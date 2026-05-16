@@ -62,8 +62,8 @@
       "value": 144
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 85,
-      "numerator": 85,
+      "denominator": 93,
+      "numerator": 93,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 85,
+      "denominator": 93,
       "numerator": 47,
-      "percent": "55.3%"
+      "percent": "50.5%"
     },
     "supportedProfileCoverage": {
       "denominator": 117,
-      "numerator": 85,
-      "percent": "72.6%"
+      "numerator": 93,
+      "percent": "79.5%"
     }
   },
   "metricSemantics": [
@@ -1164,7 +1164,7 @@
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
       ],
-      "sourceBoundary": "Caller-supplied Grease ground-area identity and per-trigger membership; caller-supplied total-distance and Grease-distance Movement facts for Difficult Terrain cost. Automatic area membership, pathfinding, and grid geometry remain outside the runtime boundary.",
+      "sourceBoundary": "The runtime consumes typed table-supplied Grease ground-area identity and affected-target membership witnesses for appearance saves, table-triggered enter-area/end-turn save subjects for active hazards, and typed total-distance plus Grease-distance Movement facts for Difficult Terrain cost. Automatic area membership, pathfinding, path selection, and grid geometry derivation remain runtime-detached table adjudication/presentation outside this profile.",
       "taskRefs": [
         "SRDINV40",
         "SRDINV57"
@@ -1196,7 +1196,7 @@
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts"
       ],
-      "sourceBoundary": "Caller-supplied Fog Cloud area identity; runtime owns the spell source, slot-scaled Sphere radius, Heavily Obscured area projection, one-hour Concentration duration, and table-supplied strong-wind dispersal. Automatic area membership, line of sight, map illumination, pathfinding, and wind derivation remain outside the runtime boundary.",
+      "sourceBoundary": "The runtime consumes typed table-supplied Fog Cloud area identity and a typed table-triggered strong-wind dispersal command; runtime owns the spell source, slot-scaled Sphere radius, Heavily Obscured area projection, one-hour Concentration duration, and cleanup. Automatic area membership, line-of-sight drawing, map illumination, pathfinding, and wind derivation remain runtime-detached table adjudication/presentation outside this profile.",
       "taskRefs": [
         "SRDINV84E"
       ],
@@ -1221,7 +1221,7 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
-      "sourceBoundary": "Caller-supplied touched object identity, size, worn/carried facts, and emitter projection facts; runtime owns the spell source, object attachment, Bright/Dim radii, one-hour duration, same-caster recast replacement, duration cleanup, opaque-cover suppression for the Light object emitter, and derived Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences. Colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside this runtime boundary.",
+      "sourceBoundary": "Runtime consumes typed table-supplied touched-object identity, size, worn/carried, emitter-distance, and opaque-cover witnesses; runtime owns the spell source, object attachment, Bright/Dim radii, one-hour duration, same-caster recast replacement, duration cleanup, opaque-cover suppression for the Light object emitter, and derived Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences. Colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation are runtime-detached table adjudication/presentation outside this object-emitter boundary.",
       "taskRefs": [
         "SRDINV70B",
         "SRDINV89C"
@@ -1439,7 +1439,7 @@
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
         "packages/battle-runtime/src/battle-reducer/reaction-triggered-spells.ts"
       ],
-      "sourceBoundary": "The runtime consumes caller-supplied falling trigger and falling target facts, spends the caster's Reaction and Spell Slot, admits up to five falling targets within range, creates one-minute per-target mitigation effects, exposes the 60-foot descent-rate cap projection, and consumes caller-supplied landing facts to clear the landed target's mitigation while emitting fall-damage prevention and Falling-Prone prevention outcomes. Fall-distance derivation, map elevation, and landing geometry remain caller/table-owned.",
+      "sourceBoundary": "The runtime consumes typed table-supplied falling-trigger, falling target, range, and landing witnesses. It spends the caster's Reaction and Spell Slot, admits up to five falling targets within range, creates one-minute per-target mitigation effects, exposes the 60-foot descent-rate cap projection, and clears the landed target's mitigation while emitting fall-damage prevention and Falling-Prone prevention outcomes. Fall-distance derivation, map elevation, and landing-geometry derivation remain runtime-detached table adjudication outside this profile.",
       "taskRefs": [
         "SRDINV56A",
         "SRDINV56B"
@@ -1495,7 +1495,7 @@
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
       ],
-      "sourceBoundary": "The runtime owns touched willing target admission, one-minute active effect duration, per-target-turn use reset, the 10-foot Movement spend for up to 30 feet of jump movement, and the Prone outcome for caller-supplied failed Difficult Terrain landing Acrobatics facts; path, jump arc, final-position derivation, landing legality derivation, and landing-check derivation remain caller-supplied facts.",
+      "sourceBoundary": "The runtime owns touched willing target admission, one-minute active effect duration, per-target-turn use reset, and the 10-foot Movement spend for up to 30 feet of jump movement. It consumes typed table-supplied jump distance and landing witnesses; legal-destination and Difficult Terrain landing Acrobatics outcomes arrive as landing witness variants, illegal landings are rejected, and failed Difficult Terrain landing applies Prone. Path, jump arc, collision, final-position, legal-destination derivation, and Difficult Terrain landing Dexterity (Acrobatics) check derivation remain runtime-detached table adjudication outside this profile.",
       "taskRefs": [
         "SRDINV53"
       ],
@@ -1779,9 +1779,10 @@
       "taskRefs": [
         "SRDINV31B",
         "SRDINV62",
-        "SRDINV77"
+        "SRDINV77",
+        "SRDINV87C"
       ],
-      "title": "Spell invocation creates a combat mark with attack-roll damage, Concentration duration, and 0-HP transfer",
+      "title": "Spell invocation creates a combat mark with attack-roll damage, Ability Check roll-mode projection, Concentration duration, and 0-HP transfer",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -1947,7 +1948,7 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
-      "sourceBoundary": "Faerie Fire owns affected-creature and affected-object outline effects, derived Dim Light emitter facts, and derived Dim Light to sight-obscurement and Darkvision-adjusted sight consequences. Color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside this runtime boundary.",
+      "sourceBoundary": "Faerie Fire consumes typed table-supplied area-membership, affected-object, object-sight, and emitter-distance witnesses; runtime owns affected-creature and affected-object outline effects, derived Dim Light emitter facts, object attack-roll Advantage from supplied sight facts, and derived Dim Light to sight-obscurement and Darkvision-adjusted sight consequences without applying Light-specific opaque-cover suppression. Color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation are runtime-detached table adjudication/presentation outside this outline/emitter boundary.",
       "taskRefs": [
         "SRDINV30E",
         "SRDINV58A",
@@ -2742,7 +2743,7 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Promoted battle-runtime Quint facts for Hunter's Mark combat target marking, mark-scoped Force damage, and transfer after the marked target drops to 0 Hit Points; finding Advantage remains a classified caller-supplied ability-check roll-mode gap after SRDINV63.",
+      "note": "Promoted battle-runtime Quint facts for Hunter's Mark combat target marking, mark-scoped Force damage, and transfer after the marked target drops to 0 Hit Points.",
       "profileIds": [
         "spell.invocation-marked-damage-rider"
       ],
@@ -2750,7 +2751,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime admission and reducer tests for Hunter's Mark combat target marking, mark-scoped Force damage, Concentration cleanup, and Bonus Action transfer; finding Advantage remains a classified caller-supplied ability-check roll-mode gap after SRDINV63.",
+      "note": "Focused battle-runtime admission and reducer tests for Hunter's Mark combat target marking, mark-scoped Force damage, Concentration cleanup, and Bonus Action transfer.",
       "profileIds": [
         "spell.invocation-marked-damage-rider"
       ],
@@ -3359,6 +3360,22 @@
         "spell.invocation-marked-damage-rider"
       ],
       "taskId": "SRDINV77"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Hunter's Mark Wisdom (Perception or Survival) Ability Check Advantage to find the marked target, including nonmatching target, ability, and skill cases.",
+      "profileIds": [
+        "spell.invocation-marked-damage-rider"
+      ],
+      "taskId": "SRDINV87C"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Hunter's Mark finding Advantage on caller-supplied Ability Check holes, mark transfer to a new target, Concentration cleanup, and Favored Enemy free-cast inheritance.",
+      "profileIds": [
+        "spell.invocation-marked-damage-rider"
+      ],
+      "taskId": "SRDINV87C"
     },
     {
       "claimKind": "qnt-proof",
@@ -4684,10 +4701,10 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "outside-runtime-presentation-exploration",
-          "owner": "exploration/language owner",
-          "reason": "Language, hidden-message, and non-battle prepared-spell source facts are outside promoted battle runtime."
+          "owner": "runtime-detached hidden-message/language adjudication owner",
+          "reason": "Druidic hidden-message spotting, Investigation adjudication, and deciphering are runtime-detached table adjudication outside promoted battle runtime; Druidic language and always-prepared Speak with Animals Spell Access remain character-owned source facts."
         },
-        "reason": "Language, hidden-message, and prepared-spell source facts are authored; exploration/language execution is not promoted as a battle Unit profile.",
+        "reason": "Druidic known-language and always-prepared Speak with Animals Spell Access source facts are authored as character-owned facts; hidden-message discovery and deciphering are runtime-detached table adjudication, so no battle Unit profile is promoted.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
@@ -4938,15 +4955,6 @@
             },
             "followUpTaskId": "SRDINV78",
             "mechanic": "later-level Favored Enemy free-cast count scaling beyond two uses"
-          },
-          {
-            "battleReadinessClosure": {
-              "kind": "social-knowledge-effect",
-              "owner": "SRDINV66 ability-check roll-mode owner",
-              "reason": "Hunter's Mark finding Advantage is an ability-check roll-mode projection, not additional battle reducer behavior for Favored Enemy."
-            },
-            "followUpTaskId": "SRDINV66",
-            "mechanic": "Hunter's Mark Perception/Survival finding Advantage remains deferred to ability-check roll-mode work"
           }
         ],
         "profileIds": [
@@ -4958,13 +4966,19 @@
         "supportedMechanics": [
           "always-prepared Hunter's Mark access through retained prepared Spell Access",
           "two-use Favored Enemy Long Rest free-cast resource at Ranger level 1",
-          "free-cast Hunter's Mark uses the existing marked damage rider, target gate, Concentration ownership, and Bonus Action cost",
+          "free-cast Hunter's Mark uses the existing marked damage rider, target gate, Concentration ownership, Bonus Action cost, and Wisdom (Perception or Survival) Advantage to find the marked target",
           "normal Spell Slot Hunter's Mark casting remains available when the free-cast resource is exhausted"
         ],
         "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV87C"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
       "profiles": [
@@ -4981,9 +4995,10 @@
           "taskRefs": [
             "SRDINV31B",
             "SRDINV62",
-            "SRDINV77"
+            "SRDINV77",
+            "SRDINV87C"
           ],
-          "title": "Spell invocation creates a combat mark with attack-roll damage, Concentration duration, and 0-HP transfer",
+          "title": "Spell invocation creates a combat mark with attack-roll damage, Ability Check roll-mode projection, Concentration duration, and 0-HP transfer",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -5297,10 +5312,10 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "outside-runtime-presentation-exploration",
-          "owner": "exploration/language owner",
-          "reason": "Thieves' Cant is a language/communication source fact outside promoted battle runtime."
+          "owner": "runtime-detached language/communication adjudication owner",
+          "reason": "Thieves' Cant communication adjudication is runtime-detached table adjudication outside promoted battle runtime; Thieves' Cant and the additional Character Creation language choice remain character-owned source facts."
         },
-        "reason": "Language source facts are authored; exploration/language execution is not promoted as a battle Unit profile.",
+        "reason": "Thieves' Cant and the additional language-choice source fact are authored as character-owned facts; communication adjudication is runtime-detached table adjudication, so no battle Unit profile is promoted.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
@@ -7701,17 +7716,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "table/spatial and presentation owners",
-              "reason": "Color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the runtime boundary."
-            },
-            "followUpTaskId": "SRDINV89D",
-            "mechanic": "color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the runtime boundary"
-          }
-        ],
         "profileIds": [
           "spell.invocation-attack-roll-advantage-save"
         ],
@@ -7719,16 +7723,17 @@
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
         ],
         "supportedMechanics": [
-          "20-foot point-origin Cube affected-creature boundary with table-supplied area membership",
+          "20-foot point-origin Cube affected-creature boundary consumes typed table-supplied area membership witnesses",
           "Dexterity save-gated affected creatures",
           "Concentration-owned outline effect that grants attack-roll Advantage against failed-save affected creatures when the attacker can see them and denies benefits from the Invisible condition",
-          "caller-supplied object ids for objects in the Cube create concentration-owned object outline projections",
-          "object-target spell attacks consume caller-supplied object sight facts to grant attack-roll Advantage against outlined objects",
+          "typed table-supplied faerieFireArea affected-object witnesses create concentration-owned object outline projections",
+          "object-target spell attacks consume typed table-supplied object sight witnesses to grant attack-roll Advantage against outlined objects",
           "affected creatures and objects shed concentration-owned Dim Light emitter facts in a 10-foot radius attached to their outline effects",
-          "caller-supplied emitter projection facts derive Dim Light illumination from Faerie Fire object and creature emitters",
-          "derived Dim Light illumination projects Lightly Obscured sight consequences and Darkvision-adjusted sight consequences without duplicating emitter state"
+          "typed table-supplied emitter projection witnesses derive Dim Light illumination from Faerie Fire object and creature emitters",
+          "derived Dim Light illumination projects Lightly Obscured sight consequences and Darkvision-adjusted sight consequences without duplicating emitter state",
+          "residual checklist: color rendering is runtime-detached presentation; automatic line-of-sight drawing, map geometry, and pathfinding derivation are runtime-detached table adjudication/presentation and no promoted runtime procedure consumes them"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -7750,7 +7755,7 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
-          "sourceBoundary": "Faerie Fire owns affected-creature and affected-object outline effects, derived Dim Light emitter facts, and derived Dim Light to sight-obscurement and Darkvision-adjusted sight consequences. Color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside this runtime boundary.",
+          "sourceBoundary": "Faerie Fire consumes typed table-supplied area-membership, affected-object, object-sight, and emitter-distance witnesses; runtime owns affected-creature and affected-object outline effects, derived Dim Light emitter facts, object attack-roll Advantage from supplied sight facts, and derived Dim Light to sight-obscurement and Darkvision-adjusted sight consequences without applying Light-specific opaque-cover suppression. Color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation are runtime-detached table adjudication/presentation outside this outline/emitter boundary.",
           "taskRefs": [
             "SRDINV30E",
             "SRDINV58A",
@@ -7781,17 +7786,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "SRDINV55 table/spatial owner",
-              "reason": "Fall-distance derivation, map elevation, and landing geometry simulation remain table/spatial derivations."
-            },
-            "followUpTaskId": "SRDINV55",
-            "mechanic": "fall-distance derivation, map elevation, and landing geometry simulation remain outside the runtime boundary"
-          }
-        ],
         "profileIds": [
           "spell.invocation-feather-fall-mitigation"
         ],
@@ -7800,14 +7794,15 @@
           "RAW-PTG-REACTIONS-002"
         ],
         "supportedMechanics": [
-          "caller-supplied falling Reaction trigger for the caster or a visible creature within 60 feet",
-          "up-to-five falling creature target admission using caller-supplied falling and range facts",
+          "typed table-supplied falling Reaction trigger witness for the caster or a visible creature within 60 feet",
+          "up-to-five falling creature target admission using typed table-supplied falling and range witnesses",
           "Reaction and level-1 Spell Slot spend",
           "one-minute per-target Feather Fall mitigation effect",
           "active 60-foot-per-round descent-rate cap projection",
-          "caller-supplied landing cleanup that ends the landed target's mitigation, emits no-fall-damage outcome, and suppresses Falling-Prone when Feather Fall prevents damage"
+          "typed table-supplied landing witness cleanup that ends the landed target's mitigation, emits no-fall-damage outcome, and suppresses Falling-Prone when Feather Fall prevents damage",
+          "residual checklist: fall-distance derivation, map elevation, and landing-geometry derivation are runtime-detached table adjudication; the promoted runtime consumes falling/range and landing witnesses and does not derive elevation, fall distance, or landing geometry"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -7831,7 +7826,7 @@
             "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
             "packages/battle-runtime/src/battle-reducer/reaction-triggered-spells.ts"
           ],
-          "sourceBoundary": "The runtime consumes caller-supplied falling trigger and falling target facts, spends the caster's Reaction and Spell Slot, admits up to five falling targets within range, creates one-minute per-target mitigation effects, exposes the 60-foot descent-rate cap projection, and consumes caller-supplied landing facts to clear the landed target's mitigation while emitting fall-damage prevention and Falling-Prone prevention outcomes. Fall-distance derivation, map elevation, and landing geometry remain caller/table-owned.",
+          "sourceBoundary": "The runtime consumes typed table-supplied falling-trigger, falling target, range, and landing witnesses. It spends the caster's Reaction and Spell Slot, admits up to five falling targets within range, creates one-minute per-target mitigation effects, exposes the 60-foot descent-rate cap projection, and clears the landed target's mitigation while emitting fall-damage prevention and Falling-Prone prevention outcomes. Fall-distance derivation, map elevation, and landing-geometry derivation remain runtime-detached table adjudication outside this profile.",
           "taskRefs": [
             "SRDINV56A",
             "SRDINV56B"
@@ -8086,17 +8081,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "SRDINV66 table/spatial owner",
-              "reason": "Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain table/spatial derivations."
-            },
-            "followUpTaskId": "SRDINV66",
-            "mechanic": "automatic area membership, line of sight, map illumination, pathfinding, and wind derivation"
-          }
-        ],
         "profileIds": [
           "spell.invocation-fog-cloud-obscurement"
         ],
@@ -8104,13 +8088,14 @@
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
         ],
         "supportedMechanics": [
-          "caller-supplied point-origin fog area identity",
+          "typed table-supplied point-origin fog area identity witness",
           "Concentration-owned Heavily Obscured area projection",
-          "20-foot radius at level 1 with +20 feet per slot above 1",
-          "one-hour Concentration duration cleanup",
-          "table-supplied strong-wind dispersal cleanup"
+          "20-foot Sphere radius at level 1 with +20 feet per slot above 1",
+          "one-hour Concentration duration and Concentration-break cleanup",
+          "typed table-triggered strong-wind dispersal command cleanup for the active fog area",
+          "residual checklist: automatic area membership, line-of-sight drawing, map illumination, pathfinding, and wind derivation are runtime-detached table adjudication/presentation; the promoted runtime consumes the fog area identity witness and typed strong-wind command and does not derive area membership, line of sight, map illumination, pathfinding, or wind"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -8134,7 +8119,7 @@
             "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts"
           ],
-          "sourceBoundary": "Caller-supplied Fog Cloud area identity; runtime owns the spell source, slot-scaled Sphere radius, Heavily Obscured area projection, one-hour Concentration duration, and table-supplied strong-wind dispersal. Automatic area membership, line of sight, map illumination, pathfinding, and wind derivation remain outside the runtime boundary.",
+          "sourceBoundary": "The runtime consumes typed table-supplied Fog Cloud area identity and a typed table-triggered strong-wind dispersal command; runtime owns the spell source, slot-scaled Sphere radius, Heavily Obscured area projection, one-hour Concentration duration, and cleanup. Automatic area membership, line-of-sight drawing, map illumination, pathfinding, and wind derivation remain runtime-detached table adjudication/presentation outside this profile.",
           "taskRefs": [
             "SRDINV84E"
           ],
@@ -8220,17 +8205,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "SRDINV66 table/spatial owner",
-              "reason": "Automatic area membership, pathfinding, and grid geometry derivation remain table/spatial derivations."
-            },
-            "followUpTaskId": "SRDINV66",
-            "mechanic": "automatic area membership, pathfinding, and grid geometry derivation for Grease movement"
-          }
-        ],
         "profileIds": [
           "spell.invocation-grease-ground-hazard"
         ],
@@ -8238,13 +8212,14 @@
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
         ],
         "supportedMechanics": [
-          "one-minute Grease ground hazard lifecycle keyed by caller-supplied ground-area id",
-          "on-cast Dexterity Saving Throw for caller-supplied affected creatures",
+          "one-minute Grease ground hazard lifecycle keyed by typed table-supplied ground-area id",
+          "on-cast Dexterity Saving Throw consumes typed table-supplied affected-target membership witnesses for creatures standing in the Grease area",
           "Prone application on failed Grease saves",
-          "table-triggered enter-area and end-turn-in-area Dexterity save procedures",
-          "caller-supplied Grease Difficult Terrain movement facts that validate active hazard identity and spend total Movement distance plus one extra foot per foot moved through Grease"
+          "table-triggered enter-area and end-turn-in-area Dexterity save procedures keyed by the active hazard identity",
+          "typed table-supplied Grease Difficult Terrain movement facts validate active hazard identity and spend total Movement distance plus one extra foot per foot moved through Grease",
+          "residual checklist: automatic area membership, pathfinding, path selection, and grid geometry derivation for Grease movement are runtime-detached table adjudication/presentation; the promoted runtime consumes ground-area, affected-target, per-trigger save, and movement-distance witnesses and does not derive area membership, paths, or grid geometry"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -8268,7 +8243,7 @@
             "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
             "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
           ],
-          "sourceBoundary": "Caller-supplied Grease ground-area identity and per-trigger membership; caller-supplied total-distance and Grease-distance Movement facts for Difficult Terrain cost. Automatic area membership, pathfinding, and grid geometry remain outside the runtime boundary.",
+          "sourceBoundary": "The runtime consumes typed table-supplied Grease ground-area identity and affected-target membership witnesses for appearance saves, table-triggered enter-area/end-turn save subjects for active hazards, and typed total-distance plus Grease-distance Movement facts for Difficult Terrain cost. Automatic area membership, pathfinding, path selection, and grid geometry derivation remain runtime-detached table adjudication/presentation outside this profile.",
           "taskRefs": [
             "SRDINV40",
             "SRDINV57"
@@ -8505,9 +8480,10 @@
           "taskRefs": [
             "SRDINV31B",
             "SRDINV62",
-            "SRDINV77"
+            "SRDINV77",
+            "SRDINV87C"
           ],
-          "title": "Spell invocation creates a combat mark with attack-roll damage, Concentration duration, and 0-HP transfer",
+          "title": "Spell invocation creates a combat mark with attack-roll damage, Ability Check roll-mode projection, Concentration duration, and 0-HP transfer",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -8538,17 +8514,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "social-knowledge-effect",
-              "owner": "SRDINV66 ability-check roll-mode owner",
-              "reason": "Wisdom (Perception or Survival) Advantage to find the marked target is ability-check roll-mode state outside the promoted damage-rider runtime."
-            },
-            "followUpTaskId": "SRDINV66",
-            "mechanic": "classified gap: caller-supplied Wisdom (Perception or Survival) Advantage roll-mode projection to find the marked target; no dedicated SRDINV63 implementation task"
-          }
-        ],
         "profileIds": [
           "spell.invocation-marked-damage-rider"
         ],
@@ -8559,11 +8524,12 @@
           "Bonus Action cast with Spell Slot spend",
           "Concentration-owned mark identity on one combatant target",
           "extra Force damage when the caster hits the marked target with an Attack Roll",
+          "Wisdom (Perception or Survival) Ability Check Advantage to find the marked target from caller-supplied finding facts",
           "Bonus Action transfer only after the marked target drops to 0 Hit Points",
           "slot-scaled Concentration maximum of 1 hour at slots 1-2, 8 hours at slots 3-4, and 24 hours at slots 5+",
           "Concentration cleanup and maximum-duration expiration remove the marked-target damage rider"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -8589,9 +8555,10 @@
           "taskRefs": [
             "SRDINV31B",
             "SRDINV62",
-            "SRDINV77"
+            "SRDINV77",
+            "SRDINV87C"
           ],
-          "title": "Spell invocation creates a combat mark with attack-roll damage, Concentration duration, and 0-HP transfer",
+          "title": "Spell invocation creates a combat mark with attack-roll damage, Ability Check roll-mode projection, Concentration duration, and 0-HP transfer",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -8809,26 +8776,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "SRDINV55 table/spatial owner",
-              "reason": "Runtime-owned jump arc, pathfinding, collision, and final-position derivation remain table/spatial derivations."
-            },
-            "followUpTaskId": "SRDINV55",
-            "mechanic": "runtime-owned jump arc, pathfinding, collision, and final-position derivation"
-          },
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "SRDINV55 table/spatial owner",
-              "reason": "Runtime-owned Difficult Terrain landing Acrobatics check derivation remains a table/spatial derivation."
-            },
-            "followUpTaskId": "SRDINV55",
-            "mechanic": "runtime-owned Difficult Terrain landing Acrobatics check derivation"
-          }
-        ],
         "profileIds": [
           "spell.invocation-jump-movement-replacement"
         ],
@@ -8842,11 +8789,12 @@
           "slot-scaled target count",
           "one-minute spell-owned duration",
           "once on each target turn use marker",
-          "10-foot Movement spend for up to 30 feet of jump movement",
-          "caller-supplied legal landing facts",
-          "Prone outcome for caller-supplied failed Difficult Terrain landing Acrobatics facts"
+          "typed table-supplied jump Movement witness that spends exactly 10 feet of Movement for a positive jump distance up to 30 feet",
+          "typed table-supplied legal-destination landing witness that rejects illegal landings without deriving final position",
+          "Prone outcome for typed table-supplied failed Difficult Terrain landing Dexterity (Acrobatics) witness",
+          "residual checklist: jump arc, pathfinding, collision, final-position, legal-destination derivation, and Difficult Terrain landing Dexterity (Acrobatics) check derivation are runtime-detached table adjudication; the promoted runtime consumes distance and landing witnesses and does not derive path, collision, or final position"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -8870,7 +8818,7 @@
             "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
             "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
           ],
-          "sourceBoundary": "The runtime owns touched willing target admission, one-minute active effect duration, per-target-turn use reset, the 10-foot Movement spend for up to 30 feet of jump movement, and the Prone outcome for caller-supplied failed Difficult Terrain landing Acrobatics facts; path, jump arc, final-position derivation, landing legality derivation, and landing-check derivation remain caller-supplied facts.",
+          "sourceBoundary": "The runtime owns touched willing target admission, one-minute active effect duration, per-target-turn use reset, and the 10-foot Movement spend for up to 30 feet of jump movement. It consumes typed table-supplied jump distance and landing witnesses; legal-destination and Difficult Terrain landing Acrobatics outcomes arrive as landing witness variants, illegal landings are rejected, and failed Difficult Terrain landing applies Prone. Path, jump arc, collision, final-position, legal-destination derivation, and Difficult Terrain landing Dexterity (Acrobatics) check derivation remain runtime-detached table adjudication outside this profile.",
           "taskRefs": [
             "SRDINV53"
           ],
@@ -8897,17 +8845,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "table/spatial and presentation owners",
-              "reason": "Colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the object-emitter runtime boundary."
-            },
-            "followUpTaskId": "SRDINV89D",
-            "mechanic": "colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the object-emitter runtime boundary"
-          }
-        ],
         "profileIds": [
           "spell.invocation-object-light"
         ],
@@ -8916,16 +8853,17 @@
         ],
         "supportedMechanics": [
           "Magic Action cantrip cast with no Spell Slot spend",
-          "caller-supplied touched object identity, size, and worn/carried facts",
+          "typed table-supplied touched object identity, size, and worn/carried witnesses",
           "Large-or-smaller object admission",
           "rejection when the object is worn or carried by someone else",
           "source-owned object-attached Bright Light 20-foot radius plus Dim Light for an additional 20 feet",
           "one-hour duration cleanup",
           "same-caster recast replacement of the prior Light emitter",
-          "caller-supplied emitter projection facts derive Bright Light, Dim Light, and opaque-cover suppression from the existing Light object emitter",
-          "derived Dim Light illumination projects Lightly Obscured sight consequences and Darkvision-adjusted sight consequences without duplicating emitter state"
+          "typed table-supplied emitter projection witnesses derive Bright Light, Dim Light, and opaque-cover suppression from the existing Light object emitter",
+          "derived Dim Light illumination projects Lightly Obscured sight consequences and Darkvision-adjusted sight consequences without duplicating emitter state",
+          "residual checklist: colored-light rendering is runtime-detached presentation; automatic line-of-sight drawing, map geometry, and pathfinding derivation are runtime-detached table adjudication/presentation and no promoted runtime procedure consumes them"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -8947,7 +8885,7 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
-          "sourceBoundary": "Caller-supplied touched object identity, size, worn/carried facts, and emitter projection facts; runtime owns the spell source, object attachment, Bright/Dim radii, one-hour duration, same-caster recast replacement, duration cleanup, opaque-cover suppression for the Light object emitter, and derived Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences. Colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside this runtime boundary.",
+          "sourceBoundary": "Runtime consumes typed table-supplied touched-object identity, size, worn/carried, emitter-distance, and opaque-cover witnesses; runtime owns the spell source, object attachment, Bright/Dim radii, one-hour duration, same-caster recast replacement, duration cleanup, opaque-cover suppression for the Light object emitter, and derived Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences. Colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation are runtime-detached table adjudication/presentation outside this object-emitter boundary.",
           "taskRefs": [
             "SRDINV70B",
             "SRDINV89C"
@@ -10253,10 +10191,10 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "outside-runtime-presentation-exploration",
-          "owner": "exploration/detection owner",
-          "reason": "Sensing, occlusion, and Hallow discovery are exploration/detection state outside promoted battle runtime."
+          "owner": "runtime-detached detection adjudication owner",
+          "reason": "Sensing, occlusion, and Hallow discovery are runtime-detached exploration/detection table adjudication outside promoted battle runtime."
         },
-        "reason": "Detection/occlusion search semantics and Hallow discovery are not promoted as battle Unit profiles.",
+        "reason": "Detection/occlusion search semantics and Hallow discovery are runtime-detached exploration table adjudication, not promoted battle Unit profiles.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
@@ -10276,10 +10214,10 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "outside-runtime-presentation-exploration",
-          "owner": "exploration/detection owner",
-          "reason": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime."
+          "owner": "runtime-detached detection adjudication owner",
+          "reason": "Magic sensing, aura viewing, and school identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime."
         },
-        "reason": "Detection/concentration search semantics are not promoted as a battle Unit profile.",
+        "reason": "Detection/concentration search semantics are runtime-detached exploration table adjudication, not a promoted battle Unit profile.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
@@ -10299,10 +10237,10 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "outside-runtime-presentation-exploration",
-          "owner": "exploration/detection owner",
-          "reason": "Poison, disease, creature-kind sensing, occlusion, and identification are exploration/detection state outside promoted battle runtime."
+          "owner": "runtime-detached detection adjudication owner",
+          "reason": "Poison, disease, creature-kind sensing, occlusion, and identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime."
         },
-        "reason": "Detection/occlusion search semantics and poison/disease identification are not promoted as battle Unit profiles.",
+        "reason": "Detection/occlusion search semantics and poison/disease identification are runtime-detached exploration table adjudication, not promoted battle Unit profiles.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
@@ -11000,26 +10938,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "SRDINV55 table/spatial owner",
-              "reason": "Runtime-owned push geometry, collision/pathfinding, and final-position derivation remain table/spatial derivations."
-            },
-            "followUpTaskId": "SRDINV55",
-            "mechanic": "runtime-owned push geometry, collision/pathfinding, and final-position derivation"
-          },
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "SRDINV55 table/spatial owner",
-              "reason": "Broad object inventory simulation and sound propagation simulation remain table/spatial derivations."
-            },
-            "followUpTaskId": "SRDINV55",
-            "mechanic": "broad object inventory simulation and sound propagation simulation"
-          }
-        ],
         "profileIds": [
           "spell.invocation-damage-save-or-attack"
         ],
@@ -11027,13 +10945,14 @@
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
         ],
         "supportedMechanics": [
-          "self-origin 15-foot Cube Constitution Saving Throw boundary with table-supplied affected creatures",
-          "slot-scaled Thunder damage with half damage on successful saves",
-          "failed-save creature push consumed from caller-supplied legal destination or blocked-push facts",
-          "unsecured-object push disposition consumed from caller-supplied object facts",
-          "audible thunderous boom evidence within 300 feet"
+          "self-origin 15-foot Cube Constitution Saving Throw boundary consumes typed table-supplied affected-creature witnesses",
+          "slot-scaled Thunder damage with half damage on successful Saving Throws",
+          "failed-save creature push consumes typed table-supplied pushed-destination or blocked-push disposition witnesses and does not derive push geometry or final position",
+          "unsecured-object push consumes typed table-supplied object identity and pushed-destination or blocked-push disposition witnesses for objects entirely within the Cube",
+          "audible thunderous boom consumes a typed table-supplied sound witness matching the 300-foot radius",
+          "residual checklist: push destination legality, blockage, collision/pathfinding, and final-position derivation are runtime-detached table adjudication/presentation; unsecured-object inventory discovery and object-location derivation are runtime-detached table adjudication/presentation; sound propagation/listener discovery is runtime-detached table adjudication/presentation; the promoted runtime consumes the supplied push/object/boom witnesses and does not derive geometry, object inventory, or sound propagation"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -11222,10 +11141,10 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "outside-runtime-presentation-exploration",
-          "owner": "illusion/exploration owner",
-          "reason": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are illusion/exploration state outside promoted battle runtime."
+          "owner": "runtime-detached illusion adjudication owner",
+          "reason": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are runtime-detached illusion/exploration table adjudication outside promoted battle runtime."
         },
-        "reason": "Sound/image illusion creation, physical-interaction reveal, faint rendering after Study, and recast expiry are illusion/exploration state outside promoted runtime owners.",
+        "reason": "Sound/image illusion creation, physical-interaction reveal, faint rendering after Study, and recast expiry are runtime-detached illusion/exploration table adjudication outside promoted runtime owners.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
@@ -11248,7 +11167,7 @@
             "battleReadinessClosure": {
               "kind": "social-knowledge-effect",
               "owner": "SRDINV41 social/knowledge owner",
-              "reason": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are social/knowledge state outside promoted battle runtime."
+              "reason": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are runtime-detached social/knowledge table adjudication outside promoted battle runtime."
             },
             "followUpTaskId": "SRDINV41",
             "mechanic": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are not represented in battle runtime state"
@@ -11793,6 +11712,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached security/exploration adjudication owner",
+          "reason": "Warded area truth, intrusion events, designated exceptions, audible or mental alarm presentation, and sleep wake-up results are runtime-detached table adjudication outside promoted battle runtime."
+        },
+        "reason": "Intrusion ward placement, designated non-triggering creatures, audible or mental alert delivery, and sleep wake-up adjudication are runtime-detached table adjudication, not a promoted battle Unit profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -12639,6 +12568,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached language/information adjudication owner",
+          "reason": "Language comprehension, signed and written text access, page-reading time, and secret-message exclusion are runtime-detached table adjudication outside promoted battle runtime."
+        },
+        "reason": "Literal language, signed-language, and written-language comprehension; page-reading pace; and secret-message exclusion are runtime-detached information-disclosure table adjudication, not a promoted battle Unit profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -13503,6 +13442,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached item/information adjudication owner",
+          "reason": "Magic item properties, Attunement and charge knowledge, ongoing-spell identification, spell-origin naming, and creature spell-effect information are runtime-detached table adjudication outside promoted battle runtime."
+        },
+        "reason": "Magic item, magical object, ongoing-spell, and creature spell-effect information disclosure is runtime-detached table adjudication, not a promoted battle Unit profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -15645,6 +15594,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached illusion adjudication owner",
+          "reason": "Image content, movement appearance, physical interaction, Study action adjudication, and seeing-through behavior are runtime-detached table adjudication outside promoted battle runtime."
+        },
+        "reason": "Visual illusion content, movement presentation, physical-interaction reveal, Study adjudication, and see-through results are runtime-detached illusion table adjudication, not a promoted battle Unit profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -15681,6 +15640,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached social/language adjudication owner",
+          "reason": "Beast conversation, Influence action options, and information remembered by Beasts are runtime-detached table adjudication outside promoted battle runtime."
+        },
+        "reason": "Beast communication, Influence options, and local-information disclosure are runtime-detached social table adjudication, not a promoted battle Unit profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",

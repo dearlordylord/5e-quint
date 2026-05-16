@@ -2252,7 +2252,7 @@
     "srd521:classes/druid:level-1:class-feature-grant:druid_druidic": {
       "taskId": "SRDINV18",
       "profile": "level-1 Druid class-feature support profile",
-      "summary": "Druidic is retained through the finalized CharacterBuild feature Unit refs for supported Druid progressions; executable feature behavior remains owned by downstream feature/runtime projections.",
+      "summary": "Druidic is retained through finalized CharacterBuild feature Unit refs for supported Druid progressions; the Surface feature record carries the Druidic language and always-prepared Speak with Animals Spell Access source facts for downstream CharacterBuild-derived projections, while hidden-message adjudication remains runtime-detached.",
       "discovery": [
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
@@ -2353,7 +2353,7 @@
     "srd521:classes/rogue:level-1:class-feature-grant:rogue_thieves_cant": {
       "taskId": "SRDINV18",
       "profile": "level-1 Rogue class-feature support profile",
-      "summary": "Thieves' Cant is retained through the finalized CharacterBuild feature Unit refs for supported Rogue progressions; executable feature behavior remains owned by downstream feature/runtime projections.",
+      "summary": "Thieves' Cant is retained through finalized CharacterBuild feature Unit refs for supported Rogue progressions; the Surface feature record carries the Thieves' Cant and additional language-choice source facts for downstream CharacterBuild-derived projections, while communication adjudication remains runtime-detached.",
       "discovery": [
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],

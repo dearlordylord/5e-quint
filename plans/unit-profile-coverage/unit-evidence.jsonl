@@ -102,6 +102,7 @@
 {"unitId":"searing_smite","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV31E","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"true_strike","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV31F","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"hunters_mark","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV31B","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
+{"unitId":"ranger_favored_enemy","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV87C","ownerPath":"packages/battle-runtime/src/index.test.ts"}}
 {"unitId":"produce_flame","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV87A","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"dancing_lights","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV88A","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"fire_bolt","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84A","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}

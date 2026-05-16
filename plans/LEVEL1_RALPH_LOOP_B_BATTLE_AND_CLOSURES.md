@@ -7,79 +7,79 @@
     {
       "number": 1,
       "id": "L1B-AT01",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Hunter's Mark And Favored Enemy Claim Cleanup"
     },
     {
       "number": 2,
       "id": "L1B-AT02",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Runtime-Detached And Character-Fact Split Claims"
     },
     {
       "number": 3,
       "id": "L1B-AT09",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Light And Outline Witness Promotion"
     },
     {
       "number": 4,
       "id": "L1B-AT10",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Falling And Jump Witness Promotion"
     },
     {
       "number": 5,
       "id": "L1B-AT11",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Area Hazard And Obscurement Witness Promotion"
     },
     {
       "number": 6,
       "id": "L1B-AT12",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Thunderwave Witness Promotion"
     },
     {
       "number": 7,
       "id": "L1B-L1X-02",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Disguise Self No-Matrix Decision"
     },
     {
       "number": 8,
       "id": "L1B-L1X-03",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Druidcraft No-Matrix Decision"
     },
     {
       "number": 9,
       "id": "L1B-L1X-04",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Elementalism No-Matrix Decision"
     },
     {
       "number": 10,
       "id": "L1B-L1X-07",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Illusory Script No-Matrix Decision"
     },
     {
       "number": 11,
       "id": "L1B-L1X-10",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Message No-Matrix Decision"
     },
     {
       "number": 12,
       "id": "L1B-L1X-11",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Prestidigitation No-Matrix Decision"
     },
     {
       "number": 13,
       "id": "L1B-L1X-13",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Thaumaturgy Mixed Owner Decision"
     }
   ]
@@ -197,25 +197,25 @@ For `AT-L1-09` through `AT-L1-12`:
 
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
-| 1 | L1B-AT01 - Hunter's Mark And Favored Enemy Claim Cleanup | ready-for-implementation-after-light-research | none | Removes stale runtime-behavior residual before Ranger strict closure. |
-| 2 | L1B-AT02 - Runtime-Detached And Character-Fact Split Claims | ready-for-implementation-after-light-research | none | Closure claims and Druidic/Thieves' Cant split. |
-| 3 | L1B-AT09 - Light And Outline Witness Promotion | ready-for-implementation-after-light-research | none | Witness checklist before promotion. |
-| 4 | L1B-AT10 - Falling And Jump Witness Promotion | ready-for-implementation-after-light-research | none | Witness checklist before promotion. |
-| 5 | L1B-AT11 - Area Hazard And Obscurement Witness Promotion | ready-for-implementation-after-light-research | none | Witness checklist before promotion. |
-| 6 | L1B-AT12 - Thunderwave Witness Promotion | ready-for-implementation-after-light-research | none | Witness checklist before promotion. |
-| 7 | L1B-L1X-02 - Disguise Self No-Matrix Decision | ready-for-research | none | Decision artifact only; no Unit claim without admitted UnitRecord. |
-| 8 | L1B-L1X-03 - Druidcraft No-Matrix Decision | ready-for-research | none | Decision artifact only; no Unit claim without admitted UnitRecord. |
-| 9 | L1B-L1X-04 - Elementalism No-Matrix Decision | ready-for-research | none | Decision artifact only; no Unit claim without admitted UnitRecord. |
-| 10 | L1B-L1X-07 - Illusory Script No-Matrix Decision | ready-for-research | none | Decision artifact only; no Unit claim without admitted UnitRecord. |
-| 11 | L1B-L1X-10 - Message No-Matrix Decision | ready-for-research | none | Runtime-detached communication decision; no battle profile. |
-| 12 | L1B-L1X-11 - Prestidigitation No-Matrix Decision | ready-for-research | none | Utility/presentation decision artifact. |
-| 13 | L1B-L1X-13 - Thaumaturgy Mixed Owner Decision | ready-for-research | none | Decide Booming Voice owner; utility effects likely detached. |
+| 1 | L1B-AT01 - Hunter's Mark And Favored Enemy Claim Cleanup | done | none | Removes stale runtime-behavior residual before Ranger strict closure. |
+| 2 | L1B-AT02 - Runtime-Detached And Character-Fact Split Claims | done | none | Closure claims and Druidic/Thieves' Cant split. |
+| 3 | L1B-AT09 - Light And Outline Witness Promotion | done | none | Witness checklist before promotion. |
+| 4 | L1B-AT10 - Falling And Jump Witness Promotion | done | none | Witness checklist before promotion. |
+| 5 | L1B-AT11 - Area Hazard And Obscurement Witness Promotion | done | none | Witness checklist before promotion. |
+| 6 | L1B-AT12 - Thunderwave Witness Promotion | done | none | Witness checklist before promotion. |
+| 7 | L1B-L1X-02 - Disguise Self No-Matrix Decision | done | none | Decision artifact only; no Unit claim without admitted UnitRecord. |
+| 8 | L1B-L1X-03 - Druidcraft No-Matrix Decision | done | none | Decision artifact only; no Unit claim without admitted UnitRecord. |
+| 9 | L1B-L1X-04 - Elementalism No-Matrix Decision | done | none | Decision artifact only; no Unit claim without admitted UnitRecord. |
+| 10 | L1B-L1X-07 - Illusory Script No-Matrix Decision | done | none | Decision artifact only; no Unit claim without admitted UnitRecord. |
+| 11 | L1B-L1X-10 - Message No-Matrix Decision | done | none | Runtime-detached communication decision; no battle profile. |
+| 12 | L1B-L1X-11 - Prestidigitation No-Matrix Decision | done | none | Utility/presentation decision artifact. |
+| 13 | L1B-L1X-13 - Thaumaturgy Mixed Owner Decision | done | none | Decide Booming Voice owner; utility effects likely detached. |
 
 ## Task Details
 
 ### Task 1 - L1B-AT01 - Hunter's Mark And Favored Enemy Claim Cleanup
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Implement `AT-L1-01` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
@@ -255,7 +255,7 @@ Plan Impact:
 
 ### Task 2 - L1B-AT02 - Runtime-Detached And Character-Fact Split Claims
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Implement `AT-L1-02` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
@@ -296,7 +296,7 @@ Plan Impact:
 
 ### Task 3 - L1B-AT09 - Light And Outline Witness Promotion
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Implement `AT-L1-09` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
@@ -324,7 +324,7 @@ Plan Impact:
 
 ### Task 7 - L1B-L1X-02 - Disguise Self No-Matrix Decision
 
-Status: `ready-for-research`
+Status: `done`
 
 Research `AT-L1X-02` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
@@ -351,7 +351,7 @@ Plan Impact:
 
 ### Task 8 - L1B-L1X-03 - Druidcraft No-Matrix Decision
 
-Status: `ready-for-research`
+Status: `done`
 
 Research `AT-L1X-03` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
@@ -375,7 +375,7 @@ Plan Impact:
 
 ### Task 9 - L1B-L1X-04 - Elementalism No-Matrix Decision
 
-Status: `ready-for-research`
+Status: `done`
 
 Research `AT-L1X-04` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
@@ -398,7 +398,7 @@ Plan Impact:
 
 ### Task 10 - L1B-L1X-07 - Illusory Script No-Matrix Decision
 
-Status: `ready-for-research`
+Status: `done`
 
 Research `AT-L1X-07` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
@@ -421,7 +421,7 @@ Plan Impact:
 
 ### Task 11 - L1B-L1X-10 - Message No-Matrix Decision
 
-Status: `ready-for-research`
+Status: `done`
 
 Research `AT-L1X-10` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
@@ -444,7 +444,7 @@ Plan Impact:
 
 ### Task 12 - L1B-L1X-11 - Prestidigitation No-Matrix Decision
 
-Status: `ready-for-research`
+Status: `done`
 
 Research `AT-L1X-11` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
@@ -466,7 +466,7 @@ Plan Impact:
 
 ### Task 13 - L1B-L1X-13 - Thaumaturgy Mixed Owner Decision
 
-Status: `ready-for-research`
+Status: `done`
 
 Research `AT-L1X-13` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
@@ -491,7 +491,7 @@ Plan Impact:
 
 ### Task 4 - L1B-AT10 - Falling And Jump Witness Promotion
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Implement `AT-L1-10` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
@@ -517,7 +517,7 @@ Plan Impact:
 
 ### Task 5 - L1B-AT11 - Area Hazard And Obscurement Witness Promotion
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Implement `AT-L1-11` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
@@ -546,7 +546,7 @@ Plan Impact:
 
 ### Task 6 - L1B-AT12 - Thunderwave Witness Promotion
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Implement `AT-L1-12` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
