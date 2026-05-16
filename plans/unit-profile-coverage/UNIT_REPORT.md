@@ -23,7 +23,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Runtime mapping coverage | 62/62 | 100% |
 | Runtime parity coverage | 62/62 | 100% |
 | Deterministic admission/projection coverage | 85/85 | 100% |
-| Selected identity MBT coverage | 20/85 | 23.5% |
+| Selected identity MBT coverage | 24/85 | 28.2% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -877,6 +877,8 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `fighter_improved_critical` | `unit-feature.weapon-critical-range-19` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `barbarian_rage` | `unit-feature.bonus-action-ongoing-rage` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `barbarian_reckless_attack` | `unit-feature.first-attack-roll-reckless-advantage` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `bard_cutting_words` | `unit-feature.reaction-roll-or-damage-reduction` | reaction-interruption | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `monk_deflect_attacks` | `unit-feature.attack-damage-reduction-zero-damage-redirect` | reaction-interruption | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `rogue_cunning_action` | `unit-feature.alternate-action-cost` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `rogue_evasion` | `unit-feature.save-damage-replacement` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `rogue_uncanny_dodge` | `unit-feature.reaction-roll-or-damage-reduction` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
@@ -891,6 +893,8 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `acid_splash` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV91D | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
 | `ray_of_frost` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV91D | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
 | `magic_missile` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV91D | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
+| `shield` | `spell.reaction-shield` | reaction-interruption | `packages/battle-runtime/src/reaction-spell-selected-identity.mbt.test.ts` |
+| `hellish_rebuke` | `spell.reaction-hellish-rebuke`, `spell.invocation-damage-save-or-attack` | reaction-interruption | `packages/battle-runtime/src/reaction-spell-selected-identity.mbt.test.ts` |
 
 ## Unsupported And Widening Pressure
 

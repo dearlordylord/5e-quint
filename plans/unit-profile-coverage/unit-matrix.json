@@ -93,8 +93,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 85,
-      "numerator": 20,
-      "percent": "23.5%"
+      "numerator": 24,
+      "percent": "28.2%"
     },
     "supportedProfileCoverage": {
       "denominator": 117,
@@ -4593,6 +4593,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "QMBT65"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "reaction-interruption"
         }
       ],
       "executableMechanics": true,
@@ -4868,6 +4873,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "QMBT59"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "reaction-interruption"
         }
       ],
       "executableMechanics": true,
@@ -10616,6 +10626,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "QMBT22"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/reaction-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "reaction-interruption"
         }
       ],
       "executableMechanics": true,
@@ -11209,6 +11224,11 @@
           "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV69B"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/reaction-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "reaction-interruption"
         }
       ],
       "executableMechanics": true,
