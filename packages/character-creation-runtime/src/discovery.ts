@@ -15,7 +15,6 @@ import { allCantripsFromClassSpellList } from "@dnd/surface/surface/schema";
 import { SKILLS } from "@dnd/surface/surface/types";
 import type {
   BackgroundToolProficiency,
-  ClassRecord,
   ClassFeatureRecord,
   EffectAtom,
   FeatRecord,
@@ -27,8 +26,6 @@ import type {
   ClassSpellcastingCreation,
   ListPreparedSpellcastingCreation,
   UnitRecord,
-  WeaponProficiency,
-  WeaponRecord,
   WizardSpellcastingCreation,
 } from "@dnd/surface/surface/types";
 import { proficiencyGrantSubjectOptions } from "./choice-option-codecs.ts";
@@ -115,8 +112,11 @@ import {
   classUnitId,
   type CharacterProgression,
 } from "./character-progression-types.ts";
-
-const byKind = Match.discriminator("kind");
+import {
+  isWeaponMasteryChoiceFeature,
+  weaponMasteryChoiceProfileForFeature,
+  type WeaponMasteryChoiceFeature,
+} from "./weapon-mastery.ts";
 
 const SRD_GAMING_SET_OPTIONS = [
   {
@@ -1379,17 +1379,6 @@ function requireClassFeature(
   return feature.value;
 }
 
-function isWeaponMasteryChoiceFeature(
-  feature: ClassFeatureRecord,
-): feature is ClassFeatureRecord & {
-  readonly mechanics: Extract<
-    ClassFeatureRecord["mechanics"],
-    { readonly family: "weapon_mastery_choice" }
-  >;
-} {
-  return feature.mechanics.family === "weapon_mastery_choice";
-}
-
 function featGrantFeatureHoleSource(
   featureUnitId: UnitRecord["id"],
   grant: Extract<
@@ -1498,94 +1487,25 @@ export function selectedFeatAbilityScoreIncreaseOptions(
 }
 
 function weaponMasteryFeatureHoleSource(
-  feature: ClassFeatureRecord & {
-    readonly mechanics: Extract<
-      ClassFeatureRecord["mechanics"],
-      { readonly family: "weapon_mastery_choice" }
-    >;
-  },
+  feature: WeaponMasteryChoiceFeature,
   unitLibrary: UnitCatalog,
 ): ChoiceCreationHole | undefined {
-  const mechanics = feature.mechanics;
-  const classRecord = classRecordForFeature(feature, unitLibrary);
-  if (classRecord === undefined) {
+  const profile = weaponMasteryChoiceProfileForFeature({
+    featureUnitId: feature.id,
+    unitLibrary,
+  });
+  if (profile === undefined) {
     return undefined;
   }
 
-  const options = unitLibrary
-    .listUnits()
-    .filter(
-      (unit): unit is WeaponRecord =>
-        unit.kind === "weapon" &&
-        weaponMatchesMasteryEligibility(
-          unit,
-          mechanics.eligibleWeapons,
-          classRecord,
-        ),
-    )
-    .map(unitOption);
+  const options = profile.eligibleWeapons.map(unitOption);
 
   return requireChoiceCreationHole(
     choiceHole({
       source: unitSource(feature.id, WEAPON_MASTERY_OPTIONS_CHOICE_KEY),
-      cardinality: exactChoiceCardinality(mechanics.choose),
+      cardinality: exactChoiceCardinality(profile.choiceCount),
       options,
     }),
-  );
-}
-
-function classRecordForFeature(
-  feature: ClassFeatureRecord,
-  unitLibrary: UnitCatalog,
-): ClassRecord | undefined {
-  return unitLibrary
-    .listUnits()
-    .find(
-      (unit): unit is ClassRecord =>
-        unit.kind === "class" && unit.className === feature.className,
-    );
-}
-
-function weaponMatchesMasteryEligibility(
-  weapon: WeaponRecord,
-  eligibility: Extract<
-    ClassFeatureRecord["mechanics"],
-    { readonly family: "weapon_mastery_choice" }
-  >["eligibleWeapons"],
-  classRecord: ClassRecord,
-): boolean {
-  return Match.value(eligibility).pipe(
-    byKind(
-      "class_proficient_weapons",
-      (classProficientWeapons) =>
-        (classProficientWeapons.usage === undefined ||
-          weapon.usage === classProficientWeapons.usage) &&
-        classRecord.weaponProficiencies.some((proficiency) =>
-          weaponMatchesProficiency(weapon, proficiency),
-        ),
-    ),
-    Match.exhaustive,
-  );
-}
-
-function weaponMatchesProficiency(
-  weapon: WeaponRecord,
-  proficiency: WeaponProficiency,
-): boolean {
-  return Match.value(proficiency).pipe(
-    byKind(
-      "weapon_category",
-      (categoryProficiency) => weapon.category === categoryProficiency.category,
-    ),
-    byKind(
-      "weapon_category_with_properties",
-      (propertyProficiency) =>
-        weapon.category === propertyProficiency.category &&
-        weapon.properties?.some((property) =>
-          propertyProficiency.anyOfProperties.includes(property.kind),
-        ) === true,
-    ),
-    Match.exhaustive,
   );
 }
 

@@ -172,6 +172,12 @@ export {
   characterBuildUnitRefs,
 } from "./finalization.ts";
 export {
+  isWeaponMasteryChoiceFeature,
+  weaponMasteryChoiceProfileForFeature,
+  type WeaponMasteryChoiceFeature,
+  type WeaponMasteryChoiceProfile,
+} from "./weapon-mastery.ts";
+export {
   classNameFromClassUnit,
   classUnitIdFromClassUnit,
   classUnitIdFromUnitId,

@@ -8,8 +8,8 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 
 | Metric | Covered |
 | --- | ---: |
-| Strict runtime/profile support | 63/93 (67.7%) |
-| Strict target closure | 74/93 (79.6%) |
+| Strict runtime/profile support | 68/93 (73.1%) |
+| Strict target closure | 79/93 (84.9%) |
 | Product readiness | 367/367 (100%) |
 
 ## Scope
@@ -21,14 +21,14 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | SRD pressure with no Unit matrix row | 14 |
 | Non-executable class containers | 12 |
 | Strict executable denominator | 93 |
-| Non-supported frontier | 30 |
+| Non-supported frontier | 25 |
 
 ## Status Groups
 
 | Status | Count | Units |
 | --- | ---: | --- |
-| supported-profile | 63 | `acid_splash`, `animal_friendship`, `bane`, `barbarian_rage`, `barbarian_unarmored_defense`, `bless`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_divine_order`, `color_spray`, `command`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `druid_primal_order`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `false_life`, `fighter_second_wind`, `fire_bolt`, `guidance`, `guiding_bolt`, `healing_word`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `ice_knife`, `inflict_wounds`, `longstrider`, `mage_armor`, `magic_missile`, `monk_unarmored_defense`, `paladin_lay_on_hands`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_expertise`, `rogue_sneak_attack`, `sacred_flame`, `sanctuary`, `searing_smite`, `shield`, `shield_of_faith`, `shillelagh`, `shocking_grasp`, `sleep`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `starry_wisp`, `true_strike`, `vicious_mockery`, `wizard_arcane_recovery`, `wizard_ritual_adept` |
-| open-profile-accounting | 14 | `barbarian_weapon_mastery`, `faerie_fire`, `feather_fall`, `fighter_weapon_mastery`, `fog_cloud`, `grease`, `hunters_mark`, `jump`, `light`, `paladin_weapon_mastery`, `ranger_favored_enemy`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `thunderwave` |
+| supported-profile | 68 | `acid_splash`, `animal_friendship`, `bane`, `barbarian_rage`, `barbarian_unarmored_defense`, `barbarian_weapon_mastery`, `bless`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_divine_order`, `color_spray`, `command`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `druid_primal_order`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `false_life`, `fighter_second_wind`, `fighter_weapon_mastery`, `fire_bolt`, `guidance`, `guiding_bolt`, `healing_word`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `ice_knife`, `inflict_wounds`, `longstrider`, `mage_armor`, `magic_missile`, `monk_unarmored_defense`, `paladin_lay_on_hands`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `ranger_weapon_mastery`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_expertise`, `rogue_sneak_attack`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `searing_smite`, `shield`, `shield_of_faith`, `shillelagh`, `shocking_grasp`, `sleep`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `starry_wisp`, `true_strike`, `vicious_mockery`, `wizard_arcane_recovery`, `wizard_ritual_adept` |
+| open-profile-accounting | 9 | `faerie_fire`, `feather_fall`, `fog_cloud`, `grease`, `hunters_mark`, `jump`, `light`, `ranger_favored_enemy`, `thunderwave` |
 | closed-runtime-detached-table-adjudication | 7 | `charm_person`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `druid_druidic`, `minor_illusion`, `rogue_thieves_cant` |
 | open-runtime-behavior | 5 | `alarm`, `comprehend_languages`, `identify`, `silent_image`, `speak_with_animals` |
 | closed-later-level-only | 4 | `bard_bardic_inspiration`, `fighter_fighting_style`, `monk_martial_arts`, `warlock_eldritch_invocations` |
@@ -37,7 +37,7 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 
 | Status | Count | Units |
 | --- | ---: | --- |
-| open-profile-accounting | 14 | `barbarian_weapon_mastery`, `faerie_fire`, `feather_fall`, `fighter_weapon_mastery`, `fog_cloud`, `grease`, `hunters_mark`, `jump`, `light`, `paladin_weapon_mastery`, `ranger_favored_enemy`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `thunderwave` |
+| open-profile-accounting | 9 | `faerie_fire`, `feather_fall`, `fog_cloud`, `grease`, `hunters_mark`, `jump`, `light`, `ranger_favored_enemy`, `thunderwave` |
 | open-runtime-behavior | 5 | `alarm`, `comprehend_languages`, `identify`, `silent_image`, `speak_with_animals` |
 
 ## Non-Supported Frontier Detail
@@ -45,7 +45,6 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | Unit | Status | Claim | Catalog | Closure kinds | Reason |
 | --- | --- | --- | --- | --- | --- |
 | `alarm` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
-| `barbarian_weapon_mastery` | open-profile-accounting | unsupported-profile | installed | selection-grant-container | The class feature grants weapon mastery choices; selected mastery property Units own executable battle pressure. |
 | `bard_bardic_inspiration` | closed-later-level-only | profile-subset-supported | installed | later-level-only | The remaining Bardic Inspiration die-size changes occur only after level 1. |
 | `charm_person` | closed-runtime-detached-table-adjudication | profile-subset-supported | installed | social-knowledge-effect | Friendly disposition, social interaction effects, and target knowledge when the spell ends are social/knowledge state outside promoted battle runtime. |
 | `comprehend_languages` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
@@ -56,7 +55,6 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | `faerie_fire` | open-profile-accounting | profile-subset-supported | installed | table-spatial-derivation | Color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the runtime boundary. |
 | `feather_fall` | open-profile-accounting | profile-subset-supported | installed | table-spatial-derivation | Fall-distance derivation, map elevation, and landing geometry simulation remain table/spatial derivations. |
 | `fighter_fighting_style` | closed-later-level-only | profile-subset-supported | installed | later-level-only | The remaining Fighting Style replacement clause occurs when gaining later Fighter levels after the level-1 choice has already been finalized. |
-| `fighter_weapon_mastery` | open-profile-accounting | unsupported-profile | installed | selection-grant-container | The class feature grants weapon mastery choices; selected mastery property Units own executable battle pressure. |
 | `fog_cloud` | open-profile-accounting | profile-subset-supported | installed | table-spatial-derivation | Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain table/spatial derivations. |
 | `grease` | open-profile-accounting | profile-subset-supported | installed | table-spatial-derivation | Automatic area membership, pathfinding, and grid geometry derivation remain table/spatial derivations. |
 | `hunters_mark` | open-profile-accounting | profile-subset-supported | installed | social-knowledge-effect | Wisdom (Perception or Survival) Advantage to find the marked target is ability-check roll-mode state outside the promoted damage-rider runtime. |
@@ -65,11 +63,8 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | `light` | open-profile-accounting | profile-subset-supported | installed | table-spatial-derivation | Colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the object-emitter runtime boundary. |
 | `minor_illusion` | closed-runtime-detached-table-adjudication | unsupported-profile | installed | outside-runtime-presentation-exploration | Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are illusion/exploration state outside promoted battle runtime. |
 | `monk_martial_arts` | closed-later-level-only | profile-subset-supported | installed | later-level-only | The remaining Martial Arts die-size changes occur only after level 1. |
-| `paladin_weapon_mastery` | open-profile-accounting | unsupported-profile | installed | selection-grant-container | The class feature grants weapon mastery choices; selected mastery property Units own executable battle pressure. |
 | `ranger_favored_enemy` | open-profile-accounting | profile-subset-supported | installed | later-level-only, social-knowledge-effect | The remaining Favored Enemy free-cast count changes occur only after level 1.; Hunter's Mark finding Advantage is an ability-check roll-mode projection, not additional battle reducer behavior for Favored Enemy. |
-| `ranger_weapon_mastery` | open-profile-accounting | unsupported-profile | installed | selection-grant-container | The class feature grants weapon mastery choices; selected mastery property Units own executable battle pressure. |
 | `rogue_thieves_cant` | closed-runtime-detached-table-adjudication | unsupported-profile | installed | outside-runtime-presentation-exploration | Thieves' Cant is a language/communication source fact outside promoted battle runtime. |
-| `rogue_weapon_mastery` | open-profile-accounting | unsupported-profile | installed | selection-grant-container | The class feature grants weapon mastery choices; selected mastery property Units own executable battle pressure. |
 | `silent_image` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
 | `speak_with_animals` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
 | `thunderwave` | open-profile-accounting | profile-subset-supported | installed | table-spatial-derivation | Runtime-owned push geometry, collision/pathfinding, and final-position derivation remain table/spatial derivations.; Broad object inventory simulation and sound propagation simulation remain table/spatial derivations. |

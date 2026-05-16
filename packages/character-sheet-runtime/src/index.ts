@@ -16,6 +16,7 @@ import {
   parseCharacterEquipmentItemId,
   progressionClassUnitIds,
   STANDARD_LANGUAGES,
+  weaponMasteryChoiceProfileForFeature,
   type CharacterBuild,
   type CharacterBuildBookOfShadowsSpellAccess,
   type CharacterBuildEquipment,
@@ -104,6 +105,7 @@ import { Brand, Either, Option } from "effect";
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.healing-resource-action
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.short-rest-spell-slot-recovery
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.spellbook-ritual-invocation
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.weapon-mastery-reselection
 
 const WEAPON_PROFICIENCY_CATEGORY_VALUES = ["simple", "martial"] as const;
 const ARMOR_TRAINING_CATEGORY_VALUES = [
@@ -255,8 +257,23 @@ export type CharacterSheetShortRestInput = {
   };
 };
 
-export type CharacterSheetLongRestInput = {
-  readonly sheet: CharacterSheet;
+export type CharacterSheetWeaponMasteryReselection = {
+  readonly featureUnitId: UnitRecord["id"];
+  readonly selectedWeaponUnitIds: ReadonlyNonEmptyArray<UnitRecord["id"]>;
+};
+
+export type CharacterSheetLongRestInput =
+  | {
+      readonly sheet: CharacterSheet;
+      readonly unitLibrary?: never;
+      readonly weaponMasteryReselections?: never;
+    }
+  | {
+      readonly sheet: CharacterSheet;
+      readonly unitLibrary: UnitCatalog;
+      readonly weaponMasteryReselections: ReadonlyNonEmptyArray<
+        CharacterSheetWeaponMasteryReselection
+      >;
 };
 
 export type CharacterSheetLayOnHandsInput = {
@@ -902,8 +919,11 @@ export function completeLongRest(
   });
   if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
   if (isCharacterSheetWithSpellSlots(input.sheet)) {
+    const build = characterSheetLongRestBuild(input, input.sheet.build);
+    if (Either.isLeft(build)) return Either.left(build.left);
     return Either.right({
       ...input.sheet,
+      build: build.right,
       hitPoints: hitPoints.right,
       spentHitDice: [],
       restFeatureUses: [],
@@ -920,13 +940,216 @@ export function completeLongRest(
           : { ...input.sheet.pactSlotExpenditure, expended: resourceCount(0) },
     });
   }
+  const build = characterSheetLongRestBuild(input, input.sheet.build);
+  if (Either.isLeft(build)) return Either.left(build.left);
   return Either.right({
     ...input.sheet,
+    build: build.right,
     hitPoints: hitPoints.right,
     spentHitDice: [],
     restFeatureUses: [],
     resourceExpenditures: [],
   });
+}
+
+function characterSheetLongRestBuild<TBuild extends CharacterBuild>(
+  input: CharacterSheetLongRestInput,
+  build: TBuild,
+): Either.Either<TBuild, CharacterSheetIssue> {
+  if (input.weaponMasteryReselections === undefined) {
+    return Either.right(build);
+  }
+  return characterBuildWithWeaponMasteryReselections({
+    build,
+    unitLibrary: input.unitLibrary,
+    reselections: input.weaponMasteryReselections,
+  });
+}
+
+function characterBuildWithWeaponMasteryReselections<
+  TBuild extends CharacterBuild,
+>(input: {
+  readonly build: TBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly reselections: ReadonlyNonEmptyArray<
+    CharacterSheetWeaponMasteryReselection
+  >;
+}): Either.Either<TBuild, CharacterSheetIssue> {
+  if (input.reselections.length === 0) {
+    return characterSheetIssue(
+      "Weapon Mastery Long Rest reselection input must be nonempty.",
+    );
+  }
+  const ownedFeatureUnitIds = new Set(
+    characterBuildFeatureUnitIds(input.build, input.unitLibrary),
+  );
+  const reselectedWeaponUnitIdsByFeature = new Map<
+    UnitRecord["id"],
+    readonly UnitRecord["id"][]
+  >();
+
+  for (const reselection of input.reselections) {
+    if (reselectedWeaponUnitIdsByFeature.has(reselection.featureUnitId)) {
+      return characterSheetIssue(
+        "Weapon Mastery Long Rest reselection must not duplicate feature sources.",
+      );
+    }
+    if (!ownedFeatureUnitIds.has(reselection.featureUnitId)) {
+      return characterSheetIssue(
+        "Weapon Mastery Long Rest reselection requires the Character Build to own the feature.",
+      );
+    }
+    const selectedWeaponUnitIds = selectedWeaponMasteryUnitIdsForLongRest({
+      build: input.build,
+      unitLibrary: input.unitLibrary,
+      reselection,
+    });
+    if (Either.isLeft(selectedWeaponUnitIds)) {
+      return Either.left(selectedWeaponUnitIds.left);
+    }
+    reselectedWeaponUnitIdsByFeature.set(
+      reselection.featureUnitId,
+      selectedWeaponUnitIds.right,
+    );
+  }
+
+  return Either.right({
+    ...input.build,
+    features: characterBuildFeaturesWithWeaponMasteryReselections(
+      input.build.features,
+      reselectedWeaponUnitIdsByFeature,
+    ),
+  });
+}
+
+function selectedWeaponMasteryUnitIdsForLongRest(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly reselection: CharacterSheetWeaponMasteryReselection;
+}): Either.Either<readonly UnitRecord["id"][], CharacterSheetIssue> {
+  const profile = weaponMasteryChoiceProfileForFeature({
+    featureUnitId: input.reselection.featureUnitId,
+    unitLibrary: input.unitLibrary,
+  });
+  if (profile === undefined) {
+    return characterSheetIssue(
+      "Weapon Mastery Long Rest reselection requires a Weapon Mastery class-feature Unit.",
+    );
+  }
+  if (profile.longRestChangeCount < 1) {
+    return characterSheetIssue(
+      "Weapon Mastery class-feature Unit does not support Long Rest reselection.",
+    );
+  }
+
+  const currentWeaponUnitIds = selectedWeaponMasteryUnitIds(
+    input.build,
+    input.reselection.featureUnitId,
+  );
+  if (
+    currentWeaponUnitIds.length !== profile.choiceCount ||
+    new Set(currentWeaponUnitIds).size !== currentWeaponUnitIds.length
+  ) {
+    return characterSheetIssue(
+      "Existing Weapon Mastery selections must match the feature choice count.",
+    );
+  }
+
+  const selectedWeaponUnitIds = input.reselection.selectedWeaponUnitIds;
+  if (selectedWeaponUnitIds.length !== profile.choiceCount) {
+    return characterSheetIssue(
+      "Weapon Mastery Long Rest reselection must match the feature choice count.",
+    );
+  }
+  if (new Set(selectedWeaponUnitIds).size !== selectedWeaponUnitIds.length) {
+    return characterSheetIssue(
+      "Weapon Mastery Long Rest reselection must not duplicate weapon choices.",
+    );
+  }
+
+  const eligibleWeaponUnitIds = new Set(
+    profile.eligibleWeapons.map((weapon) => weapon.id),
+  );
+  if (
+    selectedWeaponUnitIds.some((unitId) => !eligibleWeaponUnitIds.has(unitId))
+  ) {
+    return characterSheetIssue(
+      "Weapon Mastery Long Rest reselection must choose eligible proficient weapons.",
+    );
+  }
+
+  const currentWeaponUnitIdSet = new Set(currentWeaponUnitIds);
+  const changedChoiceCount = selectedWeaponUnitIds.filter(
+    (unitId) => !currentWeaponUnitIdSet.has(unitId),
+  ).length;
+  if (changedChoiceCount > profile.longRestChangeCount) {
+    return characterSheetIssue(
+      "Weapon Mastery Long Rest reselection changes too many weapon choices.",
+    );
+  }
+
+  return Either.right([...selectedWeaponUnitIds]);
+}
+
+function selectedWeaponMasteryUnitIds(
+  build: CharacterBuild,
+  featureUnitId: UnitRecord["id"],
+): readonly UnitRecord["id"][] {
+  return build.features.flatMap((feature) =>
+    feature.kind === "selectedClassChoice" &&
+    feature.selectedFromUnitId === featureUnitId
+      ? [feature.unitId]
+      : [],
+  );
+}
+
+function characterBuildFeaturesWithWeaponMasteryReselections(
+  features: readonly CharacterBuildFeature[],
+  selectedWeaponUnitIdsByFeature: ReadonlyMap<
+    UnitRecord["id"],
+    readonly UnitRecord["id"][]
+  >,
+): readonly CharacterBuildFeature[] {
+  const insertedFeatureUnitIds = new Set<UnitRecord["id"]>();
+  const nextFeatures: CharacterBuildFeature[] = [];
+
+  for (const feature of features) {
+    const selectedWeaponUnitIds =
+      feature.kind === "selectedClassChoice"
+        ? selectedWeaponUnitIdsByFeature.get(feature.selectedFromUnitId)
+        : undefined;
+    if (selectedWeaponUnitIds === undefined) {
+      nextFeatures.push(feature);
+      continue;
+    }
+
+    if (!insertedFeatureUnitIds.has(feature.selectedFromUnitId)) {
+      nextFeatures.push(
+        ...selectedWeaponUnitIds.map((unitId) => ({
+          kind: "selectedClassChoice" as const,
+          unitId,
+          selectedFromUnitId: feature.selectedFromUnitId,
+        })),
+      );
+      insertedFeatureUnitIds.add(feature.selectedFromUnitId);
+    }
+  }
+
+  for (const [
+    featureUnitId,
+    selectedWeaponUnitIds,
+  ] of selectedWeaponUnitIdsByFeature) {
+    if (insertedFeatureUnitIds.has(featureUnitId)) continue;
+    nextFeatures.push(
+      ...selectedWeaponUnitIds.map((unitId) => ({
+        kind: "selectedClassChoice" as const,
+        unitId,
+        selectedFromUnitId: featureUnitId,
+      })),
+    );
+  }
+
+  return nextFeatures;
 }
 
 export function applyLayOnHands(

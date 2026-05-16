@@ -17,13 +17,13 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Authored Surface Unit catalog admission | 143/429 | 33.3% |
 | Authored Surface executable catalog admission | 116/362 | 32% |
 | Installed Unit profile classification coverage | 144/144 | 100% |
-| Supported executable Unit coverage | 89/117 | 76.1% |
+| Supported executable Unit coverage | 94/117 | 80.3% |
 | QNT profile modeling coverage | 62/62 | 100% |
 | QNT proof coverage | 62/62 | 100% |
 | Runtime mapping coverage | 62/62 | 100% |
 | Runtime parity coverage | 62/62 | 100% |
-| Deterministic admission/projection coverage | 89/89 | 100% |
-| Selected identity MBT coverage | 47/89 | 52.8% |
+| Deterministic admission/projection coverage | 94/94 | 100% |
+| Selected identity MBT coverage | 47/94 | 50% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -48,6 +48,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Unit | Collection | Profiles |
 | --- | --- | --- |
 | `fighter_second_wind` | srd-5.2.1 | `unit-feature.self-bonus-action-healing` |
+| `fighter_weapon_mastery` | srd-5.2.1 | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` |
 | `fighter_action_surge` | srd-5.2.1 | `unit-feature.action-surge-resource` |
 | `fighter_extra_attack` | srd-5.2.1 | `unit-feature.attack-action-attack-count-scaling` |
 | `fighter_tactical_mind` | srd-5.2.1 | `unit-feature.failed-ability-check-resource-boost` |
@@ -56,6 +57,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `barbarian_unarmored_defense` | srd-5.2.1 | `character-sheet.armor-class-base-formula` |
 | `barbarian_reckless_attack` | srd-5.2.1 | `unit-feature.first-attack-roll-reckless-advantage` |
 | `barbarian_fast_movement` | srd-5.2.1 | `unit-feature.passive-speed-bonus` |
+| `barbarian_weapon_mastery` | srd-5.2.1 | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` |
 | `bard_cutting_words` | srd-5.2.1 | `unit-feature.reaction-roll-or-damage-reduction` |
 | `cleric_divine_order` | srd-5.2.1 | `character-creation.class-feature-option-projection` |
 | `druid_primal_order` | srd-5.2.1 | `character-creation.class-feature-option-projection` |
@@ -75,8 +77,11 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `feat_savage_attacker` | srd-5.2.1 | `unit-feature.weapon-damage-dice-roll-choice` |
 | `paladin_lay_on_hands` | srd-5.2.1 | `character-sheet.healing-resource-action` |
 | `paladin_extra_attack` | srd-5.2.1 | `unit-feature.attack-action-attack-count-scaling` |
+| `paladin_weapon_mastery` | srd-5.2.1 | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` |
 | `ranger_extra_attack` | srd-5.2.1 | `unit-feature.attack-action-attack-count-scaling` |
 | `ranger_roving` | srd-5.2.1 | `unit-feature.passive-speed-kind-grants` |
+| `ranger_weapon_mastery` | srd-5.2.1 | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` |
+| `rogue_weapon_mastery` | srd-5.2.1 | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` |
 | `mastery_cleave` | srd-5.2.1 | `unit-feature.weapon-mastery-cleave` |
 | `mastery_sap` | srd-5.2.1 | `unit-feature.weapon-mastery-sap` |
 | `mastery_topple` | srd-5.2.1 | `unit-feature.weapon-mastery-topple` |
@@ -769,6 +774,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | Unit | Profiles | Task | Owner |
 | --- | --- | --- | --- |
 | `fighter_second_wind` | `unit-feature.self-bonus-action-healing` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `fighter_weapon_mastery` | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` | AT-L1-04 | `packages/character-sheet-runtime/src/index.test.ts` |
 | `fighter_action_surge` | `unit-feature.action-surge-resource` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `fighter_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | QMBT37 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `fighter_tactical_mind` | `unit-feature.failed-ability-check-resource-boost` | QMBT62 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
@@ -777,6 +783,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `barbarian_unarmored_defense` | `character-sheet.armor-class-base-formula` | SRDINV91B | `packages/character-sheet-runtime/src/index.test.ts` |
 | `barbarian_reckless_attack` | `unit-feature.first-attack-roll-reckless-advantage` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `barbarian_fast_movement` | `unit-feature.passive-speed-bonus` | QMBT40 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `barbarian_weapon_mastery` | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` | AT-L1-04 | `packages/character-sheet-runtime/src/index.test.ts` |
 | `bard_cutting_words` | `unit-feature.reaction-roll-or-damage-reduction` | QMBT65 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `cleric_divine_order` | `character-creation.class-feature-option-projection` | AT-L1-06 | `packages/character-creation-runtime/src/index.test.ts` |
 | `druid_primal_order` | `character-creation.class-feature-option-projection` | AT-L1-06 | `packages/character-creation-runtime/src/index.test.ts` |
@@ -798,8 +805,11 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `feat_savage_attacker` | `unit-feature.weapon-damage-dice-roll-choice` | QMBT31 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `paladin_lay_on_hands` | `character-sheet.healing-resource-action` | SRDINV91B | `packages/character-sheet-runtime/src/index.test.ts` |
 | `paladin_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | QMBT37 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `paladin_weapon_mastery` | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` | AT-L1-04 | `packages/character-sheet-runtime/src/index.test.ts` |
 | `ranger_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | QMBT37 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `ranger_roving` | `unit-feature.passive-speed-kind-grants` | QMBT44 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `ranger_weapon_mastery` | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` | AT-L1-04 | `packages/character-sheet-runtime/src/index.test.ts` |
+| `rogue_weapon_mastery` | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` | AT-L1-04 | `packages/character-sheet-runtime/src/index.test.ts` |
 | `mastery_cleave` | `unit-feature.weapon-mastery-cleave` | SRDINV91B | `packages/character-battle-runtime/src/index.test.ts` |
 | `mastery_sap` | `unit-feature.weapon-mastery-sap` | SRDINV91B | `packages/character-battle-runtime/src/index.test.ts` |
 | `mastery_topple` | `unit-feature.weapon-mastery-topple` | SRDINV91B | `packages/character-battle-runtime/src/index.test.ts` |
@@ -953,8 +963,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `subclass_fighter_champion` | unsupported-profile | Subclass container record; executable pressure lives on granted feature Units. |
 | `subclass_wizard_evoker` | unsupported-profile | Subclass container record; no promoted execution profile yet. |
 | `fighter_fighting_style` | profile-subset-supported | supported subset: Level 1 Fighter character creation discovers the Fighting Style feat choice from the Surface class-feature record; Character Creation admits one selected Fighting Style feat and finalizes it as a selected CharacterBuild feature ref with selectedFromUnitId fighter_fighting_style; Selected Fighting Style feat execution remains owned by the selected feat Unit profile; deferred: Fighter-level advancement replacement of an already-chosen Fighting Style feat whenever the character gains another Fighter level (L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT) |
-| `fighter_weapon_mastery` | unsupported-profile | Weapon mastery grant container; mastery Unit carries executable pressure. |
-| `barbarian_weapon_mastery` | unsupported-profile | Weapon mastery grant container; mastery Unit carries executable pressure. |
 | `bard_bardic_inspiration` | profile-subset-supported | supported subset: Bonus Action grant to another creature within 60 feet who can see or hear the Bard; one Bardic Inspiration die per creature; one-hour die ownership; d6 grant and Charisma-modifier use pool minimum; spending the Bardic Inspiration die after an already-failed attack roll, Saving Throw, or Ability Check; deferred: later-level Bardic Inspiration die size increases beyond d6 (SRDINV78) |
 | `druid_druidic` | unsupported-profile | Language, hidden-message, and prepared-spell source facts are authored; exploration/language execution is not promoted as a battle Unit profile. |
 | `monk_martial_arts` | profile-subset-supported | supported subset: while unarmored and not wielding a Shield, and unarmed or wielding only Monk weapons, eligible Unarmed Strikes and Monk weapons may use Dexterity instead of Strength for attack and damage rolls; eligible Unarmed Strikes and eligible one-die Monk weapons may replace lower damage dice with the level-1 d6 Martial Arts die; eligible promoted Unarmed Strike Grapple and Shove save DCs may use Dexterity through the projected Unarmed Strike ability modifier; while the same Martial Arts eligibility gate holds, the Monk can make an Unarmed Strike as a Bonus Action without an Attack-action prerequisite; deferred: later-level Martial Arts die size increases beyond d6 (SRDINV78) |
@@ -962,9 +970,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `rogue_thieves_cant` | unsupported-profile | Language source facts are authored; exploration/language execution is not promoted as a battle Unit profile. |
 | `warlock_eldritch_invocations` | profile-subset-supported | supported subset: Level 1 Warlock character creation discovers the Eldritch Invocation choice from the Surface class-feature record; Character Creation admits the level-1 eligible invocation options by filtering the SRD invocation option catalog to options with no prerequisites at level 1; Character Creation finalizes one selected invocation as selected Eldritch Invocation ownership with selectedFromUnitId warlock_eldritch_invocations; Selected invocation execution remains owned by the selected invocation option profiles; deferred: Warlock-level invocation replacement when gaining a Warlock level, including the prerequisite-retention rule that blocks replacing an invocation required by another selected invocation (L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE); Later-level invocation gains from the Warlock Invocations column, including prerequisite gating and duplicate-selection enforcement across retained invocations (L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE) |
 | `feat_ability_score_improvement` | unsupported-profile | Character-creation ability score mutation is outside promoted battle Unit profile scope. |
-| `paladin_weapon_mastery` | unsupported-profile | Weapon mastery grant container; mastery Unit carries executable pressure. |
-| `ranger_weapon_mastery` | unsupported-profile | Weapon mastery grant container; mastery Unit carries executable pressure. |
-| `rogue_weapon_mastery` | unsupported-profile | Weapon mastery grant container; mastery Unit carries executable pressure. |
 | `orc_darkvision` | unsupported-profile | Sense grant is authored data with no promoted execution profile. |
 | `faerie_fire` | profile-subset-supported | supported subset: 20-foot point-origin Cube affected-creature boundary with table-supplied area membership; Dexterity save-gated affected creatures; Concentration-owned outline effect that grants attack-roll Advantage against failed-save affected creatures when the attacker can see them and denies benefits from the Invisible condition; caller-supplied object ids for objects in the Cube create concentration-owned object outline projections; object-target spell attacks consume caller-supplied object sight facts to grant attack-roll Advantage against outlined objects; affected creatures and objects shed concentration-owned Dim Light emitter facts in a 10-foot radius attached to their outline effects; caller-supplied emitter projection facts derive Dim Light illumination from Faerie Fire object and creature emitters; derived Dim Light illumination projects Lightly Obscured sight consequences and Darkvision-adjusted sight consequences without duplicating emitter state; deferred: color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the runtime boundary (SRDINV89D) |
 | `feather_fall` | profile-subset-supported | supported subset: caller-supplied falling Reaction trigger for the caster or a visible creature within 60 feet; up-to-five falling creature target admission using caller-supplied falling and range facts; Reaction and level-1 Spell Slot spend; one-minute per-target Feather Fall mitigation effect; active 60-foot-per-round descent-rate cap projection; caller-supplied landing cleanup that ends the landed target's mitigation, emits no-fall-damage outcome, and suppresses Falling-Prone when Feather Fall prevents damage; deferred: fall-distance derivation, map elevation, and landing geometry simulation remain outside the runtime boundary (SRDINV55) |
@@ -996,7 +1001,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
-| srd-5.2.1 | unassigned | unsupported-profile | 40 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `druid_druidic`, `rogue_thieves_cant`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `orc_darkvision`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `minor_illusion`, `armor_chain_mail`, `equipment_shield`, `weapon_club`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff` |
+| srd-5.2.1 | unassigned | unsupported-profile | 35 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `druid_druidic`, `rogue_thieves_cant`, `feat_ability_score_improvement`, `orc_darkvision`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `minor_illusion`, `armor_chain_mail`, `equipment_shield`, `weapon_club`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff` |
 | srd-5.2.1 | unassigned | profile-subset-supported | 15 | `fighter_fighting_style`, `bard_bardic_inspiration`, `monk_martial_arts`, `ranger_favored_enemy`, `warlock_eldritch_invocations`, `faerie_fire`, `feather_fall`, `find_familiar`, `fog_cloud`, `grease`, `hunters_mark`, `jump`, `light`, `thunderwave`, `charm_person` |
 
 ## Profile Claims By Task
@@ -1172,6 +1177,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | SRDINV84I5 | qnt-proof | `spell.find-familiar-lifecycle` |
 | SRDINV84I5 | completed-runtime-parity | `spell.find-familiar-lifecycle` |
 | AT-L1-03S | completed-runtime-parity | `character-creation.class-feature-feat-choice`, `character-creation.weapon-mastery-choice`, `character-creation.eldritch-invocation-choice`, `character-creation.class-feature-option-projection`, `character-creation.skill-expertise-choice` |
+| AT-L1-04 | completed-runtime-parity | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` |
 | SRDINV87A | qnt-proof | `spell.invocation-held-light-emitter` |
 | SRDINV87A | completed-runtime-parity | `spell.invocation-held-light-emitter` |
 | SRDINV88A | qnt-proof | `spell.invocation-dancing-lights-movable-dim-light` |

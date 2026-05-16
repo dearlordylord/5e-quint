@@ -1720,7 +1720,10 @@ function isLevelOneBattleReadinessRow(row) {
 }
 
 function battleReadinessClosureFromUnitClaim(claim) {
-  if (claim?.tag === "unsupported-profile") {
+  if (
+    claim?.tag === "unsupported-profile" ||
+    claim?.tag === "supported-profile"
+  ) {
     if (!isBattleReadinessClosure(claim.battleReadinessClosure)) {
       return undefined;
     }

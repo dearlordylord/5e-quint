@@ -49,6 +49,86 @@
         "packages/character-sheet-runtime/src/index.test.ts:layOnHandsLongRestRecoveryTestName"
       ]
     },
+    "srd521:classes/fighter:level-1:mastery-pressure:fighter_weapon_mastery": {
+      "taskId": "AT-L1-04",
+      "profile": "Character Sheet Weapon Mastery Long Rest reselection runtime",
+      "summary": "Fighter Weapon Mastery is read from the installed Surface class-feature record and applied during Long Rest as a one-choice reselection over eligible Simple or Martial weapons. The runtime replaces selected CharacterBuild class-choice refs and stores no parallel Weapon Mastery state.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/index.ts:completeLongRest",
+        "packages/character-sheet-runtime/src/index.ts:characterBuildWithWeaponMasteryReselections",
+        "packages/character-sheet-runtime/src/index.ts:selectedWeaponMasteryUnitIdsForLongRest",
+        "packages/character-sheet-runtime/src/index.ts:characterBuildFeaturesWithWeaponMasteryReselections"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/index.test.ts:weaponMasteryLongRestReselectionTestName",
+        "packages/character-sheet-runtime/src/index.test.ts:weaponMasteryBuild",
+        "packages/character-sheet-runtime/src/index.test.ts:selectedClassChoiceUnitIds"
+      ]
+    },
+    "srd521:classes/barbarian:level-1:mastery-pressure:barbarian_weapon_mastery": {
+      "taskId": "AT-L1-04",
+      "profile": "Character Sheet Weapon Mastery Long Rest reselection runtime",
+      "summary": "Barbarian Weapon Mastery is read from the installed Surface class-feature record and applied during Long Rest as a one-choice reselection over eligible Simple or Martial Melee weapons. The runtime replaces selected CharacterBuild class-choice refs and stores no parallel Weapon Mastery state.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/index.ts:completeLongRest",
+        "packages/character-sheet-runtime/src/index.ts:characterBuildWithWeaponMasteryReselections",
+        "packages/character-sheet-runtime/src/index.ts:selectedWeaponMasteryUnitIdsForLongRest",
+        "packages/character-sheet-runtime/src/index.ts:characterBuildFeaturesWithWeaponMasteryReselections"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/index.test.ts:weaponMasteryLongRestReselectionTestName",
+        "packages/character-sheet-runtime/src/index.test.ts:weaponMasteryBuild",
+        "packages/character-sheet-runtime/src/index.test.ts:selectedClassChoiceUnitIds"
+      ]
+    },
+    "srd521:classes/paladin:level-1:mastery-pressure:paladin_weapon_mastery": {
+      "taskId": "AT-L1-04",
+      "profile": "Character Sheet Weapon Mastery Long Rest reselection runtime",
+      "summary": "Paladin Weapon Mastery is read from the installed Surface class-feature record and applied during Long Rest as a two-choice reselection over eligible proficient weapons. The runtime replaces selected CharacterBuild class-choice refs and stores no parallel Weapon Mastery state.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/index.ts:completeLongRest",
+        "packages/character-sheet-runtime/src/index.ts:characterBuildWithWeaponMasteryReselections",
+        "packages/character-sheet-runtime/src/index.ts:selectedWeaponMasteryUnitIdsForLongRest",
+        "packages/character-sheet-runtime/src/index.ts:characterBuildFeaturesWithWeaponMasteryReselections"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/index.test.ts:weaponMasteryLongRestReselectionTestName",
+        "packages/character-sheet-runtime/src/index.test.ts:weaponMasteryBuild",
+        "packages/character-sheet-runtime/src/index.test.ts:selectedClassChoiceUnitIds"
+      ]
+    },
+    "srd521:classes/ranger:level-1:mastery-pressure:ranger_weapon_mastery": {
+      "taskId": "AT-L1-04",
+      "profile": "Character Sheet Weapon Mastery Long Rest reselection runtime",
+      "summary": "Ranger Weapon Mastery is read from the installed Surface class-feature record and applied during Long Rest as a two-choice reselection over eligible proficient weapons. The runtime replaces selected CharacterBuild class-choice refs and stores no parallel Weapon Mastery state.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/index.ts:completeLongRest",
+        "packages/character-sheet-runtime/src/index.ts:characterBuildWithWeaponMasteryReselections",
+        "packages/character-sheet-runtime/src/index.ts:selectedWeaponMasteryUnitIdsForLongRest",
+        "packages/character-sheet-runtime/src/index.ts:characterBuildFeaturesWithWeaponMasteryReselections"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/index.test.ts:weaponMasteryLongRestReselectionTestName",
+        "packages/character-sheet-runtime/src/index.test.ts:weaponMasteryBuild",
+        "packages/character-sheet-runtime/src/index.test.ts:selectedClassChoiceUnitIds"
+      ]
+    },
+    "srd521:classes/rogue:level-1:mastery-pressure:rogue_weapon_mastery": {
+      "taskId": "AT-L1-04",
+      "profile": "Character Sheet Weapon Mastery Long Rest reselection runtime",
+      "summary": "Rogue Weapon Mastery is read from the installed Surface class-feature record and applied during Long Rest as a two-choice reselection over eligible proficient weapons. The runtime replaces selected CharacterBuild class-choice refs and stores no parallel Weapon Mastery state.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/index.ts:completeLongRest",
+        "packages/character-sheet-runtime/src/index.ts:characterBuildWithWeaponMasteryReselections",
+        "packages/character-sheet-runtime/src/index.ts:selectedWeaponMasteryUnitIdsForLongRest",
+        "packages/character-sheet-runtime/src/index.ts:characterBuildFeaturesWithWeaponMasteryReselections"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/index.test.ts:weaponMasteryLongRestReselectionTestName",
+        "packages/character-sheet-runtime/src/index.test.ts:weaponMasteryBuild",
+        "packages/character-sheet-runtime/src/index.test.ts:selectedClassChoiceUnitIds"
+      ]
+    },
     "srd521:classes/wizard:level-1:class-feature-grant:wizard_ritual_adept": {
       "taskId": "SRDINV26",
       "profile": "Character Sheet spellbook ritual invocation runtime",

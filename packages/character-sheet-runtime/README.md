@@ -43,7 +43,10 @@ Current executable state:
 - `completeLongRest` requires at least 1 current HP, restores HP to
   `maximumHp`, clears Temporary Hit Points, restores spent Hit Dice, restores
   ordinary Spell Slots and Pact Slots, and recharges tracked rest feature uses
-  such as Arcane Recovery and spent feature pools such as Lay On Hands.
+  such as Arcane Recovery and spent feature pools such as Lay On Hands. When
+  supplied with Weapon Mastery reselections, it replaces the existing
+  `CharacterBuild` selected class-choice refs using the installed Surface
+  feature's Long Rest change count and weapon eligibility facts.
 - `applyLayOnHands` spends the Paladin Lay On Hands healing pool as a
   character-sheet resource action. The same pool spend restores target HP and
   pays the SRD 5 HP cost to remove Poisoned, so those costs cannot drift into

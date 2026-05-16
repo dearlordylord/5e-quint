@@ -134,6 +134,11 @@
 {"unitId":"shillelagh","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84H","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"find_familiar","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84I5","ownerPath":"packages/battle-runtime/src/find-familiar-lifecycle.test.ts"}}
 {"unitId":"fighter_fighting_style","evidence":{"tag":"deterministic-admission-projection","taskId":"AT-L1-03","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
+{"unitId":"fighter_weapon_mastery","evidence":{"tag":"deterministic-admission-projection","taskId":"AT-L1-04","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
+{"unitId":"barbarian_weapon_mastery","evidence":{"tag":"deterministic-admission-projection","taskId":"AT-L1-04","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
+{"unitId":"paladin_weapon_mastery","evidence":{"tag":"deterministic-admission-projection","taskId":"AT-L1-04","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
+{"unitId":"ranger_weapon_mastery","evidence":{"tag":"deterministic-admission-projection","taskId":"AT-L1-04","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
+{"unitId":"rogue_weapon_mastery","evidence":{"tag":"deterministic-admission-projection","taskId":"AT-L1-04","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"warlock_eldritch_invocations","evidence":{"tag":"deterministic-admission-projection","taskId":"AT-L1-05","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"cleric_divine_order","evidence":{"tag":"deterministic-admission-projection","taskId":"AT-L1-06","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"druid_primal_order","evidence":{"tag":"deterministic-admission-projection","taskId":"AT-L1-06","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
