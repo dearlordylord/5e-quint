@@ -1,4 +1,7 @@
 const { fail } = require("./unit-profile-coverage-io.cjs");
+const {
+  battleReadinessClosureKind,
+} = require("./unit-profile-coverage-config.cjs");
 const { percent, stable } = require("./unit-profile-coverage-report.cjs");
 
 const strictLevelBands = ["level-1", "spell-level-0", "spell-level-1"];
@@ -53,9 +56,11 @@ const strictStatusDescriptions = new Map(
   ]),
 );
 const runtimeDetachedClosureKinds = new Set([
-  "outside-runtime-presentation-exploration",
+  battleReadinessClosureKind.outsideRuntimePresentationExploration,
 ]);
-const durableSocialKnowledgeClosureKind = "social-knowledge-effect";
+const durableSocialKnowledgeClosureKind =
+  battleReadinessClosureKind.socialKnowledgeEffect;
+const laterLevelOnlyClosureKind = battleReadinessClosureKind.laterLevelOnly;
 const d20RollModeResidualTerms = [
   "ability-check roll-mode",
   "finding advantage",
@@ -179,6 +184,17 @@ function allClosuresMatch(claim) {
   });
 }
 
+function hasOnlyLaterLevelResiduals(claim) {
+  return (
+    claim?.tag === "profile-subset-supported" &&
+    claim.deferredMechanics.length > 0 &&
+    claim.deferredMechanics.every(
+      (entry) =>
+        entry.battleReadinessClosure?.kind === laterLevelOnlyClosureKind,
+    )
+  );
+}
+
 function strictStatusDescription(status) {
   const description = strictStatusDescriptions.get(status);
   if (description === undefined) {
@@ -193,6 +209,14 @@ function strictStatusForUnit(unit) {
     return {
       status: "supported-profile",
       reason: "The Unit has a supported-profile claim.",
+    };
+  }
+  if (hasOnlyLaterLevelResiduals(claim)) {
+    return {
+      status: "closed-later-level-only",
+      reason:
+        closureReasonForClaim(claim) ||
+        "The remaining profile subset residuals occur only after level 1.",
     };
   }
   if (

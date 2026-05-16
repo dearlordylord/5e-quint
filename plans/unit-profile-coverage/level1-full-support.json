@@ -97,8 +97,8 @@
           }
         }
       ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
+      "status": "closed-later-level-only",
+      "strictTargetClosed": true,
       "unitId": "bard_bardic_inspiration"
     },
     {
@@ -1101,8 +1101,8 @@
           }
         }
       ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
+      "status": "closed-later-level-only",
+      "strictTargetClosed": true,
       "unitId": "monk_martial_arts"
     },
     {
@@ -1595,12 +1595,11 @@
       ]
     },
     {
-      "count": 22,
+      "count": 20,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
         "barbarian_weapon_mastery",
-        "bard_bardic_inspiration",
         "cleric_divine_order",
         "druid_primal_order",
         "faerie_fire",
@@ -1612,7 +1611,6 @@
         "hunters_mark",
         "jump",
         "light",
-        "monk_martial_arts",
         "paladin_weapon_mastery",
         "ranger_favored_enemy",
         "ranger_weapon_mastery",
@@ -1648,6 +1646,15 @@
         "silent_image",
         "speak_with_animals"
       ]
+    },
+    {
+      "count": 2,
+      "description": "The level-1 behavior is complete and every remaining residual is later-level-only.",
+      "status": "closed-later-level-only",
+      "unitIds": [
+        "bard_bardic_inspiration",
+        "monk_martial_arts"
+      ]
     }
   ],
   "metrics": {
@@ -1667,18 +1674,17 @@
     },
     "strictTargetClosure": {
       "denominator": 93,
-      "numerator": 66,
-      "percent": "71%"
+      "numerator": 68,
+      "percent": "73.1%"
     }
   },
   "openFrontier": [
     {
-      "count": 22,
+      "count": 20,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
         "barbarian_weapon_mastery",
-        "bard_bardic_inspiration",
         "cleric_divine_order",
         "druid_primal_order",
         "faerie_fire",
@@ -1690,7 +1696,6 @@
         "hunters_mark",
         "jump",
         "light",
-        "monk_martial_arts",
         "paladin_weapon_mastery",
         "ranger_favored_enemy",
         "ranger_weapon_mastery",
@@ -3996,8 +4001,9 @@
       "unsupported-profile": 17
     },
     "groupsByStatus": {
+      "closed-later-level-only": 2,
       "closed-runtime-detached-table-adjudication": 7,
-      "open-profile-accounting": 22,
+      "open-profile-accounting": 20,
       "open-runtime-behavior": 5,
       "supported-profile": 59
     },
