@@ -1,5 +1,25 @@
 # Level 1 Ralph Loop A - Metric And Integration
 
+<!-- ralph-task-index
+{
+  "schema": "ralph-plan.v1",
+  "tasks": [
+    {
+      "number": 1,
+      "id": "L1A-AT13",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Strict Level-1 Metric Infrastructure"
+    },
+    {
+      "number": 2,
+      "id": "L1A-AT14A",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Later-Level Strict Closure Classifier For Bard And Monk"
+    }
+  ]
+}
+-->
+
 Umbrella source plan: `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
 This loop owns the strict level-1 metric, generated strict artifacts, later-level
@@ -84,3 +104,86 @@ Then implement `AT-L1-14`:
 - Do not run MBT for this strict-support metric loop unless promoted battle
   behavior unexpectedly changes; selected identity MBT work remains in the
   separate selected-MBT lane.
+
+## DAG / Queue Order
+
+| # | Task | Status | Depends on | Notes |
+| ---: | --- | --- | --- | --- |
+| 1 | L1A-AT13 - Strict Level-1 Metric Infrastructure | ready-for-implementation-after-light-research | none | Must land before Loops B/C count against strict reports. |
+| 2 | L1A-AT14A - Later-Level Strict Closure Classifier For Bard And Monk | ready-for-implementation-after-light-research | L1A-AT13 | Close only Bard/Monk later-level residuals; Ranger waits for Loop B `AT-L1-01`. |
+
+## Task Details
+
+### Task 1 - L1A-AT13 - Strict Level-1 Metric Infrastructure
+
+Status: `ready-for-implementation-after-light-research`
+
+Implement `AT-L1-13` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
+
+Scope:
+
+- Derive strictly from `plans/unit-profile-coverage/unit-matrix.json` and
+  `plans/unit-profile-coverage/srd-unit-inventory.json`.
+- Add `scripts/level1-full-support-report.cjs`.
+- Wire strict JSON/Markdown generation into the existing
+  `unit-profile-coverage:check` pipeline.
+- Generate and stale-check:
+  `plans/unit-profile-coverage/level1-full-support.json` and
+  `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`.
+- Show strict runtime/profile support, strict target closure, product readiness,
+  open frontier, and outside-denominator pressure.
+
+Out of scope:
+
+- Do not change Unit claims.
+- Do not change runtime behavior.
+- Do not run MBT unless promoted battle behavior unexpectedly changes.
+- Do not regress existing selected identity MBT evidence or the current 28/85
+  selected identity MBT metric.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`
+- `pnpm unit-profile-coverage:check`
+- targeted checker self-test if added
+- `/simplify` convergence, minimum two rounds
+
+Plan Impact:
+
+- Update this loop plan only when task ordering or durable scope changes.
+- Keep `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md` as the umbrella source plan.
+
+### Task 2 - L1A-AT14A - Later-Level Strict Closure Classifier For Bard And Monk
+
+Status: `ready-for-implementation-after-light-research`
+
+Implement the Bard/Monk portion of `AT-L1-14` from
+`plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
+
+Scope:
+
+- Classify `profile-subset-supported` rows with only later-level residuals as
+  `closed-later-level-only` in the strict level-1 report.
+- Close `bard_bardic_inspiration` and `monk_martial_arts` for strict level 1
+  when their only residuals are later-level mechanics.
+- Leave `ranger_favored_enemy` for a later Loop A integration pass after Loop B
+  removes stale Hunter's Mark finding-Advantage residuals.
+
+Out of scope:
+
+- Do not change Bardic Inspiration or Martial Arts all-level Unit claims to
+  `supported-profile`.
+- Do not implement later-level scaling.
+- Do not change Ranger closure in this task.
+- Do not run MBT unless promoted battle behavior unexpectedly changes.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`
+- `pnpm unit-profile-coverage:check`
+- `/simplify` convergence, minimum two rounds
+
+Plan Impact:
+
+- If the Ranger dependency becomes ready during this run, add a concrete
+  follow-up task instead of silently folding it into this task.

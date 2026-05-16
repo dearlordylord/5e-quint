@@ -1,5 +1,55 @@
 # Level 1 Ralph Loop C - Character Runtime Support
 
+<!-- ralph-task-index
+{
+  "schema": "ralph-plan.v1",
+  "tasks": [
+    {
+      "number": 1,
+      "id": "L1C-AT03S",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Character Creation Support Scaffold"
+    },
+    {
+      "number": 2,
+      "id": "L1C-AT03",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Fighter Fighting Style Character Profile"
+    },
+    {
+      "number": 3,
+      "id": "L1C-AT05",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Warlock Eldritch Invocations Character Profile"
+    },
+    {
+      "number": 4,
+      "id": "L1C-AT06",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Cleric And Druid Order Character Profiles"
+    },
+    {
+      "number": 5,
+      "id": "L1C-AT07",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Rogue Expertise Character Profile"
+    },
+    {
+      "number": 6,
+      "id": "L1C-AT08",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Wizard Arcane Recovery Character Sheet Profile"
+    },
+    {
+      "number": 7,
+      "id": "L1C-AT04",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Weapon Mastery Character And Rest Profile"
+    }
+  ]
+}
+-->
+
 Umbrella source plan: `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
 This loop owns Character Creation and Character Sheet support accounting for the
@@ -126,3 +176,221 @@ For `AT-L1-08`:
 - Run `/simplify` to convergence, minimum two rounds.
 - Do not run MBT unless promoted battle behavior unexpectedly changes; selected
   identity MBT work remains in the separate selected-MBT lane.
+
+## DAG / Queue Order
+
+| # | Task | Status | Depends on | Notes |
+| ---: | --- | --- | --- | --- |
+| 1 | L1C-AT03S - Character Creation Support Scaffold | ready-for-implementation-after-light-research | none | Shared profiles/markers only; no Unit claim conversion. |
+| 2 | L1C-AT03 - Fighter Fighting Style Character Profile | ready-for-implementation-after-light-research | L1C-AT03S | Level-1 slice with advancement lifecycle guard. |
+| 3 | L1C-AT05 - Warlock Eldritch Invocations Character Profile | ready-for-implementation-after-light-research | L1C-AT03S | Level-1 slice with invocation lifecycle guard. |
+| 4 | L1C-AT06 - Cleric And Druid Order Character Profiles | ready-for-implementation-after-light-research | L1C-AT03S | Divine/Primal Order projection. |
+| 5 | L1C-AT07 - Rogue Expertise Character Profile | ready-for-implementation-after-light-research | L1C-AT03S | Level-1 slice with level 6 Expertise guard. |
+| 6 | L1C-AT08 - Wizard Arcane Recovery Character Sheet Profile | ready-for-implementation-after-light-research | none | Character Sheet Short Rest Spell Slot recovery. |
+| 7 | L1C-AT04 - Weapon Mastery Character And Rest Profile | ready-for-implementation-after-light-research | L1C-AT03S | Includes Long Rest reselection support; selected mastery-property MBT does not satisfy this gate. |
+
+## Task Details
+
+### Task 1 - L1C-AT03S - Character Creation Support Scaffold
+
+Status: `ready-for-implementation-after-light-research`
+
+Implement `AT-L1-03S` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
+
+Scope:
+
+- Add or reuse:
+  - `character-creation.class-feature-feat-choice`
+  - `character-creation.weapon-mastery-choice`
+  - `character-creation.eldritch-invocation-choice`
+  - `character-creation.class-feature-option-projection`
+  - `character-creation.skill-expertise-choice`
+- Add Character Creation runtime/test owner markers if absent.
+- Add shared completed-runtime-parity task claims.
+- Do not edit individual Unit claims in this scaffold task.
+
+Verification:
+
+- `pnpm --filter @dnd/character-creation-runtime test` if runtime/test marker
+  files are touched beyond comments
+- `pnpm unit-profile-coverage:check --write`
+- `pnpm unit-profile-coverage:check`
+- `/simplify` convergence, minimum two rounds
+
+Plan Impact:
+
+- If a shared profile id is wrong or duplicative, update this plan before moving
+  Unit-specific tasks forward.
+
+### Task 2 - L1C-AT03 - Fighter Fighting Style Character Profile
+
+Status: `ready-for-implementation-after-light-research`
+
+Implement `AT-L1-03` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
+
+Scope:
+
+- Own only `fighter_fighting_style`.
+- Reuse `character-creation.class-feature-feat-choice` from Task 1.
+- Evidence the level-1 Fighting Style choice/finalization boundary.
+- Convert to all-level `supported-profile` only if advancement/replacement
+  ownership is also evidenced.
+- Otherwise keep the all-level claim `profile-subset-supported` and make the
+  strict level-1 report close only the level-1 character-creation slice.
+- Add deterministic identity evidence.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`
+- `pnpm unit-profile-coverage:check`
+- `pnpm --filter @dnd/character-creation-runtime test` if runtime/test marker
+  files are touched beyond comments
+- `/simplify` convergence, minimum two rounds
+
+Plan Impact:
+
+- Preserve any unowned advancement replacement work as a concrete follow-up.
+
+### Task 3 - L1C-AT05 - Warlock Eldritch Invocations Character Profile
+
+Status: `ready-for-implementation-after-light-research`
+
+Implement `AT-L1-05` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
+
+Scope:
+
+- Own only `warlock_eldritch_invocations`.
+- Reuse `character-creation.eldritch-invocation-choice` from Task 1.
+- Evidence the level-1 invocation choice and prerequisite-gating boundary.
+- Convert to all-level `supported-profile` only if replacement/gain and
+  prerequisite-retention lifecycle support is also evidenced.
+- Otherwise keep the all-level claim `profile-subset-supported` and make the
+  strict level-1 report close only the level-1 character-creation slice.
+- Keep individual invocation execution owned by selected invocation profiles.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`
+- `pnpm unit-profile-coverage:check`
+- `pnpm --filter @dnd/character-creation-runtime test` if runtime/test marker
+  files are touched beyond comments
+- `/simplify` convergence, minimum two rounds
+
+Plan Impact:
+
+- Preserve unowned invocation lifecycle work as concrete follow-up tasks.
+
+### Task 4 - L1C-AT06 - Cleric And Druid Order Character Profiles
+
+Status: `ready-for-implementation-after-light-research`
+
+Implement `AT-L1-06` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
+
+Scope:
+
+- Own only `cleric_divine_order` and `druid_primal_order`.
+- Reuse `character-creation.class-feature-option-projection` from Task 1.
+- Convert both order Units to `supported-profile`.
+- Add deterministic identity evidence for both.
+- Preserve build projection as the runtime-owned output.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`
+- `pnpm unit-profile-coverage:check`
+- `pnpm --filter @dnd/character-creation-runtime test` if runtime/test marker
+  files are touched beyond comments
+- `/simplify` convergence, minimum two rounds
+
+Plan Impact:
+
+- Add follow-up tasks only for newly discovered durable lifecycle gaps.
+
+### Task 5 - L1C-AT07 - Rogue Expertise Character Profile
+
+Status: `ready-for-implementation-after-light-research`
+
+Implement `AT-L1-07` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
+
+Scope:
+
+- Own only `rogue_expertise`.
+- Reuse `character-creation.skill-expertise-choice` from Task 1.
+- Evidence the level-1 two-skill Expertise choice boundary.
+- Convert to all-level `supported-profile` only if the Rogue level 6 additional
+  Expertise grant is also owned/evidenced.
+- Otherwise keep the all-level claim `profile-subset-supported` and make the
+  strict level-1 report close only the initial two-skill Expertise slice.
+- Add deterministic identity evidence.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`
+- `pnpm unit-profile-coverage:check`
+- `pnpm --filter @dnd/character-creation-runtime test` if runtime/test marker
+  files are touched beyond comments
+- `/simplify` convergence, minimum two rounds
+
+Plan Impact:
+
+- Preserve unowned level 6 Expertise work as a concrete follow-up.
+
+### Task 6 - L1C-AT08 - Wizard Arcane Recovery Character Sheet Profile
+
+Status: `ready-for-implementation-after-light-research`
+
+Implement `AT-L1-08` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
+
+Scope:
+
+- Own only `wizard_arcane_recovery`.
+- Add `character-sheet.short-rest-spell-slot-recovery`.
+- Add Character Sheet runtime/test owner markers.
+- Convert `wizard_arcane_recovery` to `supported-profile`.
+- Add deterministic identity evidence.
+- Do not add Pact Slot recovery under Arcane Recovery.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`
+- `pnpm unit-profile-coverage:check`
+- `pnpm --filter @dnd/character-sheet-runtime test` if runtime/test marker files
+  are touched beyond comments
+- `/simplify` convergence, minimum two rounds
+
+Plan Impact:
+
+- Add follow-up tasks only for newly discovered durable Character Sheet gaps.
+
+### Task 7 - L1C-AT04 - Weapon Mastery Character And Rest Profile
+
+Status: `ready-for-implementation-after-light-research`
+
+Implement `AT-L1-04` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
+
+Scope:
+
+- Own only `fighter_weapon_mastery`, `barbarian_weapon_mastery`,
+  `paladin_weapon_mastery`, `ranger_weapon_mastery`, and
+  `rogue_weapon_mastery`.
+- Reuse `character-creation.weapon-mastery-choice` from Task 1.
+- Add or cite Character Sheet/rest support for Long Rest weapon-choice
+  reselection.
+- Convert all five Weapon Mastery container Units to `supported-profile` only
+  after both initial choice and Long Rest reselection are evidenced.
+- Existing selected identity MBT evidence for `mastery_cleave`, `mastery_sap`,
+  and `mastery_topple` may be cited as child mastery-property execution
+  evidence, but it does not satisfy this container support gate.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`
+- `pnpm unit-profile-coverage:check`
+- `pnpm --filter @dnd/character-sheet-runtime test` if Character Sheet
+  runtime/test marker files are touched beyond comments
+- `/simplify` convergence, minimum two rounds
+
+Plan Impact:
+
+- Preserve unowned Long Rest reselection work as a concrete follow-up if the
+  task cannot close it.
