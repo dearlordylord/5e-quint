@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L1B-AT01",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Hunter's Mark And Favored Enemy Claim Cleanup"
     },
     {
@@ -153,7 +153,7 @@ For `AT-L1-09` through `AT-L1-12`:
 
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
-| 1 | L1B-AT01 - Hunter's Mark And Favored Enemy Claim Cleanup | ready-for-implementation-after-light-research | none | Removes stale runtime-behavior residual before Ranger strict closure. |
+| 1 | L1B-AT01 - Hunter's Mark And Favored Enemy Claim Cleanup | done | none | Removes stale runtime-behavior residual before Ranger strict closure. |
 | 2 | L1B-AT02 - Runtime-Detached And Character-Fact Split Claims | ready-for-implementation-after-light-research | none | Closure claims and Druidic/Thieves' Cant split. |
 | 3 | L1B-AT09 - Light And Outline Witness Promotion | ready-for-implementation-after-light-research | none | Witness checklist before promotion. |
 | 4 | L1B-AT10 - Falling And Jump Witness Promotion | ready-for-implementation-after-light-research | none | Witness checklist before promotion. |
@@ -164,7 +164,7 @@ For `AT-L1-09` through `AT-L1-12`:
 
 ### Task 1 - L1B-AT01 - Hunter's Mark And Favored Enemy Claim Cleanup
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Implement `AT-L1-01` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
