@@ -31,7 +31,7 @@ semantics.
   Surface remains the authored rules vocabulary; battle runtime projects
   supported procedure facts at its own boundary.
 - `Find Familiar` is currently authored as `mechanics.family =
-  "spawned_creature"`. That is a Surface/content mechanics family, not the
+"spawned_creature"`. That is a Surface/content mechanics family, not the
   MCP `start_battle` input shape and not a sibling category beside familiars.
 - The existing Find Familiar runtime state is owner-linked familiar state. A
   present familiar is a combatant, but the familiar record is keyed by owner
@@ -73,8 +73,6 @@ type StatBlockCombatantAdmissionSource =
   | {
       readonly kind: "sourceLinked";
       readonly sourceActorId: CombatantId;
-      readonly sourceUnitId: UnitId;
-      readonly sourceOccurrenceId: SourceOccurrenceId;
       readonly selection: SourceLinkedCombatantSelection;
     };
 ```
@@ -82,6 +80,11 @@ type StatBlockCombatantAdmissionSource =
 `admissionSource` means "what source facts admitted this combatant into this
 BattleState." It does not mean creature provenance, metaphysical origin, or an
 executable rule bundle.
+
+Do not accept a caller-supplied source occurrence id until the character
+projection owns a real access occurrence id that the battle-start boundary can
+validate. For this slice, source admission is validated from the source actor,
+source unit, and projected character access facts.
 
 The raw MCP boundary may provide convenience defaults for ordinary Stat Block
 combatants, but the parsed internal shape should be explicit. Do not use
@@ -114,16 +117,14 @@ initialCombatants: [
     admissionSource: {
       kind: "sourceLinked",
       sourceActorId: "wizard",
-      sourceUnitId: "find_familiar",
-      sourceOccurrenceId: "ff-1",
       selection: {
         kind: "familiarForm",
         formId: "owl",
-        creatureTypeOverride: "fey"
-      }
-    }
-  }
-]
+        creatureTypeOverride: "fey",
+      },
+    },
+  },
+];
 ```
 
 The same composition principle should later cover other source-linked Stat
@@ -148,7 +149,7 @@ Examples of reusable mechanical lanes to consider later:
 - action restrictions: for example, a familiar cannot attack.
 
 The support gate should derive those lanes from the authored Surface mechanics
-shape, not from branches such as "if sourceUnitId is `find_familiar`." Concrete
+selection shape, not from source-unit string branches. Concrete
 Unit ids are identity and diagnostics, not semantic switches.
 
 Do not store static control or lifecycle facts that are already derivable from
@@ -277,6 +278,18 @@ Surface/content should remain the authority for:
 
 Do not implement generic demons, reanimation, animated objects, polymorph, or
 session-time maintenance through this pre-research item.
+
+Domain-language review note: `bookOfShadowsSpellAccesses` reads like authored
+content language leaking into runtime projection state. This plan does not
+rename that existing surface, but future cleanup should name the runtime fact
+after the executable spell access it grants rather than the authored object that
+originally supplied it.
+
+Resumption note: every deferred companion family below is a full vertical from
+authored content through any required Surface shape changes, battle-runtime
+projection, MCP admission/execution surface, and tests. Do not treat Find
+Steed, Summon Dragon, undead/reanimation, or demon-style summon support as a
+light follow-on to Find Familiar admission.
 
 Specifically deferred:
 

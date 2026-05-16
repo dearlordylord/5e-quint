@@ -443,6 +443,7 @@ function chromaticOrbBattle(input: {
           cantrips: [],
           preparedSpells: [input.spell ?? chromaticOrb],
           featurePreparedSpells: [],
+          spellbookRitualSpellAccesses: [],
           invocationSpellAccesses: [],
           spellSlots: [{ spellLevel: input.spellLevel, count: 1 }],
         },

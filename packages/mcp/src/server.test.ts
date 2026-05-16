@@ -234,7 +234,13 @@ describe("MCP server route", () => {
     expect(root.unitLibrary.listUnits().length).toBeGreaterThan(0);
     expect(
       root.statBlockCatalog.listStatBlocks().map((record) => record.id),
-    ).toEqual(["stat_block_goblin_warrior", "stat_block_skeleton"]);
+    ).toEqual(
+      expect.arrayContaining([
+        "stat_block_goblin_warrior",
+        "stat_block_skeleton",
+        "stat_block_owl",
+      ]),
+    );
     expect(Either.isRight(selected) ? selected.right.id : undefined).toBe(
       "stat_block_goblin_warrior",
     );
@@ -1067,20 +1073,26 @@ describe("MCP server route", () => {
     const statBlocks = readPayload(
       handleToolCall(root, "list_stat_blocks", {}),
     );
-    expect(statBlocks.statBlocks).toEqual([
-      expect.objectContaining({
-        statBlockId: "stat_block_goblin_warrior",
-        displayName: "Goblin Warrior",
-        attacks: expect.arrayContaining([
-          expect.objectContaining({ attackName: "Scimitar" }),
-        ]),
-      }),
-      expect.objectContaining({
-        statBlockId: "stat_block_skeleton",
-        displayName: "Skeleton",
-        damageVulnerabilities: ["bludgeoning"],
-      }),
-    ]);
+    expect(statBlocks.statBlocks).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          statBlockId: "stat_block_goblin_warrior",
+          displayName: "Goblin Warrior",
+          attacks: expect.arrayContaining([
+            expect.objectContaining({ attackName: "Scimitar" }),
+          ]),
+        }),
+        expect.objectContaining({
+          statBlockId: "stat_block_skeleton",
+          displayName: "Skeleton",
+          damageVulnerabilities: ["bludgeoning"],
+        }),
+        expect.objectContaining({
+          statBlockId: "stat_block_owl",
+          displayName: "Owl",
+        }),
+      ]),
+    );
   });
 
   test("accepts omitted arguments for no-arg and optional-arg tools", () => {
@@ -1167,6 +1179,8 @@ describe("MCP server route", () => {
           combatantId: "goblin",
           initiative: 7,
           side: "opposition",
+          admissionSource: { kind: "encounterParticipant" },
+          currentHp: 0,
         },
       ],
     });
@@ -1178,7 +1192,7 @@ describe("MCP server route", () => {
     ).toMatchObject({
       displayName: "Goblin Warrior",
       initiative: 7,
-      hp: 10,
+      hp: 0,
     });
     expect(started).toMatchObject({
       snapshot: {
@@ -1305,6 +1319,7 @@ describe("MCP server route", () => {
             combatantId: "goblin",
             initiative: 7,
             side: "opposition",
+            admissionSource: { kind: "encounterParticipant" },
           },
         ],
       }),
@@ -1397,6 +1412,7 @@ describe("MCP server route", () => {
             combatantId: "goblin",
             initiative: 7,
             side: "opposition",
+            admissionSource: { kind: "encounterParticipant" },
           },
         ],
       }),
@@ -1501,6 +1517,7 @@ describe("MCP server route", () => {
             combatantId: "goblin",
             initiative: 7,
             side: "opposition",
+            admissionSource: { kind: "encounterParticipant" },
           },
         ],
       }),
@@ -1525,6 +1542,7 @@ describe("MCP server route", () => {
             combatantId: "second-goblin",
             initiative: 8,
             side: "opposition",
+            admissionSource: { kind: "encounterParticipant" },
           },
         ],
       }),
@@ -1578,6 +1596,7 @@ describe("MCP server route", () => {
             combatantId: "goblin",
             initiative: 7,
             side: "opposition",
+            admissionSource: { kind: "encounterParticipant" },
           },
         ],
       }),
@@ -2055,12 +2074,18 @@ describe("MCP server route", () => {
       ],
     });
 
-    const afterDamage = fillBattleHoleThroughTool(root, "fighter", "Dagger", {
-      kind: "rolledDice",
-      holeId: "battle:attack:damage-result:1d4+3-piercing",
-      selectedAttackDamageRiderUnitIds: ["rogue_sneak_attack"],
-      value: [{ results: [2] }, { results: [3] }],
-    }, afterAttackRoll.result.subject);
+    const afterDamage = fillBattleHoleThroughTool(
+      root,
+      "fighter",
+      "Dagger",
+      {
+        kind: "rolledDice",
+        holeId: "battle:attack:damage-result:1d4+3-piercing",
+        selectedAttackDamageRiderUnitIds: ["rogue_sneak_attack"],
+        value: [{ results: [2] }, { results: [3] }],
+      },
+      afterAttackRoll.result.subject,
+    );
 
     expect(afterDamage.result).toMatchObject({ tag: "resolved" });
     expect(afterDamage.snapshot.combatants).toEqual(
@@ -2100,6 +2125,8 @@ describe("MCP server route", () => {
             kind: "statBlock",
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
+            side: "opposition",
+            admissionSource: { kind: "encounterParticipant" },
           },
         ],
       }),
@@ -2131,6 +2158,7 @@ describe("MCP server route", () => {
           combatantId: "goblin",
           initiative: 7,
           side: "opposition",
+          admissionSource: { kind: "encounterParticipant" },
         },
       ],
     };
@@ -2214,6 +2242,7 @@ describe("MCP server route", () => {
             combatantId: "goblin",
             initiative: 7,
             side: "opposition",
+            admissionSource: { kind: "encounterParticipant" },
           },
         ],
       }),
@@ -2258,6 +2287,7 @@ describe("MCP server route", () => {
             combatantId: "first-goblin",
             initiative: 11,
             side: "opposition",
+            admissionSource: { kind: "encounterParticipant" },
           },
           {
             kind: "statBlock",
@@ -2265,6 +2295,7 @@ describe("MCP server route", () => {
             combatantId: "second-goblin",
             initiative: 8,
             side: "opposition",
+            admissionSource: { kind: "encounterParticipant" },
           },
         ],
       }),
@@ -2285,6 +2316,255 @@ describe("MCP server route", () => {
         currentActorId: "first-goblin",
       },
     });
+  });
+
+  test("start_battle admits a source-linked Find Familiar combatant", () => {
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-find-familiar-admission";
+    createFinalizedWizardWithFindFamiliar(root, draftId);
+
+    const started = readPayload(
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-find-familiar-admission",
+        initialCombatants: [
+          {
+            kind: "characterSession",
+            characterId: testCharacterId(draftId),
+            combatantId: "wizard",
+            initiative: 12,
+            side: "party",
+          },
+          {
+            kind: "statBlock",
+            combatantId: "wizard-familiar",
+            initiative: 18,
+            currentHp: 1,
+            tempHp: 3,
+            admissionSource: {
+              kind: "sourceLinked",
+              sourceActorId: "wizard",
+              selection: {
+                kind: "findFamiliarForm",
+                form: { tag: "normalNamedForm", formId: "cat" },
+                creatureTypeOverrideChoiceId: "fey",
+              },
+            },
+          },
+        ],
+      }),
+    );
+
+    expect(started.snapshot).toMatchObject({
+      currentActorId: "wizard-familiar",
+      turnOrder: ["wizard-familiar", "wizard"],
+      combatants: [
+        {
+          combatantId: "wizard-familiar",
+          displayName: "Cat",
+          initiative: 18,
+          origin: { kind: "statBlock" },
+        },
+        { combatantId: "wizard", origin: { kind: "character" } },
+      ],
+      findFamiliars: [
+        {
+          ownerId: "wizard",
+          familiarId: "wizard-familiar",
+          formSelection: { tag: "normalNamedForm", formId: "cat" },
+          creatureTypeOverride: "fey",
+        },
+      ],
+    });
+    expect(
+      root.sessionStore.battleState?.combatants.get(
+        combatantId("wizard-familiar"),
+      ),
+    ).toMatchObject({
+      hp: Hp(1),
+      tempHp: Hp(3),
+    });
+    expect(
+      root.sessionStore.battleState?.findFamiliars.get(combatantId("wizard")),
+    ).toMatchObject({
+      status: "present",
+      familiarId: combatantId("wizard-familiar"),
+    });
+  });
+
+  test("start_battle admits spellbook Ritual source-linked Find Familiar without preparation", () => {
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-find-familiar-spellbook-ritual-admission";
+    createFinalizedWizardWithFindFamiliar(root, draftId, {
+      preparedSpells: [],
+    });
+
+    const started = readPayload(
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-find-familiar-spellbook-ritual-admission",
+        initialCombatants: [
+          {
+            kind: "characterSession",
+            characterId: testCharacterId(draftId),
+            combatantId: "wizard",
+            initiative: 12,
+            side: "party",
+          },
+          {
+            kind: "statBlock",
+            combatantId: "wizard-familiar",
+            initiative: 18,
+            admissionSource: {
+              kind: "sourceLinked",
+              sourceActorId: "wizard",
+              selection: {
+                kind: "findFamiliarForm",
+                form: { tag: "normalNamedForm", formId: "owl" },
+                creatureTypeOverrideChoiceId: "fey",
+              },
+            },
+          },
+        ],
+      }),
+    );
+
+    expect(started.snapshot).toMatchObject({
+      currentActorId: "wizard-familiar",
+      turnOrder: ["wizard-familiar", "wizard"],
+      findFamiliars: [
+        {
+          ownerId: "wizard",
+          familiarId: "wizard-familiar",
+          formSelection: { tag: "normalNamedForm", formId: "owl" },
+        },
+      ],
+    });
+  });
+
+  test("start_battle preserves source-linked Find Familiar initiative tie order", () => {
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-find-familiar-tie-order";
+    createFinalizedWizardWithFindFamiliar(root, draftId);
+
+    const started = readPayload(
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-find-familiar-tie-order",
+        initialCombatants: [
+          {
+            kind: "statBlock",
+            combatantId: "wizard-familiar",
+            initiative: 18,
+            admissionSource: {
+              kind: "sourceLinked",
+              sourceActorId: "wizard",
+              selection: {
+                kind: "findFamiliarForm",
+                form: { tag: "normalNamedForm", formId: "owl" },
+                creatureTypeOverrideChoiceId: "fey",
+              },
+            },
+          },
+          {
+            kind: "characterSession",
+            characterId: testCharacterId(draftId),
+            combatantId: "wizard",
+            initiative: 18,
+            side: "party",
+          },
+        ],
+      }),
+    );
+
+    expect(started.snapshot).toMatchObject({
+      currentActorId: "wizard-familiar",
+      turnOrder: ["wizard-familiar", "wizard"],
+    });
+  });
+
+  test("start_battle rejects a source-linked combatant with a missing source actor", () => {
+    const root = createMcpCompositionRoot();
+    const rejected = readPayload(
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-find-familiar-missing-owner",
+        initialCombatants: [
+          {
+            kind: "statBlock",
+            combatantId: "orphan-familiar",
+            initiative: 18,
+            admissionSource: {
+              kind: "sourceLinked",
+              sourceActorId: "missing-wizard",
+              selection: {
+                kind: "findFamiliarForm",
+                form: { tag: "normalNamedForm", formId: "owl" },
+                creatureTypeOverrideChoiceId: "fey",
+              },
+            },
+          },
+        ],
+      }),
+    );
+
+    expect(rejected).toMatchObject({
+      details: {
+        code: "INVALID_BATTLE_COMBATANTS",
+        issues: [
+          {
+            details: {
+              code: "SOURCE_LINKED_ACTOR_NOT_IN_ROSTER",
+              combatantId: "orphan-familiar",
+              sourceActorId: "missing-wizard",
+            },
+          },
+        ],
+      },
+    });
+    expect(root.sessionStore.battleState).toBeNull();
+  });
+
+  test("start_battle rejects unsupported source-linked familiar forms", () => {
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-find-familiar-invalid-form";
+    createFinalizedWizardWithFindFamiliar(root, draftId);
+
+    const rejected = readPayload(
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-find-familiar-invalid-form",
+        initialCombatants: [
+          {
+            kind: "characterSession",
+            characterId: testCharacterId(draftId),
+            combatantId: "wizard",
+            initiative: 12,
+            side: "party",
+          },
+          {
+            kind: "statBlock",
+            combatantId: "wizard-familiar",
+            initiative: 18,
+            admissionSource: {
+              kind: "sourceLinked",
+              sourceActorId: "wizard",
+              selection: {
+                kind: "findFamiliarForm",
+                form: { tag: "pactOfTheChainSpecialForm", formId: "imp" },
+                creatureTypeOverrideChoiceId: "fey",
+              },
+            },
+          },
+        ],
+      }),
+    );
+
+    expect(rejected).toMatchObject({
+      details: {
+        code: "SOURCE_LINKED_COMBATANT_ADMISSION_FAILED",
+        combatantId: "wizard-familiar",
+        sourceActorId: "wizard",
+        message:
+          "Pact of the Chain familiar forms require Pact of the Chain Find Familiar access.",
+      },
+    });
+    expect(root.sessionStore.battleState).toBeNull();
   });
 
   test("battle act tools reject contradictory subjects and no-hole misuse", () => {
@@ -2313,6 +2593,7 @@ describe("MCP server route", () => {
             combatantId: "goblin",
             initiative: 7,
             side: "opposition",
+            admissionSource: { kind: "encounterParticipant" },
           },
         ],
       }),
@@ -2386,6 +2667,7 @@ describe("MCP server route", () => {
           combatantId: "goblin",
           initiative: 7,
           side: "opposition",
+          admissionSource: { kind: "encounterParticipant" },
         },
       ],
     };
@@ -2553,6 +2835,7 @@ describe("MCP server route", () => {
             combatantId: "goblin",
             initiative: 7,
             side: "opposition",
+            admissionSource: { kind: "encounterParticipant" },
           },
         ],
       }),
@@ -2619,11 +2902,16 @@ describe("MCP server route", () => {
       "End Turn",
     ]);
 
-    const afterFighterTarget = fillBattleHoleThroughTool(root, "fighter", "Longsword", {
-      kind: "targetChoice",
-      holeId: "battle:attack:target",
-      value: "goblin",
-    });
+    const afterFighterTarget = fillBattleHoleThroughTool(
+      root,
+      "fighter",
+      "Longsword",
+      {
+        kind: "targetChoice",
+        holeId: "battle:attack:target",
+        value: "goblin",
+      },
+    );
     expect(root.sessionStore.battleState?.combatants.get(goblinId)?.hp).toBe(
       10,
     );
@@ -2632,11 +2920,17 @@ describe("MCP server route", () => {
       fills: [{ kind: "targetChoice", value: "goblin" }],
     });
 
-    const afterFighterAttackRoll = fillBattleHoleThroughTool(root, "fighter", "Longsword", {
-      kind: "attackRoll",
-      holeId: "battle:attack:roll",
-      value: { total: 16, naturalD20: 14 },
-    }, afterFighterTarget.result.subject);
+    const afterFighterAttackRoll = fillBattleHoleThroughTool(
+      root,
+      "fighter",
+      "Longsword",
+      {
+        kind: "attackRoll",
+        holeId: "battle:attack:roll",
+        value: { total: 16, naturalD20: 14 },
+      },
+      afterFighterTarget.result.subject,
+    );
     const afterFighterDamage = fillBattleHoleThroughTool(
       root,
       "fighter",
@@ -2700,25 +2994,36 @@ describe("MCP server route", () => {
       "End Turn",
     ]);
 
-    const afterGoblinTarget = fillBattleHoleThroughTool(root, "goblin", "Scimitar", {
-      kind: "targetChoice",
-      holeId: "battle:attack:target",
-      value: "fighter",
-    });
+    const afterGoblinTarget = fillBattleHoleThroughTool(
+      root,
+      "goblin",
+      "Scimitar",
+      {
+        kind: "targetChoice",
+        holeId: "battle:attack:target",
+        value: "fighter",
+      },
+    );
     const goblinAttackRoll = afterGoblinTarget.result.holes.find(
       (hole: { kind: string }) => hole.kind === "attackRoll",
     );
-    const afterGoblinAttackRoll = fillBattleHoleThroughTool(root, "goblin", "Scimitar", {
-      kind: "attackRoll",
-      holeId: "battle:attack:roll",
-      value: {
-        total: 20,
-        naturalD20: 18,
-        ...(goblinAttackRoll?.rollMode === undefined
-          ? {}
-          : { rollMode: goblinAttackRoll.rollMode }),
+    const afterGoblinAttackRoll = fillBattleHoleThroughTool(
+      root,
+      "goblin",
+      "Scimitar",
+      {
+        kind: "attackRoll",
+        holeId: "battle:attack:roll",
+        value: {
+          total: 20,
+          naturalD20: 18,
+          ...(goblinAttackRoll?.rollMode === undefined
+            ? {}
+            : { rollMode: goblinAttackRoll.rollMode }),
+        },
       },
-    }, afterGoblinTarget.result.subject);
+      afterGoblinTarget.result.subject,
+    );
     const afterGoblinDamage = fillBattleHoleThroughTool(
       root,
       "goblin",
@@ -2894,6 +3199,7 @@ describe("MCP server route", () => {
             combatantId: "goblin",
             initiative: 10,
             side: "opposition",
+            admissionSource: { kind: "encounterParticipant" },
           },
         ],
       }),
@@ -2995,6 +3301,7 @@ describe("MCP server route", () => {
             combatantId: "goblin",
             initiative: 10,
             side: "opposition",
+            admissionSource: { kind: "encounterParticipant" },
           },
         ],
       }),
@@ -3136,6 +3443,7 @@ describe("MCP server route", () => {
             combatantId: "goblin",
             initiative: 10,
             side: "opposition",
+            admissionSource: { kind: "encounterParticipant" },
           },
         ],
       }),
@@ -3199,6 +3507,7 @@ describe("MCP server route", () => {
             combatantId: "goblin",
             initiative: 10,
             side: "opposition",
+            admissionSource: { kind: "encounterParticipant" },
           },
         ],
       }),
@@ -3278,6 +3587,7 @@ describe("MCP server route", () => {
             combatantId: "goblin",
             initiative: 12,
             side: "opposition",
+            admissionSource: { kind: "encounterParticipant" },
           },
           {
             kind: "characterSession",
@@ -3341,6 +3651,7 @@ describe("MCP server route", () => {
             combatantId: "goblin",
             initiative: 12,
             side: "opposition",
+            admissionSource: { kind: "encounterParticipant" },
           },
           {
             kind: "characterSession",
@@ -3451,6 +3762,7 @@ describe("MCP server route", () => {
             combatantId: "goblin",
             initiative: 10,
             side: "opposition",
+            admissionSource: { kind: "encounterParticipant" },
           },
         ],
       }),
@@ -5012,6 +5324,35 @@ function createFinalizedFighterSheet(
   draftId: string,
 ): CharacterBuild {
   const build = fighterCharacterBuild(root.unitLibrary);
+  root.sessionStore.characters.set(
+    availableCharacterSessionRight({
+      characterId: testCharacterId(draftId),
+      build,
+      maximumHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
+      currentHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
+      tempHp: Hp(0),
+      unitLibrary: root.unitLibrary,
+    }),
+  );
+  return build;
+}
+
+function createFinalizedWizardWithFindFamiliar(
+  root: ReturnType<typeof createMcpCompositionRoot>,
+  draftId: string,
+  input: { readonly preparedSpells?: readonly string[] } = {},
+): CharacterBuild {
+  const fighter = fighterCharacterBuild(root.unitLibrary);
+  const build = {
+    ...fighter,
+    progression: wizardProgression(root),
+    spellcasting: testWizardSpellcasting({
+      cantrips: [],
+      spellbook: ["find_familiar"],
+      preparedSpells: input.preparedSpells ?? ["find_familiar"],
+      spellSlots: [{ spellLevel: 1, count: 2 }],
+    }),
+  };
   root.sessionStore.characters.set(
     availableCharacterSessionRight({
       characterId: testCharacterId(draftId),

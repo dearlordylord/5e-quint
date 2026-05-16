@@ -1,0 +1,4011 @@
+{
+  "frontierRows": [
+    {
+      "catalogDisposition": {
+        "category": "srd-candidate",
+        "planningLane": "QMBT14-QMBT16",
+        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
+      },
+      "catalogStatus": "not-in-unit-catalog",
+      "claimTag": "missing",
+      "closureKinds": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "sourceRecordPath": "packages/surface/content/alarm.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Ranger spell list Alarm",
+          "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_alarm",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 164,
+            "lineStart": 164,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Alarm",
+          "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_alarm",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 162,
+            "lineStart": 162,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "status": "open-runtime-behavior",
+      "strictTargetClosed": false,
+      "unitId": "alarm"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "selection-grant-container"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "The class feature grants weapon mastery choices; selected mastery property Units own executable battle pressure.",
+      "sourceRecordPath": "packages/surface/content/barbarian_weapon_mastery.json",
+      "sourceRows": [
+        {
+          "category": "mastery pressure",
+          "concept": "Barbarian Weapon Mastery",
+          "id": "srd521:classes/barbarian:level-1:mastery-pressure:barbarian_weapon_mastery",
+          "levelBand": "level-1",
+          "rowKind": "mastery-pressure",
+          "source": {
+            "lineEnd": 89,
+            "lineStart": 84,
+            "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+          }
+        }
+      ],
+      "status": "open-profile-accounting",
+      "strictTargetClosed": false,
+      "unitId": "barbarian_weapon_mastery"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "later-level-only"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "The remaining Bardic Inspiration die-size changes occur only after level 1.",
+      "sourceRecordPath": "packages/surface/content/bard_bardic_inspiration.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Bard Bardic Inspiration",
+          "id": "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
+          "levelBand": "level-1",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 68,
+            "lineStart": 57,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        }
+      ],
+      "status": "closed-later-level-only",
+      "strictTargetClosed": true,
+      "unitId": "bard_bardic_inspiration"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "social-knowledge-effect"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are social/knowledge state outside promoted battle runtime.",
+      "sourceRecordPath": "packages/surface/content/charm_person.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Charm Person",
+          "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_charm_person",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 164,
+            "lineStart": 164,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Druid spell list Charm Person",
+          "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_charm_person",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 205,
+            "lineStart": 205,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Sorcerer spell list Charm Person",
+          "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_charm_person",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 245,
+            "lineStart": 245,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Warlock spell list Charm Person",
+          "id": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_charm_person",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 349,
+            "lineStart": 349,
+            "path": ".references/srd-5.2.1/Classes/Warlock.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Charm Person",
+          "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_charm_person",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 164,
+            "lineStart": 164,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
+      "unitId": "charm_person"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "selection-grant-container"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "Divine Order is a character-creation suborder choice; no promoted battle Unit profile consumes the container directly.",
+      "sourceRecordPath": "packages/surface/content/cleric_divine_order.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Cleric Divine Order",
+          "id": "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order",
+          "levelBand": "level-1",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 87,
+            "lineStart": 80,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        }
+      ],
+      "status": "open-profile-accounting",
+      "strictTargetClosed": false,
+      "unitId": "cleric_divine_order"
+    },
+    {
+      "catalogDisposition": {
+        "category": "srd-candidate",
+        "planningLane": "QMBT14-QMBT16",
+        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
+      },
+      "catalogStatus": "not-in-unit-catalog",
+      "claimTag": "missing",
+      "closureKinds": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "sourceRecordPath": "packages/surface/content/comprehend_languages.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Comprehend Languages",
+          "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_comprehend_languages",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 167,
+            "lineStart": 167,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Sorcerer spell list Comprehend Languages",
+          "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_comprehend_languages",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 248,
+            "lineStart": 248,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Warlock spell list Comprehend Languages",
+          "id": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_comprehend_languages",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 350,
+            "lineStart": 350,
+            "path": ".references/srd-5.2.1/Classes/Warlock.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Comprehend Languages",
+          "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_comprehend_languages",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 167,
+            "lineStart": 167,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "status": "open-runtime-behavior",
+      "strictTargetClosed": false,
+      "unitId": "comprehend_languages"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Sensing, occlusion, and Hallow discovery are exploration/detection state outside promoted battle runtime.",
+      "sourceRecordPath": "packages/surface/content/detect_evil_and_good.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Cleric spell list Detect Evil and Good",
+          "id": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_detect_evil_and_good",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 167,
+            "lineStart": 167,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Paladin spell list Detect Evil and Good",
+          "id": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_detect_evil_and_good",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 179,
+            "lineStart": 179,
+            "path": ".references/srd-5.2.1/Classes/Paladin.md"
+          }
+        }
+      ],
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
+      "unitId": "detect_evil_and_good"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime.",
+      "sourceRecordPath": "packages/surface/content/detect_magic.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Detect Magic",
+          "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_detect_magic",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 169,
+            "lineStart": 169,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Cleric spell list Detect Magic",
+          "id": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_detect_magic",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 168,
+            "lineStart": 168,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Druid spell list Detect Magic",
+          "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_detect_magic",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 208,
+            "lineStart": 208,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Paladin spell list Detect Magic",
+          "id": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_detect_magic",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 180,
+            "lineStart": 180,
+            "path": ".references/srd-5.2.1/Classes/Paladin.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Ranger spell list Detect Magic",
+          "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_detect_magic",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 167,
+            "lineStart": 167,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Sorcerer spell list Detect Magic",
+          "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_detect_magic",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 249,
+            "lineStart": 249,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Warlock spell list Detect Magic",
+          "id": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_detect_magic",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 351,
+            "lineStart": 351,
+            "path": ".references/srd-5.2.1/Classes/Warlock.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Detect Magic",
+          "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_detect_magic",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 168,
+            "lineStart": 168,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
+      "unitId": "detect_magic"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Poison, disease, creature-kind sensing, occlusion, and identification are exploration/detection state outside promoted battle runtime.",
+      "sourceRecordPath": "packages/surface/content/detect_poison_and_disease.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Cleric spell list Detect Poison and Disease",
+          "id": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_detect_poison_and_disease",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 169,
+            "lineStart": 169,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Druid spell list Detect Poison and Disease",
+          "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_detect_poison_and_disease",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 209,
+            "lineStart": 209,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Paladin spell list Detect Poison and Disease",
+          "id": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_detect_poison_and_disease",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 181,
+            "lineStart": 181,
+            "path": ".references/srd-5.2.1/Classes/Paladin.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Ranger spell list Detect Poison and Disease",
+          "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_detect_poison_and_disease",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 168,
+            "lineStart": 168,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
+        }
+      ],
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
+      "unitId": "detect_poison_and_disease"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "Language, hidden-message, and non-battle prepared-spell source facts are outside promoted battle runtime.",
+      "sourceRecordPath": "packages/surface/content/druid_druidic.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Druid Druidic",
+          "id": "srd521:classes/druid:level-1:class-feature-grant:druid_druidic",
+          "levelBand": "level-1",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 86,
+            "lineStart": 81,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        }
+      ],
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
+      "unitId": "druid_druidic"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "selection-grant-container"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "Primal Order is a character-creation suborder choice; no promoted battle Unit profile consumes the container directly.",
+      "sourceRecordPath": "packages/surface/content/druid_primal_order.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Druid Primal Order",
+          "id": "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order",
+          "levelBand": "level-1",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 94,
+            "lineStart": 87,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        }
+      ],
+      "status": "open-profile-accounting",
+      "strictTargetClosed": false,
+      "unitId": "druid_primal_order"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "table-spatial-derivation"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the runtime boundary.",
+      "sourceRecordPath": "packages/surface/content/faerie_fire.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Faerie Fire",
+          "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_faerie_fire",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 172,
+            "lineStart": 172,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Druid spell list Faerie Fire",
+          "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_faerie_fire",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 211,
+            "lineStart": 211,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        }
+      ],
+      "status": "open-profile-accounting",
+      "strictTargetClosed": false,
+      "unitId": "faerie_fire"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "table-spatial-derivation"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Fall-distance derivation, map elevation, and landing geometry simulation remain table/spatial derivations.",
+      "sourceRecordPath": "packages/surface/content/feather_fall.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Feather Fall",
+          "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_feather_fall",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 173,
+            "lineStart": 173,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Sorcerer spell list Feather Fall",
+          "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_feather_fall",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 253,
+            "lineStart": 253,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Feather Fall",
+          "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_feather_fall",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 172,
+            "lineStart": 172,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "status": "open-profile-accounting",
+      "strictTargetClosed": false,
+      "unitId": "feather_fall"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "later-level-only"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "The remaining Fighting Style replacement clause occurs when gaining later Fighter levels after the level-1 choice has already been finalized.",
+      "sourceRecordPath": "packages/surface/content/fighter_fighting_style.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Fighter Fighting Style",
+          "id": "srd521:classes/fighter:level-1:class-feature-grant:fighter_fighting_style",
+          "levelBand": "level-1",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 61,
+            "lineStart": 56,
+            "path": ".references/srd-5.2.1/Classes/Fighter.md"
+          }
+        }
+      ],
+      "status": "closed-later-level-only",
+      "strictTargetClosed": true,
+      "unitId": "fighter_fighting_style"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "selection-grant-container"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "The class feature grants weapon mastery choices; selected mastery property Units own executable battle pressure.",
+      "sourceRecordPath": "packages/surface/content/fighter_weapon_mastery.json",
+      "sourceRows": [
+        {
+          "category": "mastery pressure",
+          "concept": "Fighter Weapon Mastery",
+          "id": "srd521:classes/fighter:level-1:mastery-pressure:fighter_weapon_mastery",
+          "levelBand": "level-1",
+          "rowKind": "mastery-pressure",
+          "source": {
+            "lineEnd": 75,
+            "lineStart": 70,
+            "path": ".references/srd-5.2.1/Classes/Fighter.md"
+          }
+        }
+      ],
+      "status": "open-profile-accounting",
+      "strictTargetClosed": false,
+      "unitId": "fighter_weapon_mastery"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "table-spatial-derivation"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain table/spatial derivations.",
+      "sourceRecordPath": "packages/surface/content/fog_cloud.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Druid spell list Fog Cloud",
+          "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_fog_cloud",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 212,
+            "lineStart": 212,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Ranger spell list Fog Cloud",
+          "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_fog_cloud",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 171,
+            "lineStart": 171,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Sorcerer spell list Fog Cloud",
+          "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_fog_cloud",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 254,
+            "lineStart": 254,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Fog Cloud",
+          "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_fog_cloud",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 175,
+            "lineStart": 175,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "status": "open-profile-accounting",
+      "strictTargetClosed": false,
+      "unitId": "fog_cloud"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "table-spatial-derivation"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Automatic area membership, pathfinding, and grid geometry derivation remain table/spatial derivations.",
+      "sourceRecordPath": "packages/surface/content/grease.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Sorcerer spell list Grease",
+          "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_grease",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 255,
+            "lineStart": 255,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Grease",
+          "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_grease",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 176,
+            "lineStart": 176,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "status": "open-profile-accounting",
+      "strictTargetClosed": false,
+      "unitId": "grease"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "social-knowledge-effect"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Wisdom (Perception or Survival) Advantage to find the marked target is ability-check roll-mode state outside the promoted damage-rider runtime.",
+      "sourceRecordPath": "packages/surface/content/hunters_mark.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Ranger spell list Hunter's Mark",
+          "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_hunters_mark",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 173,
+            "lineStart": 173,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
+        }
+      ],
+      "status": "open-profile-accounting",
+      "strictTargetClosed": false,
+      "unitId": "hunters_mark"
+    },
+    {
+      "catalogDisposition": {
+        "category": "srd-candidate",
+        "planningLane": "QMBT14-QMBT16",
+        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
+      },
+      "catalogStatus": "not-in-unit-catalog",
+      "claimTag": "missing",
+      "closureKinds": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "sourceRecordPath": "packages/surface/content/identify.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Identify",
+          "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_identify",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 177,
+            "lineStart": 177,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Identify",
+          "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_identify",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 179,
+            "lineStart": 179,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "status": "open-runtime-behavior",
+      "strictTargetClosed": false,
+      "unitId": "identify"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "table-spatial-derivation"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Runtime-owned jump arc, pathfinding, collision, and final-position derivation remain table/spatial derivations.; Runtime-owned Difficult Terrain landing Acrobatics check derivation remains a table/spatial derivation.",
+      "sourceRecordPath": "packages/surface/content/jump.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Druid spell list Jump",
+          "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_jump",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 216,
+            "lineStart": 216,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Ranger spell list Jump",
+          "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_jump",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 174,
+            "lineStart": 174,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Sorcerer spell list Jump",
+          "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_jump",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 257,
+            "lineStart": 257,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Jump",
+          "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_jump",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 181,
+            "lineStart": 181,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "status": "open-profile-accounting",
+      "strictTargetClosed": false,
+      "unitId": "jump"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "table-spatial-derivation"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the object-emitter runtime boundary.",
+      "sourceRecordPath": "packages/surface/content/light.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Light",
+          "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_light",
+          "levelBand": "spell-level-0",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 148,
+            "lineStart": 148,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Cleric spell list Light",
+          "id": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_light",
+          "levelBand": "spell-level-0",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 151,
+            "lineStart": 151,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Sorcerer spell list Light",
+          "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_light",
+          "levelBand": "spell-level-0",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 228,
+            "lineStart": 228,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Light",
+          "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_light",
+          "levelBand": "spell-level-0",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 147,
+            "lineStart": 147,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "status": "open-profile-accounting",
+      "strictTargetClosed": false,
+      "unitId": "light"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are illusion/exploration state outside promoted battle runtime.",
+      "sourceRecordPath": "packages/surface/content/minor_illusion.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Minor Illusion",
+          "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_minor_illusion",
+          "levelBand": "spell-level-0",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 152,
+            "lineStart": 152,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Sorcerer spell list Minor Illusion",
+          "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_minor_illusion",
+          "levelBand": "spell-level-0",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 232,
+            "lineStart": 232,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Warlock spell list Minor Illusion",
+          "id": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_minor_illusion",
+          "levelBand": "spell-level-0",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 339,
+            "lineStart": 339,
+            "path": ".references/srd-5.2.1/Classes/Warlock.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Minor Illusion",
+          "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_minor_illusion",
+          "levelBand": "spell-level-0",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 151,
+            "lineStart": 151,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
+      "unitId": "minor_illusion"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "later-level-only"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "The remaining Martial Arts die-size changes occur only after level 1.",
+      "sourceRecordPath": "packages/surface/content/monk_martial_arts.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Monk Martial Arts",
+          "id": "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
+          "levelBand": "level-1",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 71,
+            "lineStart": 57,
+            "path": ".references/srd-5.2.1/Classes/Monk.md"
+          }
+        }
+      ],
+      "status": "closed-later-level-only",
+      "strictTargetClosed": true,
+      "unitId": "monk_martial_arts"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "selection-grant-container"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "The class feature grants weapon mastery choices; selected mastery property Units own executable battle pressure.",
+      "sourceRecordPath": "packages/surface/content/paladin_weapon_mastery.json",
+      "sourceRows": [
+        {
+          "category": "mastery pressure",
+          "concept": "Paladin Weapon Mastery",
+          "id": "srd521:classes/paladin:level-1:mastery-pressure:paladin_weapon_mastery",
+          "levelBand": "level-1",
+          "rowKind": "mastery-pressure",
+          "source": {
+            "lineEnd": 89,
+            "lineStart": 84,
+            "path": ".references/srd-5.2.1/Classes/Paladin.md"
+          }
+        }
+      ],
+      "status": "open-profile-accounting",
+      "strictTargetClosed": false,
+      "unitId": "paladin_weapon_mastery"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "later-level-only",
+        "social-knowledge-effect"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "The remaining Favored Enemy free-cast count changes occur only after level 1.; Hunter's Mark finding Advantage is an ability-check roll-mode projection, not additional battle reducer behavior for Favored Enemy.",
+      "sourceRecordPath": "packages/surface/content/ranger_favored_enemy.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Ranger Favored Enemy",
+          "id": "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy",
+          "levelBand": "level-1",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 81,
+            "lineStart": 76,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
+        }
+      ],
+      "status": "open-profile-accounting",
+      "strictTargetClosed": false,
+      "unitId": "ranger_favored_enemy"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "selection-grant-container"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "The class feature grants weapon mastery choices; selected mastery property Units own executable battle pressure.",
+      "sourceRecordPath": "packages/surface/content/ranger_weapon_mastery.json",
+      "sourceRows": [
+        {
+          "category": "mastery pressure",
+          "concept": "Ranger Weapon Mastery",
+          "id": "srd521:classes/ranger:level-1:mastery-pressure:ranger_weapon_mastery",
+          "levelBand": "level-1",
+          "rowKind": "mastery-pressure",
+          "source": {
+            "lineEnd": 87,
+            "lineStart": 82,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
+        }
+      ],
+      "status": "open-profile-accounting",
+      "strictTargetClosed": false,
+      "unitId": "ranger_weapon_mastery"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-battle-runtime"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "Expertise is a character-creation skill choice boundary, not a promoted battle Unit profile.",
+      "sourceRecordPath": "packages/surface/content/rogue_expertise.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Rogue Expertise",
+          "id": "srd521:classes/rogue:level-1:class-feature-grant:rogue_expertise",
+          "levelBand": "level-1",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 62,
+            "lineStart": 57,
+            "path": ".references/srd-5.2.1/Classes/Rogue.md"
+          }
+        }
+      ],
+      "status": "open-profile-accounting",
+      "strictTargetClosed": false,
+      "unitId": "rogue_expertise"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "Thieves' Cant is a language/communication source fact outside promoted battle runtime.",
+      "sourceRecordPath": "packages/surface/content/rogue_thieves_cant.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Rogue Thieves' Cant",
+          "id": "srd521:classes/rogue:level-1:class-feature-grant:rogue_thieves_cant",
+          "levelBand": "level-1",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 74,
+            "lineStart": 71,
+            "path": ".references/srd-5.2.1/Classes/Rogue.md"
+          }
+        }
+      ],
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
+      "unitId": "rogue_thieves_cant"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "selection-grant-container"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "The class feature grants weapon mastery choices; selected mastery property Units own executable battle pressure.",
+      "sourceRecordPath": "packages/surface/content/rogue_weapon_mastery.json",
+      "sourceRows": [
+        {
+          "category": "mastery pressure",
+          "concept": "Rogue Weapon Mastery",
+          "id": "srd521:classes/rogue:level-1:mastery-pressure:rogue_weapon_mastery",
+          "levelBand": "level-1",
+          "rowKind": "mastery-pressure",
+          "source": {
+            "lineEnd": 80,
+            "lineStart": 75,
+            "path": ".references/srd-5.2.1/Classes/Rogue.md"
+          }
+        }
+      ],
+      "status": "open-profile-accounting",
+      "strictTargetClosed": false,
+      "unitId": "rogue_weapon_mastery"
+    },
+    {
+      "catalogDisposition": {
+        "category": "srd-candidate",
+        "planningLane": "QMBT14-QMBT16",
+        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
+      },
+      "catalogStatus": "not-in-unit-catalog",
+      "claimTag": "missing",
+      "closureKinds": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "sourceRecordPath": "packages/surface/content/silent_image.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Silent Image",
+          "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_silent_image",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 180,
+            "lineStart": 180,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Sorcerer spell list Silent Image",
+          "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_silent_image",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 262,
+            "lineStart": 262,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Silent Image",
+          "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_silent_image",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 188,
+            "lineStart": 188,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "status": "open-runtime-behavior",
+      "strictTargetClosed": false,
+      "unitId": "silent_image"
+    },
+    {
+      "catalogDisposition": {
+        "category": "srd-candidate",
+        "planningLane": "QMBT14-QMBT16",
+        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
+      },
+      "catalogStatus": "not-in-unit-catalog",
+      "claimTag": "missing",
+      "closureKinds": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "sourceRecordPath": "packages/surface/content/speak_with_animals.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Speak with Animals",
+          "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_speak_with_animals",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 182,
+            "lineStart": 182,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Druid spell list Speak with Animals",
+          "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_speak_with_animals",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 220,
+            "lineStart": 220,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Ranger spell list Speak with Animals",
+          "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_speak_with_animals",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 176,
+            "lineStart": 176,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Warlock spell list Speak with Animals",
+          "id": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_speak_with_animals",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 358,
+            "lineStart": 358,
+            "path": ".references/srd-5.2.1/Classes/Warlock.md"
+          }
+        }
+      ],
+      "status": "open-runtime-behavior",
+      "strictTargetClosed": false,
+      "unitId": "speak_with_animals"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "table-spatial-derivation"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Runtime-owned push geometry, collision/pathfinding, and final-position derivation remain table/spatial derivations.; Broad object inventory simulation and sound propagation simulation remain table/spatial derivations.",
+      "sourceRecordPath": "packages/surface/content/thunderwave.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Thunderwave",
+          "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_thunderwave",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 183,
+            "lineStart": 183,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Druid spell list Thunderwave",
+          "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_thunderwave",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 221,
+            "lineStart": 221,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Sorcerer spell list Thunderwave",
+          "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_thunderwave",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 264,
+            "lineStart": 264,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Thunderwave",
+          "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_thunderwave",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 190,
+            "lineStart": 190,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "status": "open-profile-accounting",
+      "strictTargetClosed": false,
+      "unitId": "thunderwave"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "later-level-only"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "The remaining invocation replacement and prerequisite-retention mechanics occur after the level-1 invocation choice has already been finalized.; The remaining invocation gain, prerequisite, and repeatability mechanics occur after the level-1 invocation choice has already been finalized.",
+      "sourceRecordPath": "packages/surface/content/warlock_eldritch_invocations.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Warlock Eldritch Invocations",
+          "id": "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations",
+          "levelBand": "level-1",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 67,
+            "lineStart": 56,
+            "path": ".references/srd-5.2.1/Classes/Warlock.md"
+          }
+        }
+      ],
+      "status": "closed-later-level-only",
+      "strictTargetClosed": true,
+      "unitId": "warlock_eldritch_invocations"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-battle-runtime"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "Short Rest Spell Slot recovery is outside promoted battle runtime.",
+      "sourceRecordPath": "packages/surface/content/wizard_arcane_recovery.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Wizard Arcane Recovery",
+          "id": "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery",
+          "levelBand": "level-1",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 103,
+            "lineStart": 98,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "status": "open-profile-accounting",
+      "strictTargetClosed": false,
+      "unitId": "wizard_arcane_recovery"
+    }
+  ],
+  "generatedBy": "scripts/unit-profile-coverage-check.cjs",
+  "groups": [
+    {
+      "count": 59,
+      "description": "Full support exists at the Unit profile boundary for strict level-1 accounting.",
+      "status": "supported-profile",
+      "unitIds": [
+        "acid_splash",
+        "animal_friendship",
+        "bane",
+        "barbarian_rage",
+        "barbarian_unarmored_defense",
+        "bless",
+        "burning_hands",
+        "chill_touch",
+        "chromatic_orb",
+        "color_spray",
+        "command",
+        "cure_wounds",
+        "dancing_lights",
+        "dissonant_whispers",
+        "divine_favor",
+        "divine_smite",
+        "eldritch_blast",
+        "ensnaring_strike",
+        "entangle",
+        "expeditious_retreat",
+        "false_life",
+        "fighter_second_wind",
+        "fire_bolt",
+        "guidance",
+        "guiding_bolt",
+        "healing_word",
+        "hellish_rebuke",
+        "heroism",
+        "hex",
+        "hideous_laughter",
+        "ice_knife",
+        "inflict_wounds",
+        "longstrider",
+        "mage_armor",
+        "magic_missile",
+        "monk_unarmored_defense",
+        "paladin_lay_on_hands",
+        "poison_spray",
+        "produce_flame",
+        "protection_from_evil_and_good",
+        "ray_of_frost",
+        "ray_of_sickness",
+        "resistance",
+        "rogue_sneak_attack",
+        "sacred_flame",
+        "sanctuary",
+        "searing_smite",
+        "shield",
+        "shield_of_faith",
+        "shillelagh",
+        "shocking_grasp",
+        "sleep",
+        "sorcerer_innate_sorcery",
+        "sorcerous_burst",
+        "spare_the_dying",
+        "starry_wisp",
+        "true_strike",
+        "vicious_mockery",
+        "wizard_ritual_adept"
+      ]
+    },
+    {
+      "count": 18,
+      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
+      "status": "open-profile-accounting",
+      "unitIds": [
+        "barbarian_weapon_mastery",
+        "cleric_divine_order",
+        "druid_primal_order",
+        "faerie_fire",
+        "feather_fall",
+        "fighter_weapon_mastery",
+        "fog_cloud",
+        "grease",
+        "hunters_mark",
+        "jump",
+        "light",
+        "paladin_weapon_mastery",
+        "ranger_favored_enemy",
+        "ranger_weapon_mastery",
+        "rogue_expertise",
+        "rogue_weapon_mastery",
+        "thunderwave",
+        "wizard_arcane_recovery"
+      ]
+    },
+    {
+      "count": 7,
+      "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
+      "status": "closed-runtime-detached-table-adjudication",
+      "unitIds": [
+        "charm_person",
+        "detect_evil_and_good",
+        "detect_magic",
+        "detect_poison_and_disease",
+        "druid_druidic",
+        "minor_illusion",
+        "rogue_thieves_cant"
+      ]
+    },
+    {
+      "count": 5,
+      "description": "No Unit profile claim records runtime support or an accepted strict closure.",
+      "status": "open-runtime-behavior",
+      "unitIds": [
+        "alarm",
+        "comprehend_languages",
+        "identify",
+        "silent_image",
+        "speak_with_animals"
+      ]
+    },
+    {
+      "count": 4,
+      "description": "The level-1 behavior is complete and every remaining residual is later-level-only.",
+      "status": "closed-later-level-only",
+      "unitIds": [
+        "bard_bardic_inspiration",
+        "fighter_fighting_style",
+        "monk_martial_arts",
+        "warlock_eldritch_invocations"
+      ]
+    }
+  ],
+  "metrics": {
+    "productReadiness": {
+      "denominator": 367,
+      "numerator": 367,
+      "percent": "100%",
+      "rowsByStatus": {
+        "accepted": 278,
+        "accepted-no-battle-effect": 89
+      }
+    },
+    "strictRuntimeProfileSupport": {
+      "denominator": 93,
+      "numerator": 59,
+      "percent": "63.4%"
+    },
+    "strictTargetClosure": {
+      "denominator": 93,
+      "numerator": 70,
+      "percent": "75.3%"
+    }
+  },
+  "openFrontier": [
+    {
+      "count": 18,
+      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
+      "status": "open-profile-accounting",
+      "unitIds": [
+        "barbarian_weapon_mastery",
+        "cleric_divine_order",
+        "druid_primal_order",
+        "faerie_fire",
+        "feather_fall",
+        "fighter_weapon_mastery",
+        "fog_cloud",
+        "grease",
+        "hunters_mark",
+        "jump",
+        "light",
+        "paladin_weapon_mastery",
+        "ranger_favored_enemy",
+        "ranger_weapon_mastery",
+        "rogue_expertise",
+        "rogue_weapon_mastery",
+        "thunderwave",
+        "wizard_arcane_recovery"
+      ]
+    },
+    {
+      "count": 5,
+      "description": "No Unit profile claim records runtime support or an accepted strict closure.",
+      "status": "open-runtime-behavior",
+      "unitIds": [
+        "alarm",
+        "comprehend_languages",
+        "identify",
+        "silent_image",
+        "speak_with_animals"
+      ]
+    }
+  ],
+  "outsideDenominator": {
+    "companionWorktree": [
+      {
+        "reason": "Companion and familiar runtime work is owned by the separate companion worktree.",
+        "sourceRows": [
+          {
+            "category": "spell Unit pressure",
+            "concept": "Wizard spell list Find Familiar",
+            "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_find_familiar",
+            "levelBand": "spell-level-1",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 173,
+              "lineStart": 173,
+              "path": ".references/srd-5.2.1/Classes/Wizard.md"
+            }
+          }
+        ],
+        "unitId": "find_familiar"
+      }
+    ],
+    "noMatrixSrdPressure": [
+      {
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "sourceRows": [
+          {
+            "category": "spell Unit pressure",
+            "concept": "Cleric spell list Create or Destroy Water",
+            "id": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_create_or_destroy_water",
+            "levelBand": "spell-level-1",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 165,
+              "lineStart": 165,
+              "path": ".references/srd-5.2.1/Classes/Cleric.md"
+            }
+          },
+          {
+            "category": "spell Unit pressure",
+            "concept": "Druid spell list Create or Destroy Water",
+            "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_create_or_destroy_water",
+            "levelBand": "spell-level-1",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 206,
+              "lineStart": 206,
+              "path": ".references/srd-5.2.1/Classes/Druid.md"
+            }
+          }
+        ],
+        "unitId": "create_or_destroy_water"
+      },
+      {
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "sourceRows": [
+          {
+            "category": "spell Unit pressure",
+            "concept": "Bard spell list Disguise Self",
+            "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_disguise_self",
+            "levelBand": "spell-level-1",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 170,
+              "lineStart": 170,
+              "path": ".references/srd-5.2.1/Classes/Bard.md"
+            }
+          },
+          {
+            "category": "spell Unit pressure",
+            "concept": "Sorcerer spell list Disguise Self",
+            "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_disguise_self",
+            "levelBand": "spell-level-1",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 250,
+              "lineStart": 250,
+              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+            }
+          },
+          {
+            "category": "spell Unit pressure",
+            "concept": "Wizard spell list Disguise Self",
+            "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_disguise_self",
+            "levelBand": "spell-level-1",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 169,
+              "lineStart": 169,
+              "path": ".references/srd-5.2.1/Classes/Wizard.md"
+            }
+          }
+        ],
+        "unitId": "disguise_self"
+      },
+      {
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "sourceRows": [
+          {
+            "category": "spell Unit pressure",
+            "concept": "Druid spell list Druidcraft",
+            "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_druidcraft",
+            "levelBand": "spell-level-0",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 188,
+              "lineStart": 188,
+              "path": ".references/srd-5.2.1/Classes/Druid.md"
+            }
+          }
+        ],
+        "unitId": "druidcraft"
+      },
+      {
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "sourceRows": [
+          {
+            "category": "spell Unit pressure",
+            "concept": "Druid spell list Elementalism",
+            "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_elementalism",
+            "levelBand": "spell-level-0",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 189,
+              "lineStart": 189,
+              "path": ".references/srd-5.2.1/Classes/Druid.md"
+            }
+          },
+          {
+            "category": "spell Unit pressure",
+            "concept": "Sorcerer spell list Elementalism",
+            "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_elementalism",
+            "levelBand": "spell-level-0",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 226,
+              "lineStart": 226,
+              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+            }
+          },
+          {
+            "category": "spell Unit pressure",
+            "concept": "Wizard spell list Elementalism",
+            "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_elementalism",
+            "levelBand": "spell-level-0",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 145,
+              "lineStart": 145,
+              "path": ".references/srd-5.2.1/Classes/Wizard.md"
+            }
+          }
+        ],
+        "unitId": "elementalism"
+      },
+      {
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "sourceRows": [
+          {
+            "category": "spell Unit pressure",
+            "concept": "Wizard spell list Floating Disk",
+            "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_floating_disk",
+            "levelBand": "spell-level-1",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 174,
+              "lineStart": 174,
+              "path": ".references/srd-5.2.1/Classes/Wizard.md"
+            }
+          }
+        ],
+        "unitId": "floating_disk"
+      },
+      {
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "sourceRows": [
+          {
+            "category": "spell Unit pressure",
+            "concept": "Druid spell list Goodberry",
+            "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_goodberry",
+            "levelBand": "spell-level-1",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 213,
+              "lineStart": 213,
+              "path": ".references/srd-5.2.1/Classes/Druid.md"
+            }
+          },
+          {
+            "category": "spell Unit pressure",
+            "concept": "Ranger spell list Goodberry",
+            "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_goodberry",
+            "levelBand": "spell-level-1",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 172,
+              "lineStart": 172,
+              "path": ".references/srd-5.2.1/Classes/Ranger.md"
+            }
+          }
+        ],
+        "unitId": "goodberry"
+      },
+      {
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "sourceRows": [
+          {
+            "category": "spell Unit pressure",
+            "concept": "Bard spell list Illusory Script",
+            "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_illusory_script",
+            "levelBand": "spell-level-1",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 178,
+              "lineStart": 178,
+              "path": ".references/srd-5.2.1/Classes/Bard.md"
+            }
+          },
+          {
+            "category": "spell Unit pressure",
+            "concept": "Warlock spell list Illusory Script",
+            "id": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_illusory_script",
+            "levelBand": "spell-level-1",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 356,
+              "lineStart": 356,
+              "path": ".references/srd-5.2.1/Classes/Warlock.md"
+            }
+          },
+          {
+            "category": "spell Unit pressure",
+            "concept": "Wizard spell list Illusory Script",
+            "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_illusory_script",
+            "levelBand": "spell-level-1",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 180,
+              "lineStart": 180,
+              "path": ".references/srd-5.2.1/Classes/Wizard.md"
+            }
+          }
+        ],
+        "unitId": "illusory_script"
+      },
+      {
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "sourceRows": [
+          {
+            "category": "spell Unit pressure",
+            "concept": "Bard spell list Mage Hand",
+            "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_mage_hand",
+            "levelBand": "spell-level-0",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 149,
+              "lineStart": 149,
+              "path": ".references/srd-5.2.1/Classes/Bard.md"
+            }
+          },
+          {
+            "category": "spell Unit pressure",
+            "concept": "Sorcerer spell list Mage Hand",
+            "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_mage_hand",
+            "levelBand": "spell-level-0",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 229,
+              "lineStart": 229,
+              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+            }
+          },
+          {
+            "category": "spell Unit pressure",
+            "concept": "Warlock spell list Mage Hand",
+            "id": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_mage_hand",
+            "levelBand": "spell-level-0",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 338,
+              "lineStart": 338,
+              "path": ".references/srd-5.2.1/Classes/Warlock.md"
+            }
+          },
+          {
+            "category": "spell Unit pressure",
+            "concept": "Wizard spell list Mage Hand",
+            "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_mage_hand",
+            "levelBand": "spell-level-0",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 148,
+              "lineStart": 148,
+              "path": ".references/srd-5.2.1/Classes/Wizard.md"
+            }
+          }
+        ],
+        "unitId": "mage_hand"
+      },
+      {
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "sourceRows": [
+          {
+            "category": "spell Unit pressure",
+            "concept": "Bard spell list Mending",
+            "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_mending",
+            "levelBand": "spell-level-0",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 150,
+              "lineStart": 150,
+              "path": ".references/srd-5.2.1/Classes/Bard.md"
+            }
+          },
+          {
+            "category": "spell Unit pressure",
+            "concept": "Cleric spell list Mending",
+            "id": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_mending",
+            "levelBand": "spell-level-0",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 152,
+              "lineStart": 152,
+              "path": ".references/srd-5.2.1/Classes/Cleric.md"
+            }
+          },
+          {
+            "category": "spell Unit pressure",
+            "concept": "Druid spell list Mending",
+            "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_mending",
+            "levelBand": "spell-level-0",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 191,
+              "lineStart": 191,
+              "path": ".references/srd-5.2.1/Classes/Druid.md"
+            }
+          },
+          {
+            "category": "spell Unit pressure",
+            "concept": "Sorcerer spell list Mending",
+            "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_mending",
+            "levelBand": "spell-level-0",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 230,
+              "lineStart": 230,
+              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+            }
+          },
+          {
+            "category": "spell Unit pressure",
+            "concept": "Wizard spell list Mending",
+            "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_mending",
+            "levelBand": "spell-level-0",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 149,
+              "lineStart": 149,
+              "path": ".references/srd-5.2.1/Classes/Wizard.md"
+            }
+          }
+        ],
+        "unitId": "mending"
+      },
+      {
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "sourceRows": [
+          {
+            "category": "spell Unit pressure",
+            "concept": "Bard spell list Message",
+            "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_message",
+            "levelBand": "spell-level-0",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 151,
+              "lineStart": 151,
+              "path": ".references/srd-5.2.1/Classes/Bard.md"
+            }
+          },
+          {
+            "category": "spell Unit pressure",
+            "concept": "Druid spell list Message",
+            "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_message",
+            "levelBand": "spell-level-0",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 192,
+              "lineStart": 192,
+              "path": ".references/srd-5.2.1/Classes/Druid.md"
+            }
+          },
+          {
+            "category": "spell Unit pressure",
+            "concept": "Sorcerer spell list Message",
+            "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_message",
+            "levelBand": "spell-level-0",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 231,
+              "lineStart": 231,
+              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+            }
+          },
+          {
+            "category": "spell Unit pressure",
+            "concept": "Wizard spell list Message",
+            "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_message",
+            "levelBand": "spell-level-0",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 150,
+              "lineStart": 150,
+              "path": ".references/srd-5.2.1/Classes/Wizard.md"
+            }
+          }
+        ],
+        "unitId": "message"
+      },
+      {
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "sourceRows": [
+          {
+            "category": "spell Unit pressure",
+            "concept": "Bard spell list Prestidigitation",
+            "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_prestidigitation",
+            "levelBand": "spell-level-0",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 153,
+              "lineStart": 153,
+              "path": ".references/srd-5.2.1/Classes/Bard.md"
+            }
+          },
+          {
+            "category": "spell Unit pressure",
+            "concept": "Sorcerer spell list Prestidigitation",
+            "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_prestidigitation",
+            "levelBand": "spell-level-0",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 234,
+              "lineStart": 234,
+              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+            }
+          },
+          {
+            "category": "spell Unit pressure",
+            "concept": "Warlock spell list Prestidigitation",
+            "id": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_prestidigitation",
+            "levelBand": "spell-level-0",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 341,
+              "lineStart": 341,
+              "path": ".references/srd-5.2.1/Classes/Warlock.md"
+            }
+          },
+          {
+            "category": "spell Unit pressure",
+            "concept": "Wizard spell list Prestidigitation",
+            "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_prestidigitation",
+            "levelBand": "spell-level-0",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 153,
+              "lineStart": 153,
+              "path": ".references/srd-5.2.1/Classes/Wizard.md"
+            }
+          }
+        ],
+        "unitId": "prestidigitation"
+      },
+      {
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "sourceRows": [
+          {
+            "category": "spell Unit pressure",
+            "concept": "Cleric spell list Purify Food and Drink",
+            "id": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_purify_food_and_drink",
+            "levelBand": "spell-level-1",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 174,
+              "lineStart": 174,
+              "path": ".references/srd-5.2.1/Classes/Cleric.md"
+            }
+          },
+          {
+            "category": "spell Unit pressure",
+            "concept": "Druid spell list Purify Food and Drink",
+            "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_purify_food_and_drink",
+            "levelBand": "spell-level-1",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 219,
+              "lineStart": 219,
+              "path": ".references/srd-5.2.1/Classes/Druid.md"
+            }
+          },
+          {
+            "category": "spell Unit pressure",
+            "concept": "Paladin spell list Purify Food and Drink",
+            "id": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_purify_food_and_drink",
+            "levelBand": "spell-level-1",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 186,
+              "lineStart": 186,
+              "path": ".references/srd-5.2.1/Classes/Paladin.md"
+            }
+          }
+        ],
+        "unitId": "purify_food_and_drink"
+      },
+      {
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "sourceRows": [
+          {
+            "category": "spell Unit pressure",
+            "concept": "Cleric spell list Thaumaturgy",
+            "id": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_thaumaturgy",
+            "levelBand": "spell-level-0",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 156,
+              "lineStart": 156,
+              "path": ".references/srd-5.2.1/Classes/Cleric.md"
+            }
+          }
+        ],
+        "unitId": "thaumaturgy"
+      },
+      {
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "sourceRows": [
+          {
+            "category": "spell Unit pressure",
+            "concept": "Bard spell list Unseen Servant",
+            "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_unseen_servant",
+            "levelBand": "spell-level-1",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 184,
+              "lineStart": 184,
+              "path": ".references/srd-5.2.1/Classes/Bard.md"
+            }
+          },
+          {
+            "category": "spell Unit pressure",
+            "concept": "Warlock spell list Unseen Servant",
+            "id": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_unseen_servant",
+            "levelBand": "spell-level-1",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 359,
+              "lineStart": 359,
+              "path": ".references/srd-5.2.1/Classes/Warlock.md"
+            }
+          },
+          {
+            "category": "spell Unit pressure",
+            "concept": "Wizard spell list Unseen Servant",
+            "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_unseen_servant",
+            "levelBand": "spell-level-1",
+            "rowKind": "spell-unit-pressure",
+            "source": {
+              "lineEnd": 191,
+              "lineStart": 191,
+              "path": ".references/srd-5.2.1/Classes/Wizard.md"
+            }
+          }
+        ],
+        "unitId": "unseen_servant"
+      }
+    ],
+    "nonExecutableClassContainers": [
+      {
+        "kind": "class",
+        "reason": "The Unit joins the matrix, but it has no executable mechanics and is outside the strict executable denominator.",
+        "sourceRecordPath": "packages/surface/content/class_barbarian.json",
+        "sourceRows": [
+          {
+            "category": "class container",
+            "concept": "Barbarian class container",
+            "id": "srd521:classes/barbarian:level-1:class-container:barbarian_class_container",
+            "levelBand": "level-1",
+            "rowKind": "class-container",
+            "source": {
+              "lineEnd": 26,
+              "lineStart": 3,
+              "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Barbarian level 1 feature table row",
+            "id": "srd521:classes/barbarian:level-1:class-table-summary:barbarian_level_1_feature_table_row",
+            "levelBand": "level-1",
+            "rowKind": "class-table-summary",
+            "source": {
+              "lineEnd": 35,
+              "lineStart": 35,
+              "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Barbarian Armor Training",
+            "id": "srd521:classes/barbarian:level-1:core-trait:barbarian_armor_training",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 12,
+              "lineStart": 12,
+              "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Barbarian Hit Point Die",
+            "id": "srd521:classes/barbarian:level-1:core-trait:barbarian_hit_point_die",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 8,
+              "lineStart": 8,
+              "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Barbarian Primary Ability",
+            "id": "srd521:classes/barbarian:level-1:core-trait:barbarian_primary_ability",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 7,
+              "lineStart": 7,
+              "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Barbarian Saving Throw Proficiencies",
+            "id": "srd521:classes/barbarian:level-1:core-trait:barbarian_saving_throw_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 9,
+              "lineStart": 9,
+              "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Barbarian Skill Proficiencies",
+            "id": "srd521:classes/barbarian:level-1:core-trait:barbarian_skill_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 10,
+              "lineStart": 10,
+              "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Barbarian Weapon Proficiencies",
+            "id": "srd521:classes/barbarian:level-1:core-trait:barbarian_weapon_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 11,
+              "lineStart": 11,
+              "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+            }
+          },
+          {
+            "category": "equipment/weapon/armor pressure",
+            "concept": "Barbarian Starting Equipment",
+            "id": "srd521:classes/barbarian:level-1:equipment-pressure:barbarian_starting_equipment",
+            "levelBand": "level-1",
+            "rowKind": "equipment-pressure",
+            "source": {
+              "lineEnd": 13,
+              "lineStart": 13,
+              "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Barbarian multiclass entry traits",
+            "id": "srd521:classes/barbarian:level-1:multiclass-entry:barbarian_multiclass_entry_traits",
+            "levelBand": "level-1",
+            "rowKind": "multiclass-entry",
+            "source": {
+              "lineEnd": 26,
+              "lineStart": 22,
+              "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+            }
+          }
+        ],
+        "unitId": "class_barbarian"
+      },
+      {
+        "kind": "class",
+        "reason": "The Unit joins the matrix, but it has no executable mechanics and is outside the strict executable denominator.",
+        "sourceRecordPath": "packages/surface/content/class_bard.json",
+        "sourceRows": [
+          {
+            "category": "class container",
+            "concept": "Bard class container",
+            "id": "srd521:classes/bard:level-1:class-container:bard_class_container",
+            "levelBand": "level-1",
+            "rowKind": "class-container",
+            "source": {
+              "lineEnd": 27,
+              "lineStart": 3,
+              "path": ".references/srd-5.2.1/Classes/Bard.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Bard level 1 feature table row",
+            "id": "srd521:classes/bard:level-1:class-table-summary:bard_level_1_feature_table_row",
+            "levelBand": "level-1",
+            "rowKind": "class-table-summary",
+            "source": {
+              "lineEnd": 36,
+              "lineStart": 36,
+              "path": ".references/srd-5.2.1/Classes/Bard.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Bard Armor Training",
+            "id": "srd521:classes/bard:level-1:core-trait:bard_armor_training",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 13,
+              "lineStart": 13,
+              "path": ".references/srd-5.2.1/Classes/Bard.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Bard Hit Point Die",
+            "id": "srd521:classes/bard:level-1:core-trait:bard_hit_point_die",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 8,
+              "lineStart": 8,
+              "path": ".references/srd-5.2.1/Classes/Bard.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Bard Primary Ability",
+            "id": "srd521:classes/bard:level-1:core-trait:bard_primary_ability",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 7,
+              "lineStart": 7,
+              "path": ".references/srd-5.2.1/Classes/Bard.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Bard Saving Throw Proficiencies",
+            "id": "srd521:classes/bard:level-1:core-trait:bard_saving_throw_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 9,
+              "lineStart": 9,
+              "path": ".references/srd-5.2.1/Classes/Bard.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Bard Skill Proficiencies",
+            "id": "srd521:classes/bard:level-1:core-trait:bard_skill_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 10,
+              "lineStart": 10,
+              "path": ".references/srd-5.2.1/Classes/Bard.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Bard Tool Proficiencies",
+            "id": "srd521:classes/bard:level-1:core-trait:bard_tool_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 12,
+              "lineStart": 12,
+              "path": ".references/srd-5.2.1/Classes/Bard.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Bard Weapon Proficiencies",
+            "id": "srd521:classes/bard:level-1:core-trait:bard_weapon_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 11,
+              "lineStart": 11,
+              "path": ".references/srd-5.2.1/Classes/Bard.md"
+            }
+          },
+          {
+            "category": "equipment/weapon/armor pressure",
+            "concept": "Bard Starting Equipment",
+            "id": "srd521:classes/bard:level-1:equipment-pressure:bard_starting_equipment",
+            "levelBand": "level-1",
+            "rowKind": "equipment-pressure",
+            "source": {
+              "lineEnd": 14,
+              "lineStart": 14,
+              "path": ".references/srd-5.2.1/Classes/Bard.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Bard multiclass entry traits",
+            "id": "srd521:classes/bard:level-1:multiclass-entry:bard_multiclass_entry_traits",
+            "levelBand": "level-1",
+            "rowKind": "multiclass-entry",
+            "source": {
+              "lineEnd": 27,
+              "lineStart": 23,
+              "path": ".references/srd-5.2.1/Classes/Bard.md"
+            }
+          },
+          {
+            "category": "spell access/list pressure",
+            "concept": "Bard Spellcasting",
+            "id": "srd521:classes/bard:level-1:spell-access:bard_spellcasting",
+            "levelBand": "level-1",
+            "rowKind": "spell-access",
+            "source": {
+              "lineEnd": 92,
+              "lineStart": 69,
+              "path": ".references/srd-5.2.1/Classes/Bard.md"
+            }
+          }
+        ],
+        "unitId": "class_bard"
+      },
+      {
+        "kind": "class",
+        "reason": "The Unit joins the matrix, but it has no executable mechanics and is outside the strict executable denominator.",
+        "sourceRecordPath": "packages/surface/content/class_cleric.json",
+        "sourceRows": [
+          {
+            "category": "class container",
+            "concept": "Cleric class container",
+            "id": "srd521:classes/cleric:level-1:class-container:cleric_class_container",
+            "levelBand": "level-1",
+            "rowKind": "class-container",
+            "source": {
+              "lineEnd": 26,
+              "lineStart": 3,
+              "path": ".references/srd-5.2.1/Classes/Cleric.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Cleric level 1 feature table row",
+            "id": "srd521:classes/cleric:level-1:class-table-summary:cleric_level_1_feature_table_row",
+            "levelBand": "level-1",
+            "rowKind": "class-table-summary",
+            "source": {
+              "lineEnd": 35,
+              "lineStart": 35,
+              "path": ".references/srd-5.2.1/Classes/Cleric.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Cleric Armor Training",
+            "id": "srd521:classes/cleric:level-1:core-trait:cleric_armor_training",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 12,
+              "lineStart": 12,
+              "path": ".references/srd-5.2.1/Classes/Cleric.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Cleric Hit Point Die",
+            "id": "srd521:classes/cleric:level-1:core-trait:cleric_hit_point_die",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 8,
+              "lineStart": 8,
+              "path": ".references/srd-5.2.1/Classes/Cleric.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Cleric Primary Ability",
+            "id": "srd521:classes/cleric:level-1:core-trait:cleric_primary_ability",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 7,
+              "lineStart": 7,
+              "path": ".references/srd-5.2.1/Classes/Cleric.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Cleric Saving Throw Proficiencies",
+            "id": "srd521:classes/cleric:level-1:core-trait:cleric_saving_throw_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 9,
+              "lineStart": 9,
+              "path": ".references/srd-5.2.1/Classes/Cleric.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Cleric Skill Proficiencies",
+            "id": "srd521:classes/cleric:level-1:core-trait:cleric_skill_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 10,
+              "lineStart": 10,
+              "path": ".references/srd-5.2.1/Classes/Cleric.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Cleric Weapon Proficiencies",
+            "id": "srd521:classes/cleric:level-1:core-trait:cleric_weapon_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 11,
+              "lineStart": 11,
+              "path": ".references/srd-5.2.1/Classes/Cleric.md"
+            }
+          },
+          {
+            "category": "equipment/weapon/armor pressure",
+            "concept": "Cleric Starting Equipment",
+            "id": "srd521:classes/cleric:level-1:equipment-pressure:cleric_starting_equipment",
+            "levelBand": "level-1",
+            "rowKind": "equipment-pressure",
+            "source": {
+              "lineEnd": 13,
+              "lineStart": 13,
+              "path": ".references/srd-5.2.1/Classes/Cleric.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Cleric multiclass entry traits",
+            "id": "srd521:classes/cleric:level-1:multiclass-entry:cleric_multiclass_entry_traits",
+            "levelBand": "level-1",
+            "rowKind": "multiclass-entry",
+            "source": {
+              "lineEnd": 26,
+              "lineStart": 22,
+              "path": ".references/srd-5.2.1/Classes/Cleric.md"
+            }
+          },
+          {
+            "category": "spell access/list pressure",
+            "concept": "Cleric Spellcasting",
+            "id": "srd521:classes/cleric:level-1:spell-access:cleric_spellcasting",
+            "levelBand": "level-1",
+            "rowKind": "spell-access",
+            "source": {
+              "lineEnd": 79,
+              "lineStart": 56,
+              "path": ".references/srd-5.2.1/Classes/Cleric.md"
+            }
+          }
+        ],
+        "unitId": "class_cleric"
+      },
+      {
+        "kind": "class",
+        "reason": "The Unit joins the matrix, but it has no executable mechanics and is outside the strict executable denominator.",
+        "sourceRecordPath": "packages/surface/content/class_druid.json",
+        "sourceRows": [
+          {
+            "category": "class container",
+            "concept": "Druid class container",
+            "id": "srd521:classes/druid:level-1:class-container:druid_class_container",
+            "levelBand": "level-1",
+            "rowKind": "class-container",
+            "source": {
+              "lineEnd": 27,
+              "lineStart": 3,
+              "path": ".references/srd-5.2.1/Classes/Druid.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Druid level 1 feature table row",
+            "id": "srd521:classes/druid:level-1:class-table-summary:druid_level_1_feature_table_row",
+            "levelBand": "level-1",
+            "rowKind": "class-table-summary",
+            "source": {
+              "lineEnd": 32,
+              "lineStart": 32,
+              "path": ".references/srd-5.2.1/Classes/Druid.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Druid Armor Training",
+            "id": "srd521:classes/druid:level-1:core-trait:druid_armor_training",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 13,
+              "lineStart": 13,
+              "path": ".references/srd-5.2.1/Classes/Druid.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Druid Hit Point Die",
+            "id": "srd521:classes/druid:level-1:core-trait:druid_hit_point_die",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 8,
+              "lineStart": 8,
+              "path": ".references/srd-5.2.1/Classes/Druid.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Druid Primary Ability",
+            "id": "srd521:classes/druid:level-1:core-trait:druid_primary_ability",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 7,
+              "lineStart": 7,
+              "path": ".references/srd-5.2.1/Classes/Druid.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Druid Saving Throw Proficiencies",
+            "id": "srd521:classes/druid:level-1:core-trait:druid_saving_throw_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 9,
+              "lineStart": 9,
+              "path": ".references/srd-5.2.1/Classes/Druid.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Druid Skill Proficiencies",
+            "id": "srd521:classes/druid:level-1:core-trait:druid_skill_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 10,
+              "lineStart": 10,
+              "path": ".references/srd-5.2.1/Classes/Druid.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Druid Tool Proficiencies",
+            "id": "srd521:classes/druid:level-1:core-trait:druid_tool_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 12,
+              "lineStart": 12,
+              "path": ".references/srd-5.2.1/Classes/Druid.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Druid Weapon Proficiencies",
+            "id": "srd521:classes/druid:level-1:core-trait:druid_weapon_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 11,
+              "lineStart": 11,
+              "path": ".references/srd-5.2.1/Classes/Druid.md"
+            }
+          },
+          {
+            "category": "equipment/weapon/armor pressure",
+            "concept": "Druid Starting Equipment",
+            "id": "srd521:classes/druid:level-1:equipment-pressure:druid_starting_equipment",
+            "levelBand": "level-1",
+            "rowKind": "equipment-pressure",
+            "source": {
+              "lineEnd": 14,
+              "lineStart": 14,
+              "path": ".references/srd-5.2.1/Classes/Druid.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Druid multiclass entry traits",
+            "id": "srd521:classes/druid:level-1:multiclass-entry:druid_multiclass_entry_traits",
+            "levelBand": "level-1",
+            "rowKind": "multiclass-entry",
+            "source": {
+              "lineEnd": 27,
+              "lineStart": 23,
+              "path": ".references/srd-5.2.1/Classes/Druid.md"
+            }
+          },
+          {
+            "category": "spell access/list pressure",
+            "concept": "Druid Spellcasting",
+            "id": "srd521:classes/druid:level-1:spell-access:druid_spellcasting",
+            "levelBand": "level-1",
+            "rowKind": "spell-access",
+            "source": {
+              "lineEnd": 80,
+              "lineStart": 57,
+              "path": ".references/srd-5.2.1/Classes/Druid.md"
+            }
+          }
+        ],
+        "unitId": "class_druid"
+      },
+      {
+        "kind": "class",
+        "reason": "The Unit joins the matrix, but it has no executable mechanics and is outside the strict executable denominator.",
+        "sourceRecordPath": "packages/surface/content/class_fighter.json",
+        "sourceRows": [
+          {
+            "category": "class container",
+            "concept": "Fighter class container",
+            "id": "srd521:classes/fighter:level-1:class-container:fighter_class_container",
+            "levelBand": "level-1",
+            "rowKind": "class-container",
+            "source": {
+              "lineEnd": 26,
+              "lineStart": 3,
+              "path": ".references/srd-5.2.1/Classes/Fighter.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Fighter level 1 feature table row",
+            "id": "srd521:classes/fighter:level-1:class-table-summary:fighter_level_1_feature_table_row",
+            "levelBand": "level-1",
+            "rowKind": "class-table-summary",
+            "source": {
+              "lineEnd": 31,
+              "lineStart": 31,
+              "path": ".references/srd-5.2.1/Classes/Fighter.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Fighter Armor Training",
+            "id": "srd521:classes/fighter:level-1:core-trait:fighter_armor_training",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 12,
+              "lineStart": 12,
+              "path": ".references/srd-5.2.1/Classes/Fighter.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Fighter Hit Point Die",
+            "id": "srd521:classes/fighter:level-1:core-trait:fighter_hit_point_die",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 8,
+              "lineStart": 8,
+              "path": ".references/srd-5.2.1/Classes/Fighter.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Fighter Primary Ability",
+            "id": "srd521:classes/fighter:level-1:core-trait:fighter_primary_ability",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 7,
+              "lineStart": 7,
+              "path": ".references/srd-5.2.1/Classes/Fighter.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Fighter Saving Throw Proficiencies",
+            "id": "srd521:classes/fighter:level-1:core-trait:fighter_saving_throw_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 9,
+              "lineStart": 9,
+              "path": ".references/srd-5.2.1/Classes/Fighter.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Fighter Skill Proficiencies",
+            "id": "srd521:classes/fighter:level-1:core-trait:fighter_skill_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 10,
+              "lineStart": 10,
+              "path": ".references/srd-5.2.1/Classes/Fighter.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Fighter Weapon Proficiencies",
+            "id": "srd521:classes/fighter:level-1:core-trait:fighter_weapon_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 11,
+              "lineStart": 11,
+              "path": ".references/srd-5.2.1/Classes/Fighter.md"
+            }
+          },
+          {
+            "category": "equipment/weapon/armor pressure",
+            "concept": "Fighter Starting Equipment",
+            "id": "srd521:classes/fighter:level-1:equipment-pressure:fighter_starting_equipment",
+            "levelBand": "level-1",
+            "rowKind": "equipment-pressure",
+            "source": {
+              "lineEnd": 13,
+              "lineStart": 13,
+              "path": ".references/srd-5.2.1/Classes/Fighter.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Fighter multiclass entry traits",
+            "id": "srd521:classes/fighter:level-1:multiclass-entry:fighter_multiclass_entry_traits",
+            "levelBand": "level-1",
+            "rowKind": "multiclass-entry",
+            "source": {
+              "lineEnd": 26,
+              "lineStart": 22,
+              "path": ".references/srd-5.2.1/Classes/Fighter.md"
+            }
+          }
+        ],
+        "unitId": "class_fighter"
+      },
+      {
+        "kind": "class",
+        "reason": "The Unit joins the matrix, but it has no executable mechanics and is outside the strict executable denominator.",
+        "sourceRecordPath": "packages/surface/content/class_monk.json",
+        "sourceRows": [
+          {
+            "category": "class container",
+            "concept": "Monk class container",
+            "id": "srd521:classes/monk:level-1:class-container:monk_class_container",
+            "levelBand": "level-1",
+            "rowKind": "class-container",
+            "source": {
+              "lineEnd": 27,
+              "lineStart": 3,
+              "path": ".references/srd-5.2.1/Classes/Monk.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Monk level 1 feature table row",
+            "id": "srd521:classes/monk:level-1:class-table-summary:monk_level_1_feature_table_row",
+            "levelBand": "level-1",
+            "rowKind": "class-table-summary",
+            "source": {
+              "lineEnd": 32,
+              "lineStart": 32,
+              "path": ".references/srd-5.2.1/Classes/Monk.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Monk Armor Training",
+            "id": "srd521:classes/monk:level-1:core-trait:monk_armor_training",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 13,
+              "lineStart": 13,
+              "path": ".references/srd-5.2.1/Classes/Monk.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Monk Hit Point Die",
+            "id": "srd521:classes/monk:level-1:core-trait:monk_hit_point_die",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 8,
+              "lineStart": 8,
+              "path": ".references/srd-5.2.1/Classes/Monk.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Monk Primary Ability",
+            "id": "srd521:classes/monk:level-1:core-trait:monk_primary_ability",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 7,
+              "lineStart": 7,
+              "path": ".references/srd-5.2.1/Classes/Monk.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Monk Saving Throw Proficiencies",
+            "id": "srd521:classes/monk:level-1:core-trait:monk_saving_throw_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 9,
+              "lineStart": 9,
+              "path": ".references/srd-5.2.1/Classes/Monk.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Monk Skill Proficiencies",
+            "id": "srd521:classes/monk:level-1:core-trait:monk_skill_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 10,
+              "lineStart": 10,
+              "path": ".references/srd-5.2.1/Classes/Monk.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Monk Tool Proficiencies",
+            "id": "srd521:classes/monk:level-1:core-trait:monk_tool_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 12,
+              "lineStart": 12,
+              "path": ".references/srd-5.2.1/Classes/Monk.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Monk Weapon Proficiencies",
+            "id": "srd521:classes/monk:level-1:core-trait:monk_weapon_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 11,
+              "lineStart": 11,
+              "path": ".references/srd-5.2.1/Classes/Monk.md"
+            }
+          },
+          {
+            "category": "equipment/weapon/armor pressure",
+            "concept": "Monk Starting Equipment",
+            "id": "srd521:classes/monk:level-1:equipment-pressure:monk_starting_equipment",
+            "levelBand": "level-1",
+            "rowKind": "equipment-pressure",
+            "source": {
+              "lineEnd": 14,
+              "lineStart": 14,
+              "path": ".references/srd-5.2.1/Classes/Monk.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Monk multiclass entry traits",
+            "id": "srd521:classes/monk:level-1:multiclass-entry:monk_multiclass_entry_traits",
+            "levelBand": "level-1",
+            "rowKind": "multiclass-entry",
+            "source": {
+              "lineEnd": 27,
+              "lineStart": 23,
+              "path": ".references/srd-5.2.1/Classes/Monk.md"
+            }
+          }
+        ],
+        "unitId": "class_monk"
+      },
+      {
+        "kind": "class",
+        "reason": "The Unit joins the matrix, but it has no executable mechanics and is outside the strict executable denominator.",
+        "sourceRecordPath": "packages/surface/content/class_paladin.json",
+        "sourceRows": [
+          {
+            "category": "class container",
+            "concept": "Paladin class container",
+            "id": "srd521:classes/paladin:level-1:class-container:paladin_class_container",
+            "levelBand": "level-1",
+            "rowKind": "class-container",
+            "source": {
+              "lineEnd": 26,
+              "lineStart": 3,
+              "path": ".references/srd-5.2.1/Classes/Paladin.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Paladin level 1 feature table row",
+            "id": "srd521:classes/paladin:level-1:class-table-summary:paladin_level_1_feature_table_row",
+            "levelBand": "level-1",
+            "rowKind": "class-table-summary",
+            "source": {
+              "lineEnd": 35,
+              "lineStart": 35,
+              "path": ".references/srd-5.2.1/Classes/Paladin.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Paladin Armor Training",
+            "id": "srd521:classes/paladin:level-1:core-trait:paladin_armor_training",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 12,
+              "lineStart": 12,
+              "path": ".references/srd-5.2.1/Classes/Paladin.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Paladin Hit Point Die",
+            "id": "srd521:classes/paladin:level-1:core-trait:paladin_hit_point_die",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 8,
+              "lineStart": 8,
+              "path": ".references/srd-5.2.1/Classes/Paladin.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Paladin Primary Ability",
+            "id": "srd521:classes/paladin:level-1:core-trait:paladin_primary_ability",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 7,
+              "lineStart": 7,
+              "path": ".references/srd-5.2.1/Classes/Paladin.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Paladin Saving Throw Proficiencies",
+            "id": "srd521:classes/paladin:level-1:core-trait:paladin_saving_throw_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 9,
+              "lineStart": 9,
+              "path": ".references/srd-5.2.1/Classes/Paladin.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Paladin Skill Proficiencies",
+            "id": "srd521:classes/paladin:level-1:core-trait:paladin_skill_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 10,
+              "lineStart": 10,
+              "path": ".references/srd-5.2.1/Classes/Paladin.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Paladin Weapon Proficiencies",
+            "id": "srd521:classes/paladin:level-1:core-trait:paladin_weapon_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 11,
+              "lineStart": 11,
+              "path": ".references/srd-5.2.1/Classes/Paladin.md"
+            }
+          },
+          {
+            "category": "equipment/weapon/armor pressure",
+            "concept": "Paladin Starting Equipment",
+            "id": "srd521:classes/paladin:level-1:equipment-pressure:paladin_starting_equipment",
+            "levelBand": "level-1",
+            "rowKind": "equipment-pressure",
+            "source": {
+              "lineEnd": 13,
+              "lineStart": 13,
+              "path": ".references/srd-5.2.1/Classes/Paladin.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Paladin multiclass entry traits",
+            "id": "srd521:classes/paladin:level-1:multiclass-entry:paladin_multiclass_entry_traits",
+            "levelBand": "level-1",
+            "rowKind": "multiclass-entry",
+            "source": {
+              "lineEnd": 26,
+              "lineStart": 22,
+              "path": ".references/srd-5.2.1/Classes/Paladin.md"
+            }
+          },
+          {
+            "category": "spell access/list pressure",
+            "concept": "Paladin Spellcasting",
+            "id": "srd521:classes/paladin:level-1:spell-access:paladin_spellcasting",
+            "levelBand": "level-1",
+            "rowKind": "spell-access",
+            "source": {
+              "lineEnd": 83,
+              "lineStart": 66,
+              "path": ".references/srd-5.2.1/Classes/Paladin.md"
+            }
+          }
+        ],
+        "unitId": "class_paladin"
+      },
+      {
+        "kind": "class",
+        "reason": "The Unit joins the matrix, but it has no executable mechanics and is outside the strict executable denominator.",
+        "sourceRecordPath": "packages/surface/content/class_ranger.json",
+        "sourceRows": [
+          {
+            "category": "class container",
+            "concept": "Ranger class container",
+            "id": "srd521:classes/ranger:level-1:class-container:ranger_class_container",
+            "levelBand": "level-1",
+            "rowKind": "class-container",
+            "source": {
+              "lineEnd": 26,
+              "lineStart": 3,
+              "path": ".references/srd-5.2.1/Classes/Ranger.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Ranger level 1 feature table row",
+            "id": "srd521:classes/ranger:level-1:class-table-summary:ranger_level_1_feature_table_row",
+            "levelBand": "level-1",
+            "rowKind": "class-table-summary",
+            "source": {
+              "lineEnd": 35,
+              "lineStart": 35,
+              "path": ".references/srd-5.2.1/Classes/Ranger.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Ranger Armor Training",
+            "id": "srd521:classes/ranger:level-1:core-trait:ranger_armor_training",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 12,
+              "lineStart": 12,
+              "path": ".references/srd-5.2.1/Classes/Ranger.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Ranger Hit Point Die",
+            "id": "srd521:classes/ranger:level-1:core-trait:ranger_hit_point_die",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 8,
+              "lineStart": 8,
+              "path": ".references/srd-5.2.1/Classes/Ranger.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Ranger Primary Ability",
+            "id": "srd521:classes/ranger:level-1:core-trait:ranger_primary_ability",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 7,
+              "lineStart": 7,
+              "path": ".references/srd-5.2.1/Classes/Ranger.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Ranger Saving Throw Proficiencies",
+            "id": "srd521:classes/ranger:level-1:core-trait:ranger_saving_throw_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 9,
+              "lineStart": 9,
+              "path": ".references/srd-5.2.1/Classes/Ranger.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Ranger Skill Proficiencies",
+            "id": "srd521:classes/ranger:level-1:core-trait:ranger_skill_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 10,
+              "lineStart": 10,
+              "path": ".references/srd-5.2.1/Classes/Ranger.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Ranger Weapon Proficiencies",
+            "id": "srd521:classes/ranger:level-1:core-trait:ranger_weapon_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 11,
+              "lineStart": 11,
+              "path": ".references/srd-5.2.1/Classes/Ranger.md"
+            }
+          },
+          {
+            "category": "equipment/weapon/armor pressure",
+            "concept": "Ranger Starting Equipment",
+            "id": "srd521:classes/ranger:level-1:equipment-pressure:ranger_starting_equipment",
+            "levelBand": "level-1",
+            "rowKind": "equipment-pressure",
+            "source": {
+              "lineEnd": 13,
+              "lineStart": 13,
+              "path": ".references/srd-5.2.1/Classes/Ranger.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Ranger multiclass entry traits",
+            "id": "srd521:classes/ranger:level-1:multiclass-entry:ranger_multiclass_entry_traits",
+            "levelBand": "level-1",
+            "rowKind": "multiclass-entry",
+            "source": {
+              "lineEnd": 26,
+              "lineStart": 22,
+              "path": ".references/srd-5.2.1/Classes/Ranger.md"
+            }
+          },
+          {
+            "category": "spell access/list pressure",
+            "concept": "Ranger Spellcasting",
+            "id": "srd521:classes/ranger:level-1:spell-access:ranger_spellcasting",
+            "levelBand": "level-1",
+            "rowKind": "spell-access",
+            "source": {
+              "lineEnd": 75,
+              "lineStart": 58,
+              "path": ".references/srd-5.2.1/Classes/Ranger.md"
+            }
+          }
+        ],
+        "unitId": "class_ranger"
+      },
+      {
+        "kind": "class",
+        "reason": "The Unit joins the matrix, but it has no executable mechanics and is outside the strict executable denominator.",
+        "sourceRecordPath": "packages/surface/content/class_rogue.json",
+        "sourceRows": [
+          {
+            "category": "class container",
+            "concept": "Rogue class container",
+            "id": "srd521:classes/rogue:level-1:class-container:rogue_class_container",
+            "levelBand": "level-1",
+            "rowKind": "class-container",
+            "source": {
+              "lineEnd": 27,
+              "lineStart": 3,
+              "path": ".references/srd-5.2.1/Classes/Rogue.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Rogue level 1 feature table row",
+            "id": "srd521:classes/rogue:level-1:class-table-summary:rogue_level_1_feature_table_row",
+            "levelBand": "level-1",
+            "rowKind": "class-table-summary",
+            "source": {
+              "lineEnd": 36,
+              "lineStart": 36,
+              "path": ".references/srd-5.2.1/Classes/Rogue.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Rogue Armor Training",
+            "id": "srd521:classes/rogue:level-1:core-trait:rogue_armor_training",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 13,
+              "lineStart": 13,
+              "path": ".references/srd-5.2.1/Classes/Rogue.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Rogue Hit Point Die",
+            "id": "srd521:classes/rogue:level-1:core-trait:rogue_hit_point_die",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 8,
+              "lineStart": 8,
+              "path": ".references/srd-5.2.1/Classes/Rogue.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Rogue Primary Ability",
+            "id": "srd521:classes/rogue:level-1:core-trait:rogue_primary_ability",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 7,
+              "lineStart": 7,
+              "path": ".references/srd-5.2.1/Classes/Rogue.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Rogue Saving Throw Proficiencies",
+            "id": "srd521:classes/rogue:level-1:core-trait:rogue_saving_throw_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 9,
+              "lineStart": 9,
+              "path": ".references/srd-5.2.1/Classes/Rogue.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Rogue Skill Proficiencies",
+            "id": "srd521:classes/rogue:level-1:core-trait:rogue_skill_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 10,
+              "lineStart": 10,
+              "path": ".references/srd-5.2.1/Classes/Rogue.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Rogue Tool Proficiencies",
+            "id": "srd521:classes/rogue:level-1:core-trait:rogue_tool_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 12,
+              "lineStart": 12,
+              "path": ".references/srd-5.2.1/Classes/Rogue.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Rogue Weapon Proficiencies",
+            "id": "srd521:classes/rogue:level-1:core-trait:rogue_weapon_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 11,
+              "lineStart": 11,
+              "path": ".references/srd-5.2.1/Classes/Rogue.md"
+            }
+          },
+          {
+            "category": "equipment/weapon/armor pressure",
+            "concept": "Rogue Starting Equipment",
+            "id": "srd521:classes/rogue:level-1:equipment-pressure:rogue_starting_equipment",
+            "levelBand": "level-1",
+            "rowKind": "equipment-pressure",
+            "source": {
+              "lineEnd": 14,
+              "lineStart": 14,
+              "path": ".references/srd-5.2.1/Classes/Rogue.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Rogue multiclass entry traits",
+            "id": "srd521:classes/rogue:level-1:multiclass-entry:rogue_multiclass_entry_traits",
+            "levelBand": "level-1",
+            "rowKind": "multiclass-entry",
+            "source": {
+              "lineEnd": 27,
+              "lineStart": 23,
+              "path": ".references/srd-5.2.1/Classes/Rogue.md"
+            }
+          }
+        ],
+        "unitId": "class_rogue"
+      },
+      {
+        "kind": "class",
+        "reason": "The Unit joins the matrix, but it has no executable mechanics and is outside the strict executable denominator.",
+        "sourceRecordPath": "packages/surface/content/class_sorcerer.json",
+        "sourceRows": [
+          {
+            "category": "class container",
+            "concept": "Sorcerer class container",
+            "id": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container",
+            "levelBand": "level-1",
+            "rowKind": "class-container",
+            "source": {
+              "lineEnd": 26,
+              "lineStart": 3,
+              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Sorcerer level 1 feature table row",
+            "id": "srd521:classes/sorcerer:level-1:class-table-summary:sorcerer_level_1_feature_table_row",
+            "levelBand": "level-1",
+            "rowKind": "class-table-summary",
+            "source": {
+              "lineEnd": 35,
+              "lineStart": 35,
+              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Sorcerer Armor Training",
+            "id": "srd521:classes/sorcerer:level-1:core-trait:sorcerer_armor_training",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 12,
+              "lineStart": 12,
+              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Sorcerer Hit Point Die",
+            "id": "srd521:classes/sorcerer:level-1:core-trait:sorcerer_hit_point_die",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 8,
+              "lineStart": 8,
+              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Sorcerer Primary Ability",
+            "id": "srd521:classes/sorcerer:level-1:core-trait:sorcerer_primary_ability",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 7,
+              "lineStart": 7,
+              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Sorcerer Saving Throw Proficiencies",
+            "id": "srd521:classes/sorcerer:level-1:core-trait:sorcerer_saving_throw_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 9,
+              "lineStart": 9,
+              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Sorcerer Skill Proficiencies",
+            "id": "srd521:classes/sorcerer:level-1:core-trait:sorcerer_skill_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 10,
+              "lineStart": 10,
+              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Sorcerer Weapon Proficiencies",
+            "id": "srd521:classes/sorcerer:level-1:core-trait:sorcerer_weapon_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 11,
+              "lineStart": 11,
+              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+            }
+          },
+          {
+            "category": "equipment/weapon/armor pressure",
+            "concept": "Sorcerer Starting Equipment",
+            "id": "srd521:classes/sorcerer:level-1:equipment-pressure:sorcerer_starting_equipment",
+            "levelBand": "level-1",
+            "rowKind": "equipment-pressure",
+            "source": {
+              "lineEnd": 13,
+              "lineStart": 13,
+              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Sorcerer multiclass entry traits",
+            "id": "srd521:classes/sorcerer:level-1:multiclass-entry:sorcerer_multiclass_entry_traits",
+            "levelBand": "level-1",
+            "rowKind": "multiclass-entry",
+            "source": {
+              "lineEnd": 26,
+              "lineStart": 22,
+              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+            }
+          },
+          {
+            "category": "spell access/list pressure",
+            "concept": "Sorcerer Spellcasting",
+            "id": "srd521:classes/sorcerer:level-1:spell-access:sorcerer_spellcasting",
+            "levelBand": "level-1",
+            "rowKind": "spell-access",
+            "source": {
+              "lineEnd": 77,
+              "lineStart": 56,
+              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+            }
+          }
+        ],
+        "unitId": "class_sorcerer"
+      },
+      {
+        "kind": "class",
+        "reason": "The Unit joins the matrix, but it has no executable mechanics and is outside the strict executable denominator.",
+        "sourceRecordPath": "packages/surface/content/class_warlock.json",
+        "sourceRows": [
+          {
+            "category": "class container",
+            "concept": "Warlock class container",
+            "id": "srd521:classes/warlock:level-1:class-container:warlock_class_container",
+            "levelBand": "level-1",
+            "rowKind": "class-container",
+            "source": {
+              "lineEnd": 26,
+              "lineStart": 3,
+              "path": ".references/srd-5.2.1/Classes/Warlock.md"
+            }
+          },
+          {
+            "category": "class feature",
+            "concept": "Warlock Pact Magic",
+            "id": "srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic",
+            "levelBand": "level-1",
+            "rowKind": "class-feature-grant",
+            "source": {
+              "lineEnd": 91,
+              "lineStart": 68,
+              "path": ".references/srd-5.2.1/Classes/Warlock.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Warlock level 1 feature table row",
+            "id": "srd521:classes/warlock:level-1:class-table-summary:warlock_level_1_feature_table_row",
+            "levelBand": "level-1",
+            "rowKind": "class-table-summary",
+            "source": {
+              "lineEnd": 35,
+              "lineStart": 35,
+              "path": ".references/srd-5.2.1/Classes/Warlock.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Warlock Armor Training",
+            "id": "srd521:classes/warlock:level-1:core-trait:warlock_armor_training",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 12,
+              "lineStart": 12,
+              "path": ".references/srd-5.2.1/Classes/Warlock.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Warlock Hit Point Die",
+            "id": "srd521:classes/warlock:level-1:core-trait:warlock_hit_point_die",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 8,
+              "lineStart": 8,
+              "path": ".references/srd-5.2.1/Classes/Warlock.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Warlock Primary Ability",
+            "id": "srd521:classes/warlock:level-1:core-trait:warlock_primary_ability",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 7,
+              "lineStart": 7,
+              "path": ".references/srd-5.2.1/Classes/Warlock.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Warlock Saving Throw Proficiencies",
+            "id": "srd521:classes/warlock:level-1:core-trait:warlock_saving_throw_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 9,
+              "lineStart": 9,
+              "path": ".references/srd-5.2.1/Classes/Warlock.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Warlock Skill Proficiencies",
+            "id": "srd521:classes/warlock:level-1:core-trait:warlock_skill_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 10,
+              "lineStart": 10,
+              "path": ".references/srd-5.2.1/Classes/Warlock.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Warlock Weapon Proficiencies",
+            "id": "srd521:classes/warlock:level-1:core-trait:warlock_weapon_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 11,
+              "lineStart": 11,
+              "path": ".references/srd-5.2.1/Classes/Warlock.md"
+            }
+          },
+          {
+            "category": "equipment/weapon/armor pressure",
+            "concept": "Warlock Starting Equipment",
+            "id": "srd521:classes/warlock:level-1:equipment-pressure:warlock_starting_equipment",
+            "levelBand": "level-1",
+            "rowKind": "equipment-pressure",
+            "source": {
+              "lineEnd": 13,
+              "lineStart": 13,
+              "path": ".references/srd-5.2.1/Classes/Warlock.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Warlock multiclass entry traits",
+            "id": "srd521:classes/warlock:level-1:multiclass-entry:warlock_multiclass_entry_traits",
+            "levelBand": "level-1",
+            "rowKind": "multiclass-entry",
+            "source": {
+              "lineEnd": 26,
+              "lineStart": 22,
+              "path": ".references/srd-5.2.1/Classes/Warlock.md"
+            }
+          }
+        ],
+        "unitId": "class_warlock"
+      },
+      {
+        "kind": "class",
+        "reason": "The Unit joins the matrix, but it has no executable mechanics and is outside the strict executable denominator.",
+        "sourceRecordPath": "packages/surface/content/class_wizard.json",
+        "sourceRows": [
+          {
+            "category": "class container",
+            "concept": "Wizard class container",
+            "id": "srd521:classes/wizard:level-1:class-container:wizard_class_container",
+            "levelBand": "level-1",
+            "rowKind": "class-container",
+            "source": {
+              "lineEnd": 26,
+              "lineStart": 3,
+              "path": ".references/srd-5.2.1/Classes/Wizard.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Wizard level 1 feature table row",
+            "id": "srd521:classes/wizard:level-1:class-table-summary:wizard_level_1_feature_table_row",
+            "levelBand": "level-1",
+            "rowKind": "class-table-summary",
+            "source": {
+              "lineEnd": 35,
+              "lineStart": 35,
+              "path": ".references/srd-5.2.1/Classes/Wizard.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Wizard Armor Training",
+            "id": "srd521:classes/wizard:level-1:core-trait:wizard_armor_training",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 12,
+              "lineStart": 12,
+              "path": ".references/srd-5.2.1/Classes/Wizard.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Wizard Hit Point Die",
+            "id": "srd521:classes/wizard:level-1:core-trait:wizard_hit_point_die",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 8,
+              "lineStart": 8,
+              "path": ".references/srd-5.2.1/Classes/Wizard.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Wizard Primary Ability",
+            "id": "srd521:classes/wizard:level-1:core-trait:wizard_primary_ability",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 7,
+              "lineStart": 7,
+              "path": ".references/srd-5.2.1/Classes/Wizard.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Wizard Saving Throw Proficiencies",
+            "id": "srd521:classes/wizard:level-1:core-trait:wizard_saving_throw_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 9,
+              "lineStart": 9,
+              "path": ".references/srd-5.2.1/Classes/Wizard.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Wizard Skill Proficiencies",
+            "id": "srd521:classes/wizard:level-1:core-trait:wizard_skill_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 10,
+              "lineStart": 10,
+              "path": ".references/srd-5.2.1/Classes/Wizard.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Wizard Weapon Proficiencies",
+            "id": "srd521:classes/wizard:level-1:core-trait:wizard_weapon_proficiencies",
+            "levelBand": "level-1",
+            "rowKind": "core-trait",
+            "source": {
+              "lineEnd": 11,
+              "lineStart": 11,
+              "path": ".references/srd-5.2.1/Classes/Wizard.md"
+            }
+          },
+          {
+            "category": "equipment/weapon/armor pressure",
+            "concept": "Wizard Starting Equipment",
+            "id": "srd521:classes/wizard:level-1:equipment-pressure:wizard_starting_equipment",
+            "levelBand": "level-1",
+            "rowKind": "equipment-pressure",
+            "source": {
+              "lineEnd": 13,
+              "lineStart": 13,
+              "path": ".references/srd-5.2.1/Classes/Wizard.md"
+            }
+          },
+          {
+            "category": "character-creation or progression mechanic",
+            "concept": "Wizard multiclass entry traits",
+            "id": "srd521:classes/wizard:level-1:multiclass-entry:wizard_multiclass_entry_traits",
+            "levelBand": "level-1",
+            "rowKind": "multiclass-entry",
+            "source": {
+              "lineEnd": 26,
+              "lineStart": 22,
+              "path": ".references/srd-5.2.1/Classes/Wizard.md"
+            }
+          },
+          {
+            "category": "spell access/list pressure",
+            "concept": "Wizard Spellcasting",
+            "id": "srd521:classes/wizard:level-1:spell-access:wizard_spellcasting",
+            "levelBand": "level-1",
+            "rowKind": "spell-access",
+            "source": {
+              "lineEnd": 93,
+              "lineStart": 56,
+              "path": ".references/srd-5.2.1/Classes/Wizard.md"
+            }
+          }
+        ],
+        "unitId": "class_wizard"
+      }
+    ]
+  },
+  "scope": {
+    "denominatorRule": "unique candidateUnitId rows joined to executable Unit matrix rows",
+    "excludedUnitIds": [
+      "find_familiar"
+    ],
+    "levelBands": [
+      "level-1",
+      "spell-level-0",
+      "spell-level-1"
+    ]
+  },
+  "sourceArtifacts": {
+    "srdUnitInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+    "unitMatrix": "plans/unit-profile-coverage/unit-matrix.json"
+  },
+  "summary": {
+    "candidateUnitIdsBeforeExclusions": 120,
+    "groupsByClaimTag": {
+      "missing": 5,
+      "profile-subset-supported": 14,
+      "supported-profile": 59,
+      "unsupported-profile": 15
+    },
+    "groupsByStatus": {
+      "closed-later-level-only": 4,
+      "closed-runtime-detached-table-adjudication": 7,
+      "open-profile-accounting": 18,
+      "open-runtime-behavior": 5,
+      "supported-profile": 59
+    },
+    "nonSupportedFrontier": 34,
+    "strictDenominator": 93
+  }
+}

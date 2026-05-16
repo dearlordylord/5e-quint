@@ -2543,6 +2543,7 @@ function handoffSpellcastingState(): CharacterBattleSpellcastingState {
     canCastSpells: true,
     cantrips: [],
     preparedSpells: [],
+    spellbookRitualSpellAccesses: [],
     bookOfShadowsSpellAccesses: [],
     invocationSpellAccesses: [],
     spellSlots: [

@@ -66,7 +66,11 @@ import type {
   FindFamiliarSnapshot,
   FindFamiliarPlacement,
 } from "../find-familiar-lifecycle.ts";
-import type { FindFamiliarFormSelection } from "../find-familiar-forms.ts";
+import type {
+  FindFamiliarFormSelection,
+  PactOfTheChainFindFamiliarFormSelection,
+} from "../find-familiar-forms.ts";
+import { PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS } from "../find-familiar-forms.ts";
 import {
   BATTLE_ATTACK_RANGE_BANDS,
   COMMAND_OPTIONS,
@@ -90,6 +94,23 @@ const FindFamiliarFormSelectionSchema = Schema.Union(
   // Effect Schema infers plain strings here and cannot preserve those imported
   // content-id aliases through Schema.Union generics.
 ) as unknown as Schema.Schema<FindFamiliarFormSelection>;
+const PactOfTheChainSpecialFormIdSchema = pactOfTheChainSpecialFormIdSchema();
+const PactOfTheChainFindFamiliarFormSelectionSchema = Schema.Union(
+  FindFamiliarFormSelectionSchema,
+  Schema.Struct({
+    tag: Schema.Literal("pactOfTheChainSpecialForm"),
+    formId: PactOfTheChainSpecialFormIdSchema,
+  }),
+  // Cast evidence is local to this union: it widens the base Find Familiar
+  // selection schema with the Pact-only special-form discriminant.
+) as unknown as Schema.Schema<PactOfTheChainFindFamiliarFormSelection>;
+
+function pactOfTheChainSpecialFormIdSchema() {
+  const [first, ...rest] = PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS.map(
+    (ref) => ref.formId,
+  );
+  return Schema.Literal(first, ...rest);
+}
 const FindFamiliarCreatureTypeOverrideSchema = Schema.Literal(
   "celestial",
   "fey",
@@ -115,6 +136,14 @@ const HpSchema = Schema.Number.pipe(
   Schema.int(),
   Schema.greaterThanOrEqualTo(0),
 ) as unknown as Schema.Schema<Hp, number, never>;
+const PositiveHpSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(1),
+) as unknown as Schema.Schema<Hp, number, never>;
+const FindFamiliarHitPointsSchema = Schema.Struct({
+  currentHp: PositiveHpSchema,
+  tempHp: HpSchema,
+});
 // BattleArmorClass and shared ArmorClass are both runtime numbers validated by
 // the shared schema. Their brands are compile-time-only, so this cast narrows
 // the already-validated shared AC schema to the battle boundary's AC alias.
@@ -3439,7 +3468,18 @@ const FindFamiliarSnapshotSchema = Schema.Union(
     status: Schema.Literal("present"),
     ownerId: CombatantId,
     familiarId: CombatantId,
+    formAccess: Schema.Literal("findFamiliar"),
     formSelection: FindFamiliarFormSelectionSchema,
+    creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
+    initiative: Schema.Number,
+    placement: FindFamiliarPlacementSchema,
+  }),
+  Schema.Struct({
+    status: Schema.Literal("present"),
+    ownerId: CombatantId,
+    familiarId: CombatantId,
+    formAccess: Schema.Literal("pactOfTheChain"),
+    formSelection: PactOfTheChainFindFamiliarFormSelectionSchema,
     creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
     initiative: Schema.Number,
     placement: FindFamiliarPlacementSchema,
@@ -3447,13 +3487,31 @@ const FindFamiliarSnapshotSchema = Schema.Union(
   Schema.Struct({
     status: Schema.Literal("temporarilyDismissed"),
     ownerId: CombatantId,
+    formAccess: Schema.Literal("findFamiliar"),
+    formSelection: FindFamiliarFormSelectionSchema,
+    creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
+    hitPoints: FindFamiliarHitPointsSchema,
+  }),
+  Schema.Struct({
+    status: Schema.Literal("temporarilyDismissed"),
+    ownerId: CombatantId,
+    formAccess: Schema.Literal("pactOfTheChain"),
+    formSelection: PactOfTheChainFindFamiliarFormSelectionSchema,
+    creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
+    hitPoints: FindFamiliarHitPointsSchema,
+  }),
+  Schema.Struct({
+    status: Schema.Literal("disappearedAtZeroHitPoints"),
+    ownerId: CombatantId,
+    formAccess: Schema.Literal("findFamiliar"),
     formSelection: FindFamiliarFormSelectionSchema,
     creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
   }),
   Schema.Struct({
     status: Schema.Literal("disappearedAtZeroHitPoints"),
     ownerId: CombatantId,
-    formSelection: FindFamiliarFormSelectionSchema,
+    formAccess: Schema.Literal("pactOfTheChain"),
+    formSelection: PactOfTheChainFindFamiliarFormSelectionSchema,
     creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
   }),
   // Cast evidence is local to this union: every snapshot variant is assembled

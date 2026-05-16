@@ -48,6 +48,7 @@ import type {
 } from "../battle-init.ts";
 import {
   characterBattleInvocationSpellAccessInitIssue,
+  characterBattleSpellbookRitualSpellAccessInitIssue,
   characterBattleResourceInitIssue,
   characterBattleResourceUsage,
   characterResourceState,
@@ -699,6 +700,32 @@ export function characterSpellcastingInitIssue(
     );
   if (invocationSpellAccessIssue !== null) {
     return battleStateInitIssue(invocationSpellAccessIssue);
+  }
+  const spellbookRitualAccessIssue =
+    characterBattleSpellbookRitualSpellAccessInitIssue(
+      creatureInit.spellcasting.spellbookRitualSpellAccesses,
+    );
+  if (spellbookRitualAccessIssue !== null) {
+    return battleStateInitIssue(spellbookRitualAccessIssue);
+  }
+  if (
+    creatureInit.spellcasting.spellbookRitualSpellAccesses.length > 0 &&
+    creatureInit.spellcasting.sourceClassName !== "wizard"
+  ) {
+    return battleStateInitIssue(
+      "Spellbook Ritual Spell Access requires Wizard spellcasting.",
+    );
+  }
+  for (const access of creatureInit.spellcasting.spellbookRitualSpellAccesses) {
+    if (
+      !creatureInit.characterUnitRefs.some(
+        (unitRef) => unitRef.unitId === access.featureUnitId,
+      )
+    ) {
+      return battleStateInitIssue(
+        "Spellbook Ritual Spell Access must trace to an owner feature.",
+      );
+    }
   }
   return classLevels.some(
     (classLevel) =>

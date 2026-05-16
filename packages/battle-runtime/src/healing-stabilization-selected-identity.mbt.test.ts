@@ -241,6 +241,7 @@ function spareTheDyingBattle(): BattleState {
           preparedSpells: [],
           featurePreparedSpells: [],
           invocationSpellAccesses: [],
+          spellbookRitualSpellAccesses: [],
           spellSlots: [],
         },
       }),

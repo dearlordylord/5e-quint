@@ -57,6 +57,42 @@
       "id": "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE",
       "status": "ready-for-implementation-after-light-research",
       "title": "Warlock Eldritch Invocation Lifecycle"
+    },
+    {
+      "number": 10,
+      "id": "L1C-L1X-01",
+      "status": "ready-for-research",
+      "title": "Create Or Destroy Water No-Matrix Decision"
+    },
+    {
+      "number": 11,
+      "id": "L1C-L1X-05",
+      "status": "ready-for-research",
+      "title": "Floating Disk No-Matrix Decision"
+    },
+    {
+      "number": 12,
+      "id": "L1C-L1X-06",
+      "status": "ready-for-research",
+      "title": "Goodberry No-Matrix Decision"
+    },
+    {
+      "number": 13,
+      "id": "L1C-L1X-08",
+      "status": "ready-for-research",
+      "title": "Mage Hand No-Matrix Decision"
+    },
+    {
+      "number": 14,
+      "id": "L1C-L1X-09",
+      "status": "ready-for-research",
+      "title": "Mending No-Matrix Decision"
+    },
+    {
+      "number": 15,
+      "id": "L1C-L1X-12",
+      "status": "ready-for-research",
+      "title": "Purify Food And Drink No-Matrix Decision"
     }
   ]
 }
@@ -95,6 +131,7 @@ Every Ralph prompt for this loop must include:
 | `AT-L1-06` Cleric/Druid order profile | `cleric_divine_order`, `druid_primal_order` | Divine/Primal Order option projection |
 | `AT-L1-07` Rogue Expertise profile | `rogue_expertise` | level-1 two-skill Expertise choice evidence; level 6 lifecycle guard |
 | `AT-L1-08` Wizard Arcane Recovery profile | `wizard_arcane_recovery` | Character Sheet Short Rest Spell Slot recovery profile |
+| `AT-L1X-01`, `AT-L1X-05`, `AT-L1X-06`, `AT-L1X-08`, `AT-L1X-09`, `AT-L1X-12` item/environment no-matrix decisions | missing spell pressures | owner decisions for item, inventory, object-control, equipment, and environment candidates |
 
 ## Internal Order
 
@@ -212,6 +249,12 @@ For `AT-L1-08`:
 | 7 | L1C-AT04 - Weapon Mastery Character And Rest Profile | ready-for-implementation-after-light-research | L1C-AT03S | Includes Long Rest reselection support; selected mastery-property MBT does not satisfy this gate. |
 | 8 | L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT - Fighter Fighting Style Advancement Replacement | ready-for-implementation-after-light-research | L1C-AT03 | Required before `fighter_fighting_style` can move from level-1 subset support to all-level support. |
 | 9 | L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE - Warlock Eldritch Invocation Lifecycle | ready-for-implementation-after-light-research | L1C-AT05 | Required before `warlock_eldritch_invocations` can move from level-1 subset support to all-level support. |
+| 10 | L1C-L1X-01 - Create Or Destroy Water No-Matrix Decision | ready-for-research | none | Decide environment/fog owner; no Unit claim without admitted UnitRecord. |
+| 11 | L1C-L1X-05 - Floating Disk No-Matrix Decision | ready-for-research | none | Decide object/inventory movement owner. |
+| 12 | L1C-L1X-06 - Goodberry No-Matrix Decision | ready-for-research | none | Decide Character Sheet consumable/inventory owner. |
+| 13 | L1C-L1X-08 - Mage Hand No-Matrix Decision | ready-for-research | none | Decide object-control owner. |
+| 14 | L1C-L1X-09 - Mending No-Matrix Decision | ready-for-research | none | Decide equipment/object repair owner. |
+| 15 | L1C-L1X-12 - Purify Food And Drink No-Matrix Decision | ready-for-research | none | Decide item/inventory purification owner. |
 
 ## Task Details
 
@@ -453,6 +496,36 @@ Plan Impact:
 - Preserve unowned Long Rest reselection work as a concrete follow-up if the
   task cannot close it.
 
+### Task 8 - L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT - Fighter Fighting Style Advancement Replacement
+
+Status: `ready-for-implementation-after-light-research`
+
+Implement the all-level Fighter Fighting Style lifecycle follow-up produced by
+`L1C-AT03`.
+
+Scope:
+
+- Own only `fighter_fighting_style`.
+- Read the local Fighter RAW for Fighting Style and advancement replacement.
+- Model or evidence Fighter-level replacement of an already chosen Fighting
+  Style feat when gaining Fighter levels.
+- Promote `fighter_fighting_style` to all-level `supported-profile` only if the
+  replacement lifecycle is owned without duplicating existing CharacterBuild
+  choice state.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`
+- `pnpm unit-profile-coverage:check`
+- `pnpm --filter @dnd/character-creation-runtime test` if runtime/test files are
+  touched beyond comments
+- `/simplify` convergence, minimum two rounds
+
+Plan Impact:
+
+- If replacement lifecycle needs a broader advancement subsystem, leave the Unit
+  subset-supported and record the concrete follow-up.
+
 ### Task 9 - L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE - Warlock Eldritch Invocation Lifecycle
 
 Status: `ready-for-implementation-after-light-research`
@@ -488,3 +561,144 @@ Plan Impact:
 
 - Add follow-up tasks only for newly discovered durable invocation lifecycle
   gaps.
+
+### Task 10 - L1C-L1X-01 - Create Or Destroy Water No-Matrix Decision
+
+Status: `ready-for-research`
+
+Research `AT-L1X-01` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
+
+Scope:
+
+- Unit pressure id: `create_or_destroy_water`.
+- Read local SRD Create or Destroy Water text.
+- Decide between future environment subsystem, table-supplied runtime witness if
+  fog removal touches runtime Fog Cloud state, or runtime-detached table
+  adjudication.
+- Write
+  `plans/unit-profile-coverage/frontier-decisions/create_or_destroy_water.md`.
+- Do not add claims/profiles without first proposing an admitted UnitRecord
+  path.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check` if coverage files are edited.
+
+Plan Impact:
+
+- Add implementation follow-ups only for a selected owner.
+
+### Task 11 - L1C-L1X-05 - Floating Disk No-Matrix Decision
+
+Status: `ready-for-research`
+
+Research `AT-L1X-05` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
+
+Scope:
+
+- Unit pressure id: `floating_disk`.
+- Read local SRD Floating Disk text.
+- Decide between future object/inventory movement subsystem and
+  runtime-detached table adjudication.
+- Write `plans/unit-profile-coverage/frontier-decisions/floating_disk.md`.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check` if coverage files are edited.
+
+Plan Impact:
+
+- No claim/profile changes unless a real owner and UnitRecord path are proposed.
+
+### Task 12 - L1C-L1X-06 - Goodberry No-Matrix Decision
+
+Status: `ready-for-research`
+
+Research `AT-L1X-06` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
+
+Scope:
+
+- Unit pressure id: `goodberry`.
+- Read local SRD Goodberry text.
+- Decide whether `@dnd/character-sheet-runtime` owns berry inventory,
+  consumable healing, nourishment, and expiry, or whether the current product
+  treats it as owner-decision/out-of-scope.
+- Write `plans/unit-profile-coverage/frontier-decisions/goodberry.md`.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check` if coverage files are edited.
+
+Plan Impact:
+
+- Produce Character Sheet follow-up tasks only if consumable inventory is in
+  scope.
+
+### Task 13 - L1C-L1X-08 - Mage Hand No-Matrix Decision
+
+Status: `ready-for-research`
+
+Research `AT-L1X-08` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
+
+Scope:
+
+- Unit pressure id: `mage_hand`.
+- Read local SRD Mage Hand text.
+- Decide between future object-control subsystem and runtime-detached table
+  adjudication for manipulation, movement, carry limit, and prohibited actions.
+- Write `plans/unit-profile-coverage/frontier-decisions/mage_hand.md`.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check` if coverage files are edited.
+
+Plan Impact:
+
+- Add owner tasks only for concrete object-control support.
+
+### Task 14 - L1C-L1X-09 - Mending No-Matrix Decision
+
+Status: `ready-for-research`
+
+Research `AT-L1X-09` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
+
+Scope:
+
+- Unit pressure id: `mending`.
+- Read local SRD Mending text.
+- Decide between future equipment/object subsystem and runtime-detached table
+  adjudication for physical repair and magic-item non-restoration.
+- Write `plans/unit-profile-coverage/frontier-decisions/mending.md`.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check` if coverage files are edited.
+
+Plan Impact:
+
+- Add future-owner task recommendations only for concrete object/equipment
+  support.
+
+### Task 15 - L1C-L1X-12 - Purify Food And Drink No-Matrix Decision
+
+Status: `ready-for-research`
+
+Research `AT-L1X-12` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
+
+Scope:
+
+- Unit pressure id: `purify_food_and_drink`.
+- Read local SRD Purify Food and Drink text.
+- Decide between future item/inventory subsystem and runtime-detached table
+  adjudication for nonmagical food/drink poison and rot removal.
+- Write
+  `plans/unit-profile-coverage/frontier-decisions/purify_food_and_drink.md`.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check` if coverage files are edited.
+
+Plan Impact:
+
+- Do not add claims/profiles until an admitted UnitRecord and package owner are
+  selected.

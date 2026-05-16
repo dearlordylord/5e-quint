@@ -563,6 +563,7 @@ function rollModifierBuffBattle(
           preparedSpells: input.preparedSpells ?? [],
           featurePreparedSpells: [],
           invocationSpellAccesses: [],
+          spellbookRitualSpellAccesses: [],
           spellSlots: input.spellSlots ?? [{ spellLevel: 1, count: 2 }],
         },
       }),
