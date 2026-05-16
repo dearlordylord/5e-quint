@@ -20,6 +20,10 @@ const {
   renderReport,
 } = require("./unit-profile-coverage-report.cjs");
 const {
+  buildLevel1FullSupport,
+  renderLevel1FullSupport,
+} = require("./level1-full-support-report.cjs");
+const {
   buildSrdUnitInventory,
   renderSrdUnitInventory,
   validateSrdUnitInventory,
@@ -95,6 +99,7 @@ function main() {
       selectedIdentityMbtEvidenceTag,
     },
   );
+  const level1FullSupport = buildLevel1FullSupport(matrix, srdUnitInventory);
   writeOrCompare(
     { root, write },
     paths.matrix,
@@ -118,6 +123,16 @@ function main() {
     { root, write },
     paths.srdUnitInventoryReport,
     renderSrdUnitInventory(srdUnitInventory),
+  );
+  writeOrCompare(
+    { root, write },
+    paths.level1FullSupport,
+    `${JSON.stringify(level1FullSupport, null, 2)}\n`,
+  );
+  writeOrCompare(
+    { root, write },
+    paths.level1FullSupportReport,
+    renderLevel1FullSupport(level1FullSupport),
   );
   console.log(
     `Unit profile coverage OK: ${inventory.length} Units, ${profiles.length} profiles.`,

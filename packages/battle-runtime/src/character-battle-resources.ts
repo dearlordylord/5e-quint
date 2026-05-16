@@ -140,6 +140,12 @@ export type CharacterBattleFeaturePreparedSpellInit = {
   readonly spell: SpellRecord;
 };
 
+export type CharacterBattleSpellbookRitualSpellAccessInit = {
+  readonly tag: "spellbookRitual";
+  readonly spell: SpellRecord;
+  readonly featureUnitId: UnitRecord["id"];
+};
+
 export type CharacterBattleInvocationSpellAccessInit = {
   readonly tag: "armorOfShadowsMageArmor" | "pactOfTheChainFindFamiliar";
   readonly spell: SpellRecord;
@@ -181,8 +187,11 @@ type CharacterBattleInvocationSpellAccessParseResult =
 
 export type CharacterBattleSpellcastingStateInit = Omit<
   CharacterBattleSpellcastingInit,
-  "bookOfShadowsSpellAccesses" | "invocationSpellAccesses"
+  | "bookOfShadowsSpellAccesses"
+  | "invocationSpellAccesses"
+  | "spellbookRitualSpellAccesses"
 > & {
+  readonly spellbookRitualSpellAccesses: readonly CharacterBattleSpellbookRitualSpellAccessInit[];
   readonly bookOfShadowsSpellAccesses: readonly CharacterBattleBookOfShadowsSpellAccessInit[];
   readonly invocationSpellAccesses: readonly CharacterBattleInvocationSpellAccessState[];
 };
@@ -201,6 +210,7 @@ export type CharacterBattleSpellcastingInit = {
   readonly cantrips: readonly SpellRecord[];
   readonly preparedSpells: readonly SpellRecord[];
   readonly featurePreparedSpells: readonly CharacterBattleFeaturePreparedSpellInit[];
+  readonly spellbookRitualSpellAccesses: readonly CharacterBattleSpellbookRitualSpellAccessInit[];
   readonly bookOfShadowsSpellAccesses?: readonly CharacterBattleBookOfShadowsSpellAccessInit[];
   readonly invocationSpellAccesses: readonly CharacterBattleInvocationSpellAccessInit[];
   readonly spellSlots: readonly CharacterBattleSpellSlotInit[];
@@ -211,12 +221,14 @@ export type CharacterBattleSpellcastingState = Omit<
   CharacterBattleSpellcastingInit,
   | "spellcastingAbilityModifier"
   | "featurePreparedSpells"
+  | "spellbookRitualSpellAccesses"
   | "bookOfShadowsSpellAccesses"
   | "invocationSpellAccesses"
   | "spellSlots"
   | "spellSlotExpenditures"
 > & {
   readonly spellcastingAbilityModifier: AbilityModifier;
+  readonly spellbookRitualSpellAccesses: readonly CharacterBattleSpellbookRitualSpellAccessInit[];
   readonly bookOfShadowsSpellAccesses: readonly CharacterBattleBookOfShadowsSpellAccessInit[];
   readonly invocationSpellAccesses: readonly CharacterBattleInvocationSpellAccessState[];
   readonly spellSlots: readonly CharacterBattleSpellSlotState[];
@@ -268,6 +280,29 @@ export function characterBattleInvocationSpellAccessInitIssue(
     invocationSpellAccesses,
   );
   return parsed.tag === "issue" ? parsed.message : null;
+}
+
+export function characterBattleSpellbookRitualSpellAccessInitIssue(
+  spellbookRitualSpellAccesses: readonly CharacterBattleSpellbookRitualSpellAccessInit[],
+): string | null {
+  const spellIds = new Set<SpellRecord["id"]>();
+  for (const access of spellbookRitualSpellAccesses) {
+    if (access.tag !== "spellbookRitual") {
+      return "Spellbook Ritual Spell Access must carry spellbook Ritual facts.";
+    }
+    if (
+      access.spell.mechanics.level < 1 ||
+      !("ritual" in access.spell.mechanics.castingTime) ||
+      access.spell.mechanics.castingTime.ritual !== true
+    ) {
+      return "Spellbook Ritual Spell Access must reference ritual-tagged leveled Spell Definitions.";
+    }
+    if (spellIds.has(access.spell.id)) {
+      return "Spellbook Ritual Spell Access spell ids must be unique.";
+    }
+    spellIds.add(access.spell.id);
+  }
+  return null;
 }
 
 export function parseCharacterBattleInvocationSpellAccesses(
@@ -684,6 +719,7 @@ export function characterSpellcastingState(
       input.preparedSpells,
       input.featurePreparedSpells,
     ),
+    spellbookRitualSpellAccesses: input.spellbookRitualSpellAccesses,
     bookOfShadowsSpellAccesses: input.bookOfShadowsSpellAccesses ?? [],
     invocationSpellAccesses: input.invocationSpellAccesses,
     spellSlots: input.spellSlots.map((slot) => {

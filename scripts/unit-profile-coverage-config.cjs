@@ -35,15 +35,19 @@ const claimTags = new Set([
   "needs-assumption",
   "closed-by-assumption",
 ]);
-const battleReadinessClosureKinds = new Set([
-  "selection-grant-container",
-  "later-level-only",
-  "table-spatial-derivation",
-  "social-knowledge-effect",
-  "companion-ai-exclusion",
-  "outside-runtime-presentation-exploration",
-  "outside-battle-runtime",
-]);
+const battleReadinessClosureKind = Object.freeze({
+  selectionGrantContainer: "selection-grant-container",
+  laterLevelOnly: "later-level-only",
+  tableSpatialDerivation: "table-spatial-derivation",
+  socialKnowledgeEffect: "social-knowledge-effect",
+  companionAiExclusion: "companion-ai-exclusion",
+  outsideRuntimePresentationExploration:
+    "outside-runtime-presentation-exploration",
+  outsideBattleRuntime: "outside-battle-runtime",
+});
+const battleReadinessClosureKinds = new Set(
+  Object.values(battleReadinessClosureKind),
+);
 const deterministicAdmissionProjectionEvidenceTag =
   "deterministic-admission-projection";
 const selectedIdentityMbtEvidenceTag = "selected-identity-mbt";
@@ -165,10 +169,16 @@ function coveragePaths(root) {
     report: path.join(coverageDir, "UNIT_REPORT.md"),
     srdUnitInventory: path.join(coverageDir, "srd-unit-inventory.json"),
     srdUnitInventoryReport: path.join(coverageDir, "SRD_UNIT_INVENTORY.md"),
+    level1FullSupport: path.join(coverageDir, "level1-full-support.json"),
+    level1FullSupportReport: path.join(
+      coverageDir,
+      "LEVEL1_FULL_SUPPORT.md",
+    ),
   };
 }
 
 module.exports = {
+  battleReadinessClosureKind,
   battleReadinessClosureKinds,
   catalogAdmissionDispositionCategories,
   catalogAdmissionDispositionCategory,

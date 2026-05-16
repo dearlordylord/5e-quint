@@ -2,6 +2,7 @@
 import {
   scoreModifier,
   type CharacterBattleSpellSlotState,
+  type CharacterBattleSpellbookRitualSpellAccessInit,
   type CharacterBattleInvocationFeature,
   type CharacterBattleClassLevelInit,
   type CharacterBattleFeaturePreparedSpellInit,
@@ -33,6 +34,7 @@ import {
 } from "@dnd/character-creation-runtime";
 import {
   characterSheetArmorClassState,
+  characterSheetSpellbookRitualAccessesForBuild,
   type CharacterSheetArmorClassBaseChoice,
 } from "@dnd/character-sheet-runtime";
 import {
@@ -733,6 +735,13 @@ export function characterSpellcasting(input: {
   if (Either.isLeft(invocationSpellAccesses)) {
     return Either.left(invocationSpellAccesses.left);
   }
+  const spellbookRitualSpellAccesses = spellbookRitualSpellAccess({
+    build,
+    unitLibrary,
+  });
+  if (Either.isLeft(spellbookRitualSpellAccesses)) {
+    return Either.left(spellbookRitualSpellAccesses.left);
+  }
 
   const bookOfShadowsSpellAccesses = bookOfShadowsSpellAccess({
     build,
@@ -756,6 +765,7 @@ export function characterSpellcasting(input: {
     cantrips: cantrips.right,
     preparedSpells: preparedSpells.right,
     featurePreparedSpells: featurePreparedSpells.right,
+    spellbookRitualSpellAccesses: spellbookRitualSpellAccesses.right,
     bookOfShadowsSpellAccesses: bookOfShadowsSpellAccesses.right,
     invocationSpellAccesses: invocationSpellAccesses.right,
     spellSlots: characterBuildSpellcastingSlotCapacity(build).map((slot) => ({
@@ -771,6 +781,25 @@ export function characterSpellcasting(input: {
           })),
         }),
   });
+}
+
+function spellbookRitualSpellAccess(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+}): Either.Either<
+  readonly CharacterBattleSpellbookRitualSpellAccessInit[],
+  BattleCreatureInitIssue
+> {
+  const accesses = characterSheetSpellbookRitualAccessesForBuild(input);
+  return Either.isLeft(accesses)
+    ? battleCreatureInitIssue(accesses.left.message)
+    : Either.right(
+        accesses.right.map((access) => ({
+          tag: "spellbookRitual",
+          spell: access.spell,
+          featureUnitId: access.featureUnitId,
+        })),
+      );
 }
 
 function bookOfShadowsSpellAccess(input: {

@@ -1500,6 +1500,7 @@ function spellcaster(input: {
         spellRecord("mage_armor"),
       ],
       featurePreparedSpells: [],
+      spellbookRitualSpellAccesses: [],
       invocationSpellAccesses: [],
       spellSlots: input.spellSlots ?? [{ spellLevel: 1, count: 2 }],
     },

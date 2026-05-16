@@ -29396,6 +29396,7 @@ function wizardSpellcasting(input?: {
     ],
     preparedSpells: input?.preparedSpells ?? [spellRecord("magic_missile")],
     featurePreparedSpells: [],
+    spellbookRitualSpellAccesses: [],
     ...(input?.bookOfShadowsSpellAccesses === undefined
       ? {}
       : { bookOfShadowsSpellAccesses: input.bookOfShadowsSpellAccesses }),

@@ -1766,7 +1766,7 @@ function validateSleepTargetAdmissionSavingThrowOutcomes(input: {
   }
   const nonSleeperTargetIds = new Set<CombatantId>();
   if ("sleepNonSleeperFacts" in input.area) {
-    for (const fact of input.area.sleepNonSleeperFacts) {
+    for (const fact of input.area.sleepNonSleeperFacts ?? []) {
       if (!selectedTargets.has(fact.targetId)) {
         return "Sleep non-sleeper facts must match selected Sphere targets.";
       }
@@ -1858,7 +1858,9 @@ function sleepTargetAutomaticallySucceeds(
   targetId: CombatantId,
   facts: { readonly doesNotSleep: boolean },
 ): boolean {
-  return facts.doesNotSleep || sleepTargetHasExhaustionImmunity(state, targetId);
+  return (
+    facts.doesNotSleep || sleepTargetHasExhaustionImmunity(state, targetId)
+  );
 }
 
 function sleepTargetHasExhaustionImmunity(

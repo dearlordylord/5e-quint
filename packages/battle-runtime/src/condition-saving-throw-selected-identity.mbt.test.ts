@@ -441,6 +441,7 @@ function conditionSpellBattle(
           preparedSpells: [spell],
           featurePreparedSpells: [],
           invocationSpellAccesses: [],
+          spellbookRitualSpellAccesses: [],
           spellSlots: [{ spellLevel: 1, count: 1 }],
         },
       }),
