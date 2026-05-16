@@ -1,6 +1,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const {
+  battleReadinessClosureKinds,
   claimTags,
   collectionIds,
   completedRuntimeParityKinds,
@@ -15,6 +16,32 @@ const {
   unitProfileOwnerClaimKinds,
 } = require("./unit-profile-coverage-config.cjs");
 const { stable } = require("./unit-profile-coverage-report.cjs");
+
+function isRecord(value) {
+  return value != null && typeof value === "object" && !Array.isArray(value);
+}
+
+function battleReadinessClosureIssues(unitId, closure, context) {
+  const issues = [];
+  if (!isRecord(closure)) {
+    return [`${context} for ${unitId} must be an object.`];
+  }
+  if (!battleReadinessClosureKinds.has(closure.kind)) {
+    issues.push(
+      `${context} for ${unitId} has unknown kind ${closure.kind}.`,
+    );
+  }
+  if (typeof closure.owner !== "string" || closure.owner.length === 0) {
+    issues.push(`${context} for ${unitId} requires owner.`);
+  }
+  if (
+    closure.reason !== undefined &&
+    (typeof closure.reason !== "string" || closure.reason.length === 0)
+  ) {
+    issues.push(`${context} for ${unitId} reason must be a non-empty string.`);
+  }
+  return issues;
+}
 
 function collectFields(value, prefix = "") {
   if (Array.isArray(value)) {
@@ -219,6 +246,15 @@ function validateUnitClaims(claims, inventory, authoredSurfaceUnits, profiles) {
         }
       }
     }
+    if (claim.claim.battleReadinessClosure !== undefined) {
+      issues.push(
+        ...battleReadinessClosureIssues(
+          claim.unitId,
+          claim.claim.battleReadinessClosure,
+          "Unit claim battleReadinessClosure",
+        ),
+      );
+    }
     if (claim.claim.tag === "profile-subset-supported") {
       if (
         !Array.isArray(claim.claim.supportedMechanics) ||
@@ -245,6 +281,15 @@ function validateUnitClaims(claims, inventory, authoredSurfaceUnits, profiles) {
           ) {
             issues.push(
               `Profile-subset Unit ${claim.unitId} deferredMechanics entries require mechanic and followUpTaskId.`,
+            );
+          }
+          if (deferredMechanic.battleReadinessClosure !== undefined) {
+            issues.push(
+              ...battleReadinessClosureIssues(
+                claim.unitId,
+                deferredMechanic.battleReadinessClosure,
+                "Profile-subset deferredMechanic battleReadinessClosure",
+              ),
             );
           }
         }

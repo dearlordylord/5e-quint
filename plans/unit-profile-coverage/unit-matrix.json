@@ -3866,6 +3866,11 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "selected Fighting Style feat Unit",
+          "reason": "The class feature chooses a Fighting Style feat; the selected feat Unit owns executable battle pressure."
+        },
         "reason": "Choice/grant container; selected Fighting Style feat carries executable pressure.",
         "tag": "unsupported-profile"
       },
@@ -3945,6 +3950,11 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "selected Mastery Property Unit",
+          "reason": "The class feature grants weapon mastery choices; selected mastery property Units own executable battle pressure."
+        },
         "reason": "Weapon mastery grant container; mastery Unit carries executable pressure.",
         "tag": "unsupported-profile"
       },
@@ -4415,6 +4425,11 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "selected Mastery Property Unit",
+          "reason": "The class feature grants weapon mastery choices; selected mastery property Units own executable battle pressure."
+        },
         "reason": "Weapon mastery grant container; mastery Unit carries executable pressure.",
         "tag": "unsupported-profile"
       },
@@ -4435,6 +4450,11 @@
       "claim": {
         "deferredMechanics": [
           {
+            "battleReadinessClosure": {
+              "kind": "later-level-only",
+              "owner": "SRDINV78 later-level scaling",
+              "reason": "The remaining Bardic Inspiration die-size changes occur only after level 1."
+            },
             "followUpTaskId": "SRDINV78",
             "mechanic": "later-level Bardic Inspiration die size increases beyond d6"
           }
@@ -4605,6 +4625,11 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "character-creation-runtime",
+          "reason": "Divine Order is a character-creation suborder choice; no promoted battle Unit profile consumes the container directly."
+        },
         "reason": "Class feature source facts are authored for character creation choices; no promoted battle Unit profile consumes this suborder choice directly.",
         "tag": "unsupported-profile"
       },
@@ -4623,6 +4648,11 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "exploration/language owner",
+          "reason": "Language, hidden-message, and non-battle prepared-spell source facts are outside promoted battle runtime."
+        },
         "reason": "Language, hidden-message, and prepared-spell source facts are authored; exploration/language execution is not promoted as a battle Unit profile.",
         "tag": "unsupported-profile"
       },
@@ -4641,6 +4671,11 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "character-creation-runtime",
+          "reason": "Primal Order is a character-creation suborder choice; no promoted battle Unit profile consumes the container directly."
+        },
         "reason": "Class feature source facts are authored for character creation choices; no promoted battle Unit profile consumes this suborder choice directly.",
         "tag": "unsupported-profile"
       },
@@ -4661,6 +4696,11 @@
       "claim": {
         "deferredMechanics": [
           {
+            "battleReadinessClosure": {
+              "kind": "later-level-only",
+              "owner": "SRDINV78 later-level scaling",
+              "reason": "The remaining Martial Arts die-size changes occur only after level 1."
+            },
             "followUpTaskId": "SRDINV78",
             "mechanic": "later-level Martial Arts die size increases beyond d6"
           }
@@ -4846,10 +4886,20 @@
       "claim": {
         "deferredMechanics": [
           {
+            "battleReadinessClosure": {
+              "kind": "later-level-only",
+              "owner": "SRDINV78 later-level scaling",
+              "reason": "The remaining Favored Enemy free-cast count changes occur only after level 1."
+            },
             "followUpTaskId": "SRDINV78",
             "mechanic": "later-level Favored Enemy free-cast count scaling beyond two uses"
           },
           {
+            "battleReadinessClosure": {
+              "kind": "social-knowledge-effect",
+              "owner": "SRDINV66 ability-check roll-mode owner",
+              "reason": "Hunter's Mark finding Advantage is an ability-check roll-mode projection, not additional battle reducer behavior for Favored Enemy."
+            },
             "followUpTaskId": "SRDINV66",
             "mechanic": "Hunter's Mark Perception/Survival finding Advantage remains deferred to ability-check roll-mode work"
           }
@@ -5116,6 +5166,11 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "character-creation-runtime",
+          "reason": "Expertise is a character-creation skill choice boundary, not a promoted battle Unit profile."
+        },
         "reason": "Class feature source facts are authored for character creation skill Expertise choices; no promoted battle Unit profile consumes this choice directly.",
         "tag": "unsupported-profile"
       },
@@ -5195,6 +5250,11 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "exploration/language owner",
+          "reason": "Thieves' Cant is a language/communication source fact outside promoted battle runtime."
+        },
         "reason": "Language source facts are authored; exploration/language execution is not promoted as a battle Unit profile.",
         "tag": "unsupported-profile"
       },
@@ -5279,6 +5339,11 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "selected Eldritch Invocation option Unit",
+          "reason": "The class feature chooses an invocation option; individual invocation Units own executable pressure."
+        },
         "reason": "Invocation choice source facts are authored; individual invocation option execution is outside this class-feature Unit profile.",
         "tag": "unsupported-profile"
       },
@@ -5338,6 +5403,11 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "character-sheet/rest runtime",
+          "reason": "Short Rest Spell Slot recovery is outside promoted battle runtime."
+        },
         "reason": "Spell slot recovery outside battle is not a promoted Unit profile yet.",
         "tag": "unsupported-profile"
       },
@@ -5356,6 +5426,11 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "character-creation-runtime",
+          "reason": "Ability Score Improvement is a character-creation ability score mutation outside promoted battle runtime."
+        },
         "reason": "Character-creation ability score mutation is outside promoted battle Unit profile scope.",
         "tag": "unsupported-profile"
       },
@@ -5698,6 +5773,11 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "selected Mastery Property Unit",
+          "reason": "The class feature grants weapon mastery choices; selected mastery property Units own executable battle pressure."
+        },
         "reason": "Weapon mastery grant container; mastery Unit carries executable pressure.",
         "tag": "unsupported-profile"
       },
@@ -5829,6 +5909,11 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "selected Mastery Property Unit",
+          "reason": "The class feature grants weapon mastery choices; selected mastery property Units own executable battle pressure."
+        },
         "reason": "Weapon mastery grant container; mastery Unit carries executable pressure.",
         "tag": "unsupported-profile"
       },
@@ -5847,6 +5932,11 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "selected Mastery Property Unit",
+          "reason": "The class feature grants weapon mastery choices; selected mastery property Units own executable battle pressure."
+        },
         "reason": "Weapon mastery grant container; mastery Unit carries executable pressure.",
         "tag": "unsupported-profile"
       },
@@ -6084,6 +6174,11 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "sight/illumination projection owner",
+          "reason": "Darkvision sense grants are authored source facts; promoted battle execution consumes derived sight projections rather than this Unit directly."
+        },
         "reason": "Sense grant is authored data with no promoted execution profile.",
         "tag": "unsupported-profile"
       },
@@ -7433,6 +7528,11 @@
       "claim": {
         "deferredMechanics": [
           {
+            "battleReadinessClosure": {
+              "kind": "table-spatial-derivation",
+              "owner": "table/spatial and presentation owners",
+              "reason": "Color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the runtime boundary."
+            },
             "followUpTaskId": "SRDINV89D",
             "mechanic": "color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the runtime boundary"
           }
@@ -7508,6 +7608,11 @@
       "claim": {
         "deferredMechanics": [
           {
+            "battleReadinessClosure": {
+              "kind": "table-spatial-derivation",
+              "owner": "SRDINV55 table/spatial owner",
+              "reason": "Fall-distance derivation, map elevation, and landing geometry simulation remain table/spatial derivations."
+            },
             "followUpTaskId": "SRDINV55",
             "mechanic": "fall-distance derivation, map elevation, and landing geometry simulation remain outside the runtime boundary"
           }
@@ -7721,6 +7826,11 @@
       "claim": {
         "deferredMechanics": [
           {
+            "battleReadinessClosure": {
+              "kind": "companion-ai-exclusion",
+              "owner": "SRDINV86 companion review boundary",
+              "reason": "Unsupported familiar form attacks and generic command AI are outside the promoted companion lifecycle subset."
+            },
             "followUpTaskId": "SRDINV86",
             "mechanic": "unsupported familiar form attacks and generic command AI"
           }
@@ -7798,6 +7908,11 @@
       "claim": {
         "deferredMechanics": [
           {
+            "battleReadinessClosure": {
+              "kind": "table-spatial-derivation",
+              "owner": "SRDINV66 table/spatial owner",
+              "reason": "Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain table/spatial derivations."
+            },
             "followUpTaskId": "SRDINV66",
             "mechanic": "automatic area membership, line of sight, map illumination, pathfinding, and wind derivation"
           }
@@ -7922,6 +8037,11 @@
       "claim": {
         "deferredMechanics": [
           {
+            "battleReadinessClosure": {
+              "kind": "table-spatial-derivation",
+              "owner": "SRDINV66 table/spatial owner",
+              "reason": "Automatic area membership, pathfinding, and grid geometry derivation remain table/spatial derivations."
+            },
             "followUpTaskId": "SRDINV66",
             "mechanic": "automatic area membership, pathfinding, and grid geometry derivation for Grease movement"
           }
@@ -8230,6 +8350,11 @@
       "claim": {
         "deferredMechanics": [
           {
+            "battleReadinessClosure": {
+              "kind": "social-knowledge-effect",
+              "owner": "SRDINV66 ability-check roll-mode owner",
+              "reason": "Wisdom (Perception or Survival) Advantage to find the marked target is ability-check roll-mode state outside the promoted damage-rider runtime."
+            },
             "followUpTaskId": "SRDINV66",
             "mechanic": "classified gap: caller-supplied Wisdom (Perception or Survival) Advantage roll-mode projection to find the marked target; no dedicated SRDINV63 implementation task"
           }
@@ -8491,10 +8616,20 @@
       "claim": {
         "deferredMechanics": [
           {
+            "battleReadinessClosure": {
+              "kind": "table-spatial-derivation",
+              "owner": "SRDINV55 table/spatial owner",
+              "reason": "Runtime-owned jump arc, pathfinding, collision, and final-position derivation remain table/spatial derivations."
+            },
             "followUpTaskId": "SRDINV55",
             "mechanic": "runtime-owned jump arc, pathfinding, collision, and final-position derivation"
           },
           {
+            "battleReadinessClosure": {
+              "kind": "table-spatial-derivation",
+              "owner": "SRDINV55 table/spatial owner",
+              "reason": "Runtime-owned Difficult Terrain landing Acrobatics check derivation remains a table/spatial derivation."
+            },
             "followUpTaskId": "SRDINV55",
             "mechanic": "runtime-owned Difficult Terrain landing Acrobatics check derivation"
           }
@@ -8569,6 +8704,11 @@
       "claim": {
         "deferredMechanics": [
           {
+            "battleReadinessClosure": {
+              "kind": "table-spatial-derivation",
+              "owner": "table/spatial and presentation owners",
+              "reason": "Colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the object-emitter runtime boundary."
+            },
             "followUpTaskId": "SRDINV89D",
             "mechanic": "colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the object-emitter runtime boundary"
           }
@@ -9896,6 +10036,11 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "exploration/detection owner",
+          "reason": "Sensing, occlusion, and Hallow discovery are exploration/detection state outside promoted battle runtime."
+        },
         "reason": "Detection/occlusion search semantics and Hallow discovery are not promoted as battle Unit profiles.",
         "tag": "unsupported-profile"
       },
@@ -9914,6 +10059,11 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "exploration/detection owner",
+          "reason": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime."
+        },
         "reason": "Detection/concentration search semantics are not promoted as a battle Unit profile.",
         "tag": "unsupported-profile"
       },
@@ -9932,6 +10082,11 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "exploration/detection owner",
+          "reason": "Poison, disease, creature-kind sensing, occlusion, and identification are exploration/detection state outside promoted battle runtime."
+        },
         "reason": "Detection/occlusion search semantics and poison/disease identification are not promoted as battle Unit profiles.",
         "tag": "unsupported-profile"
       },
@@ -10607,10 +10762,20 @@
       "claim": {
         "deferredMechanics": [
           {
+            "battleReadinessClosure": {
+              "kind": "table-spatial-derivation",
+              "owner": "SRDINV55 table/spatial owner",
+              "reason": "Runtime-owned push geometry, collision/pathfinding, and final-position derivation remain table/spatial derivations."
+            },
             "followUpTaskId": "SRDINV55",
             "mechanic": "runtime-owned push geometry, collision/pathfinding, and final-position derivation"
           },
           {
+            "battleReadinessClosure": {
+              "kind": "table-spatial-derivation",
+              "owner": "SRDINV55 table/spatial owner",
+              "reason": "Broad object inventory simulation and sound propagation simulation remain table/spatial derivations."
+            },
             "followUpTaskId": "SRDINV55",
             "mechanic": "broad object inventory simulation and sound propagation simulation"
           }
@@ -10815,6 +10980,11 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "illusion/exploration owner",
+          "reason": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are illusion/exploration state outside promoted battle runtime."
+        },
         "reason": "Sound/image illusion creation, physical-interaction reveal, faint rendering after Study, and recast expiry are illusion/exploration state outside promoted runtime owners.",
         "tag": "unsupported-profile"
       },
@@ -10835,6 +11005,11 @@
       "claim": {
         "deferredMechanics": [
           {
+            "battleReadinessClosure": {
+              "kind": "social-knowledge-effect",
+              "owner": "SRDINV41 social/knowledge owner",
+              "reason": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are social/knowledge state outside promoted battle runtime."
+            },
             "followUpTaskId": "SRDINV41",
             "mechanic": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are not represented in battle runtime state"
           }

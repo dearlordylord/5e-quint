@@ -64,13 +64,13 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 334,
       "id": "SRDINV90A",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Model Battle Readiness Owner-Accepted Closures"
     },
     {
       "number": 335,
       "id": "SRDINV90B",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Recursive Level-1 Battle Readiness Closure Review"
     }
   ]
@@ -83,8 +83,8 @@ Keep it synchronized with the DAG table and task details.
 | --- | --- | --- | --- | --- | --- | --- |
 | 332 | SRDINV89C - Promote Light Visibility Boundary | done | SRDINV88B | SRDINV89D | SRDINV88B review, Light, Faerie Fire, Bright/Dim Light, Darkvision, Lightly Obscured, UNIT_REPORT, UBIQUITOUS_LANGUAGE | Completed in `f059bf8b`: promoted source-owned light emitter projection, opaque-cover suppression for Light object emitters, Bright/Dim/Darkness illumination derivation, Darkvision adjustment, Lightly Obscured Perception Disadvantage projection, QNT parity, and focused runtime evidence. |
 | 333 | SRDINV89D - Recursive Level-1 Battle Feature Planning Review | done | SRDINV89A, SRDINV89B, SRDINV89C | SRDINV90A | SRDINV89D review, SRD inventory report, UNIT_REPORT, SRDINV88B review, ACTIVE_PLAN, UBIQUITOUS_LANGUAGE | Completed: post-SRDINV89A-C readiness is 309/367 (84.2%) while supported executable Unit coverage is 85/117 (72.6%); appended SRDINV90A-SRDINV90B because the remaining gap is now the readiness classifier's owner-accepted closure boundary, not catalog admission or active-plan exhaustion. |
-| 334 | SRDINV90A - Model Battle Readiness Owner-Accepted Closures | ready-for-implementation-after-light-research | SRDINV89D | SRDINV90B | SRDINV89D review, SRD_UNIT_INVENTORY, UNIT_REPORT, unit-claims.jsonl, unit-matrix.json, UBIQUITOUS_LANGUAGE | Make level-1 battle readiness consume explicit Unit-claim/deferred-owner closure facts so rows already closed as non-battle, later-level, table/spatial, social/knowledge, companion-AI, or outside-runtime do not remain contradictory battle-runtime-required/partial rows. Do not count catalog admission alone. |
-| 335 | SRDINV90B - Recursive Level-1 Battle Readiness Closure Review | blocked | SRDINV90A | next concrete batch unless accepted battle coverage is 100% | SRDINV89D review, refreshed SRD inventory report, refreshed UNIT_REPORT, ACTIVE_PLAN, UBIQUITOUS_LANGUAGE | Recompute product readiness after SRDINV90A and either close the lane if the accepted product metric is genuinely complete, or append the next concrete executable owner for any rows still truly battle-runtime-required. |
+| 334 | SRDINV90A - Model Battle Readiness Owner-Accepted Closures | done | SRDINV89D | SRDINV90B | SRDINV89D review, SRD_UNIT_INVENTORY, UNIT_REPORT, unit-claims.jsonl, unit-matrix.json, UBIQUITOUS_LANGUAGE | Completed: level-1 battle readiness now consumes explicit Unit-claim/deferred-owner closure facts for non-battle, later-level, table/spatial, social/knowledge, companion-AI, and outside-runtime residuals; refreshed readiness is 367/367 (100%) without counting catalog admission alone. |
+| 335 | SRDINV90B - Recursive Level-1 Battle Readiness Closure Review | ready-for-implementation-after-light-research | SRDINV90A | next concrete batch unless accepted battle coverage is 100% | SRDINV89D review, refreshed SRD inventory report, refreshed UNIT_REPORT, ACTIVE_PLAN, UBIQUITOUS_LANGUAGE | Recompute product readiness after SRDINV90A and either close the lane if the accepted product metric is genuinely complete, or append the next concrete executable owner for rows still truly battle-runtime-required. |
 
 ## Task Details
 
@@ -152,7 +152,7 @@ in the SRDINV89D review note.
 
 ### Task 334 - SRDINV90A - Model Battle Readiness Owner-Accepted Closures
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: SRDINV89D
 
@@ -181,15 +181,21 @@ line-of-sight, social, illusion, detection, companion-AI, or later-level
 mechanics; treating active-plan exhaustion, supported-profile coverage, or
 catalog admission as product completion.
 
-Verification: RAW/source review for every closure family whose status changes
-and `UBIQUITOUS_LANGUAGE.md`; `pnpm unit-profile-coverage:check --write` if
-matrix or inventory artifacts change; `pnpm unit-profile-coverage:check`; active
-plan consistency across Ralph index, DAG table, and task details; `/simplify`
-convergence, minimum two rounds unless the changeset is trivial.
+Completed: modeled explicit `battleReadinessClosure` facts on Unit claims and
+deferred profile-subset mechanics, made the readiness classifier consume those
+facts, and refreshed matrix/inventory artifacts. Level-1 battle readiness is now
+367/367 (100%) with rows by status: accepted 276, accepted-no-battle-effect 91.
+Catalog admission alone still does not count as support.
+
+Verification completed:
+RAW/source review for changed closure families in local SRD 5.2.1 text;
+`UBIQUITOUS_LANGUAGE.md` terminology check; `pnpm unit-profile-coverage:check
+--write`; `pnpm unit-profile-coverage:check`; active-plan consistency across
+Ralph index, DAG table, and task details; two-round `/simplify` convergence.
 
 ### Task 335 - SRDINV90B - Recursive Level-1 Battle Readiness Closure Review
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: SRDINV90A
 

@@ -35,6 +35,15 @@ const claimTags = new Set([
   "needs-assumption",
   "closed-by-assumption",
 ]);
+const battleReadinessClosureKinds = new Set([
+  "selection-grant-container",
+  "later-level-only",
+  "table-spatial-derivation",
+  "social-knowledge-effect",
+  "companion-ai-exclusion",
+  "outside-runtime-presentation-exploration",
+  "outside-battle-runtime",
+]);
 const deterministicAdmissionProjectionEvidenceTag =
   "deterministic-admission-projection";
 const selectedIdentityMbtEvidenceTag = "selected-identity-mbt";
@@ -160,6 +169,7 @@ function coveragePaths(root) {
 }
 
 module.exports = {
+  battleReadinessClosureKinds,
   catalogAdmissionDispositionCategories,
   catalogAdmissionDispositionCategory,
   claimTags,

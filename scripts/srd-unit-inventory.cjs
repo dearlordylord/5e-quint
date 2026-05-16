@@ -1,5 +1,8 @@
 const fs = require("node:fs");
 const path = require("node:path");
+const {
+  battleReadinessClosureKinds,
+} = require("./unit-profile-coverage-config.cjs");
 
 const classDir = ".references/srd-5.2.1/Classes";
 const classOrder = [
@@ -125,13 +128,6 @@ const catalogOnlyClosures = new Map([
   ],
 ]);
 
-const installedSpellUnitCatalogOnlyClosures = new Set([
-  "detect_evil_and_good",
-  "detect_magic",
-  "detect_poison_and_disease",
-  "minor_illusion",
-]);
-
 const authoredSpellUnitCatalogOnlyClosures = new Map([
   [
     "alarm",
@@ -182,13 +178,6 @@ const battleRuntimeRelevantFeatureUnitIds = new Set([
   "rogue_weapon_mastery",
   "sorcerer_innate_sorcery",
   "warlock_eldritch_invocations",
-]);
-
-const battleRuntimeRelevantCatalogOnlySpellUnitIds = new Set([
-  "detect_evil_and_good",
-  "detect_magic",
-  "detect_poison_and_disease",
-  "minor_illusion",
 ]);
 
 const classContainerSurfaceBlockers = new Map();
@@ -338,6 +327,15 @@ function slug(text) {
 
 function withoutTrailingPeriod(text) {
   return text.replace(/\.+$/, "");
+}
+
+function isBattleReadinessClosure(value) {
+  return (
+    isRecord(value) &&
+    battleReadinessClosureKinds.has(value.kind) &&
+    typeof value.owner === "string" &&
+    value.owner.length > 0
+  );
 }
 
 function readLines(root, relativePath) {
@@ -766,12 +764,12 @@ function installedSpellUnitOwnerClassification(
   }
   if (
     claim?.tag === "unsupported-profile" &&
-    installedSpellUnitCatalogOnlyClosures.has(row.candidateUnitId)
+    isBattleReadinessClosure(claim.battleReadinessClosure)
   ) {
     return {
       kind: "catalog-only-closure",
-      owner: "catalog-only/dead-for-now",
-      reason: claim.reason,
+      owner: claim.battleReadinessClosure.owner,
+      reason: claim.battleReadinessClosure.reason ?? claim.reason,
     };
   }
   if (claim?.tag === "unsupported-profile") {
@@ -1585,7 +1583,9 @@ function withState(rows, authored, installedIds, ownerEvidenceSources) {
       ownerEvidenceSources,
       installedIds,
     );
-    return {
+    const battleReadinessClosure =
+      battleReadinessClosureFromUnitClaim(unitClaim);
+    const rowWithState = {
       ...row,
       surface: gate,
       authoredContent: authoredUnit
@@ -1599,6 +1599,7 @@ function withState(rows, authored, installedIds, ownerEvidenceSources) {
       characterCreationOwnership: characterCreationOwnership(row),
       unitProfileDisposition: unitClaim?.tag,
       finalDisposition: disposition,
+      battleReadinessClosure,
       ownerEvidence:
         catalogAdmission.state === "installed" &&
         (disposition === "catalog-installed-needs-owner-evidence" ||
@@ -1624,6 +1625,10 @@ function withState(rows, authored, installedIds, ownerEvidenceSources) {
         ownerEvidenceSources,
         installedIds,
       ),
+    };
+    return {
+      ...rowWithState,
+      battleReadinessStatus: battleReadinessStatus(rowWithState),
     };
   });
 }
@@ -1692,6 +1697,49 @@ function isLevelOneBattleReadinessRow(row) {
   return levelOneBattleReadinessLevelBands.has(row.levelBand);
 }
 
+function battleReadinessClosureFromUnitClaim(claim) {
+  if (claim?.tag === "unsupported-profile") {
+    if (!isBattleReadinessClosure(claim.battleReadinessClosure)) {
+      return undefined;
+    }
+    return {
+      source: "unit-claim",
+      kind: claim.battleReadinessClosure.kind,
+      owner: claim.battleReadinessClosure.owner,
+      reason: claim.battleReadinessClosure.reason ?? claim.reason,
+    };
+  }
+  if (claim?.tag !== "profile-subset-supported") {
+    return undefined;
+  }
+  const deferredMechanics = claim.deferredMechanics ?? [];
+  if (
+    deferredMechanics.length === 0 ||
+    deferredMechanics.some(
+      (mechanic) => !isBattleReadinessClosure(mechanic.battleReadinessClosure),
+    )
+  ) {
+    return undefined;
+  }
+  return {
+    source: "deferred-mechanics",
+    kind: "profile-subset-remaining-mechanics-closed",
+    owner: [
+      ...new Set(
+        deferredMechanics.map(
+          (mechanic) => mechanic.battleReadinessClosure.owner,
+        ),
+      ),
+    ].join("; "),
+    reason: deferredMechanics
+      .map(
+        (mechanic) =>
+          mechanic.battleReadinessClosure.reason ?? mechanic.mechanic,
+      )
+      .join("; "),
+  };
+}
+
 function isBattleRuntimeRelevantFeatureRow(row) {
   return (
     row.rowKind === "mastery-pressure" ||
@@ -1702,8 +1750,7 @@ function isBattleRuntimeRelevantFeatureRow(row) {
 function isAcceptedNoBattleEffectSpellRow(row) {
   return (
     row.rowKind === "spell-unit-pressure" &&
-    row.finalDisposition === "catalog-only/dead-for-now" &&
-    !battleRuntimeRelevantCatalogOnlySpellUnitIds.has(row.candidateUnitId)
+    row.finalDisposition === "catalog-only/dead-for-now"
   );
 }
 
@@ -1719,7 +1766,11 @@ function battleReadinessStatus(row) {
         : "battle-runtime-required";
     }
     if (row.unitProfileDisposition === "profile-subset-supported") {
-      return "partial-battle-runtime";
+      return row.battleReadinessClosure !== undefined &&
+        (hasAcceptedOwnerEvidence(row, "battle-runtime") ||
+          row.finalDisposition === "catalog-installed-owner-evidence-present")
+        ? "accepted"
+        : "partial-battle-runtime";
     }
     if (isAcceptedNoBattleEffectSpellRow(row)) {
       return "accepted-no-battle-effect";
@@ -1741,7 +1792,14 @@ function battleReadinessStatus(row) {
       return "accepted";
     }
     if (row.unitProfileDisposition === "profile-subset-supported") {
-      return "partial-battle-runtime";
+      return row.battleReadinessClosure !== undefined &&
+        (hasAcceptedOwnerEvidence(row, "battle-runtime") ||
+          row.finalDisposition === "catalog-installed-owner-evidence-present")
+        ? "accepted"
+        : "partial-battle-runtime";
+    }
+    if (row.battleReadinessClosure !== undefined) {
+      return "accepted-no-battle-effect";
     }
     return "battle-runtime-required";
   }
@@ -3381,21 +3439,19 @@ function validateSrdUnitInventory(report) {
       .filter((row) => row.rowKind === "spell-unit-pressure")
       .map((row) => [row.candidateUnitId, row]),
   );
-  for (const unitId of installedSpellUnitCatalogOnlyClosures) {
-    const row = spellUnitRowsByUnitId.get(unitId);
-    if (row === undefined) {
-      issues.push(
-        `Installed Spell Unit catalog-only closure references unknown row ${unitId}.`,
-      );
-      continue;
-    }
+  for (const row of report.rows.filter(
+    (candidate) =>
+      candidate.rowKind === "spell-unit-pressure" &&
+      candidate.unitProfileDisposition === "unsupported-profile" &&
+      candidate.battleReadinessClosure !== undefined,
+  )) {
     if (
       row.authoredContent.state !== "authored-record-present" ||
       row.catalogAdmission.state !== "installed" ||
       row.finalDisposition !== "catalog-only/dead-for-now"
     ) {
       issues.push(
-        `Installed Spell Unit catalog-only closure ${unitId} must reference an authored, installed Spell Unit row classified catalog-only/dead-for-now.`,
+        `Installed Spell Unit catalog-only closure ${row.candidateUnitId} must reference an authored, installed Spell Unit row classified catalog-only/dead-for-now.`,
       );
     }
   }
@@ -3542,8 +3598,8 @@ function renderSrdUnitInventory(report) {
     "",
     "## Level-1 Backlog Rows",
     "",
-    "| Row | Category | Creation ownership | Surface | Authored | Catalog | Unit profile | Disposition | Owner evidence | Next action | Source |",
-    "|---|---|---|---|---|---|---|---|---|---|---|",
+    "| Row | Category | Creation ownership | Surface | Authored | Catalog | Unit profile | Disposition | Battle readiness | Readiness closure | Owner evidence | Next action | Source |",
+    "|---|---|---|---|---|---|---|---|---|---|---|---|---|",
     ...levelOne.map((row) =>
       [
         row.concept,
@@ -3554,6 +3610,10 @@ function renderSrdUnitInventory(report) {
         row.catalogAdmission.state,
         row.unitProfileDisposition ?? "",
         row.finalDisposition,
+        row.battleReadinessStatus ?? "",
+        row.battleReadinessClosure === undefined
+          ? ""
+          : `${row.battleReadinessClosure.kind}: ${row.battleReadinessClosure.owner}`,
         row.ownerEvidence
           .map((evidence) => `${evidence.owner}: ${evidence.status}`)
           .join("; "),
