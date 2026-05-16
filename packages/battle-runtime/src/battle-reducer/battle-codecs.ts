@@ -55,6 +55,7 @@ import {
 } from "../battle-subjects.ts";
 import {
   BattleCombatantSide,
+  BattleDancingLightId,
   BattleId,
   BattleObjectId,
   BattleTablePositionId,
@@ -195,6 +196,45 @@ const BattleRuntimeObjectSchema = Schema.Record({
   value: Schema.Any,
 });
 
+const BattleDancingLightCastPlacementSchema = Schema.Struct({
+  positionId: BattleTablePositionId,
+  distanceFromCasterFeet: MovementFeet,
+  nearestSiblingDistanceFeet: Schema.optionalWith(MovementFeet, {
+    exact: true,
+  }),
+});
+const BattleDancingLightRepositionPlacementSchema = Schema.Struct({
+  positionId: BattleTablePositionId,
+  distanceFromCasterFeet: MovementFeet,
+  nearestSiblingDistanceFeet: Schema.optionalWith(MovementFeet, {
+    exact: true,
+  }),
+  lightId: BattleDancingLightId,
+  moveDistanceFeet: MovementFeet,
+});
+const BattleDancingLightsPlacementValueSchema = Schema.Union(
+  Schema.Struct({
+    mode: Schema.Literal("cast"),
+    form: Schema.Literal("separateLights"),
+    lights: Schema.Array(BattleDancingLightCastPlacementSchema),
+  }),
+  Schema.Struct({
+    mode: Schema.Literal("cast"),
+    form: Schema.Literal("combinedMediumForm"),
+    light: BattleDancingLightCastPlacementSchema,
+  }),
+  Schema.Struct({
+    mode: Schema.Literal("reposition"),
+    form: Schema.Literal("separateLights"),
+    lights: Schema.Array(BattleDancingLightRepositionPlacementSchema),
+  }),
+  Schema.Struct({
+    mode: Schema.Literal("reposition"),
+    form: Schema.Literal("combinedMediumForm"),
+    light: BattleDancingLightRepositionPlacementSchema,
+  }),
+);
+
 const BattleSleepNonSleeperFactSchema = Schema.Struct({
   kind: Schema.Literal("doesNotSleep"),
   targetId: CombatantId,
@@ -301,7 +341,7 @@ const BattleSpellAreaChoiceSchema = Schema.Union(
     ...BattleSpellAreaChoiceBaseSchema,
     kind: Schema.optionalWith(Schema.Never, { exact: true }),
     areaId: Schema.optionalWith(Schema.Never, { exact: true }),
-    sleepNonSleeperFacts: Schema.Array(BattleSleepNonSleeperFactSchema),
+    sleepNonSleeperFacts: Schema.NonEmptyArray(BattleSleepNonSleeperFactSchema),
   }),
   Schema.Struct({
     ...BattleSpellAreaChoiceBaseSchema,
@@ -821,6 +861,42 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       rangeFeet: MovementFeet,
       attackKind: Schema.Literal("ranged_spell_attack"),
       attackBonus: AttackBonus,
+    }),
+    Schema.Struct({
+      access: ClassCantripSpellAccessSchema,
+      resource: NoSpellInvocationResourceSchema,
+      procedure: Schema.Literal("dancingLightsSeparateCast"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      form: Schema.Literal("separateLights"),
+      dimRadiusFeet: MovementFeet,
+      rangeFeet: MovementFeet,
+      maxMoveFeet: MovementFeet,
+      spacingFeet: MovementFeet,
+      expiresAt: BattleRuntimeObjectSchema,
+    }),
+    Schema.Struct({
+      access: ClassCantripSpellAccessSchema,
+      resource: NoSpellInvocationResourceSchema,
+      procedure: Schema.Literal("dancingLightsCombinedCast"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      form: Schema.Literal("combinedMediumForm"),
+      dimRadiusFeet: MovementFeet,
+      rangeFeet: MovementFeet,
+      maxMoveFeet: MovementFeet,
+      spacingFeet: MovementFeet,
+      expiresAt: BattleRuntimeObjectSchema,
+    }),
+    Schema.Struct({
+      access: ClassCantripSpellAccessSchema,
+      resource: NoSpellInvocationResourceSchema,
+      procedure: Schema.Literal("dancingLightsReposition"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("bonusAction"),
+      maxMoveFeet: MovementFeet,
+      rangeFeet: MovementFeet,
+      spacingFeet: MovementFeet,
     }),
     Schema.Struct({
       access: ClassCantripSpellAccessSchema,
@@ -1409,7 +1485,21 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       actionCost: Schema.Literal("bonusAction"),
       targeting: Schema.Struct({ kind: Schema.Literal("singleCombatant") }),
       damage: BattleRuntimeObjectSchema,
-      abilityChoices: Schema.Union(Schema.Array(AbilitySchema), Schema.Null),
+      abilityCheckBehavior: Schema.Union(
+        Schema.Struct({ kind: Schema.Literal("none") }),
+        Schema.Struct({
+          kind: Schema.Literal("chosenAbilityDisadvantage"),
+          choices: Schema.Array(AbilitySchema),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("findingAdvantage"),
+          ability: Schema.Literal("wis"),
+          skills: Schema.Tuple(
+            Schema.Literal("perception"),
+            Schema.Literal("survival"),
+          ),
+        }),
+      ),
       rangeFeet: MovementFeet,
       expiresAt: BattleRuntimeObjectSchema,
     }),
@@ -1681,6 +1771,19 @@ export const BattleHoleSchema = Schema.Union(
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
+    kind: Schema.Literal("dancingLightsPlacement"),
+    label: Schema.String,
+    spell: SupportedSpellInvocationSchema,
+    mode: Schema.Literal("cast", "reposition"),
+    form: Schema.Literal("separateLights", "combinedMediumForm"),
+    activeLightIds: Schema.Array(BattleDancingLightId),
+    rangeFeet: MovementFeet,
+    maxMoveFeet: MovementFeet,
+    spacingFeet: MovementFeet,
+    requiresTableSpatialFact: Schema.Literal(true),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
     kind: Schema.Literal("spellAreaChoice"),
     label: Schema.String,
     spell: SupportedSpellInvocationSchema,
@@ -1740,6 +1843,21 @@ export const BattleHoleSchema = Schema.Union(
     label: Schema.String,
     greaseGroundHazard: BattleRuntimeObjectSchema,
     ability: Schema.Literal("dex"),
+    dc: DcSourceSchema,
+    areaChoices: Schema.Array(BattleRuntimeObjectSchema),
+    targetRollModes: Schema.Array(
+      Schema.Struct({
+        targetId: CombatantId,
+        rollMode: Schema.Literal(...ATTACK_ROLL_MODES),
+      }),
+    ),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("savingThrowOutcome"),
+    label: Schema.String,
+    protectionRelevantEffectSave: BattleRuntimeObjectSchema,
+    ability: AbilitySchema,
     dc: DcSourceSchema,
     areaChoices: Schema.Array(BattleRuntimeObjectSchema),
     targetRollModes: Schema.Array(
@@ -1840,7 +1958,7 @@ export const BattleHoleSchema = Schema.Union(
     kind: Schema.Literal("abilityCheck"),
     label: Schema.String,
     ability: AbilitySchema,
-    skill: Schema.Literal("stealth", "perception", "athletics"),
+    skill: Schema.Literal("stealth", "perception", "survival", "athletics"),
     dc: DifficultyClass,
     rollMode: Schema.optionalWith(Schema.Literal(...ATTACK_ROLL_MODES), {
       exact: true,
@@ -1939,10 +2057,16 @@ type BattleSpellAreaChoiceEncoded = {
   | {
       readonly kind?: never;
       readonly areaId?: never;
-      readonly sleepNonSleeperFacts: readonly {
-        readonly kind: "doesNotSleep";
-        readonly targetId: string;
-      }[];
+      readonly sleepNonSleeperFacts: readonly [
+        {
+          readonly kind: "doesNotSleep";
+          readonly targetId: string;
+        },
+        ...{
+          readonly kind: "doesNotSleep";
+          readonly targetId: string;
+        }[],
+      ];
     }
   | {
       readonly kind: "faerieFireArea";
@@ -2187,6 +2311,51 @@ type BattleFillEncoded =
       readonly kind: "commandOptionChoice";
       readonly holeId: string;
       readonly value: (typeof COMMAND_OPTIONS)[number];
+    }
+  | {
+      readonly kind: "dancingLightsPlacement";
+      readonly holeId: string;
+      readonly value:
+        | {
+            readonly mode: "cast";
+            readonly form: "separateLights";
+            readonly lights: readonly {
+              readonly positionId: string;
+              readonly distanceFromCasterFeet: number;
+              readonly nearestSiblingDistanceFeet?: number;
+            }[];
+          }
+        | {
+            readonly mode: "cast";
+            readonly form: "combinedMediumForm";
+            readonly light: {
+              readonly positionId: string;
+              readonly distanceFromCasterFeet: number;
+              readonly nearestSiblingDistanceFeet?: number;
+            };
+          }
+        | {
+            readonly mode: "reposition";
+            readonly form: "separateLights";
+            readonly lights: readonly {
+              readonly lightId: string;
+              readonly positionId: string;
+              readonly distanceFromCasterFeet: number;
+              readonly moveDistanceFeet: number;
+              readonly nearestSiblingDistanceFeet?: number;
+            }[];
+          }
+        | {
+            readonly mode: "reposition";
+            readonly form: "combinedMediumForm";
+            readonly light: {
+              readonly lightId: string;
+              readonly positionId: string;
+              readonly distanceFromCasterFeet: number;
+              readonly moveDistanceFeet: number;
+              readonly nearestSiblingDistanceFeet?: number;
+            };
+          };
     }
   | {
       readonly kind: "unitFeatureDecision";
@@ -2600,6 +2769,11 @@ export const BattleFillSchema: Schema.Schema<
       kind: Schema.Literal("commandOptionChoice"),
       holeId: BattleHoleIdSchema,
       value: Schema.Literal(...COMMAND_OPTIONS),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("dancingLightsPlacement"),
+      holeId: BattleHoleIdSchema,
+      value: BattleDancingLightsPlacementValueSchema,
     }),
     Schema.Struct({
       kind: Schema.Literal("unitFeatureDecision"),
@@ -3211,6 +3385,12 @@ const BattleLightEmitterSchema = Schema.Union(
       Schema.Struct({
         kind: Schema.Literal("object"),
         objectId: BattleObjectId,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("dancingLight"),
+        lightId: BattleDancingLightId,
+        positionId: BattleTablePositionId,
+        form: Schema.Literal("separateLights", "combinedMediumForm"),
       }),
     ),
     emission: Schema.Union(

@@ -156,13 +156,13 @@
     "spellPressureRows": 211,
     "levelOneBattleReadiness": {
       "denominator": 367,
-      "numerator": 297,
-      "percent": "80.9%",
+      "numerator": 309,
+      "percent": "84.2%",
       "rowsByStatus": {
-        "accepted": 228,
-        "accepted-no-battle-effect": 69,
+        "accepted": 243,
+        "accepted-no-battle-effect": 66,
         "battle-runtime-required": 25,
-        "partial-battle-runtime": 45
+        "partial-battle-runtime": 33
       }
     },
     "levelOneClassContainers": 12,
@@ -171,13 +171,13 @@
       "non-runtime": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 280,
+      "catalog-installed-owner-evidence-present": 283,
       "non-runtime": 12,
-      "catalog-only/dead-for-now": 75
+      "catalog-only/dead-for-now": 72
     },
     "spellPressureRowsByDisposition": {
-      "catalog-only/dead-for-now": 75,
-      "catalog-installed-owner-evidence-present": 136
+      "catalog-installed-owner-evidence-present": 139,
+      "catalog-only/dead-for-now": 72
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -525,8 +525,9 @@
       "title": "Classify Installed Cantrip and Level-1 Spell Units",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Classify installed SRD cantrip and level-1 Spell Unit owner evidence separately from missing and catalog-only spell rows.",
-      "rowCount": 154,
+      "rowCount": 157,
       "rowIds": [
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_dancing_lights",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_light",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_minor_illusion",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_starry_wisp",
@@ -611,6 +612,7 @@
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_longstrider",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_acid_splash",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_chill_touch",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_dancing_lights",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_fire_bolt",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_light",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_minor_illusion",
@@ -652,6 +654,7 @@
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_protection_from_evil_and_good",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_acid_splash",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_chill_touch",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_dancing_lights",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_fire_bolt",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_light",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_minor_illusion",
@@ -690,9 +693,8 @@
       "title": "Review Catalog-Only Cantrip and Level-1 Spell Units",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Keep catalog-only spell pressure explicit and counted without forcing unrelated class or nonspell rows into the same task.",
-      "rowCount": 75,
+      "rowCount": 72,
       "rowIds": [
-        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_dancing_lights",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_mage_hand",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_mending",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_message",
@@ -732,7 +734,6 @@
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_detect_poison_and_disease",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_goodberry",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_speak_with_animals",
-        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_dancing_lights",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_elementalism",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_mage_hand",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_mending",
@@ -751,7 +752,6 @@
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_illusory_script",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_speak_with_animals",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_unseen_servant",
-        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_dancing_lights",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_elementalism",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_mage_hand",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_mending",
@@ -4463,12 +4463,24 @@
         "sourceRecordPath": "packages/surface/content/dancing_lights.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "dancing_lights"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Multiple movable Dim Light sources, linked spacing, humanoid light forms, and range-based expiry are illumination/exploration state outside promoted runtime owners."
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit dancing_lights is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV88A at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_light",
@@ -5552,7 +5564,7 @@
         "state": "installed",
         "unitId": "sleep"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -6954,7 +6966,7 @@
         "state": "installed",
         "unitId": "protection_from_evil_and_good"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -7940,7 +7952,7 @@
         "state": "installed",
         "unitId": "produce_flame"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -7950,7 +7962,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV32B at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV87A at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -8710,7 +8722,7 @@
         "state": "installed",
         "unitId": "protection_from_evil_and_good"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -11000,7 +11012,7 @@
         "state": "installed",
         "unitId": "protection_from_evil_and_good"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -13516,7 +13528,7 @@
         "state": "installed",
         "unitId": "chill_touch"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -13526,7 +13538,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV64 at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV89A at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -13555,12 +13567,24 @@
         "sourceRecordPath": "packages/surface/content/dancing_lights.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "dancing_lights"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Multiple movable Dim Light sources, linked spacing, humanoid light forms, and range-based expiry are illumination/exploration state outside promoted runtime owners."
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit dancing_lights is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV88A at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_elementalism",
@@ -14824,7 +14848,7 @@
         "state": "installed",
         "unitId": "sleep"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -15454,7 +15478,7 @@
         "state": "installed",
         "unitId": "chill_touch"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -15464,7 +15488,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV64 at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV89A at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -16072,7 +16096,7 @@
         "state": "installed",
         "unitId": "protection_from_evil_and_good"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -16802,7 +16826,7 @@
         "state": "installed",
         "unitId": "chill_touch"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -16812,7 +16836,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV64 at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV89A at packages/battle-runtime/src/unit-profile-admission.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -16841,12 +16865,24 @@
         "sourceRecordPath": "packages/surface/content/dancing_lights.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "dancing_lights"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Multiple movable Dim Light sources, linked spacing, humanoid light forms, and range-based expiry are illumination/exploration state outside promoted runtime owners."
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit dancing_lights is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV88A at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_elementalism",
@@ -18196,7 +18232,7 @@
         "state": "installed",
         "unitId": "protection_from_evil_and_good"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -18352,7 +18388,7 @@
         "state": "installed",
         "unitId": "sleep"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {

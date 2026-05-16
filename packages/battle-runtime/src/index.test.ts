@@ -105,6 +105,7 @@ import {
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
 import { combatantCanSee } from "./battle-reducer/creature-state-leaves.ts";
+import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
 import { applyWeaponMasterySapOnHit } from "./battle-reducer/attack-roll.ts";
 import {
   holeId,
@@ -18936,6 +18937,154 @@ describe("battle runtime", () => {
     expect(expendedLevelOneSlots(result, wizardId)).toBe(0);
   });
 
+  test("Chill Touch admits caller-supplied object targets for melee spell attack damage", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-chill-touch-object-hit"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          classLevel: 5,
+          spellcasting: wizardSpellcasting({
+            cantrips: [spellRecord("chill_touch")],
+            preparedSpells: [],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject = magicSubject("chill_touch");
+    const act = findAct(state, subject);
+    expect(act.initialHoles).toEqual([
+      expect.objectContaining({
+        kind: "targetChoice",
+        choices: expect.arrayContaining([skeletonId]),
+      }),
+      expect.objectContaining({ kind: "objectTargetChoice" }),
+    ]);
+
+    const objectId = battleObjectId("chill-touch-training-object");
+    const objectTarget = objectTargetFill({
+      hole: findHole(act.initialHoles, "objectTargetChoice"),
+      objectId,
+      spellId: "chill_touch",
+      rangeFeet: movementFeet(5),
+      damageDisposition: { kind: "hitPoints", hitPoints: Hp(12) },
+    });
+    const attackRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [objectTarget],
+      }),
+      "attackRoll",
+    );
+    expect(attackRoll).toMatchObject({
+      label: "Chill Touch spell attack roll",
+      spell: expect.objectContaining({
+        targeting: { kind: "singleCreatureOrObject" },
+        attackKind: "melee_spell_attack",
+      }),
+    });
+    const damage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          objectTarget,
+          attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    expect(damage).toMatchObject({
+      label: "Chill Touch damage (2d10-necrotic)",
+    });
+
+    const result = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        objectTarget,
+        attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+        damageRollFillWithGroups(damage, [[4, 5]]),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      objectDamages: [
+        {
+          kind: "hitPoints",
+          objectId,
+          damageType: "necrotic",
+          rolledDamage: damageAmount(9),
+          effectiveDamage: damageAmount(9),
+          priorHitPoints: Hp(12),
+          nextHitPoints: Hp(3),
+          destroyed: false,
+        },
+      ],
+      snapshot: {
+        combatants: [
+          { combatantId: wizardId, hp: 12 },
+          { combatantId: skeletonId, hp: 13 },
+        ],
+        turn: { actionResources: [] },
+      },
+    });
+    expect(expendedLevelOneSlots(requireResolved(result), wizardId)).toBe(0);
+    expect(
+      requireResolved(result).state.combatants.get(skeletonId)?.activeEffects,
+    ).toEqual([]);
+  });
+
+  test("Chill Touch object targeting rejects missing matching object facts", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-chill-touch-object-reject"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          classLevel: 5,
+          spellcasting: wizardSpellcasting({
+            cantrips: [spellRecord("chill_touch")],
+            preparedSpells: [],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject = magicSubject("chill_touch");
+    const objectTarget = findHole(
+      findAct(state, subject).initialHoles,
+      "objectTargetChoice",
+    );
+
+    const result = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        objectTargetFill({
+          hole: objectTarget,
+          spellId: "chill_touch",
+          rangeFeet: movementFeet(30),
+        }),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Spell object target must include a matching table-supplied range and object Armor Class fact.",
+    });
+  });
+
   test("Starry Wisp applies a shared Dim Light emitter to a hit creature until the caster's next turn ends", () => {
     const state = startBattleRight({
       battleId: battleId("battle-starry-wisp-creature"),
@@ -23753,7 +23902,7 @@ describe("battle runtime", () => {
     });
   });
 
-  test("Sleep rejects rolled outcomes for Exhaustion-immune targets and unsupported non-sleeper facts", () => {
+  test("Sleep rejects rolled outcomes for automatic-success targets", () => {
     const state = startBattleRight({
       battleId: battleId("battle-sleep-auto-success"),
       combatants: [
@@ -23798,7 +23947,155 @@ describe("battle runtime", () => {
     ).toMatchObject({
       tag: "invalid",
       message:
-        "Sleep targets with Exhaustion Immunity automatically succeed and must not receive a rolled Saving Throw outcome.",
+        "Sleep targets that do not sleep or have Exhaustion Immunity automatically succeed and must not receive a rolled Saving Throw outcome.",
+    });
+  });
+
+  test("Sleep non-sleeper facts automatically succeed without a save outcome", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-sleep-non-sleeper-auto-success"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            cantrips: [],
+            preparedSpells: [spellRecord("sleep")],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+        }),
+        characterSeed({
+          combatantId: goblinId,
+          displayName: "Target",
+          initiative: 10,
+          side: oppositionSide,
+        }),
+      ],
+    });
+    const subject = magicSubject("sleep");
+    const savingThrows = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "savingThrowOutcome",
+    );
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          {
+            kind: "savingThrowOutcome",
+            holeId: savingThrows.holeId,
+            value: {
+              area: {
+                originAnchorId: wizardId,
+                affectedTargetIds: [goblinId],
+                sleepNonSleeperFacts: [
+                  { kind: "doesNotSleep", targetId: goblinId },
+                ],
+              },
+              outcomes: [{ targetId: goblinId, succeeded: true }],
+            },
+          },
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Sleep targets that do not sleep or have Exhaustion Immunity automatically succeed and must not receive a rolled Saving Throw outcome.",
+    });
+
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          {
+            kind: "savingThrowOutcome",
+            holeId: savingThrows.holeId,
+            value: {
+              area: {
+                originAnchorId: wizardId,
+                affectedTargetIds: [goblinId],
+                sleepNonSleeperFacts: [
+                  { kind: "doesNotSleep", targetId: goblinId },
+                ],
+              },
+              outcomes: [],
+            },
+          },
+        ],
+      }),
+    );
+
+    const target = resolved.state.combatants.get(goblinId)!;
+    expect(target.conditions.directIncapacitated).toBe(false);
+    expect(target.activeEffects).toEqual([]);
+    expect(
+      resolved.state.currentTurnResources.actionResources.some(
+        (resource) => resource.source === "turn",
+      ),
+    ).toBe(false);
+    expect(resolved.state.currentTurnResources.spellSlotExpendedThisTurn).toBe(
+      true,
+    );
+  });
+
+  test("Sleep rejects duplicate or unselected non-sleeper facts", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-sleep-non-sleeper-validation"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            cantrips: [],
+            preparedSpells: [spellRecord("sleep")],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+        }),
+        characterSeed({
+          combatantId: goblinId,
+          displayName: "Target",
+          initiative: 10,
+          side: oppositionSide,
+        }),
+      ],
+    });
+    const subject = magicSubject("sleep");
+    const savingThrows = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "savingThrowOutcome",
+    );
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          {
+            kind: "savingThrowOutcome",
+            holeId: savingThrows.holeId,
+            value: {
+              area: {
+                originAnchorId: wizardId,
+                affectedTargetIds: [goblinId],
+                sleepNonSleeperFacts: [
+                  { kind: "doesNotSleep", targetId: fighterId },
+                ],
+              },
+              outcomes: [{ targetId: goblinId, succeeded: true }],
+            },
+          },
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: "Sleep non-sleeper facts must match selected Sphere targets.",
     });
 
     expect(
@@ -23812,9 +24109,10 @@ describe("battle runtime", () => {
             value: {
               area: {
                 originAnchorId: wizardId,
-                affectedTargetIds: [skeletonId],
+                affectedTargetIds: [goblinId],
                 sleepNonSleeperFacts: [
-                  { kind: "doesNotSleep", targetId: skeletonId },
+                  { kind: "doesNotSleep", targetId: goblinId },
+                  { kind: "doesNotSleep", targetId: goblinId },
                 ],
               },
               outcomes: [],
@@ -23824,8 +24122,7 @@ describe("battle runtime", () => {
       }),
     ).toMatchObject({
       tag: "invalid",
-      message:
-        "Sleep non-sleeper automatic-success facts are not supported yet.",
+      message: "Sleep non-sleeper facts must not duplicate targets.",
     });
   });
 
@@ -24548,6 +24845,178 @@ describe("battle runtime", () => {
     ]);
   });
 
+  test("Hunter's Mark projects Advantage on owner checks to find the marked target", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-hunters-mark-finding-advantage"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("hunters_mark")],
+          }),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+        skeletonCreatureInit({ initiative: 5 }),
+      ],
+    });
+    const markAct = discoverBattleActs(state).find(
+      (candidate) =>
+        candidate.subject.tag === "bonusActionSpell" &&
+        candidate.subject.invocation.spellId === "hunters_mark",
+    );
+    if (markAct === undefined) {
+      throw new Error("Expected Hunter's Mark Bonus Action spell act.");
+    }
+    const marked = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: markAct.subject,
+        fills: [
+          targetFill(findHole(markAct.initialHoles, "targetChoice"), goblinId, [
+            {
+              kind: "spellTarget",
+              casterId: fighterId,
+              targetId: goblinId,
+              spellId: "hunters_mark",
+            },
+          ]),
+        ],
+      }),
+    ).state;
+
+    expect(
+      requiredAbilityCheckRollMode(marked, fighterId, "wis", {
+        skill: "perception",
+        targetId: goblinId,
+      }),
+    ).toBe("advantage");
+    expect(
+      requiredAbilityCheckRollMode(marked, fighterId, "wis", {
+        skill: "survival",
+        targetId: goblinId,
+      }),
+    ).toBe("advantage");
+    expect(
+      requiredAbilityCheckRollMode(marked, fighterId, "wis", {
+        skill: "athletics",
+        targetId: goblinId,
+      }),
+    ).toBeUndefined();
+    expect(
+      requiredAbilityCheckRollMode(marked, goblinId, "wis", {
+        skill: "perception",
+        targetId: fighterId,
+      }),
+    ).toBeUndefined();
+    expect(
+      requiredAbilityCheckRollMode(marked, fighterId, "wis", {
+        skill: "perception",
+        targetId: skeletonId,
+      }),
+    ).toBeUndefined();
+
+    const hiddenGoblinState: BattleState = {
+      ...marked,
+      combatants: new Map(marked.combatants).set(goblinId, {
+        ...marked.combatants.get(goblinId)!,
+        hidden: { discoveryDc: difficultyClass(15) },
+      }),
+    };
+    const searchSubject = {
+      tag: "action" as const,
+      actorId: fighterId,
+      action: "search" as const,
+    };
+    const searchAct = findAct(hiddenGoblinState, searchSubject);
+    const searchCheck = requireHole(
+      resolveBattleSubject({
+        state: hiddenGoblinState,
+        subject: searchSubject,
+        fills: [
+          targetFill(
+            findHole(searchAct.initialHoles, "targetChoice"),
+            goblinId,
+          ),
+        ],
+      }),
+      "abilityCheck",
+    );
+    expect(searchCheck).toMatchObject({
+      ability: "wis",
+      skill: "perception",
+      rollMode: "advantage",
+    });
+
+    const dropped = applyBattleHitPointDamage({
+      state: marked,
+      target: marked.combatants.get(goblinId)!,
+      damageAmount: 99,
+      deathFailuresAtZeroHp: 1,
+      damageSourceId: fighterId,
+    });
+    const nextFighterTurn = requireResolved(
+      endTurn({
+        state: requireResolved(
+          endTurn({
+            state: requireResolved(
+              endTurn({ state: dropped, actorId: fighterId }),
+            ).state,
+            actorId: goblinId,
+          }),
+        ).state,
+        actorId: skeletonId,
+      }),
+    ).state;
+    const transferAct = discoverBattleActs(nextFighterTurn).find(
+      (candidate) =>
+        candidate.subject.tag === "bonusActionSpell" &&
+        candidate.subject.invocation.spellId === "hunters_mark",
+    );
+    if (transferAct === undefined) {
+      throw new Error("Expected Hunter's Mark transfer act.");
+    }
+    const transferred = requireResolved(
+      resolveBattleSubject({
+        state: nextFighterTurn,
+        subject: transferAct.subject,
+        fills: [
+          targetFill(
+            findHole(transferAct.initialHoles, "targetChoice"),
+            skeletonId,
+            [
+              {
+                kind: "spellTarget",
+                casterId: fighterId,
+                targetId: skeletonId,
+                spellId: "hunters_mark",
+              },
+            ],
+          ),
+        ],
+      }),
+    ).state;
+    expect(
+      requiredAbilityCheckRollMode(transferred, fighterId, "wis", {
+        skill: "perception",
+        targetId: goblinId,
+      }),
+    ).toBeUndefined();
+    expect(
+      requiredAbilityCheckRollMode(transferred, fighterId, "wis", {
+        skill: "perception",
+        targetId: skeletonId,
+      }),
+    ).toBe("advantage");
+
+    const broken = breakBattleConcentration(transferred, fighterId);
+    expect(
+      requiredAbilityCheckRollMode(broken, fighterId, "wis", {
+        skill: "perception",
+        targetId: skeletonId,
+      }),
+    ).toBeUndefined();
+  });
+
   test("breaking Hunter's Mark concentration clears the marked target rider", () => {
     const state = startBattleRight({
       battleId: battleId("battle-hunters-mark-concentration"),
@@ -24717,7 +25186,7 @@ describe("battle runtime", () => {
       expect.objectContaining({
         kind: "spellMarkedDamageRider",
         targetCombatantId: goblinId,
-        abilityCheckDisadvantage: { ability: "wis" },
+        abilityCheckBehavior: { kind: "abilityDisadvantage", ability: "wis" },
         damage: expect.objectContaining({ damageType: "necrotic" }),
       }),
     ]);
@@ -25074,7 +25543,7 @@ describe("battle runtime", () => {
       expect.objectContaining({
         kind: "spellMarkedDamageRider",
         targetCombatantId: skeletonId,
-        abilityCheckDisadvantage: { ability: "wis" },
+        abilityCheckBehavior: { kind: "abilityDisadvantage", ability: "wis" },
         transfer: {
           kind: "awaitingTargetDrop",
           retargetTiming: "laterTurn",
@@ -25165,6 +25634,12 @@ describe("battle runtime", () => {
         },
       }),
     ]);
+    expect(
+      requiredAbilityCheckRollMode(marked.state, fighterId, "wis", {
+        skill: "survival",
+        targetId: goblinId,
+      }),
+    ).toBe("advantage");
   });
 
   test("stale Favored Enemy Hunter's Mark free-cast resolution preserves turn resources and Concentration", () => {
@@ -25701,6 +26176,7 @@ function subjectName(
   | "commandApproach"
   | "commandFlee"
   | "disperseFogCloud"
+  | "protectionRelevantEffectSave"
   | "creatureFalls" {
   if (subject.tag === "action") {
     return subject.action;

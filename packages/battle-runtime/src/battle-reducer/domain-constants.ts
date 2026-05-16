@@ -10,7 +10,11 @@ import {
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { Condition, CreatureType } from "@dnd/shared/game-facts";
 import { movementFeet } from "@dnd/shared/types";
-import type { DamageType, SpellRecord } from "@dnd/surface/surface/types";
+import type {
+  DamageType,
+  Skill,
+  SpellRecord,
+} from "@dnd/surface/surface/types";
 
 export const CRITICAL_HIT_THRESHOLDS = [19, 20] as const;
 export const BATTLE_ATTACK_RANGE_BANDS = ["normal", "long"] as const;
@@ -45,6 +49,10 @@ export const CHROMATIC_ORB_CONTINUATION_LIMIT_KINDS = [
 export const HIDEOUS_LAUGHTER_REPEAT_SAVE_HOLE_KEY_PREFIX =
   "battle:hideous-laughter-repeat-save:";
 export const HIDEOUS_LAUGHTER_DURATION_TICKS = elapsedTimeTicks(10);
+export const HUNTERS_MARK_FINDING_SKILLS = [
+  "perception",
+  "survival",
+] as const satisfies ReadonlyArray<Skill>;
 export const ELDRITCH_BLAST_BEAM_COUNT_TIERS = [
   { atLevel: 5, value: 2 },
   { atLevel: 11, value: 3 },

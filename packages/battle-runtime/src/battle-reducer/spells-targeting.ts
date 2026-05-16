@@ -13,6 +13,7 @@ import {
   ATTACK_TARGET_HOLE_INSTANCE,
   type BattleHoleId,
   type BattleCommandOptionChoiceHole,
+  type BattleDancingLightsPlacementHole,
   type BattleSpellTargetAllocation,
   type BattleSpellAreaChoiceHole,
   type BattleSpellTargetAllocationHole,
@@ -192,6 +193,57 @@ export function spellObjectTargetHoleId(
   return holeId(`battle:spell:object-target:${invocation.spell.id}`);
 }
 
+export function spellDancingLightsPlacementHole(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    {
+      readonly procedure:
+        | "dancingLightsSeparateCast"
+        | "dancingLightsCombinedCast"
+        | "dancingLightsReposition";
+    }
+  >,
+  form: BattleDancingLightsPlacementHole["form"],
+  activeLightIds: readonly BattleDancingLightsPlacementHole["activeLightIds"][number][],
+): BattleDancingLightsPlacementHole {
+  const mode =
+    invocation.procedure === "dancingLightsReposition" ? "reposition" : "cast";
+  const holeKey = `battle:spell:dancing-lights-placement:${invocation.spell.id}:${mode}:${form}`;
+  return {
+    kind: "dancingLightsPlacement",
+    holeId: holeId(holeKey),
+    holeInstanceKey: holeInstanceKey(holeKey),
+    label: `${invocation.spell.name} placement`,
+    spell: invocation,
+    mode,
+    form,
+    activeLightIds,
+    rangeFeet: invocation.rangeFeet,
+    maxMoveFeet: invocation.maxMoveFeet,
+    spacingFeet: invocation.spacingFeet,
+    requiresTableSpatialFact: true,
+  };
+}
+
+export function spellDancingLightsPlacementHoleId(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    {
+      readonly procedure:
+        | "dancingLightsSeparateCast"
+        | "dancingLightsCombinedCast"
+        | "dancingLightsReposition";
+    }
+  >,
+  form: BattleDancingLightsPlacementHole["form"],
+): BattleHoleId {
+  const mode =
+    invocation.procedure === "dancingLightsReposition" ? "reposition" : "cast";
+  return holeId(
+    `battle:spell:dancing-lights-placement:${invocation.spell.id}:${mode}:${form}`,
+  );
+}
+
 export function spellTargetAllocationHoleId(
   invocation: Extract<
     SupportedSpellInvocation,
@@ -315,8 +367,15 @@ export function spellTargetIsLegal(
   ) {
     return false;
   }
-  return facts.some((fact) =>
+  const hasSpellTargetFact = facts.some((fact) =>
     spellTargetSpatialFactMatches(fact, actorId, targetId, invocation),
+  );
+  if (!hasSpellTargetFact) {
+    return false;
+  }
+  return (
+    !spellInvocationRequiresKnownWillingTarget(invocation) ||
+    spellTargetIsKnownWilling(actorId, targetId, invocation, facts)
   );
 }
 
@@ -445,6 +504,7 @@ export function spellTargetHasNonSpatialPrerequisites(
   const target = state.combatants.get(targetId);
   if (
     spellInvocationRequiresKnownWillingTarget(invocation) &&
+    invocation.procedure !== "creatureTypeProtection" &&
     !spellTargetIsKnownWilling(actorId, targetId)
   ) {
     return false;
@@ -644,6 +704,7 @@ export function spellInvocationRequiresKnownWillingTarget(
 ): boolean {
   return (
     invocation.procedure === "persistentArmorEffect" ||
+    invocation.procedure === "creatureTypeProtection" ||
     invocation.procedure ===
       "conditionImmunityAndTurnStartTemporaryHitPoints" ||
     (invocation.procedure === "damageReduction" &&
@@ -660,6 +721,18 @@ export function spellInvocationRequiresKnownWillingTarget(
 export function spellTargetIsKnownWilling(
   actorId: CombatantId,
   targetId: CombatantId,
+  invocation?: SupportedSpellInvocation,
+  facts: readonly BattleTargetSpatialFact[] = [],
 ): boolean {
-  return actorId === targetId;
+  return (
+    actorId === targetId ||
+    (invocation !== undefined &&
+      facts.some(
+        (fact) =>
+          fact.kind === "spellTargetKnownWilling" &&
+          fact.casterId === actorId &&
+          fact.targetId === targetId &&
+          fact.spellId === invocation.spell.id,
+      ))
+  );
 }

@@ -6,13 +6,14 @@ import {
   hasCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { type Round as RoundType } from "@dnd/shared/types";
+import { movementFeet, type Round as RoundType } from "@dnd/shared/types";
 import type {
   Ability,
   DamageType,
   Skill,
   SpellRecord,
 } from "@dnd/surface/surface/types";
+import { battleDancingLightId } from "../identity.ts";
 import type { CombatantId } from "../identity.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state.ts";
@@ -32,6 +33,9 @@ import {
   type BattleActiveEffectExpiration,
   type BattleCommandOption,
   type BattleCreatureState,
+  type BattleDancingLight,
+  type BattleDancingLightList,
+  type BattleDancingLightsPlacementValue,
   type BattleFill,
   type BattleLightEmitter,
   type BattleLightEmitterAttachment,
@@ -51,6 +55,24 @@ import type { BattleObjectId } from "../identity.ts";
 import { HIDEOUS_LAUGHTER_DURATION_TICKS } from "./domain-constants.ts";
 
 export const FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND = 60;
+export const FAERIE_FIRE_DIM_LIGHT_RADIUS_FEET = movementFeet(10);
+export const DANCING_LIGHTS_DIM_LIGHT_RADIUS_FEET = movementFeet(10);
+type DancingLightsActiveEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "dancingLights" }
+>;
+type DancingLightsEffectShape =
+  | Pick<
+      Extract<DancingLightsActiveEffect, { readonly form: "separateLights" }>,
+      "form" | "lights"
+    >
+  | Pick<
+      Extract<
+        DancingLightsActiveEffect,
+        { readonly form: "combinedMediumForm" }
+      >,
+      "form" | "light"
+    >;
 
 export type SaveGatedAttackRollAdvantageInvocation = Extract<
   SupportedSpellInvocation,
@@ -148,32 +170,93 @@ export function applySpellActiveEffects(
 export function battleLightEmitters(
   state: BattleState,
 ): readonly BattleLightEmitter[] {
-  const heldLightEmitters = [...state.combatants.values()].flatMap(
+  const outlineLightEmitters = [...state.combatants.values()].flatMap(
     (combatant): readonly BattleLightEmitter[] =>
       combatant.activeEffects.flatMap(
         (effect): readonly BattleLightEmitter[] =>
-          effect.kind === "heldLight"
+          effect.kind === "faerieFireOutline"
             ? [
-                {
-                  kind: "spellLightEmitter",
-                  sourceSpellId: effect.sourceSpellId,
-                  sourceCombatantId: effect.sourceCombatantId,
-                  attachment: {
-                    kind: "combatant",
-                    combatantId: combatant.combatantId,
-                  },
-                  emission: {
-                    kind: "brightAndDim",
-                    brightRadiusFeet: effect.brightRadiusFeet,
-                    dimAdditionalFeet: effect.dimAdditionalFeet,
-                  },
-                  expiresAt: effect.expiresAt,
-                },
+                faerieFireCombatantDimLightEmitter(
+                  combatant.combatantId,
+                  effect,
+                ),
               ]
-            : [],
+            : effect.kind === "heldLight"
+              ? [
+                  {
+                    kind: "spellLightEmitter",
+                    sourceSpellId: effect.sourceSpellId,
+                    sourceCombatantId: effect.sourceCombatantId,
+                    attachment: {
+                      kind: "combatant",
+                      combatantId: combatant.combatantId,
+                    },
+                    emission: {
+                      kind: "brightAndDim",
+                      brightRadiusFeet: effect.brightRadiusFeet,
+                      dimAdditionalFeet: effect.dimAdditionalFeet,
+                    },
+                    expiresAt: effect.expiresAt,
+                  },
+                ]
+              : effect.kind === "dancingLights"
+                ? dancingLightsFromEffect(effect).map((light) => ({
+                    kind: "spellLightEmitter" as const,
+                    sourceSpellId: effect.sourceSpellId,
+                    sourceCombatantId: effect.sourceCombatantId,
+                    attachment: {
+                      kind: "dancingLight" as const,
+                      lightId: light.lightId,
+                      positionId: light.positionId,
+                      form: effect.form,
+                    },
+                    emission: {
+                      kind: "dim" as const,
+                      radiusFeet: DANCING_LIGHTS_DIM_LIGHT_RADIUS_FEET,
+                    },
+                    expiresAt: effect.expiresAt,
+                  }))
+                : [],
       ),
   );
-  return [...state.lightEmitters, ...heldLightEmitters];
+  return [
+    ...state.lightEmitters,
+    ...outlineLightEmitters,
+    ...state.objectOutlines.map(faerieFireObjectDimLightEmitter),
+  ];
+}
+
+function faerieFireCombatantDimLightEmitter(
+  combatantId: CombatantId,
+  effect: Extract<BattleActiveEffect, { readonly kind: "faerieFireOutline" }>,
+): BattleLightEmitter {
+  return {
+    kind: "spellLightEmitter",
+    sourceSpellId: effect.sourceSpellId,
+    sourceCombatantId: effect.sourceCombatantId,
+    attachment: { kind: "combatant", combatantId },
+    emission: {
+      kind: "dim",
+      radiusFeet: FAERIE_FIRE_DIM_LIGHT_RADIUS_FEET,
+    },
+    expiresAt: effect.expiresAt,
+  };
+}
+
+function faerieFireObjectDimLightEmitter(
+  outline: BattleObjectOutline,
+): BattleLightEmitter {
+  return {
+    kind: "spellLightEmitter",
+    sourceSpellId: outline.sourceSpellId,
+    sourceCombatantId: outline.sourceCombatantId,
+    attachment: { kind: "object", objectId: outline.objectId },
+    emission: {
+      kind: "dim",
+      radiusFeet: FAERIE_FIRE_DIM_LIGHT_RADIUS_FEET,
+    },
+    expiresAt: outline.expiresAt,
+  };
 }
 
 export function battleObscurementZones(
@@ -292,6 +375,14 @@ function sameLightEmitterAttachment(
       (leftObject) =>
         right.kind === "object" && leftObject.objectId === right.objectId,
     ),
+    Match.when(
+      { kind: "dancingLight" },
+      (leftLight) =>
+        right.kind === "dancingLight" &&
+        leftLight.lightId === right.lightId &&
+        leftLight.positionId === right.positionId &&
+        leftLight.form === right.form,
+    ),
     Match.exhaustive,
   );
 }
@@ -312,6 +403,214 @@ function lightEmitterMatchesAttachment(
     ),
     Match.exhaustive,
   );
+}
+
+export function applyDancingLightsSpellEffect(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    {
+      readonly procedure:
+        | "dancingLightsSeparateCast"
+        | "dancingLightsCombinedCast";
+    }
+  >,
+  placement: Extract<
+    BattleDancingLightsPlacementValue,
+    { readonly mode: "cast" }
+  >,
+): BattleState {
+  const caster = state.combatants.get(actorId);
+  if (caster === undefined) {
+    return state;
+  }
+  const dancingLights = dancingLightsForCastPlacement(
+    actorId,
+    invocation,
+    placement,
+  );
+  if (dancingLights === null) {
+    return state;
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(actorId, {
+      ...caster,
+      activeEffects: [
+        ...caster.activeEffects.filter(
+          (effect) =>
+            !(
+              effect.kind === "dancingLights" &&
+              effect.sourceSpellId === invocation.spell.id &&
+              effect.sourceCombatantId === actorId
+            ),
+        ),
+        {
+          kind: "dancingLights",
+          sourceSpellId: invocation.spell.id,
+          sourceCombatantId: actorId,
+          expiresAt: invocation.expiresAt,
+          ...dancingLights,
+        },
+      ],
+    }),
+  };
+}
+
+export function repositionDancingLightsSpellEffect(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "dancingLightsReposition" }
+  >,
+  placement: Extract<
+    BattleDancingLightsPlacementValue,
+    { readonly mode: "reposition" }
+  >,
+): BattleState {
+  const caster = state.combatants.get(actorId);
+  if (caster === undefined) {
+    return state;
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(actorId, {
+      ...caster,
+      activeEffects: caster.activeEffects.flatMap((effect) => {
+        if (
+          effect.kind !== "dancingLights" ||
+          effect.sourceSpellId !== invocation.spell.id ||
+          effect.sourceCombatantId !== actorId
+        ) {
+          return [effect];
+        }
+        const moved = dancingLightsForReposition(
+          effect,
+          placement,
+          invocation.rangeFeet,
+        );
+        return moved === null ? [] : [{ ...effect, ...moved }];
+      }),
+    }),
+  };
+}
+
+function dancingLightsForCastPlacement(
+  actorId: CombatantId,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    {
+      readonly procedure:
+        | "dancingLightsSeparateCast"
+        | "dancingLightsCombinedCast";
+    }
+  >,
+  placement: Extract<
+    BattleDancingLightsPlacementValue,
+    { readonly mode: "cast" }
+  >,
+): DancingLightsEffectShape | null {
+  if (
+    invocation.procedure === "dancingLightsCombinedCast" &&
+    placement.form === "combinedMediumForm"
+  ) {
+    return {
+      form: "combinedMediumForm",
+      light: {
+        lightId: battleDancingLightId(
+          `${actorId}:${invocation.spell.id}:combinedMediumForm:1`,
+        ),
+        positionId: placement.light.positionId,
+      },
+    };
+  }
+  if (
+    invocation.procedure === "dancingLightsSeparateCast" &&
+    placement.form === "separateLights"
+  ) {
+    const lights = dancingLightListFromArray(
+      placement.lights.map((light, index) => ({
+        lightId: battleDancingLightId(
+          `${actorId}:${invocation.spell.id}:separateLights:${index + 1}`,
+        ),
+        positionId: light.positionId,
+      })),
+    );
+    if (lights === null) {
+      return null;
+    }
+    return {
+      form: "separateLights",
+      lights,
+    };
+  }
+  return null;
+}
+
+function dancingLightsForReposition(
+  effect: Extract<BattleActiveEffect, { readonly kind: "dancingLights" }>,
+  placement: Extract<
+    BattleDancingLightsPlacementValue,
+    { readonly mode: "reposition" }
+  >,
+  rangeFeet: number,
+): DancingLightsEffectShape | null {
+  if (
+    effect.form === "combinedMediumForm" &&
+    placement.form === "combinedMediumForm"
+  ) {
+    if (placement.light.distanceFromCasterFeet > rangeFeet) {
+      return null;
+    }
+    return {
+      form: "combinedMediumForm",
+      light: {
+        lightId: effect.light.lightId,
+        positionId: placement.light.positionId,
+      },
+    };
+  }
+  if (effect.form !== "separateLights" || placement.form !== "separateLights") {
+    return null;
+  }
+  const currentDancingLightById = new Map(
+    effect.lights.map((dancingLight) => [dancingLight.lightId, dancingLight]),
+  );
+  const lights = placement.lights.flatMap((candidate) => {
+    const current = currentDancingLightById.get(candidate.lightId);
+    return current === undefined || candidate.distanceFromCasterFeet > rangeFeet
+      ? []
+      : [{ lightId: current.lightId, positionId: candidate.positionId }];
+  });
+  const narrowedLights = dancingLightListFromArray(lights);
+  return narrowedLights === null
+    ? null
+    : { form: "separateLights", lights: narrowedLights };
+}
+
+function dancingLightListFromArray(
+  lights: readonly BattleDancingLight[],
+): BattleDancingLightList | null {
+  if (new Set(lights.map((light) => light.lightId)).size !== lights.length) {
+    return null;
+  }
+  return lights.length === 1
+    ? [lights[0]!]
+    : lights.length === 2
+      ? [lights[0]!, lights[1]!]
+      : lights.length === 3
+        ? [lights[0]!, lights[1]!, lights[2]!]
+        : lights.length === 4
+          ? [lights[0]!, lights[1]!, lights[2]!, lights[3]!]
+          : null;
+}
+
+export function dancingLightsFromEffect(
+  effect: Extract<BattleActiveEffect, { readonly kind: "dancingLights" }>,
+): readonly BattleDancingLight[] {
+  return effect.form === "combinedMediumForm" ? [effect.light] : effect.lights;
 }
 
 function lightEmitterFromPostDamageRider(
@@ -611,7 +910,9 @@ export function applyHideousLaughterEffects(
   const effected: BattleState = { ...state, combatants };
   const incapacitatedTargetIds = targetIds.filter((targetId) => {
     const target = combatants.get(targetId);
-    return target !== undefined && hasCondition(target.conditions, "incapacitated");
+    return (
+      target !== undefined && hasCondition(target.conditions, "incapacitated")
+    );
   });
   return incapacitatedTargetIds.reduce(
     (nextState, targetId) => breakBattleConcentration(nextState, targetId),
@@ -1132,6 +1433,34 @@ export function applyHeldLightSpellEffect(
   };
 }
 
+export function endHeldLightSpellEffect(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "heldLightHurl" }
+  >,
+): BattleState {
+  const caster = state.combatants.get(actorId);
+  if (caster === undefined) {
+    return state;
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(actorId, {
+      ...caster,
+      activeEffects: caster.activeEffects.filter(
+        (effect) =>
+          !(
+            effect.kind === "heldLight" &&
+            effect.sourceSpellId === invocation.spell.id &&
+            effect.sourceCombatantId === actorId
+          ),
+      ),
+    }),
+  };
+}
+
 export function applyWeaponAttackOverrideSpellEffect(
   state: BattleState,
   actorId: CombatantId,
@@ -1234,12 +1563,13 @@ export function applyMarkedDamageRiderSpellEffect(
       sourceCombatantId: actorId,
       targetCombatantId: targetId,
       transfer,
-      abilityCheckDisadvantage:
+      abilityCheckBehavior:
         invocation.action === "transfer"
-          ? invocation.activeEffect.abilityCheckDisadvantage
-          : selectedAbility === undefined
-            ? null
-            : { ability: selectedAbility },
+          ? invocation.activeEffect.abilityCheckBehavior
+          : markedDamageRiderActiveAbilityCheckBehavior(
+              invocation.abilityCheckBehavior,
+              selectedAbility,
+            ),
       damage: invocation.damage,
       expiresAt: existingExpiresAt,
     },
@@ -1251,6 +1581,32 @@ export function applyMarkedDamageRiderSpellEffect(
       activeEffects,
     }),
   };
+}
+
+function markedDamageRiderActiveAbilityCheckBehavior(
+  behavior: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "markedDamageRider"; readonly action: "cast" }
+  >["abilityCheckBehavior"],
+  selectedAbility: Ability | undefined,
+): Extract<
+  BattleActiveEffect,
+  { readonly kind: "spellMarkedDamageRider" }
+>["abilityCheckBehavior"] {
+  return Match.value(behavior).pipe(
+    Match.when({ kind: "none" }, () => ({ kind: "none" as const })),
+    Match.when({ kind: "findingAdvantage" }, (findingAdvantage) => ({
+      kind: "findingAdvantage" as const,
+      ability: findingAdvantage.ability,
+      skills: findingAdvantage.skills,
+    })),
+    Match.when({ kind: "chosenAbilityDisadvantage" }, () =>
+      selectedAbility === undefined
+        ? { kind: "none" as const }
+        : { kind: "abilityDisadvantage" as const, ability: selectedAbility },
+    ),
+    Match.exhaustive,
+  );
 }
 
 export function applyScalarBuffSpellEffect(

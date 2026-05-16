@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.creature-type-protection-and-charm spell.find-familiar-lifecycle spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-sleep-repeat-save-lifecycle spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.creature-type-protection-and-charm spell.find-familiar-lifecycle spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-dancing-lights-movable-dim-light spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-condition-immunity-turn-start-temporary-hit-points
@@ -11,6 +11,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-beam-sequence
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-damage-reduction
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-sleep-repeat-save-lifecycle
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-sleep-target-admission
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-hideous-laughter-repeat-save-lifecycle
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-grease-ground-hazard
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-fog-cloud-obscurement
@@ -25,6 +26,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-sanctuary-targeting-interdiction
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.creature-type-protection-and-charm
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-object-light
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-held-light-emitter spell.invocation-dancing-lights-movable-dim-light
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-make-stable
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.find-familiar-lifecycle
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.reaction-hellish-rebuke spell.invocation-damage-save-or-attack
@@ -327,7 +329,7 @@ module battleRuntime {
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
   type Ability = StrAbility | DexAbility | ConAbility | IntAbility | WisAbility | ChaAbility
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | FireBolt | EldritchBlast | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | Hex | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | Light | TrueStrike | Grease | FogCloud | Command | DissonantWhispers | FeatherFall | HellishRebuke | SorcerousBurst | SpareTheDying | HideousLaughter
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | FireBolt | EldritchBlast | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | Hex | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | DancingLightsSpell | Light | TrueStrike | Grease | FogCloud | Command | DissonantWhispers | FeatherFall | HellishRebuke | SorcerousBurst | SpareTheDying | HideousLaughter
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | StarryWispSpellAttack | FireBoltSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack | SorcerousBurstSpellAttack({ damageTypeChoice: BattleRuntimeSorcerousBurstDamageTypeChoice, spellcastingAbilityModifier: int, characterLevel: int })
   type FixedSpellAttackDamageInvocation = RayOfFrostFixedSpellAttack | PoisonSprayFixedSpellAttack | ChillTouchFixedSpellAttack | StarryWispFixedSpellAttack | FireBoltFixedSpellAttack | ShockingGraspFixedSpellAttack | GuidingBoltFixedSpellAttack | RayOfSicknessFixedSpellAttack | ProduceFlameHurlFixedSpellAttack
   type SpellAttackBeamSequenceInvocation =
@@ -417,16 +419,18 @@ module battleRuntime {
     itemDropBoundaryEvents: Set[FindFamiliarItemDropBoundaryEvent],
     magicActionSpent: bool,
   }
-  type ActiveEffect = BardicInspirationDie({ source: Actor, dieSize: int, durationTicks: int }) | MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | HexDamageRider({ target: Actor, ability: Ability, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | RayOfSicknessPoisoned | ChillTouchHitPointRegainPrevented({ source: Actor, expiresAtRound: int }) | StarryWispInvisibleBenefitDenied({ source: Actor, expiresAtRound: int }) | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | WeaponMasterySapNextAttackDisadvantage({ source: Actor }) | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireOutline | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodCreatureTypeProtection | ProduceFlameHeldLight({ durationTicks: int }) | ShillelaghWeaponAttackOverride({ weapon: ShillelaghWeapon, damageDice: int, damageDieSize: int, spellcastingAbilityModifier: int, durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SanctuaryWard({ source: Actor, durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | HideousLaughterEffect({ source: Actor, target: Actor, hadProne: bool, hadIncapacitated: bool, durationTicks: int }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | FogCloudObscurement({ areaId: int, radiusFeet: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
+  type ActiveEffect = BardicInspirationDie({ source: Actor, dieSize: int, durationTicks: int }) | MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | HexDamageRider({ target: Actor, ability: Ability, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | RayOfSicknessPoisoned | ChillTouchHitPointRegainPrevented({ source: Actor, expiresAtRound: int }) | StarryWispInvisibleBenefitDenied({ source: Actor, expiresAtRound: int }) | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | WeaponMasterySapNextAttackDisadvantage({ source: Actor }) | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireOutline | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionRelevantCharmed({ source: Actor, durationTicks: int }) | ProtectionRelevantFrightened({ source: Actor, durationTicks: int }) | ProtectionRelevantPossession({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodCreatureTypeProtection | DancingLightsEffect({ combined: bool, lightCount: int, light1Position: int, light2Position: int, light3Position: int, light4Position: int, durationTicks: int }) | ProduceFlameHeldLight({ durationTicks: int }) | ShillelaghWeaponAttackOverride({ weapon: ShillelaghWeapon, damageDice: int, damageDieSize: int, spellcastingAbilityModifier: int, durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SanctuaryWard({ source: Actor, durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | HideousLaughterEffect({ source: Actor, target: Actor, hadProne: bool, hadIncapacitated: bool, durationTicks: int }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | FogCloudObscurement({ areaId: int, radiusFeet: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
   type PreventedProtectionCondition = PreventedCharmed | PreventedFrightened
   type PossessionAttemptDisposition = PossessionPreventedByCreatureTypeProtection | PossessionUnprevented
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
   type SavingThrowRollMode = NormalSavingThrow | AdvantageSavingThrow | DisadvantageSavingThrow
-  type AbilityCheckRollMode = NormalAbilityCheck | DisadvantageAbilityCheck
+  type AbilityCheckSkill = PerceptionSkill | SurvivalSkill | StealthSkill | AthleticsSkill
+  type AbilityCheckRollMode = NormalAbilityCheck | AdvantageAbilityCheck | DisadvantageAbilityCheck
   type SpellSourceClass = SorcererSpellSource | NonSorcererSpellSource
   type RuntimeCreatureType = HumanoidCreature | BeastCreature | AberrationCreature | CelestialCreature | ElementalCreature | FeyCreature | FiendCreature | UndeadCreature
   type ObjectTarget =
     | StarryWispObjectTarget
+    | ChillTouchObjectTarget
     | EldritchBlastObjectTarget
     | FireBoltObjectTarget
     | ProduceFlameObjectTarget
@@ -469,11 +473,13 @@ module battleRuntime {
   type LightEmitterAttachment =
     | CombatantLightEmitter({ actor: Actor })
     | ObjectLightEmitter({ object: ObjectTarget })
+    | DancingLightEmitter({ light: int, position: int, combined: bool })
   type LightEmission =
     | DimLightEmission({ radiusFeet: int })
     | BrightAndDimLightEmission({ brightRadiusFeet: int, dimAdditionalFeet: int })
   type LightEmitterExpiration =
     | EndOfTurnLightEmitterExpiration({ actor: Actor, round: int })
+    | ConcentrationLightEmitterExpiration({ actor: Actor })
     | DurationLightEmitterExpiration({ durationTicks: int })
   type LightEmitter =
     | SpellLightEmitter({
@@ -1298,6 +1304,7 @@ module battleRuntime {
     emitters.filter(emitter => match emitter {
       | SpellLightEmitter(data) => match data.expiresAt {
           | EndOfTurnLightEmitterExpiration(expiresAt) => expiresAt.actor != actor or expiresAt.round != round
+          | ConcentrationLightEmitterExpiration(_) => true
           | DurationLightEmitterExpiration(_) => true
         }
       | ObjectInvisibleRevealLightEmitter(data) => data.expiresAtActor != actor or data.expiresAtRound != round
@@ -1318,6 +1325,7 @@ module battleRuntime {
             else
               emitter
           | EndOfTurnLightEmitterExpiration(_) => emitter
+          | ConcentrationLightEmitterExpiration(_) => emitter
         }
         | ObjectInvisibleRevealLightEmitter(_) => emitter
       })
@@ -1326,6 +1334,7 @@ module battleRuntime {
           | DurationLightEmitterExpiration(expiresAt) =>
             battleRuntimeTimedSpellEffectRemainsActive(expiresAt.durationTicks)
           | EndOfTurnLightEmitterExpiration(_) => true
+          | ConcentrationLightEmitterExpiration(_) => true
         }
         | ObjectInvisibleRevealLightEmitter(_) => true
       })
@@ -1472,6 +1481,15 @@ module battleRuntime {
             source: data.source,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
+        | DancingLightsEffect(data) => DancingLightsEffect({
+            combined: data.combined,
+            lightCount: data.lightCount,
+            light1Position: data.light1Position,
+            light2Position: data.light2Position,
+            light3Position: data.light3Position,
+            light4Position: data.light4Position,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
         | ProduceFlameHeldLight(data) => ProduceFlameHeldLight({
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
@@ -1523,6 +1541,7 @@ module battleRuntime {
         | SearingSmiteBurning(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | AnimalFriendshipCharmed(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | CharmPersonCharmed(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | DancingLightsEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | ProduceFlameHeldLight(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | ShillelaghWeaponAttackOverride(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | JumpMovementReplacement(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
@@ -1686,7 +1705,11 @@ module battleRuntime {
         | FaerieFireOutline => false
         | AnimalFriendshipCharmed(_) => false
         | CharmPersonCharmed(_) => false
+        | ProtectionRelevantCharmed(_) => false
+        | ProtectionRelevantFrightened(_) => false
+        | ProtectionRelevantPossession(_) => false
         | ProtectionFromEvilAndGoodCreatureTypeProtection => false
+        | DancingLightsEffect(_) => false
         | ProduceFlameHeldLight(_) => false
         | ShillelaghWeaponAttackOverride(_) => false
         | ExpeditiousRetreatDashBonusAction => false
@@ -2908,6 +2931,13 @@ module battleRuntime {
           expiresAtActor: source,
           expiresAtRound: endOfCasterNextTurnLightEmitterExpiresAtRound(state, source),
         })
+      | DancingLightEmitter(_) => SpellLightEmitter({
+          source: source,
+          sourceSpell: DancingLightsSpell,
+          attachment: attachment,
+          emission: DimLightEmission({ radiusFeet: 10 }),
+          expiresAt: ConcentrationLightEmitterExpiration({ actor: source }),
+        })
     }
 
   pure def applyStarryWispDimLightEmitter(
@@ -2929,6 +2959,7 @@ module battleRuntime {
                 or match attachment {
                   | CombatantLightEmitter(_) => true
                   | ObjectLightEmitter(objectAttachment) => data.object != objectAttachment.object
+                  | DancingLightEmitter(_) => true
                 }
         })
         .union(Set(emitter)),
@@ -3020,6 +3051,7 @@ module battleRuntime {
         | SleepPendingRepeatSave(_) => false
         | SleepUnconscious(_) => false
         | HideousLaughterEffect(_) => false
+        | DancingLightsEffect(_) => false
         | _ => true
       })
 
@@ -4787,6 +4819,7 @@ module battleRuntime {
       | HuntersMarkDamageRider(_) => true
       | HexDamageRider(_) => true
       | FogCloudObscurement(_) => true
+      | DancingLightsEffect(_) => true
       | _ => false
     })
 
@@ -4850,6 +4883,16 @@ module battleRuntime {
       | HexDamageRider(data) => data.target == actor and data.ability == ability
       | _ => false
     })) DisadvantageAbilityCheck else NormalAbilityCheck
+
+  pure def huntersMarkFindingAbilityCheckRollMode(effects: Set[ActiveEffect], target: Actor, ability: Ability, skill: AbilityCheckSkill): AbilityCheckRollMode =
+    if (
+      ability == WisAbility and
+      (skill == PerceptionSkill or skill == SurvivalSkill) and
+      effects.exists(effect => match effect {
+        | HuntersMarkDamageRider(data) => data.target == target
+        | _ => false
+      })
+    ) AdvantageAbilityCheck else NormalAbilityCheck
 
   pure def rollModifierMaximumTargets(invocation: RollModifierSpell, slotLevel: int): int =
     match invocation {
@@ -4926,11 +4969,215 @@ module battleRuntime {
 
   pure def produceFlameDurationTicks: int = 100
 
+  pure def faerieFireDimLightRadiusFeet: int = 10
+
   pure def lightBrightLightRadiusFeet: int = 20
 
   pure def lightDimLightAdditionalFeet: int = 20
 
   pure def lightDurationTicks: int = 600
+
+  pure def dancingLightsDimLightRadiusFeet: int = 10
+
+  pure def dancingLightsDurationTicks: int = 600
+
+  pure def dancingLightsRangeFeet: int = 120
+
+  pure def dancingLightsMaxMoveFeet: int = 60
+
+  pure def dancingLightsSpacingFeet: int = 20
+
+  pure def dancingLightsSeparateLightCountAllowed(lightCount: int): bool =
+    lightCount >= 1 and lightCount <= 4
+
+  pure def dancingLightsCastPlacementAllowed(lightCount: int, distanceFromCasterFeet: int, nearestSiblingDistanceFeet: int): bool =
+    dancingLightsSeparateLightCountAllowed(lightCount) and
+    distanceFromCasterFeet <= dancingLightsRangeFeet and
+    (lightCount == 1 or nearestSiblingDistanceFeet <= dancingLightsSpacingFeet)
+
+  pure def dancingLightsRepositionAllowed(moveDistanceFeet: int, nearestSiblingDistanceFeet: int, lightCount: int): bool =
+    moveDistanceFeet <= dancingLightsMaxMoveFeet and
+    (lightCount == 1 or nearestSiblingDistanceFeet <= dancingLightsSpacingFeet)
+
+  pure def dancingLightSurvivesRange(distanceFromCasterFeet: int): bool =
+    distanceFromCasterFeet <= dancingLightsRangeFeet
+
+  pure def dancingLightsEmitter(light: int, position: int, combined: bool): LightEmitter =
+    SpellLightEmitter({
+      source: Fighter,
+      sourceSpell: DancingLightsSpell,
+      attachment: DancingLightEmitter({ light: light, position: position, combined: combined }),
+      emission: DimLightEmission({ radiusFeet: dancingLightsDimLightRadiusFeet }),
+      expiresAt: ConcentrationLightEmitterExpiration({ actor: Fighter }),
+    })
+
+  pure def dancingLightsEmitters(combined: bool, lightCount: int): Set[LightEmitter] =
+    if (combined) {
+      Set(dancingLightsEmitter(1, 1, true))
+    } else if (lightCount == 1) {
+      Set(dancingLightsEmitter(1, 1, false))
+    } else if (lightCount == 2) {
+      Set(dancingLightsEmitter(1, 1, false), dancingLightsEmitter(2, 2, false))
+    } else if (lightCount == 3) {
+      Set(dancingLightsEmitter(1, 1, false), dancingLightsEmitter(2, 2, false), dancingLightsEmitter(3, 3, false))
+    } else if (lightCount == 4) {
+      Set(dancingLightsEmitter(1, 1, false), dancingLightsEmitter(2, 2, false), dancingLightsEmitter(3, 3, false), dancingLightsEmitter(4, 4, false))
+    } else {
+      Set()
+    }
+
+  pure def dancingLightsActiveEffect(
+    combined: bool,
+    lightCount: int,
+    light1Position: int,
+    light2Position: int,
+    light3Position: int,
+    light4Position: int,
+    durationTicks: int,
+  ): ActiveEffect =
+    DancingLightsEffect({
+      combined: combined,
+      lightCount: lightCount,
+      light1Position: light1Position,
+      light2Position: light2Position,
+      light3Position: light3Position,
+      light4Position: light4Position,
+      durationTicks: durationTicks,
+    })
+
+  pure def activeEffectsWithoutDancingLights(effects: Set[ActiveEffect]): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | DancingLightsEffect(_) => false
+      | _ => true
+    })
+
+  pure def activeEffectsContainDancingLights(effects: Set[ActiveEffect]): bool =
+    effects.exists(effect => match effect {
+      | DancingLightsEffect(_) => true
+      | _ => false
+    })
+
+  pure def dancingLightsRemainingDurationTicks(effects: Set[ActiveEffect]): int =
+    effects
+      .map(effect => match effect {
+        | DancingLightsEffect(data) => data.durationTicks
+        | _ => 0
+      })
+      .fold(0, (left, right) => if (left > right) left else right)
+
+  pure def dancingLightsEmittersFromEffect(effect: ActiveEffect): Set[LightEmitter] =
+    match effect {
+      | DancingLightsEffect(data) =>
+          if (data.combined) {
+            Set(dancingLightsEmitter(1, data.light1Position, true))
+          } else if (data.lightCount == 1) {
+            Set(dancingLightsEmitter(1, data.light1Position, false))
+          } else if (data.lightCount == 2) {
+            Set(dancingLightsEmitter(1, data.light1Position, false), dancingLightsEmitter(2, data.light2Position, false))
+          } else if (data.lightCount == 3) {
+            Set(dancingLightsEmitter(1, data.light1Position, false), dancingLightsEmitter(2, data.light2Position, false), dancingLightsEmitter(3, data.light3Position, false))
+          } else if (data.lightCount == 4) {
+            Set(dancingLightsEmitter(1, data.light1Position, false), dancingLightsEmitter(2, data.light2Position, false), dancingLightsEmitter(3, data.light3Position, false), dancingLightsEmitter(4, data.light4Position, false))
+          } else {
+            Set()
+          }
+      | _ => Set()
+    }
+
+  pure def dancingLightsActiveEffectEmitters(effects: Set[ActiveEffect]): Set[LightEmitter] =
+    effects
+      .map(effect => dancingLightsEmittersFromEffect(effect))
+      .fold(Set(), (emitters, emitterSet) => emitters.union(emitterSet))
+
+  pure def resolveDancingLightsSeparateCast(
+    state: BattleState,
+    lightCount: int,
+    distanceFromCasterFeet: int,
+    nearestSiblingDistanceFeet: int,
+  ): BattleState =
+    if (
+      currentActor(state) == Fighter and
+      state.actionAvailable and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(fighterHasRage(state)) and
+      dancingLightsCastPlacementAllowed(lightCount, distanceFromCasterFeet, nearestSiblingDistanceFeet)
+    ) {
+      val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
+      {
+        ...withoutPrior,
+        fighter: {
+          ...withoutPrior.fighter,
+          concentrating: true,
+          activeEffects: activeEffectsWithoutDancingLights(withoutPrior.fighter.activeEffects)
+            .union(Set(dancingLightsActiveEffect(false, lightCount, 1, 2, 3, 4, dancingLightsDurationTicks))),
+        },
+        actionAvailable: false,
+      }
+    } else {
+      state
+    }
+
+  pure def resolveDancingLightsCombinedCast(state: BattleState, distanceFromCasterFeet: int): BattleState =
+    if (
+      currentActor(state) == Fighter and
+      state.actionAvailable and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(fighterHasRage(state)) and
+      distanceFromCasterFeet <= dancingLightsRangeFeet
+    ) {
+      val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
+      {
+        ...withoutPrior,
+        fighter: {
+          ...withoutPrior.fighter,
+          concentrating: true,
+          activeEffects: activeEffectsWithoutDancingLights(withoutPrior.fighter.activeEffects)
+            .union(Set(dancingLightsActiveEffect(true, 1, 1, 0, 0, 0, dancingLightsDurationTicks))),
+        },
+        actionAvailable: false,
+      }
+    } else {
+      state
+    }
+
+  pure def resolveDancingLightsReposition(
+    state: BattleState,
+    combined: bool,
+    lightCount: int,
+    moveDistanceFeet: int,
+    nearestSiblingDistanceFeet: int,
+    distanceFromCasterFeet: int,
+  ): BattleState =
+    if (
+      currentActor(state) == Fighter and
+      state.bonusActionAvailable and
+      activeEffectsContainDancingLights(state.fighter.activeEffects) and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(fighterHasRage(state)) and
+      dancingLightsRepositionAllowed(moveDistanceFeet, nearestSiblingDistanceFeet, lightCount)
+    ) {
+      val remainingLightCount = if (dancingLightSurvivesRange(distanceFromCasterFeet)) lightCount else 0
+      val remainingDurationTicks = dancingLightsRemainingDurationTicks(state.fighter.activeEffects)
+      val nextEffects =
+        if (remainingLightCount == 0)
+          activeEffectsWithoutDancingLights(state.fighter.activeEffects)
+        else
+          activeEffectsWithoutDancingLights(state.fighter.activeEffects)
+            .union(Set(dancingLightsActiveEffect(combined, remainingLightCount, 11, 12, 13, 14, remainingDurationTicks)))
+      {
+        ...state,
+        fighter: {
+          ...state.fighter,
+          activeEffects: nextEffects,
+        },
+        bonusActionAvailable: false,
+      }
+    } else {
+      state
+    }
 
   pure def lightObjectTargetAllowed(objectSize: ObjectSize, wornOrCarried: ObjectWearCarry): bool =
     (
@@ -4996,6 +5243,65 @@ module battleRuntime {
       | ProduceFlameHeldLight(_) => true
       | _ => false
     })
+
+  pure def produceFlameHeldLightEmitter(durationTicks: int): LightEmitter =
+    SpellLightEmitter({
+      source: Fighter,
+      sourceSpell: ProduceFlame,
+      attachment: CombatantLightEmitter({ actor: Fighter }),
+      emission: BrightAndDimLightEmission({
+        brightRadiusFeet: produceFlameBrightLightRadiusFeet,
+        dimAdditionalFeet: produceFlameDimLightAdditionalFeet,
+      }),
+      expiresAt: DurationLightEmitterExpiration({ durationTicks: durationTicks }),
+    })
+
+  pure def produceFlameHeldLightEmitters(effects: Set[ActiveEffect]): Set[LightEmitter] =
+    effects
+      .map(effect => match effect {
+        | ProduceFlameHeldLight(data) => Set(produceFlameHeldLightEmitter(data.durationTicks))
+        | _ => Set()
+      })
+      .fold(Set(), (emitters, emitterSet) => emitters.union(emitterSet))
+
+  pure def faerieFireCombatantDimLightEmitters(actor: Actor, effects: Set[ActiveEffect]): Set[LightEmitter] =
+    effects
+      .map(effect => match effect {
+        | FaerieFireOutline => Set(SpellLightEmitter({
+            source: Fighter,
+            sourceSpell: FaerieFire,
+            attachment: CombatantLightEmitter({ actor: actor }),
+            emission: DimLightEmission({ radiusFeet: faerieFireDimLightRadiusFeet }),
+            expiresAt: ConcentrationLightEmitterExpiration({ actor: Fighter }),
+          }))
+        | _ => Set()
+      })
+      .fold(Set(), (emitters, emitterSet) => emitters.union(emitterSet))
+
+  pure def faerieFireObjectDimLightEmitters(outlines: Set[ObjectOutline]): Set[LightEmitter] =
+    outlines.map(outline => match outline {
+      | FaerieFireObjectOutline(data) => SpellLightEmitter({
+          source: data.source,
+          sourceSpell: FaerieFire,
+          attachment: ObjectLightEmitter({ object: data.object }),
+          emission: DimLightEmission({ radiusFeet: faerieFireDimLightRadiusFeet }),
+          expiresAt: ConcentrationLightEmitterExpiration({ actor: data.source }),
+        })
+    })
+
+  pure def battleRuntimeLightEmitters(state: BattleState): Set[LightEmitter] =
+    state.lightEmitters
+      .union(produceFlameHeldLightEmitters(state.fighter.activeEffects))
+      .union(dancingLightsActiveEffectEmitters(state.fighter.activeEffects))
+      .union(faerieFireCombatantDimLightEmitters(Fighter, state.fighter.activeEffects))
+      .union(faerieFireCombatantDimLightEmitters(Goblin, state.goblin.activeEffects))
+      .union(faerieFireObjectDimLightEmitters(state.objectOutlines))
+
+  pure def fighterWithoutProduceFlameHeldLight(state: BattleState): Combatant =
+    {
+      ...state.fighter,
+      activeEffects: activeEffectsWithoutProduceFlameHeldLight(state.fighter.activeEffects),
+    }
 
   pure def resolveProduceFlameHeldLight(state: BattleState): BattleState =
     if (
@@ -5132,10 +5438,11 @@ module battleRuntime {
       state
     else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), 20))) {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
-      { ...rolled, actionAvailable: false }
+      { ...rolled, fighter: fighterWithoutProduceFlameHeldLight(rolled), actionAvailable: false }
     }
     else if (state.goblin.reactionAvailable and not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
-      openReactionWindow(recordFighterAttackRoll(revealFighterHidden(state)), {
+      val rolled = recordFighterAttackRoll(revealFighterHidden(state))
+      openReactionWindow({ ...rolled, fighter: fighterWithoutProduceFlameHeldLight(rolled) }, {
         trigger: AttackHit,
         eligibleReactors: Set(Goblin),
         offeredReactors: Set(),
@@ -5146,7 +5453,7 @@ module battleRuntime {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
       val adjustedDamage = damageAfterAdjustments(damageRoll, Fire, Set(), Set(), Set())
       val damaged = applyDamageFromSource(state.goblin, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter)
-      { ...rolled, goblin: damaged, actionAvailable: false }
+      { ...rolled, fighter: fighterWithoutProduceFlameHeldLight(rolled), goblin: damaged, actionAvailable: false }
     }
 
   pure def damageAfterAdjustments(
@@ -5509,6 +5816,7 @@ module battleRuntime {
       | RayOfSickness => true
       | ViciousMockery => false
       | ProduceFlame => false
+      | DancingLightsSpell => false
       | Light => false
       | TrueStrike => false
       | Grease => true
@@ -5711,7 +6019,7 @@ module battleRuntime {
     match invocation {
       | RayOfFrostSpellAttack => false
       | PoisonSpraySpellAttack => false
-      | ChillTouchSpellAttack => false
+      | ChillTouchSpellAttack => true
       | StarryWispSpellAttack => true
       | FireBoltSpellAttack => true
       | ShockingGraspSpellAttack => false
@@ -6245,6 +6553,29 @@ module battleRuntime {
     else
       PossessionUnprevented
 
+  pure def protectionRelevantEffectHasSource(effect: ActiveEffect): bool =
+    match effect {
+      | ProtectionRelevantCharmed(_) => true
+      | ProtectionRelevantFrightened(_) => true
+      | ProtectionRelevantPossession(_) => true
+      | _ => false
+    }
+
+  pure def protectionFromEvilAndGoodRelevantEffectSaveRollMode(
+    sourceCreatureType: RuntimeCreatureType,
+    targetEffects: Set[ActiveEffect],
+    relevantEffect: ActiveEffect,
+  ): SavingThrowRollMode =
+    if (
+      targetEffects.contains(ProtectionFromEvilAndGoodCreatureTypeProtection)
+      and targetEffects.contains(relevantEffect)
+      and protectionFromEvilAndGoodCreatureTypeIsScoped(sourceCreatureType)
+      and protectionRelevantEffectHasSource(relevantEffect)
+    )
+      AdvantageSavingThrow
+    else
+      NormalSavingThrow
+
   pure def saveGatedConditionPreventedByCreatureTypeProtection(
     invocation: SaveGatedConditionInvocation,
     sourceCreatureType: RuntimeCreatureType,
@@ -6597,9 +6928,15 @@ module battleRuntime {
     target: Combatant,
     targetActor: Actor,
     savingThrowSucceeded: bool,
+    targetDoesNotSleep: bool,
+    targetHasExhaustionImmunity: bool,
     source: Actor,
-  ): Combatant =
-    match battleRuntimeSleepInitialSaveLifecycle(savingThrowSucceeded, target.incapacitated) {
+  ): Combatant = {
+    val automaticallySucceeded = battleRuntimeSleepSavingThrowAutomaticallySucceeds(
+      targetDoesNotSleep,
+      targetHasExhaustionImmunity,
+    )
+    match battleRuntimeSleepInitialSaveLifecycle(savingThrowSucceeded or automaticallySucceeded, target.incapacitated) {
       | BattleRuntimeNoSleepRepeatSaveLifecycle => target
       | BattleRuntimePendingSleepRepeatSaveLifecycle(data) => {
           val slept = {
@@ -6617,10 +6954,13 @@ module battleRuntime {
         }
       | BattleRuntimeUnconsciousSleepRepeatSaveLifecycle(_) => target
     }
+  }
 
   pure def resolveSleepTargetAdmission(
     state: BattleState,
     goblinSavingThrowSucceeded: bool,
+    goblinDoesNotSleep: bool,
+    goblinHasExhaustionImmunity: bool,
   ): BattleState =
     if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)))
       state
@@ -6629,7 +6969,15 @@ module battleRuntime {
       {
         ...withoutPrior,
         fighter: { ...withoutPrior.fighter, concentrating: true },
-        goblin: sleepInitialSaveTarget(withoutPrior, withoutPrior.goblin, Goblin, goblinSavingThrowSucceeded, Fighter),
+        goblin: sleepInitialSaveTarget(
+          withoutPrior,
+          withoutPrior.goblin,
+          Goblin,
+          goblinSavingThrowSucceeded,
+          goblinDoesNotSleep,
+          goblinHasExhaustionImmunity,
+          Fighter,
+        ),
         actionAvailable: false,
         spellSlotExpendedThisTurn: true,
       }
@@ -8859,10 +9207,10 @@ module battleRuntime {
         expiresAt: EndOfTurnLightEmitterExpiration({ actor: Fighter, round: 2 }),
       })),
       assert(spellAttackDamageSupportsObjectTarget(StarryWispSpellAttack)),
+      assert(spellAttackDamageSupportsObjectTarget(ChillTouchSpellAttack)),
       assert(spellAttackDamageSupportsObjectTarget(FireBoltSpellAttack)),
       assert(spellAttackDamageSupportsObjectTarget(ProduceFlameHurlSpellAttack)),
       assert(spellAttackDamageSupportsObjectTarget(SorcerousBurstSpellAttack({ damageTypeChoice: BattleRuntimeSorcerousBurstPsychicDamage, spellcastingAbilityModifier: 3, characterLevel: 5 }))),
-      assert(not(spellAttackDamageSupportsObjectTarget(ChillTouchSpellAttack))),
       assert(spellAttackBeamSequenceDamageType(EldritchBlastBeamSequence) == Force),
       assert(eldritchBlastBeamCount(1) == 1),
       assert(eldritchBlastBeamCount(5) == 2),
@@ -8876,6 +9224,10 @@ module battleRuntime {
       assert(spellAttackDamageObjectReplayHoles(StarryWispSpellAttack, true, true, false, false, false) == Set(AttackRoll)),
       assert(spellAttackDamageObjectReplayHoles(StarryWispSpellAttack, true, true, true, true, false) == Set(SpellDamageRoll)),
       assert(spellAttackDamageObjectReplayHoles(StarryWispSpellAttack, true, true, true, false, false) == Set()),
+      assert(spellAttackDamageObjectReplayHoles(ChillTouchSpellAttack, true, false, false, false, false) == Set(ObjectTargetChoice)),
+      assert(spellAttackDamageObjectReplayHoles(ChillTouchSpellAttack, true, true, false, false, false) == Set(AttackRoll)),
+      assert(spellAttackDamageObjectReplayHoles(ChillTouchSpellAttack, true, true, true, true, false) == Set(SpellDamageRoll)),
+      assert(spellAttackDamageObjectReplayHoles(ChillTouchSpellAttack, true, true, true, false, false) == Set()),
       assert(spellAttackDamageObjectReplayHoles(FireBoltSpellAttack, true, false, false, false, false) == Set(ObjectTargetChoice)),
       assert(spellAttackDamageObjectReplayHoles(FireBoltSpellAttack, true, true, false, false, false) == Set(AttackRoll)),
       assert(spellAttackDamageObjectReplayHoles(FireBoltSpellAttack, true, true, true, true, false) == Set(SpellDamageRoll)),
@@ -8892,6 +9244,15 @@ module battleRuntime {
         priorHitPoints: 5,
         nextHitPoints: 0,
         destroyed: true,
+      })),
+      assert(spellObjectDamageOutcome(ChillTouchSpellAttack, ChillTouchObjectTarget, 6, ObjectHitPoints({ hitPoints: 10 })) == ObjectHitPointDamage({
+        object: ChillTouchObjectTarget,
+        damageType: Necrotic,
+        rolledDamage: 6,
+        effectiveDamage: 6,
+        priorHitPoints: 10,
+        nextHitPoints: 4,
+        destroyed: false,
       })),
       assert(spellObjectDamageOutcome(SorcerousBurstSpellAttack({ damageTypeChoice: BattleRuntimeSorcerousBurstPsychicDamage, spellcastingAbilityModifier: 3, characterLevel: 5 }), FireBoltObjectTarget, 9, ObjectHitPoints({ hitPoints: 8 })) == ObjectHitPointDamage({
         object: FireBoltObjectTarget,
@@ -9005,6 +9366,12 @@ module battleRuntime {
       assert(not(protectionFromEvilAndGoodPreventsPossessionFromCreatureType(FeyCreature, Set()))),
       assert(possessionAttemptDispositionFromCreatureTypeProtection(FeyCreature, Set(ProtectionFromEvilAndGoodCreatureTypeProtection)) == PossessionPreventedByCreatureTypeProtection),
       assert(possessionAttemptDispositionFromCreatureTypeProtection(HumanoidCreature, Set(ProtectionFromEvilAndGoodCreatureTypeProtection)) == PossessionUnprevented),
+      assert(protectionFromEvilAndGoodRelevantEffectSaveRollMode(FeyCreature, Set(ProtectionFromEvilAndGoodCreatureTypeProtection, ProtectionRelevantCharmed({ source: Fighter, durationTicks: 10 })), ProtectionRelevantCharmed({ source: Fighter, durationTicks: 10 })) == AdvantageSavingThrow),
+      assert(protectionFromEvilAndGoodRelevantEffectSaveRollMode(FeyCreature, Set(ProtectionFromEvilAndGoodCreatureTypeProtection, ProtectionRelevantFrightened({ source: Fighter, durationTicks: 10 })), ProtectionRelevantFrightened({ source: Fighter, durationTicks: 10 })) == AdvantageSavingThrow),
+      assert(protectionFromEvilAndGoodRelevantEffectSaveRollMode(FeyCreature, Set(ProtectionFromEvilAndGoodCreatureTypeProtection, ProtectionRelevantPossession({ source: Fighter, durationTicks: 10 })), ProtectionRelevantPossession({ source: Fighter, durationTicks: 10 })) == AdvantageSavingThrow),
+      assert(protectionFromEvilAndGoodRelevantEffectSaveRollMode(HumanoidCreature, Set(ProtectionFromEvilAndGoodCreatureTypeProtection, ProtectionRelevantCharmed({ source: Fighter, durationTicks: 10 })), ProtectionRelevantCharmed({ source: Fighter, durationTicks: 10 })) == NormalSavingThrow),
+      assert(protectionFromEvilAndGoodRelevantEffectSaveRollMode(FeyCreature, Set(ProtectionFromEvilAndGoodCreatureTypeProtection), CharmPersonCharmed({ source: Fighter, durationTicks: charmPersonCharmedDurationTicks })) == NormalSavingThrow),
+      assert(protectionFromEvilAndGoodRelevantEffectSaveRollMode(FeyCreature, Set(ProtectionFromEvilAndGoodCreatureTypeProtection, CharmPersonCharmed({ source: Fighter, durationTicks: charmPersonCharmedDurationTicks })), CharmPersonCharmed({ source: Fighter, durationTicks: charmPersonCharmedDurationTicks })) == NormalSavingThrow),
       assert(saveGatedConditionTarget(CharmPersonSaveGate, { ...initialState.goblin, activeEffects: Set(ProtectionFromEvilAndGoodCreatureTypeProtection) }, false, Fighter, FeyCreature).activeEffects == Set(ProtectionFromEvilAndGoodCreatureTypeProtection)),
       assert(saveGatedConditionTarget(CharmPersonSaveGate, { ...initialState.goblin, activeEffects: Set(ProtectionFromEvilAndGoodCreatureTypeProtection) }, false, Fighter, HumanoidCreature).activeEffects == Set(ProtectionFromEvilAndGoodCreatureTypeProtection, CharmPersonCharmed({ source: Fighter, durationTicks: charmPersonCharmedDurationTicks }))),
       assert(saveGatedTargeting(SacredFlameSaveGate) == SingleSaveTarget),
@@ -9052,6 +9419,11 @@ module battleRuntime {
       assert(resolveFavoredEnemyHuntersMark(initialState, Goblin, 0).state == initialState),
       assert(fighterHuntersMarkDamage(4, Set(HuntersMarkDamageRider({ target: Goblin, transfer: AwaitingTargetDrop, durationTicks: 600 })), Goblin) == 4),
       assert(fighterHuntersMarkDamage(4, Set(HuntersMarkDamageRider({ target: Fighter, transfer: AwaitingTargetDrop, durationTicks: 600 })), Goblin) == 0),
+      assert(huntersMarkFindingAbilityCheckRollMode(Set(HuntersMarkDamageRider({ target: Goblin, transfer: AwaitingTargetDrop, durationTicks: 600 })), Goblin, WisAbility, PerceptionSkill) == AdvantageAbilityCheck),
+      assert(huntersMarkFindingAbilityCheckRollMode(Set(HuntersMarkDamageRider({ target: Goblin, transfer: AwaitingTargetDrop, durationTicks: 600 })), Goblin, WisAbility, SurvivalSkill) == AdvantageAbilityCheck),
+      assert(huntersMarkFindingAbilityCheckRollMode(Set(HuntersMarkDamageRider({ target: Goblin, transfer: AwaitingTargetDrop, durationTicks: 600 })), Goblin, WisAbility, AthleticsSkill) == NormalAbilityCheck),
+      assert(huntersMarkFindingAbilityCheckRollMode(Set(HuntersMarkDamageRider({ target: Goblin, transfer: AwaitingTargetDrop, durationTicks: 600 })), Fighter, WisAbility, PerceptionSkill) == NormalAbilityCheck),
+      assert(huntersMarkFindingAbilityCheckRollMode(Set(HuntersMarkDamageRider({ target: Goblin, transfer: AwaitingTargetDrop, durationTicks: 600 })), Goblin, StrAbility, PerceptionSkill) == NormalAbilityCheck),
       assert(fighterHexDamage(4, Set(HexDamageRider({ target: Goblin, ability: WisAbility, transfer: AwaitingTargetDrop, durationTicks: 600 })), Goblin) == 4),
       assert(fighterHexDamage(4, Set(HexDamageRider({ target: Fighter, ability: WisAbility, transfer: AwaitingTargetDrop, durationTicks: 600 })), Goblin) == 0),
       assert(hexAbilityCheckRollMode(Set(HexDamageRider({ target: Goblin, ability: WisAbility, transfer: AwaitingTargetDrop, durationTicks: 600 })), Goblin, WisAbility) == DisadvantageAbilityCheck),
@@ -9522,10 +9894,25 @@ module battleRuntime {
       assert(lit.fighter.concentrating),
       assert(not(lit.fighter.activeEffects.contains(FaerieFireOutline))),
       assert(lit.goblin.activeEffects.contains(FaerieFireOutline)),
+      assert(faerieFireDimLightRadiusFeet == 10),
+      assert(battleRuntimeLightEmitters(lit).contains(SpellLightEmitter({
+        source: Fighter,
+        sourceSpell: FaerieFire,
+        attachment: CombatantLightEmitter({ actor: Goblin }),
+        emission: DimLightEmission({ radiusFeet: faerieFireDimLightRadiusFeet }),
+        expiresAt: ConcentrationLightEmitterExpiration({ actor: Fighter }),
+      }))),
       assert(activeEffectsDenyInvisibleBenefit(lit.goblin.activeEffects)),
       assert(spellAttackRollModeFromActiveEffects(Set(), lit.goblin.activeEffects, true) == AdvantageSpellAttackRoll),
       assert(spellAttackRollModeFromActiveEffects(Set(), lit.goblin.activeEffects, false) == NormalSpellAttackRoll),
       assert(not(broken.goblin.activeEffects.contains(FaerieFireOutline))),
+      assert(not(battleRuntimeLightEmitters(broken).contains(SpellLightEmitter({
+        source: Fighter,
+        sourceSpell: FaerieFire,
+        attachment: CombatantLightEmitter({ actor: Goblin }),
+        emission: DimLightEmission({ radiusFeet: faerieFireDimLightRadiusFeet }),
+        expiresAt: ConcentrationLightEmitterExpiration({ actor: Fighter }),
+      })))),
       assert(not(activeEffectsDenyInvisibleBenefit(broken.goblin.activeEffects))),
     }
   }
@@ -9535,11 +9922,25 @@ module battleRuntime {
     val broken = breakConcentrationSpellEffects(lit, Fighter)
     all {
       assert(lit.objectOutlines.contains(FaerieFireObjectOutline({ source: Fighter, object: FaerieFireObjectTarget }))),
+      assert(battleRuntimeLightEmitters(lit).contains(SpellLightEmitter({
+        source: Fighter,
+        sourceSpell: FaerieFire,
+        attachment: ObjectLightEmitter({ object: FaerieFireObjectTarget }),
+        emission: DimLightEmission({ radiusFeet: faerieFireDimLightRadiusFeet }),
+        expiresAt: ConcentrationLightEmitterExpiration({ actor: Fighter }),
+      }))),
       assert(objectOutlinesDenyInvisibleBenefit(lit.objectOutlines, FaerieFireObjectTarget)),
       assert(spellObjectAttackRollModeFromActiveEffects(Set(), lit.objectOutlines, FaerieFireObjectTarget, true) == AdvantageSpellAttackRoll),
       assert(spellObjectAttackRollModeFromActiveEffects(Set(), lit.objectOutlines, FaerieFireObjectTarget, false) == NormalSpellAttackRoll),
       assert(spellObjectAttackRollModeFromActiveEffects(Set(ViciousMockeryNextAttackDisadvantage), lit.objectOutlines, FaerieFireObjectTarget, true) == NormalSpellAttackRoll),
       assert(not(broken.objectOutlines.contains(FaerieFireObjectOutline({ source: Fighter, object: FaerieFireObjectTarget })))),
+      assert(not(battleRuntimeLightEmitters(broken).contains(SpellLightEmitter({
+        source: Fighter,
+        sourceSpell: FaerieFire,
+        attachment: ObjectLightEmitter({ object: FaerieFireObjectTarget }),
+        emission: DimLightEmission({ radiusFeet: faerieFireDimLightRadiusFeet }),
+        expiresAt: ConcentrationLightEmitterExpiration({ actor: Fighter }),
+      })))),
       assert(not(objectOutlinesDenyInvisibleBenefit(broken.objectOutlines, FaerieFireObjectTarget))),
     }
   }
@@ -9603,7 +10004,7 @@ module battleRuntime {
   }
 
   run test_sleep_failed_initial_save_adds_pending_repeat_save_until_concentration = {
-    val slept = resolveSleepTargetAdmission(initialState, false)
+    val slept = resolveSleepTargetAdmission(initialState, false, false, false)
     val broken = breakConcentrationSpellEffects(slept, Fighter)
     all {
       assert(not(slept.actionAvailable)),
@@ -9622,8 +10023,25 @@ module battleRuntime {
     }
   }
 
+  run test_sleep_non_sleeper_and_exhaustion_immunity_auto_success = {
+    val nonSleeper = resolveSleepTargetAdmission(initialState, false, true, false)
+    val exhaustionImmune = resolveSleepTargetAdmission(initialState, false, false, true)
+    all {
+      assert(not(nonSleeper.actionAvailable)),
+      assert(nonSleeper.spellSlotExpendedThisTurn),
+      assert(nonSleeper.fighter.concentrating),
+      assert(not(nonSleeper.goblin.incapacitated)),
+      assert(not(combatantHasSleepEffect(nonSleeper.goblin))),
+      assert(not(exhaustionImmune.actionAvailable)),
+      assert(exhaustionImmune.spellSlotExpendedThisTurn),
+      assert(exhaustionImmune.fighter.concentrating),
+      assert(not(exhaustionImmune.goblin.incapacitated)),
+      assert(not(combatantHasSleepEffect(exhaustionImmune.goblin))),
+    }
+  }
+
   run test_sleep_repeat_save_success_removes_pending_effect = {
-    val slept = resolveSleepTargetAdmission(initialState, false)
+    val slept = resolveSleepTargetAdmission(initialState, false, false, false)
     val goblinTurn = endTurn(slept)
     val repeated = endTurnWithSleepRepeatSave(goblinTurn, true)
     all {
@@ -9638,7 +10056,7 @@ module battleRuntime {
       ...initialState,
       goblin: { ...initialState.goblin, concentrating: true, activeEffects: Set(MageArmor) },
     }
-    val slept = resolveSleepTargetAdmission(concentratingGoblin, false)
+    val slept = resolveSleepTargetAdmission(concentratingGoblin, false, false, false)
     all {
       assert(not(slept.goblin.concentrating)),
       assert(not(slept.goblin.activeEffects.contains(MageArmor))),
@@ -9652,7 +10070,7 @@ module battleRuntime {
   }
 
   run test_sleep_repeat_save_failure_escalates_to_unconscious_until_concentration = {
-    val slept = resolveSleepTargetAdmission(initialState, false)
+    val slept = resolveSleepTargetAdmission(initialState, false, false, false)
     val goblinTurn = endTurn(slept)
     val repeated = endTurnWithSleepRepeatSave(goblinTurn, false)
     val broken = breakConcentrationSpellEffects(repeated, Fighter)
@@ -9676,7 +10094,7 @@ module battleRuntime {
   }
 
   run test_sleep_repeat_save_failure_breaks_target_concentration = {
-    val slept = resolveSleepTargetAdmission(initialState, false)
+    val slept = resolveSleepTargetAdmission(initialState, false, false, false)
     val goblinTurn = endTurn(slept)
     val concentratingGoblinTurn = {
       ...goblinTurn,
@@ -9695,7 +10113,7 @@ module battleRuntime {
   }
 
   run test_sleep_damage_ends_pending_sleep_on_target = {
-    val slept = resolveSleepTargetAdmission(initialState, false)
+    val slept = resolveSleepTargetAdmission(initialState, false, false, false)
     val damaged = { ...slept, goblin: applyDamageFromSource(slept.goblin, 1, 1, true, OrdinaryDamage, Goblin) }
     all {
       assert(not(damaged.goblin.incapacitated)),
@@ -9704,7 +10122,7 @@ module battleRuntime {
   }
 
   run test_sleep_damage_ends_unconscious_sleep_and_leaves_prone = {
-    val slept = resolveSleepTargetAdmission(initialState, false)
+    val slept = resolveSleepTargetAdmission(initialState, false, false, false)
     val goblinTurn = endTurn(slept)
     val repeated = endTurnWithSleepRepeatSave(goblinTurn, false)
     val damaged = { ...repeated, goblin: applyDamageFromSource(repeated.goblin, 1, 1, true, OrdinaryDamage, Goblin) }
@@ -9787,7 +10205,7 @@ module battleRuntime {
   }
 
   run test_sleep_adjacent_action_shakes_target_awake = {
-    val slept = resolveSleepTargetAdmission(initialState, false)
+    val slept = resolveSleepTargetAdmission(initialState, false, false, false)
     val nextRoundFighterTurn = {
       ...slept,
       initiative: { round: 2, alreadyActed: List(), stillToAct: List(Fighter, Goblin) },
@@ -10710,6 +11128,7 @@ module battleRuntime {
       assert(not(result.spellSlotExpendedThisTurn)),
       assert(produceFlameBrightLightRadiusFeet == 20),
       assert(produceFlameDimLightAdditionalFeet == 20),
+      assert(battleRuntimeLightEmitters(result).contains(produceFlameHeldLightEmitter(produceFlameDurationTicks))),
     }
   }
 
@@ -10720,6 +11139,7 @@ module battleRuntime {
     all {
       assert(recast.fighter.activeEffects.contains(ProduceFlameHeldLight({ durationTicks: produceFlameDurationTicks }))),
       assert(recast.fighter.activeEffects.size() == 1),
+      assert(battleRuntimeLightEmitters(recast) == Set(produceFlameHeldLightEmitter(produceFlameDurationTicks))),
     }
   }
 
@@ -10736,6 +11156,66 @@ module battleRuntime {
     all {
       assert(activeEffectsContainProduceFlameHeldLight(stillSameRound.fighter.activeEffects)),
       assert(not(activeEffectsContainProduceFlameHeldLight(nextRound.fighter.activeEffects))),
+      assert(battleRuntimeLightEmitters(stillSameRound).contains(produceFlameHeldLightEmitter(1))),
+      assert(not(battleRuntimeLightEmitters(nextRound).contains(produceFlameHeldLightEmitter(1)))),
+    }
+  }
+
+  run test_dancing_lights_projects_dim_emitters_and_srd_bounds = {
+    val cast = resolveDancingLightsSeparateCast(initialState, 3, 60, 20)
+    val recast = resolveDancingLightsCombinedCast({ ...cast, actionAvailable: true }, 40)
+    val moved = resolveDancingLightsReposition(cast, false, 3, 60, 20, 70)
+    val partiallyElapsed = {
+      ...cast,
+      fighter: {
+        ...cast.fighter,
+        activeEffects: Set(dancingLightsActiveEffect(false, 3, 1, 2, 3, 4, 37)),
+      },
+    }
+    val movedAfterElapsed = resolveDancingLightsReposition(partiallyElapsed, false, 3, 60, 20, 70)
+    val vanished = resolveDancingLightsReposition(cast, false, 3, 60, 20, 121)
+    val broken = breakConcentrationSpellEffects(cast, Fighter)
+    val nearlyExpired = {
+      ...cast,
+      fighter: {
+        ...cast.fighter,
+        activeEffects: Set(dancingLightsActiveEffect(false, 3, 1, 2, 3, 4, 1)),
+      },
+    }
+    val stillSameRound = endTurn(nearlyExpired)
+    val nextRound = endTurn(stillSameRound)
+    all {
+      assert(dancingLightsDimLightRadiusFeet == 10),
+      assert(dancingLightsDurationTicks == 600),
+      assert(dancingLightsCastPlacementAllowed(1, 120, 99)),
+      assert(dancingLightsCastPlacementAllowed(3, 60, 20)),
+      assert(not(dancingLightsCastPlacementAllowed(0, 60, 20))),
+      assert(not(dancingLightsCastPlacementAllowed(5, 60, 20))),
+      assert(not(dancingLightsCastPlacementAllowed(2, 121, 20))),
+      assert(not(dancingLightsCastPlacementAllowed(2, 60, 21))),
+      assert(dancingLightsRepositionAllowed(60, 20, 2)),
+      assert(not(dancingLightsRepositionAllowed(61, 20, 2))),
+      assert(dancingLightSurvivesRange(120)),
+      assert(not(dancingLightSurvivesRange(121))),
+      assert(dancingLightsEmitters(false, 1).size() == 1),
+      assert(dancingLightsEmitters(false, 3).size() == 3),
+      assert(dancingLightsEmitters(true, 1) == Set(dancingLightsEmitter(1, 1, true))),
+      assert(cast.fighter.activeEffects.contains(dancingLightsActiveEffect(false, 3, 1, 2, 3, 4, dancingLightsDurationTicks))),
+      assert(cast.fighter.concentrating),
+      assert(not(cast.actionAvailable)),
+      assert(battleRuntimeLightEmitters(cast) == dancingLightsEmitters(false, 3)),
+      assert(recast.fighter.activeEffects == Set(dancingLightsActiveEffect(true, 1, 1, 0, 0, 0, dancingLightsDurationTicks))),
+      assert(battleRuntimeLightEmitters(recast) == dancingLightsEmitters(true, 1)),
+      assert(moved.fighter.activeEffects.contains(dancingLightsActiveEffect(false, 3, 11, 12, 13, 14, dancingLightsDurationTicks))),
+      assert(movedAfterElapsed.fighter.activeEffects.contains(dancingLightsActiveEffect(false, 3, 11, 12, 13, 14, 37))),
+      assert(not(moved.bonusActionAvailable)),
+      assert(battleRuntimeLightEmitters(moved).contains(dancingLightsEmitter(1, 11, false))),
+      assert(not(activeEffectsContainDancingLights(vanished.fighter.activeEffects))),
+      assert(battleRuntimeLightEmitters(vanished) == Set()),
+      assert(not(activeEffectsContainDancingLights(broken.fighter.activeEffects))),
+      assert(battleRuntimeLightEmitters(broken) == Set()),
+      assert(activeEffectsContainDancingLights(stillSameRound.fighter.activeEffects)),
+      assert(not(activeEffectsContainDancingLights(nextRound.fighter.activeEffects))),
     }
   }
 
@@ -10812,9 +11292,31 @@ module battleRuntime {
       assert(unlit == initialState),
       assert(hit.goblin.hp == 5),
       assert(not(hit.actionAvailable)),
-      assert(activeEffectsContainProduceFlameHeldLight(hit.fighter.activeEffects)),
+      assert(not(activeEffectsContainProduceFlameHeldLight(hit.fighter.activeEffects))),
+      assert(not(battleRuntimeLightEmitters(hit).contains(produceFlameHeldLightEmitter(produceFlameDurationTicks)))),
       assert(spellAttackDamageType(ProduceFlameHurlSpellAttack) == Fire),
       assert(spellAttackDamageActiveEffects(ProduceFlameHurlSpellAttack) == Set()),
+    }
+  }
+
+  run test_produce_flame_hurl_attack_hit_reaction_window_ends_held_light = {
+    val lit = resolveProduceFlameHeldLight(initialState)
+    val nextTurn = {
+      ...lit,
+      actionAvailable: true,
+      bonusActionAvailable: true,
+    }
+    val awaiting = resolveProduceFlameHurl(nextTurn, 15, 10, 5, true)
+    all {
+      assert(awaiting.interruptStack.length() == 1),
+      assert(pendingReactionFrame(awaiting.interruptStack[0]) == HasPendingReactionFrame({
+        trigger: AttackHit,
+        eligibleReactors: Set(Goblin),
+        offeredReactors: Set(),
+        continuation: ResumeProduceFlameHurl,
+      })),
+      assert(not(activeEffectsContainProduceFlameHeldLight(awaiting.fighter.activeEffects))),
+      assert(not(battleRuntimeLightEmitters(awaiting).contains(produceFlameHeldLightEmitter(produceFlameDurationTicks)))),
     }
   }
 

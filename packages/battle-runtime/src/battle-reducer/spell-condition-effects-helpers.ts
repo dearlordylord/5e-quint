@@ -8,6 +8,10 @@ import {
   hasCondition,
   removeCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
+import {
+  holeId,
+  holeInstanceKey,
+} from "@dnd/shared-algebras/runtime-hole-algebra";
 import type { ConditionState } from "@dnd/shared-algebras/conditions-algebra";
 import type { CreatureType } from "@dnd/shared/game-facts";
 import type { Condition } from "@dnd/shared/types";
@@ -17,6 +21,8 @@ import type {
   BattleActiveEffect,
   BattleCreatureState,
   BattlePossessionAttemptDisposition,
+  BattleProtectionRelevantEffectSavingThrowOutcomeHole,
+  BattleSavingThrowOutcomeValue,
   BattleState,
   ProtectionFromEvilAndGoodPreventedCondition,
 } from "../battle-reducer.ts";
@@ -26,9 +32,15 @@ const HIDEOUS_LAUGHTER_CONDITIONS = [
   "prone",
   "incapacitated",
 ] as const satisfies ReadonlyArray<Condition>;
+type ProtectionRelevantCondition = ProtectionFromEvilAndGoodPreventedCondition;
+type ProtectionRelevantEffect =
+  | Extract<BattleActiveEffect, { readonly kind: "spellConditionRepeatSave" }>
+  | Extract<BattleActiveEffect, { readonly kind: "possession" }>;
+type ProtectionRelevantEffectKind = ProtectionRelevantCondition | "possession";
 
 type ConditionApplyingActiveEffect =
   | Extract<BattleActiveEffect, { readonly kind: "spellCondition" }>
+  | Extract<BattleActiveEffect, { readonly kind: "spellConditionRepeatSave" }>
   | Extract<BattleActiveEffect, { readonly kind: "sleepPendingRepeatSave" }>
   | Extract<BattleActiveEffect, { readonly kind: "sleepUnconscious" }>
   | Extract<BattleActiveEffect, { readonly kind: "hideousLaughter" }>;
@@ -149,6 +161,157 @@ export function resolveBattlePossessionAttempt({
   return { tag: "unprevented", sourceCombatantId, targetId };
 }
 
+export function protectionRelevantEffectSavingThrowOutcomeHole(
+  state: BattleState,
+  targetId: CombatantId,
+  effect: ProtectionRelevantEffect,
+): BattleProtectionRelevantEffectSavingThrowOutcomeHole {
+  const relevantEffect = protectionRelevantEffectKind(effect);
+  const key = [
+    "battle:protection-relevant-effect-save:",
+    targetId,
+    effect.sourceCombatantId,
+    effect.sourceSpellId,
+    relevantEffect,
+  ]
+    .map(String)
+    .join(":");
+  return {
+    kind: "savingThrowOutcome",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${effect.sourceSpellId} ${relevantEffect} save`,
+    protectionRelevantEffectSave: {
+      targetId,
+      sourceSpellId: effect.sourceSpellId,
+      sourceCombatantId: effect.sourceCombatantId,
+      relevantEffect,
+      save: effect.save,
+    },
+    ability: effect.save.ability,
+    dc: effect.save.dc,
+    areaChoices: [],
+    targetRollModes: targetHasProtectionRelevantEffectSaveAdvantage(
+      state,
+      targetId,
+      effect,
+    )
+      ? [{ targetId, rollMode: "advantage" }]
+      : [],
+  };
+}
+
+export function protectionRelevantEffects(
+  combatant: BattleCreatureState,
+): readonly ProtectionRelevantEffect[] {
+  return combatant.activeEffects.filter(isProtectionRelevantEffect);
+}
+
+export function protectionRelevantEffectFor(
+  state: BattleState,
+  targetId: CombatantId,
+  sourceCombatantId: CombatantId,
+  sourceSpellId: SpellId,
+  relevantEffect: ProtectionRelevantEffectKind,
+): ProtectionRelevantEffect | undefined {
+  return protectionRelevantEffectsForTarget(state, targetId).find(
+    (effect) =>
+      effect.sourceCombatantId === sourceCombatantId &&
+      effect.sourceSpellId === sourceSpellId &&
+      protectionRelevantEffectKind(effect) === relevantEffect,
+  );
+}
+
+export function protectionRelevantEffectsForTarget(
+  state: BattleState,
+  targetId: CombatantId,
+): readonly ProtectionRelevantEffect[] {
+  const target = state.combatants.get(targetId);
+  return target === undefined ? [] : protectionRelevantEffects(target);
+}
+
+export function applyProtectionRelevantEffectSaveOutcome(
+  state: BattleState,
+  targetId: CombatantId,
+  effect: ProtectionRelevantEffect,
+  succeeded: boolean,
+): BattleState {
+  if (!succeeded) {
+    return state;
+  }
+  return effect.kind === "spellConditionRepeatSave"
+    ? removeSpellConditionEffect(state, targetId, effect)
+    : removePossessionEffect(state, targetId, effect);
+}
+
+export function validateProtectionRelevantEffectSavingThrowOutcome(
+  value: BattleSavingThrowOutcomeValue,
+  targetId: CombatantId,
+): string | null {
+  if ("area" in value) {
+    return "Protection from Evil and Good relevant-effect save must not include area facts.";
+  }
+  return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
+    ? null
+    : "Protection from Evil and Good relevant-effect save must match the affected target exactly once.";
+}
+
+function isProtectionRelevantEffect(
+  effect: BattleActiveEffect,
+): effect is ProtectionRelevantEffect {
+  return (
+    effect.kind === "spellConditionRepeatSave" || effect.kind === "possession"
+  );
+}
+
+function protectionRelevantEffectKind(
+  effect: ProtectionRelevantEffect,
+): ProtectionRelevantEffectKind {
+  return effect.kind === "spellConditionRepeatSave"
+    ? effect.condition
+    : effect.kind;
+}
+
+function targetHasProtectionRelevantEffectSaveAdvantage(
+  state: BattleState,
+  targetId: CombatantId,
+  effect: ProtectionRelevantEffect,
+): boolean {
+  const target = state.combatants.get(targetId);
+  const sourceCreatureType = battleCreatureTypeForCombatant(
+    state,
+    effect.sourceCombatantId,
+  );
+  return (
+    target !== undefined &&
+    sourceCreatureType !== null &&
+    target.activeEffects.includes(effect) &&
+    target.activeEffects.some((candidate) =>
+      creatureTypeProtectionAppliesToSource(candidate, sourceCreatureType),
+    )
+  );
+}
+
+function removePossessionEffect(
+  state: BattleState,
+  targetId: CombatantId,
+  effect: Extract<BattleActiveEffect, { readonly kind: "possession" }>,
+): BattleState {
+  const target = state.combatants.get(targetId);
+  if (target === undefined) {
+    return state;
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(targetId, {
+      ...target,
+      activeEffects: target.activeEffects.filter(
+        (candidate) => candidate !== effect,
+      ),
+    }),
+  };
+}
+
 function battleCreatureTypeForCombatant(
   state: BattleState,
   combatantId: CombatantId,
@@ -198,6 +361,8 @@ function activeEffectSourcesCondition(
     (effect.kind === "spellCondition" &&
       (effect.condition === condition ||
         (condition === "prone" && effect.condition === "unconscious"))) ||
+    (effect.kind === "spellConditionRepeatSave" &&
+      effect.condition === condition) ||
     (effect.kind === "sleepUnconscious" &&
       (condition === "unconscious" || condition === "prone")) ||
     activeEffectDirectlyAppliesCondition(effect, condition)
@@ -210,6 +375,8 @@ function activeEffectDirectlyAppliesCondition(
 ): boolean {
   return (
     (effect.kind === "spellCondition" && effect.condition === condition) ||
+    (effect.kind === "spellConditionRepeatSave" &&
+      effect.condition === condition) ||
     (effect.kind === "sleepPendingRepeatSave" &&
       condition === "incapacitated") ||
     (effect.kind === "sleepUnconscious" && condition === "unconscious") ||
@@ -288,7 +455,10 @@ export function spellRestraintEffectFor(
 export function removeSpellConditionEffect(
   state: BattleState,
   combatantId: CombatantId,
-  effect: Extract<BattleActiveEffect, { readonly kind: "spellCondition" }>,
+  effect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "spellCondition" | "spellConditionRepeatSave" }
+  >,
 ): BattleState {
   const combatant = state.combatants.get(combatantId);
   if (combatant === undefined) {
@@ -438,10 +608,9 @@ export function combatantsAfterHideousLaughterSpellEndedIfNoEffects(
   });
 }
 
-function isHideousLaughterEffect(effect: BattleActiveEffect): effect is Extract<
-  BattleActiveEffect,
-  { readonly kind: "hideousLaughter" }
-> {
+function isHideousLaughterEffect(
+  effect: BattleActiveEffect,
+): effect is Extract<BattleActiveEffect, { readonly kind: "hideousLaughter" }> {
   return effect.kind === "hideousLaughter";
 }
 
@@ -478,7 +647,9 @@ export function conditionsAfterApplyingSpellConditionEffects(
     .reduce((nextConditions, effect) => {
       return activeEffectConditions(effect).reduce(
         (conditionState, condition) =>
-          conditionImmunities.some((immunity) => immunity.condition === condition)
+          conditionImmunities.some(
+            (immunity) => immunity.condition === condition,
+          )
             ? conditionState
             : applyCondition(conditionState, condition),
         nextConditions,
@@ -516,6 +687,7 @@ function isConditionApplyingActiveEffect(
 ): effect is ConditionApplyingActiveEffect {
   return (
     effect.kind === "spellCondition" ||
+    effect.kind === "spellConditionRepeatSave" ||
     effect.kind === "sleepPendingRepeatSave" ||
     effect.kind === "sleepUnconscious" ||
     effect.kind === "hideousLaughter"
@@ -533,7 +705,11 @@ function activeEffectConditions(
 function activeEffectCondition(
   effect: SingleConditionApplyingActiveEffect,
 ): Condition {
-  if (effect.kind === "spellCondition") return effect.condition;
+  if (
+    effect.kind === "spellCondition" ||
+    effect.kind === "spellConditionRepeatSave"
+  )
+    return effect.condition;
   return effect.kind === "sleepPendingRepeatSave"
     ? "incapacitated"
     : "unconscious";

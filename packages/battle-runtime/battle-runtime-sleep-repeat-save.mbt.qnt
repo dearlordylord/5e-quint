@@ -16,7 +16,7 @@ module battleRuntimeSleepRepeatSaveMbt {
   pure val casterTurnRole: str = "caster"
   pure val targetTurnRole: str = "target"
 
-  pure val slept: BattleState = resolveSleepTargetAdmission(initialState, false)
+  pure val slept: BattleState = resolveSleepTargetAdmission(initialState, false, false, false)
   pure val concentrationBroken: BattleState = breakConcentrationSpellEffects(slept, Fighter)
   pure val concentrationBrokenTargetTurn: BattleState = endTurn(concentrationBroken)
   pure val concentrationBrokenNextRound: BattleState = endTurn(concentrationBrokenTargetTurn)

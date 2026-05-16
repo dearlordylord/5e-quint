@@ -248,8 +248,8 @@ flowchart TD
   5-foot-radius Sphere targets. It asks for Wisdom Saving Throw outcomes only
   for selected creatures that are not automatic successes, derives
   Exhaustion-immunity automatic success from retained Stat Block condition
-  immunities, rejects non-sleeper facts until executable support lands, and
-  spends the Magic action plus Spell Slot. Failed saves record a typed
+  immunities, accepts caller-supplied non-sleeper facts as automatic successes,
+  and spends the Magic action plus Spell Slot. Failed saves record a typed
   per-target concentration-owned pending lifecycle that applies Incapacitated
   until that target's next end turn; the end-turn command then asks for the
   second Wisdom save and either removes that target's Sleep effect or escalates
@@ -262,10 +262,10 @@ flowchart TD
   `protection_from_evil_and_good` adds a concentration protection active effect
   whose attacker creature-type filter feeds attack-roll Disadvantage, prevents
   scoped-creature possession attempts, and prevents scoped-creature Charmed or
-  Frightened condition application. Its save-Advantage clause remains deferred
-  until the runtime has a real save boundary against an already-applied
-  possession, Charmed, or Frightened effect; fresh spell-cast condition saves are
-  not treated as that boundary.
+  Frightened condition application. Runtime relevant-effect save commands
+  project Advantage for new Saving Throws against already-applied possession,
+  Charmed, or Frightened effects from scoped creature types; fresh spell-cast
+  condition saves are not treated as that boundary.
 - Stat Block damage vulnerabilities, resistances, and immunities are read from
   the retained `StatBlockRecord` at the HP mutation boundary.
 - Optional attack damage riders are retained feature profiles, not named

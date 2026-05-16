@@ -34,6 +34,7 @@ import {
   type ActionSpellBattleResolutionInput,
   type BattleFill,
   type BattleResolutionResult,
+  type BattleState,
   type BonusActionDashSpellBattleResolutionInput,
   type BonusActionSpellBattleResolutionInput,
   type SpellMarkedDamageRider,
@@ -80,6 +81,7 @@ import {
 } from "./spells-discovery.ts";
 import {
   applyPersistentSpellActiveEffect,
+  endHeldLightSpellEffect,
   applySpellActiveEffects,
   applySpellLightEmitterEffects,
   applySpellDamage,
@@ -219,6 +221,8 @@ import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
 
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import {
+  resolveDancingLightsCastSpellAct,
+  resolveDancingLightsRepositionSpellAct,
   resolveHeldLightSpellAct,
   resolveMarkedDamageRiderSpellAct,
   resolveObjectLightSpellAct,
@@ -321,7 +325,13 @@ export function resolveSpellAct(
       "Action-time spell act no longer has its required runtime spell resource.",
     );
   }
-  if (!spellInvocationCasterPrerequisiteIsMet(actor, invocation)) {
+  if (
+    !(
+      input.replayingInterruptedProcedure === true &&
+      invocation.procedure === "heldLightHurl"
+    ) &&
+    !spellInvocationCasterPrerequisiteIsMet(actor, invocation)
+  ) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -447,6 +457,17 @@ export function resolveSpellAct(
   }
   if (invocation.procedure === "objectLight") {
     return resolveObjectLightSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (
+    invocation.procedure === "dancingLightsSeparateCast" ||
+    invocation.procedure === "dancingLightsCombinedCast"
+  ) {
+    return resolveDancingLightsCastSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
@@ -699,7 +720,11 @@ export function resolveSpellAct(
     }
     if (sanctuaryCheck.tag === "lost") {
       return spendSpellCastResources({
-        state: castingState,
+        state: stateAfterResolvedHeldLightHurl(
+          castingState,
+          subject.actorId,
+          invocationForResolution,
+        ),
         actorId: subject.actorId,
         invocation: invocationForResolution,
         errorState: input.state,
@@ -884,15 +909,20 @@ export function resolveSpellAct(
         attackRoll: fillSet.attackRoll,
       },
     );
+    const attackRolledStateAfterHurl = stateAfterResolvedHeldLightHurl(
+      attackRolledState,
+      subject.actorId,
+      invocationForResolution,
+    );
     spellMarkedDamageRiders = hit
       ? activeMarkedDamageRiders(
-          attackRolledState.combatants.get(subject.actorId),
+          attackRolledStateAfterHurl.combatants.get(subject.actorId),
           target.combatantId,
         )
       : [];
     if (hit && input.suppressedReactionTrigger !== "attackHit") {
       const reactionWindow = maybeOpenReactionWindow(
-        attackRolledState,
+        attackRolledStateAfterHurl,
         {
           trigger: "attackHit",
           attackerId: subject.actorId,
@@ -930,7 +960,7 @@ export function resolveSpellAct(
           "Selected spell act does not use a damage roll.",
         );
       }
-      return needsHolesResult(attackRolledState, input.subject, [
+      return needsHolesResult(attackRolledStateAfterHurl, input.subject, [
         spellDamageHole(
           invocationForResolution,
           critical,
@@ -950,7 +980,7 @@ export function resolveSpellAct(
     }
     if (!hit) {
       return spendSpellCastResources({
-        state: attackRolledState,
+        state: attackRolledStateAfterHurl,
         actorId: subject.actorId,
         invocation: invocationForResolution,
         errorState: input.state,
@@ -1175,7 +1205,11 @@ export function resolveSpellAct(
         )
       : effected;
   const spentResources = spendSpellCastResources({
-    state: lit,
+    state: stateAfterResolvedHeldLightHurl(
+      lit,
+      subject.actorId,
+      invocationForResolution,
+    ),
     actorId: subject.actorId,
     invocation: invocationForResolution,
     errorState: input.state,
@@ -1212,6 +1246,16 @@ export function resolveSpellAct(
     state: nextState,
     snapshot: snapshotBattle(nextState),
   };
+}
+
+function stateAfterResolvedHeldLightHurl(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: SupportedSpellInvocation,
+): BattleState {
+  return invocation.procedure === "heldLightHurl"
+    ? endHeldLightSpellEffect(state, actorId, invocation)
+    : state;
 }
 
 function resolveSpellAttackDamageObjectTarget(input: {
@@ -1385,7 +1429,11 @@ function resolveSpellAttackDamageObjectTarget(input: {
   }
   if (!hit) {
     return spendSpellCastResources({
-      state: attackRolledState,
+      state: stateAfterResolvedHeldLightHurl(
+        attackRolledState,
+        input.actorId,
+        input.invocation,
+      ),
       actorId: input.actorId,
       invocation: input.invocation,
       errorState: input.input.state,
@@ -1423,7 +1471,7 @@ function resolveSpellAttackDamageObjectTarget(input: {
     input.invocation,
   );
   const spentResources = spendSpellCastResources({
-    state: lit,
+    state: stateAfterResolvedHeldLightHurl(lit, input.actorId, input.invocation),
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
@@ -1483,6 +1531,14 @@ export function resolveBonusActionSpellAct(
     );
   }
   if (invocation.procedure === "heldLight") {
+    if (invocation.actionCost !== "bonusAction") {
+      return invalidResult(
+        input.state,
+        "unsupportedSubject",
+        "Bonus Action spell subject requires a supported Bonus Action spell act.",
+      );
+    }
+  } else if (invocation.procedure === "dancingLightsReposition") {
     if (invocation.actionCost !== "bonusAction") {
       return invalidResult(
         input.state,
@@ -1581,6 +1637,14 @@ export function resolveBonusActionSpellAct(
   }
   if (invocation.procedure === "heldLight") {
     return resolveHeldLightSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "dancingLightsReposition") {
+    return resolveDancingLightsRepositionSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

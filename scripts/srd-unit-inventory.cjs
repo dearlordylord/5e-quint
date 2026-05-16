@@ -142,10 +142,6 @@ const authoredSpellUnitCatalogOnlyClosures = new Map([
     "Language comprehension, signed-language understanding, page-reading time, and secret-message exclusion are exploration/communication effects outside promoted runtime owners.",
   ],
   [
-    "dancing_lights",
-    "Multiple movable Dim Light sources, linked spacing, humanoid light forms, and range-based expiry are illumination/exploration state outside promoted runtime owners.",
-  ],
-  [
     "identify",
     "Magic item property discovery, Attunement and charge knowledge, ongoing-spell identification, and object/creature investigation are exploration/item-inspection effects outside promoted runtime owners.",
   ],

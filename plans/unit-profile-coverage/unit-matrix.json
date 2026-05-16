@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 362,
-      "numerator": 115,
-      "percent": "31.8%"
+      "numerator": 116,
+      "percent": "32%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 429,
-      "numerator": 142,
-      "percent": "33.1%"
+      "numerator": 143,
+      "percent": "33.3%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,47 +59,47 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 143
+      "value": 144
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 80,
-      "numerator": 73,
-      "percent": "91.3%"
+      "denominator": 85,
+      "numerator": 78,
+      "percent": "91.8%"
     },
     "profileClassificationCoverage": {
-      "denominator": 143,
-      "numerator": 143,
+      "denominator": 144,
+      "numerator": 144,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 61,
-      "numerator": 61,
+      "denominator": 62,
+      "numerator": 62,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 61,
-      "numerator": 60,
+      "denominator": 62,
+      "numerator": 61,
       "percent": "98.4%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 61,
-      "numerator": 61,
+      "denominator": 62,
+      "numerator": 62,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 61,
-      "numerator": 61,
+      "denominator": 62,
+      "numerator": 62,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 80,
+      "denominator": 85,
       "numerator": 10,
-      "percent": "12.5%"
+      "percent": "11.8%"
     },
     "supportedProfileCoverage": {
-      "denominator": 116,
-      "numerator": 80,
-      "percent": "69%"
+      "denominator": 117,
+      "numerator": 85,
+      "percent": "72.6%"
     }
   },
   "metricSemantics": [
@@ -1011,7 +1011,8 @@
         "SRDINV67",
         "SRDINV69B",
         "SRDINV84A",
-        "SRDINV84B"
+        "SRDINV84B",
+        "SRDINV89A"
       ],
       "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
       "verificationOwners": [
@@ -1090,16 +1091,23 @@
     {
       "id": "spell.invocation-sleep-target-admission",
       "profileKind": "table-caller",
-      "qntOwners": [],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
-      "sourceBoundary": "Caller-supplied Sleep Sphere membership plus retained Stat Block Exhaustion Immunity facts",
+      "sourceBoundary": "Caller-supplied Sleep Sphere membership, caller-supplied non-sleeper facts, and retained Stat Block Exhaustion Immunity facts",
       "taskRefs": [
-        "SRDINV38A"
+        "SRDINV38A",
+        "SRDINV87D"
       ],
       "title": "Spell invocation admits Sleep's point-origin target set and automatic-save boundary",
       "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/index.test.ts"
@@ -1213,6 +1221,56 @@
         "SRDINV70B"
       ],
       "title": "Spell invocation creates a source-owned object light emitter",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-held-light-emitter",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "sourceBoundary": "Runtime owns the spell source, combatant attachment, Bright/Dim radii, timed duration, recast replacement, hurl cleanup, and duration cleanup. Map illumination rendering, opaque-cover suppression, illuminated-area projection, Darkvision-adjusted sight, and colored-light presentation remain outside this runtime boundary.",
+      "taskRefs": [
+        "SRDINV87A"
+      ],
+      "title": "Spell invocation creates a source-owned held light emitter",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-dancing-lights-movable-dim-light",
+      "profileKind": "table-caller",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "sourceBoundary": "Caller-supplied Dancing Lights placement facts; runtime owns the spell source, source-owned dancing-light identities, separate-light and combined Medium-form emitter projection, 10-foot Dim Light radius, one-minute Concentration duration, recast replacement, Concentration cleanup, Bonus Action repositioning up to 60 feet, 20-foot inter-light spacing validation, and 120-foot range expiry. Map illumination rendering, color presentation, line of sight, pathfinding, automatic geometry derivation, Darkvision adjustment, and generic illusion adjudication remain outside this runtime boundary.",
+      "taskRefs": [
+        "SRDINV88A"
+      ],
+      "title": "Spell invocation creates movable linked Dancing Lights Dim Light emitters",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -1884,7 +1942,8 @@
       "taskRefs": [
         "SRDINV30E",
         "SRDINV58A",
-        "SRDINV58C"
+        "SRDINV58C",
+        "SRDINV87B"
       ],
       "title": "Spell invocation applies save-gated attack-roll Advantage against affected creatures or objects",
       "verificationOwners": [
@@ -2409,11 +2468,27 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime Sleep tests for point-origin 5-foot Sphere target admission, Wisdom Saving Throw holes, Exhaustion-immunity automatic success, resource spend, unsupported non-sleeper facts, and ready-mode rejection.",
+      "note": "Focused battle-runtime Sleep tests for point-origin 5-foot Sphere target admission, Wisdom Saving Throw holes, Exhaustion-immunity automatic success, resource spend, and ready-mode rejection.",
       "profileIds": [
         "spell.invocation-sleep-target-admission"
       ],
       "taskId": "SRDINV38A"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Sleep automatic save success from caller-supplied non-sleeper facts and retained Exhaustion Immunity facts.",
+      "profileIds": [
+        "spell.invocation-sleep-target-admission"
+      ],
+      "taskId": "SRDINV87D"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover caller-supplied Sleep non-sleeper facts as automatic successes, including rejection of rolled save outcomes and validation of fact target identity.",
+      "profileIds": [
+        "spell.invocation-sleep-target-admission"
+      ],
+      "taskId": "SRDINV87D"
     },
     {
       "claimKind": "qnt-proof",
@@ -3101,6 +3176,22 @@
     },
     {
       "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Chill Touch creature-or-object spell attack support, Necrotic object damage, and object hit/miss replay holes.",
+      "profileIds": [
+        "spell.invocation-damage-save-or-attack"
+      ],
+      "taskId": "SRDINV89A"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover Chill Touch object target admission, caller-supplied object fact rejection, object hit adjudication, cantrip-scaled Necrotic damage, caller-supplied object damage disposition, and preservation of existing combatant hit-point-regain prevention behavior.",
+      "profileIds": [
+        "spell.invocation-damage-save-or-attack"
+      ],
+      "taskId": "SRDINV89A"
+    },
+    {
+      "claimKind": "qnt-proof",
       "note": "Promoted battle-runtime Quint facts for Jump target count scaling with willing target facts, one-minute active effect, once-per-target-turn use marker reset, exact 10-foot Movement spend, maximum 30-foot jump distance, caller-supplied landing legality, and failed Difficult Terrain landing Acrobatics applying Prone.",
       "profileIds": [
         "spell.invocation-jump-movement-replacement"
@@ -3402,6 +3493,54 @@
         "spell.find-familiar-lifecycle"
       ],
       "taskId": "SRDINV84I5"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Produce Flame's source-owned held Bright Light 20-foot radius plus Dim Light for an additional 20 feet emitter projection, recast replacement, duration cleanup, and hurl cleanup.",
+      "profileIds": [
+        "spell.invocation-held-light-emitter"
+      ],
+      "taskId": "SRDINV87A"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission tests cover Produce Flame held-light emitter projection, recast replacement, hurl cleanup for combatant and object target paths, duration cleanup, and no stale emitter facts after the held flame ends.",
+      "profileIds": [
+        "spell.invocation-held-light-emitter"
+      ],
+      "taskId": "SRDINV87A"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Dancing Lights movable Dim Light emitters, including separate and combined forms, 10-foot Dim Light, source-owned light identities, Magic Action cast state, Bonus Action repositioning, 60-foot reposition cap, 20-foot spacing, 120-foot range survival and vanishing, recast replacement, Concentration cleanup, and duration cleanup.",
+      "profileIds": [
+        "spell.invocation-dancing-lights-movable-dim-light"
+      ],
+      "taskId": "SRDINV88A"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission tests cover Dancing Lights Magic Action cantrip admission, source-owned movable light identities, combined Medium-form choice, caller-supplied placement fills, Bonus Action repositioning, spacing and range validation and expiry, recast replacement, Concentration cleanup, and duration cleanup.",
+      "profileIds": [
+        "spell.invocation-dancing-lights-movable-dim-light"
+      ],
+      "taskId": "SRDINV88A"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Faerie Fire affected-creature and affected-object Dim Light emitters derived from concentration-owned outline effects.",
+      "profileIds": [
+        "spell.invocation-attack-roll-advantage-save"
+      ],
+      "taskId": "SRDINV87B"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission tests cover Faerie Fire affected-creature and affected-object Dim Light emitter projection plus concentration cleanup through the existing outline lifecycle.",
+      "profileIds": [
+        "spell.invocation-attack-roll-advantage-save"
+      ],
+      "taskId": "SRDINV87B"
     }
   ],
   "units": [
@@ -6036,7 +6175,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6304,7 +6444,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6364,12 +6505,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "followUpTaskId": "SRDINV34",
-            "mechanic": "non-combatant target eligibility for the SRD generic target wording"
-          }
-        ],
         "profileIds": [
           "spell.invocation-damage-save-or-attack",
           "spell.readied-action-time-spell"
@@ -6378,19 +6513,22 @@
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
         ],
         "supportedMechanics": [
-          "combatant-target melee spell attack damage",
+          "creature-or-object target boundary with combatant target choice or typed caller-supplied object identity",
+          "caller-supplied object range, Armor Class, Hit Points or table-resolved damage disposition facts",
+          "melee spell attack hit/miss adjudication against combatant and object targets",
+          "Necrotic damage",
           "cantrip damage scaling",
-          "hit-applied target can't regain Hit Points until the end of the caster's next turn",
+          "hit-applied creature target can't regain Hit Points until the end of the caster's next turn",
           "readied Action-time spell release"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
-          "taskId": "SRDINV64"
+          "taskId": "SRDINV89A"
         }
       ],
       "executableMechanics": true,
@@ -6420,7 +6558,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6828,6 +6967,61 @@
       },
       "claim": {
         "profileIds": [
+          "spell.invocation-dancing-lights-movable-dim-light"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV88A"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-dancing-lights-movable-dim-light",
+          "profileKind": "table-caller",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "Caller-supplied Dancing Lights placement facts; runtime owns the spell source, source-owned dancing-light identities, separate-light and combined Medium-form emitter projection, 10-foot Dim Light radius, one-minute Concentration duration, recast replacement, Concentration cleanup, Bonus Action repositioning up to 60 feet, 20-foot inter-light spacing validation, and 120-foot range expiry. Map illumination rendering, color presentation, line of sight, pathfinding, automatic geometry derivation, Darkvision adjustment, and generic illusion adjudication remain outside this runtime boundary.",
+          "taskRefs": [
+            "SRDINV88A"
+          ],
+          "title": "Spell invocation creates movable linked Dancing Lights Dim Light emitters",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/dancing_lights.json",
+      "unitId": "dancing_lights"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
           "spell.invocation-damage-save-or-attack",
           "spell.invocation-forced-reaction-movement"
         ],
@@ -6875,7 +7069,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -7210,8 +7405,8 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "SRDINV70A",
-            "mechanic": "Dim Light emitted by affected creatures and objects"
+            "followUpTaskId": "SRDINV87E",
+            "mechanic": "map illumination, color rendering, illuminated-area projection, line of sight, and Darkvision interaction remain outside the object-emitter runtime boundary"
           }
         ],
         "profileIds": [
@@ -7225,7 +7420,8 @@
           "Dexterity save-gated affected creatures",
           "Concentration-owned outline effect that grants attack-roll Advantage against failed-save affected creatures when the attacker can see them and denies benefits from the Invisible condition",
           "caller-supplied object ids for objects in the Cube create concentration-owned object outline projections",
-          "object-target spell attacks consume caller-supplied object sight facts to grant attack-roll Advantage against outlined objects"
+          "object-target spell attacks consume caller-supplied object sight facts to grant attack-roll Advantage against outlined objects",
+          "affected creatures and objects shed concentration-owned Dim Light emitter facts in a 10-foot radius attached to their outline effects"
         ],
         "tag": "profile-subset-supported"
       },
@@ -7252,7 +7448,8 @@
           "taskRefs": [
             "SRDINV30E",
             "SRDINV58A",
-            "SRDINV58C"
+            "SRDINV58C",
+            "SRDINV87B"
           ],
           "title": "Spell invocation applies save-gated attack-roll Advantage against affected creatures or objects",
           "verificationOwners": [
@@ -7456,7 +7653,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -7809,7 +8007,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -8119,7 +8318,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -8196,7 +8396,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -8502,7 +8703,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -8562,16 +8764,7 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "followUpTaskId": "SRDINV66",
-            "mechanic": "classified gap: Advantage on new Saving Throws against active already-applied possession, Charmed, or Frightened effects from scoped creatures requires a future owning-effect repeat-save or possession-save boundary; no dedicated SRDINV60C implementation task"
-          },
-          {
-            "followUpTaskId": "SRDINV66",
-            "mechanic": "RAW willing touched-creature target boundary beyond the runtime's current known-willing target fact"
-          }
-        ],
+        "deferredMechanics": [],
         "profileIds": [
           "spell.creature-type-protection-and-charm"
         ],
@@ -8580,12 +8773,14 @@
         ],
         "supportedMechanics": [
           "1-action Spell Slot expenditure",
+          "known-willing touched-creature target admission through caller-supplied spellTargetKnownWilling facts, including non-self willing targets",
           "concentration-owned protection active effect",
           "attacker creature-type filter for attack-roll Disadvantage",
           "scoped-creature possession-attempt prevention",
-          "scoped-creature Charmed and Frightened condition application prevention"
+          "scoped-creature Charmed and Frightened condition application prevention",
+          "Advantage on new Saving Throws against active already-applied possession, Charmed, or Frightened effects from scoped creatures through the relevant-effect save command"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -8635,35 +8830,32 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "followUpTaskId": "SRDINV70A",
-            "mechanic": "shared Bright Light and Dim Light runtime interaction boundary for the held flame"
-          }
-        ],
         "profileIds": [
-          "spell.invocation-damage-save-or-attack"
+          "spell.invocation-damage-save-or-attack",
+          "spell.invocation-held-light-emitter"
         ],
         "rawRequirementIds": [
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
         ],
         "supportedMechanics": [
           "Bonus Action held-flame state",
+          "source-owned held Bright Light 20-foot radius plus Dim Light for an additional 20 feet",
           "held-state-gated later Magic action hurl",
+          "hurl, recast, and duration cleanup of the held light emitter",
           "creature-or-object target boundary with combatant target choice or typed caller-supplied object identity",
           "caller-supplied object range, Armor Class, Hit Points or table-resolved damage disposition facts",
           "ranged spell attack hit/miss adjudication against combatant and object targets",
           "Fire damage",
           "cantrip damage scaling"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
-          "taskId": "SRDINV32B"
+          "taskId": "SRDINV87A"
         }
       ],
       "executableMechanics": true,
@@ -8693,7 +8885,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -8712,6 +8905,31 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "spell.invocation-held-light-emitter",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "Runtime owns the spell source, combatant attachment, Bright/Dim radii, timed duration, recast replacement, hurl cleanup, and duration cleanup. Map illumination rendering, opaque-cover suppression, illuminated-area projection, Darkvision-adjusted sight, and colored-light presentation remain outside this runtime boundary.",
+          "taskRefs": [
+            "SRDINV87A"
+          ],
+          "title": "Spell invocation creates a source-owned held light emitter",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
             }
           ]
         }
@@ -8770,7 +8988,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -8874,7 +9093,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -9032,7 +9252,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -9256,7 +9477,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -9367,7 +9589,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -9498,7 +9721,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -9575,7 +9799,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -9733,7 +9958,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -9837,7 +10063,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -10251,12 +10478,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "followUpTaskId": "SRDINV41",
-            "mechanic": "creatures that do not sleep automatically succeed only when an executable non-sleeper fact is supported"
-          }
-        ],
         "profileIds": [
           "spell.invocation-sleep-target-admission",
           "spell.invocation-sleep-repeat-save-lifecycle"
@@ -10264,18 +10485,7 @@
         "rawRequirementIds": [
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
         ],
-        "supportedMechanics": [
-          "point-origin 5-foot-radius Sphere target admission",
-          "Wisdom Saving Throw holes for selected targets that are not automatic successes",
-          "Exhaustion-immunity automatic success derived from retained Stat Block condition-immunity facts",
-          "Magic action and Spell Slot spend",
-          "failed initial save applies Sleep-owned Incapacitated until the end of the target's next turn with a repeat Wisdom save",
-          "repeat success ends that target's Sleep effect",
-          "failed repeat save escalates to spell-owned Unconscious for the remaining Concentration duration",
-          "damage from any source ends that target's Sleep effect with Sleep-owned condition cleanup",
-          "caller-supplied adjacent action shakes a target out of Sleep's effect and spends the actor's action"
-        ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -10291,16 +10501,23 @@
         {
           "id": "spell.invocation-sleep-target-admission",
           "profileKind": "table-caller",
-          "qntOwners": [],
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
-          "sourceBoundary": "Caller-supplied Sleep Sphere membership plus retained Stat Block Exhaustion Immunity facts",
+          "sourceBoundary": "Caller-supplied Sleep Sphere membership, caller-supplied non-sleeper facts, and retained Stat Block Exhaustion Immunity facts",
           "taskRefs": [
-            "SRDINV38A"
+            "SRDINV38A",
+            "SRDINV87D"
           ],
           "title": "Spell invocation admits Sleep's point-origin target set and automatic-save boundary",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/index.test.ts"
@@ -10412,7 +10629,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -10722,7 +10940,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -12109,24 +12328,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/create_undead.json",
       "unitId": "create_undead"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/dancing_lights.json",
-      "unitId": "dancing_lights"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

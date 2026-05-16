@@ -140,6 +140,27 @@ export function supportedSpellInvocationRef(
       procedure: "objectLight",
     };
   }
+  if (invocation.procedure === "dancingLightsSeparateCast") {
+    return {
+      tag: "cantrip",
+      spellId: spellId(invocation.spell.id),
+      procedure: "dancingLightsSeparateCast",
+    };
+  }
+  if (invocation.procedure === "dancingLightsCombinedCast") {
+    return {
+      tag: "cantrip",
+      spellId: spellId(invocation.spell.id),
+      procedure: "dancingLightsCombinedCast",
+    };
+  }
+  if (invocation.procedure === "dancingLightsReposition") {
+    return {
+      tag: "cantrip",
+      spellId: spellId(invocation.spell.id),
+      procedure: "dancingLightsReposition",
+    };
+  }
   if (invocation.procedure === "makeStable") {
     return {
       tag: "cantrip",

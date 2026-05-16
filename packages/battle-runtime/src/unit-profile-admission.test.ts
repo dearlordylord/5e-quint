@@ -2,7 +2,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT8 fighter_action_surge fighter_improved_critical barbarian_rage rogue_cunning_action rogue_uncanny_dodge rogue_sneak_attack
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT14 acid_splash mage_armor magic_missile ray_of_frost
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV28B inflict_wounds poison_spray sacred_flame
-// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV64 chill_touch
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV89A chill_touch
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV28D guiding_bolt ray_of_sickness shocking_grasp vicious_mockery
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29A burning_hands
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29B color_spray
@@ -17,14 +17,15 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30D heroism
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV58C faerie_fire
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30F resistance
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-dancing-lights-movable-dim-light spell.invocation-held-light-emitter spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31A divine_favor
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31C divine_smite
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31D ensnaring_strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31E searing_smite
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31F true_strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31B hunters_mark
-// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV32B produce_flame
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV87A produce_flame
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV88A dancing_lights
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84H shillelagh
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84A fire_bolt
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84B sorcerous_burst
@@ -169,6 +170,7 @@ import {
 } from "./index.ts";
 import type {
   BattleActiveEffect,
+  BattleCreatureState,
   SpellMarkedDamageRider,
   SupportedDamageSpellInvocation,
 } from "./battle-reducer.ts";
@@ -289,6 +291,7 @@ const sacredFlameUnitId = "sacred_flame";
 const shillelaghUnitId = "shillelagh";
 const sorcerousBurstUnitId = "sorcerous_burst";
 const cureWoundsUnitId = "cure_wounds";
+const dancingLightsUnitId = "dancing_lights";
 const healingWordUnitId = "healing_word";
 const massCureWoundsUnitId = "mass_cure_wounds";
 const massHealingWordUnitId = "mass_healing_word";
@@ -2608,7 +2611,7 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
     ]);
   });
 
-  test("chill_touch is admitted as melee spell attack with Hit Point regain prevention rider", () => {
+  test("chill_touch is admitted as creature-or-object melee spell attack with Hit Point regain prevention rider", () => {
     const spell = spellRecord(chillTouchUnitId);
     const act = spellAct({
       state: spellBattle({ cantrips: [spell] }),
@@ -2640,7 +2643,7 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
       expect.objectContaining({
         procedure: "spellAttackDamage",
         spell,
-        targeting: { kind: "singleCombatant" },
+        targeting: { kind: "singleCreatureOrObject" },
         damage: {
           kind: "fixedSpellAttackDamage",
           expr: { dice: 1, dieSize: 10 },
@@ -2654,12 +2657,17 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
             expiresAt: "endOfCasterNextTurn",
           },
         ],
+        objectHitEffect: { kind: "none" },
       }),
     );
     expect(act.initialHoles).toEqual([
       expect.objectContaining({
         kind: "targetChoice",
         choices: [spellCasterId, spellTargetId],
+      }),
+      expect.objectContaining({
+        kind: "objectTargetChoice",
+        requiresTableSpatialFact: true,
       }),
     ]);
   });
@@ -3726,9 +3734,7 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
     expect(hasCondition(target.conditions, "prone")).toBe(false);
     expect(hasCondition(target.conditions, "incapacitated")).toBe(false);
     expect(
-      target.activeEffects.some(
-        (effect) => effect.kind === "hideousLaughter",
-      ),
+      target.activeEffects.some((effect) => effect.kind === "hideousLaughter"),
     ).toBe(false);
   });
 
@@ -3836,7 +3842,10 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
         combatantId: spellCasterId,
         durationTicks: hideousLaughterDurationTicks,
       },
-    } satisfies Extract<BattleActiveEffect, { readonly kind: "hideousLaughter" }>;
+    } satisfies Extract<
+      BattleActiveEffect,
+      { readonly kind: "hideousLaughter" }
+    >;
     const secondEffect = {
       ...firstEffect,
       sourceCombatantId: spellTargetId,
@@ -3845,7 +3854,10 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
         combatantId: spellTargetId,
         durationTicks: hideousLaughterDurationTicks,
       },
-    } satisfies Extract<BattleActiveEffect, { readonly kind: "hideousLaughter" }>;
+    } satisfies Extract<
+      BattleActiveEffect,
+      { readonly kind: "hideousLaughter" }
+    >;
     const affectedTarget = battleCreatureStateWithKnockOutPreservedConditions(
       target,
       applyCondition(
@@ -4170,7 +4182,10 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
         combatantId: spellCasterId,
         durationTicks: hideousLaughterDurationTicks,
       },
-    } satisfies Extract<BattleActiveEffect, { readonly kind: "hideousLaughter" }>;
+    } satisfies Extract<
+      BattleActiveEffect,
+      { readonly kind: "hideousLaughter" }
+    >;
     const affectedTarget = battleCreatureStateWithKnockOutPreservedConditions(
       target,
       applyCondition(
@@ -4344,7 +4359,10 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
         combatantId: spellCasterId,
         durationTicks: hideousLaughterDurationTicks,
       },
-    } satisfies Extract<BattleActiveEffect, { readonly kind: "hideousLaughter" }>;
+    } satisfies Extract<
+      BattleActiveEffect,
+      { readonly kind: "hideousLaughter" }
+    >;
     const affectedTarget = battleCreatureStateWithKnockOutPreservedConditions(
       target,
       applyCondition(
@@ -4526,7 +4544,10 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
         combatantId: spellCasterId,
         durationTicks: hideousLaughterDurationTicks,
       },
-    } satisfies Extract<BattleActiveEffect, { readonly kind: "hideousLaughter" }>;
+    } satisfies Extract<
+      BattleActiveEffect,
+      { readonly kind: "hideousLaughter" }
+    >;
     const affectedTarget = battleCreatureStateWithKnockOutPreservedConditions(
       target,
       applyCondition(
@@ -6962,7 +6983,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
         kind: "awaitingTargetDrop",
         retargetTiming: "sameTurn",
       },
-      abilityCheckDisadvantage: null,
+      abilityCheckBehavior: { kind: "none" },
       damage: { expr: { dice: 1, dieSize: 6 }, damageType: "force" as const },
       expiresAt: { kind: "concentration" as const, combatantId: spellCasterId },
     } satisfies SpellMarkedDamageRider;
@@ -8004,6 +8025,16 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
         }),
       ],
     );
+    expect(resolved.snapshot.lightEmitters).toEqual([
+      {
+        kind: "spellLightEmitter",
+        sourceSpellId: faerieFireUnitId,
+        sourceCombatantId: spellCasterId,
+        attachment: { kind: "combatant", combatantId: spellTargetId },
+        emission: { kind: "dim", radiusFeet: movementFeet(10) },
+        expiresAt: { kind: "concentration", combatantId: spellCasterId },
+      },
+    ]);
 
     const afterCasterTurn = resolveBattleSubject({
       state: resolved.state,
@@ -8228,9 +8259,22 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
         expiresAt: { kind: "concentration", combatantId: spellCasterId },
       },
     ]);
-    expect(
-      breakBattleConcentration(resolved.state, spellCasterId).objectOutlines,
-    ).toEqual([]);
+    expect(resolved.snapshot.lightEmitters).toEqual([
+      {
+        kind: "spellLightEmitter",
+        sourceSpellId: faerieFireUnitId,
+        sourceCombatantId: spellCasterId,
+        attachment: { kind: "object", objectId },
+        emission: { kind: "dim", radiusFeet: movementFeet(10) },
+        expiresAt: { kind: "concentration", combatantId: spellCasterId },
+      },
+    ]);
+    const concentrationBroken = breakBattleConcentration(
+      resolved.state,
+      spellCasterId,
+    );
+    expect(concentrationBroken.objectOutlines).toEqual([]);
+    expect(snapshotBattle(concentrationBroken).lightEmitters).toEqual([]);
   });
 
   test("faerie_fire object area facts require the Faerie Fire spell identity", () => {
@@ -8345,6 +8389,699 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
 });
 
 describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
+  test("dancing_lights is admitted as Magic Action source-owned movable Dim Light", () => {
+    const spell = spellRecord(dancingLightsUnitId);
+    const state = spellBattle({ cantrips: [spell] });
+    const castActs = discoverBattleActs(state).filter(
+      (candidate): candidate is ActionSpellAct =>
+        candidate.subject.tag === "actionSpell" &&
+        candidate.subject.invocation.spellId === dancingLightsUnitId,
+    );
+
+    expect(castActs.map((act) => act.subject.invocation)).toEqual([
+      cantripSpellInvocationRef(
+        dancingLightsUnitId,
+        "dancingLightsSeparateCast",
+      ),
+      cantripSpellInvocationRef(
+        dancingLightsUnitId,
+        "dancingLightsCombinedCast",
+      ),
+    ]);
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject:
+        castActs[0]?.subject ??
+        spellAct({ state, spellId: dancingLightsUnitId }).subject,
+      fills: [
+        {
+          kind: "dancingLightsPlacement",
+          holeId: requireHole(
+            castActs[0]?.initialHoles ?? [],
+            "dancingLightsPlacement",
+          ).holeId,
+          value: {
+            mode: "cast",
+            form: "separateLights",
+            lights: [
+              {
+                positionId: battleTablePositionId("dancing-lights-a"),
+                distanceFromCasterFeet: movementFeet(30),
+                nearestSiblingDistanceFeet: movementFeet(10),
+              },
+              {
+                positionId: battleTablePositionId("dancing-lights-b"),
+                distanceFromCasterFeet: movementFeet(35),
+                nearestSiblingDistanceFeet: movementFeet(10),
+              },
+              {
+                positionId: battleTablePositionId("dancing-lights-c"),
+                distanceFromCasterFeet: movementFeet(40),
+                nearestSiblingDistanceFeet: movementFeet(10),
+              },
+            ],
+          },
+        } satisfies BattleFill,
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Dancing Lights to resolve.");
+    }
+    expect(
+      resolved.state.combatants.get(spellCasterId)?.activeEffects,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "dancingLights",
+        sourceSpellId: dancingLightsUnitId,
+        sourceCombatantId: spellCasterId,
+        form: "separateLights",
+      }),
+    );
+    expect(resolved.snapshot.lightEmitters).toHaveLength(3);
+    expect(resolved.snapshot.lightEmitters).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "spellLightEmitter",
+          sourceSpellId: dancingLightsUnitId,
+          sourceCombatantId: spellCasterId,
+          attachment: expect.objectContaining({
+            kind: "dancingLight",
+            form: "separateLights",
+          }),
+          emission: { kind: "dim", radiusFeet: movementFeet(10) },
+          expiresAt: expect.objectContaining({
+            kind: "concentration",
+            combatantId: spellCasterId,
+          }),
+        }),
+      ]),
+    );
+    expect(canSpendAction(resolved.state.currentTurnResources, "magic")).toBe(
+      false,
+    );
+    expect(resolved.state.combatants.get(spellCasterId)?.concentration).toEqual(
+      {
+        sourceSpellId: dancingLightsUnitId,
+        effectKind: "spellEffect",
+      },
+    );
+  });
+
+  test("dancing_lights opens the spell-cast reaction window before applying lights", () => {
+    const spell = spellRecord(dancingLightsUnitId);
+    const rayOfFrost = spellRecord(rayOfFrostUnitId);
+    const initialState = spellBattle({
+      cantrips: [spell],
+      targetSpellcasting: {
+        sourceClassName: "wizard",
+        spellcastingAbilityModifier: abilityModifier(3),
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [rayOfFrost],
+        preparedSpells: [],
+        featurePreparedSpells: [],
+        invocationSpellAccesses: [],
+        spellSlots: [],
+      },
+    });
+    const targetTurn = endTurn({
+      state: initialState,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected target turn to begin.");
+    }
+    const readiedRay = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: {
+        tag: "actionSpell",
+        actorId: spellTargetId,
+        invocation: cantripSpellInvocationRef(
+          rayOfFrostUnitId,
+          "spellAttackDamage",
+        ),
+        mode: { tag: "ready", trigger: "spellCast" },
+      },
+      fills: [],
+    });
+    if (readiedRay.tag !== "resolved") {
+      throw new Error("Expected target to ready Ray of Frost.");
+    }
+    const casterTurn = endTurn({
+      state: readiedRay.state,
+      actorId: spellTargetId,
+    });
+    if (casterTurn.tag !== "resolved") {
+      throw new Error("Expected caster turn to resume.");
+    }
+    const castAct = spellAct({
+      state: casterTurn.state,
+      spellId: dancingLightsUnitId,
+    });
+    const placement = {
+      kind: "dancingLightsPlacement",
+      holeId: requireHole(castAct.initialHoles, "dancingLightsPlacement")
+        .holeId,
+      value: {
+        mode: "cast",
+        form: "separateLights",
+        lights: [
+          {
+            positionId: battleTablePositionId("dancing-lights-reaction-a"),
+            distanceFromCasterFeet: movementFeet(30),
+            nearestSiblingDistanceFeet: movementFeet(10),
+          },
+          {
+            positionId: battleTablePositionId("dancing-lights-reaction-b"),
+            distanceFromCasterFeet: movementFeet(35),
+            nearestSiblingDistanceFeet: movementFeet(10),
+          },
+        ],
+      },
+    } satisfies BattleFill;
+    const awaitingReaction = resolveBattleSubject({
+      state: casterTurn.state,
+      subject: castAct.subject,
+      fills: [placement],
+    });
+    expect(awaitingReaction).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "reactionDecision", trigger: "spellCast" }],
+      snapshot: {
+        pendingReaction: {
+          trigger: "spellCast",
+          choices: [
+            expect.objectContaining({
+              kind: "releaseReadiedSpell",
+              readiedSpellCasterId: spellTargetId,
+            }),
+          ],
+        },
+        lightEmitters: [],
+      },
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected Dancing Lights spell-cast reaction window.");
+    }
+    const afterDecline = resolveBattleReaction({
+      state: awaitingReaction.state,
+      fill: reactionDecisionFill(
+        awaitingReaction.snapshot.pendingReaction!.decisionHole,
+        { kind: "decline", reactorId: spellTargetId },
+      ),
+    });
+    if (afterDecline.tag !== "resolved") {
+      throw new Error("Expected declined reaction to replay Dancing Lights.");
+    }
+    expect(afterDecline.snapshot.pendingReaction).toBeNull();
+    expect(afterDecline.snapshot.lightEmitters).toHaveLength(2);
+    expect(
+      canSpendAction(afterDecline.state.currentTurnResources, "magic"),
+    ).toBe(false);
+  });
+
+  test("dancing_lights supports combined Medium-form choice, Bonus Action movement, Concentration cleanup, and duration cleanup", () => {
+    const spell = spellRecord(dancingLightsUnitId);
+    const state = spellBattle({ cantrips: [spell] });
+    const combinedAct = discoverBattleActs(state).find(
+      (candidate): candidate is ActionSpellAct =>
+        candidate.subject.tag === "actionSpell" &&
+        candidate.subject.invocation.spellId === dancingLightsUnitId &&
+        candidate.subject.invocation.procedure === "dancingLightsCombinedCast",
+    );
+    expect(combinedAct).toBeDefined();
+    if (combinedAct === undefined) {
+      throw new Error("Expected Dancing Lights combined-form act.");
+    }
+    const resolved = resolveBattleSubject({
+      state,
+      subject: combinedAct.subject,
+      fills: [
+        {
+          kind: "dancingLightsPlacement",
+          holeId: requireHole(
+            combinedAct.initialHoles,
+            "dancingLightsPlacement",
+          ).holeId,
+          value: {
+            mode: "cast",
+            form: "combinedMediumForm",
+            light: {
+              positionId: battleTablePositionId("dancing-lights-combined"),
+              distanceFromCasterFeet: movementFeet(60),
+            },
+          },
+        } satisfies BattleFill,
+      ],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Dancing Lights combined form to resolve.");
+    }
+    expect(resolved.snapshot.lightEmitters).toEqual([
+      expect.objectContaining({
+        attachment: expect.objectContaining({
+          kind: "dancingLight",
+          form: "combinedMediumForm",
+        }),
+        emission: { kind: "dim", radiusFeet: movementFeet(10) },
+      }),
+    ]);
+
+    const beforeMovePosition =
+      resolved.snapshot.lightEmitters[0]?.kind === "spellLightEmitter" &&
+      resolved.snapshot.lightEmitters[0].attachment.kind === "dancingLight"
+        ? resolved.snapshot.lightEmitters[0].attachment.positionId
+        : null;
+    const recastReadyState: BattleState = {
+      ...resolved.state,
+      currentTurnResources: state.currentTurnResources,
+    };
+    const recast = resolveBattleSubject({
+      state: recastReadyState,
+      subject: combinedAct.subject,
+      fills: [
+        {
+          kind: "dancingLightsPlacement",
+          holeId: requireHole(
+            combinedAct.initialHoles,
+            "dancingLightsPlacement",
+          ).holeId,
+          value: {
+            mode: "cast",
+            form: "combinedMediumForm",
+            light: {
+              positionId: battleTablePositionId("dancing-lights-recast"),
+              distanceFromCasterFeet: movementFeet(45),
+            },
+          },
+        } satisfies BattleFill,
+      ],
+    });
+    if (recast.tag !== "resolved") {
+      throw new Error("Expected Dancing Lights recast to resolve.");
+    }
+    expect(recast.snapshot.lightEmitters).toHaveLength(1);
+    expect(recast.snapshot.lightEmitters[0]).toEqual(
+      expect.objectContaining({
+        attachment: expect.objectContaining({
+          positionId: battleTablePositionId("dancing-lights-recast"),
+        }),
+      }),
+    );
+    expect(recast.snapshot.lightEmitters[0]).not.toEqual(
+      expect.objectContaining({
+        attachment: expect.objectContaining({ positionId: beforeMovePosition }),
+      }),
+    );
+
+    const moveAct = bonusSpellAct({
+      state: resolved.state,
+      spellId: dancingLightsUnitId,
+    });
+    expect(moveAct.subject.invocation).toEqual(
+      cantripSpellInvocationRef(dancingLightsUnitId, "dancingLightsReposition"),
+    );
+    const moved = resolveBattleSubject({
+      state: resolved.state,
+      subject: moveAct.subject,
+      fills: [
+        {
+          kind: "dancingLightsPlacement",
+          holeId: requireHole(moveAct.initialHoles, "dancingLightsPlacement")
+            .holeId,
+          value: {
+            mode: "reposition",
+            form: "combinedMediumForm",
+            light: {
+              lightId:
+                resolved.snapshot.lightEmitters[0]?.kind ===
+                  "spellLightEmitter" &&
+                resolved.snapshot.lightEmitters[0].attachment.kind ===
+                  "dancingLight"
+                  ? resolved.snapshot.lightEmitters[0].attachment.lightId
+                  : (() => {
+                      throw new Error("Expected Dancing Lights emitter.");
+                    })(),
+              positionId: battleTablePositionId(
+                "dancing-lights-combined-moved",
+              ),
+              distanceFromCasterFeet: movementFeet(70),
+              moveDistanceFeet: movementFeet(50),
+            },
+          },
+        } satisfies BattleFill,
+      ],
+    });
+    if (moved.tag !== "resolved") {
+      throw new Error("Expected Dancing Lights reposition to resolve.");
+    }
+    const afterMovePosition =
+      moved.snapshot.lightEmitters[0]?.kind === "spellLightEmitter" &&
+      moved.snapshot.lightEmitters[0].attachment.kind === "dancingLight"
+        ? moved.snapshot.lightEmitters[0].attachment.positionId
+        : null;
+    expect(afterMovePosition).not.toBe(beforeMovePosition);
+    expect(moved.state.currentTurnResources.currentHasBonusAction).toBe(false);
+
+    const concentrationBroken = breakBattleConcentration(
+      moved.state,
+      spellCasterId,
+    );
+    expect(snapshotBattle(concentrationBroken).lightEmitters).toEqual([]);
+
+    const caster = resolved.state.combatants.get(spellCasterId);
+    if (caster === undefined) {
+      throw new Error("Expected Dancing Lights caster.");
+    }
+    const expiringState: BattleState = {
+      ...resolved.state,
+      combatants: new Map(resolved.state.combatants).set(spellCasterId, {
+        ...caster,
+        activeEffects: caster.activeEffects.map((effect) =>
+          effect.kind === "dancingLights"
+            ? {
+                ...effect,
+                expiresAt: {
+                  ...effect.expiresAt,
+                  durationTicks: elapsedTimeTicks(1),
+                },
+              }
+            : effect,
+        ),
+      }),
+    };
+    const afterCasterTurn = resolveBattleSubject({
+      state: expiringState,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellCasterId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+    if (afterCasterTurn.tag !== "resolved") {
+      throw new Error("Expected Dancing Lights caster end turn.");
+    }
+    const expired = resolveBattleSubject({
+      state: afterCasterTurn.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellTargetId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+    if (expired.tag !== "resolved") {
+      throw new Error("Expected Dancing Lights duration end turn.");
+    }
+    expect(snapshotBattle(expired.state).lightEmitters).toEqual([]);
+  });
+
+  test("dancing_lights rejects unrelated fills and duplicate reposition identities", () => {
+    const spell = spellRecord(dancingLightsUnitId);
+    const state = spellBattle({ cantrips: [spell] });
+    const separateAct = spellAct({ state, spellId: dancingLightsUnitId });
+    const placementHole = requireHole(
+      separateAct.initialHoles,
+      "dancingLightsPlacement",
+    );
+    const castPlacement = {
+      kind: "dancingLightsPlacement",
+      holeId: placementHole.holeId,
+      value: {
+        mode: "cast",
+        form: "separateLights",
+        lights: [
+          {
+            positionId: battleTablePositionId("dancing-lights-identity-a"),
+            distanceFromCasterFeet: movementFeet(30),
+            nearestSiblingDistanceFeet: movementFeet(10),
+          },
+          {
+            positionId: battleTablePositionId("dancing-lights-identity-b"),
+            distanceFromCasterFeet: movementFeet(35),
+            nearestSiblingDistanceFeet: movementFeet(10),
+          },
+        ],
+      },
+    } satisfies BattleFill;
+    const unrelatedFill = {
+      kind: "concentrationSavingThrow",
+      holeId: holeId("unrelated-dancing-lights-concentration"),
+      value: { succeeded: true },
+    } satisfies BattleFill;
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: separateAct.subject,
+        fills: [castPlacement, unrelatedFill],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+
+    const cast = resolveBattleSubject({
+      state,
+      subject: separateAct.subject,
+      fills: [castPlacement],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected two-light Dancing Lights cast.");
+    }
+    const lightIds = cast.snapshot.lightEmitters.flatMap((emitter) =>
+      emitter.kind === "spellLightEmitter" &&
+      emitter.attachment.kind === "dancingLight"
+        ? [emitter.attachment.lightId]
+        : [],
+    );
+    expect(lightIds).toHaveLength(2);
+
+    const moveAct = bonusSpellAct({
+      state: cast.state,
+      spellId: dancingLightsUnitId,
+    });
+    const moveHole = requireHole(
+      moveAct.initialHoles,
+      "dancingLightsPlacement",
+    );
+    expect(
+      resolveBattleSubject({
+        state: breakBattleConcentration(cast.state, spellCasterId),
+        subject: moveAct.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+    });
+    const validMovePlacement = {
+      kind: "dancingLightsPlacement",
+      holeId: moveHole.holeId,
+      value: {
+        mode: "reposition",
+        form: "separateLights",
+        lights: [
+          {
+            lightId: lightIds[0]!,
+            positionId: battleTablePositionId("dancing-lights-identity-a-move"),
+            distanceFromCasterFeet: movementFeet(40),
+            moveDistanceFeet: movementFeet(10),
+            nearestSiblingDistanceFeet: movementFeet(10),
+          },
+          {
+            lightId: lightIds[1]!,
+            positionId: battleTablePositionId("dancing-lights-identity-b-move"),
+            distanceFromCasterFeet: movementFeet(45),
+            moveDistanceFeet: movementFeet(10),
+            nearestSiblingDistanceFeet: movementFeet(10),
+          },
+        ],
+      },
+    } satisfies BattleFill;
+
+    expect(
+      resolveBattleSubject({
+        state: cast.state,
+        subject: moveAct.subject,
+        fills: [validMovePlacement, unrelatedFill],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+
+    const duplicateMovePlacement = {
+      kind: "dancingLightsPlacement",
+      holeId: moveHole.holeId,
+      value: {
+        mode: "reposition",
+        form: "separateLights",
+        lights: [
+          {
+            lightId: lightIds[0]!,
+            positionId: battleTablePositionId("dancing-lights-duplicate-a"),
+            distanceFromCasterFeet: movementFeet(40),
+            moveDistanceFeet: movementFeet(10),
+            nearestSiblingDistanceFeet: movementFeet(10),
+          },
+          {
+            lightId: lightIds[0]!,
+            positionId: battleTablePositionId("dancing-lights-duplicate-b"),
+            distanceFromCasterFeet: movementFeet(45),
+            moveDistanceFeet: movementFeet(10),
+            nearestSiblingDistanceFeet: movementFeet(10),
+          },
+        ],
+      },
+    } satisfies BattleFill;
+    expect(
+      resolveBattleSubject({
+        state: cast.state,
+        subject: moveAct.subject,
+        fills: [duplicateMovePlacement],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+  });
+
+  test("dancing_lights enforces movement distance, spacing, range expiry, and one-to-four separate lights", () => {
+    const spell = spellRecord(dancingLightsUnitId);
+    const state = spellBattle({ cantrips: [spell] });
+    const separateAct = spellAct({ state, spellId: dancingLightsUnitId });
+    const placementHole = requireHole(
+      separateAct.initialHoles,
+      "dancingLightsPlacement",
+    );
+    const cast = resolveBattleSubject({
+      state,
+      subject: separateAct.subject,
+      fills: [
+        {
+          kind: "dancingLightsPlacement",
+          holeId: placementHole.holeId,
+          value: {
+            mode: "cast",
+            form: "separateLights",
+            lights: [
+              {
+                positionId: battleTablePositionId("dancing-lights-one"),
+                distanceFromCasterFeet: movementFeet(30),
+                nearestSiblingDistanceFeet: movementFeet(15),
+              },
+            ],
+          },
+        } satisfies BattleFill,
+      ],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected one-light Dancing Lights cast.");
+    }
+    expect(cast.snapshot.lightEmitters).toHaveLength(1);
+
+    const moveAct = bonusSpellAct({
+      state: cast.state,
+      spellId: dancingLightsUnitId,
+    });
+    const moveHole = requireHole(
+      moveAct.initialHoles,
+      "dancingLightsPlacement",
+    );
+    const lightId =
+      cast.snapshot.lightEmitters[0]?.kind === "spellLightEmitter" &&
+      cast.snapshot.lightEmitters[0].attachment.kind === "dancingLight"
+        ? cast.snapshot.lightEmitters[0].attachment.lightId
+        : (() => {
+            throw new Error("Expected Dancing Lights emitter.");
+          })();
+    const tooFar = resolveBattleSubject({
+      state: cast.state,
+      subject: moveAct.subject,
+      fills: [
+        {
+          kind: "dancingLightsPlacement",
+          holeId: moveHole.holeId,
+          value: {
+            mode: "reposition",
+            form: "separateLights",
+            lights: [
+              {
+                lightId,
+                positionId: battleTablePositionId("dancing-lights-too-far"),
+                distanceFromCasterFeet: movementFeet(40),
+                moveDistanceFeet: movementFeet(65),
+              },
+            ],
+          },
+        } satisfies BattleFill,
+      ],
+    });
+    expect(tooFar).toMatchObject({ tag: "invalid" });
+
+    const expiredByRange = resolveBattleSubject({
+      state: cast.state,
+      subject: moveAct.subject,
+      fills: [
+        {
+          kind: "dancingLightsPlacement",
+          holeId: moveHole.holeId,
+          value: {
+            mode: "reposition",
+            form: "separateLights",
+            lights: [
+              {
+                lightId,
+                positionId: battleTablePositionId(
+                  "dancing-lights-out-of-range",
+                ),
+                distanceFromCasterFeet: movementFeet(125),
+                moveDistanceFeet: movementFeet(50),
+              },
+            ],
+          },
+        } satisfies BattleFill,
+      ],
+    });
+    if (expiredByRange.tag !== "resolved") {
+      throw new Error("Expected out-of-range Dancing Light to vanish.");
+    }
+    expect(snapshotBattle(expiredByRange.state).lightEmitters).toEqual([]);
+
+    const badSpacing = resolveBattleSubject({
+      state,
+      subject: separateAct.subject,
+      fills: [
+        {
+          kind: "dancingLightsPlacement",
+          holeId: placementHole.holeId,
+          value: {
+            mode: "cast",
+            form: "separateLights",
+            lights: [
+              {
+                positionId: battleTablePositionId("dancing-lights-space-a"),
+                distanceFromCasterFeet: movementFeet(30),
+                nearestSiblingDistanceFeet: movementFeet(25),
+              },
+              {
+                positionId: battleTablePositionId("dancing-lights-space-b"),
+                distanceFromCasterFeet: movementFeet(35),
+                nearestSiblingDistanceFeet: movementFeet(25),
+              },
+            ],
+          },
+        } satisfies BattleFill,
+      ],
+    });
+    expect(badSpacing).toMatchObject({ tag: "invalid" });
+  });
+
   test("produce_flame is admitted as a Bonus Action cantrip held light", () => {
     const spell = spellRecord(produceFlameUnitId);
     const state = spellBattle({ cantrips: [spell] });
@@ -8385,6 +9122,23 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
         dimAdditionalFeet: 20,
       }),
     );
+    expect(resolved.snapshot.lightEmitters).toEqual([
+      {
+        kind: "spellLightEmitter",
+        sourceSpellId: produceFlameUnitId,
+        sourceCombatantId: spellCasterId,
+        attachment: { kind: "combatant", combatantId: spellCasterId },
+        emission: {
+          kind: "brightAndDim",
+          brightRadiusFeet: movementFeet(20),
+          dimAdditionalFeet: movementFeet(20),
+        },
+        expiresAt: {
+          kind: "duration",
+          durationTicks: elapsedTimeTicks(100),
+        },
+      },
+    ]);
     expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
       false,
     );
@@ -8482,6 +9236,24 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
         }),
       }),
     );
+    expect(resolved.snapshot.lightEmitters).toHaveLength(1);
+    expect(resolved.snapshot.lightEmitters[0]).toEqual(
+      expect.objectContaining({
+        kind: "spellLightEmitter",
+        sourceSpellId: produceFlameUnitId,
+        sourceCombatantId: spellCasterId,
+        attachment: { kind: "combatant", combatantId: spellCasterId },
+        emission: {
+          kind: "brightAndDim",
+          brightRadiusFeet: movementFeet(20),
+          dimAdditionalFeet: movementFeet(20),
+        },
+        expiresAt: {
+          kind: "duration",
+          durationTicks: elapsedTimeTicks(100),
+        },
+      }),
+    );
   });
 
   test("produce_flame held light expires on its timed duration", () => {
@@ -8574,6 +9346,7 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
             effect.sourceSpellId === produceFlameUnitId,
         ),
     ).toBe(false);
+    expect(expired.snapshot.lightEmitters).toEqual([]);
   });
 
   test("produce_flame hurl is admitted only while the caster holds the flame", () => {
@@ -8648,7 +9421,7 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
     ]);
   });
 
-  test("produce_flame hurl resolves ranged spell attack Fire damage without ending the held flame", () => {
+  test("produce_flame hurl resolves ranged spell attack Fire damage and ends the held flame", () => {
     const spell = spellRecord(produceFlameUnitId);
     const state = spellBattle({
       cantrips: [spell],
@@ -8731,13 +9504,89 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
             effect.kind === "heldLight" &&
             effect.sourceSpellId === produceFlameUnitId,
         ),
-    ).toBe(true);
+    ).toBe(false);
+    expect(resolved.snapshot.lightEmitters).toEqual([]);
     expect(canSpendAction(resolved.state.currentTurnResources, "magic")).toBe(
       false,
     );
     expect(resolved.state.currentTurnResources.spellSlotExpendedThisTurn).toBe(
       false,
     );
+  });
+
+  test("produce_flame hurl hit reaction window does not expose stale held light", () => {
+    const spell = spellRecord(produceFlameUnitId);
+    const state = spellBattle({
+      cantrips: [spell],
+      targetPreparedSpells: [spellRecord(shieldUnitId)],
+      targetHp: 20,
+      targetMaxHp: 20,
+    });
+    const lit = resolveBattleSubject({
+      state,
+      subject: bonusSpellAct({ state, spellId: produceFlameUnitId }).subject,
+      fills: [],
+    });
+    if (lit.tag !== "resolved") {
+      throw new Error("Expected Produce Flame held light to resolve.");
+    }
+    const hurl = spellAct({ state: lit.state, spellId: produceFlameUnitId });
+    const target = requireHole(hurl.initialHoles, "targetChoice");
+    const targetFill = spellTargetFill(
+      target,
+      produceFlameUnitId,
+      spellCasterId,
+      spellTargetId,
+    );
+    const attack = requireResultHole(
+      resolveBattleSubject({
+        state: lit.state,
+        subject: hurl.subject,
+        fills: [targetFill],
+      }),
+      "attackRoll",
+    );
+
+    const awaitingReaction = resolveBattleSubject({
+      state: lit.state,
+      subject: hurl.subject,
+      fills: [
+        targetFill,
+        attackRollFill(attack, { total: 18, naturalD20: 12 }),
+      ],
+    });
+
+    expect(awaitingReaction).toMatchObject({
+      tag: "needsHoles",
+      snapshot: { pendingReaction: { trigger: "attackHit" } },
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected Produce Flame hurl to open attack-hit window.");
+    }
+    expect(awaitingReaction.snapshot.lightEmitters).toEqual([]);
+    expect(
+      awaitingReaction.state.combatants
+        .get(spellCasterId)
+        ?.activeEffects.some(
+          (effect) =>
+            effect.kind === "heldLight" &&
+            effect.sourceSpellId === produceFlameUnitId,
+        ),
+    ).toBe(false);
+
+    const afterDecline = resolveBattleReaction({
+      state: awaitingReaction.state,
+      fill: reactionDecisionFill(
+        awaitingReaction.snapshot.pendingReaction!.decisionHole,
+        { kind: "decline", reactorId: spellTargetId },
+      ),
+    });
+
+    expect(afterDecline).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "rolledDice" }],
+      snapshot: { pendingReaction: null, lightEmitters: [] },
+    });
   });
 
   test("produce_flame hurl object miss spends the Magic action without object damage", () => {
@@ -8781,6 +9630,7 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
           { combatantId: spellTargetId },
         ],
         turn: { actionResources: [] },
+        lightEmitters: [],
       },
     });
     if (resolved.tag !== "resolved") {
@@ -8872,7 +9722,8 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
             effect.kind === "heldLight" &&
             effect.sourceSpellId === produceFlameUnitId,
         ),
-    ).toBe(true);
+    ).toBe(false);
+    expect(resolved.snapshot.lightEmitters).toEqual([]);
   });
 });
 
@@ -8943,13 +9794,19 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
       casterClassLevels: [{ className: "druid", level: 17 }],
     });
     const act = bonusSpellAct({ state, spellId: shillelaghUnitId });
-    const cast = resolveBattleSubject({ state, subject: act.subject, fills: [] });
+    const cast = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [],
+    });
     expect(cast).toMatchObject({ tag: "resolved" });
     if (cast.tag !== "resolved") {
       throw new Error("Expected Shillelagh to resolve.");
     }
 
-    expect(cast.state.combatants.get(spellCasterId)?.activeEffects).toContainEqual(
+    expect(
+      cast.state.combatants.get(spellCasterId)?.activeEffects,
+    ).toContainEqual(
       expect.objectContaining({
         kind: "spellWeaponAttackOverride",
         sourceSpellId: shillelaghUnitId,
@@ -9015,12 +9872,18 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
       casterClassLevels: [{ className: "druid", level: 5 }],
     });
     const act = bonusSpellAct({ state, spellId: shillelaghUnitId });
-    const cast = resolveBattleSubject({ state, subject: act.subject, fills: [] });
+    const cast = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [],
+    });
     if (cast.tag !== "resolved") {
       throw new Error("Expected Club Shillelagh to resolve.");
     }
 
-    expect(cast.state.combatants.get(spellCasterId)?.activeEffects).toContainEqual(
+    expect(
+      cast.state.combatants.get(spellCasterId)?.activeEffects,
+    ).toContainEqual(
       expect.objectContaining({
         kind: "spellWeaponAttackOverride",
         sourceSpellId: shillelaghUnitId,
@@ -12900,11 +13763,29 @@ describe("SRDINV30C deterministic protection and charm Spell Unit admission", ()
       spellId: protectionFromEvilAndGoodUnitId,
     });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
+    expect(targetHole.choices).toContain(spellTargetId);
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          spellTargetFill(
+            targetHole,
+            protectionFromEvilAndGoodUnitId,
+            spellCasterId,
+            spellTargetId,
+          ),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
     const resolved = resolveBattleSubject({
       state,
       subject: act.subject,
       fills: [
-        spellTargetFill(
+        knownWillingSpellTargetFill(
           targetHole,
           protectionFromEvilAndGoodUnitId,
           spellCasterId,
@@ -13038,7 +13919,7 @@ describe("SRDINV30C deterministic protection and charm Spell Unit admission", ()
       state,
       subject: protectionAct.subject,
       fills: [
-        spellTargetFill(
+        knownWillingSpellTargetFill(
           protectionTarget,
           protectionFromEvilAndGoodUnitId,
           spellCasterId,
@@ -13057,10 +13938,18 @@ describe("SRDINV30C deterministic protection and charm Spell Unit admission", ()
     if (charmInvocation.procedure !== "saveGatedCondition") {
       throw new Error("Expected Charm Person to be a save-gated condition.");
     }
-    const protectedTarget = requireCombatant(
-      protectedResult.state,
-      spellTargetId,
-    );
+    const targetTurn = endTurn({
+      state: protectedResult.state,
+      actorId: spellCasterId,
+    });
+    expect(targetTurn).toMatchObject({ tag: "resolved" });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected to advance to the protected target turn.");
+    }
+    const protectedTarget = requireCombatant(targetTurn.state, spellTargetId);
+    if (protectedTarget.positiveHpUnconscious !== null) {
+      throw new Error("Expected conscious Protection target.");
+    }
     expect(
       conditionApplicationPreventedByCreatureTypeProtection(
         protectedResult.state,
@@ -13152,7 +14041,7 @@ describe("SRDINV30C deterministic protection and charm Spell Unit admission", ()
       state,
       subject: protectionAct.subject,
       fills: [
-        spellTargetFill(
+        knownWillingSpellTargetFill(
           targetHole,
           protectionFromEvilAndGoodUnitId,
           spellCasterId,
@@ -13224,6 +14113,7 @@ describe("SRDINV30C deterministic protection and charm Spell Unit admission", ()
           combatantId: feySourceId,
           statBlock: statBlockWithCreatureType("fey"),
           initiative: 9,
+          side: oppositionSide,
         },
       ],
     });
@@ -13236,7 +14126,7 @@ describe("SRDINV30C deterministic protection and charm Spell Unit admission", ()
       state,
       subject: protectionAct.subject,
       fills: [
-        spellTargetFill(
+        knownWillingSpellTargetFill(
           targetHole,
           protectionFromEvilAndGoodUnitId,
           spellCasterId,
@@ -13254,38 +14144,6 @@ describe("SRDINV30C deterministic protection and charm Spell Unit admission", ()
     if (charmInvocation.procedure !== "saveGatedCondition") {
       throw new Error("Expected Charm Person to be a save-gated condition.");
     }
-    const protectedTarget = requireCombatant(
-      protectedResult.state,
-      spellTargetId,
-    );
-    const charmedEffect = {
-      kind: "spellCondition",
-      sourceSpellId: charmPersonUnitId,
-      sourceCombatantId: feySourceId,
-      condition: "charmed",
-      conditionHadNonSpellSource: false,
-      escape: { kind: "targetDamagedByCasterOrAlly" },
-      turnStartDamage: null,
-      expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(600) },
-    } as const;
-    const protectedWithActiveCharm: BattleState = {
-      ...protectedResult.state,
-      combatants: new Map(protectedResult.state.combatants).set(spellTargetId, {
-        ...protectedTarget,
-        activeEffects: [...protectedTarget.activeEffects, charmedEffect],
-      }),
-    };
-
-    const activeCharmSaveHole = spellSavingThrowOutcomeHole(
-      protectedWithActiveCharm,
-      feySourceId,
-      charmInvocation,
-    );
-    expect(
-      activeCharmSaveHole.targetRollModes.filter(
-        (projection) => projection.targetId === spellTargetId,
-      ),
-    ).toEqual([]);
     expect(
       spellSavingThrowOutcomeHole(
         protectedResult.state,
@@ -13295,26 +14153,240 @@ describe("SRDINV30C deterministic protection and charm Spell Unit admission", ()
         (projection) => projection.targetId === spellTargetId,
       ),
     ).toEqual([]);
+  });
 
-    const wrongSpellActiveCharm: BattleState = {
-      ...protectedResult.state,
-      combatants: new Map(protectedResult.state.combatants).set(spellTargetId, {
-        ...protectedTarget,
-        activeEffects: [
-          ...protectedTarget.activeEffects,
-          { ...charmedEffect, sourceSpellId: animalFriendshipUnitId },
-        ],
-      }),
-    };
-    expect(
-      spellSavingThrowOutcomeHole(
-        wrongSpellActiveCharm,
-        feySourceId,
-        charmInvocation,
-      ).targetRollModes.filter(
-        (projection) => projection.targetId === spellTargetId,
+  test("protection from evil and good projects Advantage onto saves against already-applied relevant effects", () => {
+    const protection = spellRecord(protectionFromEvilAndGoodUnitId);
+    const feySourceId = combatantId(
+      "unit-profile-protection-repeat-save-fey-source",
+    );
+    const humanoidSourceId = combatantId(
+      "unit-profile-protection-repeat-save-humanoid-source",
+    );
+    const state = spellBattle({
+      preparedSpells: [protection],
+      statBlockTargets: [
+        {
+          combatantId: feySourceId,
+          statBlock: statBlockWithCreatureType("fey"),
+          initiative: 9,
+          side: oppositionSide,
+        },
+        {
+          combatantId: humanoidSourceId,
+          statBlock: statBlockWithCreatureType("humanoid"),
+          initiative: 8,
+          side: oppositionSide,
+        },
+      ],
+    });
+    const protectionAct = spellAct({
+      state,
+      spellId: protectionFromEvilAndGoodUnitId,
+    });
+    const targetHole = requireHole(protectionAct.initialHoles, "targetChoice");
+    const protectedResult = resolveBattleSubject({
+      state,
+      subject: protectionAct.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          targetHole,
+          protectionFromEvilAndGoodUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+      ],
+    });
+    if (protectedResult.tag !== "resolved") {
+      throw new Error("Expected Protection from Evil and Good to resolve.");
+    }
+    const targetTurn = endTurn({
+      state: protectedResult.state,
+      actorId: spellCasterId,
+    });
+    expect(targetTurn).toMatchObject({ tag: "resolved" });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected to advance to the protected target turn.");
+    }
+    const protectedTarget = requireCombatant(targetTurn.state, spellTargetId);
+    const charmedEffect = {
+      kind: "spellCondition",
+      sourceSpellId: charmPersonUnitId,
+      sourceCombatantId: feySourceId,
+      condition: "charmed",
+      conditionHadNonSpellSource: false,
+      escape: { kind: "targetDamagedByCasterOrAlly" },
+      turnStartDamage: null,
+      expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(600) },
+    } as const satisfies BattleActiveEffect;
+    const repeatCharmedEffect = {
+      kind: "spellConditionRepeatSave",
+      sourceSpellId: "unit-profile-repeat-charm-effect",
+      sourceCombatantId: feySourceId,
+      condition: "charmed",
+      conditionHadNonSpellSource: false,
+      save: { ability: "wis", dc: { kind: "fixed", dc: difficultyClass(13) } },
+      expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(600) },
+    } as const satisfies BattleActiveEffect;
+    const repeatFrightenedEffect = {
+      ...repeatCharmedEffect,
+      sourceSpellId: "unit-profile-fear-effect",
+      condition: "frightened",
+    } as const satisfies BattleActiveEffect;
+    const possessionEffect = {
+      kind: "possession",
+      sourceSpellId: "unit-profile-possession-effect",
+      sourceCombatantId: feySourceId,
+      save: { ability: "cha", dc: { kind: "fixed", dc: difficultyClass(14) } },
+      expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(600) },
+    } as const satisfies BattleActiveEffect;
+    const humanoidCharmEffect = {
+      ...repeatCharmedEffect,
+      sourceSpellId: "unit-profile-humanoid-charm-effect",
+      sourceCombatantId: humanoidSourceId,
+    } as const satisfies BattleActiveEffect;
+    const targetWithRelevantEffects: BattleCreatureState = {
+      ...battleCreatureStateWithKnockOutPreservedConditions(
+        protectedTarget,
+        applyCondition(
+          applyCondition(protectedTarget.conditions, "charmed"),
+          "frightened",
+        ),
       ),
-    ).toEqual([]);
+      activeEffects: [
+        ...protectedTarget.activeEffects,
+        charmedEffect,
+        repeatCharmedEffect,
+        repeatFrightenedEffect,
+        possessionEffect,
+        humanoidCharmEffect,
+      ],
+    };
+    const activeEffectState: BattleState = {
+      ...targetTurn.state,
+      combatants: new Map(targetTurn.state.combatants).set(
+        spellTargetId,
+        targetWithRelevantEffects,
+      ),
+    };
+    const discoveredRelevantSaveSubjects = discoverBattleActs(activeEffectState)
+      .map((act) => act.subject)
+      .filter(
+        (subject) =>
+          subject.tag === "runtimeCommand" &&
+          subject.command === "protectionRelevantEffectSave",
+      );
+    expect(discoveredRelevantSaveSubjects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceSpellId: spellId("unit-profile-repeat-charm-effect"),
+          relevantEffect: "charmed",
+        }),
+        expect.objectContaining({
+          sourceSpellId: spellId("unit-profile-fear-effect"),
+          relevantEffect: "frightened",
+        }),
+        expect.objectContaining({
+          sourceSpellId: spellId("unit-profile-possession-effect"),
+          relevantEffect: "possession",
+        }),
+      ]),
+    );
+    expect(discoveredRelevantSaveSubjects).not.toContainEqual(
+      expect.objectContaining({ sourceSpellId: spellId(charmPersonUnitId) }),
+    );
+
+    const relevantEffectSaveNeedsHoles = (
+      sourceCombatantId: CombatantId,
+      sourceSpellId: string,
+      relevantEffect: "charmed" | "frightened" | "possession",
+    ) =>
+      resolveBattleSubject({
+        state: activeEffectState,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: spellTargetId,
+          command: "protectionRelevantEffectSave",
+          sourceCombatantId,
+          sourceSpellId: spellId(sourceSpellId),
+          relevantEffect,
+        },
+        fills: [],
+      });
+    const ordinaryCharmSave = relevantEffectSaveNeedsHoles(
+      feySourceId,
+      charmPersonUnitId,
+      "charmed",
+    );
+    expect(ordinaryCharmSave).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+    });
+    const feyCharmSave = relevantEffectSaveNeedsHoles(
+      feySourceId,
+      "unit-profile-repeat-charm-effect",
+      "charmed",
+    );
+    const feyFrightenedSave = relevantEffectSaveNeedsHoles(
+      feySourceId,
+      "unit-profile-fear-effect",
+      "frightened",
+    );
+    const feyPossessionSave = relevantEffectSaveNeedsHoles(
+      feySourceId,
+      "unit-profile-possession-effect",
+      "possession",
+    );
+    const humanoidCharmSave = relevantEffectSaveNeedsHoles(
+      humanoidSourceId,
+      "unit-profile-humanoid-charm-effect",
+      "charmed",
+    );
+    for (const result of [feyCharmSave, feyFrightenedSave, feyPossessionSave]) {
+      expect(result).toMatchObject({
+        tag: "needsHoles",
+        holes: [
+          expect.objectContaining({
+            kind: "savingThrowOutcome",
+            targetRollModes: [
+              { targetId: spellTargetId, rollMode: "advantage" },
+            ],
+          }),
+        ],
+      });
+    }
+    expect(humanoidCharmSave).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        expect.objectContaining({
+          kind: "savingThrowOutcome",
+          targetRollModes: [],
+        }),
+      ],
+    });
+    if (feyCharmSave.tag !== "needsHoles") {
+      throw new Error("Expected an already-applied Charmed save act.");
+    }
+    const feyCharmHole = requireHole(feyCharmSave.holes, "savingThrowOutcome");
+    const afterSuccessfulSave = resolveBattleSubject({
+      state: activeEffectState,
+      subject: feyCharmSave.subject,
+      fills: [
+        savingThrowOutcomeFill(feyCharmHole, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
+      ],
+    });
+    expect(afterSuccessfulSave).toMatchObject({ tag: "resolved" });
+    if (afterSuccessfulSave.tag !== "resolved") {
+      throw new Error("Expected Charmed repeat save to resolve.");
+    }
+    expect(
+      requireCombatant(afterSuccessfulSave.state, spellTargetId).activeEffects,
+    ).not.toContainEqual(repeatCharmedEffect);
+    expect(
+      requireCombatant(afterSuccessfulSave.state, spellTargetId).activeEffects,
+    ).toContainEqual(charmedEffect);
   });
 });
 
@@ -16187,6 +17259,7 @@ function spellBattle(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["spellcasting"];
+  readonly targetPreparedSpells?: readonly SpellRecord[];
   readonly casterClassLevels?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -16246,9 +17319,22 @@ function spellBattle(input: {
         ...(input.targetUnitRefs === undefined
           ? {}
           : { characterUnitRefs: input.targetUnitRefs }),
-        ...(input.targetSpellcasting === undefined
+        ...(input.targetSpellcasting === undefined &&
+        input.targetPreparedSpells === undefined
           ? {}
-          : { spellcasting: input.targetSpellcasting }),
+          : {
+              spellcasting: input.targetSpellcasting ?? {
+                sourceClassName: "wizard",
+                spellcastingAbilityModifier: abilityModifier(3),
+                proficiencyBonus: proficiencyBonus(2),
+                canCastSpells: true,
+                cantrips: [],
+                preparedSpells: input.targetPreparedSpells ?? [],
+                featurePreparedSpells: [],
+                invocationSpellAccesses: [],
+                spellSlots: [{ spellLevel: 1, count: 1 }],
+              },
+            }),
       }),
       ...(input.extraTargetIds ?? []).map((combatantId, index) =>
         characterCreature({
@@ -17812,6 +18898,27 @@ function spellTargetFill(
     spatialFacts: [
       {
         kind: "spellTarget",
+        casterId,
+        targetId,
+        spellId,
+      },
+    ],
+  };
+}
+
+function knownWillingSpellTargetFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  spellId: string,
+  casterId: CombatantId,
+  targetId: CombatantId,
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  const base = spellTargetFill(hole, spellId, casterId, targetId);
+  return {
+    ...base,
+    spatialFacts: [
+      ...(base.spatialFacts ?? []),
+      {
+        kind: "spellTargetKnownWilling",
         casterId,
         targetId,
         spellId,

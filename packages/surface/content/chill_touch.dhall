@@ -2,9 +2,10 @@
 -- Family: activation (single attack_roll phase).
 -- Melee spell attack; on hit: 1d10 Necrotic damage (cantrip scaling) and
 -- target can't regain Hit Points until end of your next turn.
--- TARGET SUBSET: RAW says generic "target", not "creature"; battle-runtime
--- projects this Task 200 subset to combatant targets. Non-combatant target
--- eligibility remains deferred in the unit-profile claim/report.
+-- The generic RAW "target" uses the SRD Target glossary boundary: creature or
+-- object. Battle-runtime admits combatant targets and caller-supplied object
+-- identity/range/Armor Class/damage disposition facts without owning generic
+-- object discovery.
 -- Cantrip upgrade: 1d10 → 2d10 (L5) → 3d10 (L11) → 4d10 (L17).
 
 let AmountRec
@@ -79,7 +80,9 @@ let chillTouch =
                     , label = "target"
                     , value =
                         { kind = "target"
-                        , selection = { mode = "one" }
+                        , selection =
+                            { mode = "one" }
+                              // { targetKinds = [ "creature", "object" ] }
                         }
                     }
                 , attackKind = "melee_spell_attack"

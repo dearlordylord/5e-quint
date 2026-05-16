@@ -653,6 +653,12 @@ module battleRuntimeSpellBridge {
       sleepInitialSaveLifecycle(savingThrowSucceeded, hadIncapacitated)
     )
 
+  pure def battleRuntimeSleepSavingThrowAutomaticallySucceeds(
+    targetDoesNotSleep: bool,
+    targetHasExhaustionImmunity: bool,
+  ): bool =
+    sleepSavingThrowAutomaticallySucceeds(targetDoesNotSleep, targetHasExhaustionImmunity)
+
   pure def battleRuntimeSleepRepeatSaveLifecycleAfterSave(
     lifecycle: BattleRuntimeSleepRepeatSaveLifecycle,
     savingThrowSucceeded: bool,
@@ -885,6 +891,9 @@ module battleRuntimeSpellBridge {
     val saved = battleRuntimeSleepRepeatSaveLifecycleAfterSave(pending, true, false)
     val unconscious = battleRuntimeSleepRepeatSaveLifecycleAfterSave(pending, false, false)
     all {
+      assert(battleRuntimeSleepSavingThrowAutomaticallySucceeds(true, false)),
+      assert(battleRuntimeSleepSavingThrowAutomaticallySucceeds(false, true)),
+      assert(not(battleRuntimeSleepSavingThrowAutomaticallySucceeds(false, false))),
       assert(battleRuntimeSleepInitialSaveLifecycle(true, true) == BattleRuntimeNoSleepRepeatSaveLifecycle),
       assert(pending == BattleRuntimePendingSleepRepeatSaveLifecycle({ hadIncapacitated: true })),
       assert(saved == BattleRuntimeNoSleepRepeatSaveLifecycle),

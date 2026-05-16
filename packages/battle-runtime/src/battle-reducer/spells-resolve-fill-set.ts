@@ -42,6 +42,7 @@ import {
   spellTargetAllocationHoleId,
   spellTargetListHoleId,
 } from "./spells-holes-fills.ts";
+import { spellDancingLightsPlacementHoleId } from "./spells-targeting.ts";
 
 export type SpellBeamTargetFill =
   | {
@@ -117,6 +118,9 @@ export type SpellFillSet =
       readonly abilityChoice: Ability | undefined;
       readonly commandOptionChoice: BattleCommandOption | undefined;
       readonly areaChoice: BattleFogCloudAreaChoice | undefined;
+      readonly dancingLightsPlacement:
+        | Extract<BattleFill, { readonly kind: "dancingLightsPlacement" }>
+        | undefined;
       readonly damageTypeChoice:
         | Extract<BattleFill, { readonly kind: "damageTypeChoice" }>
         | undefined;
@@ -198,6 +202,9 @@ export function spellFillSet(
   let abilityChoice: Ability | undefined;
   let commandOptionChoice: BattleCommandOption | undefined;
   let areaChoice: BattleFogCloudAreaChoice | undefined;
+  let dancingLightsPlacement:
+    | Extract<BattleFill, { readonly kind: "dancingLightsPlacement" }>
+    | undefined;
   let damageTypeChoice:
     | Extract<BattleFill, { readonly kind: "damageTypeChoice" }>
     | undefined;
@@ -382,6 +389,37 @@ export function spellFillSet(
         return { tag: "invalid", message: "Spell area was filled twice." };
       }
       areaChoice = fill.value;
+      continue;
+    }
+
+    if (fill.kind === "dancingLightsPlacement") {
+      if (
+        invocation.procedure !== "dancingLightsSeparateCast" &&
+        invocation.procedure !== "dancingLightsCombinedCast" &&
+        invocation.procedure !== "dancingLightsReposition"
+      ) {
+        return {
+          tag: "invalid",
+          message: "Dancing Lights placement does not match this spell act.",
+        };
+      }
+      if (
+        fill.holeId !==
+        spellDancingLightsPlacementHoleId(invocation, fill.value.form)
+      ) {
+        return {
+          tag: "invalid",
+          message:
+            "Dancing Lights placement must use the selected spell act placement hole.",
+        };
+      }
+      if (dancingLightsPlacement !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Dancing Lights placement was filled twice.",
+        };
+      }
+      dancingLightsPlacement = fill;
       continue;
     }
 
@@ -639,7 +677,7 @@ export function spellFillSet(
       if (
         invocation.procedure !== "markedDamageRider" ||
         invocation.action !== "cast" ||
-        invocation.abilityChoices === null
+        invocation.abilityCheckBehavior.kind !== "chosenAbilityDisadvantage"
       ) {
         return {
           tag: "invalid",
@@ -653,7 +691,7 @@ export function spellFillSet(
             "Spell ability choice must use the selected spell act ability-choice hole.",
         };
       }
-      if (!invocation.abilityChoices.includes(fill.value)) {
+      if (!invocation.abilityCheckBehavior.choices.includes(fill.value)) {
         return {
           tag: "invalid",
           message: "Spell ability choice is not available for this spell.",
@@ -862,6 +900,7 @@ export function spellFillSet(
     abilityChoice,
     commandOptionChoice,
     areaChoice,
+    dancingLightsPlacement,
     damageTypeChoice,
     concentrationSavingThrows,
     hideousLaughterDamageRepeatSaves,
