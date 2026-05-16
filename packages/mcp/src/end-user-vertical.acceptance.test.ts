@@ -158,6 +158,7 @@ describe("end-user MCP vertical", () => {
           combatantId: "goblin",
           initiative: 7,
           side: "opposition",
+          admissionSource: { kind: "encounterParticipant" },
         },
       ],
     });
@@ -403,6 +404,7 @@ describe("end-user MCP vertical", () => {
           combatantId: "skeleton",
           initiative: 8,
           side: "opposition",
+          admissionSource: { kind: "encounterParticipant" },
         },
       ],
     });
@@ -1544,6 +1546,7 @@ function statBlockCombatant(
     combatantId,
     initiative,
     side: "opposition",
+    admissionSource: { kind: "encounterParticipant" },
   };
 }
 

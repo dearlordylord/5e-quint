@@ -277,13 +277,26 @@ function applyFindFamiliarZeroHitPointDisappearanceAfterDamage(input: {
   if (entry === null) {
     return input.state;
   }
+  const disappearedFamiliar =
+    entry.familiar.formAccess === "findFamiliar"
+      ? ({
+          formAccess: "findFamiliar",
+          formSelection: entry.familiar.formSelection,
+          status: "disappearedAtZeroHitPoints",
+          creatureTypeOverride: entry.familiar.creatureTypeOverride,
+        } as const)
+      : ({
+          formAccess: "pactOfTheChain",
+          formSelection: entry.familiar.formSelection,
+          status: "disappearedAtZeroHitPoints",
+          creatureTypeOverride: entry.familiar.creatureTypeOverride,
+        } as const);
   const stateWithDisappearedFamiliar = {
     ...input.state,
-    findFamiliars: new Map(input.state.findFamiliars).set(entry.ownerId, {
-      status: "disappearedAtZeroHitPoints",
-      formSelection: entry.familiar.formSelection,
-      creatureTypeOverride: entry.familiar.creatureTypeOverride,
-    }),
+    findFamiliars: new Map(input.state.findFamiliars).set(
+      entry.ownerId,
+      disappearedFamiliar,
+    ),
   };
   const removed = removeBattleCombatants({
     state: stateWithDisappearedFamiliar,

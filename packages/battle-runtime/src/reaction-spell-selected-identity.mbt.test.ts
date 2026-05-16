@@ -318,6 +318,7 @@ function reactionSpellBattle(spell: SpellRecord): BattleState {
           preparedSpells: [spell],
           featurePreparedSpells: [],
           invocationSpellAccesses: [],
+          spellbookRitualSpellAccesses: [],
           spellSlots: [
             { spellLevel: 1, count: 2 },
             { spellLevel: 2, count: 1 },

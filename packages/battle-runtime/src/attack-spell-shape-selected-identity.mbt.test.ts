@@ -524,6 +524,7 @@ function attackSpellShapeBattle(
           preparedSpells: input.preparedSpells ?? [],
           featurePreparedSpells: [],
           invocationSpellAccesses: [],
+          spellbookRitualSpellAccesses: [],
           spellSlots: [{ spellLevel: 1, count: 2 }],
         },
       }),
