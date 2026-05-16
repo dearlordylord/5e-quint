@@ -62,9 +62,9 @@
       "value": 144
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 82,
-      "numerator": 75,
-      "percent": "91.5%"
+      "denominator": 83,
+      "numerator": 76,
+      "percent": "91.6%"
     },
     "profileClassificationCoverage": {
       "denominator": 144,
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 82,
+      "denominator": 83,
       "numerator": 10,
-      "percent": "12.2%"
+      "percent": "12%"
     },
     "supportedProfileCoverage": {
       "denominator": 117,
-      "numerator": 82,
-      "percent": "70.1%"
+      "numerator": 83,
+      "percent": "70.9%"
     }
   },
   "metricSemantics": [
@@ -1245,6 +1245,31 @@
         "SRDINV87A"
       ],
       "title": "Spell invocation creates a source-owned held light emitter",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-dancing-lights-movable-dim-light",
+      "profileKind": "table-caller",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "sourceBoundary": "Caller-supplied Dancing Lights placement facts; runtime owns the spell source, source-owned dancing-light identities, separate-light and combined Medium-form emitter projection, 10-foot Dim Light radius, one-minute Concentration duration, recast replacement, Concentration cleanup, Bonus Action repositioning up to 60 feet, 20-foot inter-light spacing validation, and 120-foot range expiry. Map illumination rendering, color presentation, line of sight, pathfinding, automatic geometry derivation, Darkvision adjustment, and generic illusion adjudication remain outside this runtime boundary.",
+      "taskRefs": [
+        "SRDINV88A"
+      ],
+      "title": "Spell invocation creates movable linked Dancing Lights Dim Light emitters",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -3467,6 +3492,22 @@
         "spell.invocation-held-light-emitter"
       ],
       "taskId": "SRDINV87A"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Dancing Lights movable Dim Light emitters, including separate and combined forms, 10-foot Dim Light, source-owned light identities, Magic Action cast state, Bonus Action repositioning, 60-foot reposition cap, 20-foot spacing, 120-foot range survival and vanishing, recast replacement, Concentration cleanup, and duration cleanup.",
+      "profileIds": [
+        "spell.invocation-dancing-lights-movable-dim-light"
+      ],
+      "taskId": "SRDINV88A"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission tests cover Dancing Lights Magic Action cantrip admission, source-owned movable light identities, combined Medium-form choice, caller-supplied placement fills, Bonus Action repositioning, spacing and range validation and expiry, recast replacement, Concentration cleanup, and duration cleanup.",
+      "profileIds": [
+        "spell.invocation-dancing-lights-movable-dim-light"
+      ],
+      "taskId": "SRDINV88A"
     },
     {
       "claimKind": "qnt-proof",
@@ -6908,14 +6949,51 @@
         "status": "installed"
       },
       "claim": {
-        "reason": "Movable linked Dim Light sources, concentration lifecycle, Bonus Action repositioning, range expiry, and combined Medium-form choice are not promoted yet; SRDINV88A owns the next battle-runtime slice.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "spell.invocation-dancing-lights-movable-dim-light"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV88A"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-dancing-lights-movable-dim-light",
+          "profileKind": "table-caller",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "Caller-supplied Dancing Lights placement facts; runtime owns the spell source, source-owned dancing-light identities, separate-light and combined Medium-form emitter projection, 10-foot Dim Light radius, one-minute Concentration duration, recast replacement, Concentration cleanup, Bonus Action repositioning up to 60 feet, 20-foot inter-light spacing validation, and 120-foot range expiry. Map illumination rendering, color presentation, line of sight, pathfinding, automatic geometry derivation, Darkvision adjustment, and generic illusion adjudication remain outside this runtime boundary.",
+          "taskRefs": [
+            "SRDINV88A"
+          ],
+          "title": "Spell invocation creates movable linked Dancing Lights Dim Light emitters",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/dancing_lights.json",
       "unitId": "dancing_lights"
     },

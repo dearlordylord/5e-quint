@@ -19,6 +19,7 @@ export const BATTLE_TRACE_HOLE_KINDS = [
   "skillChoice",
   "abilityChoice",
   "commandOptionChoice",
+  "dancingLightsPlacement",
   "spellAreaChoice",
   "savingThrowOutcome",
   "deathSavingThrow",

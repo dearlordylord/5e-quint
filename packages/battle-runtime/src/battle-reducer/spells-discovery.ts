@@ -17,6 +17,7 @@ import {
   isScalarBuffTargetListInvocation,
   isTargetListSpellInvocation,
   reactionTriggerLabel,
+  type BattleActiveEffect,
   type AvailableBattleAct,
   type BattleCreatureState,
   type BattleState,
@@ -46,6 +47,8 @@ import {
   spellTargetListHole,
   supportedSpellInvocationRef,
 } from "./spells-holes-fills.ts";
+import { spellDancingLightsPlacementHole } from "./spells-targeting.ts";
+import { dancingLightsFromEffect } from "./spells-active-effects.ts";
 import { attackTargetHole } from "./hole-helpers.ts";
 
 export function discoverSupportedSpellInvocations(
@@ -264,6 +267,63 @@ export function discoverSupportedSpellInvocations(
             label: invocation.spell.name,
             summary: spellInvocationCastSummary(invocation),
             initialHoles: [],
+          },
+        ];
+      }
+      if (
+        invocation.procedure === "dancingLightsSeparateCast" ||
+        invocation.procedure === "dancingLightsCombinedCast"
+      ) {
+        return [
+          {
+            subject: {
+              tag: "actionSpell" as const,
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
+            },
+            label: invocation.spell.name,
+            summary: spellInvocationCastSummary(invocation),
+            initialHoles: [
+              spellDancingLightsPlacementHole(invocation, invocation.form, []),
+            ],
+          },
+        ];
+      }
+      if (invocation.procedure === "dancingLightsReposition") {
+        const activeEffect = actor.activeEffects.find(
+          (
+            effect,
+          ): effect is Extract<
+            BattleActiveEffect,
+            { readonly kind: "dancingLights" }
+          > =>
+            effect.kind === "dancingLights" &&
+            effect.sourceSpellId === invocation.spell.id &&
+            effect.sourceCombatantId === actorId,
+        );
+        if (activeEffect === undefined) {
+          return [];
+        }
+        return [
+          {
+            subject: {
+              tag: "bonusActionSpell" as const,
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
+            },
+            label: `${invocation.spell.name} movement`,
+            summary: spellInvocationCastSummary(invocation),
+            initialHoles: [
+              spellDancingLightsPlacementHole(
+                invocation,
+                activeEffect.form,
+                dancingLightsFromEffect(activeEffect).map(
+                  (light) => light.lightId,
+                ),
+              ),
+            ],
           },
         ];
       }
@@ -578,6 +638,15 @@ export function spellInvocationCastSummary(
   if (invocation.procedure === "heldLight") {
     return `Cast ${invocation.spell.name} as a cantrip.`;
   }
+  if (
+    invocation.procedure === "dancingLightsSeparateCast" ||
+    invocation.procedure === "dancingLightsCombinedCast"
+  ) {
+    return `Cast ${invocation.spell.name} as a cantrip.`;
+  }
+  if (invocation.procedure === "dancingLightsReposition") {
+    return `Move ${invocation.spell.name} with a Bonus Action.`;
+  }
   if (invocation.procedure === "objectLight") {
     return `Cast ${invocation.spell.name} as a cantrip.`;
   }
@@ -687,6 +756,8 @@ export function spellActivationInvocationCastSummary(
         | "command"
         | "greaseGroundHazard"
         | "fogCloudObscurement"
+        | "dancingLightsSeparateCast"
+        | "dancingLightsCombinedCast"
         | "jumpMovementReplacement"
         | "sanctuaryTargetingInterdiction"
         | "featherFallMitigation";
@@ -702,6 +773,9 @@ export function spellSubjectTagForInvocation(
   invocation: SupportedSpellInvocation,
 ): "actionSpell" | "bonusActionSpell" {
   if (invocation.procedure === "heldLight") {
+    return "bonusActionSpell";
+  }
+  if (invocation.procedure === "dancingLightsReposition") {
     return "bonusActionSpell";
   }
   if (
@@ -744,8 +818,9 @@ export function spellInvocationIsSpellcasting(
   invocation: SupportedSpellInvocation,
 ): boolean {
   return !(
-    invocation.procedure === "markedDamageRider" &&
-    invocation.action === "transfer"
+    invocation.procedure === "dancingLightsReposition" ||
+    (invocation.procedure === "markedDamageRider" &&
+      invocation.action === "transfer")
   );
 }
 
@@ -754,13 +829,20 @@ export function spellInvocationCasterPrerequisiteIsMet(
   invocation: SupportedSpellInvocation,
 ): boolean {
   return (
-    invocation.procedure !== "heldLightHurl" ||
-    actor.activeEffects.some(
+    (invocation.procedure !== "heldLightHurl" ||
+      actor.activeEffects.some(
+        (effect) =>
+          effect.kind === "heldLight" &&
+          effect.sourceSpellId === invocation.spell.id &&
+          effect.sourceCombatantId === actor.combatantId,
+      )) &&
+    (invocation.procedure !== "dancingLightsReposition" ||
+      actor.activeEffects.some(
       (effect) =>
-        effect.kind === "heldLight" &&
+        effect.kind === "dancingLights" &&
         effect.sourceSpellId === invocation.spell.id &&
         effect.sourceCombatantId === actor.combatantId,
-    )
+      ))
   );
 }
 
@@ -774,6 +856,9 @@ export function isReadiedSpellInvocation(
   return (
     invocation.procedure !== "directHitPointRestoration" &&
     invocation.procedure !== "heldLight" &&
+    invocation.procedure !== "dancingLightsSeparateCast" &&
+    invocation.procedure !== "dancingLightsCombinedCast" &&
+    invocation.procedure !== "dancingLightsReposition" &&
     invocation.procedure !== "objectLight" &&
     invocation.procedure !== "heldLightHurl" &&
     invocation.procedure !== "spellHostedWeaponAttack" &&

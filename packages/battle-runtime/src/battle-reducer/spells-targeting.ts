@@ -13,6 +13,7 @@ import {
   ATTACK_TARGET_HOLE_INSTANCE,
   type BattleHoleId,
   type BattleCommandOptionChoiceHole,
+  type BattleDancingLightsPlacementHole,
   type BattleSpellTargetAllocation,
   type BattleSpellAreaChoiceHole,
   type BattleSpellTargetAllocationHole,
@@ -190,6 +191,57 @@ export function spellObjectTargetHoleId(
   invocation: SingleObjectSpellInvocation,
 ): BattleHoleId {
   return holeId(`battle:spell:object-target:${invocation.spell.id}`);
+}
+
+export function spellDancingLightsPlacementHole(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    {
+      readonly procedure:
+        | "dancingLightsSeparateCast"
+        | "dancingLightsCombinedCast"
+        | "dancingLightsReposition";
+    }
+  >,
+  form: BattleDancingLightsPlacementHole["form"],
+  activeLightIds: readonly BattleDancingLightsPlacementHole["activeLightIds"][number][],
+): BattleDancingLightsPlacementHole {
+  const mode =
+    invocation.procedure === "dancingLightsReposition" ? "reposition" : "cast";
+  const holeKey = `battle:spell:dancing-lights-placement:${invocation.spell.id}:${mode}:${form}`;
+  return {
+    kind: "dancingLightsPlacement",
+    holeId: holeId(holeKey),
+    holeInstanceKey: holeInstanceKey(holeKey),
+    label: `${invocation.spell.name} placement`,
+    spell: invocation,
+    mode,
+    form,
+    activeLightIds,
+    rangeFeet: invocation.rangeFeet,
+    maxMoveFeet: invocation.maxMoveFeet,
+    spacingFeet: invocation.spacingFeet,
+    requiresTableSpatialFact: true,
+  };
+}
+
+export function spellDancingLightsPlacementHoleId(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    {
+      readonly procedure:
+        | "dancingLightsSeparateCast"
+        | "dancingLightsCombinedCast"
+        | "dancingLightsReposition";
+    }
+  >,
+  form: BattleDancingLightsPlacementHole["form"],
+): BattleHoleId {
+  const mode =
+    invocation.procedure === "dancingLightsReposition" ? "reposition" : "cast";
+  return holeId(
+    `battle:spell:dancing-lights-placement:${invocation.spell.id}:${mode}:${form}`,
+  );
 }
 
 export function spellTargetAllocationHoleId(

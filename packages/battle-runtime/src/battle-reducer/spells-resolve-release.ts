@@ -15,7 +15,9 @@ import {
   maybeOpenReactionWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
+  type BattleActiveEffect,
   type BattleResolutionResult,
+  type BattleDancingLightsPlacementValue,
   type BattleState,
   type BonusActionSpellBattleResolutionInput,
   type ReadiedSpellInvocation,
@@ -54,9 +56,12 @@ import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { expendSpellSlot } from "./spell-effects.ts";
 import {
+  applyDancingLightsSpellEffect,
   applyHeldLightSpellEffect,
   applyMarkedDamageRiderSpellEffect,
   applyObjectLightSpellEffect,
+  repositionDancingLightsSpellEffect,
+  dancingLightsFromEffect,
   applyWeaponAttackOverrideSpellEffect,
   applySpellActiveEffects,
   applySpellLightEmitterEffects,
@@ -90,6 +95,7 @@ import { resolvePreparedSlotSpellRelease } from "./spells-resolve-prepared-slot.
 import { resolveSaveGateDamageSpellRelease } from "./spells-resolve-save-gates.ts";
 import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
+import { spellDancingLightsPlacementHole } from "./spells-targeting.ts";
 
 export function resolveHeldLightSpellAct(input: {
   readonly input: BonusActionSpellBattleResolutionInput;
@@ -158,6 +164,350 @@ export function resolveHeldLightSpellAct(input: {
         state: resourced.state,
         snapshot: snapshotBattle(resourced.state),
       };
+}
+
+export function resolveDancingLightsCastSpellAct(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    {
+      readonly procedure:
+        | "dancingLightsSeparateCast"
+        | "dancingLightsCombinedCast";
+    }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  if (dancingLightsFillSetHasUnrelatedFills(input.fillSet)) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Dancing Lights spells use only a Dancing Lights placement fill.",
+    );
+  }
+  const placement = input.fillSet.dancingLightsPlacement?.value;
+  if (placement === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      spellDancingLightsPlacementHole(input.invocation, input.invocation.form, []),
+    ]);
+  }
+  const placementError = dancingLightsCastPlacementError(
+    input.invocation,
+    placement,
+  );
+  if (placementError !== null) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      placementError,
+    );
+  }
+  if (placement.mode !== "cast") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Dancing Lights placement does not match the selected form.",
+    );
+  }
+  const spellCastReactionWindow = maybeOpenReactionWindow(
+    input.input.state,
+    {
+      trigger: "spellCast",
+      casterId: input.actorId,
+      spellId: input.invocation.spell.id,
+      targetIds: [],
+      continuation: {
+        kind: "replay",
+        subject: input.input.subject,
+        fills: input.input.fills,
+      },
+    },
+    input.input.suppressedReactionTrigger,
+  );
+  if (spellCastReactionWindow !== null) {
+    return spellCastReactionWindow;
+  }
+  const resourced = spendSpellCastResources({
+    state: input.input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+  });
+  if (resourced.tag === "invalid") {
+    return resourced;
+  }
+  const effected = applyDancingLightsSpellEffect(
+    resourced.state,
+    input.actorId,
+    input.invocation,
+    placement,
+  );
+  return {
+    tag: "resolved",
+    state: effected,
+    snapshot: snapshotBattle(effected),
+  };
+}
+
+export function resolveDancingLightsRepositionSpellAct(input: {
+  readonly input: BonusActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "dancingLightsReposition" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  if (dancingLightsFillSetHasUnrelatedFills(input.fillSet)) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Dancing Lights spells use only a Dancing Lights placement fill.",
+    );
+  }
+  const placement = input.fillSet.dancingLightsPlacement?.value;
+  if (placement === undefined) {
+    const activeEffect = input.input.state.combatants
+      .get(input.actorId)
+      ?.activeEffects.find(
+        (
+          candidate,
+        ): candidate is Extract<
+          BattleActiveEffect,
+          { readonly kind: "dancingLights" }
+        > =>
+          candidate.kind === "dancingLights" &&
+          candidate.sourceSpellId === input.invocation.spell.id &&
+          candidate.sourceCombatantId === input.actorId,
+      );
+    if (activeEffect === undefined) {
+      return invalidResult(
+        input.input.state,
+        "staleSubject",
+        "Dancing Lights movement requires active lights from this spell.",
+      );
+    }
+    return needsHolesResult(
+      input.input.state,
+      input.input.subject,
+      [
+        spellDancingLightsPlacementHole(
+          input.invocation,
+          activeEffect.form,
+          dancingLightsFromEffect(activeEffect).map((light) => light.lightId),
+        ),
+      ],
+    );
+  }
+  const placementError = dancingLightsRepositionPlacementError(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+    placement,
+  );
+  if (placementError !== null) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      placementError,
+    );
+  }
+  if (placement.mode !== "reposition") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Dancing Lights movement requires reposition placement.",
+    );
+  }
+  const effected = repositionDancingLightsSpellEffect(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+    placement,
+  );
+  const spent = spendActivationResource(effected.currentTurnResources, {
+    kind: "bonusAction",
+  });
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.input.state,
+      "staleSubject",
+      "Bonus Action spell is no longer available for the current actor.",
+    );
+  }
+  const state = {
+    ...effected,
+    currentTurnResources: spent.right,
+  };
+  return {
+    tag: "resolved",
+    state,
+    snapshot: snapshotBattle(state),
+  };
+}
+
+function dancingLightsCastPlacementError(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    {
+      readonly procedure:
+        | "dancingLightsSeparateCast"
+        | "dancingLightsCombinedCast";
+    }
+  >,
+  placement: BattleDancingLightsPlacementValue,
+): string | null {
+  if (placement.mode !== "cast" || placement.form !== invocation.form) {
+    return "Dancing Lights placement does not match the selected form.";
+  }
+  if (placement.form === "combinedMediumForm") {
+    return placement.light.distanceFromCasterFeet > invocation.rangeFeet
+      ? "Dancing Lights placement must be within the spell range."
+      : null;
+  }
+  return dancingLightsSeparatePlacementError(
+    placement.lights,
+    invocation.rangeFeet,
+    invocation.spacingFeet,
+  );
+}
+
+function dancingLightsRepositionPlacementError(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "dancingLightsReposition" }
+  >,
+  placement: BattleDancingLightsPlacementValue,
+): string | null {
+  if (placement.mode !== "reposition") {
+    return "Dancing Lights movement requires reposition placement.";
+  }
+  const effect = state.combatants
+    .get(actorId)
+    ?.activeEffects.find(
+      (
+        candidate,
+      ): candidate is Extract<
+        BattleActiveEffect,
+        { readonly kind: "dancingLights" }
+      > =>
+        candidate.kind === "dancingLights" &&
+        candidate.sourceSpellId === invocation.spell.id &&
+        candidate.sourceCombatantId === actorId,
+    );
+  if (effect === undefined) {
+    return "Dancing Lights movement requires active lights from this spell.";
+  }
+  if (placement.form !== effect.form) {
+    return "Dancing Lights movement form does not match the active lights.";
+  }
+  const placements =
+    placement.form === "combinedMediumForm"
+      ? [placement.light]
+      : placement.lights;
+  if (
+    placements.some(
+      (candidate) => candidate.moveDistanceFeet > invocation.maxMoveFeet,
+    )
+  ) {
+    return "Dancing Lights can move a light up to 60 feet.";
+  }
+  const currentDancingLightIds = dancingLightsFromEffect(effect).map(
+    (dancingLight) => dancingLight.lightId,
+  );
+  const placedLightIds = placements.map((candidate) => candidate.lightId);
+  if (
+    placedLightIds.length !== new Set(placedLightIds).size ||
+    placedLightIds.length !== currentDancingLightIds.length ||
+    placedLightIds.some((lightId) => !currentDancingLightIds.includes(lightId))
+  ) {
+    return "Dancing Lights movement must place each active light identity.";
+  }
+  const inRange =
+    placement.form === "combinedMediumForm"
+      ? placement.light.distanceFromCasterFeet <= invocation.rangeFeet
+        ? [placement.light]
+        : []
+      : placement.lights.filter(
+          (candidate) =>
+            candidate.distanceFromCasterFeet <= invocation.rangeFeet,
+        );
+  if (placement.form === "separateLights") {
+    if (inRange.length === 0) {
+      return null;
+    }
+    return dancingLightsSeparatePlacementError(
+      inRange,
+      invocation.rangeFeet,
+      invocation.spacingFeet,
+    );
+  }
+  return null;
+}
+
+function dancingLightsFillSetHasUnrelatedFills(
+  fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>,
+): boolean {
+  return (
+    fillSet.targetId !== undefined ||
+    fillSet.objectTarget !== undefined ||
+    fillSet.targetSpatialFacts.length > 0 ||
+    fillSet.targetAllocation !== undefined ||
+    fillSet.targetList !== undefined ||
+    fillSet.beamFills.some(
+      (beamFill) =>
+        beamFill.target !== undefined ||
+        beamFill.attackRoll !== undefined ||
+        beamFill.damageRoll !== undefined,
+    ) ||
+    fillSet.attackRoll !== undefined ||
+    fillSet.savingThrowOutcomes !== undefined ||
+    fillSet.skillChoice !== undefined ||
+    fillSet.abilityChoice !== undefined ||
+    fillSet.commandOptionChoice !== undefined ||
+    fillSet.areaChoice !== undefined ||
+    fillSet.damageTypeChoice !== undefined ||
+    fillSet.concentrationSavingThrows.length > 0 ||
+    fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
+    fillSet.damageDispositions.length > 0 ||
+    fillSet.damageRoll !== undefined ||
+    fillSet.movement !== undefined ||
+    fillSet.spellDamageReductionRolls.length > 0 ||
+    fillSet.attackBurstDamageRoll !== undefined ||
+    fillSet.healingRoll !== undefined
+  );
+}
+
+function dancingLightsSeparatePlacementError(
+  placements: readonly {
+    readonly distanceFromCasterFeet: number;
+    readonly nearestSiblingDistanceFeet?: number;
+  }[],
+  rangeFeet: number,
+  spacingFeet: number,
+): string | null {
+  if (placements.length === 0 || placements.length > 4) {
+    return "Dancing Lights separate form requires one to four lights.";
+  }
+  if (
+    placements.some((candidate) => candidate.distanceFromCasterFeet > rangeFeet)
+  ) {
+    return "Dancing Lights placement must be within the spell range.";
+  }
+  if (
+    placements.length > 1 &&
+    placements.some(
+      (candidate) =>
+        candidate.nearestSiblingDistanceFeet === undefined ||
+        candidate.nearestSiblingDistanceFeet > spacingFeet,
+    )
+  ) {
+    return "Dancing Lights separate lights must stay within 20 feet of another light.";
+  }
+  return null;
 }
 
 export function resolveWeaponAttackOverrideSpellAct(input: {

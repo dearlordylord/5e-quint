@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-object-light spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-dancing-lights-movable-dim-light spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-object-light spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 import type {
   ActionEconomyState,
   RuntimeActionResource,
@@ -94,6 +94,7 @@ import type {
   FindFamiliarState,
 } from "./find-familiar-lifecycle.ts";
 import type {
+  BattleDancingLightId,
   BattleObjectId,
   SpellId,
   BattleTablePositionId,
@@ -774,6 +775,22 @@ export type BattleActiveEffect =
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {
+      readonly kind: "dancingLights";
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "concentration" }
+      > & { readonly durationTicks: ElapsedTimeTicks };
+    } & (
+        | {
+            readonly form: "separateLights";
+            readonly lights: BattleDancingLightList;
+          }
+        | {
+            readonly form: "combinedMediumForm";
+            readonly light: BattleDancingLight;
+          }
+      ))
+  | (BattleSpellEffectBase & {
       readonly kind: "findFamiliarSharedSenses";
       readonly familiarId: CombatantId;
       readonly canSeeThroughFamiliar: true;
@@ -814,6 +831,12 @@ export type BattleLightEmitterAttachment =
   | {
       readonly kind: "object";
       readonly objectId: BattleObjectId;
+    }
+  | {
+      readonly kind: "dancingLight";
+      readonly lightId: BattleDancingLightId;
+      readonly positionId: BattleTablePositionId;
+      readonly form: BattleDancingLightsForm;
     };
 export type BattleSpellLightEmitter = BattleSpellEffectBase & {
   readonly kind: "spellLightEmitter";
@@ -833,6 +856,11 @@ export type BattleObjectInvisibleRevealLightEmitter = BattleSpellEffectBase & {
 export type BattleLightEmitter =
   | BattleSpellLightEmitter
   | BattleObjectInvisibleRevealLightEmitter;
+export type BattleDancingLightsForm = "separateLights" | "combinedMediumForm";
+export type BattleDancingLight = {
+  readonly lightId: BattleDancingLightId;
+  readonly positionId: BattleTablePositionId;
+};
 // SRD 5.2.1 Ready [Action]: this is the spell-specific Readied Response
 // created by taking Ready with an action-time spell. The caster spends the
 // spell's resources immediately, holds the energy with Concentration, and
@@ -2020,6 +2048,49 @@ export type HeldLightHurlSpellInvocation = DamageSpellSource & {
   readonly attackKind: Extract<SpellAttackKind, "ranged_spell_attack">;
   readonly attackBonus: AttackBonus;
 };
+export type DancingLightsSpellInvocation =
+  | {
+      readonly access: ClassCantripSpellAccess;
+      readonly resource: NoSpellInvocationResource;
+      readonly procedure: "dancingLightsSeparateCast";
+      readonly spell: SpellRecord;
+      readonly actionCost: "magicAction";
+      readonly form: "separateLights";
+      readonly dimRadiusFeet: MovementFeet;
+      readonly rangeFeet: MovementFeet;
+      readonly maxMoveFeet: MovementFeet;
+      readonly spacingFeet: MovementFeet;
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "concentration" }
+      > & { readonly durationTicks: ElapsedTimeTicks };
+    }
+  | {
+      readonly access: ClassCantripSpellAccess;
+      readonly resource: NoSpellInvocationResource;
+      readonly procedure: "dancingLightsCombinedCast";
+      readonly spell: SpellRecord;
+      readonly actionCost: "magicAction";
+      readonly form: "combinedMediumForm";
+      readonly dimRadiusFeet: MovementFeet;
+      readonly rangeFeet: MovementFeet;
+      readonly maxMoveFeet: MovementFeet;
+      readonly spacingFeet: MovementFeet;
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "concentration" }
+      > & { readonly durationTicks: ElapsedTimeTicks };
+    }
+  | {
+      readonly access: ClassCantripSpellAccess;
+      readonly resource: NoSpellInvocationResource;
+      readonly procedure: "dancingLightsReposition";
+      readonly spell: SpellRecord;
+      readonly actionCost: "bonusAction";
+      readonly maxMoveFeet: MovementFeet;
+      readonly rangeFeet: MovementFeet;
+      readonly spacingFeet: MovementFeet;
+    };
 export type SpellAttackDamageTargeting = Extract<
   SpellTargeting,
   { readonly kind: "singleCombatant" | "singleCreatureOrObject" }
@@ -2125,6 +2196,7 @@ export type SupportedSpellInvocation =
   | HeldLightSpellInvocation
   | ObjectLightSpellInvocation
   | HeldLightHurlSpellInvocation
+  | DancingLightsSpellInvocation
   | SpellHostedWeaponAttackInvocation
   | WeaponAttackOverrideSpellInvocation
   | DamageReductionSpellInvocation
@@ -2435,6 +2507,9 @@ type AnySupportedDamageSpellInvocation = Exclude<
       | "featherFallMitigation"
       | "heldLight"
       | "objectLight"
+      | "dancingLightsSeparateCast"
+      | "dancingLightsCombinedCast"
+      | "dancingLightsReposition"
       | "shieldReaction"
       | "saveGatedCondition"
       | "saveGatedAttackRollAdvantage"
@@ -3253,6 +3328,65 @@ export type BattleCommandOptionChoiceHole = {
   >;
   readonly choices: readonly BattleCommandOption[];
 };
+export type BattleDancingLightCastPlacement = {
+  readonly positionId: BattleTablePositionId;
+  readonly distanceFromCasterFeet: MovementFeet;
+  readonly nearestSiblingDistanceFeet?: MovementFeet;
+};
+export type BattleDancingLightRepositionPlacement =
+  BattleDancingLightCastPlacement & {
+    readonly lightId: BattleDancingLightId;
+    readonly moveDistanceFeet: MovementFeet;
+  };
+export type BattleDancingLightList =
+  | readonly [BattleDancingLight]
+  | readonly [BattleDancingLight, BattleDancingLight]
+  | readonly [BattleDancingLight, BattleDancingLight, BattleDancingLight]
+  | readonly [
+      BattleDancingLight,
+      BattleDancingLight,
+      BattleDancingLight,
+      BattleDancingLight,
+    ];
+export type BattleDancingLightCastPlacementList =
+  readonly BattleDancingLightCastPlacement[];
+export type BattleDancingLightRepositionPlacementList =
+  readonly BattleDancingLightRepositionPlacement[];
+export type BattleDancingLightsPlacementValue =
+  | {
+      readonly mode: "cast";
+      readonly form: "separateLights";
+      readonly lights: BattleDancingLightCastPlacementList;
+    }
+  | {
+      readonly mode: "cast";
+      readonly form: "combinedMediumForm";
+      readonly light: BattleDancingLightCastPlacement;
+    }
+  | {
+      readonly mode: "reposition";
+      readonly form: "separateLights";
+      readonly lights: BattleDancingLightRepositionPlacementList;
+    }
+  | {
+      readonly mode: "reposition";
+      readonly form: "combinedMediumForm";
+      readonly light: BattleDancingLightRepositionPlacement;
+    };
+export type BattleDancingLightsPlacementHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "dancingLightsPlacement";
+  readonly label: string;
+  readonly spell: DancingLightsSpellInvocation;
+  readonly mode: BattleDancingLightsPlacementValue["mode"];
+  readonly form: BattleDancingLightsForm;
+  readonly activeLightIds: readonly BattleDancingLightId[];
+  readonly rangeFeet: MovementFeet;
+  readonly maxMoveFeet: MovementFeet;
+  readonly spacingFeet: MovementFeet;
+  readonly requiresTableSpatialFact: true;
+};
 export type BattleSavingThrowOutcome = {
   readonly targetId: CombatantId;
   readonly succeeded: boolean;
@@ -3523,6 +3657,7 @@ export type BattleHole =
   | BattleSpellSkillChoiceHole
   | BattleSpellAbilityChoiceHole
   | BattleCommandOptionChoiceHole
+  | BattleDancingLightsPlacementHole
   | BattleSpellSavingThrowOutcomeHole
   | BattleSpellTurnStartSavingThrowOutcomeHole
   | BattleSleepRepeatSavingThrowOutcomeHole
@@ -3600,6 +3735,11 @@ export type BattleFill =
       readonly kind: "commandOptionChoice";
       readonly holeId: BattleHoleId;
       readonly value: BattleCommandOption;
+    }
+  | {
+      readonly kind: "dancingLightsPlacement";
+      readonly holeId: BattleHoleId;
+      readonly value: BattleDancingLightsPlacementValue;
     }
   | {
       readonly kind: "unitFeatureDecision";

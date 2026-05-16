@@ -19,6 +19,13 @@ export type BattleTablePositionId = typeof BattleTablePositionId.Type;
 export const battleTablePositionId: (value: string) => BattleTablePositionId =
   BattleTablePositionId.make;
 
+export const BattleDancingLightId = Schema.NonEmptyTrimmedString.pipe(
+  Schema.brand("BattleDancingLightId"),
+);
+export type BattleDancingLightId = typeof BattleDancingLightId.Type;
+export const battleDancingLightId: (value: string) => BattleDancingLightId =
+  BattleDancingLightId.make;
+
 export const SpellId = Schema.NonEmptyTrimmedString.pipe(
   Schema.brand("SpellId"),
 );

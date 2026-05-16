@@ -155,6 +155,12 @@ type LightEmitterAttachmentMbtProjection =
   | {
       readonly kind: "object";
       readonly objectId: string;
+    }
+  | {
+      readonly kind: "dancingLight";
+      readonly lightId: string;
+      readonly positionId: string;
+      readonly form: string;
     };
 type LightEmissionMbtProjection =
   | {
@@ -2904,6 +2910,12 @@ function projectLightEmitterAttachment(
       kind: "object" as const,
       objectId: object.objectId,
     })),
+    Match.when({ kind: "dancingLight" }, (light) => ({
+      kind: "dancingLight" as const,
+      lightId: light.lightId,
+      positionId: light.positionId,
+      form: light.form,
+    })),
     Match.exhaustive,
   );
 }
@@ -3097,6 +3109,17 @@ function lightEmitterAttachmentFromQuint(
       objectId: objectIdFromQuint(fields["object"], "object"),
     };
   }
+  if (tag === "DancingLightEmitter") {
+    const fields = quintVariantRecordValue(raw, "DancingLightEmitter");
+    return {
+      kind: "dancingLight",
+      lightId: String(numberFromQuintInt(fields["light"], "light")),
+      positionId: String(numberFromQuintInt(fields["position"], "position")),
+      form: booleanFromQuint(fields["combined"], "combined")
+        ? "combinedMediumForm"
+        : "separateLights",
+    };
+  }
 
   throw new Error(`Unknown Quint light emitter attachment variant: ${tag}`);
 }
@@ -3188,6 +3211,11 @@ function projectHole(hole: BattleHole): MbtHole {
   }
   if (hole.kind === "sanctuaryInterdictionOutcome") {
     throw new Error("Battle runtime MBT does not model Sanctuary holes.");
+  }
+  if (hole.kind === "dancingLightsPlacement") {
+    throw new Error(
+      "Battle runtime MBT does not model Dancing Lights placement holes.",
+    );
   }
   return Match.value(hole).pipe(
     Match.when({ kind: "targetChoice" }, () => "TargetChoice" as const),

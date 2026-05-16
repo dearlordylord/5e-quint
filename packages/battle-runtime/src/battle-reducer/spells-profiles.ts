@@ -321,6 +321,9 @@ export function supportedSpellActs(
       supportedCantripHeldLightSpellProfile(spell),
     ),
     ...cantrips.flatMap((spell) =>
+      supportedCantripDancingLightsSpellProfile(actor.combatantId, spell),
+    ),
+    ...cantrips.flatMap((spell) =>
       supportedCantripObjectLightSpellProfile(spell),
     ),
     ...cantrips.flatMap((spell) =>
@@ -416,6 +419,96 @@ export function supportedCantripHeldLightSpellProfile(
           expiresAt: { kind: "duration", durationTicks: durationTicks.right },
         },
       ];
+}
+
+export function supportedCantripDancingLightsSpellProfile(
+  actorId: CombatantId,
+  spell: SpellRecord,
+): readonly SupportedSpellInvocation[] {
+  if (
+    spell.name !== "Dancing Lights" ||
+    spell.provenance.kind !== "srd-5.2.1" ||
+    spell.provenance.section !== "Spells/Descriptions-A-D#Dancing Lights" ||
+    spell.mechanics.family !== "ongoing_effect" ||
+    spell.mechanics.level !== 0 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "point" ||
+    spell.mechanics.range.feet !== 120 ||
+    spell.mechanics.duration.kind !== "concentration" ||
+    spell.mechanics.duration.upTo.unit !== "minute" ||
+    spell.mechanics.duration.upTo.amount !== 1
+  ) {
+    return [];
+  }
+  const lightOperation = spell.mechanics.operations.find(
+    (operation) =>
+      operation.trigger.kind === "passive" &&
+      operation.effect.kind === "emit_light",
+  );
+  const repositionOperation = spell.mechanics.operations.find(
+    (operation) =>
+      operation.trigger.kind === "on_caster_spends_action" &&
+      operation.trigger.cost?.kind === "bonus_action" &&
+      operation.effect.kind === "reposition_attachment",
+  );
+  if (
+    lightOperation?.effect.kind !== "emit_light" ||
+    lightOperation.effect.brightRadiusFeet !== 0 ||
+    lightOperation.effect.dimAdditionalFeet !== 10 ||
+    repositionOperation?.effect.kind !== "reposition_attachment" ||
+    repositionOperation.effect.maxMoveFeet !== 60
+  ) {
+    return [];
+  }
+  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
+    spell.mechanics.duration.upTo,
+  );
+  if (Either.isLeft(durationTicks)) {
+    return [];
+  }
+  const base = {
+    access: { tag: "classCantrip" as const },
+    resource: { tag: "none" as const },
+    spell,
+    dimRadiusFeet: movementFeet(lightOperation.effect.dimAdditionalFeet),
+    rangeFeet: movementFeet(spell.mechanics.range.feet),
+    maxMoveFeet: movementFeet(repositionOperation.effect.maxMoveFeet),
+    spacingFeet: movementFeet(20),
+  };
+  return [
+    {
+      ...base,
+      procedure: "dancingLightsSeparateCast",
+      actionCost: "magicAction",
+      form: "separateLights",
+      expiresAt: {
+        kind: "concentration",
+        combatantId: actorId,
+        durationTicks: durationTicks.right,
+      },
+    },
+    {
+      ...base,
+      procedure: "dancingLightsCombinedCast",
+      actionCost: "magicAction",
+      form: "combinedMediumForm",
+      expiresAt: {
+        kind: "concentration",
+        combatantId: actorId,
+        durationTicks: durationTicks.right,
+      },
+    },
+    {
+      access: { tag: "classCantrip" },
+      resource: { tag: "none" },
+      procedure: "dancingLightsReposition",
+      spell,
+      actionCost: "bonusAction",
+      maxMoveFeet: movementFeet(repositionOperation.effect.maxMoveFeet),
+      rangeFeet: movementFeet(spell.mechanics.range.feet),
+      spacingFeet: movementFeet(20),
+    },
+  ];
 }
 
 export function supportedCantripObjectLightSpellProfile(

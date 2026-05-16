@@ -221,6 +221,8 @@ import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
 
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import {
+  resolveDancingLightsCastSpellAct,
+  resolveDancingLightsRepositionSpellAct,
   resolveHeldLightSpellAct,
   resolveMarkedDamageRiderSpellAct,
   resolveObjectLightSpellAct,
@@ -455,6 +457,17 @@ export function resolveSpellAct(
   }
   if (invocation.procedure === "objectLight") {
     return resolveObjectLightSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (
+    invocation.procedure === "dancingLightsSeparateCast" ||
+    invocation.procedure === "dancingLightsCombinedCast"
+  ) {
+    return resolveDancingLightsCastSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
@@ -1524,6 +1537,14 @@ export function resolveBonusActionSpellAct(
         "Bonus Action spell subject requires a supported Bonus Action spell act.",
       );
     }
+  } else if (invocation.procedure === "dancingLightsReposition") {
+    if (invocation.actionCost !== "bonusAction") {
+      return invalidResult(
+        input.state,
+        "unsupportedSubject",
+        "Bonus Action spell subject requires a supported Bonus Action spell act.",
+      );
+    }
   } else if (invocation.procedure === "scalarBuff") {
     if (invocation.actionCost !== "bonusAction") {
       return invalidResult(
@@ -1615,6 +1636,14 @@ export function resolveBonusActionSpellAct(
   }
   if (invocation.procedure === "heldLight") {
     return resolveHeldLightSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "dancingLightsReposition") {
+    return resolveDancingLightsRepositionSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

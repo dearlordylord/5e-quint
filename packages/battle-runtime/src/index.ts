@@ -1,5 +1,6 @@
 export {
   BattleCombatantSide,
+  BattleDancingLightId,
   BattleId,
   BattleObjectId,
   BattleReplayStackDepth,
@@ -7,6 +8,7 @@ export {
   CombatantId,
   SpellId,
   battleCombatantSide,
+  battleDancingLightId,
   battleId,
   battleObjectId,
   battleReplayStackDepth,

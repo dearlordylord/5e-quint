@@ -156,12 +156,12 @@
     "spellPressureRows": 211,
     "levelOneBattleReadiness": {
       "denominator": 367,
-      "numerator": 298,
-      "percent": "81.2%",
+      "numerator": 301,
+      "percent": "82%",
       "rowsByStatus": {
-        "accepted": 232,
+        "accepted": 235,
         "accepted-no-battle-effect": 66,
-        "battle-runtime-required": 28,
+        "battle-runtime-required": 25,
         "partial-battle-runtime": 41
       }
     },
@@ -171,14 +171,12 @@
       "non-runtime": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 280,
+      "catalog-installed-owner-evidence-present": 283,
       "non-runtime": 12,
-      "catalog-installed-owner-evidence-required": 3,
       "catalog-only/dead-for-now": 72
     },
     "spellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-required": 3,
-      "catalog-installed-owner-evidence-present": 136,
+      "catalog-installed-owner-evidence-present": 139,
       "catalog-only/dead-for-now": 72
     },
     "levelOneRowsByCategory": {
@@ -4468,8 +4466,8 @@
         "state": "installed",
         "unitId": "dancing_lights"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -4478,11 +4476,11 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "Unit matrix records unsupported-profile: Movable linked Dim Light sources, concentration lifecycle, Bonus Action repositioning, range expiry, and combined Medium-form choice are not promoted yet; SRDINV88A owns the next battle-runtime slice. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV88A at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Unit matrix records unsupported-profile: Movable linked Dim Light sources, concentration lifecycle, Bonus Action repositioning, range expiry, and combined Medium-form choice are not promoted yet; SRDINV88A owns the next battle-runtime slice. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_light",
@@ -13572,8 +13570,8 @@
         "state": "installed",
         "unitId": "dancing_lights"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -13582,11 +13580,11 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "Unit matrix records unsupported-profile: Movable linked Dim Light sources, concentration lifecycle, Bonus Action repositioning, range expiry, and combined Medium-form choice are not promoted yet; SRDINV88A owns the next battle-runtime slice. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV88A at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Unit matrix records unsupported-profile: Movable linked Dim Light sources, concentration lifecycle, Bonus Action repositioning, range expiry, and combined Medium-form choice are not promoted yet; SRDINV88A owns the next battle-runtime slice. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_elementalism",
@@ -16870,8 +16868,8 @@
         "state": "installed",
         "unitId": "dancing_lights"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -16880,11 +16878,11 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "Unit matrix records unsupported-profile: Movable linked Dim Light sources, concentration lifecycle, Bonus Action repositioning, range expiry, and combined Medium-form choice are not promoted yet; SRDINV88A owns the next battle-runtime slice. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported.",
-          "status": "owner evidence required"
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV88A at packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Unit matrix records unsupported-profile: Movable linked Dim Light sources, concentration lifecycle, Bonus Action repositioning, range expiry, and combined Medium-form choice are not promoted yet; SRDINV88A owns the next battle-runtime slice. Add runtime support and deterministic admission/projection evidence before treating this installed Spell Definition as operationally supported."
+      "nextAction": "Owner-specific operational evidence is classified and present."
     },
     {
       "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_elementalism",
