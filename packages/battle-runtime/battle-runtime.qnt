@@ -474,9 +474,27 @@ module battleRuntime {
     | CombatantLightEmitter({ actor: Actor })
     | ObjectLightEmitter({ object: ObjectTarget })
     | DancingLightEmitter({ light: int, position: int, combined: bool })
+  type LightEmitterProjectionFact =
+    | CombatantLightEmitterProjectionFact({ actor: Actor, distanceFeet: int })
+    | ObjectLightEmitterProjectionFact({ object: ObjectTarget, distanceFeet: int, opaqueCover: bool })
+    | DancingLightEmitterProjectionFact({ light: int, position: int, combined: bool, distanceFeet: int })
   type LightEmission =
     | DimLightEmission({ radiusFeet: int })
     | BrightAndDimLightEmission({ brightRadiusFeet: int, dimAdditionalFeet: int })
+  type LightEmitterOpaqueCoverInteraction =
+    | LightEmitterBlocksOpaqueCover
+    | LightEmitterDoesNotBlockOpaqueCover
+  type Illumination =
+    | BrightLightIllumination
+    | DimLightIllumination
+    | DarknessIllumination
+  type SightObscurement =
+    | UnobscuredSight
+    | LightlyObscuredSight
+    | HeavilyObscuredSight
+  type SightObserver =
+    | OrdinarySight
+    | DarkvisionSight({ rangeFeet: int, distanceFeet: int })
   type LightEmitterExpiration =
     | EndOfTurnLightEmitterExpiration({ actor: Actor, round: int })
     | ConcentrationLightEmitterExpiration({ actor: Actor })
@@ -487,6 +505,7 @@ module battleRuntime {
         sourceSpell: SpellInvocation,
         attachment: LightEmitterAttachment,
         emission: LightEmission,
+        opaqueCoverInteraction: LightEmitterOpaqueCoverInteraction,
         expiresAt: LightEmitterExpiration,
       })
     | ObjectInvisibleRevealLightEmitter({
@@ -2918,6 +2937,7 @@ module battleRuntime {
           sourceSpell: StarryWisp,
           attachment: attachment,
           emission: DimLightEmission({ radiusFeet: 10 }),
+          opaqueCoverInteraction: LightEmitterDoesNotBlockOpaqueCover,
           expiresAt: EndOfTurnLightEmitterExpiration({
             actor: source,
             round: endOfCasterNextTurnLightEmitterExpiresAtRound(state, source),
@@ -2936,6 +2956,7 @@ module battleRuntime {
           sourceSpell: DancingLightsSpell,
           attachment: attachment,
           emission: DimLightEmission({ radiusFeet: 10 }),
+          opaqueCoverInteraction: LightEmitterDoesNotBlockOpaqueCover,
           expiresAt: ConcentrationLightEmitterExpiration({ actor: source }),
         })
     }
@@ -5008,6 +5029,7 @@ module battleRuntime {
       sourceSpell: DancingLightsSpell,
       attachment: DancingLightEmitter({ light: light, position: position, combined: combined }),
       emission: DimLightEmission({ radiusFeet: dancingLightsDimLightRadiusFeet }),
+      opaqueCoverInteraction: LightEmitterDoesNotBlockOpaqueCover,
       expiresAt: ConcentrationLightEmitterExpiration({ actor: Fighter }),
     })
 
@@ -5199,8 +5221,124 @@ module battleRuntime {
         brightRadiusFeet: lightBrightLightRadiusFeet,
         dimAdditionalFeet: lightDimLightAdditionalFeet,
       }),
+      opaqueCoverInteraction: LightEmitterBlocksOpaqueCover,
       expiresAt: DurationLightEmitterExpiration({ durationTicks: lightDurationTicks }),
     })
+
+  pure def lightEmitterAttachmentMatchesProjectionFact(
+    attachment: LightEmitterAttachment,
+    fact: LightEmitterProjectionFact,
+  ): bool =
+    match attachment {
+      | CombatantLightEmitter(data) => match fact {
+          | CombatantLightEmitterProjectionFact(factData) => data.actor == factData.actor
+          | _ => false
+        }
+      | ObjectLightEmitter(data) => match fact {
+          | ObjectLightEmitterProjectionFact(factData) => data.object == factData.object
+          | _ => false
+        }
+      | DancingLightEmitter(data) => match fact {
+          | DancingLightEmitterProjectionFact(factData) =>
+              data.light == factData.light and
+              data.position == factData.position and
+              data.combined == factData.combined
+          | _ => false
+        }
+    }
+
+  pure def lightEmitterMatchesProjectionFact(emitter: LightEmitter, fact: LightEmitterProjectionFact): bool =
+    match emitter {
+      | SpellLightEmitter(data) => lightEmitterAttachmentMatchesProjectionFact(data.attachment, fact)
+      | ObjectInvisibleRevealLightEmitter(data) => match fact {
+          | ObjectLightEmitterProjectionFact(factData) => data.object == factData.object
+          | _ => false
+        }
+    }
+
+  pure def lightProjectionFactDistanceFeet(fact: LightEmitterProjectionFact): int =
+    match fact {
+      | CombatantLightEmitterProjectionFact(data) => data.distanceFeet
+      | ObjectLightEmitterProjectionFact(data) => data.distanceFeet
+      | DancingLightEmitterProjectionFact(data) => data.distanceFeet
+    }
+
+  pure def lightEmitterOpaqueCoverBlocksEmission(emitter: LightEmitter, fact: LightEmitterProjectionFact): bool =
+    match fact {
+      | ObjectLightEmitterProjectionFact(factData) =>
+          factData.opaqueCover and match emitter {
+            | SpellLightEmitter(data) =>
+                data.opaqueCoverInteraction == LightEmitterBlocksOpaqueCover
+            | ObjectInvisibleRevealLightEmitter(_) => false
+          }
+      | _ => false
+    }
+
+  pure def illuminationFromEmissionAtDistance(emission: LightEmission, distanceFeet: int): Illumination =
+    match emission {
+      | DimLightEmission(data) =>
+          if (distanceFeet <= data.radiusFeet) DimLightIllumination else DarknessIllumination
+      | BrightAndDimLightEmission(data) =>
+          if (distanceFeet <= data.brightRadiusFeet) BrightLightIllumination
+          else if (distanceFeet <= data.brightRadiusFeet + data.dimAdditionalFeet) DimLightIllumination
+          else DarknessIllumination
+    }
+
+  pure def lightEmitterIllumination(emitter: LightEmitter, fact: LightEmitterProjectionFact): Illumination =
+    if (
+      lightEmitterMatchesProjectionFact(emitter, fact) and
+      not(lightEmitterOpaqueCoverBlocksEmission(emitter, fact))
+    )
+      match emitter {
+        | SpellLightEmitter(data) =>
+            illuminationFromEmissionAtDistance(data.emission, lightProjectionFactDistanceFeet(fact))
+        | ObjectInvisibleRevealLightEmitter(data) =>
+            illuminationFromEmissionAtDistance(
+              DimLightEmission({ radiusFeet: data.dimLightRadiusFeet }),
+              lightProjectionFactDistanceFeet(fact)
+            )
+      }
+    else
+      DarknessIllumination
+
+  pure def mergedIllumination(left: Illumination, right: Illumination): Illumination =
+    match left {
+      | BrightLightIllumination => BrightLightIllumination
+      | DimLightIllumination => if (right == BrightLightIllumination) BrightLightIllumination else DimLightIllumination
+      | DarknessIllumination => right
+    }
+
+  pure def battleIlluminationFromLightEmitters(
+    emitters: Set[LightEmitter],
+    facts: Set[LightEmitterProjectionFact],
+  ): Illumination =
+    emitters
+      .map(emitter =>
+        facts
+          .map(fact => lightEmitterIllumination(emitter, fact))
+          .fold(DarknessIllumination, mergedIllumination)
+      )
+      .fold(DarknessIllumination, mergedIllumination)
+
+  pure def illuminationForObserver(illumination: Illumination, observer: SightObserver): Illumination =
+    match observer {
+      | OrdinarySight => illumination
+      | DarkvisionSight(data) =>
+          if (data.distanceFeet > data.rangeFeet)
+            illumination
+          else match illumination {
+            | BrightLightIllumination => BrightLightIllumination
+            | DimLightIllumination => BrightLightIllumination
+            | DarknessIllumination => DimLightIllumination
+          }
+    }
+
+  pure def sightObscurement(illumination: Illumination, observer: SightObserver): SightObscurement =
+    match illuminationForObserver(illumination, observer) {
+      | BrightLightIllumination => UnobscuredSight
+      | DimLightIllumination => LightlyObscuredSight
+      | DarknessIllumination => HeavilyObscuredSight
+    }
 
   pure def lightEmittersWithoutLightFromSource(emitters: Set[LightEmitter], source: Actor): Set[LightEmitter] =
     emitters.filter(emitter => match emitter {
@@ -5253,6 +5391,7 @@ module battleRuntime {
         brightRadiusFeet: produceFlameBrightLightRadiusFeet,
         dimAdditionalFeet: produceFlameDimLightAdditionalFeet,
       }),
+      opaqueCoverInteraction: LightEmitterDoesNotBlockOpaqueCover,
       expiresAt: DurationLightEmitterExpiration({ durationTicks: durationTicks }),
     })
 
@@ -5272,6 +5411,7 @@ module battleRuntime {
             sourceSpell: FaerieFire,
             attachment: CombatantLightEmitter({ actor: actor }),
             emission: DimLightEmission({ radiusFeet: faerieFireDimLightRadiusFeet }),
+            opaqueCoverInteraction: LightEmitterDoesNotBlockOpaqueCover,
             expiresAt: ConcentrationLightEmitterExpiration({ actor: Fighter }),
           }))
         | _ => Set()
@@ -5285,6 +5425,7 @@ module battleRuntime {
           sourceSpell: FaerieFire,
           attachment: ObjectLightEmitter({ object: data.object }),
           emission: DimLightEmission({ radiusFeet: faerieFireDimLightRadiusFeet }),
+          opaqueCoverInteraction: LightEmitterDoesNotBlockOpaqueCover,
           expiresAt: ConcentrationLightEmitterExpiration({ actor: data.source }),
         })
     })
@@ -9204,6 +9345,7 @@ module battleRuntime {
         sourceSpell: StarryWisp,
         attachment: CombatantLightEmitter({ actor: Goblin }),
         emission: DimLightEmission({ radiusFeet: 10 }),
+        opaqueCoverInteraction: LightEmitterDoesNotBlockOpaqueCover,
         expiresAt: EndOfTurnLightEmitterExpiration({ actor: Fighter, round: 2 }),
       })),
       assert(spellAttackDamageSupportsObjectTarget(StarryWispSpellAttack)),
@@ -9900,6 +10042,7 @@ module battleRuntime {
         sourceSpell: FaerieFire,
         attachment: CombatantLightEmitter({ actor: Goblin }),
         emission: DimLightEmission({ radiusFeet: faerieFireDimLightRadiusFeet }),
+        opaqueCoverInteraction: LightEmitterDoesNotBlockOpaqueCover,
         expiresAt: ConcentrationLightEmitterExpiration({ actor: Fighter }),
       }))),
       assert(activeEffectsDenyInvisibleBenefit(lit.goblin.activeEffects)),
@@ -9911,6 +10054,7 @@ module battleRuntime {
         sourceSpell: FaerieFire,
         attachment: CombatantLightEmitter({ actor: Goblin }),
         emission: DimLightEmission({ radiusFeet: faerieFireDimLightRadiusFeet }),
+        opaqueCoverInteraction: LightEmitterDoesNotBlockOpaqueCover,
         expiresAt: ConcentrationLightEmitterExpiration({ actor: Fighter }),
       })))),
       assert(not(activeEffectsDenyInvisibleBenefit(broken.goblin.activeEffects))),
@@ -9927,9 +10071,18 @@ module battleRuntime {
         sourceSpell: FaerieFire,
         attachment: ObjectLightEmitter({ object: FaerieFireObjectTarget }),
         emission: DimLightEmission({ radiusFeet: faerieFireDimLightRadiusFeet }),
+        opaqueCoverInteraction: LightEmitterDoesNotBlockOpaqueCover,
         expiresAt: ConcentrationLightEmitterExpiration({ actor: Fighter }),
       }))),
       assert(objectOutlinesDenyInvisibleBenefit(lit.objectOutlines, FaerieFireObjectTarget)),
+      assert(battleIlluminationFromLightEmitters(
+        battleRuntimeLightEmitters(lit),
+        Set(ObjectLightEmitterProjectionFact({
+          object: FaerieFireObjectTarget,
+          distanceFeet: 10,
+          opaqueCover: true,
+        }))
+      ) == DimLightIllumination),
       assert(spellObjectAttackRollModeFromActiveEffects(Set(), lit.objectOutlines, FaerieFireObjectTarget, true) == AdvantageSpellAttackRoll),
       assert(spellObjectAttackRollModeFromActiveEffects(Set(), lit.objectOutlines, FaerieFireObjectTarget, false) == NormalSpellAttackRoll),
       assert(spellObjectAttackRollModeFromActiveEffects(Set(ViciousMockeryNextAttackDisadvantage), lit.objectOutlines, FaerieFireObjectTarget, true) == NormalSpellAttackRoll),
@@ -9939,6 +10092,7 @@ module battleRuntime {
         sourceSpell: FaerieFire,
         attachment: ObjectLightEmitter({ object: FaerieFireObjectTarget }),
         emission: DimLightEmission({ radiusFeet: faerieFireDimLightRadiusFeet }),
+        opaqueCoverInteraction: LightEmitterDoesNotBlockOpaqueCover,
         expiresAt: ConcentrationLightEmitterExpiration({ actor: Fighter }),
       })))),
       assert(not(objectOutlinesDenyInvisibleBenefit(broken.objectOutlines, FaerieFireObjectTarget))),
@@ -11234,6 +11388,36 @@ module battleRuntime {
     }
   }
 
+  run test_light_visibility_projection = {
+    val lit = resolveLightObject(initialState, LightObjectTarget, ObjectLarge, ObjectNotWornOrCarriedBySomeoneElse)
+    val brightFact = ObjectLightEmitterProjectionFact({
+      object: LightObjectTarget,
+      distanceFeet: 20,
+      opaqueCover: false,
+    })
+    val dimFact = ObjectLightEmitterProjectionFact({
+      object: LightObjectTarget,
+      distanceFeet: 40,
+      opaqueCover: false,
+    })
+    val coveredFact = ObjectLightEmitterProjectionFact({
+      object: LightObjectTarget,
+      distanceFeet: 20,
+      opaqueCover: true,
+    })
+    all {
+      assert(battleIlluminationFromLightEmitters(lit.lightEmitters, Set(brightFact)) == BrightLightIllumination),
+      assert(battleIlluminationFromLightEmitters(lit.lightEmitters, Set(dimFact)) == DimLightIllumination),
+      assert(battleIlluminationFromLightEmitters(lit.lightEmitters, Set(coveredFact)) == DarknessIllumination),
+      assert(sightObscurement(BrightLightIllumination, OrdinarySight) == UnobscuredSight),
+      assert(sightObscurement(DimLightIllumination, OrdinarySight) == LightlyObscuredSight),
+      assert(sightObscurement(DarknessIllumination, OrdinarySight) == HeavilyObscuredSight),
+      assert(sightObscurement(DimLightIllumination, DarkvisionSight({ rangeFeet: 60, distanceFeet: 60 })) == UnobscuredSight),
+      assert(sightObscurement(DarknessIllumination, DarkvisionSight({ rangeFeet: 60, distanceFeet: 60 })) == LightlyObscuredSight),
+      assert(sightObscurement(DimLightIllumination, DarkvisionSight({ rangeFeet: 60, distanceFeet: 65 })) == LightlyObscuredSight),
+    }
+  }
+
   run test_light_object_rejects_too_large_or_worn_carried_by_someone_else = {
     all {
       assert(resolveLightObject(initialState, LightObjectTarget, ObjectHuge, ObjectNotWornOrCarriedBySomeoneElse) == initialState),
@@ -11267,6 +11451,7 @@ module battleRuntime {
           brightRadiusFeet: lightBrightLightRadiusFeet,
           dimAdditionalFeet: lightDimLightAdditionalFeet,
         }),
+        opaqueCoverInteraction: LightEmitterBlocksOpaqueCover,
         expiresAt: DurationLightEmitterExpiration({ durationTicks: 1 }),
       })),
     }

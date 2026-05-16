@@ -3401,6 +3401,10 @@ const BattleLightEmitterSchema = Schema.Union(
         dimAdditionalFeet: MovementFeet,
       }),
     ),
+    opaqueCoverInteraction: Schema.Union(
+      Schema.Struct({ kind: Schema.Literal("blocksEmission") }),
+      Schema.Struct({ kind: Schema.Literal("doesNotBlockEmission") }),
+    ),
     expiresAt: BattleRuntimeObjectSchema,
   }),
   Schema.Struct({

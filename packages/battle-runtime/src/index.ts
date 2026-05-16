@@ -104,9 +104,7 @@ export {
   type FindFamiliarTelepathicConnection,
   type FindFamiliarWithin100FeetFact,
 } from "./find-familiar-telepathy.ts";
-export {
-  type PactOfTheChainFamiliarAttackSubject,
-} from "./find-familiar-pact-chain.ts";
+export { type PactOfTheChainFamiliarAttackSubject } from "./find-familiar-pact-chain.ts";
 export {
   BATTLE_REACTION_TRIGGERS,
   BATTLE_READIED_SPELL_TRIGGERS,
@@ -183,8 +181,12 @@ export {
   BattleSnapshotSchema,
   addBattleCombatant,
   activeFeatherFallDescentRateCapFeetPerRound,
+  battleIlluminationFromLightEmitters,
+  battleLightEmitterProjection,
   battleLightEmitters,
   battleObscurementZones,
+  battlePerceptionRollModeForSight,
+  battleSightObscurement,
   battleCreatureInitFromStatBlock,
   breakBattleConcentration,
   combatantKnockedOutUnconscious,
@@ -241,9 +243,13 @@ export {
   type BattleHoleInstanceKey,
   type BattleInterruptedProcedure,
   type BattleInvalidReasonCode,
+  type BattleIllumination,
   type BattleLightEmission,
   type BattleLightEmitter,
   type BattleLightEmitterAttachment,
+  type BattleLightEmitterProjection,
+  type BattleLightEmitterProjectionFact,
+  type BattleLightlyObscuredPerceptionRollMode,
   type BattleObscurementZone,
   type BattleMovementFillValue,
   type BattleMovementHole,
@@ -266,6 +272,8 @@ export {
   type BattleRolledDiceFill,
   type BattleSavingThrowOutcome,
   type BattleSavingThrowRollModeProjection,
+  type BattleSightObserver,
+  type BattleSightObscurement,
   type BattleSnapshot,
   type BattleSpellAreaChoice,
   type BattleSpellAttackRollHole,

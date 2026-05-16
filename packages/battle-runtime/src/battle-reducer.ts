@@ -403,8 +403,12 @@ export {
 } from "./battle-reducer/spells-invocation-guards.ts";
 export {
   activeFeatherFallDescentRateCapFeetPerRound,
+  battleIlluminationFromLightEmitters,
+  battleLightEmitterProjection,
   battleLightEmitters,
   battleObscurementZones,
+  battlePerceptionRollModeForSight,
+  battleSightObscurement,
   FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
 } from "./battle-reducer/spells-active-effects.ts";
 export const BATTLE_SPECIAL_SPEED_KINDS = [
@@ -851,10 +855,18 @@ export type BattleLightEmitterAttachment =
       readonly positionId: BattleTablePositionId;
       readonly form: BattleDancingLightsForm;
     };
+export type BattleLightEmitterOpaqueCoverInteraction =
+  | {
+      readonly kind: "blocksEmission";
+    }
+  | {
+      readonly kind: "doesNotBlockEmission";
+    };
 export type BattleSpellLightEmitter = BattleSpellEffectBase & {
   readonly kind: "spellLightEmitter";
   readonly attachment: BattleLightEmitterAttachment;
   readonly emission: BattleLightEmission;
+  readonly opaqueCoverInteraction: BattleLightEmitterOpaqueCoverInteraction;
   readonly expiresAt: BattleActiveEffectExpiration;
 };
 export type BattleObjectInvisibleRevealLightEmitter = BattleSpellEffectBase & {
@@ -889,6 +901,44 @@ export type BattleDancingLight = {
   readonly lightId: BattleDancingLightId;
   readonly positionId: BattleTablePositionId;
 };
+export type BattleIllumination = "brightLight" | "dimLight" | "darkness";
+export type BattleSightObscurement =
+  | "unobscured"
+  | "lightlyObscured"
+  | "heavilyObscured";
+export type BattleLightEmitterProjectionFact =
+  | {
+      readonly kind: "combatant";
+      readonly combatantId: CombatantId;
+      readonly distanceFeet: MovementFeet;
+    }
+  | {
+      readonly kind: "object";
+      readonly objectId: BattleObjectId;
+      readonly distanceFeet: MovementFeet;
+      readonly opaqueCover: boolean;
+    }
+  | {
+      readonly kind: "dancingLight";
+      readonly lightId: BattleDancingLightId;
+      readonly positionId: BattleTablePositionId;
+      readonly form: BattleDancingLightsForm;
+      readonly distanceFeet: MovementFeet;
+    };
+export type BattleLightEmitterProjection = {
+  readonly emitter: BattleLightEmitter;
+  readonly illumination: Exclude<BattleIllumination, "darkness">;
+};
+export type BattleLightlyObscuredPerceptionRollMode = "disadvantage";
+export type BattleSightObserver =
+  | {
+      readonly kind: "ordinarySight";
+    }
+  | {
+      readonly kind: "darkvision";
+      readonly rangeFeet: MovementFeet;
+      readonly distanceFeet: MovementFeet;
+    };
 // SRD 5.2.1 Ready [Action]: this is the spell-specific Readied Response
 // created by taking Ready with an action-time spell. The caster spends the
 // spell's resources immediately, holds the energy with Concentration, and

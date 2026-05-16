@@ -1216,9 +1216,10 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
-      "sourceBoundary": "Caller-supplied touched object identity, size, and worn/carried facts; runtime owns the spell source, object attachment, Bright/Dim radii, one-hour duration, same-caster recast replacement, and duration cleanup. Opaque-cover suppression, map illumination, obscured-area derivation, Darkvision-adjusted sight, and colored-light presentation remain outside this runtime boundary.",
+      "sourceBoundary": "Caller-supplied touched object identity, size, worn/carried facts, and emitter projection facts; runtime owns the spell source, object attachment, Bright/Dim radii, one-hour duration, same-caster recast replacement, duration cleanup, opaque-cover suppression for the Light object emitter, and derived Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences. Colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside this runtime boundary.",
       "taskRefs": [
-        "SRDINV70B"
+        "SRDINV70B",
+        "SRDINV89C"
       ],
       "title": "Spell invocation creates a source-owned object light emitter",
       "verificationOwners": [
@@ -1241,9 +1242,10 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
-      "sourceBoundary": "Runtime owns the spell source, combatant attachment, Bright/Dim radii, timed duration, recast replacement, hurl cleanup, and duration cleanup. Map illumination rendering, opaque-cover suppression, illuminated-area projection, Darkvision-adjusted sight, and colored-light presentation remain outside this runtime boundary.",
+      "sourceBoundary": "Runtime owns the spell source, combatant attachment, Bright/Dim radii, timed duration, recast replacement, hurl cleanup, duration cleanup, and caller-supplied emitter projection facts for derived Bright/Dim/Darkness illumination to sight-obscurement and Darkvision-adjusted sight consequences. Map illumination rendering, opaque-cover suppression, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, and colored-light presentation remain outside this runtime boundary.",
       "taskRefs": [
-        "SRDINV87A"
+        "SRDINV87A",
+        "SRDINV89C"
       ],
       "title": "Spell invocation creates a source-owned held light emitter",
       "verificationOwners": [
@@ -1266,9 +1268,10 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
-      "sourceBoundary": "Caller-supplied Dancing Lights placement facts; runtime owns the spell source, source-owned dancing-light identities, separate-light and combined Medium-form emitter projection, 10-foot Dim Light radius, one-minute Concentration duration, recast replacement, Concentration cleanup, Bonus Action repositioning up to 60 feet, 20-foot inter-light spacing validation, and 120-foot range expiry. Map illumination rendering, color presentation, line of sight, pathfinding, automatic geometry derivation, Darkvision adjustment, and generic illusion adjudication remain outside this runtime boundary.",
+      "sourceBoundary": "Caller-supplied Dancing Lights placement facts; runtime owns the spell source, source-owned dancing-light identities, separate-light and combined Medium-form emitter projection, 10-foot Dim Light radius, one-minute Concentration duration, recast replacement, Concentration cleanup, Bonus Action repositioning up to 60 feet, 20-foot inter-light spacing validation, 120-foot range expiry, and caller-supplied emitter projection facts for derived Dim/Darkness illumination to sight-obscurement and Darkvision-adjusted sight consequences. Map illumination rendering, color presentation, automatic line-of-sight drawing, pathfinding, automatic geometry derivation, and generic illusion adjudication remain outside this runtime boundary.",
       "taskRefs": [
-        "SRDINV88A"
+        "SRDINV88A",
+        "SRDINV89C"
       ],
       "title": "Spell invocation creates movable linked Dancing Lights Dim Light emitters",
       "verificationOwners": [
@@ -1939,11 +1942,13 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
+      "sourceBoundary": "Faerie Fire owns affected-creature and affected-object outline effects, derived Dim Light emitter facts, and derived Dim Light to sight-obscurement and Darkvision-adjusted sight consequences. Color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside this runtime boundary.",
       "taskRefs": [
         "SRDINV30E",
         "SRDINV58A",
         "SRDINV58C",
-        "SRDINV87B"
+        "SRDINV87B",
+        "SRDINV89C"
       ],
       "title": "Spell invocation applies save-gated attack-roll Advantage against affected creatures or objects",
       "verificationOwners": [
@@ -3541,6 +3546,28 @@
         "spell.invocation-attack-roll-advantage-save"
       ],
       "taskId": "SRDINV87B"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts derive Bright/Dim/Darkness illumination from existing Light, Faerie Fire, Produce Flame, Dancing Lights, and object-reveal emitter facts; Light object emitters are suppressed by caller-supplied opaque-cover facts, and Dim/Darkness project Lightly/Heavily Obscured sight with Darkvision adjustment.",
+      "profileIds": [
+        "spell.invocation-object-light",
+        "spell.invocation-attack-roll-advantage-save",
+        "spell.invocation-held-light-emitter",
+        "spell.invocation-dancing-lights-movable-dim-light"
+      ],
+      "taskId": "SRDINV89C"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Light opaque-cover suppression, Bright/Dim emitter projection, Faerie Fire object Dim Light projection without Light-specific opaque-cover suppression, generic Lightly Obscured Perception Disadvantage projection, Darkvision adjustment, and preserved existing Produce Flame, Dancing Lights, Faerie Fire, and Light cleanup paths.",
+      "profileIds": [
+        "spell.invocation-object-light",
+        "spell.invocation-attack-roll-advantage-save",
+        "spell.invocation-held-light-emitter",
+        "spell.invocation-dancing-lights-movable-dim-light"
+      ],
+      "taskId": "SRDINV89C"
     }
   ],
   "units": [
@@ -6994,9 +7021,10 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
-          "sourceBoundary": "Caller-supplied Dancing Lights placement facts; runtime owns the spell source, source-owned dancing-light identities, separate-light and combined Medium-form emitter projection, 10-foot Dim Light radius, one-minute Concentration duration, recast replacement, Concentration cleanup, Bonus Action repositioning up to 60 feet, 20-foot inter-light spacing validation, and 120-foot range expiry. Map illumination rendering, color presentation, line of sight, pathfinding, automatic geometry derivation, Darkvision adjustment, and generic illusion adjudication remain outside this runtime boundary.",
+          "sourceBoundary": "Caller-supplied Dancing Lights placement facts; runtime owns the spell source, source-owned dancing-light identities, separate-light and combined Medium-form emitter projection, 10-foot Dim Light radius, one-minute Concentration duration, recast replacement, Concentration cleanup, Bonus Action repositioning up to 60 feet, 20-foot inter-light spacing validation, 120-foot range expiry, and caller-supplied emitter projection facts for derived Dim/Darkness illumination to sight-obscurement and Darkvision-adjusted sight consequences. Map illumination rendering, color presentation, automatic line-of-sight drawing, pathfinding, automatic geometry derivation, and generic illusion adjudication remain outside this runtime boundary.",
           "taskRefs": [
-            "SRDINV88A"
+            "SRDINV88A",
+            "SRDINV89C"
           ],
           "title": "Spell invocation creates movable linked Dancing Lights Dim Light emitters",
           "verificationOwners": [
@@ -7405,8 +7433,8 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "SRDINV87E",
-            "mechanic": "map illumination, color rendering, illuminated-area projection, line of sight, and Darkvision interaction remain outside the object-emitter runtime boundary"
+            "followUpTaskId": "SRDINV89D",
+            "mechanic": "color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the runtime boundary"
           }
         ],
         "profileIds": [
@@ -7421,7 +7449,9 @@
           "Concentration-owned outline effect that grants attack-roll Advantage against failed-save affected creatures when the attacker can see them and denies benefits from the Invisible condition",
           "caller-supplied object ids for objects in the Cube create concentration-owned object outline projections",
           "object-target spell attacks consume caller-supplied object sight facts to grant attack-roll Advantage against outlined objects",
-          "affected creatures and objects shed concentration-owned Dim Light emitter facts in a 10-foot radius attached to their outline effects"
+          "affected creatures and objects shed concentration-owned Dim Light emitter facts in a 10-foot radius attached to their outline effects",
+          "caller-supplied emitter projection facts derive Dim Light illumination from Faerie Fire object and creature emitters",
+          "derived Dim Light illumination projects Lightly Obscured sight consequences and Darkvision-adjusted sight consequences without duplicating emitter state"
         ],
         "tag": "profile-subset-supported"
       },
@@ -7445,11 +7475,13 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
+          "sourceBoundary": "Faerie Fire owns affected-creature and affected-object outline effects, derived Dim Light emitter facts, and derived Dim Light to sight-obscurement and Darkvision-adjusted sight consequences. Color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside this runtime boundary.",
           "taskRefs": [
             "SRDINV30E",
             "SRDINV58A",
             "SRDINV58C",
-            "SRDINV87B"
+            "SRDINV87B",
+            "SRDINV89C"
           ],
           "title": "Spell invocation applies save-gated attack-roll Advantage against affected creatures or objects",
           "verificationOwners": [
@@ -8537,8 +8569,8 @@
       "claim": {
         "deferredMechanics": [
           {
-            "followUpTaskId": "SRDINV78",
-            "mechanic": "opaque-cover suppression, map illumination, obscured-area derivation, Darkvision-adjusted sight, and colored-light presentation remain outside the object-emitter runtime boundary"
+            "followUpTaskId": "SRDINV89D",
+            "mechanic": "colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the object-emitter runtime boundary"
           }
         ],
         "profileIds": [
@@ -8554,7 +8586,9 @@
           "rejection when the object is worn or carried by someone else",
           "source-owned object-attached Bright Light 20-foot radius plus Dim Light for an additional 20 feet",
           "one-hour duration cleanup",
-          "same-caster recast replacement of the prior Light emitter"
+          "same-caster recast replacement of the prior Light emitter",
+          "caller-supplied emitter projection facts derive Bright Light, Dim Light, and opaque-cover suppression from the existing Light object emitter",
+          "derived Dim Light illumination projects Lightly Obscured sight consequences and Darkvision-adjusted sight consequences without duplicating emitter state"
         ],
         "tag": "profile-subset-supported"
       },
@@ -8578,9 +8612,10 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
-          "sourceBoundary": "Caller-supplied touched object identity, size, and worn/carried facts; runtime owns the spell source, object attachment, Bright/Dim radii, one-hour duration, same-caster recast replacement, and duration cleanup. Opaque-cover suppression, map illumination, obscured-area derivation, Darkvision-adjusted sight, and colored-light presentation remain outside this runtime boundary.",
+          "sourceBoundary": "Caller-supplied touched object identity, size, worn/carried facts, and emitter projection facts; runtime owns the spell source, object attachment, Bright/Dim radii, one-hour duration, same-caster recast replacement, duration cleanup, opaque-cover suppression for the Light object emitter, and derived Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences. Colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside this runtime boundary.",
           "taskRefs": [
-            "SRDINV70B"
+            "SRDINV70B",
+            "SRDINV89C"
           ],
           "title": "Spell invocation creates a source-owned object light emitter",
           "verificationOwners": [
@@ -8917,9 +8952,10 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
-          "sourceBoundary": "Runtime owns the spell source, combatant attachment, Bright/Dim radii, timed duration, recast replacement, hurl cleanup, and duration cleanup. Map illumination rendering, opaque-cover suppression, illuminated-area projection, Darkvision-adjusted sight, and colored-light presentation remain outside this runtime boundary.",
+          "sourceBoundary": "Runtime owns the spell source, combatant attachment, Bright/Dim radii, timed duration, recast replacement, hurl cleanup, duration cleanup, and caller-supplied emitter projection facts for derived Bright/Dim/Darkness illumination to sight-obscurement and Darkvision-adjusted sight consequences. Map illumination rendering, opaque-cover suppression, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, and colored-light presentation remain outside this runtime boundary.",
           "taskRefs": [
-            "SRDINV87A"
+            "SRDINV87A",
+            "SRDINV89C"
           ],
           "title": "Spell invocation creates a source-owned held light emitter",
           "verificationOwners": [

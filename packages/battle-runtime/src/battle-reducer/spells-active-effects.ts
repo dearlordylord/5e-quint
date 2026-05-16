@@ -37,10 +37,16 @@ import {
   type BattleDancingLightList,
   type BattleDancingLightsPlacementValue,
   type BattleFill,
+  type BattleIllumination,
   type BattleLightEmitter,
   type BattleLightEmitterAttachment,
+  type BattleLightEmitterProjection,
+  type BattleLightEmitterProjectionFact,
+  type BattleLightlyObscuredPerceptionRollMode,
   type BattleObscurementZone,
   type BattleObjectOutline,
+  type BattleSightObserver,
+  type BattleSightObscurement,
   type BattleSpellAreaChoice,
   type BattleState,
   type SpellActiveEffectPostDamageRider,
@@ -57,6 +63,7 @@ import { HIDEOUS_LAUGHTER_DURATION_TICKS } from "./domain-constants.ts";
 export const FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND = 60;
 export const FAERIE_FIRE_DIM_LIGHT_RADIUS_FEET = movementFeet(10);
 export const DANCING_LIGHTS_DIM_LIGHT_RADIUS_FEET = movementFeet(10);
+export const PERCEPTION_LIGHTLY_OBSCURED_ROLL_MODE = "disadvantage" as const;
 type DancingLightsActiveEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "dancingLights" }
@@ -196,6 +203,7 @@ export function battleLightEmitters(
                       brightRadiusFeet: effect.brightRadiusFeet,
                       dimAdditionalFeet: effect.dimAdditionalFeet,
                     },
+                    opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
                     expiresAt: effect.expiresAt,
                   },
                 ]
@@ -214,6 +222,9 @@ export function battleLightEmitters(
                       kind: "dim" as const,
                       radiusFeet: DANCING_LIGHTS_DIM_LIGHT_RADIUS_FEET,
                     },
+                    opaqueCoverInteraction: {
+                      kind: "doesNotBlockEmission" as const,
+                    },
                     expiresAt: effect.expiresAt,
                   }))
                 : [],
@@ -224,6 +235,169 @@ export function battleLightEmitters(
     ...outlineLightEmitters,
     ...state.objectOutlines.map(faerieFireObjectDimLightEmitter),
   ];
+}
+
+export function battleLightEmitterProjection(
+  emitter: BattleLightEmitter,
+  fact: BattleLightEmitterProjectionFact,
+): BattleLightEmitterProjection | null {
+  if (!lightEmitterMatchesProjectionFact(emitter, fact)) {
+    return null;
+  }
+  if (lightEmitterOpaqueCoverBlocksEmission(emitter, fact)) {
+    return null;
+  }
+  const illumination = illuminationFromEmissionAtDistance(
+    emitter.emission,
+    fact.distanceFeet,
+  );
+  return illumination === "darkness" ? null : { emitter, illumination };
+}
+
+export function battleIlluminationFromLightEmitters(
+  emitters: readonly BattleLightEmitter[],
+  facts: readonly BattleLightEmitterProjectionFact[],
+): BattleIllumination {
+  const projections = emitters.flatMap((emitter) =>
+    facts.flatMap((fact) => {
+      const projection = battleLightEmitterProjection(emitter, fact);
+      return projection === null ? [] : [projection];
+    }),
+  );
+  if (
+    projections.some((projection) => projection.illumination === "brightLight")
+  ) {
+    return "brightLight";
+  }
+  return projections.some(
+    (projection) => projection.illumination === "dimLight",
+  )
+    ? "dimLight"
+    : "darkness";
+}
+
+export function battleSightObscurement(
+  illumination: BattleIllumination,
+  observer: BattleSightObserver = { kind: "ordinarySight" },
+): BattleSightObscurement {
+  return obscurementFromIllumination(
+    battleIlluminationForObserver(illumination, observer),
+  );
+}
+
+export function battlePerceptionRollModeForSight(
+  illumination: BattleIllumination,
+  observer: BattleSightObserver = { kind: "ordinarySight" },
+): BattleLightlyObscuredPerceptionRollMode | undefined {
+  return battleSightObscurement(illumination, observer) === "lightlyObscured"
+    ? PERCEPTION_LIGHTLY_OBSCURED_ROLL_MODE
+    : undefined;
+}
+
+function lightEmitterMatchesProjectionFact(
+  emitter: BattleLightEmitter,
+  fact: BattleLightEmitterProjectionFact,
+): boolean {
+  return Match.value(emitter).pipe(
+    Match.when({ kind: "spellLightEmitter" }, (spellEmitter) =>
+      lightEmitterAttachmentMatchesFact(spellEmitter.attachment, fact),
+    ),
+    Match.when(
+      { kind: "objectInvisibleRevealLightEmitter" },
+      (objectEmitter) =>
+        fact.kind === "object" && objectEmitter.objectId === fact.objectId,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function lightEmitterAttachmentMatchesFact(
+  attachment: BattleLightEmitterAttachment,
+  fact: BattleLightEmitterProjectionFact,
+): boolean {
+  return Match.value(attachment).pipe(
+    Match.when(
+      { kind: "combatant" },
+      (combatantAttachment) =>
+        fact.kind === "combatant" &&
+        combatantAttachment.combatantId === fact.combatantId,
+    ),
+    Match.when(
+      { kind: "object" },
+      (objectAttachment) =>
+        fact.kind === "object" && objectAttachment.objectId === fact.objectId,
+    ),
+    Match.when(
+      { kind: "dancingLight" },
+      (lightAttachment) =>
+        fact.kind === "dancingLight" &&
+        lightAttachment.lightId === fact.lightId &&
+        lightAttachment.positionId === fact.positionId &&
+        lightAttachment.form === fact.form,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function lightEmitterOpaqueCoverBlocksEmission(
+  emitter: BattleLightEmitter,
+  fact: BattleLightEmitterProjectionFact,
+): boolean {
+  return (
+    fact.kind === "object" &&
+    fact.opaqueCover &&
+    emitter.kind === "spellLightEmitter" &&
+    emitter.opaqueCoverInteraction.kind === "blocksEmission"
+  );
+}
+
+function illuminationFromEmissionAtDistance(
+  emission: BattleLightEmitter["emission"],
+  distanceFeet: number,
+): BattleIllumination {
+  return Match.value(emission).pipe(
+    Match.when({ kind: "dim" }, (dim) =>
+      distanceFeet <= dim.radiusFeet ? "dimLight" : "darkness",
+    ),
+    Match.when({ kind: "brightAndDim" }, (brightAndDim) =>
+      distanceFeet <= brightAndDim.brightRadiusFeet
+        ? "brightLight"
+        : distanceFeet <=
+            brightAndDim.brightRadiusFeet + brightAndDim.dimAdditionalFeet
+          ? "dimLight"
+          : "darkness",
+    ),
+    Match.exhaustive,
+  );
+}
+
+function battleIlluminationForObserver(
+  illumination: BattleIllumination,
+  observer: BattleSightObserver,
+): BattleIllumination {
+  if (
+    observer.kind !== "darkvision" ||
+    observer.distanceFeet > observer.rangeFeet
+  ) {
+    return illumination;
+  }
+  return Match.value(illumination).pipe(
+    Match.when("brightLight", () => "brightLight" as const),
+    Match.when("dimLight", () => "brightLight" as const),
+    Match.when("darkness", () => "dimLight" as const),
+    Match.exhaustive,
+  );
+}
+
+function obscurementFromIllumination(
+  illumination: BattleIllumination,
+): BattleSightObscurement {
+  return Match.value(illumination).pipe(
+    Match.when("brightLight", () => "unobscured" as const),
+    Match.when("dimLight", () => "lightlyObscured" as const),
+    Match.when("darkness", () => "heavilyObscured" as const),
+    Match.exhaustive,
+  );
 }
 
 function faerieFireCombatantDimLightEmitter(
@@ -239,6 +413,7 @@ function faerieFireCombatantDimLightEmitter(
       kind: "dim",
       radiusFeet: FAERIE_FIRE_DIM_LIGHT_RADIUS_FEET,
     },
+    opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
     expiresAt: effect.expiresAt,
   };
 }
@@ -255,6 +430,7 @@ function faerieFireObjectDimLightEmitter(
       kind: "dim",
       radiusFeet: FAERIE_FIRE_DIM_LIGHT_RADIUS_FEET,
     },
+    opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
     expiresAt: outline.expiresAt,
   };
 }
@@ -653,6 +829,7 @@ function lightEmitterFromPostDamageRider(
         kind: "spellLightEmitter",
         attachment,
         emission: rider.emission,
+        opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
         expiresAt,
       };
 }
@@ -1517,6 +1694,7 @@ export function applyObjectLightSpellEffect(
         sourceCombatantId: actorId,
         attachment: { kind: "object", objectId },
         emission: invocation.light,
+        opaqueCoverInteraction: { kind: "blocksEmission" },
         expiresAt: invocation.expiresAt,
       },
     ],
