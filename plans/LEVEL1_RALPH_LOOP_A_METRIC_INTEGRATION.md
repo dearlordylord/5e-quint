@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "L1A-L1Y-02",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Core Trait Profile Decision"
     },
     {
@@ -162,7 +162,7 @@ Then implement `AT-L1-14`:
 | 2 | L1A-AT14A - Later-Level Strict Closure Classifier For Bard And Monk | done | L1A-AT13 | Close only Bard/Monk later-level residuals; Ranger waits for Loop B `AT-L1-01`. |
 | 3 | L1A-FRONTIER-DECISION-INDEX - Frontier Decision Artifact Index | done | L1A-AT13 | Create reusable decision artifact shape for `frontier-decisions/`. |
 | 4 | L1A-L1Y-01 - Class Container Profile Decision | done | L1A-FRONTIER-DECISION-INDEX | Decide profile vs owner-evidence-only closure for 12 class containers. |
-| 5 | L1A-L1Y-02 - Core Trait Profile Decision | ready-for-research | L1A-FRONTIER-DECISION-INDEX | Decision spike for 76 core trait rows; produce follow-ups only if justified. |
+| 5 | L1A-L1Y-02 - Core Trait Profile Decision | done | L1A-FRONTIER-DECISION-INDEX | Decision spike for 76 core trait rows; produce follow-ups only if justified. |
 | 6 | L1A-L1Y-03 - Starting Equipment Profile Decision | ready-for-research | L1A-FRONTIER-DECISION-INDEX | Decide starting equipment profile vs existing source projection closure. |
 | 7 | L1A-L1Y-04 - Multiclass Entry Trait Profile Decision | ready-for-research | L1A-FRONTIER-DECISION-INDEX | Decide multiclass entry profile vs shared-algebra/creation owner evidence. |
 | 8 | L1A-L1Y-05 - Spell Access Profile Decision | ready-for-research | L1A-FRONTIER-DECISION-INDEX | Decide explicit spell-access profile vs derived CharacterBuild evidence. |
@@ -301,7 +301,7 @@ Plan Impact:
 
 ### Task 5 - L1A-L1Y-02 - Core Trait Profile Decision
 
-Status: `ready-for-research`
+Status: `done`
 
 Research `AT-L1Y-02` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
