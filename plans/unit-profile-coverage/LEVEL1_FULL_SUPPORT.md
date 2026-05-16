@@ -8,8 +8,8 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 
 | Metric | Covered |
 | --- | ---: |
-| Strict runtime/profile support | 62/93 (66.7%) |
-| Strict target closure | 73/93 (78.5%) |
+| Strict runtime/profile support | 63/93 (67.7%) |
+| Strict target closure | 74/93 (79.6%) |
 | Product readiness | 367/367 (100%) |
 
 ## Scope
@@ -21,14 +21,14 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | SRD pressure with no Unit matrix row | 14 |
 | Non-executable class containers | 12 |
 | Strict executable denominator | 93 |
-| Non-supported frontier | 31 |
+| Non-supported frontier | 30 |
 
 ## Status Groups
 
 | Status | Count | Units |
 | --- | ---: | --- |
-| supported-profile | 62 | `acid_splash`, `animal_friendship`, `bane`, `barbarian_rage`, `barbarian_unarmored_defense`, `bless`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_divine_order`, `color_spray`, `command`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `druid_primal_order`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `false_life`, `fighter_second_wind`, `fire_bolt`, `guidance`, `guiding_bolt`, `healing_word`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `ice_knife`, `inflict_wounds`, `longstrider`, `mage_armor`, `magic_missile`, `monk_unarmored_defense`, `paladin_lay_on_hands`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_expertise`, `rogue_sneak_attack`, `sacred_flame`, `sanctuary`, `searing_smite`, `shield`, `shield_of_faith`, `shillelagh`, `shocking_grasp`, `sleep`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `starry_wisp`, `true_strike`, `vicious_mockery`, `wizard_ritual_adept` |
-| open-profile-accounting | 15 | `barbarian_weapon_mastery`, `faerie_fire`, `feather_fall`, `fighter_weapon_mastery`, `fog_cloud`, `grease`, `hunters_mark`, `jump`, `light`, `paladin_weapon_mastery`, `ranger_favored_enemy`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `thunderwave`, `wizard_arcane_recovery` |
+| supported-profile | 63 | `acid_splash`, `animal_friendship`, `bane`, `barbarian_rage`, `barbarian_unarmored_defense`, `bless`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_divine_order`, `color_spray`, `command`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `druid_primal_order`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `false_life`, `fighter_second_wind`, `fire_bolt`, `guidance`, `guiding_bolt`, `healing_word`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `ice_knife`, `inflict_wounds`, `longstrider`, `mage_armor`, `magic_missile`, `monk_unarmored_defense`, `paladin_lay_on_hands`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_expertise`, `rogue_sneak_attack`, `sacred_flame`, `sanctuary`, `searing_smite`, `shield`, `shield_of_faith`, `shillelagh`, `shocking_grasp`, `sleep`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `starry_wisp`, `true_strike`, `vicious_mockery`, `wizard_arcane_recovery`, `wizard_ritual_adept` |
+| open-profile-accounting | 14 | `barbarian_weapon_mastery`, `faerie_fire`, `feather_fall`, `fighter_weapon_mastery`, `fog_cloud`, `grease`, `hunters_mark`, `jump`, `light`, `paladin_weapon_mastery`, `ranger_favored_enemy`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `thunderwave` |
 | closed-runtime-detached-table-adjudication | 7 | `charm_person`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `druid_druidic`, `minor_illusion`, `rogue_thieves_cant` |
 | open-runtime-behavior | 5 | `alarm`, `comprehend_languages`, `identify`, `silent_image`, `speak_with_animals` |
 | closed-later-level-only | 4 | `bard_bardic_inspiration`, `fighter_fighting_style`, `monk_martial_arts`, `warlock_eldritch_invocations` |
@@ -37,7 +37,7 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 
 | Status | Count | Units |
 | --- | ---: | --- |
-| open-profile-accounting | 15 | `barbarian_weapon_mastery`, `faerie_fire`, `feather_fall`, `fighter_weapon_mastery`, `fog_cloud`, `grease`, `hunters_mark`, `jump`, `light`, `paladin_weapon_mastery`, `ranger_favored_enemy`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `thunderwave`, `wizard_arcane_recovery` |
+| open-profile-accounting | 14 | `barbarian_weapon_mastery`, `faerie_fire`, `feather_fall`, `fighter_weapon_mastery`, `fog_cloud`, `grease`, `hunters_mark`, `jump`, `light`, `paladin_weapon_mastery`, `ranger_favored_enemy`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `thunderwave` |
 | open-runtime-behavior | 5 | `alarm`, `comprehend_languages`, `identify`, `silent_image`, `speak_with_animals` |
 
 ## Non-Supported Frontier Detail
@@ -74,7 +74,6 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | `speak_with_animals` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
 | `thunderwave` | open-profile-accounting | profile-subset-supported | installed | table-spatial-derivation | Runtime-owned push geometry, collision/pathfinding, and final-position derivation remain table/spatial derivations.; Broad object inventory simulation and sound propagation simulation remain table/spatial derivations. |
 | `warlock_eldritch_invocations` | closed-later-level-only | profile-subset-supported | installed | later-level-only | The remaining invocation replacement and prerequisite-retention mechanics occur after the level-1 invocation choice has already been finalized.; The remaining invocation gain, prerequisite, and repeatability mechanics occur after the level-1 invocation choice has already been finalized. |
-| `wizard_arcane_recovery` | open-profile-accounting | unsupported-profile | installed | outside-battle-runtime | Short Rest Spell Slot recovery is outside promoted battle runtime. |
 
 ## Outside Denominator Pressure
 

@@ -1408,41 +1408,12 @@
       "status": "closed-later-level-only",
       "strictTargetClosed": true,
       "unitId": "warlock_eldritch_invocations"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "outside-battle-runtime"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "Short Rest Spell Slot recovery is outside promoted battle runtime.",
-      "sourceRecordPath": "packages/surface/content/wizard_arcane_recovery.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Wizard Arcane Recovery",
-          "id": "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery",
-          "levelBand": "level-1",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 103,
-            "lineStart": 98,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "wizard_arcane_recovery"
     }
   ],
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 62,
+      "count": 63,
       "description": "Full support exists at the Unit profile boundary for strict level-1 accounting.",
       "status": "supported-profile",
       "unitIds": [
@@ -1507,11 +1478,12 @@
         "starry_wisp",
         "true_strike",
         "vicious_mockery",
+        "wizard_arcane_recovery",
         "wizard_ritual_adept"
       ]
     },
     {
-      "count": 15,
+      "count": 14,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
@@ -1528,8 +1500,7 @@
         "ranger_favored_enemy",
         "ranger_weapon_mastery",
         "rogue_weapon_mastery",
-        "thunderwave",
-        "wizard_arcane_recovery"
+        "thunderwave"
       ]
     },
     {
@@ -1582,18 +1553,18 @@
     },
     "strictRuntimeProfileSupport": {
       "denominator": 93,
-      "numerator": 62,
-      "percent": "66.7%"
+      "numerator": 63,
+      "percent": "67.7%"
     },
     "strictTargetClosure": {
       "denominator": 93,
-      "numerator": 73,
-      "percent": "78.5%"
+      "numerator": 74,
+      "percent": "79.6%"
     }
   },
   "openFrontier": [
     {
-      "count": 15,
+      "count": 14,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
@@ -1610,8 +1581,7 @@
         "ranger_favored_enemy",
         "ranger_weapon_mastery",
         "rogue_weapon_mastery",
-        "thunderwave",
-        "wizard_arcane_recovery"
+        "thunderwave"
       ]
     },
     {
@@ -3905,17 +3875,17 @@
     "groupsByClaimTag": {
       "missing": 5,
       "profile-subset-supported": 14,
-      "supported-profile": 62,
-      "unsupported-profile": 12
+      "supported-profile": 63,
+      "unsupported-profile": 11
     },
     "groupsByStatus": {
       "closed-later-level-only": 4,
       "closed-runtime-detached-table-adjudication": 7,
-      "open-profile-accounting": 15,
+      "open-profile-accounting": 14,
       "open-runtime-behavior": 5,
-      "supported-profile": 62
+      "supported-profile": 63
     },
-    "nonSupportedFrontier": 31,
+    "nonSupportedFrontier": 30,
     "strictDenominator": 93
   }
 }

@@ -43,7 +43,7 @@
     {
       "number": 6,
       "id": "L1C-AT08",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Wizard Arcane Recovery Character Sheet Profile"
     },
     {
@@ -253,7 +253,7 @@ For `AT-L1-08`:
 | 4 | L1C-AT06 - Cleric And Druid Order Character Profiles | done | L1C-AT03S | Divine/Primal Order projection. |
 | 5 | L1C-AT07 - Rogue Expertise Character Profile | done | L1C-AT03S | Level-1 slice with level 6 Expertise guard. |
 | 16 | L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT - Rogue Expertise Level 6 Grant | done | L1C-AT07 | Production Rogue 6 admission and deterministic evidence promoted `rogue_expertise` to all-level support. |
-| 6 | L1C-AT08 - Wizard Arcane Recovery Character Sheet Profile | ready-for-implementation-after-light-research | none | Character Sheet Short Rest Spell Slot recovery. |
+| 6 | L1C-AT08 - Wizard Arcane Recovery Character Sheet Profile | done | none | Character Sheet Short Rest Spell Slot recovery. |
 | 7 | L1C-AT04 - Weapon Mastery Character And Rest Profile | ready-for-implementation-after-light-research | L1C-AT03S | Includes Long Rest reselection support; selected mastery-property MBT does not satisfy this gate. |
 | 8 | L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT - Fighter Fighting Style Advancement Replacement | ready-for-implementation-after-light-research | L1C-AT03 | Required before `fighter_fighting_style` can move from level-1 subset support to all-level support. |
 | 9 | L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE - Warlock Eldritch Invocation Lifecycle | ready-for-implementation-after-light-research | L1C-AT05 | Required before `warlock_eldritch_invocations` can move from level-1 subset support to all-level support. |
@@ -478,7 +478,7 @@ Plan Impact:
 
 ### Task 6 - L1C-AT08 - Wizard Arcane Recovery Character Sheet Profile
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Implement `AT-L1-08` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 

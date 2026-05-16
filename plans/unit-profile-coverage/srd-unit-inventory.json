@@ -16846,14 +16846,8 @@
         "state": "installed",
         "unitId": "wizard_arcane_recovery"
       },
-      "unitProfileDisposition": "unsupported-profile",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "unit-claim",
-        "kind": "outside-battle-runtime",
-        "owner": "character-sheet/rest runtime",
-        "reason": "Short Rest Spell Slot recovery is outside promoted battle runtime."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",

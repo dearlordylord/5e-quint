@@ -62,8 +62,8 @@
       "value": 144
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 88,
-      "numerator": 88,
+      "denominator": 89,
+      "numerator": 89,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 88,
+      "denominator": 89,
       "numerator": 47,
-      "percent": "53.4%"
+      "percent": "52.8%"
     },
     "supportedProfileCoverage": {
       "denominator": 117,
-      "numerator": 88,
-      "percent": "75.2%"
+      "numerator": 89,
+      "percent": "76.1%"
     }
   },
   "metricSemantics": [
@@ -936,6 +936,25 @@
         "SRDINV25"
       ],
       "title": "Character Sheet feature spends one healing pool for HP restoration and condition-removal costs",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-sheet.short-rest-spell-slot-recovery",
+      "profileKind": "character-sheet",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "CharacterBuild Wizard progression plus installed Arcane Recovery class-feature Unit; ordinary Spell Slot expenditure state remains separate from Pact Slot recovery",
+      "taskRefs": [
+        "SRDINV24"
+      ],
+      "title": "Character Sheet applies Short Rest ordinary Spell Slot recovery from Wizard Arcane Recovery and resets that use on Long Rest",
       "verificationOwners": [
         {
           "kind": "runtime-test",
@@ -2546,6 +2565,14 @@
         "character-sheet.armor-class-base-formula"
       ],
       "taskId": "SRDINV23"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Character Sheet Short Rest Spell Slot recovery runtime tests for Wizard Arcane Recovery ordinary Spell Slot refund, once-per-Long-Rest use, level budget rejection, feature ownership, and Long Rest reset.",
+      "profileIds": [
+        "character-sheet.short-rest-spell-slot-recovery"
+      ],
+      "taskId": "SRDINV24"
     },
     {
       "claimKind": "completed-runtime-parity",
@@ -5741,19 +5768,43 @@
         "status": "installed"
       },
       "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "character-sheet/rest runtime",
-          "reason": "Short Rest Spell Slot recovery is outside promoted battle runtime."
-        },
-        "reason": "Spell slot recovery outside battle is not a promoted Unit profile yet.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "character-sheet.short-rest-spell-slot-recovery"
+        ],
+        "rawRequirementIds": [],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV91B"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-sheet.short-rest-spell-slot-recovery",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "CharacterBuild Wizard progression plus installed Arcane Recovery class-feature Unit; ordinary Spell Slot expenditure state remains separate from Pact Slot recovery",
+          "taskRefs": [
+            "SRDINV24"
+          ],
+          "title": "Character Sheet applies Short Rest ordinary Spell Slot recovery from Wizard Arcane Recovery and resets that use on Long Rest",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/wizard_arcane_recovery.json",
       "unitId": "wizard_arcane_recovery"
     },
