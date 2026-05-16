@@ -62,8 +62,8 @@
       "value": 144
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 92,
-      "numerator": 92,
+      "denominator": 93,
+      "numerator": 93,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 92,
+      "denominator": 93,
       "numerator": 47,
-      "percent": "51.1%"
+      "percent": "50.5%"
     },
     "supportedProfileCoverage": {
       "denominator": 117,
-      "numerator": 92,
-      "percent": "78.6%"
+      "numerator": 93,
+      "percent": "79.5%"
     }
   },
   "metricSemantics": [
@@ -10938,26 +10938,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "SRDINV55 table/spatial owner",
-              "reason": "Runtime-owned push geometry, collision/pathfinding, and final-position derivation remain table/spatial derivations."
-            },
-            "followUpTaskId": "SRDINV55",
-            "mechanic": "runtime-owned push geometry, collision/pathfinding, and final-position derivation"
-          },
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "SRDINV55 table/spatial owner",
-              "reason": "Broad object inventory simulation and sound propagation simulation remain table/spatial derivations."
-            },
-            "followUpTaskId": "SRDINV55",
-            "mechanic": "broad object inventory simulation and sound propagation simulation"
-          }
-        ],
         "profileIds": [
           "spell.invocation-damage-save-or-attack"
         ],
@@ -10965,13 +10945,14 @@
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
         ],
         "supportedMechanics": [
-          "self-origin 15-foot Cube Constitution Saving Throw boundary with table-supplied affected creatures",
-          "slot-scaled Thunder damage with half damage on successful saves",
-          "failed-save creature push consumed from caller-supplied legal destination or blocked-push facts",
-          "unsecured-object push disposition consumed from caller-supplied object facts",
-          "audible thunderous boom evidence within 300 feet"
+          "self-origin 15-foot Cube Constitution Saving Throw boundary consumes typed table-supplied affected-creature witnesses",
+          "slot-scaled Thunder damage with half damage on successful Saving Throws",
+          "failed-save creature push consumes typed table-supplied pushed-destination or blocked-push disposition witnesses and does not derive push geometry or final position",
+          "unsecured-object push consumes typed table-supplied object identity and pushed-destination or blocked-push disposition witnesses for objects entirely within the Cube",
+          "audible thunderous boom consumes a typed table-supplied sound witness matching the 300-foot radius",
+          "residual checklist: push destination legality, blockage, collision/pathfinding, and final-position derivation are runtime-detached table adjudication/presentation; unsecured-object inventory discovery and object-location derivation are runtime-detached table adjudication/presentation; sound propagation/listener discovery is runtime-detached table adjudication/presentation; the promoted runtime consumes the supplied push/object/boom witnesses and does not derive geometry, object inventory, or sound propagation"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [

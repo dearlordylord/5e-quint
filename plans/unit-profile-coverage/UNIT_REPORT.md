@@ -17,13 +17,13 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Authored Surface Unit catalog admission | 143/429 | 33.3% |
 | Authored Surface executable catalog admission | 116/362 | 32% |
 | Installed Unit profile classification coverage | 144/144 | 100% |
-| Supported executable Unit coverage | 92/117 | 78.6% |
+| Supported executable Unit coverage | 93/117 | 79.5% |
 | QNT profile modeling coverage | 62/62 | 100% |
 | QNT proof coverage | 62/62 | 100% |
 | Runtime mapping coverage | 62/62 | 100% |
 | Runtime parity coverage | 62/62 | 100% |
-| Deterministic admission/projection coverage | 92/92 | 100% |
-| Selected identity MBT coverage | 47/92 | 51.1% |
+| Deterministic admission/projection coverage | 93/93 | 100% |
+| Selected identity MBT coverage | 47/93 | 50.5% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -134,6 +134,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `shield_of_faith` | srd-5.2.1 | `spell.scalar-buff` |
 | `shillelagh` | srd-5.2.1 | `spell.invocation-weapon-attack-override` |
 | `sleep` | srd-5.2.1 | `spell.invocation-sleep-target-admission`, `spell.invocation-sleep-repeat-save-lifecycle` |
+| `thunderwave` | srd-5.2.1 | `spell.invocation-damage-save-or-attack` |
 | `true_strike` | srd-5.2.1 | `spell.invocation-spell-hosted-weapon-attack` |
 | `eldritch_blast` | srd-5.2.1 | `spell.invocation-beam-sequence` |
 | `hellish_rebuke` | srd-5.2.1 | `spell.reaction-hellish-rebuke`, `spell.invocation-damage-save-or-attack` |
@@ -148,7 +149,6 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `monk_martial_arts` | srd-5.2.1 | `unit-feature.martial-arts-attack-projection` | while unarmored and not wielding a Shield, and unarmed or wielding only Monk weapons, eligible Unarmed Strikes and Monk weapons may use Dexterity instead of Strength for attack and damage rolls; eligible Unarmed Strikes and eligible one-die Monk weapons may replace lower damage dice with the level-1 d6 Martial Arts die; eligible promoted Unarmed Strike Grapple and Shove save DCs may use Dexterity through the projected Unarmed Strike ability modifier; while the same Martial Arts eligibility gate holds, the Monk can make an Unarmed Strike as a Bonus Action without an Attack-action prerequisite | later-level Martial Arts die size increases beyond d6 (SRDINV78) |
 | `ranger_favored_enemy` | srd-5.2.1 | `spell.invocation-marked-damage-rider` | always-prepared Hunter's Mark access through retained prepared Spell Access; two-use Favored Enemy Long Rest free-cast resource at Ranger level 1; free-cast Hunter's Mark uses the existing marked damage rider, target gate, Concentration ownership, Bonus Action cost, and Wisdom (Perception or Survival) Advantage to find the marked target; normal Spell Slot Hunter's Mark casting remains available when the free-cast resource is exhausted | later-level Favored Enemy free-cast count scaling beyond two uses (SRDINV78) |
 | `find_familiar` | srd-5.2.1 | `spell.find-familiar-lifecycle` | present familiar combatant insertion with its own Initiative turn, action, Reaction, and Movement resources; chosen named form and CR 0 Beast Stat Block resolution from the SRD form catalog; caster-chosen Celestial, Fey, or Fiend creature type override projection; one-familiar-per-caster lifecycle and atomic recast replacement; caller-supplied Initiative and unoccupied-space placement facts; ordinary Find Familiar attack and Opportunity Attack rejection while allowing supported non-attack actions; Magic-action temporary dismissal and reappearance, permanent dismissal, 0-HP disappearance, and held-item drop boundary events for 0-HP disappearance and pocket-dimension entry; 100-foot telepathic connection projection without shared-language requirement; Bonus Action shared sight, hearing, and special-sense benefits until the start of the caster's next turn; Touch-range spell delivery through a present familiar within 100 feet, atomically spending the familiar's Reaction with the spell invocation; Pact of the Chain selected-invocation exception that atomically forgoes one owner Attack-action attack, spends the present owned familiar's Reaction, and resolves a supported familiar Stat Block action attack | unsupported familiar form attacks and generic command AI (SRDINV86) |
-| `thunderwave` | srd-5.2.1 | `spell.invocation-damage-save-or-attack` | self-origin 15-foot Cube Constitution Saving Throw boundary with table-supplied affected creatures; slot-scaled Thunder damage with half damage on successful saves; failed-save creature push consumed from caller-supplied legal destination or blocked-push facts; unsecured-object push disposition consumed from caller-supplied object facts; audible thunderous boom evidence within 300 feet | runtime-owned push geometry, collision/pathfinding, and final-position derivation (SRDINV55); broad object inventory simulation and sound propagation simulation (SRDINV55) |
 | `charm_person` | srd-5.2.1 | `spell.creature-type-protection-and-charm` | Humanoid creature-type target filter; Wisdom save-gated Charmed condition; hostile-target Wisdom save Advantage; 1-hour spell-owned condition duration; spell ends if caster or one of the caster's allies deals damage to the target; slot-scaled target count | Friendly disposition, social interaction effects, and target knowledge when the spell ends are not represented in battle runtime state (SRDINV41) |
 
 ## Authored Surface Units Not In Unit Catalog
@@ -850,6 +850,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `shield_of_faith` | `spell.scalar-buff` | SRDINV30A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `shillelagh` | `spell.invocation-weapon-attack-override` | SRDINV84H | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `sleep` | `spell.invocation-sleep-target-admission`, `spell.invocation-sleep-repeat-save-lifecycle` | SRDINV38A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `thunderwave` | `spell.invocation-damage-save-or-attack` | SRDINV51 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `true_strike` | `spell.invocation-spell-hosted-weapon-attack` | SRDINV31F | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `eldritch_blast` | `spell.invocation-beam-sequence` | SRDINV39 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `hellish_rebuke` | `spell.reaction-hellish-rebuke`, `spell.invocation-damage-save-or-attack` | SRDINV69B | `packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts` |
@@ -865,7 +866,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `monk_martial_arts` | `unit-feature.martial-arts-attack-projection` | SRDINV73A | `packages/battle-runtime/src/unit-profile-admission.test.ts` | later-level Martial Arts die size increases beyond d6 (SRDINV78) |
 | `ranger_favored_enemy` | `spell.invocation-marked-damage-rider` | SRDINV87C | `packages/battle-runtime/src/index.test.ts` | later-level Favored Enemy free-cast count scaling beyond two uses (SRDINV78) |
 | `find_familiar` | `spell.find-familiar-lifecycle` | SRDINV84I5 | `packages/battle-runtime/src/find-familiar-lifecycle.test.ts` | unsupported familiar form attacks and generic command AI (SRDINV86) |
-| `thunderwave` | `spell.invocation-damage-save-or-attack` | SRDINV51 | `packages/battle-runtime/src/unit-profile-admission.test.ts` | runtime-owned push geometry, collision/pathfinding, and final-position derivation (SRDINV55); broad object inventory simulation and sound propagation simulation (SRDINV55) |
 | `charm_person` | `spell.creature-type-protection-and-charm` | SRDINV37 | `packages/battle-runtime/src/unit-profile-admission.test.ts` | Friendly disposition, social interaction effects, and target knowledge when the spell ends are not represented in battle runtime state (SRDINV41) |
 
 ## Selected Identity MBT Evidence
@@ -962,7 +962,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `detect_evil_and_good` | unsupported-profile | Detection/occlusion search semantics and Hallow discovery are runtime-detached exploration table adjudication, not promoted battle Unit profiles. |
 | `detect_magic` | unsupported-profile | Detection/concentration search semantics are runtime-detached exploration table adjudication, not a promoted battle Unit profile. |
 | `detect_poison_and_disease` | unsupported-profile | Detection/occlusion search semantics and poison/disease identification are runtime-detached exploration table adjudication, not promoted battle Unit profiles. |
-| `thunderwave` | profile-subset-supported | supported subset: self-origin 15-foot Cube Constitution Saving Throw boundary with table-supplied affected creatures; slot-scaled Thunder damage with half damage on successful saves; failed-save creature push consumed from caller-supplied legal destination or blocked-push facts; unsecured-object push disposition consumed from caller-supplied object facts; audible thunderous boom evidence within 300 feet; deferred: runtime-owned push geometry, collision/pathfinding, and final-position derivation (SRDINV55); broad object inventory simulation and sound propagation simulation (SRDINV55) |
 | `minor_illusion` | unsupported-profile | Sound/image illusion creation, physical-interaction reveal, faint rendering after Study, and recast expiry are runtime-detached illusion/exploration table adjudication outside promoted runtime owners. |
 | `charm_person` | profile-subset-supported | supported subset: Humanoid creature-type target filter; Wisdom save-gated Charmed condition; hostile-target Wisdom save Advantage; 1-hour spell-owned condition duration; spell ends if caster or one of the caster's allies deals damage to the target; slot-scaled target count; deferred: Friendly disposition, social interaction effects, and target knowledge when the spell ends are not represented in battle runtime state (SRDINV41) |
 | `armor_chain_mail` | unsupported-profile | Equipment AC data is authored but not represented as an executable Unit profile row. |
@@ -987,7 +986,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
 | srd-5.2.1 | unassigned | unsupported-profile | 51 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_fighting_style`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `rogue_expertise`, `rogue_thieves_cant`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `orc_darkvision`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `minor_illusion`, `armor_chain_mail`, `equipment_shield`, `weapon_club`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff`, `alarm`, `comprehend_languages`, `identify`, `silent_image`, `speak_with_animals` |
-| srd-5.2.1 | unassigned | profile-subset-supported | 6 | `bard_bardic_inspiration`, `monk_martial_arts`, `ranger_favored_enemy`, `find_familiar`, `thunderwave`, `charm_person` |
+| srd-5.2.1 | unassigned | profile-subset-supported | 5 | `bard_bardic_inspiration`, `monk_martial_arts`, `ranger_favored_enemy`, `find_familiar`, `charm_person` |
 
 ## Profile Claims By Task
 

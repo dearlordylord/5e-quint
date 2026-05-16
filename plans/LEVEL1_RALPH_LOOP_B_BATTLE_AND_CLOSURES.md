@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "L1B-AT12",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Thunderwave Witness Promotion"
     },
     {
@@ -202,7 +202,7 @@ For `AT-L1-09` through `AT-L1-12`:
 | 3 | L1B-AT09 - Light And Outline Witness Promotion | done | none | Witness checklist before promotion. |
 | 4 | L1B-AT10 - Falling And Jump Witness Promotion | done | none | Witness checklist before promotion. |
 | 5 | L1B-AT11 - Area Hazard And Obscurement Witness Promotion | done | none | Witness checklist before promotion. |
-| 6 | L1B-AT12 - Thunderwave Witness Promotion | ready-for-implementation-after-light-research | none | Witness checklist before promotion. |
+| 6 | L1B-AT12 - Thunderwave Witness Promotion | done | none | Witness checklist before promotion. |
 | 7 | L1B-L1X-02 - Disguise Self No-Matrix Decision | ready-for-research | none | Decision artifact only; no Unit claim without admitted UnitRecord. |
 | 8 | L1B-L1X-03 - Druidcraft No-Matrix Decision | ready-for-research | none | Decision artifact only; no Unit claim without admitted UnitRecord. |
 | 9 | L1B-L1X-04 - Elementalism No-Matrix Decision | ready-for-research | none | Decision artifact only; no Unit claim without admitted UnitRecord. |
@@ -546,7 +546,7 @@ Plan Impact:
 
 ### Task 6 - L1B-AT12 - Thunderwave Witness Promotion
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Implement `AT-L1-12` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 

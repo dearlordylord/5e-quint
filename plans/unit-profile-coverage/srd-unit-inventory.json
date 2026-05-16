@@ -5749,14 +5749,8 @@
         "state": "installed",
         "unitId": "thunderwave"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV55 table/spatial owner",
-        "reason": "Runtime-owned push geometry, collision/pathfinding, and final-position derivation remain table/spatial derivations.; Broad object inventory simulation and sound propagation simulation remain table/spatial derivations."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -9080,14 +9074,8 @@
         "state": "installed",
         "unitId": "thunderwave"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV55 table/spatial owner",
-        "reason": "Runtime-owned push geometry, collision/pathfinding, and final-position derivation remain table/spatial derivations.; Broad object inventory simulation and sound propagation simulation remain table/spatial derivations."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -15426,14 +15414,8 @@
         "state": "installed",
         "unitId": "thunderwave"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV55 table/spatial owner",
-        "reason": "Runtime-owned push geometry, collision/pathfinding, and final-position derivation remain table/spatial derivations.; Broad object inventory simulation and sound propagation simulation remain table/spatial derivations."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -19156,14 +19138,8 @@
         "state": "installed",
         "unitId": "thunderwave"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV55 table/spatial owner",
-        "reason": "Runtime-owned push geometry, collision/pathfinding, and final-position derivation remain table/spatial derivations.; Broad object inventory simulation and sound propagation simulation remain table/spatial derivations."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",

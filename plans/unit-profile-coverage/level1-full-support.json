@@ -1059,71 +1059,6 @@
     },
     {
       "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "table-spatial-derivation"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Runtime-owned push geometry, collision/pathfinding, and final-position derivation remain table/spatial derivations.; Broad object inventory simulation and sound propagation simulation remain table/spatial derivations.",
-      "sourceRecordPath": "packages/surface/content/thunderwave.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Bard spell list Thunderwave",
-          "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_thunderwave",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 183,
-            "lineStart": 183,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Druid spell list Thunderwave",
-          "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_thunderwave",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 221,
-            "lineStart": 221,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Thunderwave",
-          "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_thunderwave",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 264,
-            "lineStart": 264,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Thunderwave",
-          "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_thunderwave",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 190,
-            "lineStart": 190,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "thunderwave"
-    },
-    {
-      "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
         "selection-grant-container"
@@ -1184,7 +1119,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 66,
+      "count": 67,
       "description": "Full support exists at the Unit profile boundary for strict level-1 accounting.",
       "status": "supported-profile",
       "unitIds": [
@@ -1251,6 +1186,7 @@
         "sorcerous_burst",
         "spare_the_dying",
         "starry_wisp",
+        "thunderwave",
         "true_strike",
         "vicious_mockery",
         "wizard_ritual_adept"
@@ -1276,7 +1212,7 @@
       ]
     },
     {
-      "count": 12,
+      "count": 11,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
@@ -1289,7 +1225,6 @@
         "ranger_weapon_mastery",
         "rogue_expertise",
         "rogue_weapon_mastery",
-        "thunderwave",
         "warlock_eldritch_invocations",
         "wizard_arcane_recovery"
       ]
@@ -1317,18 +1252,18 @@
     },
     "strictRuntimeProfileSupport": {
       "denominator": 93,
-      "numerator": 66,
-      "percent": "71%"
+      "numerator": 67,
+      "percent": "72%"
     },
     "strictTargetClosure": {
       "denominator": 93,
-      "numerator": 81,
-      "percent": "87.1%"
+      "numerator": 82,
+      "percent": "88.2%"
     }
   },
   "openFrontier": [
     {
-      "count": 12,
+      "count": 11,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
@@ -1341,7 +1276,6 @@
         "ranger_weapon_mastery",
         "rogue_expertise",
         "rogue_weapon_mastery",
-        "thunderwave",
         "warlock_eldritch_invocations",
         "wizard_arcane_recovery"
       ]
@@ -3623,17 +3557,17 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 120,
     "groupsByClaimTag": {
-      "profile-subset-supported": 5,
-      "supported-profile": 66,
+      "profile-subset-supported": 4,
+      "supported-profile": 67,
       "unsupported-profile": 22
     },
     "groupsByStatus": {
       "closed-later-level-only": 3,
       "closed-runtime-detached-table-adjudication": 12,
-      "open-profile-accounting": 12,
-      "supported-profile": 66
+      "open-profile-accounting": 11,
+      "supported-profile": 67
     },
-    "nonSupportedFrontier": 27,
+    "nonSupportedFrontier": 26,
     "strictDenominator": 93
   }
 }

@@ -8,8 +8,8 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 
 | Metric | Covered |
 | --- | ---: |
-| Strict runtime/profile support | 66/93 (71%) |
-| Strict target closure | 81/93 (87.1%) |
+| Strict runtime/profile support | 67/93 (72%) |
+| Strict target closure | 82/93 (88.2%) |
 | Product readiness | 367/367 (100%) |
 
 ## Scope
@@ -21,22 +21,22 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | SRD pressure with no Unit matrix row | 14 |
 | Non-executable class containers | 12 |
 | Strict executable denominator | 93 |
-| Non-supported frontier | 27 |
+| Non-supported frontier | 26 |
 
 ## Status Groups
 
 | Status | Count | Units |
 | --- | ---: | --- |
-| supported-profile | 66 | `acid_splash`, `animal_friendship`, `bane`, `barbarian_rage`, `barbarian_unarmored_defense`, `bless`, `burning_hands`, `chill_touch`, `chromatic_orb`, `color_spray`, `command`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feather_fall`, `fighter_second_wind`, `fire_bolt`, `fog_cloud`, `grease`, `guidance`, `guiding_bolt`, `healing_word`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hunters_mark`, `ice_knife`, `inflict_wounds`, `jump`, `light`, `longstrider`, `mage_armor`, `magic_missile`, `monk_unarmored_defense`, `paladin_lay_on_hands`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_sneak_attack`, `sacred_flame`, `sanctuary`, `searing_smite`, `shield`, `shield_of_faith`, `shillelagh`, `shocking_grasp`, `sleep`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `starry_wisp`, `true_strike`, `vicious_mockery`, `wizard_ritual_adept` |
+| supported-profile | 67 | `acid_splash`, `animal_friendship`, `bane`, `barbarian_rage`, `barbarian_unarmored_defense`, `bless`, `burning_hands`, `chill_touch`, `chromatic_orb`, `color_spray`, `command`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feather_fall`, `fighter_second_wind`, `fire_bolt`, `fog_cloud`, `grease`, `guidance`, `guiding_bolt`, `healing_word`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hunters_mark`, `ice_knife`, `inflict_wounds`, `jump`, `light`, `longstrider`, `mage_armor`, `magic_missile`, `monk_unarmored_defense`, `paladin_lay_on_hands`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_sneak_attack`, `sacred_flame`, `sanctuary`, `searing_smite`, `shield`, `shield_of_faith`, `shillelagh`, `shocking_grasp`, `sleep`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `starry_wisp`, `thunderwave`, `true_strike`, `vicious_mockery`, `wizard_ritual_adept` |
 | closed-runtime-detached-table-adjudication | 12 | `alarm`, `charm_person`, `comprehend_languages`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `druid_druidic`, `identify`, `minor_illusion`, `rogue_thieves_cant`, `silent_image`, `speak_with_animals` |
-| open-profile-accounting | 12 | `barbarian_weapon_mastery`, `cleric_divine_order`, `druid_primal_order`, `fighter_fighting_style`, `fighter_weapon_mastery`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_expertise`, `rogue_weapon_mastery`, `thunderwave`, `warlock_eldritch_invocations`, `wizard_arcane_recovery` |
+| open-profile-accounting | 11 | `barbarian_weapon_mastery`, `cleric_divine_order`, `druid_primal_order`, `fighter_fighting_style`, `fighter_weapon_mastery`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_expertise`, `rogue_weapon_mastery`, `warlock_eldritch_invocations`, `wizard_arcane_recovery` |
 | closed-later-level-only | 3 | `bard_bardic_inspiration`, `monk_martial_arts`, `ranger_favored_enemy` |
 
 ## Open Frontier
 
 | Status | Count | Units |
 | --- | ---: | --- |
-| open-profile-accounting | 12 | `barbarian_weapon_mastery`, `cleric_divine_order`, `druid_primal_order`, `fighter_fighting_style`, `fighter_weapon_mastery`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_expertise`, `rogue_weapon_mastery`, `thunderwave`, `warlock_eldritch_invocations`, `wizard_arcane_recovery` |
+| open-profile-accounting | 11 | `barbarian_weapon_mastery`, `cleric_divine_order`, `druid_primal_order`, `fighter_fighting_style`, `fighter_weapon_mastery`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_expertise`, `rogue_weapon_mastery`, `warlock_eldritch_invocations`, `wizard_arcane_recovery` |
 
 ## Non-Supported Frontier Detail
 
@@ -66,7 +66,6 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | `rogue_weapon_mastery` | open-profile-accounting | unsupported-profile | installed | selection-grant-container | The class feature grants weapon mastery choices; selected mastery property Units own executable battle pressure. |
 | `silent_image` | closed-runtime-detached-table-adjudication | unsupported-profile | not-in-unit-catalog | outside-runtime-presentation-exploration | Image content, movement appearance, physical interaction, Study action adjudication, and seeing-through behavior are runtime-detached table adjudication outside promoted battle runtime. |
 | `speak_with_animals` | closed-runtime-detached-table-adjudication | unsupported-profile | not-in-unit-catalog | outside-runtime-presentation-exploration | Beast conversation, Influence action options, and information remembered by Beasts are runtime-detached table adjudication outside promoted battle runtime. |
-| `thunderwave` | open-profile-accounting | profile-subset-supported | installed | table-spatial-derivation | Runtime-owned push geometry, collision/pathfinding, and final-position derivation remain table/spatial derivations.; Broad object inventory simulation and sound propagation simulation remain table/spatial derivations. |
 | `warlock_eldritch_invocations` | open-profile-accounting | unsupported-profile | installed | selection-grant-container | The class feature chooses an invocation option; individual invocation Units own executable pressure. |
 | `wizard_arcane_recovery` | open-profile-accounting | unsupported-profile | installed | outside-battle-runtime | Short Rest Spell Slot recovery is outside promoted battle runtime. |
 
