@@ -39,6 +39,48 @@
       "id": "L1B-AT12",
       "status": "ready-for-implementation-after-light-research",
       "title": "Thunderwave Witness Promotion"
+    },
+    {
+      "number": 7,
+      "id": "L1B-L1X-02",
+      "status": "ready-for-research",
+      "title": "Disguise Self No-Matrix Decision"
+    },
+    {
+      "number": 8,
+      "id": "L1B-L1X-03",
+      "status": "ready-for-research",
+      "title": "Druidcraft No-Matrix Decision"
+    },
+    {
+      "number": 9,
+      "id": "L1B-L1X-04",
+      "status": "ready-for-research",
+      "title": "Elementalism No-Matrix Decision"
+    },
+    {
+      "number": 10,
+      "id": "L1B-L1X-07",
+      "status": "ready-for-research",
+      "title": "Illusory Script No-Matrix Decision"
+    },
+    {
+      "number": 11,
+      "id": "L1B-L1X-10",
+      "status": "ready-for-research",
+      "title": "Message No-Matrix Decision"
+    },
+    {
+      "number": 12,
+      "id": "L1B-L1X-11",
+      "status": "ready-for-research",
+      "title": "Prestidigitation No-Matrix Decision"
+    },
+    {
+      "number": 13,
+      "id": "L1B-L1X-13",
+      "status": "ready-for-research",
+      "title": "Thaumaturgy Mixed Owner Decision"
     }
   ]
 }
@@ -75,6 +117,8 @@ Every Ralph prompt for this loop must include:
 | `AT-L1-10` Falling/jump witness promotion | `feather_fall`, `jump` | falling, landing, legal destination, jump witness-boundary claim promotion |
 | `AT-L1-11` Area hazard/obscurement witness promotion | `fog_cloud`, `grease` | area, wind, movement-cost witness-boundary claim promotion |
 | `AT-L1-12` Thunderwave witness promotion | `thunderwave` | push, object disposition, audible-boom witness-boundary claim promotion |
+| `AT-L1X-02`, `AT-L1X-03`, `AT-L1X-04`, `AT-L1X-07`, `AT-L1X-10`, `AT-L1X-11` utility no-matrix decisions | utility/illusion/communication spell pressures | runtime-detached, catalog-only, or future-owner decision artifacts |
+| `AT-L1X-13` Thaumaturgy mixed owner decision | `thaumaturgy` pressure | Booming Voice owner decision plus utility closure recommendation |
 
 ## Scope
 
@@ -159,6 +203,13 @@ For `AT-L1-09` through `AT-L1-12`:
 | 4 | L1B-AT10 - Falling And Jump Witness Promotion | ready-for-implementation-after-light-research | none | Witness checklist before promotion. |
 | 5 | L1B-AT11 - Area Hazard And Obscurement Witness Promotion | ready-for-implementation-after-light-research | none | Witness checklist before promotion. |
 | 6 | L1B-AT12 - Thunderwave Witness Promotion | ready-for-implementation-after-light-research | none | Witness checklist before promotion. |
+| 7 | L1B-L1X-02 - Disguise Self No-Matrix Decision | ready-for-research | none | Decision artifact only; no Unit claim without admitted UnitRecord. |
+| 8 | L1B-L1X-03 - Druidcraft No-Matrix Decision | ready-for-research | none | Decision artifact only; no Unit claim without admitted UnitRecord. |
+| 9 | L1B-L1X-04 - Elementalism No-Matrix Decision | ready-for-research | none | Decision artifact only; no Unit claim without admitted UnitRecord. |
+| 10 | L1B-L1X-07 - Illusory Script No-Matrix Decision | ready-for-research | none | Decision artifact only; no Unit claim without admitted UnitRecord. |
+| 11 | L1B-L1X-10 - Message No-Matrix Decision | ready-for-research | none | Runtime-detached communication decision; no battle profile. |
+| 12 | L1B-L1X-11 - Prestidigitation No-Matrix Decision | ready-for-research | none | Utility/presentation decision artifact. |
+| 13 | L1B-L1X-13 - Thaumaturgy Mixed Owner Decision | ready-for-research | none | Decide Booming Voice owner; utility effects likely detached. |
 
 ## Task Details
 
@@ -270,6 +321,173 @@ Plan Impact:
 
 - If the checklist fails, keep the Unit subset-supported and add a concrete
   follow-up implementation task.
+
+### Task 7 - L1B-L1X-02 - Disguise Self No-Matrix Decision
+
+Status: `ready-for-research`
+
+Research `AT-L1X-02` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
+
+Scope:
+
+- Unit pressure id: `disguise_self`.
+- Read `.references/srd-5.2.1/Spells/Descriptions-A-D.md` around
+  Disguise Self and check `UBIQUITOUS_LANGUAGE.md`.
+- Confirm current generated state is missing-authored-record/not-installed and
+  outside the strict denominator.
+- Write `plans/unit-profile-coverage/frontier-decisions/disguise_self.md`.
+- Decide `packageOwner`, `closureKind`, and follow-up implementation atoms if a
+  future UI/illusion owner is justified.
+- Do not add Unit claims, profiles, evidence, or runtime behavior unless a real
+  authored/admitted UnitRecord path is first proposed.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check` if coverage files are edited.
+
+Plan Impact:
+
+- Add follow-up implementation tasks only for durable owner gaps.
+
+### Task 8 - L1B-L1X-03 - Druidcraft No-Matrix Decision
+
+Status: `ready-for-research`
+
+Research `AT-L1X-03` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
+
+Scope:
+
+- Unit pressure id: `druidcraft`.
+- Read the local SRD Druidcraft spell text and check domain language.
+- Decide whether weather, bloom, harmless sensory effects, and small
+  flame-light/snuff effects are runtime-detached utility, catalog-only, or need
+  a future environment owner.
+- Write `plans/unit-profile-coverage/frontier-decisions/druidcraft.md`.
+- Do not add claims/profiles for a missing authored Unit.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check` if coverage files are edited.
+
+Plan Impact:
+
+- Add future-owner tasks only if environment persistence is genuinely needed.
+
+### Task 9 - L1B-L1X-04 - Elementalism No-Matrix Decision
+
+Status: `ready-for-research`
+
+Research `AT-L1X-04` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
+
+Scope:
+
+- Unit pressure id: `elementalism`.
+- Read the local SRD Elementalism spell text.
+- Decide whether breeze, dust/sand words, embers/smoke, mist/water, and crude
+  element shaping are runtime-detached utility, catalog-only, or future
+  environment/object owner pressure.
+- Write `plans/unit-profile-coverage/frontier-decisions/elementalism.md`.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check` if coverage files are edited.
+
+Plan Impact:
+
+- Produce concrete follow-up atoms only if a real owner is selected.
+
+### Task 10 - L1B-L1X-07 - Illusory Script No-Matrix Decision
+
+Status: `ready-for-research`
+
+Research `AT-L1X-07` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
+
+Scope:
+
+- Unit pressure id: `illusory_script`.
+- Read local SRD Illusory Script text.
+- Decide document/illusion runtime-detached closure vs future document subsystem
+  ownership.
+- Write `plans/unit-profile-coverage/frontier-decisions/illusory_script.md`.
+- Do not create battle-runtime profiles.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check` if coverage files are edited.
+
+Plan Impact:
+
+- Add follow-up only for a concrete document/illusion owner.
+
+### Task 11 - L1B-L1X-10 - Message No-Matrix Decision
+
+Status: `ready-for-research`
+
+Research `AT-L1X-10` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
+
+Scope:
+
+- Unit pressure id: `message`.
+- Read local SRD Message text.
+- Decide runtime-detached communication adjudication for whisper/reply, range,
+  barrier, silence, and material blocking.
+- Write `plans/unit-profile-coverage/frontier-decisions/message.md`.
+- Do not add a battle profile.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check` if coverage files are edited.
+
+Plan Impact:
+
+- Record no follow-up unless a concrete communication subsystem owner is needed.
+
+### Task 12 - L1B-L1X-11 - Prestidigitation No-Matrix Decision
+
+Status: `ready-for-research`
+
+Research `AT-L1X-11` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
+
+Scope:
+
+- Unit pressure id: `prestidigitation`.
+- Read local SRD Prestidigitation text.
+- Decide utility/presentation/object-owner pressure for sensory, fire,
+  cleaning, warming, mark, and trinket effects.
+- Write `plans/unit-profile-coverage/frontier-decisions/prestidigitation.md`.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check` if coverage files are edited.
+
+Plan Impact:
+
+- Add future-owner tasks only for concrete non-duplicative owner gaps.
+
+### Task 13 - L1B-L1X-13 - Thaumaturgy Mixed Owner Decision
+
+Status: `ready-for-research`
+
+Research `AT-L1X-13` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
+
+Scope:
+
+- Unit pressure id: `thaumaturgy`.
+- Read local SRD Thaumaturgy text.
+- Decide whether Booming Voice Advantage on Charisma (Intimidation) needs a
+  battle/runtime Ability Check witness, Character Sheet temporary-effect owner,
+  or owner-decision follow-up.
+- Close the remaining utility effects only as runtime-detached utility if no
+  current package consumes them.
+- Write `plans/unit-profile-coverage/frontier-decisions/thaumaturgy.md`.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check` if coverage files are edited.
+
+Plan Impact:
+
+- Add a concrete follow-up if Booming Voice needs runtime support.
 
 ### Task 4 - L1B-AT10 - Falling And Jump Witness Promotion
 
