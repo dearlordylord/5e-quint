@@ -61,9 +61,9 @@ UNIT-IDENTITY-MBT-REPLAY marker fields:
 
 The checker treats these replay markers as the MBT wiring witness for
 `selected-identity-mbt`: every selected evidence row must name at least one MBT
-driver action for that Unit id, every replay action must be declared in the
-same file's `driverSchema`, and every replay action must be reachable from the
-Quint `step` action passed to that fixture's `run()` call.
+driver action for that Unit id, every replay action must be declared in an
+owner-local driver schema, and every replay action must be reachable from a
+Quint `step` action passed to an owner-local `run()` call.
 
 Selected identity MBT evidence must also have owner-local deterministic replay
 data and an owner-local deterministic replay test consumer. That replay test is

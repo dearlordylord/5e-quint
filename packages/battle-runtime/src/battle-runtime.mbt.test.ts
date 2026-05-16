@@ -1,4 +1,6 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points spell.invocation-beam-sequence spell.invocation-sleep-repeat-save-lifecycle spell.scalar-buff
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt SRDINV91D fighter_extra_attack
+// UNIT-IDENTITY-MBT-REPLAY: SRDINV91D fighter_extra_attack doResolveFirstExtraAttackMiss doResolveSecondExtraAttackMiss
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -379,6 +381,75 @@ const sleepRepeatSaveDriverSchema = {
   step: {},
 } as const;
 
+type ExtraAttackDriverAction = Exclude<
+  keyof typeof extraAttackDriverSchema,
+  "init" | "step"
+>;
+type SelectedUnitIdentityReplaySequence = {
+  readonly name: string;
+  readonly actions: readonly ExtraAttackDriverAction[];
+  readonly expected: ExtraAttackMbtProjection;
+};
+type SelectedUnitIdentityReplay = {
+  readonly taskId: "SRDINV91D";
+  readonly unitId: "fighter_extra_attack";
+  readonly actions: readonly ExtraAttackDriverAction[];
+  readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
+};
+
+const selectedUnitRuntimeBoundaryIds = new Set<string>();
+
+const selectedUnitIdentityReplays = [
+  {
+    taskId: "SRDINV91D",
+    unitId: "fighter_extra_attack",
+    actions: [
+      "doResolveFirstExtraAttackMiss",
+      "doResolveSecondExtraAttackMiss",
+    ],
+    sequences: [
+      {
+        name: "attack-action-opens-extra-attack-slot",
+        actions: ["doResolveFirstExtraAttackMiss"],
+        expected: {
+          skeletonHp: 13,
+          actionAvailable: false,
+          extraAttackSlotsAvailable: 1,
+          movementSpentFeet: 0,
+          lastResult: "resolved",
+          lastInvalidReason: "",
+        },
+      },
+      {
+        name: "extra-attack-slot-spent-without-action-cost",
+        actions: [
+          "doResolveFirstExtraAttackMiss",
+          "doResolveSecondExtraAttackMiss",
+        ],
+        expected: {
+          skeletonHp: 13,
+          actionAvailable: false,
+          extraAttackSlotsAvailable: 0,
+          movementSpentFeet: 0,
+          lastResult: "resolved",
+          lastInvalidReason: "",
+        },
+      },
+    ],
+  },
+] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
+
+function resetSelectedUnitRuntimeBoundaryIds(): void {
+  selectedUnitRuntimeBoundaryIds.clear();
+}
+
+function recordSelectedUnitRuntimeBoundaryId<UnitId extends string>(
+  unitId: UnitId,
+): UnitId {
+  selectedUnitRuntimeBoundaryIds.add(unitId);
+  return unitId;
+}
+
 function createBattleRuntimeDriver() {
   return defineDriver(driverSchema, () => {
     let state = fighterVsSkeletonBattle();
@@ -553,6 +624,7 @@ function createExtraAttackDriver() {
     }
 
     function resolveAttackMiss(): void {
+      recordExtraAttackBoundaryFromState(state);
       subject = fighterAttackSubject();
       const target = requireHole(
         discoverAttackHoles(state, subject),
@@ -573,6 +645,7 @@ function createExtraAttackDriver() {
           ],
         }),
       );
+      recordExtraAttackBoundaryFromState(state);
     }
 
     return {
@@ -1401,6 +1474,42 @@ const sleepRepeatSaveStateCheck = stateCheck(
 );
 
 describe("battle-runtime MBT", () => {
+  it("replays selected Unit identities deterministically", async () => {
+    for (const replay of selectedUnitIdentityReplays) {
+      const replayedActions = new Set<ExtraAttackDriverAction>();
+
+      for (const sequence of replay.sequences) {
+        const driver = createExtraAttackDriver()();
+
+        for (const actionName of sequence.actions) {
+          resetSelectedUnitRuntimeBoundaryIds();
+          replayedActions.add(actionName);
+          const action = driver.actions[actionName];
+          if (action === undefined) {
+            throw new Error(
+              `Missing battle-runtime driver action ${actionName}.`,
+            );
+          }
+          await action.handler({});
+          expect(
+            selectedUnitRuntimeBoundaryIds.has(replay.unitId),
+            `${replay.unitId}:${sequence.name}:${actionName} must bind its Unit id`,
+          ).toBe(true);
+        }
+
+        const runtime = driver.getState?.();
+        if (runtime === undefined) {
+          throw new Error("Extra Attack driver must expose getState.");
+        }
+        expect(runtime, `${replay.unitId}:${sequence.name}`).toEqual(
+          sequence.expected,
+        );
+      }
+
+      expect(replayedActions).toEqual(new Set(replay.actions));
+    }
+  });
+
   it("replays Rogue weapon Attack and Sneak Attack traces against a Skeleton target", async () => {
     await run({
       spec: path.resolve(import.meta.dirname, "../battle-runtime.mbt.qnt"),
@@ -1642,6 +1751,18 @@ function projectExtraAttackMbtState(input: {
     lastResult: input.lastResult,
     lastInvalidReason: input.lastInvalidReason,
   };
+}
+
+function recordExtraAttackBoundaryFromState(state: BattleState): void {
+  if (
+    state.currentTurnResources.actionResources.some(
+      (resource) =>
+        resource.source === "classFeatureExtraAttack" &&
+        resource.sourceUnitId === "fighter_extra_attack",
+    )
+  ) {
+    recordSelectedUnitRuntimeBoundaryId("fighter_extra_attack");
+  }
 }
 
 function projectAdrenalineRushMbtState(input: {

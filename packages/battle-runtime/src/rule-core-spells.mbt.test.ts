@@ -1,11 +1,15 @@
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt SRDINV91D magic_missile ray_of_frost acid_splash
+// UNIT-IDENTITY-MBT-REPLAY: SRDINV91D magic_missile doMagicMissileNeedsAllocation doMagicMissileLow doReadySpellHold doReleaseReadiedSpell
+// UNIT-IDENTITY-MBT-REPLAY: SRDINV91D ray_of_frost doRayOfFrostNeedsTarget doRayOfFrostNeedsAttackRoll doRayOfFrostNeedsDamageRoll doRayOfFrostMiss doRayOfFrostHit doRayOfFrostCritical
+// UNIT-IDENTITY-MBT-REPLAY: SRDINV91D acid_splash doAcidSplashNeedsSavingThrow doAcidSplashNeedsDamageRoll doAcidSplashAllSuccess doAcidSplashOneFail
 import * as path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { Either } from "effect";
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import {
   abilityModifier,
@@ -153,6 +157,230 @@ const driverSchema = {
   doReleaseReadiedSpell: {},
   step: {},
 } as const;
+type RuleCoreSpellDriverAction = Exclude<
+  keyof typeof driverSchema,
+  "init" | "step"
+>;
+type SelectedUnitIdentityReplaySequence = {
+  readonly name: string;
+  readonly actions: readonly RuleCoreSpellDriverAction[];
+  readonly expected: RuleCoreSpellProjection;
+};
+type SelectedUnitIdentityReplay = {
+  readonly taskId: "SRDINV91D";
+  readonly unitId: string;
+  readonly actions: readonly RuleCoreSpellDriverAction[];
+  readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
+};
+
+const selectedUnitRuntimeBoundaryIds = new Set<string>();
+
+const selectedUnitIdentityReplays = [
+  {
+    taskId: "SRDINV91D",
+    unitId: "magic_missile",
+    actions: [
+      "doMagicMissileNeedsAllocation",
+      "doMagicMissileLow",
+      "doReadySpellHold",
+      "doReleaseReadiedSpell",
+    ],
+    sequences: [
+      {
+        name: "allocation-hole",
+        actions: ["doMagicMissileNeedsAllocation"],
+        expected: expectedSpellProjection({
+          holes: ["SpellTargetAllocation"],
+          lastResult: "needsHoles",
+        }),
+      },
+      {
+        name: "allocated-damage",
+        actions: ["doMagicMissileLow"],
+        expected: expectedSpellProjection({
+          actionAvailable: false,
+          targetHp: 4,
+          spellSlotSpentThisTurn: true,
+          level1SlotsRemaining: 1,
+          lastResult: "resolved",
+        }),
+      },
+      {
+        name: "readied-hold",
+        actions: ["doReadySpellHold"],
+        expected: expectedSpellProjection({
+          actionAvailable: false,
+          spellSlotSpentThisTurn: true,
+          level1SlotsRemaining: 1,
+          readiedHeld: true,
+          concentrationActive: true,
+          lastResult: "resolved",
+        }),
+      },
+      {
+        name: "readied-release",
+        actions: ["doReleaseReadiedSpell"],
+        expected: expectedSpellProjection({
+          actionAvailable: false,
+          casterReactionAvailable: false,
+          casterHp: 11,
+          targetHp: 4,
+          level1SlotsRemaining: 1,
+          readiedReleased: true,
+          lastResult: "resolved",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "SRDINV91D",
+    unitId: "ray_of_frost",
+    actions: [
+      "doRayOfFrostNeedsTarget",
+      "doRayOfFrostNeedsAttackRoll",
+      "doRayOfFrostNeedsDamageRoll",
+      "doRayOfFrostMiss",
+      "doRayOfFrostHit",
+      "doRayOfFrostCritical",
+    ],
+    sequences: [
+      {
+        name: "target-hole",
+        actions: ["doRayOfFrostNeedsTarget"],
+        expected: expectedSpellProjection({
+          holes: ["TargetChoice"],
+          lastResult: "needsHoles",
+        }),
+      },
+      {
+        name: "attack-roll-hole",
+        actions: ["doRayOfFrostNeedsAttackRoll"],
+        expected: expectedSpellProjection({
+          holes: ["AttackRoll"],
+          lastResult: "needsHoles",
+        }),
+      },
+      {
+        name: "damage-roll-hole",
+        actions: ["doRayOfFrostNeedsDamageRoll"],
+        expected: expectedSpellProjection({
+          holes: ["DamageRoll"],
+          lastResult: "needsHoles",
+        }),
+      },
+      {
+        name: "miss",
+        actions: ["doRayOfFrostMiss"],
+        expected: expectedSpellProjection({
+          actionAvailable: false,
+          lastResult: "resolved",
+        }),
+      },
+      {
+        name: "hit-speed-reduction",
+        actions: ["doRayOfFrostHit"],
+        expected: expectedSpellProjection({
+          actionAvailable: false,
+          targetHp: 9,
+          activeEffectKind: "speedDelta",
+          lastResult: "resolved",
+        }),
+      },
+      {
+        name: "critical",
+        actions: ["doRayOfFrostCritical"],
+        expected: expectedSpellProjection({
+          actionAvailable: false,
+          targetHp: 5,
+          activeEffectKind: "speedDelta",
+          lastResult: "resolved",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "SRDINV91D",
+    unitId: "acid_splash",
+    actions: [
+      "doAcidSplashNeedsSavingThrow",
+      "doAcidSplashNeedsDamageRoll",
+      "doAcidSplashAllSuccess",
+      "doAcidSplashOneFail",
+    ],
+    sequences: [
+      {
+        name: "saving-throw-hole",
+        actions: ["doAcidSplashNeedsSavingThrow"],
+        expected: expectedSpellProjection({
+          holes: ["SavingThrowOutcome"],
+          lastResult: "needsHoles",
+        }),
+      },
+      {
+        name: "damage-roll-hole",
+        actions: ["doAcidSplashNeedsDamageRoll"],
+        expected: expectedSpellProjection({
+          holes: ["DamageRoll"],
+          lastResult: "needsHoles",
+        }),
+      },
+      {
+        name: "all-success",
+        actions: ["doAcidSplashAllSuccess"],
+        expected: expectedSpellProjection({
+          actionAvailable: false,
+          lastResult: "resolved",
+        }),
+      },
+      {
+        name: "one-failed-save",
+        actions: ["doAcidSplashOneFail"],
+        expected: expectedSpellProjection({
+          actionAvailable: false,
+          targetHp: 9,
+          lastResult: "resolved",
+        }),
+      },
+    ],
+  },
+] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
+
+function expectedSpellProjection(
+  overrides: Partial<RuleCoreSpellProjection> = {},
+): RuleCoreSpellProjection {
+  return {
+    actionAvailable: true,
+    bonusActionAvailable: true,
+    casterReactionAvailable: true,
+    casterHp: 12,
+    targetHp: 13,
+    secondTargetHp: 13,
+    targetUnconscious: false,
+    targetDeathSuccesses: 0,
+    targetDeathFailures: 0,
+    spellSlotSpentThisTurn: false,
+    level1SlotsRemaining: 2,
+    activeEffectKind: "none",
+    readiedHeld: false,
+    readiedReleased: false,
+    concentrationActive: false,
+    holes: [],
+    lastResult: "init",
+    lastInvalidReason: "none",
+    ...overrides,
+  };
+}
+
+function resetSelectedUnitRuntimeBoundaryIds(): void {
+  selectedUnitRuntimeBoundaryIds.clear();
+}
+
+function recordSelectedUnitRuntimeBoundaryId<UnitId extends string>(
+  unitId: UnitId,
+): UnitId {
+  selectedUnitRuntimeBoundaryIds.add(unitId);
+  return unitId;
+}
 
 function createRuleCoreSpellDriver() {
   return defineDriver(driverSchema, () => {
@@ -214,7 +442,7 @@ function createRuleCoreSpellDriver() {
             state,
             subject: actionSpellSubject(
               spellSlotInvocationRef(
-                "magic_missile",
+                recordSelectedUnitRuntimeBoundaryId("magic_missile"),
                 1,
                 "repeatedDamageAllocation",
               ),
@@ -228,7 +456,7 @@ function createRuleCoreSpellDriver() {
         resetProjection();
         const subject = actionSpellSubject(
           spellSlotInvocationRef(
-            "magic_missile",
+            recordSelectedUnitRuntimeBoundaryId("magic_missile"),
             1,
             "repeatedDamageAllocation",
           ),
@@ -408,7 +636,7 @@ function createRuleCoreSpellDriver() {
         resetProjection();
         const subject = actionSpellSubject(
           spellSlotInvocationRef(
-            "magic_missile",
+            recordSelectedUnitRuntimeBoundaryId("magic_missile"),
             1,
             "repeatedDamageAllocation",
           ),
@@ -458,7 +686,7 @@ function createRuleCoreSpellDriver() {
           tag: "actionSpell",
           actorId: casterId,
           invocation: spellSlotInvocationRef(
-            "magic_missile",
+            recordSelectedUnitRuntimeBoundaryId("magic_missile"),
             1,
             "repeatedDamageAllocation",
           ),
@@ -474,7 +702,7 @@ function createRuleCoreSpellDriver() {
             tag: "actionSpell",
             actorId: casterId,
             invocation: spellSlotInvocationRef(
-              "magic_missile",
+              recordSelectedUnitRuntimeBoundaryId("magic_missile"),
               1,
               "repeatedDamageAllocation",
             ),
@@ -597,7 +825,10 @@ function createRuleCoreSpellDriver() {
       state = spellBattle();
       resetProjection();
       const subject = actionSpellSubject(
-        cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
+        cantripSpellInvocationRef(
+          recordSelectedUnitRuntimeBoundaryId("ray_of_frost"),
+          "spellAttackDamage",
+        ),
       );
       const target = requireHole(
         resolveBattleSubject({ state, subject, fills: [] }),
@@ -654,7 +885,10 @@ function createRuleCoreSpellDriver() {
       state = spellBattle();
       resetProjection();
       const subject = actionSpellSubject(
-        cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
+        cantripSpellInvocationRef(
+          recordSelectedUnitRuntimeBoundaryId("ray_of_frost"),
+          "spellAttackDamage",
+        ),
       );
       const targetResult = resolveBattleSubject({ state, subject, fills: [] });
       if (stopAt === "target") {
@@ -700,7 +934,10 @@ function createRuleCoreSpellDriver() {
       state = spellBattle({ includeSecondTarget: true });
       resetProjection();
       const subject = actionSpellSubject(
-        cantripSpellInvocationRef("acid_splash", "saveGatedDamage"),
+        cantripSpellInvocationRef(
+          recordSelectedUnitRuntimeBoundaryId("acid_splash"),
+          "saveGatedDamage",
+        ),
       );
       const savingThrow = requireHole(
         resolveBattleSubject({ state, subject, fills: [] }),
@@ -741,7 +978,10 @@ function createRuleCoreSpellDriver() {
       state = spellBattle({ includeSecondTarget: true });
       resetProjection();
       const subject = actionSpellSubject(
-        cantripSpellInvocationRef("acid_splash", "saveGatedDamage"),
+        cantripSpellInvocationRef(
+          recordSelectedUnitRuntimeBoundaryId("acid_splash"),
+          "saveGatedDamage",
+        ),
       );
       const saveResult = resolveBattleSubject({ state, subject, fills: [] });
       if (stopAt === "save") {
@@ -999,6 +1239,42 @@ const spellStateCheck = stateCheck(
 const ruleCoreSpellDefaultMbtSteps = 6;
 
 describe("rule-core Spell focused MBT", () => {
+  it("replays selected Unit identities deterministically", async () => {
+    for (const replay of selectedUnitIdentityReplays) {
+      const replayedActions = new Set<RuleCoreSpellDriverAction>();
+
+      for (const sequence of replay.sequences) {
+        const driver = createRuleCoreSpellDriver()();
+
+        for (const actionName of sequence.actions) {
+          resetSelectedUnitRuntimeBoundaryIds();
+          replayedActions.add(actionName);
+          const action = driver.actions[actionName];
+          if (action === undefined) {
+            throw new Error(
+              `Missing rule-core Spell driver action ${actionName}.`,
+            );
+          }
+          await action.handler({});
+          expect(
+            selectedUnitRuntimeBoundaryIds.has(replay.unitId),
+            `${replay.unitId}:${sequence.name}:${actionName} must bind its Unit id`,
+          ).toBe(true);
+        }
+
+        const runtime = driver.getState?.();
+        if (runtime === undefined) {
+          throw new Error("Rule-core Spell driver must expose getState.");
+        }
+        expect(runtime, `${replay.unitId}:${sequence.name}`).toEqual(
+          sequence.expected,
+        );
+      }
+
+      expect(replayedActions).toEqual(new Set(replay.actions));
+    }
+  });
+
   it("replays QCORE10 spell procedure parity through battle-runtime reducers", async () => {
     await run({
       spec: path.resolve(import.meta.dirname, "../rule-core-spells.mbt.qnt"),

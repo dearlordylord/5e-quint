@@ -3,6 +3,7 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt QMBT7 fighter_second_wind
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt QMBT9 fighter_action_surge fighter_improved_critical barbarian_rage barbarian_reckless_attack rogue_cunning_action rogue_evasion rogue_uncanny_dodge rogue_sneak_attack
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt QMBT31 feat_savage_attacker
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt SRDINV91D defense feat_archery orc_relentless_endurance
 // UNIT-IDENTITY-MBT-REPLAY: QMBT7 fighter_second_wind doDiscoverSecondWind doResolveSecondWindLow doResolveSecondWindHigh
 // UNIT-IDENTITY-MBT-REPLAY: QMBT9 fighter_action_surge doActionSurgeActivate doActionSurgeRejectTwice
 // UNIT-IDENTITY-MBT-REPLAY: QMBT9 fighter_improved_critical doImprovedCritical
@@ -13,6 +14,9 @@
 // UNIT-IDENTITY-MBT-REPLAY: QMBT9 rogue_uncanny_dodge doUncannyDodge
 // UNIT-IDENTITY-MBT-REPLAY: QMBT9 rogue_sneak_attack doSneakAttack
 // UNIT-IDENTITY-MBT-REPLAY: QMBT31 feat_savage_attacker doSavageAttackerDamage
+// UNIT-IDENTITY-MBT-REPLAY: SRDINV91D defense doDefenseArmorClass
+// UNIT-IDENTITY-MBT-REPLAY: SRDINV91D feat_archery doArcheryAttackRollBonus
+// UNIT-IDENTITY-MBT-REPLAY: SRDINV91D orc_relentless_endurance doZeroHitPointReplacement
 import * as path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
@@ -184,7 +188,7 @@ type SelectedUnitIdentityReplaySequence = {
   readonly expected: RuleCoreFeatureProjection;
 };
 type SelectedUnitIdentityReplay = {
-  readonly taskId: "QMBT7" | "QMBT9" | "QMBT31";
+  readonly taskId: "QMBT7" | "QMBT9" | "QMBT31" | "SRDINV91D";
   readonly unitId: string;
   readonly actions: readonly RuleCoreFeatureDriverAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
@@ -424,6 +428,56 @@ const selectedUnitIdentityReplays = [
           actionAvailable: false,
           targetHp: 4,
           lastDamageAmount: 8,
+          lastResult: "resolved",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "SRDINV91D",
+    unitId: "defense",
+    actions: ["doDefenseArmorClass"],
+    sequences: [
+      {
+        name: "wearing-armor-bonus",
+        actions: ["doDefenseArmorClass"],
+        expected: expectedProjection({
+          actorArmorClass: 17,
+          lastResult: "resolved",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "SRDINV91D",
+    unitId: "feat_archery",
+    actions: ["doArcheryAttackRollBonus"],
+    sequences: [
+      {
+        name: "ranged-attack-roll-bonus",
+        actions: ["doArcheryAttackRollBonus"],
+        expected: expectedProjection({
+          actionAvailable: false,
+          lastDamageAmount: 2,
+          actorArmorClass: 9,
+          lastResult: "resolved",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "SRDINV91D",
+    unitId: "orc_relentless_endurance",
+    actions: ["doZeroHitPointReplacement"],
+    sequences: [
+      {
+        name: "zero-hit-point-replacement",
+        actions: ["doZeroHitPointReplacement"],
+        expected: expectedProjection({
+          actionAvailable: false,
+          featureUsesRemaining: 0,
+          targetHp: 1,
+          lastDamageAmount: 1,
           lastResult: "resolved",
         }),
       },
@@ -819,7 +873,9 @@ function createRuleCoreFeatureDriver() {
               damageFill,
               attackDamageDispositionFill(disposition, {
                 kind: "zeroHitPointReplacement",
-                unitId: "orc_relentless_endurance",
+                unitId: recordSelectedUnitRuntimeBoundaryId(
+                  "orc_relentless_endurance",
+                ),
               }),
             ],
           }),
@@ -827,6 +883,7 @@ function createRuleCoreFeatureDriver() {
         featureUsesRemaining = resourceUsesRemaining(
           state,
           "orc_relentless_endurance",
+          targetId,
         );
         lastDamageAmount = 1;
       },
@@ -871,7 +928,9 @@ function createRuleCoreFeatureDriver() {
         state = featureBattle();
         resetProjection();
         const profile = parseSupportedUnitFeatureProfile(
-          unitLibrary.requireUnit("defense"),
+          unitLibrary.requireUnit(
+            recordSelectedUnitRuntimeBoundaryId("defense"),
+          ),
           [],
         );
         if (profile?.kind !== "passiveArmorClassBonus") {
@@ -882,7 +941,9 @@ function createRuleCoreFeatureDriver() {
         lastInvalidReason = "none";
       },
       doArcheryAttackRollBonus: () => {
-        const unit = unitLibrary.requireUnit("feat_archery");
+        const unit = unitLibrary.requireUnit(
+          recordSelectedUnitRuntimeBoundaryId("feat_archery"),
+        );
         const unitRef = battleUnitRefWithSupportProfiles({
           unitRef: { unitId: unit.id },
           unit,
@@ -1400,6 +1461,7 @@ function evasionBattle(): BattleState {
         combatantId: combatantId("rule-core-feature-wizard"),
         displayName: "Wizard",
         initiative: 20,
+        classLevels: [{ className: "wizard", level: 1 }],
         attack: null,
         spellcasting: {
           sourceClassName: "wizard",
@@ -1894,8 +1956,12 @@ function reactionModifierChoice(
   return choice;
 }
 
-function resourceUsesRemaining(state: BattleState, unitId: string): number {
-  const actor = state.combatants.get(actorId);
+function resourceUsesRemaining(
+  state: BattleState,
+  unitId: string,
+  ownerId: CombatantId = actorId,
+): number {
+  const actor = state.combatants.get(ownerId);
   if (actor?.origin.kind !== "character") return 1;
   const resource = actor.origin.resources.find(
     (candidate) => candidate.unit.id === unitId,

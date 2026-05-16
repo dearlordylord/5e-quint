@@ -393,7 +393,7 @@ module ruleCoreFeaturesMbt {
     all {
       qHoles == Set(),
       recordProjection(
-        qActionAvailable, qBonusActionAvailable, qReactionAvailable,
+        false, qBonusActionAvailable, qReactionAvailable,
         result.pool.usesRemaining, NoActionSurgeActionGrant, qActorHp,
         result.vitals.hitPoints, qDashBonusFeet, qDisengaged, qHidden,
         qRageActive, qRecklessActive, qIncomingAttackAdvantage,

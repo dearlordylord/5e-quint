@@ -94,7 +94,7 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 339,
       "id": "SRDINV91D",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Select Identity MBT Frontier Evidence Batch"
     }
   ]
@@ -112,7 +112,7 @@ Keep it synchronized with the DAG table and task details.
 | 336 | SRDINV91A - Recursive Battle Runtime Coverage Frontier Review | done | SRDINV90B | SRDINV91B-SRDINV91D | SRDINV91A review, SRDINV90B review, refreshed SRD inventory report, UNIT_REPORT, unit-matrix.json, unit-claims.jsonl, ACTIVE_PLAN, UBIQUITOUS_LANGUAGE | Completed: product readiness remains 367/367 (100%) and separate frontier metrics remain supported executable Unit coverage 85/117 (72.6%), deterministic admission/projection 78/85 (91.8%), QNT proof 61/62 (98.4%), and selected identity MBT 10/85 (11.8%). Appended concrete follow-ups for deterministic evidence stragglers, the condition-save QNT proof gap, and a selected-identity MBT evidence batch. |
 | 337 | SRDINV91B - Close Deterministic Admission Projection Stragglers | done | SRDINV91A | SRDINV91C, SRDINV91D | SRDINV91A review, UNIT_REPORT deterministic evidence tables, unit-matrix.json, Barbarian/Monk/Paladin/Wizard class text, Equipment mastery properties, UBIQUITOUS_LANGUAGE | Completed: deterministic admission/projection evidence now covers all seven supported-profile stragglers: Barbarian Unarmored Defense, Monk Unarmored Defense, Wizard Ritual Adept, Paladin Lay On Hands, mastery_cleave, mastery_sap, and mastery_topple. Generated deterministic admission/projection coverage is 85/85 (100%). |
 | 338 | SRDINV91C - Prove Condition-Save Spell Invocation Profile | done | SRDINV91B | SRDINV91D | SRDINV91A review, Color Spray, Entangle, Rules Glossary conditions and saving throws, packages/battle-runtime/battle-runtime.qnt, UBIQUITOUS_LANGUAGE | Completed: `spell.invocation-condition-save` now has QNT proof evidence for Color Spray Constitution save-gated Blinded duration and Entangle Strength save-gated Restrained ownership/cleanup. Generated QNT proof coverage is now 62/62 (100%). |
-| 339 | SRDINV91D - Select Identity MBT Frontier Evidence Batch | ready-for-research | SRDINV91B, SRDINV91C | next recursive coverage review | SRDINV91A review, UNIT_REPORT selected identity MBT table, battle-runtime MBT protocol, UBIQUITOUS_LANGUAGE | Choose and implement the next small selected-identity MBT evidence batch now that deterministic/proof gaps are closed. Start with representative identities across high-value profile families rather than broad MBT exploration; likely candidates include Extra Attack, Bardic Inspiration, Martial Arts, weapon mastery identities, and one or two supported spell identities with existing deterministic admission evidence. |
+| 339 | SRDINV91D - Select Identity MBT Frontier Evidence Batch | done | SRDINV91B, SRDINV91C | next recursive coverage review | SRDINV91A review, UNIT_REPORT selected identity MBT table, battle-runtime MBT protocol, UBIQUITOUS_LANGUAGE | Completed: selected identity MBT evidence now covers 17/85 (20%) after adding representative selected replays for Extra Attack, Defense, Archery, Orc Relentless Endurance, Magic Missile, Ray of Frost, and Acid Splash. |
 
 ## Task Details
 
@@ -443,7 +443,7 @@ blocked by unrelated baseline lint in `packages/mcp/src/battle-tools.ts`
 
 ### Task 339 - SRDINV91D - Select Identity MBT Frontier Evidence Batch
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV91B, SRDINV91C
 
@@ -453,6 +453,7 @@ Research / plan:
 [SRDINV91A review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV91A_RECURSIVE_BATTLE_RUNTIME_COVERAGE_FRONTIER_REVIEW.md),
 [UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md),
 [unit-matrix.json](/workspace/typescript/dnd/plans/unit-profile-coverage/unit-matrix.json),
+[SRDINV91D evidence note](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV91D_SELECTED_IDENTITY_MBT_FRONTIER_BATCH.md),
 [battle-runtime MBT protocol](/workspace/typescript/dnd/CLAUDE.md),
 [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
 
@@ -471,9 +472,33 @@ selected identity has checker-visible `selected-identity-mbt` evidence. The
 batch must explain why the chosen identities are representative of the next
 frontier.
 
+Completed: added checker-visible `selected-identity-mbt` evidence and
+deterministic selected replay assertions for seven representative frontier
+identities: `fighter_extra_attack`, `defense`, `feat_archery`,
+`orc_relentless_endurance`, `magic_missile`, `ray_of_frost`, and
+`acid_splash`. The selected batch covers attack action-count scaling, passive
+AC and ranged attack-roll bonuses, zero-hit-point replacement, slot spell
+allocation/readied release, spell attacks with rider effects, and saving throw
+cantrip allocation. Generated selected identity MBT coverage is now 17/85
+(20%).
+
 Verification: RAW/source review for any newly selected rule identities and
 `UBIQUITOUS_LANGUAGE.md`; focused deterministic tests first; one battle-runtime
 MBT run only if completed behavior/evidence requires it, using the required
 background/timing protocol and prior-run checks; `pnpm
 unit-profile-coverage:check`; `/simplify` convergence, minimum two rounds
 unless the final changeset is trivial.
+
+Verification completed:
+RAW/source review for the selected identities in local SRD 5.2.1 text and
+`UBIQUITOUS_LANGUAGE.md`; `pnpm --filter @dnd/battle-runtime exec vitest run
+src/rule-core-features.mbt.test.ts src/rule-core-spells.mbt.test.ts
+src/battle-runtime.mbt.test.ts -t "replays selected Unit identities
+deterministically"`; focused `MBT_TRACES=1 MBT_STEPS=6 pnpm --filter
+@dnd/battle-runtime exec vitest run src/rule-core-features.mbt.test.ts` with
+prior-run checks and timing wrapper; `pnpm unit-profile-coverage:check --write`;
+`pnpm unit-profile-coverage:check`; `pnpm --filter @dnd/battle-runtime
+typecheck`; touched-file Prettier check; `pnpm quality` attempted and stopped
+at unrelated baseline lint in `packages/mcp/src/battle-tools.ts` (`max-lines`,
+432 > 420), outside the SRDINV91D touched surface; two-round `/simplify`
+convergence recorded in the SRDINV91D evidence note.

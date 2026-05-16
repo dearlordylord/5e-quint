@@ -93,8 +93,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 85,
-      "numerator": 10,
-      "percent": "11.8%"
+      "numerator": 17,
+      "percent": "20%"
     },
     "supportedProfileCoverage": {
       "denominator": 117,
@@ -4061,6 +4061,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "QMBT37"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "SRDINV91D"
         }
       ],
       "executableMechanics": true,
@@ -5494,6 +5499,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "QMBT27"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "SRDINV91D"
         }
       ],
       "executableMechanics": true,
@@ -5605,6 +5615,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "QMBT18"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "SRDINV91D"
         }
       ],
       "executableMechanics": true,
@@ -6266,6 +6281,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "QMBT47"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "SRDINV91D"
         }
       ],
       "executableMechanics": true,
@@ -6323,6 +6343,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "QMBT14"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "SRDINV91D"
         }
       ],
       "executableMechanics": true,
@@ -9200,6 +9225,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "QMBT14"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "SRDINV91D"
         }
       ],
       "executableMechanics": true,
@@ -10290,6 +10320,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "QMBT14"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "SRDINV91D"
         }
       ],
       "executableMechanics": true,

@@ -114,39 +114,52 @@ function hasSelectedUnitIdentityReplayConsumer(text) {
 }
 
 function extractDriverSchemaActionNames(text) {
-  const schemaMatch = text.match(
-    /const\s+driverSchema\s*=\s*\{([\s\S]*?)\}\s+as const;/,
-  );
-  if (!schemaMatch) return new Set();
   return new Set(
-    [...schemaMatch[1].matchAll(/^\s*([A-Za-z_]\w*)\s*:\s*\{\}\s*,/gm)].map(
-      (match) => match[1],
+    [
+      ...text.matchAll(
+        /const\s+(?:driverSchema|[A-Za-z_]\w*DriverSchema)\s*=\s*\{([\s\S]*?)\}\s+as const;/g,
+      ),
+    ].flatMap((schemaMatch) =>
+      [...schemaMatch[1].matchAll(/^\s*([A-Za-z_]\w*)\s*:\s*\{\}\s*,/gm)].map(
+        (match) => match[1],
+      ),
     ),
   );
 }
 
 function extractMbtFixtureActionSet(root, text, filePath) {
-  const runMatch = text.match(
-    /run\s*\(\s*\{[\s\S]*?spec:\s*path\.resolve\(import\.meta\.dirname,\s*"([^"]+\.qnt)"\)[\s\S]*?step:\s*"([A-Za-z_]\w*)"[\s\S]*?\}\s*\)/,
-  );
-  if (!runMatch) {
+  const runMatches = [
+    ...text.matchAll(
+      /run\s*\(\s*\{[\s\S]*?spec:\s*path\.resolve\(\s*import\.meta\.dirname\s*,\s*"([^"]+\.qnt)"[\s\S]*?\)[\s\S]*?step:\s*"([A-Za-z_]\w*)"[\s\S]*?\}\s*\)/g,
+    ),
+  ];
+  if (runMatches.length === 0) {
     return {
       actionNames: new Set(),
       description: "no focused MBT run spec/step",
     };
   }
-  const specPath = path.resolve(path.dirname(filePath), runMatch[1]);
-  const stepName = runMatch[2];
-  if (!fs.existsSync(specPath)) {
-    return {
-      actionNames: new Set(),
-      description: `${toRepoPath(root, specPath)} ${stepName}`,
-    };
+
+  const actionNames = new Set();
+  const descriptions = [];
+  for (const runMatch of runMatches) {
+    const specPath = path.resolve(path.dirname(filePath), runMatch[1]);
+    const stepName = runMatch[2];
+    descriptions.push(`${toRepoPath(root, specPath)} ${stepName}`);
+    if (!fs.existsSync(specPath)) {
+      continue;
+    }
+    for (const actionName of extractQuintAnyActionNames(
+      fs.readFileSync(specPath, "utf8"),
+      stepName,
+    )) {
+      actionNames.add(actionName);
+    }
   }
-  const specText = fs.readFileSync(specPath, "utf8");
+
   return {
-    actionNames: extractQuintAnyActionNames(specText, stepName),
-    description: `${toRepoPath(root, specPath)} ${stepName}`,
+    actionNames,
+    description: descriptions.join(", "),
   };
 }
 

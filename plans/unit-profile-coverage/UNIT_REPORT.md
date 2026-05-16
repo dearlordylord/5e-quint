@@ -23,7 +23,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Runtime mapping coverage | 62/62 | 100% |
 | Runtime parity coverage | 62/62 | 100% |
 | Deterministic admission/projection coverage | 85/85 | 100% |
-| Selected identity MBT coverage | 10/85 | 11.8% |
+| Selected identity MBT coverage | 17/85 | 20% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -873,6 +873,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | --- | --- | --- | --- |
 | `fighter_second_wind` | `unit-feature.self-bonus-action-healing` | QMBT7 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `fighter_action_surge` | `unit-feature.action-surge-resource` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `fighter_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | SRDINV91D | `packages/battle-runtime/src/battle-runtime.mbt.test.ts` |
 | `fighter_improved_critical` | `unit-feature.weapon-critical-range-19` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `barbarian_rage` | `unit-feature.bonus-action-ongoing-rage` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `barbarian_reckless_attack` | `unit-feature.first-attack-roll-reckless-advantage` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
@@ -880,7 +881,13 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `rogue_evasion` | `unit-feature.save-damage-replacement` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `rogue_uncanny_dodge` | `unit-feature.reaction-roll-or-damage-reduction` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `rogue_sneak_attack` | `unit-feature.attack-damage-rider` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `feat_archery` | `unit-feature.passive-ranged-attack-roll-bonus` | SRDINV91D | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `defense` | `unit-feature.passive-armor-class-bonus` | SRDINV91D | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `feat_savage_attacker` | `unit-feature.weapon-damage-dice-roll-choice` | QMBT31 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `orc_relentless_endurance` | `unit-feature.zero-hit-point-replacement` | SRDINV91D | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `acid_splash` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV91D | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
+| `ray_of_frost` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV91D | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
+| `magic_missile` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV91D | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
 
 ## Unsupported And Widening Pressure
 
