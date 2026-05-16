@@ -23,7 +23,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Runtime mapping coverage | 62/62 | 100% |
 | Runtime parity coverage | 62/62 | 100% |
 | Deterministic admission/projection coverage | 85/85 | 100% |
-| Selected identity MBT coverage | 17/85 | 20% |
+| Selected identity MBT coverage | 20/85 | 23.5% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -884,6 +884,9 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `feat_archery` | `unit-feature.passive-ranged-attack-roll-bonus` | SRDINV91D | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `defense` | `unit-feature.passive-armor-class-bonus` | SRDINV91D | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `feat_savage_attacker` | `unit-feature.weapon-damage-dice-roll-choice` | QMBT31 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `mastery_cleave` | `unit-feature.weapon-mastery-cleave` | weapon-mastery-properties | `packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts` |
+| `mastery_sap` | `unit-feature.weapon-mastery-sap` | weapon-mastery-properties | `packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts` |
+| `mastery_topple` | `unit-feature.weapon-mastery-topple` | weapon-mastery-properties | `packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts` |
 | `orc_relentless_endurance` | `unit-feature.zero-hit-point-replacement` | SRDINV91D | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `acid_splash` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV91D | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
 | `ray_of_frost` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV91D | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
