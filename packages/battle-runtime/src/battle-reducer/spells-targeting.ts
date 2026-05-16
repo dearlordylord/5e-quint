@@ -367,8 +367,15 @@ export function spellTargetIsLegal(
   ) {
     return false;
   }
-  return facts.some((fact) =>
+  const hasSpellTargetFact = facts.some((fact) =>
     spellTargetSpatialFactMatches(fact, actorId, targetId, invocation),
+  );
+  if (!hasSpellTargetFact) {
+    return false;
+  }
+  return (
+    !spellInvocationRequiresKnownWillingTarget(invocation) ||
+    spellTargetIsKnownWilling(actorId, targetId, invocation, facts)
   );
 }
 
@@ -497,6 +504,7 @@ export function spellTargetHasNonSpatialPrerequisites(
   const target = state.combatants.get(targetId);
   if (
     spellInvocationRequiresKnownWillingTarget(invocation) &&
+    invocation.procedure !== "creatureTypeProtection" &&
     !spellTargetIsKnownWilling(actorId, targetId)
   ) {
     return false;
@@ -696,6 +704,7 @@ export function spellInvocationRequiresKnownWillingTarget(
 ): boolean {
   return (
     invocation.procedure === "persistentArmorEffect" ||
+    invocation.procedure === "creatureTypeProtection" ||
     invocation.procedure ===
       "conditionImmunityAndTurnStartTemporaryHitPoints" ||
     (invocation.procedure === "damageReduction" &&
@@ -712,6 +721,18 @@ export function spellInvocationRequiresKnownWillingTarget(
 export function spellTargetIsKnownWilling(
   actorId: CombatantId,
   targetId: CombatantId,
+  invocation?: SupportedSpellInvocation,
+  facts: readonly BattleTargetSpatialFact[] = [],
 ): boolean {
-  return actorId === targetId;
+  return (
+    actorId === targetId ||
+    (invocation !== undefined &&
+      facts.some(
+        (fact) =>
+          fact.kind === "spellTargetKnownWilling" &&
+          fact.casterId === actorId &&
+          fact.targetId === targetId &&
+          fact.spellId === invocation.spell.id,
+      ))
+  );
 }

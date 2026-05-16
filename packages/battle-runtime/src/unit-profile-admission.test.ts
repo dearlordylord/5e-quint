@@ -170,6 +170,7 @@ import {
 } from "./index.ts";
 import type {
   BattleActiveEffect,
+  BattleCreatureState,
   SpellMarkedDamageRider,
   SupportedDamageSpellInvocation,
 } from "./battle-reducer.ts";
@@ -8410,7 +8411,9 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
 
     const resolved = resolveBattleSubject({
       state,
-      subject: castActs[0]?.subject ?? spellAct({ state, spellId: dancingLightsUnitId }).subject,
+      subject:
+        castActs[0]?.subject ??
+        spellAct({ state, spellId: dancingLightsUnitId }).subject,
       fills: [
         {
           kind: "dancingLightsPlacement",
@@ -8479,12 +8482,12 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
     expect(canSpendAction(resolved.state.currentTurnResources, "magic")).toBe(
       false,
     );
-    expect(
-      resolved.state.combatants.get(spellCasterId)?.concentration,
-    ).toEqual({
-      sourceSpellId: dancingLightsUnitId,
-      effectKind: "spellEffect",
-    });
+    expect(resolved.state.combatants.get(spellCasterId)?.concentration).toEqual(
+      {
+        sourceSpellId: dancingLightsUnitId,
+        effectKind: "spellEffect",
+      },
+    );
   });
 
   test("dancing_lights opens the spell-cast reaction window before applying lights", () => {
@@ -8540,10 +8543,8 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
     });
     const placement = {
       kind: "dancingLightsPlacement",
-      holeId: requireHole(
-        castAct.initialHoles,
-        "dancingLightsPlacement",
-      ).holeId,
+      holeId: requireHole(castAct.initialHoles, "dancingLightsPlacement")
+        .holeId,
       value: {
         mode: "cast",
         form: "separateLights",
@@ -8597,9 +8598,9 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
     }
     expect(afterDecline.snapshot.pendingReaction).toBeNull();
     expect(afterDecline.snapshot.lightEmitters).toHaveLength(2);
-    expect(canSpendAction(afterDecline.state.currentTurnResources, "magic")).toBe(
-      false,
-    );
+    expect(
+      canSpendAction(afterDecline.state.currentTurnResources, "magic"),
+    ).toBe(false);
   });
 
   test("dancing_lights supports combined Medium-form choice, Bonus Action movement, Concentration cleanup, and duration cleanup", () => {
@@ -8701,10 +8702,7 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
       spellId: dancingLightsUnitId,
     });
     expect(moveAct.subject.invocation).toEqual(
-      cantripSpellInvocationRef(
-        dancingLightsUnitId,
-        "dancingLightsReposition",
-      ),
+      cantripSpellInvocationRef(dancingLightsUnitId, "dancingLightsReposition"),
     );
     const moved = resolveBattleSubject({
       state: resolved.state,
@@ -8712,10 +8710,8 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
       fills: [
         {
           kind: "dancingLightsPlacement",
-          holeId: requireHole(
-            moveAct.initialHoles,
-            "dancingLightsPlacement",
-          ).holeId,
+          holeId: requireHole(moveAct.initialHoles, "dancingLightsPlacement")
+            .holeId,
           value: {
             mode: "reposition",
             form: "combinedMediumForm",
@@ -8729,7 +8725,9 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
                   : (() => {
                       throw new Error("Expected Dancing Lights emitter.");
                     })(),
-              positionId: battleTablePositionId("dancing-lights-combined-moved"),
+              positionId: battleTablePositionId(
+                "dancing-lights-combined-moved",
+              ),
               distanceFromCasterFeet: movementFeet(70),
               moveDistanceFeet: movementFeet(50),
             },
@@ -8867,7 +8865,10 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
       state: cast.state,
       spellId: dancingLightsUnitId,
     });
-    const moveHole = requireHole(moveAct.initialHoles, "dancingLightsPlacement");
+    const moveHole = requireHole(
+      moveAct.initialHoles,
+      "dancingLightsPlacement",
+    );
     expect(
       resolveBattleSubject({
         state: breakBattleConcentration(cast.state, spellCasterId),
@@ -8988,7 +8989,10 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
       state: cast.state,
       spellId: dancingLightsUnitId,
     });
-    const moveHole = requireHole(moveAct.initialHoles, "dancingLightsPlacement");
+    const moveHole = requireHole(
+      moveAct.initialHoles,
+      "dancingLightsPlacement",
+    );
     const lightId =
       cast.snapshot.lightEmitters[0]?.kind === "spellLightEmitter" &&
       cast.snapshot.lightEmitters[0].attachment.kind === "dancingLight"
@@ -9033,7 +9037,9 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
             lights: [
               {
                 lightId,
-                positionId: battleTablePositionId("dancing-lights-out-of-range"),
+                positionId: battleTablePositionId(
+                  "dancing-lights-out-of-range",
+                ),
                 distanceFromCasterFeet: movementFeet(125),
                 moveDistanceFeet: movementFeet(50),
               },
@@ -13757,11 +13763,29 @@ describe("SRDINV30C deterministic protection and charm Spell Unit admission", ()
       spellId: protectionFromEvilAndGoodUnitId,
     });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
+    expect(targetHole.choices).toContain(spellTargetId);
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          spellTargetFill(
+            targetHole,
+            protectionFromEvilAndGoodUnitId,
+            spellCasterId,
+            spellTargetId,
+          ),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
     const resolved = resolveBattleSubject({
       state,
       subject: act.subject,
       fills: [
-        spellTargetFill(
+        knownWillingSpellTargetFill(
           targetHole,
           protectionFromEvilAndGoodUnitId,
           spellCasterId,
@@ -13895,7 +13919,7 @@ describe("SRDINV30C deterministic protection and charm Spell Unit admission", ()
       state,
       subject: protectionAct.subject,
       fills: [
-        spellTargetFill(
+        knownWillingSpellTargetFill(
           protectionTarget,
           protectionFromEvilAndGoodUnitId,
           spellCasterId,
@@ -13914,10 +13938,18 @@ describe("SRDINV30C deterministic protection and charm Spell Unit admission", ()
     if (charmInvocation.procedure !== "saveGatedCondition") {
       throw new Error("Expected Charm Person to be a save-gated condition.");
     }
-    const protectedTarget = requireCombatant(
-      protectedResult.state,
-      spellTargetId,
-    );
+    const targetTurn = endTurn({
+      state: protectedResult.state,
+      actorId: spellCasterId,
+    });
+    expect(targetTurn).toMatchObject({ tag: "resolved" });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected to advance to the protected target turn.");
+    }
+    const protectedTarget = requireCombatant(targetTurn.state, spellTargetId);
+    if (protectedTarget.positiveHpUnconscious !== null) {
+      throw new Error("Expected conscious Protection target.");
+    }
     expect(
       conditionApplicationPreventedByCreatureTypeProtection(
         protectedResult.state,
@@ -14009,7 +14041,7 @@ describe("SRDINV30C deterministic protection and charm Spell Unit admission", ()
       state,
       subject: protectionAct.subject,
       fills: [
-        spellTargetFill(
+        knownWillingSpellTargetFill(
           targetHole,
           protectionFromEvilAndGoodUnitId,
           spellCasterId,
@@ -14081,6 +14113,7 @@ describe("SRDINV30C deterministic protection and charm Spell Unit admission", ()
           combatantId: feySourceId,
           statBlock: statBlockWithCreatureType("fey"),
           initiative: 9,
+          side: oppositionSide,
         },
       ],
     });
@@ -14093,7 +14126,7 @@ describe("SRDINV30C deterministic protection and charm Spell Unit admission", ()
       state,
       subject: protectionAct.subject,
       fills: [
-        spellTargetFill(
+        knownWillingSpellTargetFill(
           targetHole,
           protectionFromEvilAndGoodUnitId,
           spellCasterId,
@@ -14111,38 +14144,6 @@ describe("SRDINV30C deterministic protection and charm Spell Unit admission", ()
     if (charmInvocation.procedure !== "saveGatedCondition") {
       throw new Error("Expected Charm Person to be a save-gated condition.");
     }
-    const protectedTarget = requireCombatant(
-      protectedResult.state,
-      spellTargetId,
-    );
-    const charmedEffect = {
-      kind: "spellCondition",
-      sourceSpellId: charmPersonUnitId,
-      sourceCombatantId: feySourceId,
-      condition: "charmed",
-      conditionHadNonSpellSource: false,
-      escape: { kind: "targetDamagedByCasterOrAlly" },
-      turnStartDamage: null,
-      expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(600) },
-    } as const;
-    const protectedWithActiveCharm: BattleState = {
-      ...protectedResult.state,
-      combatants: new Map(protectedResult.state.combatants).set(spellTargetId, {
-        ...protectedTarget,
-        activeEffects: [...protectedTarget.activeEffects, charmedEffect],
-      }),
-    };
-
-    const activeCharmSaveHole = spellSavingThrowOutcomeHole(
-      protectedWithActiveCharm,
-      feySourceId,
-      charmInvocation,
-    );
-    expect(
-      activeCharmSaveHole.targetRollModes.filter(
-        (projection) => projection.targetId === spellTargetId,
-      ),
-    ).toEqual([]);
     expect(
       spellSavingThrowOutcomeHole(
         protectedResult.state,
@@ -14152,26 +14153,240 @@ describe("SRDINV30C deterministic protection and charm Spell Unit admission", ()
         (projection) => projection.targetId === spellTargetId,
       ),
     ).toEqual([]);
+  });
 
-    const wrongSpellActiveCharm: BattleState = {
-      ...protectedResult.state,
-      combatants: new Map(protectedResult.state.combatants).set(spellTargetId, {
-        ...protectedTarget,
-        activeEffects: [
-          ...protectedTarget.activeEffects,
-          { ...charmedEffect, sourceSpellId: animalFriendshipUnitId },
-        ],
-      }),
-    };
-    expect(
-      spellSavingThrowOutcomeHole(
-        wrongSpellActiveCharm,
-        feySourceId,
-        charmInvocation,
-      ).targetRollModes.filter(
-        (projection) => projection.targetId === spellTargetId,
+  test("protection from evil and good projects Advantage onto saves against already-applied relevant effects", () => {
+    const protection = spellRecord(protectionFromEvilAndGoodUnitId);
+    const feySourceId = combatantId(
+      "unit-profile-protection-repeat-save-fey-source",
+    );
+    const humanoidSourceId = combatantId(
+      "unit-profile-protection-repeat-save-humanoid-source",
+    );
+    const state = spellBattle({
+      preparedSpells: [protection],
+      statBlockTargets: [
+        {
+          combatantId: feySourceId,
+          statBlock: statBlockWithCreatureType("fey"),
+          initiative: 9,
+          side: oppositionSide,
+        },
+        {
+          combatantId: humanoidSourceId,
+          statBlock: statBlockWithCreatureType("humanoid"),
+          initiative: 8,
+          side: oppositionSide,
+        },
+      ],
+    });
+    const protectionAct = spellAct({
+      state,
+      spellId: protectionFromEvilAndGoodUnitId,
+    });
+    const targetHole = requireHole(protectionAct.initialHoles, "targetChoice");
+    const protectedResult = resolveBattleSubject({
+      state,
+      subject: protectionAct.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          targetHole,
+          protectionFromEvilAndGoodUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+      ],
+    });
+    if (protectedResult.tag !== "resolved") {
+      throw new Error("Expected Protection from Evil and Good to resolve.");
+    }
+    const targetTurn = endTurn({
+      state: protectedResult.state,
+      actorId: spellCasterId,
+    });
+    expect(targetTurn).toMatchObject({ tag: "resolved" });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected to advance to the protected target turn.");
+    }
+    const protectedTarget = requireCombatant(targetTurn.state, spellTargetId);
+    const charmedEffect = {
+      kind: "spellCondition",
+      sourceSpellId: charmPersonUnitId,
+      sourceCombatantId: feySourceId,
+      condition: "charmed",
+      conditionHadNonSpellSource: false,
+      escape: { kind: "targetDamagedByCasterOrAlly" },
+      turnStartDamage: null,
+      expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(600) },
+    } as const satisfies BattleActiveEffect;
+    const repeatCharmedEffect = {
+      kind: "spellConditionRepeatSave",
+      sourceSpellId: "unit-profile-repeat-charm-effect",
+      sourceCombatantId: feySourceId,
+      condition: "charmed",
+      conditionHadNonSpellSource: false,
+      save: { ability: "wis", dc: { kind: "fixed", dc: difficultyClass(13) } },
+      expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(600) },
+    } as const satisfies BattleActiveEffect;
+    const repeatFrightenedEffect = {
+      ...repeatCharmedEffect,
+      sourceSpellId: "unit-profile-fear-effect",
+      condition: "frightened",
+    } as const satisfies BattleActiveEffect;
+    const possessionEffect = {
+      kind: "possession",
+      sourceSpellId: "unit-profile-possession-effect",
+      sourceCombatantId: feySourceId,
+      save: { ability: "cha", dc: { kind: "fixed", dc: difficultyClass(14) } },
+      expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(600) },
+    } as const satisfies BattleActiveEffect;
+    const humanoidCharmEffect = {
+      ...repeatCharmedEffect,
+      sourceSpellId: "unit-profile-humanoid-charm-effect",
+      sourceCombatantId: humanoidSourceId,
+    } as const satisfies BattleActiveEffect;
+    const targetWithRelevantEffects: BattleCreatureState = {
+      ...battleCreatureStateWithKnockOutPreservedConditions(
+        protectedTarget,
+        applyCondition(
+          applyCondition(protectedTarget.conditions, "charmed"),
+          "frightened",
+        ),
       ),
-    ).toEqual([]);
+      activeEffects: [
+        ...protectedTarget.activeEffects,
+        charmedEffect,
+        repeatCharmedEffect,
+        repeatFrightenedEffect,
+        possessionEffect,
+        humanoidCharmEffect,
+      ],
+    };
+    const activeEffectState: BattleState = {
+      ...targetTurn.state,
+      combatants: new Map(targetTurn.state.combatants).set(
+        spellTargetId,
+        targetWithRelevantEffects,
+      ),
+    };
+    const discoveredRelevantSaveSubjects = discoverBattleActs(activeEffectState)
+      .map((act) => act.subject)
+      .filter(
+        (subject) =>
+          subject.tag === "runtimeCommand" &&
+          subject.command === "protectionRelevantEffectSave",
+      );
+    expect(discoveredRelevantSaveSubjects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceSpellId: spellId("unit-profile-repeat-charm-effect"),
+          relevantEffect: "charmed",
+        }),
+        expect.objectContaining({
+          sourceSpellId: spellId("unit-profile-fear-effect"),
+          relevantEffect: "frightened",
+        }),
+        expect.objectContaining({
+          sourceSpellId: spellId("unit-profile-possession-effect"),
+          relevantEffect: "possession",
+        }),
+      ]),
+    );
+    expect(discoveredRelevantSaveSubjects).not.toContainEqual(
+      expect.objectContaining({ sourceSpellId: spellId(charmPersonUnitId) }),
+    );
+
+    const relevantEffectSaveNeedsHoles = (
+      sourceCombatantId: CombatantId,
+      sourceSpellId: string,
+      relevantEffect: "charmed" | "frightened" | "possession",
+    ) =>
+      resolveBattleSubject({
+        state: activeEffectState,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: spellTargetId,
+          command: "protectionRelevantEffectSave",
+          sourceCombatantId,
+          sourceSpellId: spellId(sourceSpellId),
+          relevantEffect,
+        },
+        fills: [],
+      });
+    const ordinaryCharmSave = relevantEffectSaveNeedsHoles(
+      feySourceId,
+      charmPersonUnitId,
+      "charmed",
+    );
+    expect(ordinaryCharmSave).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+    });
+    const feyCharmSave = relevantEffectSaveNeedsHoles(
+      feySourceId,
+      "unit-profile-repeat-charm-effect",
+      "charmed",
+    );
+    const feyFrightenedSave = relevantEffectSaveNeedsHoles(
+      feySourceId,
+      "unit-profile-fear-effect",
+      "frightened",
+    );
+    const feyPossessionSave = relevantEffectSaveNeedsHoles(
+      feySourceId,
+      "unit-profile-possession-effect",
+      "possession",
+    );
+    const humanoidCharmSave = relevantEffectSaveNeedsHoles(
+      humanoidSourceId,
+      "unit-profile-humanoid-charm-effect",
+      "charmed",
+    );
+    for (const result of [feyCharmSave, feyFrightenedSave, feyPossessionSave]) {
+      expect(result).toMatchObject({
+        tag: "needsHoles",
+        holes: [
+          expect.objectContaining({
+            kind: "savingThrowOutcome",
+            targetRollModes: [
+              { targetId: spellTargetId, rollMode: "advantage" },
+            ],
+          }),
+        ],
+      });
+    }
+    expect(humanoidCharmSave).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        expect.objectContaining({
+          kind: "savingThrowOutcome",
+          targetRollModes: [],
+        }),
+      ],
+    });
+    if (feyCharmSave.tag !== "needsHoles") {
+      throw new Error("Expected an already-applied Charmed save act.");
+    }
+    const feyCharmHole = requireHole(feyCharmSave.holes, "savingThrowOutcome");
+    const afterSuccessfulSave = resolveBattleSubject({
+      state: activeEffectState,
+      subject: feyCharmSave.subject,
+      fills: [
+        savingThrowOutcomeFill(feyCharmHole, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
+      ],
+    });
+    expect(afterSuccessfulSave).toMatchObject({ tag: "resolved" });
+    if (afterSuccessfulSave.tag !== "resolved") {
+      throw new Error("Expected Charmed repeat save to resolve.");
+    }
+    expect(
+      requireCombatant(afterSuccessfulSave.state, spellTargetId).activeEffects,
+    ).not.toContainEqual(repeatCharmedEffect);
+    expect(
+      requireCombatant(afterSuccessfulSave.state, spellTargetId).activeEffects,
+    ).toContainEqual(charmedEffect);
   });
 });
 
@@ -18683,6 +18898,27 @@ function spellTargetFill(
     spatialFacts: [
       {
         kind: "spellTarget",
+        casterId,
+        targetId,
+        spellId,
+      },
+    ],
+  };
+}
+
+function knownWillingSpellTargetFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  spellId: string,
+  casterId: CombatantId,
+  targetId: CombatantId,
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  const base = spellTargetFill(hole, spellId, casterId, targetId);
+  return {
+    ...base,
+    spatialFacts: [
+      ...(base.spatialFacts ?? []),
+      {
+        kind: "spellTargetKnownWilling",
         casterId,
         targetId,
         spellId,

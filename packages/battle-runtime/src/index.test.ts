@@ -25892,6 +25892,7 @@ function subjectName(
   | "commandApproach"
   | "commandFlee"
   | "disperseFogCloud"
+  | "protectionRelevantEffectSave"
   | "creatureFalls" {
   if (subject.tag === "action") {
     return subject.action;

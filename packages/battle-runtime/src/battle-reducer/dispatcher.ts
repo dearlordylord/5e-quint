@@ -83,6 +83,12 @@ import {
 import { battleCreatureType } from "./domain-helpers.ts";
 import { hideousLaughterDamageRepeatSaveFillCheck } from "./hideous-laughter-repeat-save.ts";
 import {
+  applyProtectionRelevantEffectSaveOutcome,
+  protectionRelevantEffectFor,
+  protectionRelevantEffectSavingThrowOutcomeHole,
+  validateProtectionRelevantEffectSavingThrowOutcome,
+} from "./spell-condition-effects-helpers.ts";
+import {
   reactionModifierReductionRoll,
   reactionRollOrDamageReductionChoices,
   spendReactionModifierResource,
@@ -770,6 +776,15 @@ export function resolveBattleSubjectInternal(
     }
     if (
       subject.tag === "runtimeCommand" &&
+      subject.command === "protectionRelevantEffectSave"
+    ) {
+      return resolveProtectionRelevantEffectSaveCommand({
+        ...input,
+        subject,
+      });
+    }
+    if (
+      subject.tag === "runtimeCommand" &&
       subject.command === "disperseFogCloud"
     ) {
       return resolveDisperseFogCloudCommand({ ...input, subject });
@@ -906,6 +921,65 @@ function subjectSuppressedByCommandHalt(subject: BattleSubject): boolean {
       subject.command === "standFromProne" ||
       subject.command === "jumpMovementReplacement")
   );
+}
+
+function resolveProtectionRelevantEffectSaveCommand(
+  input: BattleResolutionInputForSubject<
+    Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "protectionRelevantEffectSave";
+      }
+    >
+  >,
+): BattleResolutionResult {
+  const effect = protectionRelevantEffectFor(
+    input.state,
+    input.subject.actorId,
+    input.subject.sourceCombatantId,
+    input.subject.sourceSpellId,
+    input.subject.relevantEffect,
+  );
+  if (effect === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Protection from Evil and Good relevant-effect save requires a matching active effect on the target.",
+    );
+  }
+  const hole = protectionRelevantEffectSavingThrowOutcomeHole(
+    input.state,
+    input.subject.actorId,
+    effect,
+  );
+  const saveFill = input.fills.find(
+    (
+      fill,
+    ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+      fill.kind === "savingThrowOutcome" && fill.holeId === hole.holeId,
+  );
+  if (saveFill === undefined) {
+    return needsHolesResult(input.state, input.subject, [hole]);
+  }
+  const validation = validateProtectionRelevantEffectSavingThrowOutcome(
+    saveFill.value,
+    input.subject.actorId,
+  );
+  if (validation !== null) {
+    return invalidResult(input.state, "invalidFill", validation);
+  }
+  const nextState = applyProtectionRelevantEffectSaveOutcome(
+    input.state,
+    input.subject.actorId,
+    effect,
+    saveFill.value.outcomes[0]?.succeeded === true,
+  );
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
 }
 
 function subjectRequiresActionEligibility(subject: BattleSubject): boolean {

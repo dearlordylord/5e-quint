@@ -568,6 +568,18 @@ export type BattleActiveEffect =
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {
+      readonly kind: "spellConditionRepeatSave";
+      readonly condition: ProtectionFromEvilAndGoodPreventedCondition;
+      readonly conditionHadNonSpellSource: boolean;
+      readonly save: SpellConditionRepeatSave;
+      readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "possession";
+      readonly save: SpellConditionRepeatSave;
+      readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleSpellEffectBase & {
       readonly kind: "sleepPendingRepeatSave";
       readonly conditionHadNonSpellSource: boolean;
       readonly save: {
@@ -1736,6 +1748,10 @@ export type SpellFailedSaveConditionEffect = {
       };
   readonly escape: SpellConditionEscape | null;
   readonly turnStartDamage: SpellTurnStartDamage | null;
+};
+export type SpellConditionRepeatSave = {
+  readonly ability: Ability;
+  readonly dc: DcSource;
 };
 export type SpellSavingThrowRollModeRule = {
   readonly kind: "hostileTarget";
@@ -3285,6 +3301,23 @@ export type BattleGreaseGroundHazardSavingThrowOutcomeHole = {
   readonly areaChoices: readonly [];
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
 };
+export type BattleProtectionRelevantEffectSavingThrowOutcomeHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "savingThrowOutcome";
+  readonly label: string;
+  readonly protectionRelevantEffectSave: {
+    readonly targetId: CombatantId;
+    readonly sourceSpellId: SpellRecord["id"];
+    readonly sourceCombatantId: CombatantId;
+    readonly relevantEffect: "charmed" | "frightened" | "possession";
+    readonly save: SpellConditionRepeatSave;
+  };
+  readonly ability: Ability;
+  readonly dc: DcSource;
+  readonly areaChoices: readonly [];
+  readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
+};
 export type BattleSpellHealingRollHole = Extract<
   RuntimeHole,
   { readonly kind: "rolledDice" }
@@ -3663,6 +3696,7 @@ export type BattleHole =
   | BattleSleepRepeatSavingThrowOutcomeHole
   | BattleHideousLaughterRepeatSavingThrowOutcomeHole
   | BattleGreaseGroundHazardSavingThrowOutcomeHole
+  | BattleProtectionRelevantEffectSavingThrowOutcomeHole
   | BattleUnitFeatureSavingThrowOutcomeHole
   | BattleUnitFeatureRollHole
   | BattleUnitFeatureDecisionHole

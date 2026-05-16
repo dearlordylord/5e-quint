@@ -529,7 +529,10 @@ function dancingLightsForReposition(
   >,
   rangeFeet: number,
 ): DancingLightsEffectShape | null {
-  if (effect.form === "combinedMediumForm" && placement.form === "combinedMediumForm") {
+  if (
+    effect.form === "combinedMediumForm" &&
+    placement.form === "combinedMediumForm"
+  ) {
     if (placement.light.distanceFromCasterFeet > rangeFeet) {
       return null;
     }
@@ -545,10 +548,7 @@ function dancingLightsForReposition(
     return null;
   }
   const currentDancingLightById = new Map(
-    effect.lights.map((dancingLight) => [
-      dancingLight.lightId,
-      dancingLight,
-    ]),
+    effect.lights.map((dancingLight) => [dancingLight.lightId, dancingLight]),
   );
   const lights = placement.lights.flatMap((candidate) => {
     const current = currentDancingLightById.get(candidate.lightId);

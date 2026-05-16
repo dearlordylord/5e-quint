@@ -156,13 +156,13 @@
     "spellPressureRows": 211,
     "levelOneBattleReadiness": {
       "denominator": 367,
-      "numerator": 304,
-      "percent": "82.8%",
+      "numerator": 309,
+      "percent": "84.2%",
       "rowsByStatus": {
-        "accepted": 238,
+        "accepted": 243,
         "accepted-no-battle-effect": 66,
         "battle-runtime-required": 25,
-        "partial-battle-runtime": 38
+        "partial-battle-runtime": 33
       }
     },
     "levelOneClassContainers": 12,
@@ -6966,7 +6966,7 @@
         "state": "installed",
         "unitId": "protection_from_evil_and_good"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -8722,7 +8722,7 @@
         "state": "installed",
         "unitId": "protection_from_evil_and_good"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -11012,7 +11012,7 @@
         "state": "installed",
         "unitId": "protection_from_evil_and_good"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -16096,7 +16096,7 @@
         "state": "installed",
         "unitId": "protection_from_evil_and_good"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -18232,7 +18232,7 @@
         "state": "installed",
         "unitId": "protection_from_evil_and_good"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {

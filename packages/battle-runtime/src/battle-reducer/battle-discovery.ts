@@ -81,6 +81,8 @@ import {
 } from "./movement-speed.ts";
 
 import {
+  protectionRelevantEffectSavingThrowOutcomeHole,
+  protectionRelevantEffectsForTarget,
   sleepShakeAwakeTargetChoices,
   spellRestraintEffectEntries,
 } from "./spell-condition-effects-helpers.ts";
@@ -506,6 +508,7 @@ export function discoverBattleActs(
   }
   acts.push(...movementActs(state, actorId));
   acts.push(...greaseGroundHazardEntrySaveActs(state, actorId));
+  acts.push(...protectionRelevantEffectSaveActs(state, actorId));
   if (standFromProneCostFeet(state, actorId) !== null) {
     acts.push({
       subject: { tag: "runtimeCommand", actorId, command: "standFromProne" },
@@ -662,6 +665,34 @@ function greaseGroundHazardSaveAct(
       greaseGroundHazardSavingThrowOutcomeHole(actorId, effect, trigger),
     ],
   };
+}
+
+function protectionRelevantEffectSaveActs(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly AvailableBattleAct[] {
+  return protectionRelevantEffectsForTarget(state, actorId).map((effect) => {
+    const hole = protectionRelevantEffectSavingThrowOutcomeHole(
+      state,
+      actorId,
+      effect,
+    );
+    const relevantEffect = hole.protectionRelevantEffectSave.relevantEffect;
+    return {
+      subject: {
+        tag: "runtimeCommand" as const,
+        actorId,
+        command: "protectionRelevantEffectSave" as const,
+        sourceCombatantId: effect.sourceCombatantId,
+        sourceSpellId: spellId(effect.sourceSpellId),
+        relevantEffect,
+      },
+      label: `${effect.sourceSpellId} ${relevantEffect} save`,
+      summary:
+        "Resolve a new Saving Throw against an already-applied effect relevant to Protection from Evil and Good.",
+      initialHoles: [hole],
+    };
+  });
 }
 
 function fogCloudStrongWindDispersalActs(
