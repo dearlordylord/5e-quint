@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "L1A-FINAL-STRICT-INTEGRATION",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Final Strict Support Integration Refresh"
     }
   ]
@@ -167,7 +167,7 @@ Then implement `AT-L1-14`:
 | 7 | L1A-L1Y-04 - Multiclass Entry Trait Profile Decision | done | L1A-FRONTIER-DECISION-INDEX | Decide multiclass entry profile vs shared-algebra/creation owner evidence. |
 | 8 | L1A-L1Y-05 - Spell Access Profile Decision | done | L1A-FRONTIER-DECISION-INDEX | Decide explicit spell-access profile vs derived CharacterBuild evidence. |
 | 9 | L1A-L1Y-06 - Class Table Summary Closure Decision | done | L1A-FRONTIER-DECISION-INDEX | Confirm source/navigation summary closure and strict-report wording. |
-| 10 | L1A-FINAL-STRICT-INTEGRATION - Final Strict Support Integration Refresh | ready-for-implementation-after-light-research | B/C branches merged or explicitly skipped | Regenerate all coverage/strict artifacts after loop branches land. |
+| 10 | L1A-FINAL-STRICT-INTEGRATION - Final Strict Support Integration Refresh | done | B/C branches merged or explicitly skipped | Coverage/strict artifacts were already current; remaining strict frontier is mapped to Loop B/C executable tasks. |
 
 ## Task Details
 
@@ -420,7 +420,7 @@ Plan Impact:
 
 ### Task 10 - L1A-FINAL-STRICT-INTEGRATION - Final Strict Support Integration Refresh
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Refresh strict level-1 support artifacts after Loop B and Loop C branches land,
 or after the owner explicitly tells this loop to integrate a subset.
@@ -445,5 +445,22 @@ Verification:
 
 Plan Impact:
 
-- If strict support is still below 100%, list the remaining rows and map them
-  back to the owning loop or a new follow-up task.
+- Completed refresh found generated artifacts already current. Product readiness
+  remains `367/367`; strict runtime/profile support remains `59/93`; strict
+  target closure remains `68/93`.
+- Remaining open strict rows map to existing executable follow-up tasks:
+  - Loop B `L1B-AT01`: `hunters_mark`, `ranger_favored_enemy`.
+  - Loop B `L1B-AT02`: `alarm`, `comprehend_languages`, `identify`,
+    `silent_image`, `speak_with_animals`.
+  - Loop B `L1B-AT09`: `faerie_fire`, `light`.
+  - Loop B `L1B-AT10`: `feather_fall`, `jump`.
+  - Loop B `L1B-AT11`: `fog_cloud`, `grease`.
+  - Loop B `L1B-AT12`: `thunderwave`.
+  - Loop C `L1C-AT03`: `fighter_fighting_style`.
+  - Loop C `L1C-AT04`: `barbarian_weapon_mastery`,
+    `fighter_weapon_mastery`, `paladin_weapon_mastery`,
+    `ranger_weapon_mastery`, `rogue_weapon_mastery`.
+  - Loop C `L1C-AT05`: `warlock_eldritch_invocations`.
+  - Loop C `L1C-AT06`: `cleric_divine_order`, `druid_primal_order`.
+  - Loop C `L1C-AT07`: `rogue_expertise`.
+  - Loop C `L1C-AT08`: `wizard_arcane_recovery`.
