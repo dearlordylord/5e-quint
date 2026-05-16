@@ -22,6 +22,7 @@ import {
   type BattleFill,
   type BattleResolutionResult,
   type BattleState,
+  type BattleTargetSpatialFact,
   type SupportedSpellInvocation,
   snapshotBattle,
 } from "../battle-reducer.ts";
@@ -38,6 +39,7 @@ import {
   recordAttackRollOngoingFeatures,
   requiredSpellAttackRollMode,
 } from "./attack-roll.ts";
+import { validateUniqueAttackSightFacts } from "./attack-fill-set.ts";
 import { activeEffectArmorClass } from "./creature-state.ts";
 import {
   applyBattleHitPointDamage,
@@ -324,6 +326,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
       input.actorId,
       target.combatantId,
       input.invocation,
+      step.target.spatialFacts ?? [],
     );
     if (step.attackRoll === undefined) {
       return needsHolesResult(replayState, input.input.subject, [
@@ -728,6 +731,10 @@ export function chainedSpellFillSet(
             message: "Chained spell target was filled twice for one step.",
           };
         }
+        const sightFactValidation = chainedSpellAttackSightFactValidation(
+          fill.spatialFacts ?? [],
+        );
+        if (sightFactValidation !== null) return sightFactValidation;
         steps[stepIndex] = { ...step, target: fill };
         continue;
       }
@@ -810,6 +817,13 @@ export function chainedSpellFillSet(
     hideousLaughterDamageRepeatSaves,
     damageDispositions,
   };
+}
+
+function chainedSpellAttackSightFactValidation(
+  facts: readonly BattleTargetSpatialFact[],
+): Extract<ChainedSpellFillSet, { readonly tag: "invalid" }> | null {
+  const message = validateUniqueAttackSightFacts(facts);
+  return message === null ? null : { tag: "invalid", message };
 }
 
 export function chainedSpellStepIndexForFill(

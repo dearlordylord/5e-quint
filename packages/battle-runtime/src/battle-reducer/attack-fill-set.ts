@@ -30,6 +30,7 @@ import { isHideousLaughterDamageRepeatSaveFill } from "./hideous-laughter-repeat
 export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
   let targetId: CombatantId | undefined;
   let targetSpatialFacts: readonly BattleTargetSpatialFact[] = [];
+  let targetSpatialFactsFilled = false;
   let attackRoll: BattleAttackRollResult | undefined;
   let concentrationSavingThrow:
     | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
@@ -109,12 +110,49 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
       if (targetId !== undefined) {
         return { tag: "invalid", message: "Attack target was filled twice." };
       }
+      if (targetSpatialFactsFilled) {
+        return {
+          tag: "invalid",
+          message: "Attack target spatial facts were filled twice.",
+        };
+      }
       targetId = fill.value;
       targetSpatialFacts = fill.spatialFacts ?? [];
+      targetSpatialFactsFilled = true;
       const rangeFactValidation =
         validateUniqueAttackTargetRangeFacts(targetSpatialFacts);
       if (rangeFactValidation !== null) {
         return { tag: "invalid", message: rangeFactValidation };
+      }
+      const sightFactValidation =
+        validateUniqueAttackSightFacts(targetSpatialFacts);
+      if (sightFactValidation !== null) {
+        return { tag: "invalid", message: sightFactValidation };
+      }
+      continue;
+    }
+
+    if (
+      fill.kind === "targetSpatialFacts" &&
+      fill.holeId === ATTACK_TARGET_HOLE_ID
+    ) {
+      if (targetSpatialFactsFilled) {
+        return {
+          tag: "invalid",
+          message: "Attack target spatial facts were filled twice.",
+        };
+      }
+      targetSpatialFacts = fill.spatialFacts;
+      targetSpatialFactsFilled = true;
+      const rangeFactValidation =
+        validateUniqueAttackTargetRangeFacts(targetSpatialFacts);
+      if (rangeFactValidation !== null) {
+        return { tag: "invalid", message: rangeFactValidation };
+      }
+      const sightFactValidation =
+        validateUniqueAttackSightFacts(targetSpatialFacts);
+      if (sightFactValidation !== null) {
+        return { tag: "invalid", message: sightFactValidation };
       }
       continue;
     }
@@ -330,6 +368,30 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     weaponMasteryCleaveDamageDisposition,
     weaponMasteryCleaveDamageDispositionFilled,
   };
+}
+
+export function validateUniqueAttackSightFacts(
+  facts: readonly BattleTargetSpatialFact[],
+): string | null {
+  const sightFacts = facts.filter(
+    (fact) =>
+      fact.kind === "attackAttackerCannotSeeTarget" ||
+      fact.kind === "attackTargetCannotSeeAttacker",
+  );
+  const duplicate = sightFacts.find((fact, factIndex) =>
+    sightFacts
+      .slice(0, factIndex)
+      .some(
+        (previous) =>
+          previous.kind === fact.kind &&
+          previous.attackerId === fact.attackerId &&
+          previous.targetId === fact.targetId,
+      ),
+  );
+  if (duplicate === undefined) {
+    return null;
+  }
+  return "Attack sight facts must contain at most one witness for each direction, attacker, and target.";
 }
 
 export function validateUniqueAttackTargetRangeFacts(

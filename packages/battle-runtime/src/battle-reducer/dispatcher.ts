@@ -125,6 +125,7 @@ import {
   applyAfterHitTimedDamageAndSaveSpellEffect,
   applyFailedSaveSpellConditionEffects,
   battleLightEmitters,
+  battleObscurementZones,
   applySpellDamage,
   applyShieldReactionSpellActiveEffect,
   featherFallLandingCleanupForCombatant,
@@ -3211,6 +3212,7 @@ export function snapshotBattle(state: BattleState): BattleSnapshot {
       };
     }),
     lightEmitters: battleLightEmitters(state),
+    obscurementZones: battleObscurementZones(state),
     acts: discoverBattleActs(state),
     turn: battleTurnSnapshot(state.currentTurnResources),
     readiedResponses: {

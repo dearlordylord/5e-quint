@@ -142,6 +142,28 @@ export function requiredAttackRollMode(
   attack?: SupportedAttackActionOption,
   targetSpatialFacts: readonly BattleTargetSpatialFact[] = [],
 ): AttackRollMode | undefined {
+  const sources = attackRollSourceFlags(
+    state,
+    attackerId,
+    targetId,
+    attack,
+    targetSpatialFacts,
+  );
+  return attackRollModeFromSources(sources.hasAdvantage, sources.hasDisadvantage);
+}
+
+type AttackRollSourceFlags = {
+  readonly hasAdvantage: boolean;
+  readonly hasDisadvantage: boolean;
+};
+
+function attackRollSourceFlags(
+  state: BattleState,
+  attackerId: CombatantId,
+  targetId: CombatantId,
+  attack?: SupportedAttackActionOption,
+  targetSpatialFacts: readonly BattleTargetSpatialFact[] = [],
+): AttackRollSourceFlags {
   const attacker = state.combatants.get(attackerId);
   const target = state.combatants.get(targetId);
   const grapple = grappledBy(state, attackerId);
@@ -159,7 +181,20 @@ export function requiredAttackRollMode(
     attack !== undefined &&
     attackTargetRangeBand(targetSpatialFacts, attackerId, targetId, attack) ===
       "long";
+  const sightAdvantage = hasAttackSightFact(
+    targetSpatialFacts,
+    "attackTargetCannotSeeAttacker",
+    attackerId,
+    targetId,
+  );
+  const sightDisadvantage = hasAttackSightFact(
+    targetSpatialFacts,
+    "attackAttackerCannotSeeTarget",
+    attackerId,
+    targetId,
+  );
   const hasAdvantage =
+    sightAdvantage ||
     (attacker?.hidden !== null &&
       attacker?.hidden !== undefined &&
       !combatantInvisibleBenefitDenied(attacker)) ||
@@ -169,6 +204,7 @@ export function requiredAttackRollMode(
     activeEffectGrantsAttackRollMode(state, attacker, target, "advantage") ||
     ongoingFeatureGrantsAttackRollMode(attacker, target, "advantage", attack);
   const hasDisadvantage =
+    sightDisadvantage ||
     hiddenTargetDisadvantage ||
     dodgeDisadvantage ||
     grappleDisadvantage ||
@@ -181,7 +217,25 @@ export function requiredAttackRollMode(
       "disadvantage",
       attack,
     );
-  return attackRollModeFromSources(hasAdvantage, hasDisadvantage);
+  return { hasAdvantage, hasDisadvantage };
+}
+
+type AttackSightSpatialFactKind =
+  | "attackAttackerCannotSeeTarget"
+  | "attackTargetCannotSeeAttacker";
+
+function hasAttackSightFact(
+  facts: readonly BattleTargetSpatialFact[],
+  kind: AttackSightSpatialFactKind,
+  attackerId: CombatantId,
+  targetId: CombatantId,
+): boolean {
+  return facts.some(
+    (fact) =>
+      fact.kind === kind &&
+      fact.attackerId === attackerId &&
+      fact.targetId === targetId,
+  );
 }
 
 export function requiredObjectTargetAttackRollMode(
@@ -190,6 +244,21 @@ export function requiredObjectTargetAttackRollMode(
   targetObjectId: BattleObjectId | undefined,
   attackerCanSeeObject: boolean | undefined,
 ): AttackRollMode | undefined {
+  const sources = objectTargetAttackRollSourceFlags(
+    state,
+    attackerId,
+    targetObjectId,
+    attackerCanSeeObject,
+  );
+  return attackRollModeFromSources(sources.hasAdvantage, sources.hasDisadvantage);
+}
+
+function objectTargetAttackRollSourceFlags(
+  state: BattleState,
+  attackerId: CombatantId,
+  targetObjectId: BattleObjectId | undefined,
+  attackerCanSeeObject: boolean | undefined,
+): AttackRollSourceFlags {
   const attacker = state.combatants.get(attackerId);
   const hasAdvantage =
     activeEffectGrantsAttackRollMode(state, attacker, undefined, "advantage") ||
@@ -206,7 +275,7 @@ export function requiredObjectTargetAttackRollMode(
       undefined,
       "disadvantage",
     );
-  return attackRollModeFromSources(hasAdvantage, hasDisadvantage);
+  return { hasAdvantage, hasDisadvantage };
 }
 
 export function requiredSpellObjectTargetAttackRollMode(
@@ -217,17 +286,17 @@ export function requiredSpellObjectTargetAttackRollMode(
   attackerCanSeeObject: boolean | undefined,
 ): AttackRollMode | undefined {
   const attacker = state.combatants.get(attackerId);
-  const baseMode = requiredObjectTargetAttackRollMode(
+  const sources = objectTargetAttackRollSourceFlags(
     state,
     attackerId,
     targetObjectId,
     attackerCanSeeObject,
   );
   const hasAdvantage =
-    baseMode === "advantage" ||
+    sources.hasAdvantage ||
     ongoingFeatureGrantsSpellAttackRollMode(attacker, invocation, "advantage");
   const hasDisadvantage =
-    baseMode === "disadvantage" ||
+    sources.hasDisadvantage ||
     ongoingFeatureGrantsSpellAttackRollMode(
       attacker,
       invocation,
@@ -289,7 +358,7 @@ export function requiredSpellAttackRollMode(
   targetSpatialFacts: readonly BattleTargetSpatialFact[] = [],
 ): AttackRollMode | undefined {
   const attacker = state.combatants.get(attackerId);
-  const baseMode = requiredAttackRollMode(
+  const sources = attackRollSourceFlags(
     state,
     attackerId,
     targetId,
@@ -297,10 +366,10 @@ export function requiredSpellAttackRollMode(
     targetSpatialFacts,
   );
   const hasAdvantage =
-    baseMode === "advantage" ||
+    sources.hasAdvantage ||
     ongoingFeatureGrantsSpellAttackRollMode(attacker, invocation, "advantage");
   const hasDisadvantage =
-    baseMode === "disadvantage" ||
+    sources.hasDisadvantage ||
     ongoingFeatureGrantsSpellAttackRollMode(
       attacker,
       invocation,
@@ -323,19 +392,15 @@ export function attackRollHasAdvantageSource(
   attackerId: CombatantId,
   targetId: CombatantId,
   attack?: SupportedAttackActionOption,
+  targetSpatialFacts: readonly BattleTargetSpatialFact[] = [],
 ): boolean {
-  const attacker = state.combatants.get(attackerId);
-  const target = state.combatants.get(targetId);
-  return (
-    (attacker?.hidden !== null &&
-      attacker?.hidden !== undefined &&
-      !combatantInvisibleBenefitDenied(attacker)) ||
-    state.helpAttacks.some(
-      (help) => help.allyId === attackerId && help.targetEnemyId === targetId,
-    ) ||
-    activeEffectGrantsAttackRollMode(state, attacker, target, "advantage") ||
-    ongoingFeatureGrantsAttackRollMode(attacker, target, "advantage", attack)
-  );
+  return attackRollSourceFlags(
+    state,
+    attackerId,
+    targetId,
+    attack,
+    targetSpatialFacts,
+  ).hasAdvantage;
 }
 
 export function attackRollModeWithOptionalOngoingFeature(
@@ -361,7 +426,13 @@ export function attackRollModeWithOptionalOngoingFeature(
   }
   if (
     baseline === undefined &&
-    attackRollHasAdvantageSource(state, attackerId, targetId, attack)
+    attackRollHasAdvantageSource(
+      state,
+      attackerId,
+      targetId,
+      attack,
+      targetSpatialFacts,
+    )
   ) {
     return undefined;
   }

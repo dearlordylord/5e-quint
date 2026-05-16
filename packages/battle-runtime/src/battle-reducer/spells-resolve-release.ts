@@ -866,6 +866,7 @@ export function resolveSpellRelease(
       input.subject.actorId,
       target.combatantId,
       invocation,
+      fillSet.targetSpatialFacts,
     );
     if (fillSet.attackRoll == null) {
       return needsHolesResult(input.state, input.subject, [

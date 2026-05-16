@@ -813,6 +813,7 @@ export function resolveSpellAct(
       subject.actorId,
       target.combatantId,
       invocationForResolution,
+      fillSet.targetSpatialFacts,
     );
     if (fillSet.attackRoll == null) {
       return needsHolesResult(castingState, input.subject, [

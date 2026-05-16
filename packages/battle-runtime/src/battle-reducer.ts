@@ -402,6 +402,7 @@ export {
 export {
   activeFeatherFallDescentRateCapFeetPerRound,
   battleLightEmitters,
+  battleObscurementZones,
   FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
 } from "./battle-reducer/spells-active-effects.ts";
 export const BATTLE_SPECIAL_SPEED_KINDS = [
@@ -832,6 +833,21 @@ export type BattleObjectInvisibleRevealLightEmitter = BattleSpellEffectBase & {
 export type BattleLightEmitter =
   | BattleSpellLightEmitter
   | BattleObjectInvisibleRevealLightEmitter;
+export type BattleObscurementZone = {
+  readonly kind: "spellObscurementZone";
+  readonly sourceSpellId: SpellRecord["id"];
+  readonly sourceCombatantId: CombatantId;
+  readonly obscurement: "heavilyObscured";
+  readonly area: {
+    readonly kind: "pointOriginSphere";
+    readonly areaId: string;
+    readonly radiusFeet: MovementFeet;
+  };
+  readonly expiresAt: Extract<
+    BattleActiveEffectExpiration,
+    { readonly kind: "concentration" }
+  >;
+};
 // SRD 5.2.1 Ready [Action]: this is the spell-specific Readied Response
 // created by taking Ready with an action-time spell. The caster spends the
 // spell's resources immediately, holds the energy with Concentration, and
@@ -1342,6 +1358,16 @@ export type BattleTargetSpatialFact =
       readonly targetId: CombatantId;
       readonly attackName: string;
       readonly rangeBand: BattleAttackRangeBand;
+    }
+  | {
+      readonly kind: "attackAttackerCannotSeeTarget";
+      readonly attackerId: CombatantId;
+      readonly targetId: CombatantId;
+    }
+  | {
+      readonly kind: "attackTargetCannotSeeAttacker";
+      readonly attackerId: CombatantId;
+      readonly targetId: CombatantId;
     }
   | {
       readonly kind: "spellTarget";
@@ -3600,6 +3626,11 @@ export type BattleFill =
       readonly spatialFacts?: readonly BattleTargetSpatialFact[];
     }
   | {
+      readonly kind: "targetSpatialFacts";
+      readonly holeId: BattleHoleId;
+      readonly spatialFacts: readonly BattleTargetSpatialFact[];
+    }
+  | {
       readonly kind: "objectTargetChoice";
       readonly holeId: BattleHoleId;
       readonly value: BattleObjectId;
@@ -3889,6 +3920,7 @@ export type BattleSnapshot = {
   readonly combatants: readonly BattleCreatureSnapshot[];
   readonly findFamiliars: readonly FindFamiliarSnapshot[];
   readonly lightEmitters: readonly BattleLightEmitter[];
+  readonly obscurementZones: readonly BattleObscurementZone[];
   readonly acts: readonly AvailableBattleAct[];
   readonly turn: BattleTurnSnapshot;
   readonly readiedResponses: {

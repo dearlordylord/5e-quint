@@ -31,6 +31,7 @@ import {
   BattleSubjectSchema,
   BATTLE_READIED_SPELL_TRIGGERS,
   addBattleCombatant,
+  battleObscurementZones,
   battleReactionRollOrDamageReductionSupportForUnit,
   battleUnitSupportProfilesForUnit,
   battleId,
@@ -401,6 +402,7 @@ describe("battle runtime", () => {
         },
       ],
       readiedResponses: { spells: [], movements: [] },
+      obscurementZones: [],
       helpAttackMarkers: [],
       pendingReaction: null,
     });
@@ -6066,6 +6068,45 @@ describe("battle runtime", () => {
     expect(Either.isLeft(decoded)).toBe(true);
   });
 
+  test("attack sight spatial facts parse through target-choice fills", () => {
+    const decoded = Schema.decodeUnknownEither(BattleFillSchema)({
+      kind: "targetChoice",
+      holeId: "battle:attack:target",
+      value: "goblin",
+      spatialFacts: [
+        {
+          kind: "attackAttackerCannotSeeTarget",
+          attackerId: "fighter",
+          targetId: "goblin",
+        },
+        {
+          kind: "attackTargetCannotSeeAttacker",
+          attackerId: "fighter",
+          targetId: "goblin",
+        },
+      ],
+    });
+
+    expect(Either.isRight(decoded)).toBe(true);
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleFillSchema)({
+          kind: "targetChoice",
+          holeId: "battle:attack:target",
+          value: "goblin",
+          spatialFacts: [
+            {
+              kind: "attackAttackerCanSeeTarget",
+              attackerId: "fighter",
+              targetId: "goblin",
+              canSee: true,
+            },
+          ],
+        }),
+      ),
+    ).toBe(true);
+  });
+
   test("attack miss spends the action without asking for weapon damage", () => {
     const state = fighterVsGoblinBattle();
     const targetHole = attackInitialTargetHole(state);
@@ -11102,6 +11143,36 @@ describe("battle runtime", () => {
     );
 
     expect(attackRoll).toMatchObject({ rollMode: "advantage" });
+
+    const mutualUnseenAttackRoll = requireHole(
+      resolveBattleSubject({
+        state: activated,
+        subject,
+        fills: [
+          targetFill(target, goblinId, [
+            {
+              kind: "spellTarget",
+              casterId: fighterId,
+              targetId: goblinId,
+              spellId: "ray_of_frost",
+            },
+            {
+              kind: "attackAttackerCannotSeeTarget",
+              attackerId: fighterId,
+              targetId: goblinId,
+            },
+            {
+              kind: "attackTargetCannotSeeAttacker",
+              attackerId: fighterId,
+              targetId: goblinId,
+            },
+          ]),
+        ],
+      }),
+      "attackRoll",
+    );
+
+    expect(mutualUnseenAttackRoll).not.toHaveProperty("rollMode");
   });
 
   test("Innate Sorcery does not project onto non-Sorcerer spell sources and stops after expiration", () => {
@@ -11935,6 +12006,181 @@ describe("battle runtime", () => {
         expect.objectContaining({ combatantId: goblinId, hp: 1 }),
       ]),
     );
+  });
+
+  test("attack sight witnesses compose into attack-roll mode", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-attack-sight-witnesses"),
+      combatants: [
+        characterSeed({ initiative: 20, attack: testDaggerAttack() }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject = fighterAttackSubject("Dagger");
+    const target = attackInitialTargetHole(state, subject);
+
+    const attackerCannotSeeTarget = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          attackTargetFill(target, fighterId, goblinId, subject.attackName, [
+            {
+              kind: "attackAttackerCannotSeeTarget",
+              attackerId: fighterId,
+              targetId: goblinId,
+            },
+          ]),
+        ],
+      }),
+      "attackRoll",
+    );
+    expect(attackerCannotSeeTarget).toMatchObject({
+      rollMode: "disadvantage",
+    });
+
+    const targetCannotSeeAttacker = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          attackTargetFill(target, fighterId, goblinId, subject.attackName, [
+            {
+              kind: "attackTargetCannotSeeAttacker",
+              attackerId: fighterId,
+              targetId: goblinId,
+            },
+          ]),
+        ],
+      }),
+      "attackRoll",
+    );
+    expect(targetCannotSeeAttacker).toMatchObject({ rollMode: "advantage" });
+
+    const mutualUnseen = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          attackTargetFill(target, fighterId, goblinId, subject.attackName, [
+            {
+              kind: "attackAttackerCannotSeeTarget",
+              attackerId: fighterId,
+              targetId: goblinId,
+            },
+            {
+              kind: "attackTargetCannotSeeAttacker",
+              attackerId: fighterId,
+              targetId: goblinId,
+            },
+          ]),
+        ],
+      }),
+      "attackRoll",
+    );
+    expect(mutualUnseen).not.toHaveProperty("rollMode");
+  });
+
+  test("mutual unseen cancellation lets Sneak Attack use the ally-within-5-feet branch", () => {
+    const allyId = combatantId("sight-sneak-ally");
+    const state = startBattleRight({
+      battleId: battleId("battle-sneak-attack-mutual-unseen-ally"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [{ className: "rogue", level: 1 }],
+          unitFeatures: [sneakAttackFeature()],
+          characterUnitRefs: sneakAttackUnitRefs(),
+          attack: testDaggerAttack(),
+        }),
+        characterSeed({
+          combatantId: allyId,
+          displayName: "Sight Sneak Ally",
+          initiative: 10,
+          attack: null,
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject = fighterAttackSubject("Dagger");
+    const target = attackInitialTargetHole(state, subject);
+    const targetFillWithSight = attackTargetFill(
+      target,
+      fighterId,
+      goblinId,
+      subject.attackName,
+      [
+        {
+          kind: "attackAttackerCannotSeeTarget",
+          attackerId: fighterId,
+          targetId: goblinId,
+        },
+        {
+          kind: "attackTargetCannotSeeAttacker",
+          attackerId: fighterId,
+          targetId: goblinId,
+        },
+        {
+          kind: "sneakAttackAllyWithin5FeetOfTarget",
+          attackerId: fighterId,
+          targetId: goblinId,
+          allyId,
+        },
+      ],
+    );
+    const roll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFillWithSight],
+      }),
+      "attackRoll",
+    );
+    expect(roll).not.toHaveProperty("rollMode");
+    const damage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFillWithSight,
+          attackRollFill(roll, { total: 20, naturalD20: 15 }),
+        ],
+      }),
+      "rolledDice",
+    );
+
+    const damageFills = [
+      targetFillWithSight,
+      attackRollFill(roll, { total: 20, naturalD20: 15 }),
+      damageRollFillWithGroups(damage, [[4], [4]], ["rogue_sneak_attack"]),
+    ];
+    const disposition = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: damageFills,
+      }),
+      "attackDamageDisposition",
+    );
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          ...damageFills,
+          attackDamageDispositionFill(disposition, { kind: "ordinaryDamage" }),
+        ],
+      }),
+    );
+
+    expect(
+      resolved.state.currentTurnResources.attackDamageRidersUsedThisTurn,
+    ).toEqual([
+      {
+        attackerId: fighterId,
+        unitId: "rogue_sneak_attack",
+      },
+    ]);
   });
 
   test("Sneak Attack once-per-turn usage is scoped to the attacking creature", () => {
@@ -24620,6 +24866,24 @@ describe("battle runtime", () => {
     expect(caster?.concentration).toMatchObject({
       sourceSpellId: "fog_cloud",
     });
+    expect(resolved.snapshot.obscurementZones).toEqual([
+      {
+        kind: "spellObscurementZone",
+        sourceSpellId: "fog_cloud",
+        sourceCombatantId: wizardId,
+        obscurement: "heavilyObscured",
+        area: {
+          kind: "pointOriginSphere",
+          areaId: "fog-1",
+          radiusFeet: movementFeet(20),
+        },
+        expiresAt: {
+          kind: "concentration",
+          combatantId: wizardId,
+          durationTicks: requireElapsedHours(1),
+        },
+      },
+    ]);
     expect(expendedLevelOneSlots(resolved, wizardId)).toBe(1);
   });
 
@@ -24629,6 +24893,7 @@ describe("battle runtime", () => {
 
     expect(broken.combatants.get(wizardId)?.activeEffects).toEqual([]);
     expect(broken.combatants.get(wizardId)?.concentration).toBeNull();
+    expect(battleObscurementZones(broken)).toEqual([]);
 
     const command = discoverBattleActs(cast.state).find(
       (candidate) =>
@@ -24649,6 +24914,25 @@ describe("battle runtime", () => {
 
     expect(dispersed.state.combatants.get(wizardId)?.activeEffects).toEqual([]);
     expect(dispersed.state.combatants.get(wizardId)?.concentration).toBeNull();
+    expect(dispersed.snapshot.obscurementZones).toEqual([]);
+  });
+
+  test("Fog Cloud source zone does not impose attack-roll Disadvantage without a sight witness", () => {
+    const cast = castFogCloud("battle-fog-cloud-no-implicit-sight", "fog-1");
+    const goblinTurn = requireResolved(
+      endTurn({ state: cast.state, actorId: wizardId }),
+    ).state;
+    const subject = goblinAttackSubject("Scimitar");
+    const target = attackInitialTargetHole(goblinTurn, subject);
+    const roll = attackRollHoleAfterTarget(
+      goblinTurn,
+      target,
+      subject,
+      wizardId,
+    );
+
+    expect(cast.snapshot.obscurementZones).toHaveLength(1);
+    expect(roll).not.toHaveProperty("rollMode");
   });
 
   test("Hex retarget waits until a later turn after the cursed target drops", () => {
@@ -26670,6 +26954,7 @@ function fogCloudBattle(battleIdValue: string): BattleState {
         combatantId: wizardId,
         displayName: "Wizard",
         initiative: 20,
+        attack: testDaggerAttack(),
         spellcasting: wizardSpellcasting({
           preparedSpells: [spellRecord("fog_cloud")],
           spellSlots: [{ spellLevel: 1, count: 1 }],

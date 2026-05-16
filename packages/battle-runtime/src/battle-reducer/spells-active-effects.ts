@@ -35,6 +35,7 @@ import {
   type BattleFill,
   type BattleLightEmitter,
   type BattleLightEmitterAttachment,
+  type BattleObscurementZone,
   type BattleObjectOutline,
   type BattleSpellAreaChoice,
   type BattleState,
@@ -173,6 +174,33 @@ export function battleLightEmitters(
       ),
   );
   return [...state.lightEmitters, ...heldLightEmitters];
+}
+
+export function battleObscurementZones(
+  state: BattleState,
+): readonly BattleObscurementZone[] {
+  return [...state.combatants.values()].flatMap(
+    (combatant): readonly BattleObscurementZone[] =>
+      combatant.activeEffects.flatMap(
+        (effect): readonly BattleObscurementZone[] =>
+          effect.kind === "fogCloudObscurement"
+            ? [
+                {
+                  kind: "spellObscurementZone",
+                  sourceSpellId: effect.sourceSpellId,
+                  sourceCombatantId: effect.sourceCombatantId,
+                  obscurement: "heavilyObscured",
+                  area: {
+                    kind: "pointOriginSphere",
+                    areaId: effect.areaId,
+                    radiusFeet: effect.radiusFeet,
+                  },
+                  expiresAt: effect.expiresAt,
+                },
+              ]
+            : [],
+      ),
+  );
 }
 
 export function applySpellLightEmitterEffects(

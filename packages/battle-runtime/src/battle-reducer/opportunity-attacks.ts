@@ -126,6 +126,7 @@ export function resolveOpportunityAttackCommand(
     subject.reactorId,
     subject.targetId,
     attack,
+    fillSet.targetSpatialFacts,
   );
   if (fillSet.attackRoll == null) {
     if (fillSet.damageRoll != null || fillSet.damageDispositionFilled) {

@@ -23,6 +23,7 @@ import {
 } from "../battle-reducer.ts";
 import type { BattleObjectId, CombatantId } from "../identity.ts";
 import { isSpellDamageReductionRollFill } from "./damage-helpers.ts";
+import { validateUniqueAttackSightFacts } from "./attack-fill-set.ts";
 import { isHideousLaughterDamageRepeatSaveFill } from "./hideous-laughter-repeat-save.ts";
 import {
   spellBurstDamageHole,
@@ -237,6 +238,8 @@ export function spellFillSet(
       }
       targetId = fill.value;
       targetSpatialFacts = fill.spatialFacts ?? [];
+      const sightFactValidation = attackSightFactValidation(targetSpatialFacts);
+      if (sightFactValidation !== null) return sightFactValidation;
       continue;
     }
 
@@ -263,12 +266,15 @@ export function spellFillSet(
             message: "Spell beam target was filled twice.",
           };
         }
+        const spatialFacts = fill.spatialFacts ?? [];
+        const sightFactValidation = attackSightFactValidation(spatialFacts);
+        if (sightFactValidation !== null) return sightFactValidation;
         beamFills[beamIndex] = {
           ...beamFill,
           target: {
             kind: "combatant",
             targetId: fill.value,
-            spatialFacts: fill.spatialFacts ?? [],
+            spatialFacts,
           },
         };
         continue;
@@ -866,6 +872,13 @@ export function spellFillSet(
     attackBurstDamageRoll,
     healingRoll,
   };
+}
+
+function attackSightFactValidation(
+  facts: readonly BattleTargetSpatialFact[],
+): Extract<SpellFillSet, { readonly tag: "invalid" }> | null {
+  const message = validateUniqueAttackSightFacts(facts);
+  return message === null ? null : { tag: "invalid", message };
 }
 
 export function spellFillSetSavingThrowTargeting(

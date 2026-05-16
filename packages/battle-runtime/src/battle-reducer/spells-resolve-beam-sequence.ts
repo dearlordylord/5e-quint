@@ -278,6 +278,7 @@ function resolveEldritchBlastCreatureBeam(input: {
     input.actorId,
     target.combatantId,
     input.invocation,
+    input.target.spatialFacts,
   );
   const originalTargetHole = spellBeamTargetHole(
     input.state,

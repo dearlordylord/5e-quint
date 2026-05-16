@@ -211,6 +211,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
     input.actorId,
     target.combatantId,
     input.invocation,
+    input.fillSet.targetSpatialFacts,
   );
   if (input.fillSet.attackRoll === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [

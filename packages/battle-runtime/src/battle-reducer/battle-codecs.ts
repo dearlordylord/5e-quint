@@ -37,7 +37,6 @@ import {
 } from "../battle-reaction-triggers.ts";
 import type {
   ActiveOngoingFeatureOccurrenceSnapshotEncoded,
-  BattleAttackRangeBand,
   BattleDroppedObjectOutcome,
   BattleFill,
   BattleObjectIgnitionOutcome,
@@ -518,6 +517,16 @@ const BattleTargetSpatialFactSchema = Schema.Union(
     targetId: CombatantId,
     attackName: Schema.String,
     rangeBand: Schema.Literal(...BATTLE_ATTACK_RANGE_BANDS),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("attackAttackerCannotSeeTarget"),
+    attackerId: CombatantId,
+    targetId: CombatantId,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("attackTargetCannotSeeAttacker"),
+    attackerId: CombatantId,
+    targetId: CombatantId,
   }),
   Schema.Struct({
     kind: Schema.Literal("spellTarget"),
@@ -1994,189 +2003,12 @@ type BattleFillEncoded =
       readonly kind: "targetChoice";
       readonly holeId: string;
       readonly value: string;
-      readonly spatialFacts?: readonly (
-        | {
-            readonly kind: "attackTargetInMeleeReach";
-            readonly actorId: string;
-            readonly targetId: string;
-            readonly attackName: string;
-          }
-        | {
-            readonly kind: "cleaveSecondTargetWithin5FeetOfFirstTarget";
-            readonly attackerId: string;
-            readonly firstTargetId: string;
-            readonly secondTargetId: string;
-          }
-        | {
-            readonly kind: "attackTargetInRangedRange";
-            readonly actorId: string;
-            readonly targetId: string;
-            readonly attackName: string;
-            readonly rangeBand: BattleAttackRangeBand;
-          }
-        | {
-            readonly kind: "spellTarget";
-            readonly casterId: string;
-            readonly targetId: string;
-            readonly spellId: string;
-          }
-        | {
-            readonly kind: "spellTargetKnownWilling";
-            readonly casterId: string;
-            readonly targetId: string;
-            readonly spellId: string;
-          }
-        | {
-            readonly kind: "spellObjectTarget";
-            readonly casterId: string;
-            readonly objectId: string;
-            readonly spellId: string;
-            readonly rangeFeet: number;
-            readonly armorClass: number;
-            readonly damageDisposition:
-              | { readonly kind: "hitPoints"; readonly hitPoints: number }
-              | {
-                  readonly kind: "hitPointsWithDamageThreshold";
-                  readonly hitPoints: number;
-                  readonly damageThreshold: number;
-                }
-              | { readonly kind: "tableResolved" };
-          }
-        | {
-            readonly kind: "spellObjectIgnition";
-            readonly casterId: string;
-            readonly objectId: string;
-            readonly spellId: string;
-            readonly disposition:
-              | { readonly kind: "flammableUnattended" }
-              | { readonly kind: "notFlammable" }
-              | { readonly kind: "wornOrCarried" };
-          }
-        | {
-            readonly kind: "spellObjectTargetSight";
-            readonly casterId: string;
-            readonly objectId: string;
-            readonly spellId: string;
-            readonly attackerCanSeeObject: boolean;
-          }
-        | {
-            readonly kind: "spellObjectLightTarget";
-            readonly casterId: string;
-            readonly objectId: string;
-            readonly spellId: string;
-            readonly size:
-              | "tiny"
-              | "small"
-              | "medium"
-              | "large"
-              | "huge"
-              | "gargantuan";
-            readonly wornOrCarried:
-              | { readonly kind: "nobody" }
-              | { readonly kind: "caster" }
-              | {
-                  readonly kind: "someoneElse";
-                  readonly relation: "worn" | "carried";
-                };
-          }
-        | {
-            readonly kind: "spellLeapTargetWithinRange";
-            readonly previousTargetId: string;
-            readonly targetId: string;
-            readonly spellId: string;
-            readonly rangeFeet: number;
-          }
-        | {
-            readonly kind: "spellTargetsInPointOriginSphere";
-            readonly casterId: string;
-            readonly spellId: string;
-            readonly areaId: string;
-            readonly radiusFeet: number;
-            readonly targetIds: readonly string[];
-          }
-        | {
-            readonly kind: "helpAttackTargetWithin5Feet";
-            readonly helperId: string;
-            readonly targetEnemyId: string;
-          }
-        | {
-            readonly kind: "meleeRedirectTargetWithin5Feet";
-            readonly sourceId: string;
-            readonly targetId: string;
-          }
-        | {
-            readonly kind: "rangedRedirectTargetWithin60FeetWithoutTotalCover";
-            readonly sourceId: string;
-            readonly targetId: string;
-          }
-        | {
-            readonly kind: "bardicInspirationTargetWithinRange";
-            readonly bardId: string;
-            readonly targetId: string;
-            readonly unitId: string;
-            readonly rangeFeet: number;
-          }
-        | {
-            readonly kind: "bardicInspirationTargetCanHear";
-            readonly bardId: string;
-            readonly targetId: string;
-            readonly unitId: string;
-          }
-        | {
-            readonly kind: "reactionRollOrDamageReductionTargetWithinRange";
-            readonly reactorId: string;
-            readonly targetId: string;
-            readonly unitId: string;
-            readonly rangeFeet: number;
-          }
-        | {
-            readonly kind: "reactionSpellDamagerVisibleWithinRange";
-            readonly reactorId: string;
-            readonly damageSourceId: string;
-            readonly spellId: string;
-            readonly rangeFeet: number;
-          }
-        | {
-            readonly kind: "featherFallTriggerSelfOrVisibleCreatureWithinRange";
-            readonly reactorId: string;
-            readonly fallingCreatureId: string;
-            readonly spellId: string;
-            readonly rangeFeet: number;
-          }
-        | {
-            readonly kind: "featherFallTargetFallingWithinRange";
-            readonly casterId: string;
-            readonly targetId: string;
-            readonly spellId: string;
-            readonly rangeFeet: number;
-          }
-        | {
-            readonly kind: "grappleTargetWithinReach";
-            readonly grapplerId: string;
-            readonly targetId: string;
-          }
-        | {
-            readonly kind: "shoveTargetWithinReach";
-            readonly shoverId: string;
-            readonly targetId: string;
-          }
-        | {
-            readonly kind: "spellRestraintEscapeActorWithinTargetReach";
-            readonly actorId: string;
-            readonly targetId: string;
-          }
-        | {
-            readonly kind: "sleepShakeAwakeActorWithin5Feet";
-            readonly actorId: string;
-            readonly targetId: string;
-          }
-        | {
-            readonly kind: "sneakAttackAllyWithin5FeetOfTarget";
-            readonly attackerId: string;
-            readonly targetId: string;
-            readonly allyId: string;
-          }
-      )[];
+      readonly spatialFacts?: readonly unknown[];
+    }
+  | {
+      readonly kind: "targetSpatialFacts";
+      readonly holeId: string;
+      readonly spatialFacts: readonly unknown[];
     }
   | {
       readonly kind: "objectTargetChoice";
@@ -2582,196 +2414,14 @@ export const BattleFillSchema: Schema.Schema<
       kind: Schema.Literal("targetChoice"),
       holeId: BattleHoleIdSchema,
       value: CombatantId,
-      spatialFacts: Schema.optionalWith(
-        Schema.Array(
-          Schema.Union(
-            Schema.Struct({
-              kind: Schema.Literal("attackTargetInMeleeReach"),
-              actorId: CombatantId,
-              targetId: CombatantId,
-              attackName: Schema.String,
-            }),
-            Schema.Struct({
-              kind: Schema.Literal(
-                "cleaveSecondTargetWithin5FeetOfFirstTarget",
-              ),
-              attackerId: CombatantId,
-              firstTargetId: CombatantId,
-              secondTargetId: CombatantId,
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("attackTargetInRangedRange"),
-              actorId: CombatantId,
-              targetId: CombatantId,
-              attackName: Schema.String,
-              rangeBand: Schema.Literal(...BATTLE_ATTACK_RANGE_BANDS),
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("spellTarget"),
-              casterId: CombatantId,
-              targetId: CombatantId,
-              spellId: Schema.String,
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("spellTargetKnownWilling"),
-              casterId: CombatantId,
-              targetId: CombatantId,
-              spellId: Schema.String,
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("spellObjectTarget"),
-              casterId: CombatantId,
-              objectId: BattleObjectId,
-              spellId: Schema.String,
-              rangeFeet: MovementFeet,
-              armorClass: BattleArmorClassSchema,
-              damageDisposition: BattleObjectDamageDispositionSchema,
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("spellObjectIgnition"),
-              casterId: CombatantId,
-              objectId: BattleObjectId,
-              spellId: Schema.String,
-              disposition: BattleObjectIgnitionDispositionSchema,
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("spellObjectTargetSight"),
-              casterId: CombatantId,
-              objectId: BattleObjectId,
-              spellId: Schema.String,
-              attackerCanSeeObject: Schema.Boolean,
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("spellObjectLightTarget"),
-              casterId: CombatantId,
-              objectId: BattleObjectId,
-              spellId: Schema.String,
-              size: Schema.Literal(
-                "tiny",
-                "small",
-                "medium",
-                "large",
-                "huge",
-                "gargantuan",
-              ),
-              wornOrCarried: Schema.Union(
-                Schema.Struct({ kind: Schema.Literal("nobody") }),
-                Schema.Struct({ kind: Schema.Literal("caster") }),
-                Schema.Struct({
-                  kind: Schema.Literal("someoneElse"),
-                  relation: Schema.Literal("worn", "carried"),
-                }),
-              ),
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("spellLeapTargetWithinRange"),
-              previousTargetId: CombatantId,
-              targetId: CombatantId,
-              spellId: Schema.String,
-              rangeFeet: MovementFeet,
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("spellTargetsInPointOriginSphere"),
-              casterId: CombatantId,
-              spellId: Schema.String,
-              areaId: Schema.String,
-              radiusFeet: MovementFeet,
-              targetIds: Schema.Array(CombatantId),
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("helpAttackTargetWithin5Feet"),
-              helperId: CombatantId,
-              targetEnemyId: CombatantId,
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("meleeRedirectTargetWithin5Feet"),
-              sourceId: CombatantId,
-              targetId: CombatantId,
-            }),
-            Schema.Struct({
-              kind: Schema.Literal(
-                "rangedRedirectTargetWithin60FeetWithoutTotalCover",
-              ),
-              sourceId: CombatantId,
-              targetId: CombatantId,
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("bardicInspirationTargetWithinRange"),
-              bardId: CombatantId,
-              targetId: CombatantId,
-              unitId: Schema.String,
-              rangeFeet: MovementFeet,
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("bardicInspirationTargetCanHear"),
-              bardId: CombatantId,
-              targetId: CombatantId,
-              unitId: Schema.String,
-            }),
-            Schema.Struct({
-              kind: Schema.Literal(
-                "reactionRollOrDamageReductionTargetWithinRange",
-              ),
-              reactorId: CombatantId,
-              targetId: CombatantId,
-              unitId: Schema.String,
-              rangeFeet: MovementFeet,
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("reactionSpellDamagerVisibleWithinRange"),
-              reactorId: CombatantId,
-              damageSourceId: CombatantId,
-              spellId: Schema.String,
-              rangeFeet: MovementFeet,
-            }),
-            Schema.Struct({
-              kind: Schema.Literal(
-                "featherFallTriggerSelfOrVisibleCreatureWithinRange",
-              ),
-              reactorId: CombatantId,
-              fallingCreatureId: CombatantId,
-              spellId: Schema.String,
-              rangeFeet: MovementFeet,
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("featherFallTargetFallingWithinRange"),
-              casterId: CombatantId,
-              targetId: CombatantId,
-              spellId: Schema.String,
-              rangeFeet: MovementFeet,
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("grappleTargetWithinReach"),
-              grapplerId: CombatantId,
-              targetId: CombatantId,
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("shoveTargetWithinReach"),
-              shoverId: CombatantId,
-              targetId: CombatantId,
-            }),
-            Schema.Struct({
-              kind: Schema.Literal(
-                "spellRestraintEscapeActorWithinTargetReach",
-              ),
-              actorId: CombatantId,
-              targetId: CombatantId,
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("sleepShakeAwakeActorWithin5Feet"),
-              actorId: CombatantId,
-              targetId: CombatantId,
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("sneakAttackAllyWithin5FeetOfTarget"),
-              attackerId: CombatantId,
-              targetId: CombatantId,
-              allyId: CombatantId,
-            }),
-          ),
-        ),
-        { exact: true },
-      ),
+      spatialFacts: Schema.optionalWith(BattleTargetSpatialFactsSchema, {
+        exact: true,
+      }),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("targetSpatialFacts"),
+      holeId: BattleHoleIdSchema,
+      spatialFacts: BattleTargetSpatialFactsSchema,
     }),
     Schema.Struct({
       kind: Schema.Literal("objectTargetChoice"),
@@ -3583,6 +3233,23 @@ const BattleLightEmitterSchema = Schema.Union(
   }),
 );
 
+const BattleObscurementZoneSchema = Schema.Struct({
+  kind: Schema.Literal("spellObscurementZone"),
+  sourceSpellId: Schema.String,
+  sourceCombatantId: CombatantId,
+  obscurement: Schema.Literal("heavilyObscured"),
+  area: Schema.Struct({
+    kind: Schema.Literal("pointOriginSphere"),
+    areaId: Schema.String,
+    radiusFeet: MovementFeet,
+  }),
+  expiresAt: Schema.Struct({
+    kind: Schema.Literal("concentration"),
+    combatantId: CombatantId,
+    durationTicks: Schema.optionalWith(Schema.Number, { exact: true }),
+  }),
+});
+
 const FindFamiliarSnapshotSchema = Schema.Union(
   Schema.Struct({
     status: Schema.Literal("present"),
@@ -3619,6 +3286,7 @@ export const BattleSnapshotSchema = Schema.Struct({
   combatants: Schema.Array(BattleCreatureSnapshotSchema),
   findFamiliars: Schema.Array(FindFamiliarSnapshotSchema),
   lightEmitters: Schema.Array(BattleLightEmitterSchema),
+  obscurementZones: Schema.Array(BattleObscurementZoneSchema),
   acts: Schema.Array(AvailableBattleActSchema),
   turn: BattleTurnSnapshotSchema,
   readiedResponses: Schema.Struct({
