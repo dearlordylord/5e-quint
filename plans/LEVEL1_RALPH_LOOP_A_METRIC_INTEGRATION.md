@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L1A-AT13",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Strict Level-1 Metric Infrastructure"
     },
     {
@@ -109,14 +109,14 @@ Then implement `AT-L1-14`:
 
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
-| 1 | L1A-AT13 - Strict Level-1 Metric Infrastructure | ready-for-implementation-after-light-research | none | Must land before Loops B/C count against strict reports. |
+| 1 | L1A-AT13 - Strict Level-1 Metric Infrastructure | done | none | Must land before Loops B/C count against strict reports. |
 | 2 | L1A-AT14A - Later-Level Strict Closure Classifier For Bard And Monk | ready-for-implementation-after-light-research | L1A-AT13 | Close only Bard/Monk later-level residuals; Ranger waits for Loop B `AT-L1-01`. |
 
 ## Task Details
 
 ### Task 1 - L1A-AT13 - Strict Level-1 Metric Infrastructure
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Implement `AT-L1-13` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
