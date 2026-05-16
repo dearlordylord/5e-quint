@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "L1A-L1Y-06",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Class Table Summary Closure Decision"
     },
     {
@@ -166,7 +166,7 @@ Then implement `AT-L1-14`:
 | 6 | L1A-L1Y-03 - Starting Equipment Profile Decision | done | L1A-FRONTIER-DECISION-INDEX | Decide starting equipment profile vs existing source projection closure. |
 | 7 | L1A-L1Y-04 - Multiclass Entry Trait Profile Decision | done | L1A-FRONTIER-DECISION-INDEX | Decide multiclass entry profile vs shared-algebra/creation owner evidence. |
 | 8 | L1A-L1Y-05 - Spell Access Profile Decision | done | L1A-FRONTIER-DECISION-INDEX | Decide explicit spell-access profile vs derived CharacterBuild evidence. |
-| 9 | L1A-L1Y-06 - Class Table Summary Closure Decision | ready-for-research | L1A-FRONTIER-DECISION-INDEX | Confirm source/navigation summary closure and strict-report wording. |
+| 9 | L1A-L1Y-06 - Class Table Summary Closure Decision | done | L1A-FRONTIER-DECISION-INDEX | Confirm source/navigation summary closure and strict-report wording. |
 | 10 | L1A-FINAL-STRICT-INTEGRATION - Final Strict Support Integration Refresh | ready-for-implementation-after-light-research | B/C branches merged or explicitly skipped | Regenerate all coverage/strict artifacts after loop branches land. |
 
 ## Task Details
@@ -396,7 +396,7 @@ Plan Impact:
 
 ### Task 9 - L1A-L1Y-06 - Class Table Summary Closure Decision
 
-Status: `ready-for-research`
+Status: `done`
 
 Research `AT-L1Y-06` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
