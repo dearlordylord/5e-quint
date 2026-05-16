@@ -159,8 +159,8 @@
       "numerator": 367,
       "percent": "100%",
       "rowsByStatus": {
-        "accepted": 276,
-        "accepted-no-battle-effect": 91
+        "accepted": 277,
+        "accepted-no-battle-effect": 90
       }
     },
     "levelOneClassContainers": 12,
@@ -9179,13 +9179,13 @@
         "state": "installed",
         "unitId": "fighter_fighting_style"
       },
-      "unitProfileDisposition": "unsupported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "unit-claim",
-        "kind": "selection-grant-container",
-        "owner": "selected Fighting Style feat Unit",
-        "reason": "The class feature chooses a Fighting Style feat; the selected feat Unit owns executable battle pressure."
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "future Fighter advancement/replacement owner",
+        "reason": "The remaining Fighting Style replacement clause occurs when gaining later Fighter levels after the level-1 choice has already been finalized."
       },
       "ownerEvidence": [
         {
@@ -9200,7 +9200,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/fighter:level-1:class-feature-grant:fighter_second_wind",

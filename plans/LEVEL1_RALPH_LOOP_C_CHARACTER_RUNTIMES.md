@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L1C-AT03",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Fighter Fighting Style Character Profile"
     },
     {
@@ -45,6 +45,12 @@
       "id": "L1C-AT04",
       "status": "ready-for-implementation-after-light-research",
       "title": "Weapon Mastery Character And Rest Profile"
+    },
+    {
+      "number": 8,
+      "id": "L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Fighter Fighting Style Advancement Replacement"
     }
   ]
 }
@@ -76,6 +82,7 @@ Every Ralph prompt for this loop must include:
 | --- | --- | --- |
 | `AT-L1-03S` Character Creation support scaffold | shared scaffold only | shared Character Creation profile ids, owner markers, runtime-test markers, task claims |
 | `AT-L1-03` Fighter Fighting Style profile | `fighter_fighting_style` | level-1 Fighting Style choice evidence; all-level lifecycle guard |
+| `L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT` Fighter Fighting Style advancement replacement | `fighter_fighting_style` | Fighter-level replacement of an already chosen Fighting Style feat when gaining Fighter levels |
 | `AT-L1-04` Weapon Mastery character/rest profile | `barbarian_weapon_mastery`, `fighter_weapon_mastery`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery` | initial choice plus Long Rest reselection support |
 | `AT-L1-05` Warlock Eldritch Invocations profile | `warlock_eldritch_invocations` | level-1 invocation choice evidence; all-level lifecycle guard |
 | `AT-L1-06` Cleric/Druid order profile | `cleric_divine_order`, `druid_primal_order` | Divine/Primal Order option projection |
@@ -90,6 +97,9 @@ Every Ralph prompt for this loop must include:
 4. Implement `AT-L1-04` after `AT-L1-03S`; include or cite Character Sheet/rest
    support for Long Rest weapon-choice reselection before promoting Weapon
    Mastery containers.
+5. Implement `L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT` after `AT-L1-03`
+   when promoting `fighter_fighting_style` from the level-1 subset to all-level
+   support.
 
 ## Scope
 
@@ -117,7 +127,8 @@ For Unit-specific Character Creation tasks:
 Lifecycle gates:
 
 - `fighter_fighting_style` needs advancement/replacement ownership before
-  all-level support.
+  all-level support. The concrete follow-up is
+  `L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT`.
 - Weapon Mastery containers need initial choice and Long Rest reselection support
   before all-level support.
 - The existing selected identity MBT evidence for `mastery_cleave`,
@@ -182,12 +193,13 @@ For `AT-L1-08`:
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
 | 1 | L1C-AT03S - Character Creation Support Scaffold | done | none | Shared profiles/markers only; no Unit claim conversion. |
-| 2 | L1C-AT03 - Fighter Fighting Style Character Profile | ready-for-implementation-after-light-research | L1C-AT03S | Level-1 slice with advancement lifecycle guard. |
+| 2 | L1C-AT03 - Fighter Fighting Style Character Profile | done | L1C-AT03S | Level-1 slice with advancement lifecycle guard. |
 | 3 | L1C-AT05 - Warlock Eldritch Invocations Character Profile | ready-for-implementation-after-light-research | L1C-AT03S | Level-1 slice with invocation lifecycle guard. |
 | 4 | L1C-AT06 - Cleric And Druid Order Character Profiles | ready-for-implementation-after-light-research | L1C-AT03S | Divine/Primal Order projection. |
 | 5 | L1C-AT07 - Rogue Expertise Character Profile | ready-for-implementation-after-light-research | L1C-AT03S | Level-1 slice with level 6 Expertise guard. |
 | 6 | L1C-AT08 - Wizard Arcane Recovery Character Sheet Profile | ready-for-implementation-after-light-research | none | Character Sheet Short Rest Spell Slot recovery. |
 | 7 | L1C-AT04 - Weapon Mastery Character And Rest Profile | ready-for-implementation-after-light-research | L1C-AT03S | Includes Long Rest reselection support; selected mastery-property MBT does not satisfy this gate. |
+| 8 | L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT - Fighter Fighting Style Advancement Replacement | ready-for-implementation-after-light-research | L1C-AT03 | Required before `fighter_fighting_style` can move from level-1 subset support to all-level support. |
 
 ## Task Details
 
@@ -224,7 +236,7 @@ Plan Impact:
 
 ### Task 2 - L1C-AT03 - Fighter Fighting Style Character Profile
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Implement `AT-L1-03` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
@@ -250,6 +262,40 @@ Verification:
 Plan Impact:
 
 - Preserve any unowned advancement replacement work as a concrete follow-up.
+
+### Task 8 - L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT - Fighter Fighting Style Advancement Replacement
+
+Status: `ready-for-implementation-after-light-research`
+
+Implement the `fighter_fighting_style` follow-up left by Task 2.
+
+Scope:
+
+- Own only `fighter_fighting_style`.
+- Preserve the level-1 `character-creation.class-feature-feat-choice` evidence
+  from `L1C-AT03`.
+- Read `.references/srd-5.2.1/Classes/Fighter.md` Level 1 Fighting Style and
+  `UBIQUITOUS_LANGUAGE.md` before changing claim/profile text.
+- Evidence or implement replacement of the already chosen Fighting Style feat
+  whenever the character gains a Fighter level.
+- Keep selected Fighting Style feat execution owned by selected feat Unit
+  profiles; do not move feat execution under the `fighter_fighting_style`
+  container.
+- Convert `fighter_fighting_style` from `profile-subset-supported` to
+  `supported-profile` only when the advancement replacement lifecycle is owned.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`
+- `pnpm unit-profile-coverage:check`
+- `pnpm --filter @dnd/character-creation-runtime test` if Character Creation
+  runtime/test marker files are touched beyond comments
+- `/simplify` convergence, minimum two rounds
+
+Plan Impact:
+
+- Close this task only when all-level replacement has runtime/test owner
+  evidence, not from the level-1 choice evidence alone.
 
 ### Task 3 - L1C-AT05 - Warlock Eldritch Invocations Character Profile
 

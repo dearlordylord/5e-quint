@@ -49,6 +49,7 @@ const classContainerOwnedCreationRowKinds = new Set([
 
 const deterministicAdmissionProjectionEvidenceTag =
   "deterministic-admission-projection";
+const characterCreationProfileIdPrefix = "character-creation.";
 const characterCreationOwnerEvidenceSchema =
   "dnd.srd-character-creation-owner-evidence.v1";
 const characterSheetOwnerEvidenceSchema =
@@ -801,6 +802,22 @@ function installedLevelOneOwnerClassification(row, ownerEvidenceSources) {
       evidence: characterSheetEvidence,
     };
   }
+  const claim = row.candidateUnitId
+    ? ownerEvidenceSources.unitClaims.get(row.candidateUnitId)?.claim
+    : undefined;
+  const characterCreationEvidence = ownerEvidenceSources.characterCreation.get(
+    row.id,
+  );
+  if (
+    characterCreationEvidence &&
+    claimUsesOnlyProfilePrefix(claim, characterCreationProfileIdPrefix)
+  ) {
+    return {
+      kind: "evidence-present",
+      owner: "character-creation-runtime",
+      evidence: characterCreationEvidence,
+    };
+  }
   const battleRuntimeEvidence = row.candidateUnitId
     ? ownerEvidenceSources.battleRuntime.get(row.candidateUnitId)
     : undefined;
@@ -811,9 +828,6 @@ function installedLevelOneOwnerClassification(row, ownerEvidenceSources) {
       evidence: battleRuntimeEvidence,
     };
   }
-  const characterCreationEvidence = ownerEvidenceSources.characterCreation.get(
-    row.id,
-  );
   if (characterCreationEvidence) {
     return {
       kind: "evidence-present",
@@ -868,6 +882,14 @@ function installedLevelOneOwnerClassification(row, ownerEvidenceSources) {
     };
   }
   return undefined;
+}
+
+function claimUsesOnlyProfilePrefix(claim, prefix) {
+  return (
+    Array.isArray(claim?.profileIds) &&
+    claim.profileIds.length > 0 &&
+    claim.profileIds.every((profileId) => profileId.startsWith(prefix))
+  );
 }
 
 function isPrimaryAbilityRow(row) {

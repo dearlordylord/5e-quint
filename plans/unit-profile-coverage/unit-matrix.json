@@ -3986,19 +3986,58 @@
         "status": "installed"
       },
       "claim": {
-        "battleReadinessClosure": {
-          "kind": "selection-grant-container",
-          "owner": "selected Fighting Style feat Unit",
-          "reason": "The class feature chooses a Fighting Style feat; the selected feat Unit owns executable battle pressure."
-        },
-        "reason": "Choice/grant container; selected Fighting Style feat carries executable pressure.",
-        "tag": "unsupported-profile"
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "later-level-only",
+              "owner": "future Fighter advancement/replacement owner",
+              "reason": "The remaining Fighting Style replacement clause occurs when gaining later Fighter levels after the level-1 choice has already been finalized."
+            },
+            "followUpTaskId": "L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT",
+            "mechanic": "Fighter-level advancement replacement of an already-chosen Fighting Style feat whenever the character gains another Fighter level"
+          }
+        ],
+        "profileIds": [
+          "character-creation.class-feature-feat-choice"
+        ],
+        "supportedMechanics": [
+          "Level 1 Fighter character creation discovers the Fighting Style feat choice from the Surface class-feature record",
+          "Character Creation admits one selected Fighting Style feat and finalizes it as a selected CharacterBuild feature ref with selectedFromUnitId fighter_fighting_style",
+          "Selected Fighting Style feat execution remains owned by the selected feat Unit profile"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "AT-L1-03"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-creation.class-feature-feat-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface class-feature grant_feat records plus Character Draft Unit-backed selections; selected feat execution remains owned by the selected feat Unit profile.",
+          "taskRefs": [
+            "AT-L1-03S"
+          ],
+          "title": "Character Creation finalizes class-feature feat choices as selected build feature refs",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/fighter_fighting_style.json",
       "unitId": "fighter_fighting_style"
     },

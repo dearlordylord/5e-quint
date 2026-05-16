@@ -111,6 +111,7 @@ import {
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.eldritch-invocation-choice
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.class-feature-option-projection
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.skill-expertise-choice
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-03 fighter_fighting_style
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
