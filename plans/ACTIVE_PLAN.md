@@ -76,8 +76,26 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 336,
       "id": "SRDINV91A",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Recursive Battle Runtime Coverage Frontier Review"
+    },
+    {
+      "number": 337,
+      "id": "SRDINV91B",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Close Deterministic Admission Projection Stragglers"
+    },
+    {
+      "number": 338,
+      "id": "SRDINV91C",
+      "status": "blocked",
+      "title": "Prove Condition-Save Spell Invocation Profile"
+    },
+    {
+      "number": 339,
+      "id": "SRDINV91D",
+      "status": "blocked",
+      "title": "Select Identity MBT Frontier Evidence Batch"
     }
   ]
 }
@@ -91,7 +109,10 @@ Keep it synchronized with the DAG table and task details.
 | 333 | SRDINV89D - Recursive Level-1 Battle Feature Planning Review | done | SRDINV89A, SRDINV89B, SRDINV89C | SRDINV90A | SRDINV89D review, SRD inventory report, UNIT_REPORT, SRDINV88B review, ACTIVE_PLAN, UBIQUITOUS_LANGUAGE | Completed: post-SRDINV89A-C readiness is 309/367 (84.2%) while supported executable Unit coverage is 85/117 (72.6%); appended SRDINV90A-SRDINV90B because the remaining gap is now the readiness classifier's owner-accepted closure boundary, not catalog admission or active-plan exhaustion. |
 | 334 | SRDINV90A - Model Battle Readiness Owner-Accepted Closures | done | SRDINV89D | SRDINV90B | SRDINV89D review, SRD_UNIT_INVENTORY, UNIT_REPORT, unit-claims.jsonl, unit-matrix.json, UBIQUITOUS_LANGUAGE | Completed: level-1 battle readiness now consumes explicit Unit-claim/deferred-owner closure facts for non-battle, later-level, table/spatial, social/knowledge, companion-AI, and outside-runtime residuals; refreshed readiness is 367/367 (100%) without counting catalog admission alone. |
 | 335 | SRDINV90B - Recursive Level-1 Battle Readiness Closure Review | done | SRDINV90A | SRDINV91A | SRDINV89D review, refreshed SRD inventory report, refreshed UNIT_REPORT, ACTIVE_PLAN, UBIQUITOUS_LANGUAGE, SRDINV90B review | Completed: post-SRDINV90A product readiness is 367/367 (100%) with zero remaining battle-runtime-required or partial-battle-runtime rows. This closes only the product-readiness classifier lane; it does not close supported executable profile expansion, proof, deterministic admission, or MBT coverage planning. |
-| 336 | SRDINV91A - Recursive Battle Runtime Coverage Frontier Review | ready-for-research | SRDINV90B | next concrete frontier task(s) | SRDINV90B review, refreshed SRD inventory report, UNIT_REPORT, unit-matrix.json, unit-claims.jsonl, ACTIVE_PLAN, UBIQUITOUS_LANGUAGE | Re-open the recursive frontier from the non-terminal metrics left after SRDINV90B: supported executable Unit coverage 85/117 (72.6%), deterministic admission/projection 78/85 (91.8%), QNT proof 61/62 (98.4%), and selected identity MBT 10/85 (11.8%). Do not treat 367/367 product readiness or active-plan exhaustion as permission to stop. |
+| 336 | SRDINV91A - Recursive Battle Runtime Coverage Frontier Review | done | SRDINV90B | SRDINV91B-SRDINV91D | SRDINV91A review, SRDINV90B review, refreshed SRD inventory report, UNIT_REPORT, unit-matrix.json, unit-claims.jsonl, ACTIVE_PLAN, UBIQUITOUS_LANGUAGE | Completed: product readiness remains 367/367 (100%) and separate frontier metrics remain supported executable Unit coverage 85/117 (72.6%), deterministic admission/projection 78/85 (91.8%), QNT proof 61/62 (98.4%), and selected identity MBT 10/85 (11.8%). Appended concrete follow-ups for deterministic evidence stragglers, the condition-save QNT proof gap, and a selected-identity MBT evidence batch. |
+| 337 | SRDINV91B - Close Deterministic Admission Projection Stragglers | ready-for-implementation-after-light-research | SRDINV91A | SRDINV91C, SRDINV91D | SRDINV91A review, UNIT_REPORT deterministic evidence tables, unit-matrix.json, Barbarian/Monk/Paladin/Wizard class text, Equipment mastery properties, UBIQUITOUS_LANGUAGE | Add deterministic catalog/support/projection evidence for the seven supported-profile identities that currently lack it: Barbarian Unarmored Defense, Monk Unarmored Defense, Wizard Ritual Adept, Paladin Lay On Hands, mastery_cleave, mastery_sap, and mastery_topple. Prefer existing admission/projection tests and manifests; do not add duplicate state beside existing profile/runtime owners. |
+| 338 | SRDINV91C - Prove Condition-Save Spell Invocation Profile | blocked | SRDINV91B | SRDINV91D | SRDINV91A review, Color Spray, Entangle, Rules Glossary conditions and saving throws, packages/battle-runtime/battle-runtime.qnt, UBIQUITOUS_LANGUAGE | Add QNT proof evidence for `spell.invocation-condition-save`, currently the lone QNT proof coverage gap. Scope the proof to already-supported condition-save semantics such as Color Spray's save-gated Blinded duration and Entangle's save-gated Restrained ownership/cleanup; keep area membership and pathfinding caller supplied. |
+| 339 | SRDINV91D - Select Identity MBT Frontier Evidence Batch | blocked | SRDINV91B, SRDINV91C | next recursive coverage review | SRDINV91A review, UNIT_REPORT selected identity MBT table, battle-runtime MBT protocol, UBIQUITOUS_LANGUAGE | Choose and implement the next small selected-identity MBT evidence batch after deterministic/proof gaps are closed. Start with representative identities across high-value profile families rather than broad MBT exploration; likely candidates include Extra Attack, Bardic Inspiration, Martial Arts, weapon mastery identities, and one or two supported spell identities with existing deterministic admission evidence. |
 
 ## Task Details
 
@@ -250,11 +271,11 @@ two-round `/simplify` convergence recorded in the SRDINV90B review note.
 
 ### Task 336 - SRDINV91A - Recursive Battle Runtime Coverage Frontier Review
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: SRDINV90B
 
-Blocks: next concrete frontier task(s)
+Blocks: SRDINV91B-SRDINV91D
 
 Research / plan:
 [SRDINV90B review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV90B_RECURSIVE_LEVEL_1_BATTLE_READINESS_CLOSURE_REVIEW.md),
@@ -287,4 +308,137 @@ Verification: RAW/source review for any newly selected rule slices and
 `UBIQUITOUS_LANGUAGE.md`; active-plan consistency across Ralph index, DAG table,
 and task details; `pnpm unit-profile-coverage:check`; a short review note if
 new frontier facts are recorded; `/simplify` convergence, minimum two rounds
+unless the final changeset is trivial.
+
+Completed: reviewed the remaining non-terminal metrics after SRDINV90B without
+reopening the 367/367 product-readiness closure. Deterministic
+admission/projection has seven concrete supported-profile identity gaps, QNT
+proof has one executable profile gap, and selected identity MBT is intentionally
+still sparse at 10/85. `ranger_favored_enemy` is a separate
+profile-subset-supported deterministic evidence gap outside the 78/85 metric
+denominator. Appended SRDINV91B-SRDINV91D so the active queue ends with runnable
+follow-up work rather than active-plan exhaustion.
+
+Verification completed:
+RAW/source review for the newly selected follow-up slices in local SRD 5.2.1
+text; `UBIQUITOUS_LANGUAGE.md` terminology check; `pnpm
+unit-profile-coverage:check`; active-plan consistency across Ralph index, DAG
+table, and task details; two-round `/simplify` convergence recorded in the
+SRDINV91A review note.
+
+### Task 337 - SRDINV91B - Close Deterministic Admission Projection Stragglers
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: SRDINV91A
+
+Blocks: SRDINV91C, SRDINV91D
+
+Research / plan:
+[SRDINV91A review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV91A_RECURSIVE_BATTLE_RUNTIME_COVERAGE_FRONTIER_REVIEW.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md),
+[unit-matrix.json](/workspace/typescript/dnd/plans/unit-profile-coverage/unit-matrix.json),
+[Barbarian Unarmored Defense](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Barbarian.md),
+[Monk Unarmored Defense](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Monk.md),
+[Paladin Lay On Hands](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Paladin.md),
+[Wizard Ritual Adept](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Wizard.md),
+[Mastery Properties](/workspace/typescript/dnd/.references/srd-5.2.1/Equipment.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: close deterministic admission/projection evidence for the seven
+supported-profile identities currently missing it: `barbarian_unarmored_defense`,
+`monk_unarmored_defense`, `wizard_ritual_adept`, `paladin_lay_on_hands`,
+`mastery_cleave`, `mastery_sap`, and `mastery_topple`. Use existing
+runtime/profile owners and admission manifests; do not duplicate
+character-sheet, spell, or mastery source state. `ranger_favored_enemy` remains
+a profile-subset-supported deterministic evidence gap, but it is outside the
+supported-profile denominator for this metric and is not part of this closure.
+
+Out of scope: new reducer semantics beyond deterministic evidence for existing
+supported profiles; selected identity MBT; proving new QNT invariants; treating
+unsupported-profile or profile-subset closure rows as product-readiness
+regressions.
+
+Acceptance: deterministic admission/projection coverage reaches 85/85 (100%)
+or each remaining gap names an exact typed blocker. `UNIT_REPORT.md` and
+`unit-matrix.json` identify deterministic evidence for every task-owned Unit.
+
+Verification: RAW/source review for the seven supported-profile identities and
+`UBIQUITOUS_LANGUAGE.md`; `pnpm unit-profile-coverage:check --write` if
+generated artifacts change; `pnpm unit-profile-coverage:check`; focused package
+tests for any touched admission/projection files; `/simplify` convergence,
+minimum two rounds unless the final changeset is trivial.
+
+### Task 338 - SRDINV91C - Prove Condition-Save Spell Invocation Profile
+
+Status: `blocked`
+
+Depends on: SRDINV91B
+
+Blocks: SRDINV91D
+
+Research / plan:
+[SRDINV91A review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV91A_RECURSIVE_BATTLE_RUNTIME_COVERAGE_FRONTIER_REVIEW.md),
+[Color Spray](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md),
+[Entangle](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md),
+[Rules Glossary conditions and saving throws](/workspace/typescript/dnd/.references/srd-5.2.1/Rules-Glossary.md),
+[battle-runtime.qnt](/workspace/typescript/dnd/packages/battle-runtime/battle-runtime.qnt),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: add QNT proof evidence for `spell.invocation-condition-save`, currently
+the lone QNT proof coverage gap. Prove the already-supported save-gated
+condition profile using the promoted battle-runtime model: Color Spray's
+Constitution save-gated Blinded condition until the end of the caster's next
+turn and Entangle's Strength save-gated Restrained condition with spell-owned
+cleanup are the concrete SRD witnesses.
+
+Out of scope: automatic cone/square area membership, pathfinding, line of sight,
+or Difficult Terrain movement derivation; new spell admission; selected
+identity MBT.
+
+Acceptance: QNT proof coverage reaches 62/62 (100%) or the remaining proof gap
+is replaced by a precise proof blocker. The profile claim for
+`spell.invocation-condition-save` names a `qnt-proof` owner.
+
+Verification: RAW/source review for Color Spray, Entangle, condition, and
+Saving Throw text plus `UBIQUITOUS_LANGUAGE.md`; package-local Quint proof/test
+command appropriate to the changed QNT file; `pnpm unit-profile-coverage:check`;
+`/simplify` convergence, minimum two rounds unless the final changeset is
+trivial.
+
+### Task 339 - SRDINV91D - Select Identity MBT Frontier Evidence Batch
+
+Status: `blocked`
+
+Depends on: SRDINV91B, SRDINV91C
+
+Blocks: next recursive coverage review
+
+Research / plan:
+[SRDINV91A review](/workspace/typescript/dnd/plans/unit-profile-coverage/SRDINV91A_RECURSIVE_BATTLE_RUNTIME_COVERAGE_FRONTIER_REVIEW.md),
+[UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md),
+[unit-matrix.json](/workspace/typescript/dnd/plans/unit-profile-coverage/unit-matrix.json),
+[battle-runtime MBT protocol](/workspace/typescript/dnd/CLAUDE.md),
+[UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
+
+Scope: choose and implement the next Ralph-sized selected identity MBT evidence
+batch after deterministic and proof gaps are closed. Prefer representative
+identities across high-value families with existing deterministic admission
+evidence, such as Extra Attack, Bardic Inspiration, Martial Arts, weapon
+mastery identities, and one or two supported spell identities.
+
+Out of scope: broad exploratory MBT, raising selected identity MBT to 100% in
+one task, changing runtime semantics solely to make MBT easier, or running
+archived/root fuzz tiers.
+
+Acceptance: selected identity MBT coverage increases from 10/85 and every newly
+selected identity has checker-visible `selected-identity-mbt` evidence. The
+batch must explain why the chosen identities are representative of the next
+frontier.
+
+Verification: RAW/source review for any newly selected rule identities and
+`UBIQUITOUS_LANGUAGE.md`; focused deterministic tests first; one battle-runtime
+MBT run only if completed behavior/evidence requires it, using the required
+background/timing protocol and prior-run checks; `pnpm
+unit-profile-coverage:check`; `/simplify` convergence, minimum two rounds
 unless the final changeset is trivial.
