@@ -37,7 +37,7 @@
     {
       "number": 16,
       "id": "L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Rogue Expertise Level 6 Grant"
     },
     {
@@ -194,9 +194,6 @@ Lifecycle gates:
 - `warlock_eldritch_invocations` needs replacement/gain and prerequisite
   retention ownership before all-level support. The concrete follow-up is
   `L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE`.
-- `rogue_expertise` needs the Rogue level 6 additional Expertise grant owned
-  before all-level support. The concrete follow-up is
-  `L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT`.
 
 For `AT-L1-08`:
 
@@ -255,7 +252,7 @@ For `AT-L1-08`:
 | 3 | L1C-AT05 - Warlock Eldritch Invocations Character Profile | done | L1C-AT03S | Level-1 slice with invocation lifecycle guard. |
 | 4 | L1C-AT06 - Cleric And Druid Order Character Profiles | done | L1C-AT03S | Divine/Primal Order projection. |
 | 5 | L1C-AT07 - Rogue Expertise Character Profile | done | L1C-AT03S | Level-1 slice with level 6 Expertise guard. |
-| 16 | L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT - Rogue Expertise Level 6 Grant | ready-for-implementation-after-light-research | L1C-AT07 | Required before `rogue_expertise` can move from level-1 subset support to all-level support. |
+| 16 | L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT - Rogue Expertise Level 6 Grant | done | L1C-AT07 | Production Rogue 6 admission and deterministic evidence promoted `rogue_expertise` to all-level support. |
 | 6 | L1C-AT08 - Wizard Arcane Recovery Character Sheet Profile | ready-for-implementation-after-light-research | none | Character Sheet Short Rest Spell Slot recovery. |
 | 7 | L1C-AT04 - Weapon Mastery Character And Rest Profile | ready-for-implementation-after-light-research | L1C-AT03S | Includes Long Rest reselection support; selected mastery-property MBT does not satisfy this gate. |
 | 8 | L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT - Fighter Fighting Style Advancement Replacement | ready-for-implementation-after-light-research | L1C-AT03 | Required before `fighter_fighting_style` can move from level-1 subset support to all-level support. |
@@ -445,11 +442,11 @@ Verification:
 
 Plan Impact:
 
-- Preserve unowned level 6 Expertise work as a concrete follow-up.
+- Level 6 Expertise follow-up is closed by completed Task 16.
 
 ### Task 16 - L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT - Rogue Expertise Level 6 Grant
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Implement the residual all-level Rogue Expertise grant left by Task 5.
 

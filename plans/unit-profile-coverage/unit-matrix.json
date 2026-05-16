@@ -62,8 +62,8 @@
       "value": 144
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 87,
-      "numerator": 87,
+      "denominator": 88,
+      "numerator": 88,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 87,
+      "denominator": 88,
       "numerator": 47,
-      "percent": "54%"
+      "percent": "53.4%"
     },
     "supportedProfileCoverage": {
       "denominator": 117,
-      "numerator": 87,
-      "percent": "74.4%"
+      "numerator": 88,
+      "percent": "75.2%"
     }
   },
   "metricSemantics": [
@@ -5415,26 +5415,16 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "later-level-only",
-              "owner": "future Rogue level 6 Expertise owner",
-              "reason": "The remaining Expertise grant occurs at Rogue level 6 after the level-1 two-skill Expertise choice has already been finalized."
-            },
-            "followUpTaskId": "L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT",
-            "mechanic": "Rogue level 6 additional Expertise grant of two more skill proficiencies of the player's choice"
-          }
-        ],
         "profileIds": [
           "character-creation.skill-expertise-choice"
         ],
         "supportedMechanics": [
           "Level 1 Rogue character creation discovers the Expertise grant over owned skill proficiencies from the Surface class-feature record",
           "Character Creation admits exactly two selected owned skill proficiencies for the level-1 Rogue Expertise choice",
-          "Character Creation finalizes the selected skills as CharacterBuild Expertise proficiency levels through the existing build proficiency projection"
+          "Character Creation admits the Rogue level 6 Expertise increase as four total selected owned skill proficiencies from the same Surface grant-expertise record",
+          "Character Creation finalizes the selected skills as CharacterBuild Expertise proficiency levels through the existing build proficiency projection without duplicating CharacterBuild proficiency state"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -5442,6 +5432,11 @@
           "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "AT-L1-07"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/rogue-expertise-level6.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT"
         }
       ],
       "executableMechanics": true,

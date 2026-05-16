@@ -1137,35 +1137,6 @@
     },
     {
       "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "later-level-only"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "The remaining Expertise grant occurs at Rogue level 6 after the level-1 two-skill Expertise choice has already been finalized.",
-      "sourceRecordPath": "packages/surface/content/rogue_expertise.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Rogue Expertise",
-          "id": "srd521:classes/rogue:level-1:class-feature-grant:rogue_expertise",
-          "levelBand": "level-1",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 62,
-            "lineStart": 57,
-            "path": ".references/srd-5.2.1/Classes/Rogue.md"
-          }
-        }
-      ],
-      "status": "closed-later-level-only",
-      "strictTargetClosed": true,
-      "unitId": "rogue_expertise"
-    },
-    {
-      "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
         "outside-runtime-presentation-exploration"
@@ -1471,7 +1442,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 61,
+      "count": 62,
       "description": "Full support exists at the Unit profile boundary for strict level-1 accounting.",
       "status": "supported-profile",
       "unitIds": [
@@ -1520,6 +1491,7 @@
         "ray_of_frost",
         "ray_of_sickness",
         "resistance",
+        "rogue_expertise",
         "rogue_sneak_attack",
         "sacred_flame",
         "sanctuary",
@@ -1576,18 +1548,6 @@
     },
     {
       "count": 5,
-      "description": "The level-1 behavior is complete and every remaining residual is later-level-only.",
-      "status": "closed-later-level-only",
-      "unitIds": [
-        "bard_bardic_inspiration",
-        "fighter_fighting_style",
-        "monk_martial_arts",
-        "rogue_expertise",
-        "warlock_eldritch_invocations"
-      ]
-    },
-    {
-      "count": 5,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
@@ -1596,6 +1556,17 @@
         "identify",
         "silent_image",
         "speak_with_animals"
+      ]
+    },
+    {
+      "count": 4,
+      "description": "The level-1 behavior is complete and every remaining residual is later-level-only.",
+      "status": "closed-later-level-only",
+      "unitIds": [
+        "bard_bardic_inspiration",
+        "fighter_fighting_style",
+        "monk_martial_arts",
+        "warlock_eldritch_invocations"
       ]
     }
   ],
@@ -1611,8 +1582,8 @@
     },
     "strictRuntimeProfileSupport": {
       "denominator": 93,
-      "numerator": 61,
-      "percent": "65.6%"
+      "numerator": 62,
+      "percent": "66.7%"
     },
     "strictTargetClosure": {
       "denominator": 93,
@@ -3933,18 +3904,18 @@
     "candidateUnitIdsBeforeExclusions": 120,
     "groupsByClaimTag": {
       "missing": 5,
-      "profile-subset-supported": 15,
-      "supported-profile": 61,
+      "profile-subset-supported": 14,
+      "supported-profile": 62,
       "unsupported-profile": 12
     },
     "groupsByStatus": {
-      "closed-later-level-only": 5,
+      "closed-later-level-only": 4,
       "closed-runtime-detached-table-adjudication": 7,
       "open-profile-accounting": 15,
       "open-runtime-behavior": 5,
-      "supported-profile": 61
+      "supported-profile": 62
     },
-    "nonSupportedFrontier": 32,
+    "nonSupportedFrontier": 31,
     "strictDenominator": 93
   }
 }

@@ -12727,14 +12727,8 @@
         "state": "installed",
         "unitId": "rogue_expertise"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "future Rogue level 6 Expertise owner",
-        "reason": "The remaining Expertise grant occurs at Rogue level 6 after the level-1 two-skill Expertise choice has already been finalized."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",

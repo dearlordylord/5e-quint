@@ -42,6 +42,7 @@ export const INITIAL_CHARACTER_DRAFT_PATHS = [
 // facts while keeping Orc/Soldier origin facts manifest-owned.
 export const PHASE1_CLASS_FIGHTER_UNIT_ID = "class_fighter";
 export const WIDTH_CLASS_WIZARD_UNIT_ID = "class_wizard";
+export const SRD_ROGUE_CLASS_UNIT_ID = "class_rogue";
 export const SRD_LEVEL_ONE_CLASS_UNIT_IDS = [
   "class_barbarian",
   "class_bard",
@@ -51,7 +52,7 @@ export const SRD_LEVEL_ONE_CLASS_UNIT_IDS = [
   "class_monk",
   "class_paladin",
   "class_ranger",
-  "class_rogue",
+  SRD_ROGUE_CLASS_UNIT_ID,
   "class_sorcerer",
   "class_warlock",
   WIDTH_CLASS_WIZARD_UNIT_ID,

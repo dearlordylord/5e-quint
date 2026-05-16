@@ -36,6 +36,7 @@ import {
   PHASE1_LOADOUT_ARMOR_OPTION_ID,
   PHASE1_LOADOUT_SHIELD_OPTION_ID,
   PHASE1_LOADOUT_WEAPON_OPTION_ID,
+  SRD_ROGUE_CLASS_UNIT_ID,
   PHASE1_SHIELD_UNIT_ID,
   PHASE1_SPECIES_ORC_UNIT_ID,
   PHASE1_WEAPON_FLAIL_UNIT_ID,
@@ -160,6 +161,7 @@ type SupportedDraftChoicePath = (typeof SUPPORTED_DRAFT_CHOICE_PATHS)[number];
 const SUPPORTED_PROGRESSIONS = [
   ...SRD_LEVEL_ONE_CLASS_UNIT_IDS.map(supportedLevelOneProgression),
   supportedSameClassSecondLevelProgression(PHASE1_CLASS_FIGHTER_UNIT_ID),
+  supportedSameClassProgression(SRD_ROGUE_CLASS_UNIT_ID, 6),
   ...SRD_LEVEL_ONE_CLASS_UNIT_IDS.filter(
     (classUnitId) => classUnitId !== PHASE1_CLASS_FIGHTER_UNIT_ID,
   ).map((classUnitId) =>
@@ -186,10 +188,33 @@ function supportedLevelOneProgression(
 function supportedSameClassSecondLevelProgression(
   supportedClassUnitId: UnitRecord["id"],
 ): CharacterProgression {
-  return supportedTwoClassSecondLevelProgression(
-    supportedClassUnitId,
-    supportedClassUnitId,
-  );
+  return supportedSameClassProgression(supportedClassUnitId, 2);
+}
+
+function supportedSameClassProgression(
+  supportedClassUnitId: UnitRecord["id"],
+  totalLevel: number,
+): CharacterProgression {
+  const progressionClassUnitId = classUnitId(supportedClassUnitId);
+  const advancements = Array.from({ length: totalLevel - 1 }, (_, index) => {
+    const advancement = characterProgressionEntry({
+      classUnitId: progressionClassUnitId,
+      characterLevel: characterClassLevel(index + 2),
+      hitPointRule: { tag: "fixedHigherLevelGain" },
+    });
+    if (Either.isLeft(advancement)) {
+      throw new Error(
+        `Invalid supported progression advancement: ${JSON.stringify(advancement.left)}`,
+      );
+    }
+
+    return advancement.right;
+  });
+
+  return {
+    startingClass: progressionClassUnitId,
+    advancements,
+  };
 }
 
 function supportedTwoClassSecondLevelProgression(

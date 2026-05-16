@@ -485,6 +485,7 @@ describe("character creation hole discovery", () => {
           "13:class_paladin:level_1:maximum_hit_die",
           "12:class_ranger:level_1:maximum_hit_die",
           "11:class_rogue:level_1:maximum_hit_die",
+          "11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue:level_6:fixed_hp_gain",
           "14:class_sorcerer:level_1:maximum_hit_die",
           "13:class_warlock:level_1:maximum_hit_die",
           "12:class_wizard:level_1:maximum_hit_die",
