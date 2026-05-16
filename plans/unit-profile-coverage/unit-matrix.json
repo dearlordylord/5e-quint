@@ -62,8 +62,8 @@
       "value": 144
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 85,
-      "numerator": 85,
+      "denominator": 86,
+      "numerator": 86,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 85,
+      "denominator": 86,
       "numerator": 28,
-      "percent": "32.9%"
+      "percent": "32.6%"
     },
     "supportedProfileCoverage": {
       "denominator": 117,
-      "numerator": 85,
-      "percent": "72.6%"
+      "numerator": 86,
+      "percent": "73.5%"
     }
   },
   "metricSemantics": [
@@ -1779,9 +1779,10 @@
       "taskRefs": [
         "SRDINV31B",
         "SRDINV62",
-        "SRDINV77"
+        "SRDINV77",
+        "SRDINV87C"
       ],
-      "title": "Spell invocation creates a combat mark with attack-roll damage, Concentration duration, and 0-HP transfer",
+      "title": "Spell invocation creates a combat mark with attack-roll damage, Ability Check roll-mode projection, Concentration duration, and 0-HP transfer",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -2742,7 +2743,7 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Promoted battle-runtime Quint facts for Hunter's Mark combat target marking, mark-scoped Force damage, and transfer after the marked target drops to 0 Hit Points; finding Advantage remains a classified caller-supplied ability-check roll-mode gap after SRDINV63.",
+      "note": "Promoted battle-runtime Quint facts for Hunter's Mark combat target marking, mark-scoped Force damage, and transfer after the marked target drops to 0 Hit Points.",
       "profileIds": [
         "spell.invocation-marked-damage-rider"
       ],
@@ -2750,7 +2751,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime admission and reducer tests for Hunter's Mark combat target marking, mark-scoped Force damage, Concentration cleanup, and Bonus Action transfer; finding Advantage remains a classified caller-supplied ability-check roll-mode gap after SRDINV63.",
+      "note": "Focused battle-runtime admission and reducer tests for Hunter's Mark combat target marking, mark-scoped Force damage, Concentration cleanup, and Bonus Action transfer.",
       "profileIds": [
         "spell.invocation-marked-damage-rider"
       ],
@@ -3359,6 +3360,22 @@
         "spell.invocation-marked-damage-rider"
       ],
       "taskId": "SRDINV77"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Hunter's Mark Wisdom (Perception or Survival) Ability Check Advantage to find the marked target, including nonmatching target, ability, and skill cases.",
+      "profileIds": [
+        "spell.invocation-marked-damage-rider"
+      ],
+      "taskId": "SRDINV87C"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Hunter's Mark finding Advantage on caller-supplied Ability Check holes, mark transfer to a new target, Concentration cleanup, and Favored Enemy free-cast inheritance.",
+      "profileIds": [
+        "spell.invocation-marked-damage-rider"
+      ],
+      "taskId": "SRDINV87C"
     },
     {
       "claimKind": "qnt-proof",
@@ -4933,15 +4950,6 @@
             },
             "followUpTaskId": "SRDINV78",
             "mechanic": "later-level Favored Enemy free-cast count scaling beyond two uses"
-          },
-          {
-            "battleReadinessClosure": {
-              "kind": "social-knowledge-effect",
-              "owner": "SRDINV66 ability-check roll-mode owner",
-              "reason": "Hunter's Mark finding Advantage is an ability-check roll-mode projection, not additional battle reducer behavior for Favored Enemy."
-            },
-            "followUpTaskId": "SRDINV66",
-            "mechanic": "Hunter's Mark Perception/Survival finding Advantage remains deferred to ability-check roll-mode work"
           }
         ],
         "profileIds": [
@@ -4953,13 +4961,19 @@
         "supportedMechanics": [
           "always-prepared Hunter's Mark access through retained prepared Spell Access",
           "two-use Favored Enemy Long Rest free-cast resource at Ranger level 1",
-          "free-cast Hunter's Mark uses the existing marked damage rider, target gate, Concentration ownership, and Bonus Action cost",
+          "free-cast Hunter's Mark uses the existing marked damage rider, target gate, Concentration ownership, Bonus Action cost, and Wisdom (Perception or Survival) Advantage to find the marked target",
           "normal Spell Slot Hunter's Mark casting remains available when the free-cast resource is exhausted"
         ],
         "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV87C"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
       "profiles": [
@@ -4976,9 +4990,10 @@
           "taskRefs": [
             "SRDINV31B",
             "SRDINV62",
-            "SRDINV77"
+            "SRDINV77",
+            "SRDINV87C"
           ],
-          "title": "Spell invocation creates a combat mark with attack-roll damage, Concentration duration, and 0-HP transfer",
+          "title": "Spell invocation creates a combat mark with attack-roll damage, Ability Check roll-mode projection, Concentration duration, and 0-HP transfer",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -8440,9 +8455,10 @@
           "taskRefs": [
             "SRDINV31B",
             "SRDINV62",
-            "SRDINV77"
+            "SRDINV77",
+            "SRDINV87C"
           ],
-          "title": "Spell invocation creates a combat mark with attack-roll damage, Concentration duration, and 0-HP transfer",
+          "title": "Spell invocation creates a combat mark with attack-roll damage, Ability Check roll-mode projection, Concentration duration, and 0-HP transfer",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -8473,17 +8489,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "social-knowledge-effect",
-              "owner": "SRDINV66 ability-check roll-mode owner",
-              "reason": "Wisdom (Perception or Survival) Advantage to find the marked target is ability-check roll-mode state outside the promoted damage-rider runtime."
-            },
-            "followUpTaskId": "SRDINV66",
-            "mechanic": "classified gap: caller-supplied Wisdom (Perception or Survival) Advantage roll-mode projection to find the marked target; no dedicated SRDINV63 implementation task"
-          }
-        ],
         "profileIds": [
           "spell.invocation-marked-damage-rider"
         ],
@@ -8494,11 +8499,12 @@
           "Bonus Action cast with Spell Slot spend",
           "Concentration-owned mark identity on one combatant target",
           "extra Force damage when the caster hits the marked target with an Attack Roll",
+          "Wisdom (Perception or Survival) Ability Check Advantage to find the marked target from caller-supplied finding facts",
           "Bonus Action transfer only after the marked target drops to 0 Hit Points",
           "slot-scaled Concentration maximum of 1 hour at slots 1-2, 8 hours at slots 3-4, and 24 hours at slots 5+",
           "Concentration cleanup and maximum-duration expiration remove the marked-target damage rider"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -8524,9 +8530,10 @@
           "taskRefs": [
             "SRDINV31B",
             "SRDINV62",
-            "SRDINV77"
+            "SRDINV77",
+            "SRDINV87C"
           ],
-          "title": "Spell invocation creates a combat mark with attack-roll damage, Concentration duration, and 0-HP transfer",
+          "title": "Spell invocation creates a combat mark with attack-roll damage, Ability Check roll-mode projection, Concentration duration, and 0-HP transfer",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
