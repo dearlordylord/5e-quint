@@ -9177,8 +9177,8 @@
       "battleReadinessClosure": {
         "source": "deferred-mechanics",
         "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "future Fighter advancement/replacement owner",
-        "reason": "The remaining Fighting Style replacement clause occurs when gaining later Fighter levels after the level-1 choice has already been finalized."
+        "owner": "future Character Creation advancement/replacement owner",
+        "reason": "The current Character Creation fill reducer appends Unit-choice fills and discovery suppresses already-selected class-feature holes; replacing an owned Fighting Style when a Fighter level is gained needs an explicit advancement/replacement boundary before the all-level lifecycle is supported."
       },
       "ownerEvidence": [
         {

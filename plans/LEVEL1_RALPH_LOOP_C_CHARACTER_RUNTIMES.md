@@ -55,8 +55,14 @@
     {
       "number": 8,
       "id": "L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Fighter Fighting Style Advancement Replacement"
+    },
+    {
+      "number": 17,
+      "id": "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE",
+      "status": "ready-for-research",
+      "title": "Character Advancement Replacement Lifecycle"
     },
     {
       "number": 9,
@@ -130,7 +136,8 @@ Every Ralph prompt for this loop must include:
 | --- | --- | --- |
 | `AT-L1-03S` Character Creation support scaffold | shared scaffold only | shared Character Creation profile ids, owner markers, runtime-test markers, task claims |
 | `AT-L1-03` Fighter Fighting Style profile | `fighter_fighting_style` | level-1 Fighting Style choice evidence; all-level lifecycle guard |
-| `L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT` Fighter Fighting Style advancement replacement | `fighter_fighting_style` | Fighter-level replacement of an already chosen Fighting Style feat when gaining Fighter levels |
+| `L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT` Fighter Fighting Style advancement replacement | `fighter_fighting_style` | evidence that Fighter-level replacement needs a shared advancement/replacement boundary before all-level support |
+| `L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE` Character advancement replacement lifecycle | shared Character Creation advancement boundary, `fighter_fighting_style` | supported replacement of an already chosen class-feature option when a class level is gained, without duplicate selected-option state |
 | `AT-L1-04` Weapon Mastery character/rest profile | `barbarian_weapon_mastery`, `fighter_weapon_mastery`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery` | initial choice plus Long Rest reselection support |
 | `AT-L1-05` Warlock Eldritch Invocations profile | `warlock_eldritch_invocations` | level-1 invocation choice evidence; all-level lifecycle guard |
 | `L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE` Warlock Eldritch Invocation lifecycle | `warlock_eldritch_invocations` | later-level invocation gains, Warlock-level replacement, prerequisite-retention lockout, and duplicate-selection enforcement |
@@ -148,13 +155,16 @@ Every Ralph prompt for this loop must include:
 4. Implement `AT-L1-04` after `AT-L1-03S`; include or cite Character Sheet/rest
    support for Long Rest weapon-choice reselection before promoting Weapon
    Mastery containers.
-5. Implement `L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT` after `AT-L1-03`
-   when promoting `fighter_fighting_style` from the level-1 subset to all-level
-   support.
-6. Implement `L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE` after `AT-L1-05`
+5. `L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT` is complete: the current
+   creation fill workflow does not own replacement of finalized choices when a
+   class level is gained.
+6. Research and implement
+   `L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE` before promoting
+   `fighter_fighting_style` from the level-1 subset to all-level support.
+7. Implement `L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE` after `AT-L1-05`
    when promoting `warlock_eldritch_invocations` from the level-1 subset to
    all-level support.
-7. Implement `L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT` after `AT-L1-07` when
+8. Implement `L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT` after `AT-L1-07` when
    promoting `rogue_expertise` from the level-1 subset to all-level support.
 
 ## Scope
@@ -182,9 +192,12 @@ For Unit-specific Character Creation tasks:
 
 Lifecycle gates:
 
-- `fighter_fighting_style` needs advancement/replacement ownership before
-  all-level support. The concrete follow-up is
-  `L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT`.
+- `fighter_fighting_style` needs a shared advancement/replacement boundary
+  before all-level support. `L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT`
+  established that the current Character Creation fill reducer appends
+  Unit-choice fills and discovery suppresses already-selected class-feature
+  holes. The concrete follow-up is
+  `L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE`.
 - Weapon Mastery containers need initial choice and Long Rest reselection support
   before all-level support.
 - The existing selected identity MBT evidence for `mastery_cleave`,
@@ -255,7 +268,8 @@ For `AT-L1-08`:
 | 16 | L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT - Rogue Expertise Level 6 Grant | done | L1C-AT07 | Production Rogue 6 admission and deterministic evidence promoted `rogue_expertise` to all-level support. |
 | 6 | L1C-AT08 - Wizard Arcane Recovery Character Sheet Profile | done | none | Character Sheet Short Rest Spell Slot recovery. |
 | 7 | L1C-AT04 - Weapon Mastery Character And Rest Profile | done | L1C-AT03S | Includes Long Rest reselection support; selected mastery-property MBT does not satisfy this gate. |
-| 8 | L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT - Fighter Fighting Style Advancement Replacement | ready-for-implementation-after-light-research | L1C-AT03 | Required before `fighter_fighting_style` can move from level-1 subset support to all-level support. |
+| 8 | L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT - Fighter Fighting Style Advancement Replacement | done | L1C-AT03 | Retargeted remaining all-level work to `L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE`. |
+| 17 | L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE - Character Advancement Replacement Lifecycle | ready-for-research | L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT | Required before `fighter_fighting_style` can move from level-1 subset support to all-level support. |
 | 9 | L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE - Warlock Eldritch Invocation Lifecycle | ready-for-implementation-after-light-research | L1C-AT05 | Required before `warlock_eldritch_invocations` can move from level-1 subset support to all-level support. |
 | 10 | L1C-L1X-01 - Create Or Destroy Water No-Matrix Decision | ready-for-research | none | Decide environment/fog owner; no Unit claim without admitted UnitRecord. |
 | 11 | L1C-L1X-05 - Floating Disk No-Matrix Decision | ready-for-research | none | Decide object/inventory movement owner. |
@@ -328,7 +342,7 @@ Plan Impact:
 
 ### Task 8 - L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT - Fighter Fighting Style Advancement Replacement
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Implement the `fighter_fighting_style` follow-up left by Task 2.
 
@@ -357,8 +371,8 @@ Verification:
 
 Plan Impact:
 
-- Close this task only when all-level replacement has runtime/test owner
-  evidence, not from the level-1 choice evidence alone.
+- Remaining all-level replacement work is executable as
+  `L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE`.
 
 ### Task 3 - L1C-AT05 - Warlock Eldritch Invocations Character Profile
 
@@ -538,7 +552,7 @@ Plan Impact:
 
 ### Task 8 - L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT - Fighter Fighting Style Advancement Replacement
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Implement the all-level Fighter Fighting Style lifecycle follow-up produced by
 `L1C-AT03`.
@@ -563,8 +577,47 @@ Verification:
 
 Plan Impact:
 
-- If replacement lifecycle needs a broader advancement subsystem, leave the Unit
-  subset-supported and record the concrete follow-up.
+- The broader advancement/replacement subsystem is captured as
+  `L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE`.
+
+### Task 17 - L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE - Character Advancement Replacement Lifecycle
+
+Status: `ready-for-research`
+
+Research and implement the shared advancement/replacement boundary needed for
+class features that replace already finalized choices when a class level is
+gained.
+
+Scope:
+
+- Own the shared advancement/replacement boundary and the
+  `fighter_fighting_style` replacement lifecycle for this loop.
+- Read `.references/srd-5.2.1/Classes/Fighter.md` Level 1 Fighting Style and
+  `UBIQUITOUS_LANGUAGE.md` before changing claim/profile text.
+- Model an executable operation that replaces the selected CharacterBuild
+  feature ref for `fighter_fighting_style` when a Fighter level is gained,
+  without adding parallel selected-option state.
+- Make invalid replacement states unrepresentable: no replacement without a
+  Fighter-level gain boundary, no duplicate Fighting Style selection state, and
+  no selected feat outside the Fighting Style feat options.
+- Keep selected Fighting Style feat execution owned by the selected feat Unit
+  profiles.
+- Convert `fighter_fighting_style` from `profile-subset-supported` to
+  `supported-profile` only when the advancement replacement lifecycle has
+  runtime/test owner evidence.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`
+- `pnpm unit-profile-coverage:check`
+- `pnpm --filter @dnd/character-creation-runtime test` if Character Creation
+  runtime/test files are touched beyond comments
+- `/simplify` convergence, minimum two rounds
+
+Plan Impact:
+
+- If research proves Character Sheet, not Character Creation, must own the
+  operation boundary, revise the DAG/source details before implementation.
 
 ### Task 9 - L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE - Warlock Eldritch Invocation Lifecycle
 

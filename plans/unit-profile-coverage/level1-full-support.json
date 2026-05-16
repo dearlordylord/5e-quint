@@ -567,7 +567,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "The remaining Fighting Style replacement clause occurs when gaining later Fighter levels after the level-1 choice has already been finalized.",
+      "reason": "The current Character Creation fill reducer appends Unit-choice fills and discovery suppresses already-selected class-feature holes; replacing an owned Fighting Style when a Fighter level is gained needs an explicit advancement/replacement boundary before the all-level lifecycle is supported.",
       "sourceRecordPath": "packages/surface/content/fighter_fighting_style.json",
       "sourceRows": [
         {
