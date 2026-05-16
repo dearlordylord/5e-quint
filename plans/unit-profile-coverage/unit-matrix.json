@@ -62,8 +62,8 @@
       "value": 144
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 86,
-      "numerator": 86,
+      "denominator": 88,
+      "numerator": 88,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 86,
+      "denominator": 88,
       "numerator": 47,
-      "percent": "54.7%"
+      "percent": "53.4%"
     },
     "supportedProfileCoverage": {
       "denominator": 117,
-      "numerator": 86,
-      "percent": "73.5%"
+      "numerator": 88,
+      "percent": "75.2%"
     }
   },
   "metricSemantics": [
@@ -1221,7 +1221,7 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
-      "sourceBoundary": "Caller-supplied touched object identity, size, worn/carried facts, and emitter projection facts; runtime owns the spell source, object attachment, Bright/Dim radii, one-hour duration, same-caster recast replacement, duration cleanup, opaque-cover suppression for the Light object emitter, and derived Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences. Colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside this runtime boundary.",
+      "sourceBoundary": "Runtime consumes typed table-supplied touched-object identity, size, worn/carried, emitter-distance, and opaque-cover witnesses; runtime owns the spell source, object attachment, Bright/Dim radii, one-hour duration, same-caster recast replacement, duration cleanup, opaque-cover suppression for the Light object emitter, and derived Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences. Colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation are runtime-detached table adjudication/presentation outside this object-emitter boundary.",
       "taskRefs": [
         "SRDINV70B",
         "SRDINV89C"
@@ -1948,7 +1948,7 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
-      "sourceBoundary": "Faerie Fire owns affected-creature and affected-object outline effects, derived Dim Light emitter facts, and derived Dim Light to sight-obscurement and Darkvision-adjusted sight consequences. Color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside this runtime boundary.",
+      "sourceBoundary": "Faerie Fire consumes typed table-supplied area-membership, affected-object, object-sight, and emitter-distance witnesses; runtime owns affected-creature and affected-object outline effects, derived Dim Light emitter facts, object attack-roll Advantage from supplied sight facts, and derived Dim Light to sight-obscurement and Darkvision-adjusted sight consequences without applying Light-specific opaque-cover suppression. Color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation are runtime-detached table adjudication/presentation outside this outline/emitter boundary.",
       "taskRefs": [
         "SRDINV30E",
         "SRDINV58A",
@@ -7716,17 +7716,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "table/spatial and presentation owners",
-              "reason": "Color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the runtime boundary."
-            },
-            "followUpTaskId": "SRDINV89D",
-            "mechanic": "color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the runtime boundary"
-          }
-        ],
         "profileIds": [
           "spell.invocation-attack-roll-advantage-save"
         ],
@@ -7734,16 +7723,17 @@
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
         ],
         "supportedMechanics": [
-          "20-foot point-origin Cube affected-creature boundary with table-supplied area membership",
+          "20-foot point-origin Cube affected-creature boundary consumes typed table-supplied area membership witnesses",
           "Dexterity save-gated affected creatures",
           "Concentration-owned outline effect that grants attack-roll Advantage against failed-save affected creatures when the attacker can see them and denies benefits from the Invisible condition",
-          "caller-supplied object ids for objects in the Cube create concentration-owned object outline projections",
-          "object-target spell attacks consume caller-supplied object sight facts to grant attack-roll Advantage against outlined objects",
+          "typed table-supplied faerieFireArea affected-object witnesses create concentration-owned object outline projections",
+          "object-target spell attacks consume typed table-supplied object sight witnesses to grant attack-roll Advantage against outlined objects",
           "affected creatures and objects shed concentration-owned Dim Light emitter facts in a 10-foot radius attached to their outline effects",
-          "caller-supplied emitter projection facts derive Dim Light illumination from Faerie Fire object and creature emitters",
-          "derived Dim Light illumination projects Lightly Obscured sight consequences and Darkvision-adjusted sight consequences without duplicating emitter state"
+          "typed table-supplied emitter projection witnesses derive Dim Light illumination from Faerie Fire object and creature emitters",
+          "derived Dim Light illumination projects Lightly Obscured sight consequences and Darkvision-adjusted sight consequences without duplicating emitter state",
+          "residual checklist: color rendering is runtime-detached presentation; automatic line-of-sight drawing, map geometry, and pathfinding derivation are runtime-detached table adjudication/presentation and no promoted runtime procedure consumes them"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -7765,7 +7755,7 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
-          "sourceBoundary": "Faerie Fire owns affected-creature and affected-object outline effects, derived Dim Light emitter facts, and derived Dim Light to sight-obscurement and Darkvision-adjusted sight consequences. Color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside this runtime boundary.",
+          "sourceBoundary": "Faerie Fire consumes typed table-supplied area-membership, affected-object, object-sight, and emitter-distance witnesses; runtime owns affected-creature and affected-object outline effects, derived Dim Light emitter facts, object attack-roll Advantage from supplied sight facts, and derived Dim Light to sight-obscurement and Darkvision-adjusted sight consequences without applying Light-specific opaque-cover suppression. Color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation are runtime-detached table adjudication/presentation outside this outline/emitter boundary.",
           "taskRefs": [
             "SRDINV30E",
             "SRDINV58A",
@@ -8904,17 +8894,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "table/spatial and presentation owners",
-              "reason": "Colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the object-emitter runtime boundary."
-            },
-            "followUpTaskId": "SRDINV89D",
-            "mechanic": "colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the object-emitter runtime boundary"
-          }
-        ],
         "profileIds": [
           "spell.invocation-object-light"
         ],
@@ -8923,16 +8902,17 @@
         ],
         "supportedMechanics": [
           "Magic Action cantrip cast with no Spell Slot spend",
-          "caller-supplied touched object identity, size, and worn/carried facts",
+          "typed table-supplied touched object identity, size, and worn/carried witnesses",
           "Large-or-smaller object admission",
           "rejection when the object is worn or carried by someone else",
           "source-owned object-attached Bright Light 20-foot radius plus Dim Light for an additional 20 feet",
           "one-hour duration cleanup",
           "same-caster recast replacement of the prior Light emitter",
-          "caller-supplied emitter projection facts derive Bright Light, Dim Light, and opaque-cover suppression from the existing Light object emitter",
-          "derived Dim Light illumination projects Lightly Obscured sight consequences and Darkvision-adjusted sight consequences without duplicating emitter state"
+          "typed table-supplied emitter projection witnesses derive Bright Light, Dim Light, and opaque-cover suppression from the existing Light object emitter",
+          "derived Dim Light illumination projects Lightly Obscured sight consequences and Darkvision-adjusted sight consequences without duplicating emitter state",
+          "residual checklist: colored-light rendering is runtime-detached presentation; automatic line-of-sight drawing, map geometry, and pathfinding derivation are runtime-detached table adjudication/presentation and no promoted runtime procedure consumes them"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -8954,7 +8934,7 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
-          "sourceBoundary": "Caller-supplied touched object identity, size, worn/carried facts, and emitter projection facts; runtime owns the spell source, object attachment, Bright/Dim radii, one-hour duration, same-caster recast replacement, duration cleanup, opaque-cover suppression for the Light object emitter, and derived Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences. Colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside this runtime boundary.",
+          "sourceBoundary": "Runtime consumes typed table-supplied touched-object identity, size, worn/carried, emitter-distance, and opaque-cover witnesses; runtime owns the spell source, object attachment, Bright/Dim radii, one-hour duration, same-caster recast replacement, duration cleanup, opaque-cover suppression for the Light object emitter, and derived Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences. Colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation are runtime-detached table adjudication/presentation outside this object-emitter boundary.",
           "taskRefs": [
             "SRDINV70B",
             "SRDINV89C"
