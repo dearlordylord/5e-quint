@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "L1A-L1Y-05",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Spell Access Profile Decision"
     },
     {
@@ -165,7 +165,7 @@ Then implement `AT-L1-14`:
 | 5 | L1A-L1Y-02 - Core Trait Profile Decision | done | L1A-FRONTIER-DECISION-INDEX | Decision spike for 76 core trait rows; produce follow-ups only if justified. |
 | 6 | L1A-L1Y-03 - Starting Equipment Profile Decision | done | L1A-FRONTIER-DECISION-INDEX | Decide starting equipment profile vs existing source projection closure. |
 | 7 | L1A-L1Y-04 - Multiclass Entry Trait Profile Decision | done | L1A-FRONTIER-DECISION-INDEX | Decide multiclass entry profile vs shared-algebra/creation owner evidence. |
-| 8 | L1A-L1Y-05 - Spell Access Profile Decision | ready-for-research | L1A-FRONTIER-DECISION-INDEX | Decide explicit spell-access profile vs derived CharacterBuild evidence. |
+| 8 | L1A-L1Y-05 - Spell Access Profile Decision | done | L1A-FRONTIER-DECISION-INDEX | Decide explicit spell-access profile vs derived CharacterBuild evidence. |
 | 9 | L1A-L1Y-06 - Class Table Summary Closure Decision | ready-for-research | L1A-FRONTIER-DECISION-INDEX | Confirm source/navigation summary closure and strict-report wording. |
 | 10 | L1A-FINAL-STRICT-INTEGRATION - Final Strict Support Integration Refresh | ready-for-implementation-after-light-research | B/C branches merged or explicitly skipped | Regenerate all coverage/strict artifacts after loop branches land. |
 
@@ -372,7 +372,7 @@ Plan Impact:
 
 ### Task 8 - L1A-L1Y-05 - Spell Access Profile Decision
 
-Status: `ready-for-research`
+Status: `done`
 
 Research `AT-L1Y-05` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
