@@ -430,6 +430,7 @@ module battleRuntime {
   type RuntimeCreatureType = HumanoidCreature | BeastCreature | AberrationCreature | CelestialCreature | ElementalCreature | FeyCreature | FiendCreature | UndeadCreature
   type ObjectTarget =
     | StarryWispObjectTarget
+    | ChillTouchObjectTarget
     | EldritchBlastObjectTarget
     | FireBoltObjectTarget
     | ProduceFlameObjectTarget
@@ -6015,7 +6016,7 @@ module battleRuntime {
     match invocation {
       | RayOfFrostSpellAttack => false
       | PoisonSpraySpellAttack => false
-      | ChillTouchSpellAttack => false
+      | ChillTouchSpellAttack => true
       | StarryWispSpellAttack => true
       | FireBoltSpellAttack => true
       | ShockingGraspSpellAttack => false
@@ -9180,10 +9181,10 @@ module battleRuntime {
         expiresAt: EndOfTurnLightEmitterExpiration({ actor: Fighter, round: 2 }),
       })),
       assert(spellAttackDamageSupportsObjectTarget(StarryWispSpellAttack)),
+      assert(spellAttackDamageSupportsObjectTarget(ChillTouchSpellAttack)),
       assert(spellAttackDamageSupportsObjectTarget(FireBoltSpellAttack)),
       assert(spellAttackDamageSupportsObjectTarget(ProduceFlameHurlSpellAttack)),
       assert(spellAttackDamageSupportsObjectTarget(SorcerousBurstSpellAttack({ damageTypeChoice: BattleRuntimeSorcerousBurstPsychicDamage, spellcastingAbilityModifier: 3, characterLevel: 5 }))),
-      assert(not(spellAttackDamageSupportsObjectTarget(ChillTouchSpellAttack))),
       assert(spellAttackBeamSequenceDamageType(EldritchBlastBeamSequence) == Force),
       assert(eldritchBlastBeamCount(1) == 1),
       assert(eldritchBlastBeamCount(5) == 2),
@@ -9197,6 +9198,10 @@ module battleRuntime {
       assert(spellAttackDamageObjectReplayHoles(StarryWispSpellAttack, true, true, false, false, false) == Set(AttackRoll)),
       assert(spellAttackDamageObjectReplayHoles(StarryWispSpellAttack, true, true, true, true, false) == Set(SpellDamageRoll)),
       assert(spellAttackDamageObjectReplayHoles(StarryWispSpellAttack, true, true, true, false, false) == Set()),
+      assert(spellAttackDamageObjectReplayHoles(ChillTouchSpellAttack, true, false, false, false, false) == Set(ObjectTargetChoice)),
+      assert(spellAttackDamageObjectReplayHoles(ChillTouchSpellAttack, true, true, false, false, false) == Set(AttackRoll)),
+      assert(spellAttackDamageObjectReplayHoles(ChillTouchSpellAttack, true, true, true, true, false) == Set(SpellDamageRoll)),
+      assert(spellAttackDamageObjectReplayHoles(ChillTouchSpellAttack, true, true, true, false, false) == Set()),
       assert(spellAttackDamageObjectReplayHoles(FireBoltSpellAttack, true, false, false, false, false) == Set(ObjectTargetChoice)),
       assert(spellAttackDamageObjectReplayHoles(FireBoltSpellAttack, true, true, false, false, false) == Set(AttackRoll)),
       assert(spellAttackDamageObjectReplayHoles(FireBoltSpellAttack, true, true, true, true, false) == Set(SpellDamageRoll)),
@@ -9213,6 +9218,15 @@ module battleRuntime {
         priorHitPoints: 5,
         nextHitPoints: 0,
         destroyed: true,
+      })),
+      assert(spellObjectDamageOutcome(ChillTouchSpellAttack, ChillTouchObjectTarget, 6, ObjectHitPoints({ hitPoints: 10 })) == ObjectHitPointDamage({
+        object: ChillTouchObjectTarget,
+        damageType: Necrotic,
+        rolledDamage: 6,
+        effectiveDamage: 6,
+        priorHitPoints: 10,
+        nextHitPoints: 4,
+        destroyed: false,
       })),
       assert(spellObjectDamageOutcome(SorcerousBurstSpellAttack({ damageTypeChoice: BattleRuntimeSorcerousBurstPsychicDamage, spellcastingAbilityModifier: 3, characterLevel: 5 }), FireBoltObjectTarget, 9, ObjectHitPoints({ hitPoints: 8 })) == ObjectHitPointDamage({
         object: FireBoltObjectTarget,

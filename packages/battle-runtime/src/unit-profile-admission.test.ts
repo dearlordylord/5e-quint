@@ -2,7 +2,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT8 fighter_action_surge fighter_improved_critical barbarian_rage rogue_cunning_action rogue_uncanny_dodge rogue_sneak_attack
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT14 acid_splash mage_armor magic_missile ray_of_frost
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV28B inflict_wounds poison_spray sacred_flame
-// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV64 chill_touch
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV89A chill_touch
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV28D guiding_bolt ray_of_sickness shocking_grasp vicious_mockery
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29A burning_hands
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29B color_spray
@@ -2610,7 +2610,7 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
     ]);
   });
 
-  test("chill_touch is admitted as melee spell attack with Hit Point regain prevention rider", () => {
+  test("chill_touch is admitted as creature-or-object melee spell attack with Hit Point regain prevention rider", () => {
     const spell = spellRecord(chillTouchUnitId);
     const act = spellAct({
       state: spellBattle({ cantrips: [spell] }),
@@ -2642,7 +2642,7 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
       expect.objectContaining({
         procedure: "spellAttackDamage",
         spell,
-        targeting: { kind: "singleCombatant" },
+        targeting: { kind: "singleCreatureOrObject" },
         damage: {
           kind: "fixedSpellAttackDamage",
           expr: { dice: 1, dieSize: 10 },
@@ -2656,12 +2656,17 @@ describe("QMBT14 deterministic Spell Unit admission tracer", () => {
             expiresAt: "endOfCasterNextTurn",
           },
         ],
+        objectHitEffect: { kind: "none" },
       }),
     );
     expect(act.initialHoles).toEqual([
       expect.objectContaining({
         kind: "targetChoice",
         choices: [spellCasterId, spellTargetId],
+      }),
+      expect.objectContaining({
+        kind: "objectTargetChoice",
+        requiresTableSpatialFact: true,
       }),
     ]);
   });

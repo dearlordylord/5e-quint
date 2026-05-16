@@ -398,11 +398,34 @@ describe("SRD Unit catalog boundary", () => {
     }
   });
 
-  test("decodes Fire Bolt object ignition and Sorcerous Burst exploding cantrip damage", () => {
+  test("decodes creature-or-object spell attack targets for Chill Touch, Fire Bolt, and Sorcerous Burst", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 
     expect(result.tag).toBe("ok");
     if (result.tag === "ok") {
+      const chillTouch = result.catalog.requireUnit("chill_touch");
+      expect(chillTouch.kind).toBe("spell");
+      if (chillTouch.kind !== "spell") return;
+      expect(chillTouch.mechanics.family).toBe("activation");
+      if (chillTouch.mechanics.family !== "activation") return;
+
+      const chillTouchPhase = chillTouch.mechanics.phases[0];
+      expect(chillTouchPhase?.kind).toBe("attack_roll");
+      if (chillTouchPhase?.kind !== "attack_roll") return;
+
+      expect(chillTouchPhase.attachment).toEqual({
+        kind: "hole",
+        holeId: "chill_touch_target",
+        label: "target",
+        value: {
+          kind: "target",
+          selection: {
+            mode: "one",
+            targetKinds: ["creature", "object"],
+          },
+        },
+      });
+
       const fireBolt = result.catalog.requireUnit("fire_bolt");
       expect(fireBolt.kind).toBe("spell");
       if (fireBolt.kind !== "spell") return;

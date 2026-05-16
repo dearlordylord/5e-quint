@@ -18691,6 +18691,154 @@ describe("battle runtime", () => {
     expect(expendedLevelOneSlots(result, wizardId)).toBe(0);
   });
 
+  test("Chill Touch admits caller-supplied object targets for melee spell attack damage", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-chill-touch-object-hit"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          classLevel: 5,
+          spellcasting: wizardSpellcasting({
+            cantrips: [spellRecord("chill_touch")],
+            preparedSpells: [],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject = magicSubject("chill_touch");
+    const act = findAct(state, subject);
+    expect(act.initialHoles).toEqual([
+      expect.objectContaining({
+        kind: "targetChoice",
+        choices: expect.arrayContaining([skeletonId]),
+      }),
+      expect.objectContaining({ kind: "objectTargetChoice" }),
+    ]);
+
+    const objectId = battleObjectId("chill-touch-training-object");
+    const objectTarget = objectTargetFill({
+      hole: findHole(act.initialHoles, "objectTargetChoice"),
+      objectId,
+      spellId: "chill_touch",
+      rangeFeet: movementFeet(5),
+      damageDisposition: { kind: "hitPoints", hitPoints: Hp(12) },
+    });
+    const attackRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [objectTarget],
+      }),
+      "attackRoll",
+    );
+    expect(attackRoll).toMatchObject({
+      label: "Chill Touch spell attack roll",
+      spell: expect.objectContaining({
+        targeting: { kind: "singleCreatureOrObject" },
+        attackKind: "melee_spell_attack",
+      }),
+    });
+    const damage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          objectTarget,
+          attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    expect(damage).toMatchObject({
+      label: "Chill Touch damage (2d10-necrotic)",
+    });
+
+    const result = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        objectTarget,
+        attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+        damageRollFillWithGroups(damage, [[4, 5]]),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      objectDamages: [
+        {
+          kind: "hitPoints",
+          objectId,
+          damageType: "necrotic",
+          rolledDamage: damageAmount(9),
+          effectiveDamage: damageAmount(9),
+          priorHitPoints: Hp(12),
+          nextHitPoints: Hp(3),
+          destroyed: false,
+        },
+      ],
+      snapshot: {
+        combatants: [
+          { combatantId: wizardId, hp: 12 },
+          { combatantId: skeletonId, hp: 13 },
+        ],
+        turn: { actionResources: [] },
+      },
+    });
+    expect(expendedLevelOneSlots(requireResolved(result), wizardId)).toBe(0);
+    expect(
+      requireResolved(result).state.combatants.get(skeletonId)?.activeEffects,
+    ).toEqual([]);
+  });
+
+  test("Chill Touch object targeting rejects missing matching object facts", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-chill-touch-object-reject"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          classLevel: 5,
+          spellcasting: wizardSpellcasting({
+            cantrips: [spellRecord("chill_touch")],
+            preparedSpells: [],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject = magicSubject("chill_touch");
+    const objectTarget = findHole(
+      findAct(state, subject).initialHoles,
+      "objectTargetChoice",
+    );
+
+    const result = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        objectTargetFill({
+          hole: objectTarget,
+          spellId: "chill_touch",
+          rangeFeet: movementFeet(30),
+        }),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Spell object target must include a matching table-supplied range and object Armor Class fact.",
+    });
+  });
+
   test("Starry Wisp applies a shared Dim Light emitter to a hit creature until the caster's next turn ends", () => {
     const state = startBattleRight({
       battleId: battleId("battle-starry-wisp-creature"),

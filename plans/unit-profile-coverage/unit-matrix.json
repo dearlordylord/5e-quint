@@ -62,9 +62,9 @@
       "value": 144
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 83,
-      "numerator": 76,
-      "percent": "91.6%"
+      "denominator": 84,
+      "numerator": 77,
+      "percent": "91.7%"
     },
     "profileClassificationCoverage": {
       "denominator": 144,
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 83,
+      "denominator": 84,
       "numerator": 10,
-      "percent": "12%"
+      "percent": "11.9%"
     },
     "supportedProfileCoverage": {
       "denominator": 117,
-      "numerator": 83,
-      "percent": "70.9%"
+      "numerator": 84,
+      "percent": "71.8%"
     }
   },
   "metricSemantics": [
@@ -1011,7 +1011,8 @@
         "SRDINV67",
         "SRDINV69B",
         "SRDINV84A",
-        "SRDINV84B"
+        "SRDINV84B",
+        "SRDINV89A"
       ],
       "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
       "verificationOwners": [
@@ -3172,6 +3173,22 @@
         "spell.invocation-damage-save-or-attack"
       ],
       "taskId": "SRDINV64"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Chill Touch creature-or-object spell attack support, Necrotic object damage, and object hit/miss replay holes.",
+      "profileIds": [
+        "spell.invocation-damage-save-or-attack"
+      ],
+      "taskId": "SRDINV89A"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover Chill Touch object target admission, caller-supplied object fact rejection, object hit adjudication, cantrip-scaled Necrotic damage, caller-supplied object damage disposition, and preservation of existing combatant hit-point-regain prevention behavior.",
+      "profileIds": [
+        "spell.invocation-damage-save-or-attack"
+      ],
+      "taskId": "SRDINV89A"
     },
     {
       "claimKind": "qnt-proof",
@@ -6158,7 +6175,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6426,7 +6444,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -6486,12 +6505,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "followUpTaskId": "SRDINV34",
-            "mechanic": "non-combatant target eligibility for the SRD generic target wording"
-          }
-        ],
         "profileIds": [
           "spell.invocation-damage-save-or-attack",
           "spell.readied-action-time-spell"
@@ -6500,19 +6513,22 @@
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
         ],
         "supportedMechanics": [
-          "combatant-target melee spell attack damage",
+          "creature-or-object target boundary with combatant target choice or typed caller-supplied object identity",
+          "caller-supplied object range, Armor Class, Hit Points or table-resolved damage disposition facts",
+          "melee spell attack hit/miss adjudication against combatant and object targets",
+          "Necrotic damage",
           "cantrip damage scaling",
-          "hit-applied target can't regain Hit Points until the end of the caster's next turn",
+          "hit-applied creature target can't regain Hit Points until the end of the caster's next turn",
           "readied Action-time spell release"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
-          "taskId": "SRDINV64"
+          "taskId": "SRDINV89A"
         }
       ],
       "executableMechanics": true,
@@ -6542,7 +6558,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -7052,7 +7069,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -7635,7 +7653,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -7988,7 +8007,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -8298,7 +8318,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -8375,7 +8396,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -8681,7 +8703,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -8869,7 +8892,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -8971,7 +8995,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -9075,7 +9100,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -9233,7 +9259,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -9457,7 +9484,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -9568,7 +9596,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -9699,7 +9728,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -9776,7 +9806,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -9934,7 +9965,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -10038,7 +10070,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -10603,7 +10636,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
@@ -10913,7 +10947,8 @@
             "SRDINV67",
             "SRDINV69B",
             "SRDINV84A",
-            "SRDINV84B"
+            "SRDINV84B",
+            "SRDINV89A"
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [

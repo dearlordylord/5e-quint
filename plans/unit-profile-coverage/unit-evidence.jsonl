@@ -24,7 +24,7 @@
 {"unitId":"inflict_wounds","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV28B","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"ray_of_sickness","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV28D","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"shocking_grasp","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV28D","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
-{"unitId":"chill_touch","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV64","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
+{"unitId":"chill_touch","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV89A","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"poison_spray","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV28B","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"sacred_flame","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV28B","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"vicious_mockery","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV28D","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
