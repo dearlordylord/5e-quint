@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L1A-FRONTIER-DECISION-INDEX",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Frontier Decision Artifact Index"
     },
     {
@@ -160,7 +160,7 @@ Then implement `AT-L1-14`:
 | ---: | --- | --- | --- | --- |
 | 1 | L1A-AT13 - Strict Level-1 Metric Infrastructure | done | none | Must land before Loops B/C count against strict reports. |
 | 2 | L1A-AT14A - Later-Level Strict Closure Classifier For Bard And Monk | done | L1A-AT13 | Close only Bard/Monk later-level residuals; Ranger waits for Loop B `AT-L1-01`. |
-| 3 | L1A-FRONTIER-DECISION-INDEX - Frontier Decision Artifact Index | ready-for-research | L1A-AT13 | Create reusable decision artifact shape for `frontier-decisions/`. |
+| 3 | L1A-FRONTIER-DECISION-INDEX - Frontier Decision Artifact Index | done | L1A-AT13 | Create reusable decision artifact shape for `frontier-decisions/`. |
 | 4 | L1A-L1Y-01 - Class Container Profile Decision | ready-for-research | L1A-FRONTIER-DECISION-INDEX | Decide profile vs owner-evidence-only closure for 12 class containers. |
 | 5 | L1A-L1Y-02 - Core Trait Profile Decision | ready-for-research | L1A-FRONTIER-DECISION-INDEX | Decision spike for 76 core trait rows; produce follow-ups only if justified. |
 | 6 | L1A-L1Y-03 - Starting Equipment Profile Decision | ready-for-research | L1A-FRONTIER-DECISION-INDEX | Decide starting equipment profile vs existing source projection closure. |
@@ -247,7 +247,7 @@ Plan Impact:
 
 ### Task 3 - L1A-FRONTIER-DECISION-INDEX - Frontier Decision Artifact Index
 
-Status: `ready-for-research`
+Status: `done`
 
 Create the shared artifact conventions used by `AT-L1X-*` and `AT-L1Y-*`
 research tasks from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
