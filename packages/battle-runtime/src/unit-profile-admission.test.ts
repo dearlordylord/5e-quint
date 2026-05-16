@@ -128,8 +128,12 @@ import {
   PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
   battleCombatantSide,
   battleId,
+  battleIlluminationFromLightEmitters,
+  battleLightEmitterProjection,
   battleObjectId,
+  battlePerceptionRollModeForSight,
   battleReactionRollOrDamageReductionSupportForUnit,
+  battleSightObscurement,
   battleBardicInspirationGrantSupportForUnit,
   battleTablePositionId,
   battleUnitRefWithSupportProfiles,
@@ -8032,6 +8036,7 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
         sourceCombatantId: spellCasterId,
         attachment: { kind: "combatant", combatantId: spellTargetId },
         emission: { kind: "dim", radiusFeet: movementFeet(10) },
+        opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
         expiresAt: { kind: "concentration", combatantId: spellCasterId },
       },
     ]);
@@ -8266,9 +8271,20 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
         sourceCombatantId: spellCasterId,
         attachment: { kind: "object", objectId },
         emission: { kind: "dim", radiusFeet: movementFeet(10) },
+        opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
         expiresAt: { kind: "concentration", combatantId: spellCasterId },
       },
     ]);
+    expect(
+      battleIlluminationFromLightEmitters(resolved.snapshot.lightEmitters, [
+        {
+          kind: "object",
+          objectId,
+          distanceFeet: movementFeet(10),
+          opaqueCover: true,
+        },
+      ]),
+    ).toBe("dimLight");
     const concentrationBroken = breakBattleConcentration(
       resolved.state,
       spellCasterId,
@@ -8472,6 +8488,7 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
             form: "separateLights",
           }),
           emission: { kind: "dim", radiusFeet: movementFeet(10) },
+          opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
           expiresAt: expect.objectContaining({
             kind: "concentration",
             combatantId: spellCasterId,
@@ -9133,6 +9150,7 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
           brightRadiusFeet: movementFeet(20),
           dimAdditionalFeet: movementFeet(20),
         },
+        opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
         expiresAt: {
           kind: "duration",
           durationTicks: elapsedTimeTicks(100),
@@ -9248,6 +9266,7 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
           brightRadiusFeet: movementFeet(20),
           dimAdditionalFeet: movementFeet(20),
         },
+        opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
         expiresAt: {
           kind: "duration",
           durationTicks: elapsedTimeTicks(100),
@@ -10126,6 +10145,98 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
     );
   });
 
+  test("light object emitter illumination is derived with opaque-cover suppression", () => {
+    const spell = spellRecord(lightUnitId);
+    const state = spellBattle({ cantrips: [spell] });
+    const act = spellAct({ state, spellId: lightUnitId });
+    const objectId = battleObjectId("unit-profile-light-covered-object");
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellObjectLightTargetFill({
+          hole: requireHole(act.initialHoles, "objectTargetChoice"),
+          objectId,
+          spellId: lightUnitId,
+          casterId: spellCasterId,
+          size: "large",
+        }),
+      ],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Light to resolve.");
+    }
+    const emitter = resolved.snapshot.lightEmitters[0];
+    if (emitter === undefined) {
+      throw new Error("Expected Light emitter.");
+    }
+
+    const brightFact = {
+      kind: "object" as const,
+      objectId,
+      distanceFeet: movementFeet(20),
+      opaqueCover: false,
+    };
+    const dimFact = {
+      ...brightFact,
+      distanceFeet: movementFeet(40),
+    };
+    const coveredFact = {
+      ...brightFact,
+      opaqueCover: true,
+    };
+
+    expect(battleLightEmitterProjection(emitter, brightFact)).toEqual({
+      emitter,
+      illumination: "brightLight",
+    });
+    expect(
+      battleIlluminationFromLightEmitters(resolved.snapshot.lightEmitters, [
+        dimFact,
+      ]),
+    ).toBe("dimLight");
+    expect(
+      battleIlluminationFromLightEmitters(resolved.snapshot.lightEmitters, [
+        coveredFact,
+      ]),
+    ).toBe("darkness");
+  });
+
+  test("dim illumination projects Lightly Obscured sight unless Darkvision adjusts it", () => {
+    expect(battleSightObscurement("brightLight")).toBe("unobscured");
+    expect(battleSightObscurement("dimLight")).toBe("lightlyObscured");
+    expect(battleSightObscurement("darkness")).toBe("heavilyObscured");
+    expect(battlePerceptionRollModeForSight("dimLight")).toBe("disadvantage");
+    expect(
+      battleSightObscurement("dimLight", {
+        kind: "darkvision",
+        rangeFeet: movementFeet(60),
+        distanceFeet: movementFeet(60),
+      }),
+    ).toBe("unobscured");
+    expect(
+      battlePerceptionRollModeForSight("dimLight", {
+        kind: "darkvision",
+        rangeFeet: movementFeet(60),
+        distanceFeet: movementFeet(60),
+      }),
+    ).toBeUndefined();
+    expect(
+      battleSightObscurement("darkness", {
+        kind: "darkvision",
+        rangeFeet: movementFeet(60),
+        distanceFeet: movementFeet(60),
+      }),
+    ).toBe("lightlyObscured");
+    expect(
+      battleSightObscurement("dimLight", {
+        kind: "darkvision",
+        rangeFeet: movementFeet(60),
+        distanceFeet: movementFeet(65),
+      }),
+    ).toBe("lightlyObscured");
+  });
+
   test("light rejects objects larger than Large", () => {
     const spell = spellRecord(lightUnitId);
     const state = spellBattle({ cantrips: [spell] });
@@ -10195,6 +10306,7 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
             brightRadiusFeet: movementFeet(20),
             dimAdditionalFeet: movementFeet(20),
           },
+          opaqueCoverInteraction: { kind: "blocksEmission" as const },
           expiresAt: {
             kind: "duration" as const,
             durationTicks: elapsedTimeTicks(1),
@@ -10260,6 +10372,7 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
             brightRadiusFeet: movementFeet(20),
             dimAdditionalFeet: movementFeet(20),
           },
+          opaqueCoverInteraction: { kind: "blocksEmission" },
           expiresAt: {
             kind: "duration",
             durationTicks: elapsedTimeTicks(1),

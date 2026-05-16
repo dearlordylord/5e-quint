@@ -197,6 +197,9 @@ type LightEmitterMbtProjection =
       readonly sourceCombatantId: string;
       readonly attachment: LightEmitterAttachmentMbtProjection;
       readonly emission: LightEmissionMbtProjection;
+      readonly opaqueCoverInteraction:
+        | { readonly kind: "blocksEmission" }
+        | { readonly kind: "doesNotBlockEmission" };
       readonly expiresAt: LightEmitterExpirationMbtProjection;
     }
   | {
@@ -2874,6 +2877,7 @@ function projectLightEmitter(
       sourceCombatantId: spellEmitter.sourceCombatantId,
       attachment: projectLightEmitterAttachment(spellEmitter.attachment),
       emission: projectLightEmission(spellEmitter.emission),
+      opaqueCoverInteraction: spellEmitter.opaqueCoverInteraction,
       expiresAt: projectLightEmitterExpiration(spellEmitter.expiresAt),
     })),
     Match.when(
@@ -3006,6 +3010,9 @@ function lightEmitterFromQuint(raw: unknown): LightEmitterMbtProjection {
       sourceCombatantId: actorIdFromQuint(fields["source"], "source"),
       attachment: lightEmitterAttachmentFromQuint(fields["attachment"]),
       emission: lightEmissionFromQuint(fields["emission"]),
+      opaqueCoverInteraction: lightEmitterOpaqueCoverInteractionFromQuint(
+        fields["opaqueCoverInteraction"],
+      ),
       expiresAt: lightEmitterExpirationFromQuint(fields["expiresAt"]),
     };
   }
@@ -3149,6 +3156,24 @@ function lightEmissionFromQuint(raw: unknown): LightEmissionMbtProjection {
   }
 
   throw new Error(`Unknown Quint light emission variant: ${tag}`);
+}
+
+function lightEmitterOpaqueCoverInteractionFromQuint(
+  raw: unknown,
+):
+  | { readonly kind: "blocksEmission" }
+  | { readonly kind: "doesNotBlockEmission" } {
+  const tag = quintVariantTag(raw);
+  if (tag === "LightEmitterBlocksOpaqueCover") {
+    return { kind: "blocksEmission" };
+  }
+  if (tag === "LightEmitterDoesNotBlockOpaqueCover") {
+    return { kind: "doesNotBlockEmission" };
+  }
+
+  throw new Error(
+    `Unknown Quint light emitter opaque-cover interaction variant: ${tag}`,
+  );
 }
 
 function actorIdFromQuint(raw: unknown, field: string): string {
