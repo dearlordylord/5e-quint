@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "L1B-L1X-03",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Druidcraft No-Matrix Decision"
     },
     {
@@ -204,7 +204,7 @@ For `AT-L1-09` through `AT-L1-12`:
 | 5 | L1B-AT11 - Area Hazard And Obscurement Witness Promotion | done | none | Witness checklist before promotion. |
 | 6 | L1B-AT12 - Thunderwave Witness Promotion | done | none | Witness checklist before promotion. |
 | 7 | L1B-L1X-02 - Disguise Self No-Matrix Decision | done | none | Decision artifact only; no Unit claim without admitted UnitRecord. |
-| 8 | L1B-L1X-03 - Druidcraft No-Matrix Decision | ready-for-research | none | Decision artifact only; no Unit claim without admitted UnitRecord. |
+| 8 | L1B-L1X-03 - Druidcraft No-Matrix Decision | done | none | Decision artifact only; no Unit claim without admitted UnitRecord. |
 | 9 | L1B-L1X-04 - Elementalism No-Matrix Decision | ready-for-research | none | Decision artifact only; no Unit claim without admitted UnitRecord. |
 | 10 | L1B-L1X-07 - Illusory Script No-Matrix Decision | ready-for-research | none | Decision artifact only; no Unit claim without admitted UnitRecord. |
 | 11 | L1B-L1X-10 - Message No-Matrix Decision | ready-for-research | none | Runtime-detached communication decision; no battle profile. |
@@ -351,7 +351,7 @@ Plan Impact:
 
 ### Task 8 - L1B-L1X-03 - Druidcraft No-Matrix Decision
 
-Status: `ready-for-research`
+Status: `done`
 
 Research `AT-L1X-03` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
