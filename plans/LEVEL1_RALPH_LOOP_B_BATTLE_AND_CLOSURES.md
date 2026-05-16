@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "L1B-L1X-07",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Illusory Script No-Matrix Decision"
     },
     {
@@ -206,7 +206,7 @@ For `AT-L1-09` through `AT-L1-12`:
 | 7 | L1B-L1X-02 - Disguise Self No-Matrix Decision | done | none | Decision artifact only; no Unit claim without admitted UnitRecord. |
 | 8 | L1B-L1X-03 - Druidcraft No-Matrix Decision | done | none | Decision artifact only; no Unit claim without admitted UnitRecord. |
 | 9 | L1B-L1X-04 - Elementalism No-Matrix Decision | done | none | Decision artifact only; no Unit claim without admitted UnitRecord. |
-| 10 | L1B-L1X-07 - Illusory Script No-Matrix Decision | ready-for-research | none | Decision artifact only; no Unit claim without admitted UnitRecord. |
+| 10 | L1B-L1X-07 - Illusory Script No-Matrix Decision | done | none | Decision artifact only; no Unit claim without admitted UnitRecord. |
 | 11 | L1B-L1X-10 - Message No-Matrix Decision | ready-for-research | none | Runtime-detached communication decision; no battle profile. |
 | 12 | L1B-L1X-11 - Prestidigitation No-Matrix Decision | ready-for-research | none | Utility/presentation decision artifact. |
 | 13 | L1B-L1X-13 - Thaumaturgy Mixed Owner Decision | ready-for-research | none | Decide Booming Voice owner; utility effects likely detached. |
@@ -398,7 +398,7 @@ Plan Impact:
 
 ### Task 10 - L1B-L1X-07 - Illusory Script No-Matrix Decision
 
-Status: `ready-for-research`
+Status: `done`
 
 Research `AT-L1X-07` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
