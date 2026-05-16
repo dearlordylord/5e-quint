@@ -3,7 +3,7 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt QMBT7 fighter_second_wind
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt QMBT9 fighter_action_surge fighter_improved_critical barbarian_rage barbarian_reckless_attack rogue_cunning_action rogue_evasion rogue_uncanny_dodge rogue_sneak_attack
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt QMBT31 feat_savage_attacker
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt SRDINV91D defense feat_archery orc_relentless_endurance
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt passive-and-zero-hp-features defense feat_archery orc_relentless_endurance
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt reaction-interruption bard_cutting_words monk_deflect_attacks
 // UNIT-IDENTITY-MBT-REPLAY: QMBT7 fighter_second_wind doDiscoverSecondWind doResolveSecondWindLow doResolveSecondWindHigh
 // UNIT-IDENTITY-MBT-REPLAY: QMBT9 fighter_action_surge doActionSurgeActivate doActionSurgeRejectTwice
@@ -15,9 +15,9 @@
 // UNIT-IDENTITY-MBT-REPLAY: QMBT9 rogue_uncanny_dodge doUncannyDodge
 // UNIT-IDENTITY-MBT-REPLAY: QMBT9 rogue_sneak_attack doSneakAttack
 // UNIT-IDENTITY-MBT-REPLAY: QMBT31 feat_savage_attacker doSavageAttackerDamage
-// UNIT-IDENTITY-MBT-REPLAY: SRDINV91D defense doDefenseArmorClass
-// UNIT-IDENTITY-MBT-REPLAY: SRDINV91D feat_archery doArcheryAttackRollBonus
-// UNIT-IDENTITY-MBT-REPLAY: SRDINV91D orc_relentless_endurance doZeroHitPointReplacement
+// UNIT-IDENTITY-MBT-REPLAY: passive-and-zero-hp-features defense doDefenseArmorClass
+// UNIT-IDENTITY-MBT-REPLAY: passive-and-zero-hp-features feat_archery doArcheryAttackRollBonus
+// UNIT-IDENTITY-MBT-REPLAY: passive-and-zero-hp-features orc_relentless_endurance doZeroHitPointReplacement
 // UNIT-IDENTITY-MBT-REPLAY: reaction-interruption bard_cutting_words doCuttingWordsDamage
 // UNIT-IDENTITY-MBT-REPLAY: reaction-interruption monk_deflect_attacks doDeflectAttacksDamageReduction
 import * as path from "node:path";
@@ -197,7 +197,7 @@ type SelectedUnitIdentityReplay = {
     | "QMBT7"
     | "QMBT9"
     | "QMBT31"
-    | "SRDINV91D"
+    | "passive-and-zero-hp-features"
     | "reaction-interruption";
   readonly unitId: string;
   readonly actions: readonly RuleCoreFeatureDriverAction[];
@@ -481,7 +481,7 @@ const selectedUnitIdentityReplays = [
     ],
   },
   {
-    taskId: "SRDINV91D",
+    taskId: "passive-and-zero-hp-features",
     unitId: "defense",
     actions: ["doDefenseArmorClass"],
     sequences: [
@@ -496,7 +496,7 @@ const selectedUnitIdentityReplays = [
     ],
   },
   {
-    taskId: "SRDINV91D",
+    taskId: "passive-and-zero-hp-features",
     unitId: "feat_archery",
     actions: ["doArcheryAttackRollBonus"],
     sequences: [
@@ -513,7 +513,7 @@ const selectedUnitIdentityReplays = [
     ],
   },
   {
-    taskId: "SRDINV91D",
+    taskId: "passive-and-zero-hp-features",
     unitId: "orc_relentless_endurance",
     actions: ["doZeroHitPointReplacement"],
     sequences: [
