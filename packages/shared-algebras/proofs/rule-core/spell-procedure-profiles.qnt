@@ -73,6 +73,12 @@ module spellProcedureProfiles {
     | SpellNoDamageOnSaveSuccess
     | SpellHalfDamageOnSaveSuccess
 
+  type SpellSavingThrowAbility =
+    | SpellStrengthSavingThrow
+    | SpellDexteritySavingThrow
+    | SpellConstitutionSavingThrow
+    | SpellWisdomSavingThrow
+
   type SpellSaveGatedDamageProfile =
     | AcidSplashSaveDamageProfile
     | SacredFlameSaveDamageProfile
@@ -451,6 +457,15 @@ module spellProcedureProfiles {
       | AnimalFriendshipSaveConditionProfile => SpellTargetListSaveTargets({ minTargets: 1, baseSlotLevel: 1, baseTargets: 1, additionalTargetsPerSlotLevel: 1 })
       | CharmPersonSaveConditionProfile => SpellTargetListSaveTargets({ minTargets: 1, baseSlotLevel: 1, baseTargets: 1, additionalTargetsPerSlotLevel: 1 })
       | FaerieFireSaveAttackRollAdvantageProfile => SpellAreaSaveTargets
+    }
+
+  pure def spellSaveGatedConditionSavingThrowAbility(profile: SpellSaveGatedConditionProfile): SpellSavingThrowAbility =
+    match profile {
+      | ColorSpraySaveConditionProfile => SpellConstitutionSavingThrow
+      | EntangleSaveConditionProfile => SpellStrengthSavingThrow
+      | AnimalFriendshipSaveConditionProfile => SpellWisdomSavingThrow
+      | CharmPersonSaveConditionProfile => SpellWisdomSavingThrow
+      | FaerieFireSaveAttackRollAdvantageProfile => SpellDexteritySavingThrow
     }
 
   pure def spellSaveGatedTargetMaxTargets(targeting: SpellSaveGatedTargeting, slotLevel: int): int =
@@ -1225,6 +1240,8 @@ module spellProcedureProfiles {
       assert(spellSaveGatedDamageFailedSaveEffects(HellishRebukeSaveDamageProfile) == Set()),
       assert(spellSaveGatedDamageFailedSaveEffects(ViciousMockerySaveDamageProfile) == Set(ViciousMockeryNextAttackDisadvantageEffect)),
       assert(spellSaveGatedConditionTargeting(ColorSpraySaveConditionProfile) == SpellAreaSaveTargets),
+      assert(spellSaveGatedConditionSavingThrowAbility(ColorSpraySaveConditionProfile) == SpellConstitutionSavingThrow),
+      assert(spellSaveGatedConditionSavingThrowAbility(EntangleSaveConditionProfile) == SpellStrengthSavingThrow),
       assert(spellSaveGatedTargetMaxTargets(animalTargets, 1) == 1),
       assert(spellSaveGatedTargetMaxTargets(animalTargets, 2) == 2),
       assert(spellSaveGatedConditionFailedSaveEffects(EntangleSaveConditionProfile) == Set(EntangleRestrainedEffect)),

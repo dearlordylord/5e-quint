@@ -19,7 +19,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Installed Unit profile classification coverage | 144/144 | 100% |
 | Supported executable Unit coverage | 85/117 | 72.6% |
 | QNT profile modeling coverage | 62/62 | 100% |
-| QNT proof coverage | 61/62 | 98.4% |
+| QNT proof coverage | 62/62 | 100% |
 | Runtime mapping coverage | 62/62 | 100% |
 | Runtime parity coverage | 62/62 | 100% |
 | Deterministic admission/projection coverage | 85/85 | 100% |
@@ -995,6 +995,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | SRDINV25 | completed-runtime-parity | `character-sheet.healing-resource-action` |
 | SRDINV26 | completed-runtime-parity | `character-sheet.spellbook-ritual-invocation` |
 | SRDINV29B | completed-runtime-parity | `spell.invocation-condition-save` |
+| SRDINV91C | qnt-proof | `spell.invocation-condition-save` |
 | SRDINV38A | completed-runtime-parity | `spell.invocation-sleep-target-admission` |
 | SRDINV87D | qnt-proof | `spell.invocation-sleep-target-admission` |
 | SRDINV87D | completed-runtime-parity | `spell.invocation-sleep-target-admission` |

@@ -88,13 +88,13 @@ Keep it synchronized with the DAG table and task details.
     {
       "number": 338,
       "id": "SRDINV91C",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Prove Condition-Save Spell Invocation Profile"
     },
     {
       "number": 339,
       "id": "SRDINV91D",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Select Identity MBT Frontier Evidence Batch"
     }
   ]
@@ -111,8 +111,8 @@ Keep it synchronized with the DAG table and task details.
 | 335 | SRDINV90B - Recursive Level-1 Battle Readiness Closure Review | done | SRDINV90A | SRDINV91A | SRDINV89D review, refreshed SRD inventory report, refreshed UNIT_REPORT, ACTIVE_PLAN, UBIQUITOUS_LANGUAGE, SRDINV90B review | Completed: post-SRDINV90A product readiness is 367/367 (100%) with zero remaining battle-runtime-required or partial-battle-runtime rows. This closes only the product-readiness classifier lane; it does not close supported executable profile expansion, proof, deterministic admission, or MBT coverage planning. |
 | 336 | SRDINV91A - Recursive Battle Runtime Coverage Frontier Review | done | SRDINV90B | SRDINV91B-SRDINV91D | SRDINV91A review, SRDINV90B review, refreshed SRD inventory report, UNIT_REPORT, unit-matrix.json, unit-claims.jsonl, ACTIVE_PLAN, UBIQUITOUS_LANGUAGE | Completed: product readiness remains 367/367 (100%) and separate frontier metrics remain supported executable Unit coverage 85/117 (72.6%), deterministic admission/projection 78/85 (91.8%), QNT proof 61/62 (98.4%), and selected identity MBT 10/85 (11.8%). Appended concrete follow-ups for deterministic evidence stragglers, the condition-save QNT proof gap, and a selected-identity MBT evidence batch. |
 | 337 | SRDINV91B - Close Deterministic Admission Projection Stragglers | done | SRDINV91A | SRDINV91C, SRDINV91D | SRDINV91A review, UNIT_REPORT deterministic evidence tables, unit-matrix.json, Barbarian/Monk/Paladin/Wizard class text, Equipment mastery properties, UBIQUITOUS_LANGUAGE | Completed: deterministic admission/projection evidence now covers all seven supported-profile stragglers: Barbarian Unarmored Defense, Monk Unarmored Defense, Wizard Ritual Adept, Paladin Lay On Hands, mastery_cleave, mastery_sap, and mastery_topple. Generated deterministic admission/projection coverage is 85/85 (100%). |
-| 338 | SRDINV91C - Prove Condition-Save Spell Invocation Profile | ready-for-implementation-after-light-research | SRDINV91B | SRDINV91D | SRDINV91A review, Color Spray, Entangle, Rules Glossary conditions and saving throws, packages/battle-runtime/battle-runtime.qnt, UBIQUITOUS_LANGUAGE | Add QNT proof evidence for `spell.invocation-condition-save`, currently the lone QNT proof coverage gap. Scope the proof to already-supported condition-save semantics such as Color Spray's save-gated Blinded duration and Entangle's save-gated Restrained ownership/cleanup; keep area membership and pathfinding caller supplied. |
-| 339 | SRDINV91D - Select Identity MBT Frontier Evidence Batch | blocked | SRDINV91B, SRDINV91C | next recursive coverage review | SRDINV91A review, UNIT_REPORT selected identity MBT table, battle-runtime MBT protocol, UBIQUITOUS_LANGUAGE | Choose and implement the next small selected-identity MBT evidence batch after deterministic/proof gaps are closed. Start with representative identities across high-value profile families rather than broad MBT exploration; likely candidates include Extra Attack, Bardic Inspiration, Martial Arts, weapon mastery identities, and one or two supported spell identities with existing deterministic admission evidence. |
+| 338 | SRDINV91C - Prove Condition-Save Spell Invocation Profile | done | SRDINV91B | SRDINV91D | SRDINV91A review, Color Spray, Entangle, Rules Glossary conditions and saving throws, packages/battle-runtime/battle-runtime.qnt, UBIQUITOUS_LANGUAGE | Completed: `spell.invocation-condition-save` now has QNT proof evidence for Color Spray Constitution save-gated Blinded duration and Entangle Strength save-gated Restrained ownership/cleanup. Generated QNT proof coverage is now 62/62 (100%). |
+| 339 | SRDINV91D - Select Identity MBT Frontier Evidence Batch | ready-for-research | SRDINV91B, SRDINV91C | next recursive coverage review | SRDINV91A review, UNIT_REPORT selected identity MBT table, battle-runtime MBT protocol, UBIQUITOUS_LANGUAGE | Choose and implement the next small selected-identity MBT evidence batch now that deterministic/proof gaps are closed. Start with representative identities across high-value profile families rather than broad MBT exploration; likely candidates include Extra Attack, Bardic Inspiration, Martial Arts, weapon mastery identities, and one or two supported spell identities with existing deterministic admission evidence. |
 
 ## Task Details
 
@@ -391,7 +391,7 @@ run because no reducer or QNT semantics changed.
 
 ### Task 338 - SRDINV91C - Prove Condition-Save Spell Invocation Profile
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: SRDINV91B
 
@@ -426,9 +426,24 @@ command appropriate to the changed QNT file; `pnpm unit-profile-coverage:check`;
 `/simplify` convergence, minimum two rounds unless the final changeset is
 trivial.
 
+Completed: added QNT-visible save-ability facts for save-gated condition
+profiles, modeled Color Spray's spell-owned Blinded expiration at the end of
+the caster's next turn, retained Entangle Restrained ownership/cleanup
+witnesses, and refreshed generated profile coverage. QNT proof coverage is now
+62/62 (100%) and `spell.invocation-condition-save` names a `qnt-proof` owner.
+
+Verification completed:
+RAW/source review for Color Spray, Entangle, Blinded, Restrained, Saving Throw,
+and `UBIQUITOUS_LANGUAGE.md`; focused package-local Quint tests for shared
+spell procedure profiles, the battle-runtime spell bridge, and promoted
+battle-runtime Color Spray/Entangle witnesses; `pnpm
+unit-profile-coverage:check`; two local simplify passes. `pnpm quality` remains
+blocked by unrelated baseline lint in `packages/mcp/src/battle-tools.ts`
+(`max-lines`, 432 > 420), outside the SRDINV91C touched surface.
+
 ### Task 339 - SRDINV91D - Select Identity MBT Frontier Evidence Batch
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: SRDINV91B, SRDINV91C
 

@@ -78,8 +78,8 @@
     },
     "qntProofCoverage": {
       "denominator": 62,
-      "numerator": 61,
-      "percent": "98.4%"
+      "numerator": 62,
+      "percent": "100%"
     },
     "runtimeMappingCoverage": {
       "denominator": 62,
@@ -1074,10 +1074,15 @@
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
       "taskRefs": [
-        "SRDINV29B"
+        "SRDINV29B",
+        "SRDINV91C"
       ],
       "title": "Spell invocation resolves supported save-gated condition effects",
       "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/index.test.ts"
@@ -2470,6 +2475,14 @@
         "spell.invocation-condition-save"
       ],
       "taskId": "SRDINV29B"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Color Spray's Constitution save-gated Blinded condition until the end of the caster's next turn and Entangle's Strength save-gated Restrained condition with Concentration cleanup and escape action cleanup; area membership remains caller supplied.",
+      "profileIds": [
+        "spell.invocation-condition-save"
+      ],
+      "taskId": "SRDINV91C"
     },
     {
       "claimKind": "completed-runtime-parity",
@@ -6900,10 +6913,15 @@
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
           "taskRefs": [
-            "SRDINV29B"
+            "SRDINV29B",
+            "SRDINV91C"
           ],
           "title": "Spell invocation resolves supported save-gated condition effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/index.test.ts"
@@ -7488,10 +7506,15 @@
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
           "taskRefs": [
-            "SRDINV29B"
+            "SRDINV29B",
+            "SRDINV91C"
           ],
           "title": "Spell invocation resolves supported save-gated condition effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/index.test.ts"

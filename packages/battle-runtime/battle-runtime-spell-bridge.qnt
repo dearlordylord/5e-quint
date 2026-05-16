@@ -59,6 +59,12 @@ module battleRuntimeSpellBridge {
     | BattleRuntimeNoDamageOnSaveSuccess
     | BattleRuntimeHalfDamageOnSaveSuccess
 
+  type BattleRuntimeSavingThrowAbility =
+    | BattleRuntimeStrengthSavingThrow
+    | BattleRuntimeDexteritySavingThrow
+    | BattleRuntimeConstitutionSavingThrow
+    | BattleRuntimeWisdomSavingThrow
+
   type BattleRuntimeSaveGatedFailedEffect =
     | BattleRuntimeViciousMockeryNextAttackDisadvantageEffect
     | BattleRuntimeThunderwavePush10FeetEffect
@@ -251,6 +257,21 @@ module battleRuntimeSpellBridge {
   ): BattleRuntimeSaveGatedTargeting =
     battleRuntimeSaveGatedTargeting(
       spellSaveGatedConditionTargeting(battleRuntimeSaveGatedConditionProfile(profile))
+    )
+
+  pure def battleRuntimeSavingThrowAbility(ability: SpellSavingThrowAbility): BattleRuntimeSavingThrowAbility =
+    match ability {
+      | SpellStrengthSavingThrow => BattleRuntimeStrengthSavingThrow
+      | SpellDexteritySavingThrow => BattleRuntimeDexteritySavingThrow
+      | SpellConstitutionSavingThrow => BattleRuntimeConstitutionSavingThrow
+      | SpellWisdomSavingThrow => BattleRuntimeWisdomSavingThrow
+    }
+
+  pure def battleRuntimeSaveGatedConditionSavingThrowAbility(
+    profile: BattleRuntimeSaveGatedConditionProfile
+  ): BattleRuntimeSavingThrowAbility =
+    battleRuntimeSavingThrowAbility(
+      spellSaveGatedConditionSavingThrowAbility(battleRuntimeSaveGatedConditionProfile(profile))
     )
 
   pure def battleRuntimeSaveGatedTargetMaxTargets(
@@ -771,6 +792,8 @@ module battleRuntimeSpellBridge {
       assert(battleRuntimeSaveGatedDamageFailedSaveEffects(BattleRuntimeHellishRebukeSaveDamage) == Set()),
       assert(battleRuntimeSaveGatedDamageFailedSaveEffects(BattleRuntimeViciousMockerySaveDamage) == Set(BattleRuntimeViciousMockeryNextAttackDisadvantageEffect)),
       assert(battleRuntimeSaveGatedConditionTargeting(BattleRuntimeColorSpraySaveCondition) == BattleRuntimeAreaSaveTargets),
+      assert(battleRuntimeSaveGatedConditionSavingThrowAbility(BattleRuntimeColorSpraySaveCondition) == BattleRuntimeConstitutionSavingThrow),
+      assert(battleRuntimeSaveGatedConditionSavingThrowAbility(BattleRuntimeEntangleSaveCondition) == BattleRuntimeStrengthSavingThrow),
       assert(battleRuntimeSaveGatedTargetMaxTargets(animalTargets, 2) == 2),
       assert(battleRuntimeSaveGatedConditionFailedSaveEffects(BattleRuntimeEntangleSaveCondition) == Set(BattleRuntimeEntangleRestrainedEffect)),
       assert(battleRuntimeSaveGatedConditionFailedSaveEffects(BattleRuntimeFaerieFireSaveAttackRollAdvantage) == Set(BattleRuntimeFaerieFireOutlineEffect)),

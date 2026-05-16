@@ -8,6 +8,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-damage spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-marked-damage-rider
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-attack-roll-advantage-save
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-condition-save
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-beam-sequence
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-damage-reduction
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-sleep-repeat-save-lifecycle
@@ -419,7 +420,7 @@ module battleRuntime {
     itemDropBoundaryEvents: Set[FindFamiliarItemDropBoundaryEvent],
     magicActionSpent: bool,
   }
-  type ActiveEffect = BardicInspirationDie({ source: Actor, dieSize: int, durationTicks: int }) | MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | HexDamageRider({ target: Actor, ability: Ability, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | RayOfSicknessPoisoned | ChillTouchHitPointRegainPrevented({ source: Actor, expiresAtRound: int }) | StarryWispInvisibleBenefitDenied({ source: Actor, expiresAtRound: int }) | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | WeaponMasterySapNextAttackDisadvantage({ source: Actor }) | ColorSprayBlinded | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireOutline | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionRelevantCharmed({ source: Actor, durationTicks: int }) | ProtectionRelevantFrightened({ source: Actor, durationTicks: int }) | ProtectionRelevantPossession({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodCreatureTypeProtection | DancingLightsEffect({ combined: bool, lightCount: int, light1Position: int, light2Position: int, light3Position: int, light4Position: int, durationTicks: int }) | ProduceFlameHeldLight({ durationTicks: int }) | ShillelaghWeaponAttackOverride({ weapon: ShillelaghWeapon, damageDice: int, damageDieSize: int, spellcastingAbilityModifier: int, durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SanctuaryWard({ source: Actor, durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | HideousLaughterEffect({ source: Actor, target: Actor, hadProne: bool, hadIncapacitated: bool, durationTicks: int }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | FogCloudObscurement({ areaId: int, radiusFeet: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
+  type ActiveEffect = BardicInspirationDie({ source: Actor, dieSize: int, durationTicks: int }) | MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | HexDamageRider({ target: Actor, ability: Ability, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | RayOfSicknessPoisoned | ChillTouchHitPointRegainPrevented({ source: Actor, expiresAtRound: int }) | StarryWispInvisibleBenefitDenied({ source: Actor, expiresAtRound: int }) | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | WeaponMasterySapNextAttackDisadvantage({ source: Actor }) | ColorSprayBlinded({ source: Actor, expiresAtRound: int }) | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireOutline | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionRelevantCharmed({ source: Actor, durationTicks: int }) | ProtectionRelevantFrightened({ source: Actor, durationTicks: int }) | ProtectionRelevantPossession({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodCreatureTypeProtection | DancingLightsEffect({ combined: bool, lightCount: int, light1Position: int, light2Position: int, light3Position: int, light4Position: int, durationTicks: int }) | ProduceFlameHeldLight({ durationTicks: int }) | ShillelaghWeaponAttackOverride({ weapon: ShillelaghWeapon, damageDice: int, damageDieSize: int, spellcastingAbilityModifier: int, durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SanctuaryWard({ source: Actor, durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | HideousLaughterEffect({ source: Actor, target: Actor, hadProne: bool, hadIncapacitated: bool, durationTicks: int }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | FogCloudObscurement({ areaId: int, radiusFeet: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
   type PreventedProtectionCondition = PreventedCharmed | PreventedFrightened
   type PossessionAttemptDisposition = PossessionPreventedByCreatureTypeProtection | PossessionUnprevented
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
@@ -1303,6 +1304,7 @@ module battleRuntime {
     effects.filter(effect => match effect {
       | ChillTouchHitPointRegainPrevented(data) => data.source != actor or data.expiresAtRound != round
       | StarryWispInvisibleBenefitDenied(data) => data.source != actor or data.expiresAtRound != round
+      | ColorSprayBlinded(data) => data.source != actor or data.expiresAtRound != round
       | _ => true
     })
 
@@ -1717,7 +1719,7 @@ module battleRuntime {
         | GuidingBoltNextAttackAdvantage => false
         | ViciousMockeryNextAttackDisadvantage => false
         | WeaponMasterySapNextAttackDisadvantage(_) => false
-        | ColorSprayBlinded => false
+        | ColorSprayBlinded(_) => false
         | EntangleRestrained => false
         | EnsnaringStrikeRestrained(_) => false
         | SearingSmiteBurning(_) => false
@@ -2920,10 +2922,7 @@ module battleRuntime {
       { ...rolled, goblin: applyChillTouchHitPointRegainPrevention(state, damaged, Fighter), actionAvailable: false }
     }
 
-  pure def chillTouchHitPointRegainPreventionExpiresAtRound(state: BattleState, source: Actor): int =
-    if (currentActor(state) == source) state.initiative.round + 1 else state.initiative.round
-
-  pure def endOfCasterNextTurnLightEmitterExpiresAtRound(state: BattleState, source: Actor): int =
+  pure def endOfCasterNextTurnExpiresAtRound(state: BattleState, source: Actor): int =
     if (currentActor(state) == source) state.initiative.round + 1 else state.initiative.round
 
   pure def starryWispDimLightEmitter(
@@ -2940,7 +2939,7 @@ module battleRuntime {
           opaqueCoverInteraction: LightEmitterDoesNotBlockOpaqueCover,
           expiresAt: EndOfTurnLightEmitterExpiration({
             actor: source,
-            round: endOfCasterNextTurnLightEmitterExpiresAtRound(state, source),
+            round: endOfCasterNextTurnExpiresAtRound(state, source),
           }),
         })
       | ObjectLightEmitter(data) => ObjectInvisibleRevealLightEmitter({
@@ -2949,7 +2948,7 @@ module battleRuntime {
           object: data.object,
           dimLightRadiusFeet: 10,
           expiresAtActor: source,
-          expiresAtRound: endOfCasterNextTurnLightEmitterExpiresAtRound(state, source),
+          expiresAtRound: endOfCasterNextTurnExpiresAtRound(state, source),
         })
       | DancingLightEmitter(_) => SpellLightEmitter({
           source: source,
@@ -2996,7 +2995,7 @@ module battleRuntime {
         })
         .union(Set(ChillTouchHitPointRegainPrevented({
           source: source,
-          expiresAtRound: chillTouchHitPointRegainPreventionExpiresAtRound(state, source),
+          expiresAtRound: endOfCasterNextTurnExpiresAtRound(state, source),
         }))),
     }
 
@@ -3009,7 +3008,7 @@ module battleRuntime {
         })
         .union(Set(StarryWispInvisibleBenefitDenied({
           source: source,
-          expiresAtRound: endOfCasterNextTurnLightEmitterExpiresAtRound(state, source),
+          expiresAtRound: endOfCasterNextTurnExpiresAtRound(state, source),
         }))),
     }
 
@@ -6823,6 +6822,16 @@ module battleRuntime {
       )
     )
 
+  pure def saveGatedConditionSavingThrowAbility(invocation: SaveGatedConditionInvocation): Ability =
+    match battleRuntimeSaveGatedConditionSavingThrowAbility(
+      battleRuntimeSaveGatedConditionProfileForInvocation(invocation)
+    ) {
+      | BattleRuntimeStrengthSavingThrow => StrAbility
+      | BattleRuntimeDexteritySavingThrow => DexAbility
+      | BattleRuntimeConstitutionSavingThrow => ConAbility
+      | BattleRuntimeWisdomSavingThrow => WisAbility
+    }
+
   pure def saveGatedTargetMaxTargets(targeting: SaveGatedTargeting, slotLevel: int): int =
     battleRuntimeSaveGatedTargetMaxTargets(saveGatedTargetingToBridge(targeting), slotLevel)
 
@@ -6833,13 +6842,26 @@ module battleRuntime {
       | TargetListSaveTargets(data) => BattleRuntimeTargetListSaveTargets(data)
     }
 
-  pure def saveGatedConditionFailedSaveActiveEffects(invocation: SaveGatedConditionInvocation, source: Actor): Set[ActiveEffect] =
+  pure def saveGatedConditionFailedSaveActiveEffects(
+    invocation: SaveGatedConditionInvocation,
+    state: BattleState,
+    source: Actor,
+  ): Set[ActiveEffect] =
     match invocation {
-      | ColorSpraySaveGate => Set(ColorSprayBlinded)
+      | ColorSpraySaveGate => Set(ColorSprayBlinded({
+          source: source,
+          expiresAtRound: endOfCasterNextTurnExpiresAtRound(state, source),
+        }))
       | EntangleSaveGate => Set(EntangleRestrained)
       | AnimalFriendshipSaveGate => Set(AnimalFriendshipCharmed({ source: source, durationTicks: 24 * 60 }))
       | CharmPersonSaveGate => Set(CharmPersonCharmed({ source: source, durationTicks: charmPersonCharmedDurationTicks }))
     }
+
+  pure def activeEffectsWithoutColorSprayFrom(effects: Set[ActiveEffect], source: Actor): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | ColorSprayBlinded(data) => data.source != source
+      | _ => true
+    })
 
   pure def charmPersonCharmedDurationTicks: int = 60 * 10
 
@@ -7032,6 +7054,7 @@ module battleRuntime {
 
   pure def saveGatedConditionTarget(
     invocation: SaveGatedConditionInvocation,
+    state: BattleState,
     target: Combatant,
     savingThrowSucceeded: bool,
     source: Actor,
@@ -7040,7 +7063,13 @@ module battleRuntime {
     if (savingThrowSucceeded or saveGatedConditionPreventedByCreatureTypeProtection(invocation, sourceCreatureType, target.activeEffects))
       target
     else
-      { ...target, activeEffects: target.activeEffects.union(saveGatedConditionFailedSaveActiveEffects(invocation, source)) }
+      {
+        val baseEffects = if (invocation == ColorSpraySaveGate)
+          activeEffectsWithoutColorSprayFrom(target.activeEffects, source)
+        else
+          target.activeEffects
+        { ...target, activeEffects: baseEffects.union(saveGatedConditionFailedSaveActiveEffects(invocation, state, source)) }
+      }
 
   pure def actorHasTurnLaterThisRound(state: BattleState, actor: Actor): bool =
     actor != currentActor(state) and state.initiative.stillToAct.length() > 1
@@ -7832,8 +7861,8 @@ module battleRuntime {
     else
       {
         ...state,
-        fighter: if (fighterTargeted) saveGatedConditionTarget(invocation, state.fighter, fighterSavingThrowSucceeded, Fighter, HumanoidCreature) else state.fighter,
-        goblin: if (goblinTargeted) saveGatedConditionTarget(invocation, state.goblin, goblinSavingThrowSucceeded, Fighter, HumanoidCreature) else state.goblin,
+        fighter: if (fighterTargeted) saveGatedConditionTarget(invocation, state, state.fighter, fighterSavingThrowSucceeded, Fighter, HumanoidCreature) else state.fighter,
+        goblin: if (goblinTargeted) saveGatedConditionTarget(invocation, state, state.goblin, goblinSavingThrowSucceeded, Fighter, HumanoidCreature) else state.goblin,
         actionAvailable: false,
         spellSlotExpendedThisTurn: true,
       }
@@ -7848,8 +7877,8 @@ module battleRuntime {
     else
       {
         ...state,
-        fighter: saveGatedConditionTarget(ColorSpraySaveGate, state.fighter, fighterSavingThrowSucceeded, Fighter, HumanoidCreature),
-        goblin: saveGatedConditionTarget(ColorSpraySaveGate, state.goblin, goblinSavingThrowSucceeded, Fighter, HumanoidCreature),
+        fighter: saveGatedConditionTarget(ColorSpraySaveGate, state, state.fighter, fighterSavingThrowSucceeded, Fighter, HumanoidCreature),
+        goblin: saveGatedConditionTarget(ColorSpraySaveGate, state, state.goblin, goblinSavingThrowSucceeded, Fighter, HumanoidCreature),
         actionAvailable: false,
         spellSlotExpendedThisTurn: true,
       }
@@ -7937,7 +7966,7 @@ module battleRuntime {
       {
         ...withoutPrior,
         fighter: { ...withoutPrior.fighter, concentrating: true },
-        goblin: saveGatedConditionTarget(EntangleSaveGate, withoutPrior.goblin, goblinSavingThrowSucceeded, Fighter, HumanoidCreature),
+        goblin: saveGatedConditionTarget(EntangleSaveGate, withoutPrior, withoutPrior.goblin, goblinSavingThrowSucceeded, Fighter, HumanoidCreature),
         actionAvailable: false,
         spellSlotExpendedThisTurn: true,
       }
@@ -9458,9 +9487,11 @@ module battleRuntime {
       assert(saveGatedDamageFailedSaveActiveEffects(ViciousMockerySaveGate) == Set(ViciousMockeryNextAttackDisadvantage)),
       assert(saveGatedDamageFailedSaveActiveEffects(DissonantWhispersSaveGate) == Set()),
       assert(saveGatedConditionTargeting(ColorSpraySaveGate) == AreaSaveTargets),
-      assert(saveGatedConditionFailedSaveActiveEffects(ColorSpraySaveGate, Fighter) == Set(ColorSprayBlinded)),
+      assert(saveGatedConditionSavingThrowAbility(ColorSpraySaveGate) == ConAbility),
+      assert(saveGatedConditionFailedSaveActiveEffects(ColorSpraySaveGate, initialState, Fighter) == Set(ColorSprayBlinded({ source: Fighter, expiresAtRound: 2 }))),
       assert(saveGatedConditionTargeting(EntangleSaveGate) == AreaSaveTargets),
-      assert(saveGatedConditionFailedSaveActiveEffects(EntangleSaveGate, Fighter) == Set(EntangleRestrained)),
+      assert(saveGatedConditionSavingThrowAbility(EntangleSaveGate) == StrAbility),
+      assert(saveGatedConditionFailedSaveActiveEffects(EntangleSaveGate, initialState, Fighter) == Set(EntangleRestrained)),
       assert(saveGatedAttackRollAdvantageTargeting(FaerieFireSaveGate) == AreaSaveTargets),
       assert(saveGatedAttackRollAdvantageFailedSaveActiveEffects(FaerieFireSaveGate) == Set(FaerieFireOutline)),
       assert(activeEffectsDenyInvisibleBenefit(Set(FaerieFireOutline))),
@@ -9471,7 +9502,7 @@ module battleRuntime {
       assert(saveGatedTargetMaxTargets(saveGatedConditionTargeting(AnimalFriendshipSaveGate), 2) == 2),
       assert(saveGatedConditionTargetCreatureTypeIsLegal(AnimalFriendshipSaveGate, BeastCreature)),
       assert(not(saveGatedConditionTargetCreatureTypeIsLegal(AnimalFriendshipSaveGate, HumanoidCreature))),
-      assert(saveGatedConditionFailedSaveActiveEffects(AnimalFriendshipSaveGate, Fighter) == Set(animalFriendshipCharmed)),
+      assert(saveGatedConditionFailedSaveActiveEffects(AnimalFriendshipSaveGate, initialState, Fighter) == Set(animalFriendshipCharmed)),
       assert(actorDamageSource(Fighter) == FighterDamageSource),
       assert(damageSourceSide(FighterAllyDamageSource) == PartySide),
       assert(damageSourceIsCasterOrAlly(Fighter, FighterDamageSource)),
@@ -9485,7 +9516,7 @@ module battleRuntime {
       assert(saveGatedTargetMaxTargets(saveGatedConditionTargeting(CharmPersonSaveGate), 2) == 2),
       assert(saveGatedConditionTargetCreatureTypeIsLegal(CharmPersonSaveGate, HumanoidCreature)),
       assert(not(saveGatedConditionTargetCreatureTypeIsLegal(CharmPersonSaveGate, BeastCreature))),
-      assert(saveGatedConditionFailedSaveActiveEffects(CharmPersonSaveGate, Fighter) == Set(CharmPersonCharmed({ source: Fighter, durationTicks: charmPersonCharmedDurationTicks }))),
+      assert(saveGatedConditionFailedSaveActiveEffects(CharmPersonSaveGate, initialState, Fighter) == Set(CharmPersonCharmed({ source: Fighter, durationTicks: charmPersonCharmedDurationTicks }))),
       assert(saveGatedConditionSavingThrowHasAdvantage(CharmPersonSaveGate, true)),
       assert(not(saveGatedConditionSavingThrowHasAdvantage(CharmPersonSaveGate, false))),
       assert(spellAttackRollModeFromActiveEffects(Set(), Set(GuidingBoltNextAttackAdvantage), false) == AdvantageSpellAttackRoll),
@@ -9514,8 +9545,8 @@ module battleRuntime {
       assert(protectionFromEvilAndGoodRelevantEffectSaveRollMode(HumanoidCreature, Set(ProtectionFromEvilAndGoodCreatureTypeProtection, ProtectionRelevantCharmed({ source: Fighter, durationTicks: 10 })), ProtectionRelevantCharmed({ source: Fighter, durationTicks: 10 })) == NormalSavingThrow),
       assert(protectionFromEvilAndGoodRelevantEffectSaveRollMode(FeyCreature, Set(ProtectionFromEvilAndGoodCreatureTypeProtection), CharmPersonCharmed({ source: Fighter, durationTicks: charmPersonCharmedDurationTicks })) == NormalSavingThrow),
       assert(protectionFromEvilAndGoodRelevantEffectSaveRollMode(FeyCreature, Set(ProtectionFromEvilAndGoodCreatureTypeProtection, CharmPersonCharmed({ source: Fighter, durationTicks: charmPersonCharmedDurationTicks })), CharmPersonCharmed({ source: Fighter, durationTicks: charmPersonCharmedDurationTicks })) == NormalSavingThrow),
-      assert(saveGatedConditionTarget(CharmPersonSaveGate, { ...initialState.goblin, activeEffects: Set(ProtectionFromEvilAndGoodCreatureTypeProtection) }, false, Fighter, FeyCreature).activeEffects == Set(ProtectionFromEvilAndGoodCreatureTypeProtection)),
-      assert(saveGatedConditionTarget(CharmPersonSaveGate, { ...initialState.goblin, activeEffects: Set(ProtectionFromEvilAndGoodCreatureTypeProtection) }, false, Fighter, HumanoidCreature).activeEffects == Set(ProtectionFromEvilAndGoodCreatureTypeProtection, CharmPersonCharmed({ source: Fighter, durationTicks: charmPersonCharmedDurationTicks }))),
+      assert(saveGatedConditionTarget(CharmPersonSaveGate, initialState, { ...initialState.goblin, activeEffects: Set(ProtectionFromEvilAndGoodCreatureTypeProtection) }, false, Fighter, FeyCreature).activeEffects == Set(ProtectionFromEvilAndGoodCreatureTypeProtection)),
+      assert(saveGatedConditionTarget(CharmPersonSaveGate, initialState, { ...initialState.goblin, activeEffects: Set(ProtectionFromEvilAndGoodCreatureTypeProtection) }, false, Fighter, HumanoidCreature).activeEffects == Set(ProtectionFromEvilAndGoodCreatureTypeProtection, CharmPersonCharmed({ source: Fighter, durationTicks: charmPersonCharmedDurationTicks }))),
       assert(saveGatedTargeting(SacredFlameSaveGate) == SingleSaveTarget),
       assert(saveGatedDamageSuccess(SacredFlameSaveGate) == NoDamageOnSaveSuccess),
       assert(saveGatedDamageType(SacredFlameSaveGate) == Radiant),
@@ -10009,11 +10040,26 @@ module battleRuntime {
 
   run test_color_spray_area_save_applies_blinded_and_spends_slot = {
     val result = resolveColorSpray(initialState, false, true)
+    val blinded = ColorSprayBlinded({ source: Fighter, expiresAtRound: 2 })
     all {
       assert(result.actionAvailable == false),
       assert(result.spellSlotExpendedThisTurn == true),
-      assert(result.fighter.activeEffects.contains(ColorSprayBlinded)),
-      assert(not(result.goblin.activeEffects.contains(ColorSprayBlinded))),
+      assert(result.fighter.activeEffects.contains(blinded)),
+      assert(not(result.goblin.activeEffects.contains(blinded))),
+    }
+  }
+
+  run test_color_spray_blinded_expires_at_end_of_caster_next_turn = {
+    val hit = resolveColorSpray(initialState, true, false)
+    val afterFighterTurn = endTurn(hit)
+    val afterGoblinTurn = endTurn(afterFighterTurn)
+    val afterFighterNextTurn = endTurn(afterGoblinTurn)
+    val blinded = ColorSprayBlinded({ source: Fighter, expiresAtRound: 2 })
+    all {
+      assert(hit.goblin.activeEffects.contains(blinded)),
+      assert(afterFighterTurn.goblin.activeEffects.contains(blinded)),
+      assert(afterGoblinTurn.goblin.activeEffects.contains(blinded)),
+      assert(not(afterFighterNextTurn.goblin.activeEffects.contains(blinded))),
     }
   }
 
@@ -10022,8 +10068,14 @@ module battleRuntime {
     all {
       assert(result.actionAvailable == false),
       assert(result.spellSlotExpendedThisTurn == true),
-      assert(not(result.fighter.activeEffects.contains(ColorSprayBlinded))),
-      assert(not(result.goblin.activeEffects.contains(ColorSprayBlinded))),
+      assert(not(result.fighter.activeEffects.exists(effect => match effect {
+        | ColorSprayBlinded(_) => true
+        | _ => false
+      }))),
+      assert(not(result.goblin.activeEffects.exists(effect => match effect {
+        | ColorSprayBlinded(_) => true
+        | _ => false
+      }))),
     }
   }
 
