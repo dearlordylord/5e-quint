@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "L1B-AT10",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Falling And Jump Witness Promotion"
     },
     {
@@ -156,7 +156,7 @@ For `AT-L1-09` through `AT-L1-12`:
 | 1 | L1B-AT01 - Hunter's Mark And Favored Enemy Claim Cleanup | done | none | Removes stale runtime-behavior residual before Ranger strict closure. |
 | 2 | L1B-AT02 - Runtime-Detached And Character-Fact Split Claims | done | none | Closure claims and Druidic/Thieves' Cant split. |
 | 3 | L1B-AT09 - Light And Outline Witness Promotion | done | none | Witness checklist before promotion. |
-| 4 | L1B-AT10 - Falling And Jump Witness Promotion | ready-for-implementation-after-light-research | none | Witness checklist before promotion. |
+| 4 | L1B-AT10 - Falling And Jump Witness Promotion | done | none | Witness checklist before promotion. |
 | 5 | L1B-AT11 - Area Hazard And Obscurement Witness Promotion | ready-for-implementation-after-light-research | none | Witness checklist before promotion. |
 | 6 | L1B-AT12 - Thunderwave Witness Promotion | ready-for-implementation-after-light-research | none | Witness checklist before promotion. |
 
@@ -273,7 +273,7 @@ Plan Impact:
 
 ### Task 4 - L1B-AT10 - Falling And Jump Witness Promotion
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Implement `AT-L1-10` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
