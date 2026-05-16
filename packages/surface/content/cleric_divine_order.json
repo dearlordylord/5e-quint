@@ -63,7 +63,10 @@
                   "arcana",
                   "religion"
                 ]
-              }
+              },
+              "abilityFilter": [
+                "int"
+              ]
             }
           ]
         }

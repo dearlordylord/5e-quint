@@ -62,6 +62,7 @@ import {
   unitChoiceSourceUnitId,
   type CharacterDraft,
   type CharacterChoiceSelection,
+  type CharacterBuild,
   type CharacterBuildProficiencies,
   type ChoiceCardinality,
   type CreationFill,
@@ -113,6 +114,7 @@ import {
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.skill-expertise-choice
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-03 fighter_fighting_style
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-05 warlock_eldritch_invocations
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-06 cleric_divine_order druid_primal_order
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -2137,13 +2139,35 @@ describe("character creation finalization", () => {
   });
 
   test("finalizes supported level-1 class-feature acquisition choices", () => {
-    const cleric = completeSupportedProgressionDraft({
-      draftId: "draft:srd-level-1-cleric-feature-choices",
+    const clericProtector = completeSupportedProgressionDraft({
+      draftId: "draft:srd-level-1-cleric-protector-feature-choice",
       progression: testProgression("class_cleric", 1),
     });
-    const druid = completeSupportedProgressionDraft({
-      draftId: "draft:srd-level-1-druid-feature-choices",
+    const clericThaumaturge = completeSupportedProgressionDraft({
+      draftId: "draft:srd-level-1-cleric-thaumaturge-feature-choice",
+      progression: testProgression("class_cleric", 1),
+      preferredOptionIdsBySource: {
+        [testUnitChoiceSourceKey("cleric_divine_order", "divine_order")]: [
+          creationChoiceOptionId("thaumaturge"),
+        ],
+        [testUnitChoiceSourceKey(
+          "cleric_divine_order",
+          CLASS_CANTRIP_CHOICE_KEY,
+        )]: [creationChoiceOptionId("light")],
+      },
+    });
+    const druidMagician = completeSupportedProgressionDraft({
+      draftId: "draft:srd-level-1-druid-magician-feature-choice",
       progression: testProgression("class_druid", 1),
+    });
+    const druidWarden = completeSupportedProgressionDraft({
+      draftId: "draft:srd-level-1-druid-warden-feature-choice",
+      progression: testProgression("class_druid", 1),
+      preferredOptionIdsBySource: {
+        [testUnitChoiceSourceKey("druid_primal_order", "primal_order")]: [
+          creationChoiceOptionId("warden"),
+        ],
+      },
     });
     const rogue = completeSupportedProgressionDraft({
       draftId: "draft:srd-level-1-rogue-feature-choices",
@@ -2151,10 +2175,42 @@ describe("character creation finalization", () => {
     });
 
     expect(
-      selectedChoiceOptionIds(cleric, "cleric_divine_order", "divine_order"),
+      selectedChoiceOptionIds(
+        clericProtector,
+        "cleric_divine_order",
+        "divine_order",
+      ),
     ).toEqual(["protector"]);
     expect(
-      selectedChoiceOptionIds(druid, "druid_primal_order", "primal_order"),
+      selectedChoiceOptionIds(
+        clericThaumaturge,
+        "cleric_divine_order",
+        "divine_order",
+      ),
+    ).toEqual(["thaumaturge"]);
+    expect(
+      selectedChoiceOptionIds(
+        clericThaumaturge,
+        "cleric_divine_order",
+        CLASS_CANTRIP_CHOICE_KEY,
+      ),
+    ).toEqual(["light"]);
+    expect(
+      selectedChoiceOptionIds(
+        druidMagician,
+        "druid_primal_order",
+        "primal_order",
+      ),
+    ).toEqual(["magician"]);
+    expect(
+      selectedChoiceOptionIds(
+        druidMagician,
+        "druid_primal_order",
+        CLASS_CANTRIP_CHOICE_KEY,
+      ),
+    ).toEqual(["guidance"]);
+    expect(
+      selectedChoiceOptionIds(druidWarden, "druid_primal_order", "primal_order"),
     ).toEqual(["warden"]);
     expect(
       selectedChoiceOptionIds(
@@ -2164,33 +2220,85 @@ describe("character creation finalization", () => {
       ),
     ).toHaveLength(2);
 
-    const clericBuild = finalizeCharacterDraft({ draft: cleric, unitLibrary });
-    const druidBuild = finalizeCharacterDraft({ draft: druid, unitLibrary });
+    const clericProtectorBuild = finalizeCharacterDraft({
+      draft: clericProtector,
+      unitLibrary,
+    });
+    const clericThaumaturgeBuild = finalizeCharacterDraft({
+      draft: clericThaumaturge,
+      unitLibrary,
+    });
+    const druidMagicianBuild = finalizeCharacterDraft({
+      draft: druidMagician,
+      unitLibrary,
+    });
+    const druidWardenBuild = finalizeCharacterDraft({
+      draft: druidWarden,
+      unitLibrary,
+    });
     const rogueBuild = finalizeCharacterDraft({ draft: rogue, unitLibrary });
-    expect(clericBuild.tag).toBe("ready");
-    expect(druidBuild.tag).toBe("ready");
+    expect(clericProtectorBuild.tag).toBe("ready");
+    expect(clericThaumaturgeBuild.tag).toBe("ready");
+    expect(druidMagicianBuild.tag).toBe("ready");
+    expect(druidWardenBuild.tag).toBe("ready");
     expect(rogueBuild.tag).toBe("ready");
     if (
-      clericBuild.tag !== "ready" ||
-      druidBuild.tag !== "ready" ||
+      clericProtectorBuild.tag !== "ready" ||
+      clericThaumaturgeBuild.tag !== "ready" ||
+      druidMagicianBuild.tag !== "ready" ||
+      druidWardenBuild.tag !== "ready" ||
       rogueBuild.tag !== "ready"
     ) {
       return;
     }
 
     expect(
-      expectRight(characterBuildProficiencies(clericBuild.build, unitLibrary))
-        .weapon,
+      expectRight(
+        characterBuildProficiencies(clericProtectorBuild.build, unitLibrary),
+      ).weapon,
     ).toContain("martial");
     expect(
-      expectRight(characterBuildArmorTraining(clericBuild.build, unitLibrary)),
+      expectRight(
+        characterBuildArmorTraining(clericProtectorBuild.build, unitLibrary),
+      ),
     ).toContain("heavy");
     expect(
-      expectRight(characterBuildProficiencies(druidBuild.build, unitLibrary))
-        .weapon,
+      clericThaumaturgeBuild.build.spellcasting?.sources[0]?.cantrips,
+    ).toEqual(expect.arrayContaining(["light"]));
+    expect(clericThaumaturgeBuild.build.features).toEqual(
+      expect.arrayContaining([
+        {
+          kind: "abilityCheckBonus",
+          selectedFromUnitId: "cleric_divine_order",
+          ability: "int",
+          skills: ["arcana", "religion"],
+          bonus: { kind: "abilityModifier", ability: "wis", minimum: 1 },
+        },
+      ]),
+    );
+    expect(
+      druidMagicianBuild.build.spellcasting?.sources[0]?.cantrips,
+    ).toEqual(expect.arrayContaining(["guidance"]));
+    expect(druidMagicianBuild.build.features).toEqual(
+      expect.arrayContaining([
+        {
+          kind: "abilityCheckBonus",
+          selectedFromUnitId: "druid_primal_order",
+          ability: "int",
+          skills: ["arcana", "nature"],
+          bonus: { kind: "abilityModifier", ability: "wis", minimum: 1 },
+        },
+      ]),
+    );
+    expect(
+      expectRight(
+        characterBuildProficiencies(druidWardenBuild.build, unitLibrary),
+      ).weapon,
     ).toContain("martial");
     expect(
-      expectRight(characterBuildArmorTraining(druidBuild.build, unitLibrary)),
+      expectRight(
+        characterBuildArmorTraining(druidWardenBuild.build, unitLibrary),
+      ),
     ).toContain("medium");
     expect(
       expectRight(characterBuildProficiencies(rogueBuild.build, unitLibrary))
@@ -2202,6 +2310,72 @@ describe("character creation finalization", () => {
         "class_feature_proficiency_choice",
       ),
     );
+  });
+
+  test("finalizes supported multiclass order cantrip projections", () => {
+    const clericThaumaturge = completeSupportedProgressionDraft({
+      draftId: "draft:srd-multiclass-cleric-thaumaturge-feature-choice",
+      progression: supportedMulticlassProgressionForClass("class_cleric"),
+      preferredOptionIdsBySource: {
+        [testUnitChoiceSourceKey("cleric_divine_order", "divine_order")]: [
+          creationChoiceOptionId("thaumaturge"),
+        ],
+        [testUnitChoiceSourceKey(
+          "cleric_divine_order",
+          CLASS_CANTRIP_CHOICE_KEY,
+        )]: [creationChoiceOptionId("light")],
+      },
+    });
+    const druidMagician = completeSupportedProgressionDraft({
+      draftId: "draft:srd-multiclass-druid-magician-feature-choice",
+      progression: supportedMulticlassProgressionForClass("class_druid"),
+      preferredOptionIdsBySource: {
+        [testUnitChoiceSourceKey("druid_primal_order", "primal_order")]: [
+          creationChoiceOptionId("magician"),
+        ],
+        [testUnitChoiceSourceKey(
+          "druid_primal_order",
+          CLASS_CANTRIP_CHOICE_KEY,
+        )]: [creationChoiceOptionId("guidance")],
+      },
+    });
+
+    expect(
+      selectedChoiceOptionIds(
+        clericThaumaturge,
+        "cleric_divine_order",
+        CLASS_CANTRIP_CHOICE_KEY,
+      ),
+    ).toEqual(["light"]);
+    expect(
+      selectedChoiceOptionIds(
+        druidMagician,
+        "druid_primal_order",
+        CLASS_CANTRIP_CHOICE_KEY,
+      ),
+    ).toEqual(["guidance"]);
+
+    const clericBuild = finalizeCharacterDraft({
+      draft: clericThaumaturge,
+      unitLibrary,
+    });
+    const druidBuild = finalizeCharacterDraft({
+      draft: druidMagician,
+      unitLibrary,
+    });
+
+    expect(clericBuild.tag).toBe("ready");
+    expect(druidBuild.tag).toBe("ready");
+    if (clericBuild.tag !== "ready" || druidBuild.tag !== "ready") {
+      return;
+    }
+
+    expect(
+      spellcastingSourceCantrips(clericBuild.build, "class_cleric"),
+    ).toEqual(expect.arrayContaining(["light"]));
+    expect(
+      spellcastingSourceCantrips(druidBuild.build, "class_druid"),
+    ).toEqual(expect.arrayContaining(["guidance"]));
   });
 
   test("finalizes non-Wizard level-1 Spell Access from Surface class spellcasting facts", () => {
@@ -2234,14 +2408,18 @@ describe("character creation finalization", () => {
       if (result.tag !== "ready") continue;
 
       const spellcasting = classFacts.spellcasting;
-      const expectedCantrips = spellcasting.cantripAccess?.spellIds ?? [];
+      const expectedClassCantrips = spellcasting.cantripAccess?.spellIds ?? [];
+      const expectedCantrips = selectedChoiceOptionIdsByChoiceKey(
+        draft,
+        CLASS_CANTRIP_CHOICE_KEY,
+      );
       const expectedPreparedSpells = spellcasting.preparedAccess.spells.map(
         (spell) => spell.spellId,
       );
       expect(
         selectedChoiceOptionIds(draft, classUnitId, CLASS_CANTRIP_CHOICE_KEY),
         classUnitId,
-      ).toEqual(expectedCantrips);
+      ).toEqual(expectedClassCantrips);
       expect(
         selectedChoiceOptionIds(
           draft,
@@ -4065,6 +4243,7 @@ function createTestDraft(draftId: string): CharacterDraft {
 function completeSupportedProgressionDraft(input: {
   readonly draftId: string;
   readonly progression: CharacterProgression;
+  readonly preferredOptionIdsBySource?: PreferredSupportedFillOptionIdsBySource;
 }): CharacterDraft {
   let draft = createTestDraft(input.draftId);
   draft = requireAcceptedBatch(
@@ -4087,7 +4266,9 @@ function completeSupportedProgressionDraft(input: {
         draft,
         unitLibrary,
         expectedRevision: draft.revision,
-        fills: holes.map(supportedFillForHole),
+        fills: holes.map((hole) =>
+          supportedFillForHole(hole, input.preferredOptionIdsBySource),
+        ),
       }),
     );
   }
@@ -4099,7 +4280,14 @@ function completeSupportedProgressionDraft(input: {
   );
 }
 
-function supportedFillForHole(hole: CreationHole): CreationFill {
+type PreferredSupportedFillOptionIdsBySource = Readonly<
+  Record<string, readonly CreationChoiceOptionId[]>
+>;
+
+function supportedFillForHole(
+  hole: CreationHole,
+  preferredOptionIdsBySource?: PreferredSupportedFillOptionIdsBySource,
+): CreationFill {
   if (hole.kind === "abilityScores") {
     return {
       kind: "abilityScores",
@@ -4123,8 +4311,14 @@ function supportedFillForHole(hole: CreationHole): CreationFill {
     );
   }
   const supportedOptionIdSet = new Set(supportedOptionIds);
-  const selectedOptionIds = hole.options
-    .map((option) => option.optionId)
+  const holeOptionIds = hole.options.map((option) => option.optionId);
+  const preferredOptionIds =
+    hole.source.tag === "unitChoice"
+      ? preferredOptionIdsBySource?.[unitChoiceSourceKey(hole.source)]
+      : undefined;
+  const holeOptionIdSet = new Set(holeOptionIds);
+  const selectedOptionIds = (preferredOptionIds ?? holeOptionIds)
+    .filter((optionId) => holeOptionIdSet.has(optionId))
     .filter((optionId) => supportedOptionIdSet.has(optionId))
     .slice(0, choiceCardinalityBounds(hole.cardinality).max);
   if (
@@ -4178,6 +4372,26 @@ function selectedChoiceOptionIds(
     selection.kind === "unitChoice" &&
     selection.source.unitId === unitId &&
     selection.source.choiceKey === choiceKey
+      ? selection.options.map((option) => option.optionId)
+      : [],
+  );
+}
+
+function spellcastingSourceCantrips(
+  build: CharacterBuild,
+  classUnitId: UnitRecord["id"],
+): readonly UnitRecord["id"][] | undefined {
+  return build.spellcasting?.sources.find(
+    (source) => source.sourceUnitId === classUnitId,
+  )?.cantrips;
+}
+
+function selectedChoiceOptionIdsByChoiceKey(
+  draft: CharacterDraft,
+  choiceKey: string,
+): readonly CreationChoiceOptionId[] {
+  return draft.selections.choices.flatMap((selection) =>
+    selection.kind === "unitChoice" && selection.source.choiceKey === choiceKey
       ? selection.options.map((option) => option.optionId)
       : [],
   );

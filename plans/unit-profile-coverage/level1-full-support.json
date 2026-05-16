@@ -179,35 +179,6 @@
       "unitId": "charm_person"
     },
     {
-      "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "selection-grant-container"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "Divine Order is a character-creation suborder choice; no promoted battle Unit profile consumes the container directly.",
-      "sourceRecordPath": "packages/surface/content/cleric_divine_order.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Cleric Divine Order",
-          "id": "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order",
-          "levelBand": "level-1",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 87,
-            "lineStart": 80,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "cleric_divine_order"
-    },
-    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -521,35 +492,6 @@
       "status": "closed-runtime-detached-table-adjudication",
       "strictTargetClosed": true,
       "unitId": "druid_druidic"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "selection-grant-container"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "Primal Order is a character-creation suborder choice; no promoted battle Unit profile consumes the container directly.",
-      "sourceRecordPath": "packages/surface/content/druid_primal_order.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Druid Primal Order",
-          "id": "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order",
-          "levelBand": "level-1",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 94,
-            "lineStart": 87,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "druid_primal_order"
     },
     {
       "catalogStatus": "installed",
@@ -1529,7 +1471,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 59,
+      "count": 61,
       "description": "Full support exists at the Unit profile boundary for strict level-1 accounting.",
       "status": "supported-profile",
       "unitIds": [
@@ -1542,6 +1484,7 @@
         "burning_hands",
         "chill_touch",
         "chromatic_orb",
+        "cleric_divine_order",
         "color_spray",
         "command",
         "cure_wounds",
@@ -1549,6 +1492,7 @@
         "dissonant_whispers",
         "divine_favor",
         "divine_smite",
+        "druid_primal_order",
         "eldritch_blast",
         "ensnaring_strike",
         "entangle",
@@ -1595,13 +1539,11 @@
       ]
     },
     {
-      "count": 18,
+      "count": 16,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
         "barbarian_weapon_mastery",
-        "cleric_divine_order",
-        "druid_primal_order",
         "faerie_fire",
         "feather_fall",
         "fighter_weapon_mastery",
@@ -1669,24 +1611,22 @@
     },
     "strictRuntimeProfileSupport": {
       "denominator": 93,
-      "numerator": 59,
-      "percent": "63.4%"
+      "numerator": 61,
+      "percent": "65.6%"
     },
     "strictTargetClosure": {
       "denominator": 93,
-      "numerator": 70,
-      "percent": "75.3%"
+      "numerator": 72,
+      "percent": "77.4%"
     }
   },
   "openFrontier": [
     {
-      "count": 18,
+      "count": 16,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
         "barbarian_weapon_mastery",
-        "cleric_divine_order",
-        "druid_primal_order",
         "faerie_fire",
         "feather_fall",
         "fighter_weapon_mastery",
@@ -3995,17 +3935,17 @@
     "groupsByClaimTag": {
       "missing": 5,
       "profile-subset-supported": 14,
-      "supported-profile": 59,
-      "unsupported-profile": 15
+      "supported-profile": 61,
+      "unsupported-profile": 13
     },
     "groupsByStatus": {
       "closed-later-level-only": 4,
       "closed-runtime-detached-table-adjudication": 7,
-      "open-profile-accounting": 18,
+      "open-profile-accounting": 16,
       "open-runtime-behavior": 5,
-      "supported-profile": 59
+      "supported-profile": 61
     },
-    "nonSupportedFrontier": 34,
+    "nonSupportedFrontier": 32,
     "strictDenominator": 93
   }
 }

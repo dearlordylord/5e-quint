@@ -991,18 +991,32 @@ export type CharacterBuildProficiencyChoiceSubject =
     }
   | { readonly kind: "tool"; readonly toolId: ToolProficiencyId };
 
-export type CharacterBuildFeature = {
+type CharacterBuildSelectedFeatureSource = {
   readonly selectedFromUnitId: UnitRecord["id"];
-} & (
-  | {
+};
+
+export type CharacterBuildFeature =
+  | (CharacterBuildSelectedFeatureSource & {
       readonly kind: "selectedClassChoice";
       readonly unitId: UnitRecord["id"];
-    }
-  | {
+    })
+  | (CharacterBuildSelectedFeatureSource & {
       readonly kind: "selectedEldritchInvocation";
       readonly invocationId: EldritchInvocationId;
-    }
-);
+    })
+  | CharacterBuildAbilityCheckBonusFeature;
+
+type CharacterBuildAbilityCheckBonusFeature =
+  CharacterBuildSelectedFeatureSource & {
+    readonly kind: "abilityCheckBonus";
+    readonly ability: Ability;
+    readonly skills: readonly Skill[];
+    readonly bonus: {
+      readonly kind: "abilityModifier";
+      readonly ability: Ability;
+      readonly minimum: number;
+    };
+  };
 
 export type CharacterBuildResource = {
   readonly unitId: UnitRecord["id"];

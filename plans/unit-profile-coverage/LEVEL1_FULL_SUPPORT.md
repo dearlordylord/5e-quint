@@ -8,8 +8,8 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 
 | Metric | Covered |
 | --- | ---: |
-| Strict runtime/profile support | 59/93 (63.4%) |
-| Strict target closure | 70/93 (75.3%) |
+| Strict runtime/profile support | 61/93 (65.6%) |
+| Strict target closure | 72/93 (77.4%) |
 | Product readiness | 367/367 (100%) |
 
 ## Scope
@@ -21,14 +21,14 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | SRD pressure with no Unit matrix row | 14 |
 | Non-executable class containers | 12 |
 | Strict executable denominator | 93 |
-| Non-supported frontier | 34 |
+| Non-supported frontier | 32 |
 
 ## Status Groups
 
 | Status | Count | Units |
 | --- | ---: | --- |
-| supported-profile | 59 | `acid_splash`, `animal_friendship`, `bane`, `barbarian_rage`, `barbarian_unarmored_defense`, `bless`, `burning_hands`, `chill_touch`, `chromatic_orb`, `color_spray`, `command`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `false_life`, `fighter_second_wind`, `fire_bolt`, `guidance`, `guiding_bolt`, `healing_word`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `ice_knife`, `inflict_wounds`, `longstrider`, `mage_armor`, `magic_missile`, `monk_unarmored_defense`, `paladin_lay_on_hands`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_sneak_attack`, `sacred_flame`, `sanctuary`, `searing_smite`, `shield`, `shield_of_faith`, `shillelagh`, `shocking_grasp`, `sleep`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `starry_wisp`, `true_strike`, `vicious_mockery`, `wizard_ritual_adept` |
-| open-profile-accounting | 18 | `barbarian_weapon_mastery`, `cleric_divine_order`, `druid_primal_order`, `faerie_fire`, `feather_fall`, `fighter_weapon_mastery`, `fog_cloud`, `grease`, `hunters_mark`, `jump`, `light`, `paladin_weapon_mastery`, `ranger_favored_enemy`, `ranger_weapon_mastery`, `rogue_expertise`, `rogue_weapon_mastery`, `thunderwave`, `wizard_arcane_recovery` |
+| supported-profile | 61 | `acid_splash`, `animal_friendship`, `bane`, `barbarian_rage`, `barbarian_unarmored_defense`, `bless`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_divine_order`, `color_spray`, `command`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `druid_primal_order`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `false_life`, `fighter_second_wind`, `fire_bolt`, `guidance`, `guiding_bolt`, `healing_word`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `ice_knife`, `inflict_wounds`, `longstrider`, `mage_armor`, `magic_missile`, `monk_unarmored_defense`, `paladin_lay_on_hands`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_sneak_attack`, `sacred_flame`, `sanctuary`, `searing_smite`, `shield`, `shield_of_faith`, `shillelagh`, `shocking_grasp`, `sleep`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `starry_wisp`, `true_strike`, `vicious_mockery`, `wizard_ritual_adept` |
+| open-profile-accounting | 16 | `barbarian_weapon_mastery`, `faerie_fire`, `feather_fall`, `fighter_weapon_mastery`, `fog_cloud`, `grease`, `hunters_mark`, `jump`, `light`, `paladin_weapon_mastery`, `ranger_favored_enemy`, `ranger_weapon_mastery`, `rogue_expertise`, `rogue_weapon_mastery`, `thunderwave`, `wizard_arcane_recovery` |
 | closed-runtime-detached-table-adjudication | 7 | `charm_person`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `druid_druidic`, `minor_illusion`, `rogue_thieves_cant` |
 | open-runtime-behavior | 5 | `alarm`, `comprehend_languages`, `identify`, `silent_image`, `speak_with_animals` |
 | closed-later-level-only | 4 | `bard_bardic_inspiration`, `fighter_fighting_style`, `monk_martial_arts`, `warlock_eldritch_invocations` |
@@ -37,7 +37,7 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 
 | Status | Count | Units |
 | --- | ---: | --- |
-| open-profile-accounting | 18 | `barbarian_weapon_mastery`, `cleric_divine_order`, `druid_primal_order`, `faerie_fire`, `feather_fall`, `fighter_weapon_mastery`, `fog_cloud`, `grease`, `hunters_mark`, `jump`, `light`, `paladin_weapon_mastery`, `ranger_favored_enemy`, `ranger_weapon_mastery`, `rogue_expertise`, `rogue_weapon_mastery`, `thunderwave`, `wizard_arcane_recovery` |
+| open-profile-accounting | 16 | `barbarian_weapon_mastery`, `faerie_fire`, `feather_fall`, `fighter_weapon_mastery`, `fog_cloud`, `grease`, `hunters_mark`, `jump`, `light`, `paladin_weapon_mastery`, `ranger_favored_enemy`, `ranger_weapon_mastery`, `rogue_expertise`, `rogue_weapon_mastery`, `thunderwave`, `wizard_arcane_recovery` |
 | open-runtime-behavior | 5 | `alarm`, `comprehend_languages`, `identify`, `silent_image`, `speak_with_animals` |
 
 ## Non-Supported Frontier Detail
@@ -48,13 +48,11 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | `barbarian_weapon_mastery` | open-profile-accounting | unsupported-profile | installed | selection-grant-container | The class feature grants weapon mastery choices; selected mastery property Units own executable battle pressure. |
 | `bard_bardic_inspiration` | closed-later-level-only | profile-subset-supported | installed | later-level-only | The remaining Bardic Inspiration die-size changes occur only after level 1. |
 | `charm_person` | closed-runtime-detached-table-adjudication | profile-subset-supported | installed | social-knowledge-effect | Friendly disposition, social interaction effects, and target knowledge when the spell ends are social/knowledge state outside promoted battle runtime. |
-| `cleric_divine_order` | open-profile-accounting | unsupported-profile | installed | selection-grant-container | Divine Order is a character-creation suborder choice; no promoted battle Unit profile consumes the container directly. |
 | `comprehend_languages` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
 | `detect_evil_and_good` | closed-runtime-detached-table-adjudication | unsupported-profile | installed | outside-runtime-presentation-exploration | Sensing, occlusion, and Hallow discovery are exploration/detection state outside promoted battle runtime. |
 | `detect_magic` | closed-runtime-detached-table-adjudication | unsupported-profile | installed | outside-runtime-presentation-exploration | Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime. |
 | `detect_poison_and_disease` | closed-runtime-detached-table-adjudication | unsupported-profile | installed | outside-runtime-presentation-exploration | Poison, disease, creature-kind sensing, occlusion, and identification are exploration/detection state outside promoted battle runtime. |
 | `druid_druidic` | closed-runtime-detached-table-adjudication | unsupported-profile | installed | outside-runtime-presentation-exploration | Language, hidden-message, and non-battle prepared-spell source facts are outside promoted battle runtime. |
-| `druid_primal_order` | open-profile-accounting | unsupported-profile | installed | selection-grant-container | Primal Order is a character-creation suborder choice; no promoted battle Unit profile consumes the container directly. |
 | `faerie_fire` | open-profile-accounting | profile-subset-supported | installed | table-spatial-derivation | Color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the runtime boundary. |
 | `feather_fall` | open-profile-accounting | profile-subset-supported | installed | table-spatial-derivation | Fall-distance derivation, map elevation, and landing geometry simulation remain table/spatial derivations. |
 | `fighter_fighting_style` | closed-later-level-only | profile-subset-supported | installed | later-level-only | The remaining Fighting Style replacement clause occurs when gaining later Fighter levels after the level-1 choice has already been finalized. |

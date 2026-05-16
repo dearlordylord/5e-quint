@@ -17,13 +17,13 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Authored Surface Unit catalog admission | 143/429 | 33.3% |
 | Authored Surface executable catalog admission | 116/362 | 32% |
 | Installed Unit profile classification coverage | 144/144 | 100% |
-| Supported executable Unit coverage | 85/117 | 72.6% |
+| Supported executable Unit coverage | 87/117 | 74.4% |
 | QNT profile modeling coverage | 62/62 | 100% |
 | QNT proof coverage | 62/62 | 100% |
 | Runtime mapping coverage | 62/62 | 100% |
 | Runtime parity coverage | 62/62 | 100% |
-| Deterministic admission/projection coverage | 85/85 | 100% |
-| Selected identity MBT coverage | 47/85 | 55.3% |
+| Deterministic admission/projection coverage | 87/87 | 100% |
+| Selected identity MBT coverage | 47/87 | 54% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -57,6 +57,8 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `barbarian_reckless_attack` | srd-5.2.1 | `unit-feature.first-attack-roll-reckless-advantage` |
 | `barbarian_fast_movement` | srd-5.2.1 | `unit-feature.passive-speed-bonus` |
 | `bard_cutting_words` | srd-5.2.1 | `unit-feature.reaction-roll-or-damage-reduction` |
+| `cleric_divine_order` | srd-5.2.1 | `character-creation.class-feature-option-projection` |
+| `druid_primal_order` | srd-5.2.1 | `character-creation.class-feature-option-projection` |
 | `monk_unarmored_defense` | srd-5.2.1 | `character-sheet.armor-class-base-formula` |
 | `monk_deflect_attacks` | srd-5.2.1 | `unit-feature.attack-damage-reduction-zero-damage-redirect` |
 | `rogue_cunning_action` | srd-5.2.1 | `unit-feature.alternate-action-cost` |
@@ -774,6 +776,8 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `barbarian_reckless_attack` | `unit-feature.first-attack-roll-reckless-advantage` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `barbarian_fast_movement` | `unit-feature.passive-speed-bonus` | QMBT40 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `bard_cutting_words` | `unit-feature.reaction-roll-or-damage-reduction` | QMBT65 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `cleric_divine_order` | `character-creation.class-feature-option-projection` | AT-L1-06 | `packages/character-creation-runtime/src/index.test.ts` |
+| `druid_primal_order` | `character-creation.class-feature-option-projection` | AT-L1-06 | `packages/character-creation-runtime/src/index.test.ts` |
 | `monk_unarmored_defense` | `character-sheet.armor-class-base-formula` | SRDINV91B | `packages/character-sheet-runtime/src/index.test.ts` |
 | `monk_deflect_attacks` | `unit-feature.attack-damage-reduction-zero-damage-redirect` | QMBT59 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `rogue_cunning_action` | `unit-feature.alternate-action-cost` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
@@ -947,9 +951,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `fighter_weapon_mastery` | unsupported-profile | Weapon mastery grant container; mastery Unit carries executable pressure. |
 | `barbarian_weapon_mastery` | unsupported-profile | Weapon mastery grant container; mastery Unit carries executable pressure. |
 | `bard_bardic_inspiration` | profile-subset-supported | supported subset: Bonus Action grant to another creature within 60 feet who can see or hear the Bard; one Bardic Inspiration die per creature; one-hour die ownership; d6 grant and Charisma-modifier use pool minimum; spending the Bardic Inspiration die after an already-failed attack roll, Saving Throw, or Ability Check; deferred: later-level Bardic Inspiration die size increases beyond d6 (SRDINV78) |
-| `cleric_divine_order` | unsupported-profile | Class feature source facts are authored for character creation choices; no promoted battle Unit profile consumes this suborder choice directly. |
 | `druid_druidic` | unsupported-profile | Language, hidden-message, and prepared-spell source facts are authored; exploration/language execution is not promoted as a battle Unit profile. |
-| `druid_primal_order` | unsupported-profile | Class feature source facts are authored for character creation choices; no promoted battle Unit profile consumes this suborder choice directly. |
 | `monk_martial_arts` | profile-subset-supported | supported subset: while unarmored and not wielding a Shield, and unarmed or wielding only Monk weapons, eligible Unarmed Strikes and Monk weapons may use Dexterity instead of Strength for attack and damage rolls; eligible Unarmed Strikes and eligible one-die Monk weapons may replace lower damage dice with the level-1 d6 Martial Arts die; eligible promoted Unarmed Strike Grapple and Shove save DCs may use Dexterity through the projected Unarmed Strike ability modifier; while the same Martial Arts eligibility gate holds, the Monk can make an Unarmed Strike as a Bonus Action without an Attack-action prerequisite; deferred: later-level Martial Arts die size increases beyond d6 (SRDINV78) |
 | `ranger_favored_enemy` | profile-subset-supported | supported subset: always-prepared Hunter's Mark access through retained prepared Spell Access; two-use Favored Enemy Long Rest free-cast resource at Ranger level 1; free-cast Hunter's Mark uses the existing marked damage rider, target gate, Concentration ownership, and Bonus Action cost; normal Spell Slot Hunter's Mark casting remains available when the free-cast resource is exhausted; deferred: later-level Favored Enemy free-cast count scaling beyond two uses (SRDINV78); Hunter's Mark Perception/Survival finding Advantage remains deferred to ability-check roll-mode work (SRDINV66) |
 | `rogue_expertise` | unsupported-profile | Class feature source facts are authored for character creation skill Expertise choices; no promoted battle Unit profile consumes this choice directly. |
@@ -991,7 +993,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
-| srd-5.2.1 | unassigned | unsupported-profile | 44 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `cleric_divine_order`, `druid_druidic`, `druid_primal_order`, `rogue_expertise`, `rogue_thieves_cant`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `orc_darkvision`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `minor_illusion`, `armor_chain_mail`, `equipment_shield`, `weapon_club`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff` |
+| srd-5.2.1 | unassigned | unsupported-profile | 42 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `druid_druidic`, `rogue_expertise`, `rogue_thieves_cant`, `wizard_arcane_recovery`, `feat_ability_score_improvement`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery`, `orc_darkvision`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `minor_illusion`, `armor_chain_mail`, `equipment_shield`, `weapon_club`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff` |
 | srd-5.2.1 | unassigned | profile-subset-supported | 15 | `fighter_fighting_style`, `bard_bardic_inspiration`, `monk_martial_arts`, `ranger_favored_enemy`, `warlock_eldritch_invocations`, `faerie_fire`, `feather_fall`, `find_familiar`, `fog_cloud`, `grease`, `hunters_mark`, `jump`, `light`, `thunderwave`, `charm_person` |
 
 ## Profile Claims By Task

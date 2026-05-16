@@ -33,7 +33,9 @@ import {
   ABILITIES,
   CONDITIONS,
   SKILLS,
+  SURFACE_SKILLS,
   type Ability,
+  type SurfaceSkill,
 } from "@dnd/shared/game-facts";
 import {
   DieRollResult,
@@ -3340,11 +3342,50 @@ function parseStoredFeatures(
         invocationId: eldritchInvocationId(feature.invocationId),
         selectedFromUnitId: feature.selectedFromUnitId,
       });
+    } else if (feature.kind === "abilityCheckBonus") {
+      const abilityCheckBonus = parseStoredAbilityCheckBonusFeature({
+        feature,
+        selectedFromUnitId: feature.selectedFromUnitId,
+      });
+      if (Either.isLeft(abilityCheckBonus)) {
+        return Either.left(abilityCheckBonus.left);
+      }
+      features.push(abilityCheckBonus.right);
     } else {
       return characterSheetIssue("Character Build feature is invalid.");
     }
   }
   return Either.right(features);
+}
+
+function parseStoredAbilityCheckBonusFeature(input: {
+  readonly feature: Readonly<Record<string, unknown>>;
+  readonly selectedFromUnitId: string;
+}): Either.Either<CharacterBuildFeature, CharacterSheetIssue> {
+  const { feature } = input;
+  if (
+    !Array.isArray(feature.skills) ||
+    !feature.skills.every(isSurfaceSkill) ||
+    !isAbility(feature.ability) ||
+    !isRecord(feature.bonus) ||
+    feature.bonus.kind !== "abilityModifier" ||
+    !isAbility(feature.bonus.ability) ||
+    typeof feature.bonus.minimum !== "number"
+  ) {
+    return characterSheetIssue("Character Build feature is invalid.");
+  }
+
+  return Either.right({
+    kind: "abilityCheckBonus" as const,
+    ability: feature.ability,
+    skills: feature.skills,
+    bonus: {
+      kind: "abilityModifier" as const,
+      ability: feature.bonus.ability,
+      minimum: feature.bonus.minimum,
+    },
+    selectedFromUnitId: input.selectedFromUnitId,
+  });
 }
 
 function parseStoredSpellcasting(
@@ -3723,6 +3764,10 @@ function parseOptionalEquipmentItemId(
 
 function isAbility(value: unknown): value is Ability {
   return ABILITIES.some((ability) => ability === value);
+}
+
+function isSurfaceSkill(value: unknown): value is SurfaceSkill {
+  return SURFACE_SKILLS.some((skill) => skill === value);
 }
 
 function isStandardLanguage(value: unknown): value is string {

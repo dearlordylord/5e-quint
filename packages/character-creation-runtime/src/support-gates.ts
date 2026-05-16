@@ -262,8 +262,14 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
       SUPPORTED_ABILITY_SCORE_INCREASE_OPTION_IDS,
     [CLASS_FEATURE_PROFICIENCY_CHOICE_KEY]:
       SUPPORTED_PROFICIENCY_GRANT_OPTION_IDS,
-    [DIVINE_ORDER_CHOICE_KEY]: [creationChoiceOptionId("protector")],
-    [PRIMAL_ORDER_CHOICE_KEY]: [creationChoiceOptionId("warden")],
+    [DIVINE_ORDER_CHOICE_KEY]: [
+      creationChoiceOptionId("protector"),
+      creationChoiceOptionId("thaumaturge"),
+    ],
+    [PRIMAL_ORDER_CHOICE_KEY]: [
+      creationChoiceOptionId("magician"),
+      creationChoiceOptionId("warden"),
+    ],
     [CLASS_TOOL_PROFICIENCY_CHOICE_KEY]: SUPPORTED_PROFICIENCY_GRANT_OPTION_IDS,
     [BARD_MULTICLASS_SKILL_PROFICIENCY_CHOICE_KEY]:
       SUPPORTED_SKILL_PROFICIENCY_OPTION_IDS,

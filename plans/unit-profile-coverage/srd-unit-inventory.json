@@ -5860,14 +5860,8 @@
         "state": "installed",
         "unitId": "cleric_divine_order"
       },
-      "unitProfileDisposition": "unsupported-profile",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "unit-claim",
-        "kind": "selection-grant-container",
-        "owner": "character-creation-runtime",
-        "reason": "Divine Order is a character-creation suborder choice; no promoted battle Unit profile consumes the container directly."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -5876,7 +5870,7 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV18 level-1 Cleric class-feature support profile; Divine Order is discovered as a class-feature acquisition choice, support-gated to Protector in the current profile, finalized from the selected option, and projected into CharacterBuild weapon and armor-training facts.",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; AT-L1-06 character-creation.class-feature-option-projection support profile; Divine Order is discovered as a class-feature acquisition choice, support-gated to Protector and Thaumaturge, finalized from the selected option, and projected into CharacterBuild weapon, armor-training, cantrip, and Intelligence Ability Check bonus facts.",
           "status": "owner evidence present"
         }
       ],
@@ -7387,14 +7381,8 @@
         "state": "installed",
         "unitId": "druid_primal_order"
       },
-      "unitProfileDisposition": "unsupported-profile",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "unit-claim",
-        "kind": "selection-grant-container",
-        "owner": "character-creation-runtime",
-        "reason": "Primal Order is a character-creation suborder choice; no promoted battle Unit profile consumes the container directly."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -7403,7 +7391,7 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV18 level-1 Druid class-feature support profile; Primal Order is discovered as a class-feature acquisition choice, support-gated to Warden in the current profile, finalized from the selected option, and projected into CharacterBuild weapon and armor-training facts.",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; AT-L1-06 character-creation.class-feature-option-projection support profile; Primal Order is discovered as a class-feature acquisition choice, support-gated to Magician and Warden, finalized from the selected option, and projected into CharacterBuild cantrip, Intelligence Ability Check bonus, weapon, and armor-training facts.",
           "status": "owner evidence present"
         }
       ],

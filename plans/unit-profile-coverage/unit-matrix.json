@@ -62,8 +62,8 @@
       "value": 144
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 85,
-      "numerator": 85,
+      "denominator": 87,
+      "numerator": 87,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 85,
+      "denominator": 87,
       "numerator": 47,
-      "percent": "55.3%"
+      "percent": "54%"
     },
     "supportedProfileCoverage": {
       "denominator": 117,
-      "numerator": 85,
-      "percent": "72.6%"
+      "numerator": 87,
+      "percent": "74.4%"
     }
   },
   "metricSemantics": [
@@ -4805,19 +4805,48 @@
         "status": "installed"
       },
       "claim": {
-        "battleReadinessClosure": {
-          "kind": "selection-grant-container",
-          "owner": "character-creation-runtime",
-          "reason": "Divine Order is a character-creation suborder choice; no promoted battle Unit profile consumes the container directly."
-        },
-        "reason": "Class feature source facts are authored for character creation choices; no promoted battle Unit profile consumes this suborder choice directly.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "character-creation.class-feature-option-projection"
+        ],
+        "supportedMechanics": [
+          "Level 1 Cleric character creation discovers both Divine Order options from the Surface class-feature record",
+          "Character Creation admits Protector and projects its Martial weapon and Heavy armor proficiency grants into CharacterBuild proficiency facts",
+          "Character Creation admits Thaumaturge in starting-class and supported multiclass-entry progressions, discovers and finalizes its extra Cleric cantrip choice, and projects its Wisdom-modifier bonus to Intelligence Ability Checks using Arcana or Religion into CharacterBuild feature facts",
+          "Character Creation preserves the selected Divine Order projection as runtime-owned CharacterBuild output"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "AT-L1-06"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-creation.class-feature-option-projection",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface class-feature option records such as Divine Order and Primal Order projected from accepted Character Draft selections into CharacterBuild facts.",
+          "taskRefs": [
+            "AT-L1-03S"
+          ],
+          "title": "Character Creation projects class-feature option choices into build facts",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/cleric_divine_order.json",
       "unitId": "cleric_divine_order"
     },
@@ -4851,19 +4880,48 @@
         "status": "installed"
       },
       "claim": {
-        "battleReadinessClosure": {
-          "kind": "selection-grant-container",
-          "owner": "character-creation-runtime",
-          "reason": "Primal Order is a character-creation suborder choice; no promoted battle Unit profile consumes the container directly."
-        },
-        "reason": "Class feature source facts are authored for character creation choices; no promoted battle Unit profile consumes this suborder choice directly.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "character-creation.class-feature-option-projection"
+        ],
+        "supportedMechanics": [
+          "Level 1 Druid character creation discovers both Primal Order options from the Surface class-feature record",
+          "Character Creation admits Magician in starting-class and supported multiclass-entry progressions, discovers and finalizes its extra Druid cantrip choice, and projects its Wisdom-modifier bonus to Intelligence Ability Checks using Arcana or Nature into CharacterBuild feature facts",
+          "Character Creation admits Warden and projects its Martial weapon and Medium armor proficiency grants into CharacterBuild proficiency facts",
+          "Character Creation preserves the selected Primal Order projection as runtime-owned CharacterBuild output"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "AT-L1-06"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-creation.class-feature-option-projection",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface class-feature option records such as Divine Order and Primal Order projected from accepted Character Draft selections into CharacterBuild facts.",
+          "taskRefs": [
+            "AT-L1-03S"
+          ],
+          "title": "Character Creation projects class-feature option choices into build facts",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/druid_primal_order.json",
       "unitId": "druid_primal_order"
     },

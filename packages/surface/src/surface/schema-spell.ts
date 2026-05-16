@@ -575,6 +575,7 @@ type EffectAtom =
       readonly on: ReadonlyNonEmptyArray<RollKind>;
       readonly delta: DiceDelta;
       readonly weaponFilter?: WeaponFilter;
+      readonly abilityFilter?: AbilityFilter;
       readonly skillFilter?:
         | {
             readonly kind: "fixed";
@@ -1987,6 +1988,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
             }),
           ),
         ),
+        abilityFilter: optionalExact(AbilityFilterSchema),
         count: optionalExact(Schema.Number),
       }),
       Schema.Struct({

@@ -2229,9 +2229,9 @@
       ]
     },
     "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order": {
-      "taskId": "SRDINV18",
-      "profile": "level-1 Cleric class-feature support profile",
-      "summary": "Divine Order is discovered as a class-feature acquisition choice, support-gated to Protector in the current profile, finalized from the selected option, and projected into CharacterBuild weapon and armor-training facts.",
+      "taskId": "AT-L1-06",
+      "profile": "character-creation.class-feature-option-projection support profile",
+      "summary": "Divine Order is discovered as a class-feature acquisition choice, support-gated to Protector and Thaumaturge, finalized from the selected option, and projected into CharacterBuild weapon, armor-training, cantrip, and Intelligence Ability Check bonus facts.",
       "discovery": [
         "packages/character-creation-runtime/src/discovery.ts:classFeatureGrantChoiceHoles"
       ],
@@ -2243,7 +2243,10 @@
       ],
       "buildProjection": [
         "packages/character-creation-runtime/src/finalization.ts:characterBuildProficiencies",
-        "packages/character-creation-runtime/src/finalization.ts:characterBuildArmorTraining"
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildArmorTraining",
+        "packages/character-creation-runtime/src/finalization.ts:finalizedBuildSpellcastingSource",
+        "packages/character-creation-runtime/src/finalization.ts:selectedSuborderCantripUnitRefs",
+        "packages/character-creation-runtime/src/finalization.ts:suborderAbilityCheckBonusFeature"
       ],
       "tests": [
         "packages/character-creation-runtime/src/index.test.ts:finalizes supported level-1 class-feature acquisition choices"
@@ -2270,9 +2273,9 @@
       ]
     },
     "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order": {
-      "taskId": "SRDINV18",
-      "profile": "level-1 Druid class-feature support profile",
-      "summary": "Primal Order is discovered as a class-feature acquisition choice, support-gated to Warden in the current profile, finalized from the selected option, and projected into CharacterBuild weapon and armor-training facts.",
+      "taskId": "AT-L1-06",
+      "profile": "character-creation.class-feature-option-projection support profile",
+      "summary": "Primal Order is discovered as a class-feature acquisition choice, support-gated to Magician and Warden, finalized from the selected option, and projected into CharacterBuild cantrip, Intelligence Ability Check bonus, weapon, and armor-training facts.",
       "discovery": [
         "packages/character-creation-runtime/src/discovery.ts:classFeatureGrantChoiceHoles"
       ],
@@ -2284,7 +2287,10 @@
       ],
       "buildProjection": [
         "packages/character-creation-runtime/src/finalization.ts:characterBuildProficiencies",
-        "packages/character-creation-runtime/src/finalization.ts:characterBuildArmorTraining"
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildArmorTraining",
+        "packages/character-creation-runtime/src/finalization.ts:finalizedBuildSpellcastingSource",
+        "packages/character-creation-runtime/src/finalization.ts:selectedSuborderCantripUnitRefs",
+        "packages/character-creation-runtime/src/finalization.ts:suborderAbilityCheckBonusFeature"
       ],
       "tests": [
         "packages/character-creation-runtime/src/index.test.ts:finalizes supported level-1 class-feature acquisition choices"

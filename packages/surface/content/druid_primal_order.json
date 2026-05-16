@@ -38,7 +38,10 @@
                   "arcana",
                   "nature"
                 ]
-              }
+              },
+              "abilityFilter": [
+                "int"
+              ]
             }
           ]
         }

@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "L1C-AT06",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Cleric And Druid Order Character Profiles"
     },
     {
@@ -243,7 +243,7 @@ For `AT-L1-08`:
 | 1 | L1C-AT03S - Character Creation Support Scaffold | done | none | Shared profiles/markers only; no Unit claim conversion. |
 | 2 | L1C-AT03 - Fighter Fighting Style Character Profile | done | L1C-AT03S | Level-1 slice with advancement lifecycle guard. |
 | 3 | L1C-AT05 - Warlock Eldritch Invocations Character Profile | done | L1C-AT03S | Level-1 slice with invocation lifecycle guard. |
-| 4 | L1C-AT06 - Cleric And Druid Order Character Profiles | ready-for-implementation-after-light-research | L1C-AT03S | Divine/Primal Order projection. |
+| 4 | L1C-AT06 - Cleric And Druid Order Character Profiles | done | L1C-AT03S | Divine/Primal Order projection. |
 | 5 | L1C-AT07 - Rogue Expertise Character Profile | ready-for-implementation-after-light-research | L1C-AT03S | Level-1 slice with level 6 Expertise guard. |
 | 6 | L1C-AT08 - Wizard Arcane Recovery Character Sheet Profile | ready-for-implementation-after-light-research | none | Character Sheet Short Rest Spell Slot recovery. |
 | 7 | L1C-AT04 - Weapon Mastery Character And Rest Profile | ready-for-implementation-after-light-research | L1C-AT03S | Includes Long Rest reselection support; selected mastery-property MBT does not satisfy this gate. |
@@ -383,7 +383,7 @@ Plan Impact:
 
 ### Task 4 - L1C-AT06 - Cleric And Druid Order Character Profiles
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Implement `AT-L1-06` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 

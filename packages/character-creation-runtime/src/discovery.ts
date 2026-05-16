@@ -11,6 +11,7 @@ import {
   readBackgroundCreationFacts,
   readClassCreationFacts,
 } from "@dnd/surface/surface/character-creation-readers";
+import { allCantripsFromClassSpellList } from "@dnd/surface/surface/schema";
 import { SKILLS } from "@dnd/surface/surface/types";
 import type {
   BackgroundToolProficiency,
@@ -38,6 +39,7 @@ import {
   CLASS_FEATURE_FEAT_CHOICE_KEY,
   CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
   CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
+  DIVINE_ORDER_CHOICE_KEY,
   CLASS_SUBCLASS_CHOICE_KEY,
   CLASS_CANTRIP_CHOICE_KEY,
   CLASS_EQUIPMENT_CHOICE_KEY,
@@ -54,6 +56,7 @@ import {
   WIZARD_PREPARED_SPELL_CHOICE_KEY,
   WIZARD_SPELLBOOK_CHOICE_KEY,
   ELDRITCH_INVOCATIONS_CHOICE_KEY,
+  PRIMAL_ORDER_CHOICE_KEY,
 } from "./phase1-manifest.ts";
 import { levelOneEldritchInvocationChoiceOptions } from "./eldritch-invocations.ts";
 import {
@@ -88,6 +91,7 @@ import {
   type CreationChoiceOptionId,
   type CreationHole,
   type CreationHoleSource,
+  type UnitChoiceKey,
   type UnitCatalog,
 } from "./types.ts";
 import {
@@ -201,6 +205,13 @@ export function discoverClassGrantedHoles(input: {
     ),
     ...discoverSubclassHoles(classUnitId, classLevel, facts.value, input),
     ...discoverSelectedFeatAbilityScoreIncreaseHoles(input),
+    ...selectedSuborderSpellAccessChoiceHoles({
+      choices: input.draft.selections.choices,
+      classUnitId,
+      classFacts: facts.value,
+      classLevel,
+      unitLibrary: input.unitLibrary,
+    }).flatMap((hole) => unselectedUnitChoiceHole(input.draft, hole)),
     ...unselectedUnitChoiceHole(
       input.draft,
       startingEquipmentChoiceHole(
@@ -227,7 +238,7 @@ export function discoverClassGrantedHoles(input: {
   ];
 }
 
-type ReadableClassCreationFacts = Extract<
+export type ReadableClassCreationFacts = Extract<
   ReturnType<typeof readClassCreationFacts>,
   { readonly tag: "readable" }
 >["value"];
@@ -410,7 +421,132 @@ function discoverAdditionalClassGrantedHoles(
       classUnitId,
       facts.value.multiclassProficiencies,
     ).flatMap((hole) => unselectedUnitChoiceHole(draft, hole)),
+    ...selectedSuborderSpellAccessChoiceHoles({
+      choices: draft.selections.choices,
+      classUnitId,
+      classFacts: facts.value,
+      classLevel,
+      unitLibrary,
+    }).flatMap((hole) => unselectedUnitChoiceHole(draft, hole)),
   ];
+}
+
+const SUBORDER_SPELL_LIST_BY_CHOICE_KEY = {
+  [DIVINE_ORDER_CHOICE_KEY]: "cleric",
+  [PRIMAL_ORDER_CHOICE_KEY]: "druid",
+} as const satisfies Partial<Record<UnitChoiceKey, "cleric" | "druid">>;
+
+function isSpellAccessSuborderChoiceKey(
+  choiceKey: UnitChoiceKey,
+): choiceKey is keyof typeof SUBORDER_SPELL_LIST_BY_CHOICE_KEY {
+  return Object.hasOwn(SUBORDER_SPELL_LIST_BY_CHOICE_KEY, choiceKey);
+}
+
+export function selectedSuborderSpellAccessChoiceHoles(input: {
+  readonly choices: readonly CharacterChoiceSelection[];
+  readonly classUnitId: UnitRecord["id"];
+  readonly classFacts: ReadableClassCreationFacts;
+  readonly classLevel: number;
+  readonly unitLibrary: UnitCatalog;
+}): readonly ChoiceCreationHole[] {
+  const spellcasting = classSpellcastingCreation(
+    input.classFacts,
+    input.classLevel,
+  );
+  if (
+    spellcasting === undefined ||
+    !isListPreparedSpellcastingCreation(spellcasting)
+  ) {
+    return [];
+  }
+
+  return input.choices.flatMap((selection) => {
+    if (
+      selection.kind !== "unitChoice" ||
+      !isSpellAccessSuborderChoiceKey(selection.source.choiceKey)
+    ) {
+      return [];
+    }
+
+    const spellList =
+      SUBORDER_SPELL_LIST_BY_CHOICE_KEY[selection.source.choiceKey];
+    if (input.classFacts.className !== spellList) {
+      return [];
+    }
+
+    const feature = input.unitLibrary.getUnit(selection.source.unitId);
+    if (
+      Option.isNone(feature) ||
+      feature.value.kind !== "class_feature" ||
+      feature.value.className !== spellList ||
+      feature.value.mechanics.family !== "suborder_choice"
+    ) {
+      return [];
+    }
+
+    const primaryCantrips = new Set(
+      input.choices.flatMap((choice) =>
+        choice.kind === "unitChoice" &&
+        choice.source.unitId === input.classUnitId &&
+        choice.source.choiceKey === CLASS_CANTRIP_CHOICE_KEY
+          ? choiceSelectionOptionIds(choice)
+          : [],
+      ),
+    );
+    const optionIds = new Set(choiceSelectionOptionIds(selection));
+    return feature.value.mechanics.options
+      .filter((option) => optionIds.has(creationChoiceOptionId(option.id)))
+      .flatMap((option) =>
+        option.mechanics.grants.flatMap((grant) => {
+          if (
+            grant.kind !== "grant_spell_access_choice" ||
+            grant.mode !== "known" ||
+            grant.spellLevel !== 0 ||
+            grant.spellList !== spellList
+          ) {
+            return [];
+          }
+
+          const cardinality = exactChoiceCardinality(grant.count);
+          if (cardinality === undefined) {
+            return [];
+          }
+
+          const options = input.unitLibrary
+            .listUnits()
+            .filter(
+              (unit) =>
+                unit.kind === "spell" &&
+                unit.mechanics.level === 0 &&
+                allCantripsFromClassSpellList(spellList, [unit.id]) &&
+                !primaryCantrips.has(creationChoiceOptionId(unit.id)),
+            )
+            .sort((left, right) =>
+              left.id < right.id ? -1 : left.id > right.id ? 1 : 0,
+            )
+            .map((unit) => ({
+              optionId: creationChoiceOptionId(unit.id),
+              label: unit.id,
+              unitRef: { unitId: unit.id },
+            }));
+          if (choiceCardinalityMax(cardinality) > options.length) {
+            return [];
+          }
+
+          const hole = requireChoiceCreationHole(
+            choiceHole({
+              source: unitSource(
+                selection.source.unitId,
+                CLASS_CANTRIP_CHOICE_KEY,
+              ),
+              cardinality,
+              options,
+            }),
+          );
+          return hole === undefined ? [] : [hole];
+        }),
+      );
+  });
 }
 
 function discoverSelectedFeatAbilityScoreIncreaseHoles(input: {
