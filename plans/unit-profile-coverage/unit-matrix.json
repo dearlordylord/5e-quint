@@ -93,8 +93,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 85,
-      "numerator": 32,
-      "percent": "37.6%"
+      "numerator": 37,
+      "percent": "43.5%"
     },
     "supportedProfileCoverage": {
       "denominator": 117,
@@ -6538,6 +6538,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV30B"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "roll-modifier-buff"
         }
       ],
       "executableMechanics": true,
@@ -6592,6 +6597,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV30B"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "roll-modifier-buff"
         }
       ],
       "executableMechanics": true,
@@ -8130,6 +8140,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV30B"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "roll-modifier-buff"
         }
       ],
       "executableMechanics": true,
@@ -9484,6 +9499,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV30F"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "roll-modifier-buff"
         }
       ],
       "executableMechanics": true,
@@ -10724,6 +10744,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV30A"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "roll-modifier-buff"
         }
       ],
       "executableMechanics": true,

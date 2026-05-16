@@ -23,7 +23,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Runtime mapping coverage | 62/62 | 100% |
 | Runtime parity coverage | 62/62 | 100% |
 | Deterministic admission/projection coverage | 85/85 | 100% |
-| Selected identity MBT coverage | 32/85 | 37.6% |
+| Selected identity MBT coverage | 37/85 | 43.5% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -892,14 +892,19 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `mastery_topple` | `unit-feature.weapon-mastery-topple` | weapon-mastery-properties | `packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts` |
 | `orc_relentless_endurance` | `unit-feature.zero-hit-point-replacement` | passive-and-zero-hp-features | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `acid_splash` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | spell-procedure-core | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
+| `bane` | `spell.invocation-roll-modifier` | roll-modifier-buff | `packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts` |
+| `bless` | `spell.invocation-roll-modifier` | roll-modifier-buff | `packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts` |
 | `color_spray` | `spell.invocation-condition-save` | condition-saving-throw-lifecycle | `packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts` |
 | `cure_wounds` | `spell.hit-point-restoration` | healing-stabilization | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
 | `entangle` | `spell.invocation-condition-save` | condition-saving-throw-lifecycle | `packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts` |
+| `guidance` | `spell.invocation-roll-modifier` | roll-modifier-buff | `packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts` |
 | `ray_of_frost` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | spell-procedure-core | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
+| `resistance` | `spell.invocation-damage-reduction` | roll-modifier-buff | `packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts` |
 | `spare_the_dying` | `spell.invocation-make-stable` | healing-stabilization | `packages/battle-runtime/src/healing-stabilization-selected-identity.mbt.test.ts` |
 | `magic_missile` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | spell-procedure-core | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
 | `healing_word` | `spell.hit-point-restoration` | healing-stabilization | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
 | `shield` | `spell.reaction-shield` | reaction-interruption | `packages/battle-runtime/src/reaction-spell-selected-identity.mbt.test.ts` |
+| `shield_of_faith` | `spell.scalar-buff` | roll-modifier-buff | `packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts` |
 | `sleep` | `spell.invocation-sleep-target-admission`, `spell.invocation-sleep-repeat-save-lifecycle` | condition-saving-throw-lifecycle | `packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts` |
 | `hellish_rebuke` | `spell.reaction-hellish-rebuke`, `spell.invocation-damage-save-or-attack` | reaction-interruption | `packages/battle-runtime/src/reaction-spell-selected-identity.mbt.test.ts` |
 | `hideous_laughter` | `spell.invocation-hideous-laughter-repeat-save-lifecycle` | condition-saving-throw-lifecycle | `packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts` |
