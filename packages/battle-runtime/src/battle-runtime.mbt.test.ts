@@ -1,6 +1,6 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points spell.invocation-beam-sequence spell.invocation-sleep-repeat-save-lifecycle spell.scalar-buff
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt SRDINV91D fighter_extra_attack
-// UNIT-IDENTITY-MBT-REPLAY: SRDINV91D fighter_extra_attack doResolveFirstExtraAttackMiss doResolveSecondExtraAttackMiss
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt extra-attack-count-scaling fighter_extra_attack
+// UNIT-IDENTITY-MBT-REPLAY: extra-attack-count-scaling fighter_extra_attack doResolveFirstExtraAttackMiss doResolveSecondExtraAttackMiss
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -391,7 +391,7 @@ type SelectedUnitIdentityReplaySequence = {
   readonly expected: ExtraAttackMbtProjection;
 };
 type SelectedUnitIdentityReplay = {
-  readonly taskId: "SRDINV91D";
+  readonly taskId: "extra-attack-count-scaling";
   readonly unitId: "fighter_extra_attack";
   readonly actions: readonly ExtraAttackDriverAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
@@ -401,7 +401,7 @@ const selectedUnitRuntimeBoundaryIds = new Set<string>();
 
 const selectedUnitIdentityReplays = [
   {
-    taskId: "SRDINV91D",
+    taskId: "extra-attack-count-scaling",
     unitId: "fighter_extra_attack",
     actions: [
       "doResolveFirstExtraAttackMiss",

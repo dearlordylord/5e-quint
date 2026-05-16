@@ -93,8 +93,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 85,
-      "numerator": 28,
-      "percent": "32.9%"
+      "numerator": 42,
+      "percent": "49.4%"
     },
     "supportedProfileCoverage": {
       "denominator": 117,
@@ -4065,7 +4065,7 @@
         {
           "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts",
           "tag": "selected-identity-mbt",
-          "taskId": "SRDINV91D"
+          "taskId": "extra-attack-count-scaling"
         }
       ],
       "executableMechanics": true,
@@ -5513,7 +5513,7 @@
         {
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
           "tag": "selected-identity-mbt",
-          "taskId": "SRDINV91D"
+          "taskId": "passive-and-zero-hp-features"
         }
       ],
       "executableMechanics": true,
@@ -5629,7 +5629,7 @@
         {
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
           "tag": "selected-identity-mbt",
-          "taskId": "SRDINV91D"
+          "taskId": "passive-and-zero-hp-features"
         }
       ],
       "executableMechanics": true,
@@ -5744,6 +5744,11 @@
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV91B"
+        },
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/healing-resource-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "healing-stabilization"
         }
       ],
       "executableMechanics": true,
@@ -6310,7 +6315,7 @@
         {
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
           "tag": "selected-identity-mbt",
-          "taskId": "SRDINV91D"
+          "taskId": "passive-and-zero-hp-features"
         }
       ],
       "executableMechanics": true,
@@ -6372,7 +6377,7 @@
         {
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
           "tag": "selected-identity-mbt",
-          "taskId": "SRDINV91D"
+          "taskId": "spell-procedure-core"
         }
       ],
       "executableMechanics": true,
@@ -6533,6 +6538,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV30B"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "roll-modifier-buff"
         }
       ],
       "executableMechanics": true,
@@ -6587,6 +6597,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV30B"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "roll-modifier-buff"
         }
       ],
       "executableMechanics": true,
@@ -6756,6 +6771,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV89A"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "attack-spell-shape"
         }
       ],
       "executableMechanics": true,
@@ -7160,6 +7180,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "QMBT32"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "healing-stabilization"
         }
       ],
       "executableMechanics": true,
@@ -7886,6 +7911,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV84A"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "attack-spell-shape"
         }
       ],
       "executableMechanics": true,
@@ -8120,6 +8150,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV30B"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "roll-modifier-buff"
         }
       ],
       "executableMechanics": true,
@@ -8255,6 +8290,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV28D"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "attack-spell-shape"
         }
       ],
       "executableMechanics": true,
@@ -8649,6 +8689,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV28B"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "attack-spell-shape"
         }
       ],
       "executableMechanics": true,
@@ -9264,7 +9309,7 @@
         {
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
           "tag": "selected-identity-mbt",
-          "taskId": "SRDINV91D"
+          "taskId": "spell-procedure-core"
         }
       ],
       "executableMechanics": true,
@@ -9474,6 +9519,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV30F"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "roll-modifier-buff"
         }
       ],
       "executableMechanics": true,
@@ -9754,6 +9804,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV28D"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "attack-spell-shape"
         }
       ],
       "executableMechanics": true,
@@ -9943,6 +9998,11 @@
           "ownerPath": "packages/battle-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV84C"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/healing-stabilization-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "healing-stabilization"
         }
       ],
       "executableMechanics": true,
@@ -10359,7 +10419,7 @@
         {
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
           "tag": "selected-identity-mbt",
-          "taskId": "SRDINV91D"
+          "taskId": "spell-procedure-core"
         }
       ],
       "executableMechanics": true,
@@ -10578,6 +10638,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "QMBT25"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "healing-stabilization"
         }
       ],
       "executableMechanics": true,
@@ -10704,6 +10769,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV30A"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "roll-modifier-buff"
         }
       ],
       "executableMechanics": true,
