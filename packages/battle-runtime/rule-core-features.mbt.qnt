@@ -456,6 +456,28 @@ module ruleCoreFeaturesMbt {
     }
   }
 
+  action doDeflectAttacksDamageReduction = {
+    val reduced = resolveDeflectAttacksReductionReaction(
+      initialTurnProcedureState,
+      {
+        incomingDamage: 6,
+        damageIncludesBludgeoningPiercingOrSlashing: true,
+        deflectRoll: 1,
+        dexterityModifier: 0,
+        monkLevel: 3,
+      }
+    )
+    all {
+      qHoles == Set(),
+      recordProjection(
+        false, true, reduced.turn.reactionAvailable, 1,
+        NoActionSurgeActionGrant, 12 - reduced.reducedAmount, 12, 0, false,
+        false, false, false, false, false, reduced.reducedAmount, false,
+        featureMbtBaselineArmorClass, Set(), false, "resolved", "none"
+      ),
+    }
+  }
+
   action doUncannyDodge = {
     val reduced = resolveUncannyDodgeReaction(
       initialTurnProcedureState,
@@ -522,6 +544,7 @@ module ruleCoreFeaturesMbt {
     doEvasionSuccess,
     doEvasionFailure,
     doCuttingWordsDamage,
+    doDeflectAttacksDamageReduction,
     doUncannyDodge,
     doDefenseArmorClass,
     doArcheryAttackRollBonus,

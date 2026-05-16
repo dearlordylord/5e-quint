@@ -4,6 +4,7 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt QMBT9 fighter_action_surge fighter_improved_critical barbarian_rage barbarian_reckless_attack rogue_cunning_action rogue_evasion rogue_uncanny_dodge rogue_sneak_attack
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt QMBT31 feat_savage_attacker
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt SRDINV91D defense feat_archery orc_relentless_endurance
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt reaction-interruption bard_cutting_words monk_deflect_attacks
 // UNIT-IDENTITY-MBT-REPLAY: QMBT7 fighter_second_wind doDiscoverSecondWind doResolveSecondWindLow doResolveSecondWindHigh
 // UNIT-IDENTITY-MBT-REPLAY: QMBT9 fighter_action_surge doActionSurgeActivate doActionSurgeRejectTwice
 // UNIT-IDENTITY-MBT-REPLAY: QMBT9 fighter_improved_critical doImprovedCritical
@@ -17,6 +18,8 @@
 // UNIT-IDENTITY-MBT-REPLAY: SRDINV91D defense doDefenseArmorClass
 // UNIT-IDENTITY-MBT-REPLAY: SRDINV91D feat_archery doArcheryAttackRollBonus
 // UNIT-IDENTITY-MBT-REPLAY: SRDINV91D orc_relentless_endurance doZeroHitPointReplacement
+// UNIT-IDENTITY-MBT-REPLAY: reaction-interruption bard_cutting_words doCuttingWordsDamage
+// UNIT-IDENTITY-MBT-REPLAY: reaction-interruption monk_deflect_attacks doDeflectAttacksDamageReduction
 import * as path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
@@ -43,6 +46,7 @@ import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
 
 import {
+  ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
@@ -171,6 +175,7 @@ const driverSchema = {
   doEvasionSuccess: {},
   doEvasionFailure: {},
   doCuttingWordsDamage: {},
+  doDeflectAttacksDamageReduction: {},
   doUncannyDodge: {},
   doDefenseArmorClass: {},
   doArcheryAttackRollBonus: {},
@@ -188,7 +193,12 @@ type SelectedUnitIdentityReplaySequence = {
   readonly expected: RuleCoreFeatureProjection;
 };
 type SelectedUnitIdentityReplay = {
-  readonly taskId: "QMBT7" | "QMBT9" | "QMBT31" | "SRDINV91D";
+  readonly taskId:
+    | "QMBT7"
+    | "QMBT9"
+    | "QMBT31"
+    | "SRDINV91D"
+    | "reaction-interruption";
   readonly unitId: string;
   readonly actions: readonly RuleCoreFeatureDriverAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
@@ -428,6 +438,43 @@ const selectedUnitIdentityReplays = [
           actionAvailable: false,
           targetHp: 4,
           lastDamageAmount: 8,
+          lastResult: "resolved",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "reaction-interruption",
+    unitId: "bard_cutting_words",
+    actions: ["doCuttingWordsDamage"],
+    sequences: [
+      {
+        name: "damage-roll-reduction",
+        actions: ["doCuttingWordsDamage"],
+        expected: expectedProjection({
+          actionAvailable: false,
+          reactionAvailable: false,
+          featureUsesRemaining: 0,
+          actorHp: 10,
+          lastDamageAmount: 2,
+          lastResult: "resolved",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "reaction-interruption",
+    unitId: "monk_deflect_attacks",
+    actions: ["doDeflectAttacksDamageReduction"],
+    sequences: [
+      {
+        name: "attack-damage-reduction",
+        actions: ["doDeflectAttacksDamageReduction"],
+        expected: expectedProjection({
+          actionAvailable: false,
+          reactionAvailable: false,
+          actorHp: 10,
+          lastDamageAmount: 2,
           lastResult: "resolved",
         }),
       },
@@ -890,7 +937,7 @@ function createRuleCoreFeatureDriver() {
       doEvasionSuccess: () => resolveDexHalfCantrip(true),
       doEvasionFailure: () => resolveDexHalfCantrip(false),
       doCuttingWordsDamage: () => {
-        const cuttingWords = cuttingWordsDamageOnlyUnit();
+        const cuttingWords = cuttingWordsUnit();
         state = reactionModifierBattle({
           unit: cuttingWords,
           unitId: cuttingWords.id,
@@ -906,6 +953,25 @@ function createRuleCoreFeatureDriver() {
           damageRoll: 6,
         });
         featureUsesRemaining = resourceUsesRemaining(state, cuttingWords.id);
+        lastDamageAmount = 2;
+      },
+      doDeflectAttacksDamageReduction: () => {
+        state = reactionModifierBattle({
+          unit: deflectAttacksUnit(),
+          unitId: "monk_deflect_attacks",
+          className: "monk",
+          level: 3,
+          supportProfile:
+            ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
+        });
+        resetProjection();
+        resolveReactionDamageReduction({
+          unitId: "monk_deflect_attacks",
+          modifierKind: "attackDamageReduction",
+          reductionRoll: 1,
+          damageRoll: 6,
+        });
+        featureUsesRemaining = 1;
         lastDamageAmount = 2;
       },
       doUncannyDodge: () => {
@@ -1104,27 +1170,32 @@ function createRuleCoreFeatureDriver() {
         attackTargetFill(target, targetId, actorId, "Shortsword"),
         attackRollFill(attackRoll, { total: 20, naturalD20: 15 }),
       ];
+      const afterHit = resolveBattleSubject({
+        state,
+        subject,
+        fills: prefixFills,
+      });
+      const damageStart =
+        input.modifierKind === "damageRollReduction" &&
+        afterHit.tag === "needsHoles" &&
+        afterHit.holes.some((hole) => hole.kind === "reactionDecision")
+          ? resolveBattleReaction({
+              state: afterHit.state,
+              fill: reactionDecisionFill(
+                requireHoleFromList(afterHit.holes, "reactionDecision"),
+                { kind: "decline", reactorId: actorId },
+              ),
+            })
+          : afterHit;
       const awaited =
         input.modifierKind === "attackDamageReduction" ||
         input.modifierKind === "attackRollReduction"
-          ? resolveBattleSubject({ state, subject, fills: prefixFills })
-          : resolveBattleSubject({
-              state,
+          ? afterHit
+          : resolveDamageRollReductionWindow({
+              damageStart,
               subject,
-              fills: [
-                ...prefixFills,
-                damageRollFillWithGroups(
-                  requireHole(
-                    resolveBattleSubject({
-                      state,
-                      subject,
-                      fills: prefixFills,
-                    }),
-                    "rolledDice",
-                  ),
-                  [[input.damageRoll]],
-                ),
-              ],
+              prefixFills,
+              damageRoll: input.damageRoll,
             });
       if (awaited.tag !== "needsHoles") {
         throw new Error(
@@ -1185,6 +1256,29 @@ function createRuleCoreFeatureDriver() {
         }),
       );
     }
+  });
+}
+
+function resolveDamageRollReductionWindow(input: {
+  readonly damageStart: BattleResolutionResult;
+  readonly subject: BattleSubject;
+  readonly prefixFills: readonly BattleFill[];
+  readonly damageRoll: number;
+}): BattleResolutionResult {
+  if (input.damageStart.tag === "invalid") {
+    throw new Error(
+      `Expected damage roll window, got invalid:${input.damageStart.message}.`,
+    );
+  }
+  return resolveBattleSubject({
+    state: input.damageStart.state,
+    subject: input.subject,
+    fills: [
+      ...input.prefixFills,
+      damageRollFillWithGroups(requireHole(input.damageStart, "rolledDice"), [
+        [input.damageRoll],
+      ]),
+    ],
   });
 }
 
@@ -1501,8 +1595,12 @@ function evasionBattle(): BattleState {
 function reactionModifierBattle(input: {
   readonly unit: Extract<UnitRecord, { readonly kind: "class_feature" }>;
   readonly unitId: string;
-  readonly className: "bard" | "rogue";
+  readonly className: "bard" | "monk" | "rogue";
   readonly level: number;
+  readonly supportProfile?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["characterUnitRefs"][number]["supportProfiles"][number];
   readonly resources?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -1523,7 +1621,8 @@ function reactionModifierBattle(input: {
           {
             unitId,
             supportProfiles: [
-              REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
+              input.supportProfile ??
+                REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
             ],
           },
         ],
@@ -2181,7 +2280,7 @@ function uncannyDodgeUnit(): Extract<
   return unit;
 }
 
-function cuttingWordsDamageOnlyUnit(): Extract<
+function cuttingWordsUnit(): Extract<
   UnitRecord,
   { readonly kind: "class_feature" }
 > {
@@ -2192,18 +2291,21 @@ function cuttingWordsDamageOnlyUnit(): Extract<
   ) {
     throw new Error("Expected Cutting Words reaction Unit.");
   }
-  const damageRollModifier = unit.mechanics.modifiers.find(
-    (modifier) => modifier.kind === "damage_roll_reduction",
-  );
-  if (damageRollModifier === undefined) {
-    throw new Error("Expected Cutting Words damage-roll modifier.");
+  return unit;
+}
+
+function deflectAttacksUnit(): Extract<
+  UnitRecord,
+  { readonly kind: "class_feature" }
+> {
+  const unit = unitLibrary.requireUnit("monk_deflect_attacks");
+  if (
+    unit.kind !== "class_feature" ||
+    unit.mechanics.family !== "reaction_roll_or_damage_reduction"
+  ) {
+    throw new Error("Expected Deflect Attacks reaction Unit.");
   }
-  return {
-    ...unit,
-    id: "bard_cutting_words_damage_test",
-    provenance: { kind: "xphb", section: "structured-input-only" },
-    mechanics: { ...unit.mechanics, modifiers: [damageRollModifier] },
-  };
+  return unit;
 }
 
 function numberFromQuintInt(raw: unknown, field: string): number {
