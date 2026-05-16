@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "L1B-L1X-02",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Disguise Self No-Matrix Decision"
     },
     {
@@ -203,7 +203,7 @@ For `AT-L1-09` through `AT-L1-12`:
 | 4 | L1B-AT10 - Falling And Jump Witness Promotion | done | none | Witness checklist before promotion. |
 | 5 | L1B-AT11 - Area Hazard And Obscurement Witness Promotion | done | none | Witness checklist before promotion. |
 | 6 | L1B-AT12 - Thunderwave Witness Promotion | done | none | Witness checklist before promotion. |
-| 7 | L1B-L1X-02 - Disguise Self No-Matrix Decision | ready-for-research | none | Decision artifact only; no Unit claim without admitted UnitRecord. |
+| 7 | L1B-L1X-02 - Disguise Self No-Matrix Decision | done | none | Decision artifact only; no Unit claim without admitted UnitRecord. |
 | 8 | L1B-L1X-03 - Druidcraft No-Matrix Decision | ready-for-research | none | Decision artifact only; no Unit claim without admitted UnitRecord. |
 | 9 | L1B-L1X-04 - Elementalism No-Matrix Decision | ready-for-research | none | Decision artifact only; no Unit claim without admitted UnitRecord. |
 | 10 | L1B-L1X-07 - Illusory Script No-Matrix Decision | ready-for-research | none | Decision artifact only; no Unit claim without admitted UnitRecord. |
@@ -324,7 +324,7 @@ Plan Impact:
 
 ### Task 7 - L1B-L1X-02 - Disguise Self No-Matrix Decision
 
-Status: `ready-for-research`
+Status: `done`
 
 Research `AT-L1X-02` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
