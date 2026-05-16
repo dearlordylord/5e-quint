@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "L1B-L1X-04",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Elementalism No-Matrix Decision"
     },
     {
