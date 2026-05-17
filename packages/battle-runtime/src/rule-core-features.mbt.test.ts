@@ -6,6 +6,7 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt passive-and-zero-hp-features defense feat_archery orc_relentless_endurance
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt reaction-interruption bard_cutting_words monk_deflect_attacks
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-FIGHTER-TACTICAL-MIND fighter_tactical_mind
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-BOON-COMBAT-PROWESS feat_boon_of_combat_prowess
 // UNIT-IDENTITY-MBT-REPLAY: QMBT7 fighter_second_wind doDiscoverSecondWind doResolveSecondWindLow doResolveSecondWindHigh
 // UNIT-IDENTITY-MBT-REPLAY: QMBT9 fighter_action_surge doActionSurgeActivate doActionSurgeRejectTwice
 // UNIT-IDENTITY-MBT-REPLAY: QMBT9 fighter_improved_critical doImprovedCritical
@@ -22,6 +23,7 @@
 // UNIT-IDENTITY-MBT-REPLAY: reaction-interruption bard_cutting_words doCuttingWordsDamage
 // UNIT-IDENTITY-MBT-REPLAY: reaction-interruption monk_deflect_attacks doDeflectAttacksDamageReduction
 // UNIT-IDENTITY-MBT-REPLAY: L1H-FIGHTER-TACTICAL-MIND fighter_tactical_mind doTacticalMindConvertedSuccess doTacticalMindStillFailed
+// UNIT-IDENTITY-MBT-REPLAY: L1H-BOON-COMBAT-PROWESS feat_boon_of_combat_prowess doCombatProwessMissToHit
 import * as path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
@@ -187,6 +189,7 @@ const driverSchema = {
   doUncannyDodge: {},
   doDefenseArmorClass: {},
   doArcheryAttackRollBonus: {},
+  doCombatProwessMissToHit: {},
   doSavageAttackerDamage: {},
   doZeroHitPointReplacement: {},
   step: {},
@@ -207,7 +210,8 @@ type SelectedUnitIdentityReplay = {
     | "QMBT31"
     | "passive-and-zero-hp-features"
     | "reaction-interruption"
-    | "L1H-FIGHTER-TACTICAL-MIND";
+    | "L1H-FIGHTER-TACTICAL-MIND"
+    | "L1H-BOON-COMBAT-PROWESS";
   readonly unitId: string;
   readonly actions: readonly RuleCoreFeatureDriverAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
@@ -480,6 +484,24 @@ const selectedUnitIdentityReplays = [
     ],
   },
   {
+    taskId: "L1H-BOON-COMBAT-PROWESS",
+    unitId: "feat_boon_of_combat_prowess",
+    actions: ["doCombatProwessMissToHit"],
+    sequences: [
+      {
+        name: "miss-to-hit",
+        actions: ["doCombatProwessMissToHit"],
+        expected: expectedProjection({
+          actionAvailable: false,
+          featureUsesRemaining: 0,
+          targetHp: 8,
+          lastDamageAmount: 4,
+          lastResult: "resolved",
+        }),
+      },
+    ],
+  },
+  {
     taskId: "reaction-interruption",
     unitId: "bard_cutting_words",
     actions: ["doCuttingWordsDamage"],
@@ -683,10 +705,12 @@ function createRuleCoreFeatureDriver() {
         { readonly tag: "action"; readonly action: "attack" }
       >;
       readonly naturalD20?: number;
+      readonly attackRollTotal?: number;
       readonly damageRoll: number;
       readonly damageGroups?: readonly (readonly number[])[];
       readonly rollMode?: AttackRollMode;
       readonly activatedOngoingFeatureUnitId?: string;
+      readonly missToHitReplacementUnitId?: string;
       readonly selectedAttackDamageRiderUnitIds?: readonly string[];
       readonly weaponDamageDiceRollChoice?: Extract<
         BattleFill,
@@ -714,7 +738,7 @@ function createRuleCoreFeatureDriver() {
         "attackRoll",
       );
       const rollValue = {
-        total: input.naturalD20 ?? 15,
+        total: input.attackRollTotal ?? input.naturalD20 ?? 15,
         naturalD20: input.naturalD20 ?? 10,
         ...(input.rollMode === undefined ? {} : { rollMode: input.rollMode }),
         ...(input.activatedOngoingFeatureUnitId === undefined
@@ -722,6 +746,11 @@ function createRuleCoreFeatureDriver() {
           : {
               activatedOngoingFeatureUnitId:
                 input.activatedOngoingFeatureUnitId,
+            }),
+        ...(input.missToHitReplacementUnitId === undefined
+          ? {}
+          : {
+              missToHitReplacementUnitId: input.missToHitReplacementUnitId,
             }),
       };
       const damage = requireHole(
@@ -1114,6 +1143,21 @@ function createRuleCoreFeatureDriver() {
         targetHpFallback = 12;
         actorArmorClass = 9;
         critical = false;
+      },
+      doCombatProwessMissToHit: () => {
+        state = combatProwessBattle();
+        resetProjection();
+        resolveActorAttack({
+          state,
+          naturalD20: 2,
+          attackRollTotal: 1,
+          damageRoll: 4,
+          missToHitReplacementUnitId: recordSelectedUnitRuntimeBoundaryId(
+            "feat_boon_of_combat_prowess",
+          ),
+        });
+        featureUsesRemaining = combatProwessUsesRemaining(state);
+        lastDamageAmount = 4;
       },
       step: () => {},
       getState: () =>
@@ -1630,6 +1674,29 @@ function savageAttackerBattle(): BattleState {
   });
 }
 
+function combatProwessBattle(): BattleState {
+  const unit = unitLibrary.requireUnit(
+    recordSelectedUnitRuntimeBoundaryId("feat_boon_of_combat_prowess"),
+  );
+  const unitRef = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
+  });
+  if (Either.isLeft(unitRef)) {
+    throw new Error(unitRef.left.message);
+  }
+  return startBattleRight({
+    battleId: battleId("rule-core-combat-prowess"),
+    combatants: [
+      featureActor({
+        initiative: 20,
+        characterUnitRefs: [unitRef.right],
+      }),
+      featureTarget(10),
+    ],
+  });
+}
+
 function relentlessEnduranceBattle(): BattleState {
   const unit = unitLibrary.requireUnit("orc_relentless_endurance");
   return startBattleRight({
@@ -2015,6 +2082,7 @@ function attackRollFill(
     readonly naturalD20: number;
     readonly rollMode?: AttackRollMode;
     readonly activatedOngoingFeatureUnitId?: string;
+    readonly missToHitReplacementUnitId?: string;
   },
 ): BattleFill {
   if (hole.kind !== "attackRoll") throw new Error("Expected attackRoll.");
@@ -2030,6 +2098,9 @@ function attackRollFill(
         : {
             activatedOngoingFeatureUnitId: value.activatedOngoingFeatureUnitId,
           }),
+      ...(value.missToHitReplacementUnitId === undefined
+        ? {}
+        : { missToHitReplacementUnitId: value.missToHitReplacementUnitId }),
     },
   };
 }
@@ -2183,6 +2254,18 @@ function resourceUsesRemaining(
     return 1;
   }
   return "usesRemaining" in resource ? resource.usesRemaining : 1;
+}
+
+function combatProwessUsesRemaining(state: BattleState): number {
+  const actor = state.combatants.get(actorId);
+  if (actor === undefined) {
+    throw new Error("Expected Combat Prowess actor.");
+  }
+  return actor.attackRollMissToHitReplacementsUsedSinceTurnStart.some(
+    (usage) => usage.unitId === "feat_boon_of_combat_prowess",
+  )
+    ? 0
+    : 1;
 }
 
 function projectRuleCoreFeatureState(input: {

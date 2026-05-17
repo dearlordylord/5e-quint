@@ -631,6 +631,26 @@ module ruleCoreFeaturesMbt {
     }
   }
 
+  action doCombatProwessMissToHit = {
+    val result = resolveAttackRollMissToHitReplacement({
+      naturalD20: 2,
+      total: 1,
+      armorClass: 10,
+      usedSinceTurnStart: false,
+      choosesFeature: true,
+    })
+    all {
+      qHoles == Set(),
+      recordProjection(
+        false, true, true, if (result.usedSinceTurnStart) 0 else 1,
+        NoActionSurgeActionGrant, 12,
+        if (result.effectiveHits) 8 else 12, 0, false, false, false, false,
+        false, false, if (result.effectiveHits) 4 else 0, result.critical,
+        featureMbtBaselineArmorClass, Set(), false, "resolved", "none"
+      ),
+    }
+  }
+
   action step = any {
     doActionSurgeActivate,
     doActionSurgeSpendAttack,
@@ -654,6 +674,7 @@ module ruleCoreFeaturesMbt {
     doUncannyDodge,
     doDefenseArmorClass,
     doArcheryAttackRollBonus,
+    doCombatProwessMissToHit,
     doSavageAttackerDamage,
     doZeroHitPointReplacement,
   }

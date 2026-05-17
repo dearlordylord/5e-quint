@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "L1H-BOON-COMBAT-PROWESS",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Boon Of Combat Prowess Selected Identity Replay"
     },
     {
@@ -255,7 +255,7 @@ RAW: `.references/srd-5.2.1/Classes/Fighter.md` Tactical Mind.
 
 ### Task 10 - L1H-BOON-COMBAT-PROWESS - Boon Of Combat Prowess Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `feat_boon_of_combat_prowess` if it remains
 in the supported selected identity denominator after the precheck.
