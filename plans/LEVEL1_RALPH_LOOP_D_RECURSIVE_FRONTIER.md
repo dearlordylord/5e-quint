@@ -433,17 +433,17 @@ task was appended; `find_familiar` stays excluded.
 
 Status: `done`
 
-Reconcile this plan against current master and active C/E/F/H lanes.
+ Reconcile this plan against current master and the then-active C/E/F/H lanes.
+ The C/E/F/H integration worktrees are now closed and their standalone plan
+ files were removed from master; this D loop is the live recursive frontier
+ lane.
 
 Inputs:
 
 - `plans/unit-profile-coverage/UNIT_REPORT.md`
 - `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`
 - `plans/unit-profile-coverage/unit-matrix.json`
-- `plans/LEVEL1_RALPH_LOOP_C_CHARACTER_RUNTIMES.md`
-- `plans/LEVEL1_RALPH_LOOP_E_BUFF_MARK_SMITE_SELECTED_IDENTITIES.md`
-- `plans/LEVEL1_RALPH_LOOP_F_SPATIAL_WITNESS_SELECTED_IDENTITIES.md`
-- `plans/LEVEL1_RALPH_LOOP_H_SPECIAL_AND_TAIL_SELECTED_IDENTITIES.md`
+- closed C/E/F/H lane history from the Ralph run artifacts
 
 Outputs:
 
