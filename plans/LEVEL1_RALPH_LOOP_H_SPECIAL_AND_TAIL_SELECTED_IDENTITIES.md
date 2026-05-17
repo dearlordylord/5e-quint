@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L1H-SPECIAL-PRECHECK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Post-C Special And Tail Identity Reconciliation"
     },
     {
@@ -81,6 +81,12 @@
       "id": "L1H-RANGER-EXTRA-ATTACK",
       "status": "ready-for-implementation-after-light-research",
       "title": "Ranger Extra Attack Selected Identity Replay"
+    },
+    {
+      "number": 14,
+      "id": "L1H-MYCELIUM-STEP",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Mycelium Step Selected Identity Replay"
     }
   ]
 }
@@ -88,9 +94,10 @@
 
 This loop owns selected-identity MBT expansion for strict level-1 special spell
 Units plus the remaining supported-profile selected identity tail that is
-already in the generated selected identity denominator. The tail tasks should
-run only after strict level-1 special Units in this plan are complete or the
-post-C precheck confirms they are still the best available frontier.
+already in the generated selected identity denominator. Tail tasks include SRD
+Units and the Classic non-SRD mechanics-only Unit counted by this precheck's
+source artifacts. The tail tasks should run only after strict level-1 special
+Units in this plan are complete.
 
 Do not edit `plans/ACTIVE_PLAN.md`.
 
@@ -99,6 +106,10 @@ Do not edit `plans/ACTIVE_PLAN.md`.
 - `@dnd/battle-runtime` plus `packages/battle-runtime/battle-runtime.qnt` is the
   promoted battle authority.
 - Use local RAW in `.references/srd-5.2.1/` and `UBIQUITOUS_LANGUAGE.md`.
+- Classic non-SRD tail work uses
+  `plans/unit-profile-coverage/QMBT17_CLASSIC_NON_SRD_MECHANICS_INTAKE_POLICY.md`
+  and the mechanics-only fixture as its source boundary; do not add protected
+  non-SRD source identity or SRD RAW claims for that Unit.
 - Do not add companion behavior. `find_familiar` stays out of scope.
 - Do not turn table-owned facts such as creature type, target legality, or
   spatial reachability into duplicated runtime state unless the existing
@@ -153,12 +164,16 @@ Every task runs:
 
 ### Task 1 - L1H-SPECIAL-PRECHECK - Post-C Special And Tail Identity Reconciliation
 
-Status: `ready-for-research`
+Status: `done`
 
 After Loop C lands, reconcile this loop against the refreshed strict report and
 selected identity denominator. Keep strict level-1 special Units first. Tail
 tasks for non-strict supported Units may remain runnable if the selected identity
 metric still counts them and no stricter Unit was missed.
+
+Decision: Tasks 2-6 remain the strict level-1 frontier. Tasks 7-13 remain the
+SRD selected-identity tail, and Task 14 keeps the Classic non-SRD denominator
+gap visible as an executable follow-up.
 
 ### Task 2 - L1H-ANIMAL-FRIENDSHIP - Animal Friendship Selected Identity Replay
 
@@ -273,3 +288,17 @@ Add selected identity evidence for `ranger_extra_attack`, reusing the existing
 extra-attack count scaling profile without conflating it with Fighter or Paladin.
 
 RAW: `.references/srd-5.2.1/Classes/Ranger.md` Extra Attack.
+
+### Task 14 - L1H-MYCELIUM-STEP - Mycelium Step Selected Identity Replay
+
+Status: `ready-for-implementation-after-light-research`
+
+Add selected identity evidence for `mycelium_step` if it remains in the
+supported selected identity denominator after the SRD tail tasks. Keep this as
+Classic non-SRD mechanics-only tail work: use the QMBT17 intake policy and
+`plans/unit-profile-coverage/fixtures/classic-non-srd/mycelium_step.json`, and
+do not add protected non-SRD source identity or SRD RAW claims for this Unit.
+
+Source boundary:
+`plans/unit-profile-coverage/QMBT17_CLASSIC_NON_SRD_MECHANICS_INTAKE_POLICY.md`
+and `plans/unit-profile-coverage/fixtures/classic-non-srd/mycelium_step.json`.
