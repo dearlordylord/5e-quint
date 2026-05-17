@@ -590,71 +590,6 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain table/spatial derivations.",
-      "sourceRecordPath": "packages/surface/content/fog_cloud.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Druid spell list Fog Cloud",
-          "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_fog_cloud",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 212,
-            "lineStart": 212,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Ranger spell list Fog Cloud",
-          "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_fog_cloud",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 171,
-            "lineStart": 171,
-            "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Fog Cloud",
-          "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_fog_cloud",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 254,
-            "lineStart": 254,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Fog Cloud",
-          "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_fog_cloud",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 175,
-            "lineStart": 175,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "fog_cloud"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "table-spatial-derivation"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
       "reason": "Automatic area membership, pathfinding, and grid geometry derivation remain table/spatial derivations.",
       "sourceRecordPath": "packages/surface/content/grease.json",
       "sourceRows": [
@@ -1242,7 +1177,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 69,
+      "count": 70,
       "description": "Full support exists at the Unit profile boundary for strict level-1 accounting.",
       "status": "supported-profile",
       "unitIds": [
@@ -1273,6 +1208,7 @@
         "fighter_fighting_style",
         "fighter_second_wind",
         "fire_bolt",
+        "fog_cloud",
         "guidance",
         "guiding_bolt",
         "healing_word",
@@ -1335,12 +1271,11 @@
       ]
     },
     {
-      "count": 8,
+      "count": 7,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
         "feather_fall",
-        "fog_cloud",
         "grease",
         "hunters_mark",
         "jump",
@@ -1382,23 +1317,22 @@
     },
     "strictRuntimeProfileSupport": {
       "denominator": 93,
-      "numerator": 69,
-      "percent": "74.2%"
+      "numerator": 70,
+      "percent": "75.3%"
     },
     "strictTargetClosure": {
       "denominator": 93,
-      "numerator": 85,
-      "percent": "91.4%"
+      "numerator": 86,
+      "percent": "92.5%"
     }
   },
   "openFrontier": [
     {
-      "count": 8,
+      "count": 7,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
         "feather_fall",
-        "fog_cloud",
         "grease",
         "hunters_mark",
         "jump",
@@ -3684,18 +3618,18 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 120,
     "groupsByClaimTag": {
-      "profile-subset-supported": 13,
-      "supported-profile": 69,
+      "profile-subset-supported": 12,
+      "supported-profile": 70,
       "unsupported-profile": 11
     },
     "groupsByStatus": {
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 4,
       "closed-runtime-detached-table-adjudication": 10,
-      "open-profile-accounting": 8,
-      "supported-profile": 69
+      "open-profile-accounting": 7,
+      "supported-profile": 70
     },
-    "nonSupportedFrontier": 24,
+    "nonSupportedFrontier": 23,
     "strictDenominator": 93
   }
 }

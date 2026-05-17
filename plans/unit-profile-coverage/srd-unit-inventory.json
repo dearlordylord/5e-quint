@@ -8737,13 +8737,13 @@
         "state": "installed",
         "unitId": "fog_cloud"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV66 table/spatial owner",
-        "reason": "Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain table/spatial derivations."
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial owner",
+        "reason": "Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain runtime-detached table/spatial derivations outside the Fog Cloud runtime profile."
       },
       "ownerEvidence": [
         {
@@ -12469,13 +12469,13 @@
         "state": "installed",
         "unitId": "fog_cloud"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV66 table/spatial owner",
-        "reason": "Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain table/spatial derivations."
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial owner",
+        "reason": "Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain runtime-detached table/spatial derivations outside the Fog Cloud runtime profile."
       },
       "ownerEvidence": [
         {
@@ -15048,13 +15048,13 @@
         "state": "installed",
         "unitId": "fog_cloud"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV66 table/spatial owner",
-        "reason": "Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain table/spatial derivations."
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial owner",
+        "reason": "Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain runtime-detached table/spatial derivations outside the Fog Cloud runtime profile."
       },
       "ownerEvidence": [
         {
@@ -18606,13 +18606,13 @@
         "state": "installed",
         "unitId": "fog_cloud"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV66 table/spatial owner",
-        "reason": "Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain table/spatial derivations."
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial owner",
+        "reason": "Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain runtime-detached table/spatial derivations outside the Fog Cloud runtime profile."
       },
       "ownerEvidence": [
         {
