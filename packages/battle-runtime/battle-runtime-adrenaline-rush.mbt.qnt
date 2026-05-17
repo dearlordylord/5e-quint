@@ -2,6 +2,7 @@
 
 module battleRuntimeAdrenalineRushMbt {
   import battleRuntime.* from "./battle-runtime"
+  import battleRuntimeModel.* from "./battle-runtime-model"
 
   var qActorTempHp: int
   var qBonusActionAvailable: bool

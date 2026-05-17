@@ -16,9 +16,14 @@ imported by a child module are not re-exported through a parent `import child.*`
 facade, so moved public QNT names need explicit wrappers or focused specs need
 to import narrower modules directly. Keep package-local integration vocabulary
 such as `Actor`, `Combatant`, `BattleState`, `ActiveEffect`, `Hole`, and replay
-variants inline in `battle-runtime.qnt` unless a focused lane can direct-import
-a smaller module without creating duplicate state names or compatibility-wrapper
-churn.
+variants in package-local QNT model modules, starting with
+`battle-runtime-model.qnt`, and let focused specs direct-import those modules
+when they need the moved names. Domain behavior helpers can live in narrower
+QNT modules, such as `battle-runtime-find-familiar.qnt`,
+`battle-runtime-light.qnt`, and `battle-runtime-creature-type-protection.qnt`,
+`battle-runtime-armor-class.qnt`, and `battle-runtime-thaumaturgy.qnt`, when
+the split follows SRD language and avoids duplicate state names or
+compatibility-wrapper churn.
 
 The promoted MBT strategy is selective. MBT proves reducer facts after Surface
 decode/projection; it must not enumerate all Surface-authored content multiplied
