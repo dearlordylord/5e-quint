@@ -97,7 +97,7 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | --- | ---: | --- | --- | --- |
 | `create_or_destroy_water` | 2 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Cleric spell list Create or Destroy Water; Druid spell list Create or Destroy Water |
 | `disguise_self` | 3 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/disguise_self.md` | Bard spell list Disguise Self; Sorcerer spell list Disguise Self; Wizard spell list Disguise Self |
-| `druidcraft` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Druid spell list Druidcraft |
+| `druidcraft` | 1 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/druidcraft.md` | Druid spell list Druidcraft |
 | `elementalism` | 3 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Druid spell list Elementalism; Sorcerer spell list Elementalism; Wizard spell list Elementalism |
 | `floating_disk` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Wizard spell list Floating Disk |
 | `goodberry` | 2 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Druid spell list Goodberry; Ranger spell list Goodberry |

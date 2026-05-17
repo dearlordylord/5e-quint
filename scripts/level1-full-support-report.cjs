@@ -8,7 +8,10 @@ const { percent, stable } = require("./unit-profile-coverage-report.cjs");
 
 const strictLevelBands = ["level-1", "spell-level-0", "spell-level-1"];
 const companionWorktreeExcludedUnitIds = ["find_familiar"];
-const adoptedNoMatrixSrdPressureDecisionUnitIds = new Set(["disguise_self"]);
+const adoptedNoMatrixSrdPressureDecisionUnitIds = new Set([
+  "disguise_self",
+  "druidcraft",
+]);
 const strictStatusDefinitions = [
   {
     status: "supported-profile",
