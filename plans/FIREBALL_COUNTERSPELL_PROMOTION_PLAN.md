@@ -36,7 +36,17 @@ Counterspell must interrupt before target/save/damage outcomes are committed.
   higher-slot automatic ending rule.
 - Spell casting resource timing:
   `.references/srd-5.2.1/Spells/Gaining-and-Casting.md`, especially spell slots,
-  higher-level slots, casting time, and one spell-slot expenditure per turn.
+  higher-level slots, casting time, and the SRD 5.2.1 "One Spell with a Spell
+  Slot per Turn" rule. This is not the older 2014 bonus-action-only spell
+  restriction.
+- Archived 2014 comparison:
+  `.references/rules/10-spellcasting.md#Bonus-Action` contains the old
+  bonus-action rule: "You can't cast another spell during the same turn, except
+  for a cantrip with a casting time of 1 action." That older rule permitted the
+  Sage Advice example where a creature casts Fireball on its own turn, is
+  Counterspelled, and then casts Counterspell as a Reaction on the same turn.
+  The current repo authority is SRD 5.2.1 unless the project owner records a
+  deliberate assumption to keep that 2014 behavior for Counterspell.
 - Saving throw damage:
   `.references/srd-5.2.1/Playing-the-Game.md#Saving-Throws-and-Damage`,
   including one damage roll for all targets of the same simultaneous
@@ -94,25 +104,42 @@ Counterspell must interrupt before target/save/damage outcomes are committed.
 Do this collaboratively before code changes. The design has to settle these
 domain questions before implementation:
 
-- Whether the existing Surface `autoSuccessIfCasterSlotGte` name correctly
-  represents Counterspell's higher-slot rule. It may need a domain rename because
-  the RAW says the spell automatically ends, not that the target succeeds on a
-  saving throw.
-- What exact runtime continuation frame represents "a spell in the process of
-  being cast" while preserving the triggering spell's action/bonus/reaction
-  spend and slot refund behavior.
-- How to defer or roll back spell-slot expenditure so a countered triggering
-  spell wastes the casting action but does not expend its slot.
-- How one-slot-per-turn applies when a creature tries to cast Counterspell during
-  its own turn after starting another slotted spell.
-- How recursive `spellCast` reaction windows are bounded or proven safe. The old
-  v0 demo used a four-spell chain; the active runtime stack must encode its own
-  continuation safety instead of inheriting old proof-lane assumptions.
-- What table/runtime facts are required for Counterspell eligibility: sight,
-  range, S component availability, triggering spell level, triggering caster id,
-  and whether the triggering spell is cast with a slot.
-- How Ready interacts with the same `spellCast` frame without confusing
-  "reactors" with "affected targets".
+- What does "a creature that you can see within range casts a spell with
+  components" mean as a battle fact? Candidate domain facts are triggering
+  creature, observer visibility, range within 60 feet, the triggering spell's
+  Components, and whether the spell is being cast rather than merely taking
+  effect.
+- What is the target of Counterspell? RAW targets the creature casting the spell,
+  not the affected creatures or area of the triggering spell. The design must
+  avoid using Fireball's affected targets, save targets, or chosen point as
+  Counterspell eligibility facts.
+- What does "the target must succeed on a Constitution saving throw or the spell
+  is countered" mean as an interrupted spell invocation? The interrupted spell
+  should be present enough to be observed and countered, but not yet have applied
+  target outcomes, saving throws, damage, active effects, or object outcomes.
+- What does "the spell slot, charge, or use spent to cast the interrupted spell
+  is not expended" mean for each resource kind? Prefer a domain model where the
+  interrupted spell has not committed its spend yet; use technical
+  spend/refund only if future resource-spend triggers cannot observe a
+  false spend.
+- What exactly is the higher-slot Counterspell rule called? The current Surface
+  `autoSuccessIfCasterSlotGte` wording may be wrong domain language because RAW
+  says the spell "is automatically countered" when Counterspell is cast with a
+  spell slot equal to or higher than the triggering spell's level.
+- Which rules-edition behavior governs same-turn reaction Counterspell? SRD
+  5.2.1 has "One Spell with a Spell Slot per Turn"; the 2014 Sage Advice
+  Fireball -> Counterspell -> Counterspell example depends on the older
+  bonus-action-only restriction. If we keep the 2014 behavior for this repo, add
+  an explicit owner-approved assumption before implementation.
+- How do multiple Counterspells form a reaction chain? The old v0 lane modeled a
+  `PISpellCast` window, pushed the interrupted spell onto a spell stack when
+  Counterspell was cast, and returned to the prior Counterspell window after
+  resolving the nested one. Use this as inspiration only; the active promoted
+  runtime needs its own SRD 5.2.1-aligned continuation model and Quint parity.
+- How does Ready share the "spell is being cast" trigger without changing the
+  Counterspell target? Ready may react to spell-cast timing, but Counterspell
+  eligibility remains about the triggering caster and observable Components, not
+  about affected targets.
 
 ### Phase 3: Counterspell Runtime Implementation
 
@@ -124,8 +151,9 @@ domain questions before implementation:
   target outcomes, saving throws, damage rolls, active effects, or slot
   expenditure.
 - Put only Counterspell-relevant facts in the frame: triggering caster,
-  triggering spell identity, cast level, component facts, visibility/range facts,
-  and a continuation for the uncommitted triggering spell.
+  triggering spell identity, triggering spell Components, Base Spell Level, Cast
+  Level, visibility/range facts, resource kind, and a continuation for the
+  uncommitted triggering spell.
 - Add Counterspell reaction choices from the same reaction-choice pipeline used
   by Shield, Hellish Rebuke, Feather Fall, and Ready.
 - Resolve Counterspell as a spell cast itself, so its S component opens another
@@ -177,7 +205,7 @@ domain questions before implementation:
   add focused tests for failed-save negation, successful-save no negation,
   higher-slot automatic ending, triggering spell slot refund, Counterspell's own
   slot spend/refund, recursive Counterspell chains, reaction economy, and the
-  one-slot-per-turn rule.
+  chosen SRD 5.2.1-vs-2014 same-turn casting rule.
 - MBT:
   run the promoted battle-runtime MBT only after completed behavior changes, one
   run at a time, using the repo's timing and seed protocol.
