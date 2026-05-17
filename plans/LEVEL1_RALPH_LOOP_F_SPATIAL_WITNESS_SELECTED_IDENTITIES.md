@@ -67,7 +67,7 @@
     {
       "number": 11,
       "id": "L1F-THUNDERWAVE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Thunderwave Selected Identity Replay"
     }
   ]
@@ -314,10 +314,20 @@ automation.
 
 ### Task 11 - L1F-THUNDERWAVE - Thunderwave Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `thunderwave`, including damage save,
 caller-supplied push dispositions, unsecured object facts, and audible boom
 evidence. Do not implement collision/pathfinding or sound propagation.
 
 RAW: `.references/srd-5.2.1/Spells/Descriptions-S-Z.md` Thunderwave.
+
+Result: `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts`
+and
+`packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt`
+record the selected-identity replay for Thunderwave's self-origin 15-foot Cube
+Constitution save damage, failed-save pushed and blocked creature dispositions,
+caller-supplied unsecured-object pushed and blocked dispositions, audible
+thunderous boom witness, slot expenditure, and rejection of missing area facts
+or mismatched boom facts without adding runtime-owned collision/pathfinding,
+object discovery, final-position derivation, or sound propagation.

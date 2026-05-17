@@ -1,4 +1,4 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt level1-spatial-witness dancing_lights faerie_fire feather_fall fog_cloud grease jump light produce_flame
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt level1-spatial-witness dancing_lights faerie_fire feather_fall fog_cloud grease jump light produce_flame thunderwave
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness dancing_lights doDancingLightsMovableDimLight
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness faerie_fire doFaerieFireOutlineAdvantageInvisibleDimLight
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness feather_fall doFeatherFallReactionMitigationLanding
@@ -7,6 +7,7 @@
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness jump doJumpMovementReplacementLandingWitness
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness light doLightObjectEmitterProjectionReplacementCleanup
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness produce_flame doProduceFlameHeldLightProjectionHurlCleanup
+// UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness thunderwave doThunderwaveSavePushObjectsBoom
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -84,6 +85,7 @@ import {
   type BattleResolutionResult,
   type BattleRolledDiceFill,
   type BattleSightObscurement,
+  type BattleSpellAreaChoice,
   type BattleState,
   type BattleSubject,
   type BattleTargetSpatialFact,
@@ -101,6 +103,7 @@ const level1SpatialWitnessSelectedIdentityDriverSchema = {
   doJumpMovementReplacementLandingWitness: {},
   doLightObjectEmitterProjectionReplacementCleanup: {},
   doProduceFlameHeldLightProjectionHurlCleanup: {},
+  doThunderwaveSavePushObjectsBoom: {},
   step: {},
 } as const;
 type Level1SpatialWitnessSelectedIdentityDriverAction = Exclude<
@@ -178,6 +181,18 @@ type Level1SpatialWitnessSelectedIdentityProjection = {
   readonly produceFlameHurlTargetDamaged: boolean;
   readonly produceFlameHurlCleanupClearedEmitter: boolean;
   readonly produceFlameDurationCleanupClearedEmitter: boolean;
+  readonly thunderwaveAffectedTargetOutcomeCount: number;
+  readonly thunderwaveFailedPushedTargetDamaged: boolean;
+  readonly thunderwaveFailedBlockedTargetDamaged: boolean;
+  readonly thunderwaveSucceededTargetHalfDamaged: boolean;
+  readonly thunderwavePushedCreatureDispositionCount: number;
+  readonly thunderwaveBlockedCreatureDispositionCount: number;
+  readonly thunderwavePushedObjectDispositionCount: number;
+  readonly thunderwaveBlockedObjectDispositionCount: number;
+  readonly thunderwaveAudibleBoomMatched: boolean;
+  readonly thunderwaveMissingAreaFactsRejected: boolean;
+  readonly thunderwaveMismatchedBoomRejected: boolean;
+  readonly thunderwaveSlotExpended: boolean;
   readonly projectedIllumination: BattleIllumination;
   readonly ordinarySightObscurement: BattleSightObscurement;
   readonly darkvisionSightObscurement: BattleSightObscurement;
@@ -196,7 +211,8 @@ type Level1SpatialWitnessSelectedIdentityProjection = {
     | "greaseMovementAndTurnTriggers"
     | "jumpMovementReplacementLandingWitness"
     | "lightObjectEmitterProjectionReplacementCleanup"
-    | "produceFlameHeldLightProjectionHurlCleanup";
+    | "produceFlameHeldLightProjectionHurlCleanup"
+    | "thunderwaveSavePushObjectsBoom";
 };
 type ProjectedAttackRollMode = AttackRollMode;
 const dancingLightsUnitId = "dancing_lights";
@@ -207,6 +223,7 @@ const greaseUnitId = "grease";
 const jumpUnitId = "jump";
 const lightUnitId = "light";
 const produceFlameUnitId = "produce_flame";
+const thunderwaveUnitId = "thunderwave";
 const starryWispUnitId = "starry_wisp";
 const level1SpatialWitnessSelectedUnitIds = [
   dancingLightsUnitId,
@@ -217,6 +234,7 @@ const level1SpatialWitnessSelectedUnitIds = [
   jumpUnitId,
   lightUnitId,
   produceFlameUnitId,
+  thunderwaveUnitId,
 ] as const;
 type Level1SpatialWitnessSelectedUnitId =
   (typeof level1SpatialWitnessSelectedUnitIds)[number];
@@ -384,6 +402,30 @@ type ProduceFlameProjection = {
   readonly hurlCleanupClearedEmitter: boolean;
   readonly durationCleanupClearedEmitter: boolean;
 };
+type ThunderwaveAreaChoice = Extract<
+  BattleSpellAreaChoice,
+  { readonly kind: "thunderwaveArea" }
+>;
+type ThunderwavePushDisposition =
+  ThunderwaveAreaChoice["creaturePushes"][number]["disposition"];
+type ThunderwaveSavingThrowOutcome = {
+  readonly targetId: CombatantId;
+  readonly succeeded: boolean;
+};
+type ThunderwaveProjection = {
+  readonly affectedTargetOutcomeCount: number;
+  readonly failedPushedTargetDamaged: boolean;
+  readonly failedBlockedTargetDamaged: boolean;
+  readonly succeededTargetHalfDamaged: boolean;
+  readonly pushedCreatureDispositionCount: number;
+  readonly blockedCreatureDispositionCount: number;
+  readonly pushedObjectDispositionCount: number;
+  readonly blockedObjectDispositionCount: number;
+  readonly audibleBoomMatched: boolean;
+  readonly missingAreaFactsRejected: boolean;
+  readonly mismatchedBoomRejected: boolean;
+  readonly slotExpended: boolean;
+};
 type LightObjectTargetFact = Extract<
   BattleTargetSpatialFact,
   { readonly kind: "spellObjectLightTarget" }
@@ -413,6 +455,15 @@ const greaseSuccessfulTargetId = combatantId(
   "level1-spatial-witness-grease-successful-target",
 );
 const jumpTargetId = combatantId("level1-spatial-witness-jump-target");
+const thunderwaveFailedPushedTargetId = combatantId(
+  "level1-spatial-witness-thunderwave-failed-pushed-target",
+);
+const thunderwaveFailedBlockedTargetId = combatantId(
+  "level1-spatial-witness-thunderwave-failed-blocked-target",
+);
+const thunderwaveSuccessfulTargetId = combatantId(
+  "level1-spatial-witness-thunderwave-successful-target",
+);
 const greaseAffectedTargetIds = [
   greaseFailedTargetId,
   greaseSuccessfulTargetId,
@@ -456,10 +507,18 @@ const produceFlameDimAdditionalFeet = movementFeet(20);
 const produceFlameDimProjectionDistanceFeet = movementFeet(
   Number(produceFlameBrightRadiusFeet) + Number(produceFlameDimAdditionalFeet),
 );
+const thunderwavePushDistanceFeet = movementFeet(10);
+const thunderwaveAudibleRadiusFeet = movementFeet(300);
 const lightObjectId = battleObjectId("level1-light-object");
 const lightRecastObjectId = battleObjectId("level1-light-recast-object");
 const lightStaleObjectId = battleObjectId("level1-light-stale-object");
 const lightExpiringObjectId = battleObjectId("level1-light-expiring-object");
+const thunderwavePushedObjectId = battleObjectId(
+  "level1-thunderwave-pushed-object",
+);
+const thunderwaveBlockedObjectId = battleObjectId(
+  "level1-thunderwave-blocked-object",
+);
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -712,6 +771,34 @@ const selectedUnitIdentityReplays = [
       },
     ],
   },
+  {
+    taskId: "level1-spatial-witness",
+    unitId: "thunderwave",
+    actions: ["doThunderwaveSavePushObjectsBoom"],
+    sequences: [
+      {
+        name: "damage-save-push-dispositions-unsecured-objects-and-boom",
+        actions: ["doThunderwaveSavePushObjectsBoom"],
+        expected: expectedProjection({
+          thunderwaveAffectedTargetOutcomeCount: 3,
+          thunderwaveFailedPushedTargetDamaged: true,
+          thunderwaveFailedBlockedTargetDamaged: true,
+          thunderwaveSucceededTargetHalfDamaged: true,
+          thunderwavePushedCreatureDispositionCount: 1,
+          thunderwaveBlockedCreatureDispositionCount: 1,
+          thunderwavePushedObjectDispositionCount: 1,
+          thunderwaveBlockedObjectDispositionCount: 1,
+          thunderwaveAudibleBoomMatched: true,
+          thunderwaveMissingAreaFactsRejected: true,
+          thunderwaveMismatchedBoomRejected: true,
+          thunderwaveSlotExpended: true,
+          magicActionAvailable: false,
+          bonusActionAvailable: true,
+          lastResult: "thunderwaveSavePushObjectsBoom",
+        }),
+      },
+    ],
+  },
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
 describe("Level 1 spatial witness selected identity MBT", () => {
@@ -780,6 +867,7 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
     let jumpProjection = emptyJumpProjection();
     let lightProjection = emptyLightProjection();
     let produceFlameProjection = emptyProduceFlameProjection();
+    let thunderwaveProjection = emptyThunderwaveProjection();
     let lastResult: Level1SpatialWitnessSelectedIdentityProjection["lastResult"] =
       "init";
 
@@ -795,6 +883,7 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
       jumpProjection = emptyJumpProjection();
       lightProjection = emptyLightProjection();
       produceFlameProjection = emptyProduceFlameProjection();
+      thunderwaveProjection = emptyThunderwaveProjection();
       lastResult = "init";
     }
 
@@ -1552,6 +1641,92 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
         state = lit.state;
         lastResult = "produceFlameHeldLightProjectionHurlCleanup";
       },
+      doThunderwaveSavePushObjectsBoom: () => {
+        state = thunderwaveBattle();
+        retainedLightIdentityCount = 0;
+        const act = thunderwaveAct(state);
+        const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+        const outcomes = thunderwaveSavingThrowOutcomes();
+        const acceptedArea = thunderwaveAreaChoice();
+
+        const missingAreaFacts = resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [
+            {
+              kind: "savingThrowOutcome",
+              holeId: savingThrow.holeId,
+              value: { outcomes },
+            },
+          ],
+        });
+        const missingAreaFactsRejected =
+          missingAreaFacts.tag === "invalid" &&
+          missingAreaFacts.message ===
+            "Spell saving throw outcomes require area facts.";
+
+        const mismatchedBoom = resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [
+            thunderwaveSavingThrowOutcomeFill(
+              savingThrow,
+              outcomes,
+              thunderwaveAreaChoice({
+                audibleBoom: {
+                  sound: "thunderous boom",
+                  audibleRadiusFeet: movementFeet(100),
+                },
+              }),
+            ),
+          ],
+        });
+        const mismatchedBoomRejected =
+          mismatchedBoom.tag === "invalid" &&
+          mismatchedBoom.message ===
+            "Thunderwave audible-boom fact must match the spell's thunderous boom within 300 feet.";
+
+        const damage = requireResultHole(
+          resolveBattleSubject({
+            state,
+            subject: act.subject,
+            fills: [
+              thunderwaveSavingThrowOutcomeFill(
+                savingThrow,
+                outcomes,
+                acceptedArea,
+              ),
+            ],
+          }),
+          "rolledDice",
+        );
+        const resolved = resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [
+            thunderwaveSavingThrowOutcomeFill(
+              savingThrow,
+              outcomes,
+              acceptedArea,
+            ),
+            damageRollFillWithGroups(damage, [[4, 4]]),
+          ],
+        });
+        if (resolved.tag !== "resolved") {
+          throw new Error(
+            `Expected Thunderwave to resolve, got ${resolved.tag}.`,
+          );
+        }
+
+        thunderwaveProjection = projectThunderwaveReplay(resolved.state, {
+          area: acceptedArea,
+          affectedTargetOutcomeCount: outcomes.length,
+          missingAreaFactsRejected,
+          mismatchedBoomRejected,
+        });
+        state = resolved.state;
+        lastResult = "thunderwaveSavePushObjectsBoom";
+      },
       step: () => {},
       getState: () =>
         projectLevel1SpatialWitnessSelectedIdentityState(
@@ -1566,6 +1741,7 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
           jumpProjection,
           lightProjection,
           produceFlameProjection,
+          thunderwaveProjection,
           lastResult,
         ),
     };
@@ -1661,6 +1837,18 @@ function expectedProjection(
     produceFlameHurlTargetDamaged: false,
     produceFlameHurlCleanupClearedEmitter: false,
     produceFlameDurationCleanupClearedEmitter: false,
+    thunderwaveAffectedTargetOutcomeCount: 0,
+    thunderwaveFailedPushedTargetDamaged: false,
+    thunderwaveFailedBlockedTargetDamaged: false,
+    thunderwaveSucceededTargetHalfDamaged: false,
+    thunderwavePushedCreatureDispositionCount: 0,
+    thunderwaveBlockedCreatureDispositionCount: 0,
+    thunderwavePushedObjectDispositionCount: 0,
+    thunderwaveBlockedObjectDispositionCount: 0,
+    thunderwaveAudibleBoomMatched: false,
+    thunderwaveMissingAreaFactsRejected: false,
+    thunderwaveMismatchedBoomRejected: false,
+    thunderwaveSlotExpended: false,
     projectedIllumination: "darkness",
     ordinarySightObscurement: "heavilyObscured",
     darkvisionSightObscurement: "lightlyObscured",
@@ -1760,6 +1948,23 @@ function emptyProduceFlameProjection(): ProduceFlameProjection {
     hurlTargetDamaged: false,
     hurlCleanupClearedEmitter: false,
     durationCleanupClearedEmitter: false,
+  };
+}
+
+function emptyThunderwaveProjection(): ThunderwaveProjection {
+  return {
+    affectedTargetOutcomeCount: 0,
+    failedPushedTargetDamaged: false,
+    failedBlockedTargetDamaged: false,
+    succeededTargetHalfDamaged: false,
+    pushedCreatureDispositionCount: 0,
+    blockedCreatureDispositionCount: 0,
+    pushedObjectDispositionCount: 0,
+    blockedObjectDispositionCount: 0,
+    audibleBoomMatched: false,
+    missingAreaFactsRejected: false,
+    mismatchedBoomRejected: false,
+    slotExpended: false,
   };
 }
 
@@ -2099,6 +2304,55 @@ function produceFlameOneRoundRemainingBattle(): BattleState {
   };
 }
 
+function thunderwaveBattle(): BattleState {
+  const thunderwave = spellRecord(thunderwaveUnitId);
+  const result = startBattle({
+    battleId: battleId("level1-spatial-witness-selected-identity"),
+    combatants: [
+      spatialWitnessCreature({
+        combatantId: casterId,
+        displayName: "Thunderwave caster",
+        initiative: 20,
+        side: partySide,
+        spellcasting: {
+          sourceClassName: "druid",
+          spellcastingAbilityModifier: abilityModifier(3),
+          proficiencyBonus: proficiencyBonus(2),
+          canCastSpells: true,
+          cantrips: [],
+          preparedSpells: [thunderwave],
+          featurePreparedSpells: [],
+          invocationSpellAccesses: [],
+          spellbookRitualSpellAccesses: [],
+          spellSlots: [{ spellLevel: 1, count: 1 }],
+        },
+      }),
+      spatialWitnessCreature({
+        combatantId: thunderwaveFailedPushedTargetId,
+        displayName: "Thunderwave failed pushed target",
+        initiative: 15,
+        side: oppositionSide,
+      }),
+      spatialWitnessCreature({
+        combatantId: thunderwaveFailedBlockedTargetId,
+        displayName: "Thunderwave failed blocked target",
+        initiative: 10,
+        side: oppositionSide,
+      }),
+      spatialWitnessCreature({
+        combatantId: thunderwaveSuccessfulTargetId,
+        displayName: "Thunderwave successful target",
+        initiative: 5,
+        side: oppositionSide,
+      }),
+    ],
+  });
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
 function spatialWitnessCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
@@ -2311,6 +2565,19 @@ function produceFlameHurlAct(state: BattleState): ActionSpellAct {
   return act;
 }
 
+function thunderwaveAct(state: BattleState): ActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.spellId === thunderwaveUnitId &&
+      candidate.subject.invocation.procedure === "saveGatedDamage",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Thunderwave save-gated damage action.");
+  }
+  return act;
+}
+
 function jumpMovementReplacementAct(
   state: BattleState,
   actorId: CombatantId,
@@ -2443,6 +2710,96 @@ function greaseCastSavingThrowOutcomes(): readonly GreaseSavingThrowOutcome[] {
     { targetId: greaseFailedTargetId, succeeded: false },
     { targetId: greaseSuccessfulTargetId, succeeded: true },
   ];
+}
+
+function thunderwaveSavingThrowOutcomes(): readonly ThunderwaveSavingThrowOutcome[] {
+  return [
+    { targetId: thunderwaveFailedPushedTargetId, succeeded: false },
+    { targetId: thunderwaveFailedBlockedTargetId, succeeded: false },
+    { targetId: thunderwaveSuccessfulTargetId, succeeded: true },
+  ];
+}
+
+function thunderwaveSavingThrowOutcomeFill(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+  outcomes: readonly ThunderwaveSavingThrowOutcome[],
+  area: ThunderwaveAreaChoice,
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    value: { area, outcomes },
+  };
+}
+
+function thunderwaveAreaChoice(
+  input: {
+    readonly audibleBoom?: ThunderwaveAreaChoice["audibleBoom"];
+  } = {},
+): ThunderwaveAreaChoice {
+  return {
+    kind: "thunderwaveArea",
+    originAnchorId: casterId,
+    affectedTargetIds: thunderwaveSavingThrowOutcomes().map(
+      (outcome) => outcome.targetId,
+    ),
+    creaturePushes: [
+      {
+        targetId: thunderwaveFailedPushedTargetId,
+        disposition: thunderwavePushedDisposition(
+          "level1-thunderwave-creature-destination",
+        ),
+      },
+      {
+        targetId: thunderwaveFailedBlockedTargetId,
+        disposition: thunderwaveBlockedDisposition("blocked"),
+      },
+    ],
+    unsecuredObjectPushes: [
+      {
+        objectId: thunderwavePushedObjectId,
+        disposition: thunderwavePushedDisposition(
+          "level1-thunderwave-object-destination",
+        ),
+      },
+      {
+        objectId: thunderwaveBlockedObjectId,
+        disposition: thunderwaveBlockedDisposition("noLegalDestination"),
+      },
+    ],
+    audibleBoom: {
+      sound: "thunderous boom",
+      audibleRadiusFeet: thunderwaveAudibleRadiusFeet,
+    },
+    ...(input.audibleBoom === undefined
+      ? {}
+      : { audibleBoom: input.audibleBoom }),
+  };
+}
+
+function thunderwavePushedDisposition(
+  destinationId: string,
+): ThunderwavePushDisposition {
+  return {
+    kind: "pushed",
+    distanceFeet: thunderwavePushDistanceFeet,
+    destinationId: battleTablePositionId(destinationId),
+    provokesOpportunityAttacks: false,
+  };
+}
+
+function thunderwaveBlockedDisposition(
+  reason: Extract<
+    ThunderwavePushDisposition,
+    { readonly kind: "blocked" }
+  >["reason"],
+): ThunderwavePushDisposition {
+  return {
+    kind: "blocked",
+    distanceFeet: thunderwavePushDistanceFeet,
+    reason,
+    provokesOpportunityAttacks: false,
+  };
 }
 
 function greaseMovementFill(
@@ -3140,6 +3497,67 @@ function greaseCombatant(state: BattleState, id: CombatantId) {
   return combatant;
 }
 
+function projectThunderwaveReplay(
+  resolvedState: BattleState,
+  input: {
+    readonly area: ThunderwaveAreaChoice;
+    readonly affectedTargetOutcomeCount: number;
+    readonly missingAreaFactsRejected: boolean;
+    readonly mismatchedBoomRejected: boolean;
+  },
+): ThunderwaveProjection {
+  return {
+    affectedTargetOutcomeCount: input.affectedTargetOutcomeCount,
+    failedPushedTargetDamaged:
+      thunderwaveCombatant(resolvedState, thunderwaveFailedPushedTargetId)
+        .hp === Hp(4),
+    failedBlockedTargetDamaged:
+      thunderwaveCombatant(resolvedState, thunderwaveFailedBlockedTargetId)
+        .hp === Hp(4),
+    succeededTargetHalfDamaged:
+      thunderwaveCombatant(resolvedState, thunderwaveSuccessfulTargetId).hp ===
+      Hp(8),
+    pushedCreatureDispositionCount: input.area.creaturePushes.filter(
+      (push) => push.disposition.kind === "pushed",
+    ).length,
+    blockedCreatureDispositionCount: input.area.creaturePushes.filter(
+      (push) => push.disposition.kind === "blocked",
+    ).length,
+    pushedObjectDispositionCount: input.area.unsecuredObjectPushes.filter(
+      (push) => push.disposition.kind === "pushed",
+    ).length,
+    blockedObjectDispositionCount: input.area.unsecuredObjectPushes.filter(
+      (push) => push.disposition.kind === "blocked",
+    ).length,
+    audibleBoomMatched:
+      input.area.audibleBoom.sound === "thunderous boom" &&
+      input.area.audibleBoom.audibleRadiusFeet === thunderwaveAudibleRadiusFeet,
+    missingAreaFactsRejected: input.missingAreaFactsRejected,
+    mismatchedBoomRejected: input.mismatchedBoomRejected,
+    slotExpended: thunderwaveCasterSlotExpended(resolvedState),
+  };
+}
+
+function thunderwaveCasterSlotExpended(state: BattleState): boolean {
+  const caster = thunderwaveCombatant(state, casterId);
+  if (caster.origin.kind !== "character") {
+    throw new Error("Expected Thunderwave caster to be a character.");
+  }
+  return (
+    caster.origin.spellcasting?.spellSlots.some(
+      (slot) => slot.spellLevel === 1 && slot.expended === 1,
+    ) ?? false
+  );
+}
+
+function thunderwaveCombatant(state: BattleState, id: CombatantId) {
+  const combatant = state.combatants.get(id);
+  if (combatant === undefined) {
+    throw new Error(`Expected Thunderwave combatant ${id}.`);
+  }
+  return combatant;
+}
+
 function jumpMovementReplacementEffect(
   state: BattleState,
   id: CombatantId,
@@ -3195,6 +3613,7 @@ function projectLevel1SpatialWitnessSelectedIdentityState(
   jumpProjection: JumpProjection,
   lightProjection: LightProjection,
   produceFlameProjection: ProduceFlameProjection,
+  thunderwaveProjection: ThunderwaveProjection,
   lastResult: Level1SpatialWitnessSelectedIdentityProjection["lastResult"],
 ): Level1SpatialWitnessSelectedIdentityProjection {
   const snapshot = snapshotBattle(state);
@@ -3304,6 +3723,28 @@ function projectLevel1SpatialWitnessSelectedIdentityState(
       produceFlameProjection.hurlCleanupClearedEmitter,
     produceFlameDurationCleanupClearedEmitter:
       produceFlameProjection.durationCleanupClearedEmitter,
+    thunderwaveAffectedTargetOutcomeCount:
+      thunderwaveProjection.affectedTargetOutcomeCount,
+    thunderwaveFailedPushedTargetDamaged:
+      thunderwaveProjection.failedPushedTargetDamaged,
+    thunderwaveFailedBlockedTargetDamaged:
+      thunderwaveProjection.failedBlockedTargetDamaged,
+    thunderwaveSucceededTargetHalfDamaged:
+      thunderwaveProjection.succeededTargetHalfDamaged,
+    thunderwavePushedCreatureDispositionCount:
+      thunderwaveProjection.pushedCreatureDispositionCount,
+    thunderwaveBlockedCreatureDispositionCount:
+      thunderwaveProjection.blockedCreatureDispositionCount,
+    thunderwavePushedObjectDispositionCount:
+      thunderwaveProjection.pushedObjectDispositionCount,
+    thunderwaveBlockedObjectDispositionCount:
+      thunderwaveProjection.blockedObjectDispositionCount,
+    thunderwaveAudibleBoomMatched: thunderwaveProjection.audibleBoomMatched,
+    thunderwaveMissingAreaFactsRejected:
+      thunderwaveProjection.missingAreaFactsRejected,
+    thunderwaveMismatchedBoomRejected:
+      thunderwaveProjection.mismatchedBoomRejected,
+    thunderwaveSlotExpended: thunderwaveProjection.slotExpended,
     projectedIllumination,
     ordinarySightObscurement: battleSightObscurement(projectedIllumination),
     darkvisionSightObscurement: battleSightObscurement(projectedIllumination, {
@@ -3367,7 +3808,8 @@ function casterConcentratingOnSelectedUnit(
     lastResult === "greaseMovementAndTurnTriggers" ||
     lastResult === "jumpMovementReplacementLandingWitness" ||
     lastResult === "lightObjectEmitterProjectionReplacementCleanup" ||
-    lastResult === "produceFlameHeldLightProjectionHurlCleanup"
+    lastResult === "produceFlameHeldLightProjectionHurlCleanup" ||
+    lastResult === "thunderwaveSavePushObjectsBoom"
   ) {
     return false;
   }
@@ -4021,6 +4463,51 @@ function normalizeLevel1SpatialWitnessSelectedIdentityQuintState(
       state,
       "qProduceFlameDurationCleanupClearedEmitter",
     ),
+    thunderwaveAffectedTargetOutcomeCount: numberFromQuintInt(
+      state["qThunderwaveAffectedTargetOutcomeCount"],
+      "qThunderwaveAffectedTargetOutcomeCount",
+    ),
+    thunderwaveFailedPushedTargetDamaged: booleanField(
+      state,
+      "qThunderwaveFailedPushedTargetDamaged",
+    ),
+    thunderwaveFailedBlockedTargetDamaged: booleanField(
+      state,
+      "qThunderwaveFailedBlockedTargetDamaged",
+    ),
+    thunderwaveSucceededTargetHalfDamaged: booleanField(
+      state,
+      "qThunderwaveSucceededTargetHalfDamaged",
+    ),
+    thunderwavePushedCreatureDispositionCount: numberFromQuintInt(
+      state["qThunderwavePushedCreatureDispositionCount"],
+      "qThunderwavePushedCreatureDispositionCount",
+    ),
+    thunderwaveBlockedCreatureDispositionCount: numberFromQuintInt(
+      state["qThunderwaveBlockedCreatureDispositionCount"],
+      "qThunderwaveBlockedCreatureDispositionCount",
+    ),
+    thunderwavePushedObjectDispositionCount: numberFromQuintInt(
+      state["qThunderwavePushedObjectDispositionCount"],
+      "qThunderwavePushedObjectDispositionCount",
+    ),
+    thunderwaveBlockedObjectDispositionCount: numberFromQuintInt(
+      state["qThunderwaveBlockedObjectDispositionCount"],
+      "qThunderwaveBlockedObjectDispositionCount",
+    ),
+    thunderwaveAudibleBoomMatched: booleanField(
+      state,
+      "qThunderwaveAudibleBoomMatched",
+    ),
+    thunderwaveMissingAreaFactsRejected: booleanField(
+      state,
+      "qThunderwaveMissingAreaFactsRejected",
+    ),
+    thunderwaveMismatchedBoomRejected: booleanField(
+      state,
+      "qThunderwaveMismatchedBoomRejected",
+    ),
+    thunderwaveSlotExpended: booleanField(state, "qThunderwaveSlotExpended"),
     projectedIllumination: mbtIllumination(state["qProjectedIllumination"]),
     ordinarySightObscurement: mbtSightObscurement(
       state["qOrdinarySightObscurement"],
@@ -4108,7 +4595,8 @@ function mbtLastResult(
     raw === "greaseMovementAndTurnTriggers" ||
     raw === "jumpMovementReplacementLandingWitness" ||
     raw === "lightObjectEmitterProjectionReplacementCleanup" ||
-    raw === "produceFlameHeldLightProjectionHurlCleanup"
+    raw === "produceFlameHeldLightProjectionHurlCleanup" ||
+    raw === "thunderwaveSavePushObjectsBoom"
   ) {
     return raw;
   }
