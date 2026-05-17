@@ -17,6 +17,7 @@ import {
   type BattleHoleId,
   type BattleAfterDamageEvent,
   type BattleFill,
+  type BattleObjectIgnitionOutcome,
   type BattleResolutionResult,
   type BattleSpellAreaChoice,
   type BattleSpellSavingThrowOutcomeHole,
@@ -26,7 +27,7 @@ import {
   type SaveDamageResult,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
-import type { CombatantId } from "../identity.ts";
+import { spellId, type CombatantId } from "../identity.ts";
 import {
   damageDispositionFillFor,
   damageDispositionFillsValidation,
@@ -635,6 +636,11 @@ export function resolveSaveGateDamageSpellAct(input: {
   const failedTargets = savingThrowOutcomes.outcomes.flatMap((outcome) =>
     outcome.succeeded ? [] : [outcome.targetId],
   );
+  const objectIgnitions = postSaveAreaObjectIgnitions({
+    actorId: input.actorId,
+    area: "area" in savingThrowOutcomes ? savingThrowOutcomes.area : undefined,
+    invocation: input.invocation,
+  });
   const postSaveAreaEffectValidation = validatePostSaveAreaEffect({
     area: "area" in savingThrowOutcomes ? savingThrowOutcomes.area : undefined,
     failedTargetIds: failedTargets,
@@ -706,7 +712,7 @@ export function resolveSaveGateDamageSpellAct(input: {
       failedTargets,
       input.invocation,
     );
-    return spendSpellCastResources({
+    const spentResources = spendSpellCastResources({
       state: extendSavingThrowOngoingFeatures(
         effected,
         input.actorId,
@@ -716,6 +722,7 @@ export function resolveSaveGateDamageSpellAct(input: {
       invocation: input.invocation,
       errorState: input.input.state,
     });
+    return withObjectIgnitions(spentResources, objectIgnitions);
   }
 
   if (input.fillSet.damageRoll == null) {
@@ -921,6 +928,7 @@ export function resolveSaveGateDamageSpellAct(input: {
     invocation: input.invocation,
     movementFill: input.fillSet.movement,
     afterDamageEvents,
+    objectIgnitions,
     suppressedReactionTrigger: input.input.suppressedReactionTrigger,
   });
   if (forcedMovement !== null) {
@@ -931,8 +939,22 @@ export function resolveSaveGateDamageSpellAct(input: {
     state: nextState,
     subject: input.input.subject,
     events: afterDamageEvents,
+    objectIgnitions,
     suppressedReactionTrigger: input.input.suppressedReactionTrigger,
   });
+}
+
+function withObjectIgnitions(
+  result: BattleResolutionResult,
+  objectIgnitions: readonly BattleObjectIgnitionOutcome[],
+): BattleResolutionResult {
+  if (result.tag !== "resolved" || objectIgnitions.length === 0) {
+    return result;
+  }
+  return {
+    ...result,
+    objectIgnitions: [...(result.objectIgnitions ?? []), ...objectIgnitions],
+  };
 }
 
 function resolveFailedSaveForcedReactionMovement(input: {
@@ -950,6 +972,7 @@ function resolveFailedSaveForcedReactionMovement(input: {
       >
     | undefined;
   readonly afterDamageEvents: readonly BattleAfterDamageEvent[];
+  readonly objectIgnitions: readonly BattleObjectIgnitionOutcome[];
   readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
 }): BattleResolutionResult | null {
   const forcedMovementRider = input.invocation.failedSavePostDamageRiders.find(
@@ -1007,6 +1030,7 @@ function resolveFailedSaveForcedReactionMovement(input: {
       state: spendReaction(input.state, targetId),
       subject: input.subject,
       events: input.afterDamageEvents,
+      objectIgnitions: input.objectIgnitions,
       suppressedReactionTrigger: input.suppressedReactionTrigger,
     });
   }
@@ -1043,6 +1067,7 @@ function resolveFailedSaveForcedReactionMovement(input: {
           subject: input.subject,
           movement: parsedMovement.movement,
           events: input.afterDamageEvents,
+          objectIgnitions: input.objectIgnitions,
         },
       },
       input.suppressedReactionTrigger,
@@ -1058,6 +1083,7 @@ function resolveFailedSaveForcedReactionMovement(input: {
     ),
     subject: input.subject,
     events: input.afterDamageEvents,
+    objectIgnitions: input.objectIgnitions,
     suppressedReactionTrigger: input.suppressedReactionTrigger,
   });
 }
@@ -1643,6 +1669,14 @@ export function validateSavingThrowOutcomes(
   ) {
     return "Thunderwave push facts are only valid for Thunderwave.";
   }
+  if (
+    "kind" in value.area &&
+    value.area.kind === "fireballArea" &&
+    (!("postSaveAreaEffect" in hole.spell) ||
+      hole.spell.postSaveAreaEffect?.kind !== "fireballObjectIgnition")
+  ) {
+    return "Fireball object ignition facts are only valid for Fireball.";
+  }
   for (const targetId of affectedTargets) {
     if (!state.combatants.has(targetId)) {
       return "Save-gate spell area affected target must be a combatant in this battle.";
@@ -1691,16 +1725,71 @@ function validatePostSaveAreaEffect(input: {
   >;
 }): string | null {
   if (input.invocation.postSaveAreaEffect === undefined) {
-    return input.area !== undefined &&
-      "kind" in input.area &&
-      input.area.kind === "thunderwaveArea"
-      ? "Thunderwave push facts are only valid for Thunderwave."
-      : null;
+    if (input.area !== undefined && "kind" in input.area) {
+      return input.area.kind === "fireballArea"
+        ? "Fireball object ignition facts are only valid for Fireball."
+        : "Thunderwave push facts are only valid for Thunderwave.";
+    }
+    return null;
+  }
+  if (input.invocation.postSaveAreaEffect.kind === "fireballObjectIgnition") {
+    return validateFireballAreaEffect(input);
   }
   if (input.invocation.postSaveAreaEffect.kind === "thunderwave") {
     return validateThunderwaveAreaEffect(input);
   }
   return null;
+}
+
+function validateFireballAreaEffect(input: {
+  readonly area: BattleSpellAreaChoice | undefined;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "saveGatedDamage" }
+  >;
+}): string | null {
+  if (input.invocation.postSaveAreaEffect?.kind !== "fireballObjectIgnition") {
+    return "Fireball object ignition validation requires a Fireball effect.";
+  }
+  if (input.area === undefined || input.area.kind !== "fireballArea") {
+    return "Fireball requires caller-supplied object ignition area facts.";
+  }
+  const objectIds = new Set<string>();
+  for (const fact of input.area.objectIgnitionFacts) {
+    if (objectIds.has(fact.objectId)) {
+      return "Fireball object ignition facts must not duplicate objects.";
+    }
+    objectIds.add(fact.objectId);
+  }
+  return null;
+}
+
+function postSaveAreaObjectIgnitions(input: {
+  readonly actorId: CombatantId;
+  readonly area: BattleSpellAreaChoice | undefined;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "saveGatedDamage" }
+  >;
+}): readonly BattleObjectIgnitionOutcome[] {
+  if (
+    input.invocation.postSaveAreaEffect?.kind !== "fireballObjectIgnition" ||
+    input.area?.kind !== "fireballArea"
+  ) {
+    return [];
+  }
+  return input.area.objectIgnitionFacts.flatMap((fact) =>
+    fact.disposition.kind === "flammableUnattended"
+      ? [
+          {
+            kind: "startsBurning" as const,
+            objectId: fact.objectId,
+            sourceCombatantId: input.actorId,
+            sourceSpellId: spellId(input.invocation.spell.id),
+          },
+        ]
+      : [],
+  );
 }
 
 function validateThunderwaveAreaEffect(input: {

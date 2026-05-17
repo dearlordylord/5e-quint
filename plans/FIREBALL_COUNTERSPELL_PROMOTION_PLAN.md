@@ -172,6 +172,41 @@ The design has to settle these domain questions before implementation:
 - Wire the React battle scene to the active `@dnd/battle-runtime` projection,
   not to v0.
 
+### Phase 4B: Full Demo Parity
+
+The current promoted React demo is a compact opening exchange, not the full old
+script. It shows 12 authored playback beats:
+
+- battle joined;
+- Laser Wizard starts Fireball;
+- four Counterspell opportunity/cast pairs for the E -> B -> F -> C chain;
+- Fireball resumes;
+- one saving-throw/damage resolution.
+
+The old quarantined `packages/v0/src/demo/fireball-battle.ts`
+`FIREBALL_BATTLE` script has 149 machine events:
+
+- 1 `BATTLE_INIT`;
+- 34 `BATTLE_START_TURN`;
+- 34 `BATTLE_END_TURN`;
+- 6 `BATTLE_CAST_AOE`;
+- 14 `BATTLE_RESOLVE_COUNTERSPELL`;
+- 22 `BATTLE_RESOLVE_AOE_TARGET`;
+- 18 `BATTLE_RESOLVE_SAVE_FAILED_REACTION`;
+- 20 `BATTLE_AFTER_DAMAGE_DECLINE`.
+
+That 149-event count is a complete scripted duel: the opening Fireball,
+Counterspell chain, a return Fireball, later Shatters and Fireballs, reaction
+passes, after-damage passes, knockouts, death saves, deaths, and stabilization.
+It is not equivalent to the promoted demo's current first Fireball slice.
+
+If the promoted demo also exposes runtime holes as visible playback beats
+instead of collapsing filled holes into one narrated result, the full promoted
+demo should have more than 149 visible steps. The old v0 script counted one
+machine event per explicit driver event; it did not separately surface every
+current runtime hole such as spell-cast reaction fact fill, reaction decision,
+saving throw outcome, or grouped damage roll fill.
+
 ## Verification
 
 - RAW agent check before each modeled rule: cite the exact local SRD passage and

@@ -646,6 +646,7 @@ export function resolveCompletedChainedSpell(input: {
       state: input.state,
       subject: input.input.input.subject,
       events: input.afterDamageEvents,
+      objectIgnitions: [],
       suppressedReactionTrigger: input.input.input.suppressedReactionTrigger,
     });
   }
@@ -662,6 +663,7 @@ export function resolveCompletedChainedSpell(input: {
     state: spentResources.state,
     subject: input.input.input.subject,
     events: input.afterDamageEvents,
+    objectIgnitions: [],
     suppressedReactionTrigger: input.input.input.suppressedReactionTrigger,
   });
 }

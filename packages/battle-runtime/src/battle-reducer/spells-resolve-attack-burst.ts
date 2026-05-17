@@ -798,6 +798,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
     state: spentResources.state,
     subject: input.input.subject,
     events: afterDamageEvents,
+    objectIgnitions: [],
     suppressedReactionTrigger: input.input.suppressedReactionTrigger,
   });
   if (afterDamageReactionWindow.tag === "needsHoles") {

@@ -569,21 +569,21 @@ export type BattleActiveEffect =
       readonly base: number;
       readonly ability: "dex";
     } & (
-      | {
-          readonly earlyEnds: readonly [BattleTargetDonsArmorEarlyEnd];
-          readonly expiresAt: Extract<
-            BattleActiveEffectExpiration,
-            { readonly kind: "duration" }
-          >;
-        }
-      | {
-          readonly earlyEnds: readonly [BattleConcentrationBrokenEarlyEnd];
-          readonly expiresAt: Extract<
-            BattleActiveEffectExpiration,
-            { readonly kind: "concentration" }
-          >;
-        }
-    ))
+        | {
+            readonly earlyEnds: readonly [BattleTargetDonsArmorEarlyEnd];
+            readonly expiresAt: Extract<
+              BattleActiveEffectExpiration,
+              { readonly kind: "duration" }
+            >;
+          }
+        | {
+            readonly earlyEnds: readonly [BattleConcentrationBrokenEarlyEnd];
+            readonly expiresAt: Extract<
+              BattleActiveEffectExpiration,
+              { readonly kind: "concentration" }
+            >;
+          }
+      ))
   | (BattleSpellEffectBase & {
       readonly kind: "spellCondition";
       readonly condition: Condition;
@@ -1003,6 +1003,7 @@ export type BattleInterruptedProcedure =
       readonly kind: "afterDamageSequence";
       readonly subject: BattleSubject;
       readonly events: readonly BattleAfterDamageEvent[];
+      readonly objectIgnitions: readonly BattleObjectIgnitionOutcome[];
     }
   | {
       readonly kind: "weaponMasteryCleave";
@@ -1021,6 +1022,7 @@ export type BattleInterruptedProcedure =
       readonly subject: BattleSubject;
       readonly movement: BattleResolvedMovement;
       readonly events: readonly BattleAfterDamageEvent[];
+      readonly objectIgnitions: readonly BattleObjectIgnitionOutcome[];
     }
   | {
       readonly kind: "commandApproachMovement";
@@ -1309,17 +1311,17 @@ export type BattleReactionFrame =
       readonly trigger: "attackDamage";
       readonly continuation: BattleAttackDamageContinuationWithoutConcentration;
     })
-	  | (BattleReactionFrameWithContinuationBase & {
-	      readonly trigger: "spellCast";
-	      readonly casterId: CombatantId;
-	      readonly spellId: SpellRecord["id"];
-	      readonly castLevel: number;
-	      readonly components: readonly SpellComponent[];
-	      readonly castingResource: BattleSpellCastingTimeResource;
-	      readonly spellSlotCommitment: BattleSpellCastSlotCommitment;
-	      readonly targetIds: readonly CombatantId[];
-	      readonly reactionSpellTargetFacts: readonly BattleSpellCastReactionFact[];
-	    })
+  | (BattleReactionFrameWithContinuationBase & {
+      readonly trigger: "spellCast";
+      readonly casterId: CombatantId;
+      readonly spellId: SpellRecord["id"];
+      readonly castLevel: number;
+      readonly components: readonly SpellComponent[];
+      readonly castingResource: BattleSpellCastingTimeResource;
+      readonly spellSlotCommitment: BattleSpellCastSlotCommitment;
+      readonly targetIds: readonly CombatantId[];
+      readonly reactionSpellTargetFacts: readonly BattleSpellCastReactionFact[];
+    })
   | (BattleReactionFrameWithContinuationBase & {
       readonly trigger: "saveFailed";
       readonly targetId: CombatantId;
@@ -1614,13 +1616,13 @@ export type BattleTargetSpatialFact =
       readonly spellId: SpellRecord["id"];
       readonly rangeFeet: MovementFeet;
     }
-	  | {
-	      readonly kind: "counterspellTriggerCasterVisibleWithinRange";
-	      readonly reactorId: CombatantId;
-	      readonly casterId: CombatantId;
-	      readonly spellId: SpellRecord["id"];
-	      readonly rangeFeet: MovementFeet;
-	    }
+  | {
+      readonly kind: "counterspellTriggerCasterVisibleWithinRange";
+      readonly reactorId: CombatantId;
+      readonly casterId: CombatantId;
+      readonly spellId: SpellRecord["id"];
+      readonly rangeFeet: MovementFeet;
+    }
   | {
       readonly kind: "grappleTargetWithinReach";
       readonly grapplerId: CombatantId;
@@ -1641,12 +1643,12 @@ export type BattleTargetSpatialFact =
       readonly actorId: CombatantId;
       readonly targetId: CombatantId;
     }
-	  | {
-	      readonly kind: "sneakAttackAllyWithin5FeetOfTarget";
-	      readonly attackerId: CombatantId;
-	      readonly targetId: CombatantId;
-	      readonly allyId: CombatantId;
-	    };
+  | {
+      readonly kind: "sneakAttackAllyWithin5FeetOfTarget";
+      readonly attackerId: CombatantId;
+      readonly targetId: CombatantId;
+      readonly allyId: CombatantId;
+    };
 export type BattleSpellCastReactionFact = Extract<
   BattleTargetSpatialFact,
   { readonly kind: "counterspellTriggerCasterVisibleWithinRange" }
@@ -1845,19 +1847,23 @@ export type SpellFailedSavePostDamageRider =
       readonly distance: "asFarAsPossible";
       readonly cost: "targetReactionIfAvailable";
     };
-export type SpellPostSaveAreaEffect = {
-  readonly kind: "thunderwave";
-  readonly creaturePush: {
-    readonly distanceFeet: MovementFeet;
-    readonly originDirection: "away_from_caster";
-  };
-  readonly unsecuredObjectPush: {
-    readonly distanceFeet: MovementFeet;
-    readonly originDirection: "away_from_caster";
-    readonly objectLocation: "entirely_within_area";
-  };
-  readonly audibleBoom: BattleThunderwaveAudibleBoom;
-};
+export type SpellPostSaveAreaEffect =
+  | {
+      readonly kind: "fireballObjectIgnition";
+    }
+  | {
+      readonly kind: "thunderwave";
+      readonly creaturePush: {
+        readonly distanceFeet: MovementFeet;
+        readonly originDirection: "away_from_caster";
+      };
+      readonly unsecuredObjectPush: {
+        readonly distanceFeet: MovementFeet;
+        readonly originDirection: "away_from_caster";
+        readonly objectLocation: "entirely_within_area";
+      };
+      readonly audibleBoom: BattleThunderwaveAudibleBoom;
+    };
 export type SpellFailedSaveConditionEffect = {
   readonly condition: Condition;
   readonly expiresAt:
@@ -2597,7 +2603,10 @@ export type SupportedSpellInvocation =
       readonly spell: SpellRecord;
       readonly ability: Extract<Ability, "con">;
       readonly dc: DcSource;
-      readonly targeting: Extract<SpellTargeting, { readonly kind: "singleCombatant" }>;
+      readonly targeting: Extract<
+        SpellTargeting,
+        { readonly kind: "singleCombatant" }
+      >;
       readonly rangeFeet: MovementFeet;
     }
   | {
@@ -2655,11 +2664,11 @@ type AnySupportedDamageSpellInvocation = Exclude<
       | "heldLight"
       | "objectLight"
       | "dancingLightsSeparateCast"
-	      | "dancingLightsCombinedCast"
-	      | "dancingLightsReposition"
-	      | "shieldReaction"
-	      | "counterspell"
-	      | "saveGatedCondition"
+      | "dancingLightsCombinedCast"
+      | "dancingLightsReposition"
+      | "shieldReaction"
+      | "counterspell"
+      | "saveGatedCondition"
       | "saveGatedAttackRollAdvantage"
       | "sleepTargetAdmission"
       | "hideousLaughter"
@@ -3206,6 +3215,10 @@ export type BattleObjectIgnitionOutcome = {
   readonly sourceCombatantId: CombatantId;
   readonly sourceSpellId: SpellId;
 };
+export type BattleFireballObjectIgnitionFact = {
+  readonly objectId: BattleObjectId;
+  readonly disposition: BattleObjectIgnitionDisposition;
+};
 export type BattleDroppedObjectOutcome = {
   readonly kind: "heldObjectDropped";
   readonly actorId: CombatantId;
@@ -3617,6 +3630,10 @@ type BattleSpellAreaChoiceKind =
   | {
       readonly kind: "greaseGroundArea";
       readonly areaId: string;
+    }
+  | {
+      readonly kind: "fireballArea";
+      readonly objectIgnitionFacts: readonly BattleFireballObjectIgnitionFact[];
     }
   | {
       readonly kind: "thunderwaveArea";

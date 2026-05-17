@@ -204,6 +204,7 @@ export function resolveSpellAttackBeamSequenceAct(input: {
     state: spent.state,
     subject: input.input.subject,
     events: afterDamageEvents,
+    objectIgnitions: [],
     suppressedReactionTrigger: input.input.suppressedReactionTrigger,
   });
   if (afterDamageReactionWindow.tag !== "resolved") {

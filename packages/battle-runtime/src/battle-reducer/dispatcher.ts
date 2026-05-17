@@ -187,6 +187,7 @@ import type {
   BattleFeatherFallLandingResult,
   BattleInterruptFrame,
   BattleInterruptedProcedure,
+  BattleObjectIgnitionOutcome,
   BattleOpportunityAttackThreat,
   BattlePendingAttackDamageReduction,
   BattleReactionDecision,
@@ -1405,7 +1406,8 @@ function stateAfterCounteredSpellCast(
   if (currentFrame?.trigger !== "spellCast") {
     return {
       tag: "invalid",
-      message: "Counterspell can only end the current spell-cast Reaction frame.",
+      message:
+        "Counterspell can only end the current spell-cast Reaction frame.",
     };
   }
   const releasedResources =
@@ -1452,13 +1454,17 @@ function turnResourcesAfterWastedSpellCastingResource(
   if (frame.castingResource.kind === "magicAction") {
     const spent = spendAction(resources, "magic");
     return Either.isLeft(spent)
-      ? Either.left("Magic action is no longer available for the countered spell.")
+      ? Either.left(
+          "Magic action is no longer available for the countered spell.",
+        )
       : Either.right(spent.right);
   }
   if (frame.castingResource.kind === "bonusAction") {
     const spent = spendActivationResource(resources, { kind: "bonusAction" });
     return Either.isLeft(spent)
-      ? Either.left("Bonus Action is no longer available for the countered spell.")
+      ? Either.left(
+          "Bonus Action is no longer available for the countered spell.",
+        )
       : Either.right(spent.right);
   }
   return Either.right(resources);
@@ -1804,7 +1810,10 @@ function triggeredReactionSpellCastTargetIds(input: {
         | "counterspell";
     }
   >;
-  readonly fillSet: Extract<ReturnType<typeof spellFillSet>, { readonly tag: "ok" }>;
+  readonly fillSet: Extract<
+    ReturnType<typeof spellFillSet>,
+    { readonly tag: "ok" }
+  >;
 }): readonly CombatantId[] {
   if (input.invocation.procedure === "shieldReaction") {
     return [input.reactorId];
@@ -2324,6 +2333,7 @@ function resolveHellishRebukeReactionSpellCommand(
         }),
       },
     ],
+    objectIgnitions: [],
     suppressedReactionTrigger: undefined,
   });
 }
@@ -2467,7 +2477,8 @@ export function resolveCastAttackHitBonusActionSpellCommand(
     );
   }
   const reactionSpellTargetFacts =
-    fillValidation.tag === "validSaveGated" || fillValidation.tag === "validNonSave"
+    fillValidation.tag === "validSaveGated" ||
+    fillValidation.tag === "validNonSave"
       ? fillValidation.fillSet.reactionSpellTargetFacts
       : [];
   const spellCastFrame = spellCastReactionFrame({
@@ -2493,10 +2504,7 @@ export function resolveCastAttackHitBonusActionSpellCommand(
           spellCastReactionState,
           spellCastFrame,
           input.suppressedReactionTrigger,
-          triggeredReactionSpellChoices(
-            spellCastReactionState,
-            spellCastFrame,
-          ),
+          triggeredReactionSpellChoices(spellCastReactionState, spellCastFrame),
         );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;
@@ -2658,7 +2666,10 @@ function attackHitBonusActionSpellFillValidation(
 ):
   | {
       readonly tag: "validNonSave";
-      readonly fillSet: Extract<ReturnType<typeof spellFillSet>, { readonly tag: "ok" }>;
+      readonly fillSet: Extract<
+        ReturnType<typeof spellFillSet>,
+        { readonly tag: "ok" }
+      >;
     }
   | {
       readonly tag: "validSaveGated";
@@ -3146,6 +3157,7 @@ export function resumeInterruptedProcedure(
       state,
       subject: continuation.subject,
       events: continuation.events,
+      objectIgnitions: continuation.objectIgnitions,
       suppressedReactionTrigger:
         suppressedReactionTrigger === "afterDamage"
           ? undefined
@@ -3178,6 +3190,7 @@ export function resumeInterruptedProcedure(
       state: applyBattleMovement(state, continuation.movement),
       subject: continuation.subject,
       events: continuation.events,
+      objectIgnitions: continuation.objectIgnitions,
       suppressedReactionTrigger:
         suppressedReactionTrigger === "afterDamage"
           ? undefined
@@ -3262,6 +3275,7 @@ export function resumeInterruptedProcedure(
           }),
         },
       ],
+      objectIgnitions: [],
       suppressedReactionTrigger,
     });
   }
@@ -3278,6 +3292,7 @@ export function openAfterDamageSequenceReactionWindow(input: {
   readonly state: BattleState;
   readonly subject: BattleSubject;
   readonly events: readonly BattleAfterDamageEvent[];
+  readonly objectIgnitions: readonly BattleObjectIgnitionOutcome[];
   readonly suppressedReactionTrigger: BattleReactionTrigger | undefined;
 }): BattleResolutionResult {
   const [event, ...remainingEvents] = input.events;
@@ -3286,6 +3301,9 @@ export function openAfterDamageSequenceReactionWindow(input: {
       tag: "resolved",
       state: input.state,
       snapshot: snapshotBattle(input.state),
+      ...(input.objectIgnitions.length === 0
+        ? {}
+        : { objectIgnitions: input.objectIgnitions }),
     };
   }
   const reactionWindow = maybeOpenReactionWindow(
@@ -3300,6 +3318,7 @@ export function openAfterDamageSequenceReactionWindow(input: {
         kind: "afterDamageSequence",
         subject: input.subject,
         events: remainingEvents,
+        objectIgnitions: input.objectIgnitions,
       },
     },
     input.suppressedReactionTrigger,

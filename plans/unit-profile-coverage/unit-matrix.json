@@ -8995,14 +8995,91 @@
         "status": "installed"
       },
       "claim": {
-        "reason": "Fireball is installed as SRD spell catalog data for the non-level-1 spell expansion lane, but no promoted battle-runtime Fireball invocation profile is claimed yet.",
-        "tag": "unsupported-profile"
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "table-spatial-derivation",
+              "owner": "SRDINV66 table/spatial owner",
+              "reason": "Fireball area membership and affected flammable objects are table/spatial facts supplied at the battle-runtime boundary."
+            },
+            "followUpTaskId": "SRDINV66",
+            "mechanic": "automatic area membership, line of effect, object inventory discovery, and grid geometry derivation"
+          }
+        ],
+        "profileIds": [
+          "spell.invocation-damage-save-or-attack"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action Spell Slot casting at level 3 or higher",
+          "caller-supplied 20-foot point-origin Sphere affected-creature boundary",
+          "Dexterity save-gated Fire damage with half damage on successful saves",
+          "slot-scaled Fire damage dice",
+          "caller-supplied unattended flammable-object ignition facts emit starts-burning outcomes"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV54"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-damage-save-or-attack",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE10",
+            "QMBT5",
+            "SRDINV29E",
+            "SRDINV32B",
+            "SRDINV34",
+            "SRDINV59A",
+            "SRDINV59B",
+            "SRDINV79",
+            "SRDINV51",
+            "SRDINV52",
+            "SRDINV64",
+            "SRDINV67",
+            "SRDINV69B",
+            "SRDINV84A",
+            "SRDINV84B",
+            "SRDINV89A"
+          ],
+          "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/fireball.json",
       "unitId": "fireball"
     },

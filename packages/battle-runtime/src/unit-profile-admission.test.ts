@@ -43,6 +43,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV49 expeditious_retreat
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV53 jump
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV51 thunderwave
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV54 fireball
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV52 dissonant_whispers
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT21 mycelium_step
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT18 defense
@@ -278,6 +279,7 @@ const chillTouchUnitId = "chill_touch";
 const commandUnitId = "command";
 const commandLegendaryActorId = combatantId("unit-profile-command-legendary");
 const fireBoltUnitId = "fire_bolt";
+const fireballUnitId = "fireball";
 const falseLifeUnitId = "false_life";
 const faerieFireUnitId = "faerie_fire";
 const guidingBoltUnitId = "guiding_bolt";
@@ -339,6 +341,7 @@ const thunderwaveSecondTargetId = combatantId(
 const ensnaringStrikeHelperId = combatantId("unit-profile-ensnaring-helper");
 const greaseAreaId = "unit-profile-grease-ground-area";
 const thunderwaveObjectId = battleObjectId("unit-profile-thunderwave-object");
+const fireballObjectId = battleObjectId("unit-profile-fireball-object");
 const massHealingTargetIds = [
   spellTargetId,
   combatantId("unit-profile-spell-target-2"),
@@ -7265,7 +7268,9 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
 
     expect(spell.mechanics.family).toBe("triggered_reaction");
     if (spell.mechanics.family !== "triggered_reaction") {
-      throw new Error("Expected Counterspell to be a triggered Reaction spell.");
+      throw new Error(
+        "Expected Counterspell to be a triggered Reaction spell.",
+      );
     }
     const mechanics = spell.mechanics;
     expect(mechanics.castingTime).toMatchObject({
@@ -9199,9 +9204,11 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
     expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
       false,
     );
-    expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn.some((use) => use.kind === "committed")).toBe(
-      false,
-    );
+    expect(
+      resolved.state.currentTurnResources.spellSlotUsesThisTurn.some(
+        (use) => use.kind === "committed",
+      ),
+    ).toBe(false);
   });
 
   test("produce_flame held light admission does not depend on operation order", () => {
@@ -9567,9 +9574,11 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
     expect(canSpendAction(resolved.state.currentTurnResources, "magic")).toBe(
       false,
     );
-    expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn.some((use) => use.kind === "committed")).toBe(
-      false,
-    );
+    expect(
+      resolved.state.currentTurnResources.spellSlotUsesThisTurn.some(
+        (use) => use.kind === "committed",
+      ),
+    ).toBe(false);
   });
 
   test("produce_flame hurl hit reaction window does not expose stale held light", () => {
@@ -10173,9 +10182,11 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
     expect(canSpendAction(resolved.state.currentTurnResources, "magic")).toBe(
       false,
     );
-    expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn.some((use) => use.kind === "committed")).toBe(
-      false,
-    );
+    expect(
+      resolved.state.currentTurnResources.spellSlotUsesThisTurn.some(
+        (use) => use.kind === "committed",
+      ),
+    ).toBe(false);
     expect(resolved.state.combatants.get(spellCasterId)?.activeEffects).toEqual(
       [],
     );
@@ -16782,6 +16793,188 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
   });
 });
 
+describe("SRDINV54 deterministic Fireball Spell Unit admission", () => {
+  test("fireball is admitted as point-origin Sphere save damage with object ignition facts", () => {
+    const spell = spellRecord(fireballUnitId);
+    const act = spellAct({
+      state: spellBattle({
+        preparedSpells: [spell],
+        spellSlots: [{ spellLevel: 4, count: 1 }],
+      }),
+      spellId: fireballUnitId,
+      slotLevel: 4,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(fireballUnitId, 4, "saveGatedDamage"),
+      mode: { tag: "cast" },
+    });
+    const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+    expect(savingThrow).toEqual(
+      expect.objectContaining({
+        label: "Fireball point-origin Sphere Saving Throw outcomes",
+        ability: "dex",
+        dc: { kind: "caster_spell_save_dc" },
+      }),
+    );
+    expect(spellHoleInvocation([savingThrow])).toEqual(
+      expect.objectContaining({
+        procedure: "saveGatedDamage",
+        spell,
+        resource: { tag: "spellSlot", slotLevel: 4 },
+        ability: "dex",
+        targeting: { kind: "pointOriginSphere", radiusFeet: 20 },
+        damage: {
+          expr: { dice: 9, dieSize: 6 },
+          damageType: "fire",
+        },
+        successDamage: "half",
+        rangeFeet: 150,
+        failedSavePostDamageRiders: [],
+        postSaveAreaEffect: { kind: "fireballObjectIgnition" },
+      }),
+    );
+  });
+
+  test("fireball applies area save damage and emits unattended flammable object ignitions", () => {
+    const spell = spellRecord(fireballUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+      targetHp: 50,
+      targetMaxHp: 50,
+    });
+    const act = spellAct({ state, spellId: fireballUnitId, slotLevel: 3 });
+    const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+    const saveFill = fireballSavingThrowOutcomeFill(
+      savingThrow,
+      [{ targetId: spellTargetId, succeeded: false }],
+      [
+        {
+          objectId: fireballObjectId,
+          disposition: { kind: "flammableUnattended" },
+        },
+      ],
+    );
+    const damageRoll = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [saveFill],
+      }),
+      "rolledDice",
+    );
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        saveFill,
+        damageRollFillWithGroups(damageRoll, [[4, 4, 4, 4, 4, 4, 4, 4]]),
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      objectIgnitions: [
+        {
+          kind: "startsBurning",
+          objectId: fireballObjectId,
+          sourceCombatantId: spellCasterId,
+          sourceSpellId: spellId(fireballUnitId),
+        },
+      ],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Fireball to resolve.");
+    }
+    expect(Number(requireCombatant(resolved.state, spellTargetId).hp)).toBe(18);
+    expect(
+      snapshotBattle(resolved.state).combatants.find(
+        (combatant) => combatant.combatantId === spellCasterId,
+      )?.origin,
+    ).toEqual(
+      expect.objectContaining({
+        spellcasting: expect.objectContaining({
+          spellSlots: expect.arrayContaining([
+            expect.objectContaining({ spellLevel: 3, expended: 1 }),
+          ]),
+        }),
+      }),
+    );
+  });
+
+  test("fireball can ignite unattended flammable objects when no creature is caught in the area", () => {
+    const spell = spellRecord(fireballUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+    });
+    const act = spellAct({ state, spellId: fireballUnitId, slotLevel: 3 });
+    const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        fireballSavingThrowOutcomeFill(
+          savingThrow,
+          [],
+          [
+            {
+              objectId: fireballObjectId,
+              disposition: { kind: "flammableUnattended" },
+            },
+          ],
+        ),
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      objectIgnitions: [
+        {
+          kind: "startsBurning",
+          objectId: fireballObjectId,
+          sourceCombatantId: spellCasterId,
+          sourceSpellId: spellId(fireballUnitId),
+        },
+      ],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Fireball to resolve.");
+    }
+    expect(Number(requireCombatant(resolved.state, spellTargetId).hp)).toBe(12);
+  });
+
+  test("fireball requires explicit object ignition area facts", () => {
+    const spell = spellRecord(fireballUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+    });
+    const act = spellAct({ state, spellId: fireballUnitId, slotLevel: 3 });
+    const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          savingThrowOutcomeFill(savingThrow, [
+            { targetId: spellTargetId, succeeded: false },
+          ]),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: "Fireball requires caller-supplied object ignition area facts.",
+    });
+  });
+});
+
 describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () => {
   test("dissonant whispers is admitted as single-target Wisdom save damage with forced Reaction movement", () => {
     const spell = spellRecord(dissonantWhispersUnitId);
@@ -17417,7 +17610,7 @@ function spellBattle(input: {
     { readonly kind: "character" }
   >["attack"];
   readonly spellSlots?: readonly {
-    readonly spellLevel: 1 | 2 | 3 | 5 | 6;
+    readonly spellLevel: 1 | 2 | 3 | 4 | 5 | 6;
     readonly count: number;
   }[];
   readonly extraTargetIds?: readonly CombatantId[];
@@ -19357,6 +19550,32 @@ function thunderwaveArea(
     audibleBoom: {
       sound: "thunderous boom",
       audibleRadiusFeet: movementFeet(300),
+    },
+  };
+}
+
+function fireballSavingThrowOutcomeFill(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+  outcomes: readonly {
+    readonly targetId: CombatantId;
+    readonly succeeded: boolean;
+  }[],
+  objectIgnitionFacts: readonly {
+    readonly objectId: ReturnType<typeof battleObjectId>;
+    readonly disposition: BattleObjectIgnitionDisposition;
+  }[],
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    value: {
+      area: {
+        kind: "fireballArea",
+        originAnchorId: spellCasterId,
+        affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
+        objectIgnitionFacts,
+      },
+      outcomes,
     },
   };
 }

@@ -6,7 +6,7 @@ import { createRoot } from "react-dom/client"
 
 import { appRouteTarget } from "#/app-routes.ts"
 import { BattlePage } from "#/battle-scene/BattlePage.tsx"
-import { STAT_BLOCK_BATTLE_DEMO_META, STAT_BLOCK_BATTLE_DEMO_STATE } from "#/battle-scene/stat-block-battle-demo.ts"
+import { WIZARD_BATTLE_DEMO_META, WIZARD_BATTLE_DEMO_STEPS } from "#/battle-scene/wizard-battle-demo.ts"
 import { CharacterCreationPage } from "#/components/character-creation/CharacterCreationPage.tsx"
 import { PageShell } from "#/components/PageShell.tsx"
 
@@ -42,7 +42,7 @@ export function TracePlaceholder() {
 
 export function RootApp({ path = pathname }: { readonly path?: string }) {
   return Match.value(appRouteTarget(path)).pipe(
-    Match.when("battle", () => <BattlePage state={STAT_BLOCK_BATTLE_DEMO_STATE} meta={STAT_BLOCK_BATTLE_DEMO_META} />),
+    Match.when("battle", () => <BattlePage steps={WIZARD_BATTLE_DEMO_STEPS} meta={WIZARD_BATTLE_DEMO_META} />),
     Match.when("character", () => <CharacterCreationPage />),
     Match.when("home", () => <HomePage />),
     Match.when("tracePlaceholder", () => <TracePlaceholder />),

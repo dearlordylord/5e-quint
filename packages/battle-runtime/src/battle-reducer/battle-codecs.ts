@@ -288,19 +288,24 @@ const BattleThunderwaveAudibleBoomSchema = Schema.Struct({
   audibleRadiusFeet: MovementFeet,
 });
 
-const SpellPostSaveAreaEffectSchema = Schema.Struct({
-  kind: Schema.Literal("thunderwave"),
-  creaturePush: Schema.Struct({
-    distanceFeet: MovementFeet,
-    originDirection: Schema.Literal("away_from_caster"),
+const SpellPostSaveAreaEffectSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("fireballObjectIgnition"),
   }),
-  unsecuredObjectPush: Schema.Struct({
-    distanceFeet: MovementFeet,
-    originDirection: Schema.Literal("away_from_caster"),
-    objectLocation: Schema.Literal("entirely_within_area"),
+  Schema.Struct({
+    kind: Schema.Literal("thunderwave"),
+    creaturePush: Schema.Struct({
+      distanceFeet: MovementFeet,
+      originDirection: Schema.Literal("away_from_caster"),
+    }),
+    unsecuredObjectPush: Schema.Struct({
+      distanceFeet: MovementFeet,
+      originDirection: Schema.Literal("away_from_caster"),
+      objectLocation: Schema.Literal("entirely_within_area"),
+    }),
+    audibleBoom: BattleThunderwaveAudibleBoomSchema,
   }),
-  audibleBoom: BattleThunderwaveAudibleBoomSchema,
-});
+);
 
 const SpellFailedSavePostDamageRiderSchema = Schema.Union(
   Schema.Struct({
@@ -383,6 +388,28 @@ const BattleSpellAreaChoiceSchema = Schema.Union(
     ...BattleSpellAreaChoiceBaseSchema,
     kind: Schema.Literal("greaseGroundArea"),
     areaId: Schema.String,
+    sleepNonSleeperFacts: Schema.optionalWith(Schema.Never, { exact: true }),
+  }),
+  Schema.Struct({
+    ...BattleSpellAreaChoiceBaseSchema,
+    kind: Schema.Literal("fireballArea"),
+    objectIgnitionFacts: Schema.Array(
+      Schema.Struct({
+        objectId: BattleObjectId,
+        disposition: Schema.Union(
+          Schema.Struct({
+            kind: Schema.Literal("flammableUnattended"),
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("notFlammable"),
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("wornOrCarried"),
+          }),
+        ),
+      }),
+    ),
+    areaId: Schema.optionalWith(Schema.Never, { exact: true }),
     sleepNonSleeperFacts: Schema.optionalWith(Schema.Never, { exact: true }),
   }),
   Schema.Struct({
@@ -1640,28 +1667,28 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
   ) as unknown as Schema.Schema<SupportedSpellInvocation>;
 
 export const BattleHoleSchema = Schema.Union(
-    Schema.Struct({
-      ...BattleHoleBaseSchema,
-      kind: Schema.Literal("targetChoice"),
-      choices: Schema.Array(CombatantId),
-      requiresTableSpatialFact: Schema.optionalWith(Schema.Boolean, {
-        exact: true,
-      }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("targetChoice"),
+    choices: Schema.Array(CombatantId),
+    requiresTableSpatialFact: Schema.optionalWith(Schema.Boolean, {
+      exact: true,
     }),
-    Schema.Struct({
-      ...BattleHoleBaseSchema,
-      kind: Schema.Literal("targetSpatialFacts"),
-      spellBeingCast: Schema.Struct({
-        casterId: CombatantId,
-        spellId: SpellId,
-        castLevel: Schema.Number,
-        components: Schema.Array(Schema.Literal("V", "S", "M")),
-      }),
-      requiresTableSpatialFact: Schema.Literal(true),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("targetSpatialFacts"),
+    spellBeingCast: Schema.Struct({
+      casterId: CombatantId,
+      spellId: SpellId,
+      castLevel: Schema.Number,
+      components: Schema.Array(Schema.Literal("V", "S", "M")),
     }),
-    Schema.Struct({
-      ...BattleHoleBaseSchema,
-      kind: Schema.Literal("objectTargetChoice"),
+    requiresTableSpatialFact: Schema.Literal(true),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("objectTargetChoice"),
     requiresTableSpatialFact: Schema.Literal(true),
   }),
   Schema.Struct({

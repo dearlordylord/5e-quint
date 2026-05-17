@@ -187,6 +187,11 @@ module battleRuntime {
   //   5-foot-radius Sphere at a point within 60 feet; each creature in the
   //   Sphere makes a Dexterity Saving Throw and takes Acid damage only on a
   //   failed save.
+  // - Spells/Descriptions-E-L.md lines 427-431 and Rules-Glossary.md lines
+  //   854-856: Fireball is an Action spell that creates a 20-foot-radius
+  //   Sphere at a point within 150 feet; each creature in the Sphere makes a
+  //   Dexterity Saving Throw and takes Fire damage, half on success. Flammable
+  //   objects in the area that aren't worn or carried start burning.
   // - Spells/Gaining-and-Casting.md lines 36-38 and Rules-Glossary.md lines
   //   98-100: lacking training for worn armor prevents spellcasting while
   //   preserving Spell Slot state.
@@ -338,7 +343,7 @@ module battleRuntime {
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
   type Ability = StrAbility | DexAbility | ConAbility | IntAbility | WisAbility | ChaAbility
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | FireBolt | EldritchBlast | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | Counterspell | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | Hex | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | DancingLightsSpell | Light | TrueStrike | Grease | FogCloud | Command | DissonantWhispers | FeatherFall | HellishRebuke | SorcerousBurst | SpareTheDying | HideousLaughter
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | FireBolt | EldritchBlast | SacredFlame | InflictWounds | BurningHands | Fireball | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | Counterspell | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | Hex | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | DancingLightsSpell | Light | TrueStrike | Grease | FogCloud | Command | DissonantWhispers | FeatherFall | HellishRebuke | SorcerousBurst | SpareTheDying | HideousLaughter
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | StarryWispSpellAttack | FireBoltSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack | SorcerousBurstSpellAttack({ damageTypeChoice: BattleRuntimeSorcerousBurstDamageTypeChoice, spellcastingAbilityModifier: int, characterLevel: int })
   type FixedSpellAttackDamageInvocation = RayOfFrostFixedSpellAttack | PoisonSprayFixedSpellAttack | ChillTouchFixedSpellAttack | StarryWispFixedSpellAttack | FireBoltFixedSpellAttack | ShockingGraspFixedSpellAttack | GuidingBoltFixedSpellAttack | RayOfSicknessFixedSpellAttack | ProduceFlameHurlFixedSpellAttack
   type SpellAttackBeamSequenceInvocation =
@@ -346,7 +351,7 @@ module battleRuntime {
   type ChainedSpellAttackDamageInvocation =
     | ChromaticOrbChainedSpellAttack
   type ChromaticOrbDamageTypeChoice = ChromaticOrbAcid | ChromaticOrbCold | ChromaticOrbFire | ChromaticOrbLightning | ChromaticOrbPoison | ChromaticOrbThunder
-  type SaveGatedDamageInvocation = AcidSplashSaveGate | SacredFlameSaveGate | InflictWoundsSaveGate | BurningHandsSaveGate | ViciousMockerySaveGate | DissonantWhispersSaveGate | HellishRebukeSaveGate
+  type SaveGatedDamageInvocation = AcidSplashSaveGate | SacredFlameSaveGate | InflictWoundsSaveGate | BurningHandsSaveGate | FireballSaveGate | ViciousMockerySaveGate | DissonantWhispersSaveGate | HellishRebukeSaveGate
   type AttackBurstSaveDamageInvocation =
     | IceKnifeAttackBurstSaveDamage
   type SaveGatedConditionInvocation =
@@ -442,6 +447,7 @@ module battleRuntime {
     | ChillTouchObjectTarget
     | EldritchBlastObjectTarget
     | FireBoltObjectTarget
+    | FireballObjectTarget
     | ProduceFlameObjectTarget
     | LightObjectTarget
     | PriorLightObjectTarget
@@ -6209,14 +6215,14 @@ module battleRuntime {
 
   pure def expendedSlotsAfterInvocation(
     invocation: SpellInvocation,
-    expendedLevelOneSlots: int,
+    expendedSpellSlots: int,
   ): int =
-    if (spellInvocationSpendsLevelOneSlot(invocation))
-      expendedLevelOneSlots + 1
+    if (spellInvocationSpendsSpellSlot(invocation))
+      expendedSpellSlots + 1
     else
-      expendedLevelOneSlots
+      expendedSpellSlots
 
-  pure def spellInvocationSpendsLevelOneSlot(invocation: SpellInvocation): bool =
+  pure def spellInvocationSpendsSpellSlot(invocation: SpellInvocation): bool =
     match invocation {
       | MagicMissile => true
       | RayOfFrost => false
@@ -6229,6 +6235,7 @@ module battleRuntime {
       | SacredFlame => false
       | InflictWounds => true
       | BurningHands => true
+      | Fireball => true
       | ColorSpray => true
       | Entangle => true
       | EnsnaringStrike => true
@@ -6336,6 +6343,7 @@ module battleRuntime {
       | SacredFlameSaveGate => BattleRuntimeSacredFlameSaveDamage
       | InflictWoundsSaveGate => BattleRuntimeInflictWoundsSaveDamage
       | BurningHandsSaveGate => BattleRuntimeBurningHandsSaveDamage
+      | FireballSaveGate => BattleRuntimeFireballSaveDamage
       | ViciousMockerySaveGate => BattleRuntimeViciousMockerySaveDamage
       | DissonantWhispersSaveGate => BattleRuntimeDissonantWhispersSaveDamage
       | HellishRebukeSaveGate => BattleRuntimeHellishRebukeSaveDamage
@@ -6597,6 +6605,21 @@ module battleRuntime {
         object: object,
         source: source,
         sourceSpell: spellAttackDamageSpellInvocation(invocation),
+      }))
+    else
+      Set()
+
+  pure def saveGatedAreaObjectIgnitionOutcomes(
+    invocation: SaveGatedDamageInvocation,
+    object: ObjectTarget,
+    source: Actor,
+    disposition: ObjectIgnitionDisposition,
+  ): Set[ObjectIgnitionOutcome] =
+    if (invocation == FireballSaveGate and disposition == ObjectFlammableUnattended)
+      Set(ObjectStartsBurning({
+        object: object,
+        source: source,
+        sourceSpell: Fireball,
       }))
     else
       Set()
@@ -6870,6 +6893,7 @@ module battleRuntime {
       | SacredFlameSaveGate => Set()
       | InflictWoundsSaveGate => Set()
       | BurningHandsSaveGate => Set()
+      | FireballSaveGate => Set()
       | DissonantWhispersSaveGate => Set()
       | HellishRebukeSaveGate => Set()
       | ViciousMockerySaveGate => Set(ViciousMockeryNextAttackDisadvantage)
@@ -7345,6 +7369,33 @@ module battleRuntime {
       }, Fighter)
 
   pure def resolveBurningHandsEmptyArea(state: BattleState): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)))
+      state
+    else
+      commitActorSpellSlotUse({
+        ...state,
+        actionAvailable: false,
+      }, Fighter)
+
+  pure def resolveFireball(
+    state: BattleState,
+    fighterSavingThrowSucceeded: bool,
+    goblinSavingThrowSucceeded: bool,
+    damageRoll: int,
+    fighterConcentrationSaveSucceeded: bool,
+    goblinConcentrationSaveSucceeded: bool,
+  ): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)))
+      state
+    else
+      commitActorSpellSlotUse({
+        ...state,
+        fighter: saveGatedDamageTarget(FireballSaveGate, state.fighter, fighterSavingThrowSucceeded, damageRoll, fighterConcentrationSaveSucceeded, Fighter),
+        goblin: saveGatedDamageTarget(FireballSaveGate, state.goblin, goblinSavingThrowSucceeded, damageRoll, goblinConcentrationSaveSucceeded, Fighter),
+        actionAvailable: false,
+      }, Fighter)
+
+  pure def resolveFireballEmptyArea(state: BattleState): BattleState =
     if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)))
       state
     else
@@ -9400,6 +9451,7 @@ module battleRuntime {
       assert(expendedSlotsAfterInvocation(SacredFlame, 0) == 0),
       assert(expendedSlotsAfterInvocation(InflictWounds, 0) == 1),
       assert(expendedSlotsAfterInvocation(BurningHands, 0) == 1),
+      assert(expendedSlotsAfterInvocation(Fireball, 0) == 1),
       assert(expendedSlotsAfterInvocation(ColorSpray, 0) == 1),
       assert(expendedSlotsAfterInvocation(Entangle, 0) == 1),
       assert(expendedSlotsAfterInvocation(HealingWord, 0) == 1),
@@ -9877,6 +9929,12 @@ module battleRuntime {
       }))),
       assert(spellObjectIgnitionOutcomes(FireBoltSpellAttack, FireBoltObjectTarget, Fighter, ObjectWornOrCarried) == Set()),
       assert(spellObjectIgnitionOutcomes(StarryWispSpellAttack, StarryWispObjectTarget, Fighter, ObjectFlammableUnattended) == Set()),
+      assert(saveGatedAreaObjectIgnitionOutcomes(FireballSaveGate, FireballObjectTarget, Fighter, ObjectFlammableUnattended) == Set(ObjectStartsBurning({
+        object: FireballObjectTarget,
+        source: Fighter,
+        sourceSpell: Fireball,
+      }))),
+      assert(saveGatedAreaObjectIgnitionOutcomes(FireballSaveGate, FireballObjectTarget, Fighter, ObjectWornOrCarried) == Set()),
       assert(spellObjectDamageOutcome(ProduceFlameHurlSpellAttack, ProduceFlameObjectTarget, 6, ObjectHitPoints({ hitPoints: 5 })) == ObjectHitPointDamage({
         object: ProduceFlameObjectTarget,
         damageType: Fire,
@@ -9904,6 +9962,7 @@ module battleRuntime {
       assert(chainedSpellAttackDamageDice(ChromaticOrbChainedSpellAttack, 3) == 5),
       assert(saveGatedDamageFailedSaveActiveEffects(ViciousMockerySaveGate) == Set(ViciousMockeryNextAttackDisadvantage)),
       assert(saveGatedDamageFailedSaveActiveEffects(DissonantWhispersSaveGate) == Set()),
+      assert(saveGatedDamageFailedSaveActiveEffects(FireballSaveGate) == Set()),
       assert(saveGatedConditionTargeting(ColorSpraySaveGate) == AreaSaveTargets),
       assert(saveGatedConditionSavingThrowAbility(ColorSpraySaveGate) == ConAbility),
       assert(saveGatedConditionFailedSaveActiveEffects(ColorSpraySaveGate, initialState, Fighter) == Set(ColorSprayBlinded({ source: Fighter, expiresAtRound: 2 }))),
@@ -9974,6 +10033,9 @@ module battleRuntime {
       assert(saveGatedTargeting(BurningHandsSaveGate) == AreaSaveTargets),
       assert(saveGatedDamageSuccess(BurningHandsSaveGate) == HalfDamageOnSaveSuccess),
       assert(saveGatedDamageType(BurningHandsSaveGate) == Fire),
+      assert(saveGatedTargeting(FireballSaveGate) == AreaSaveTargets),
+      assert(saveGatedDamageSuccess(FireballSaveGate) == HalfDamageOnSaveSuccess),
+      assert(saveGatedDamageType(FireballSaveGate) == Fire),
       assert(saveGatedTargeting(ViciousMockerySaveGate) == SingleSaveTarget),
       assert(saveGatedDamageSuccess(ViciousMockerySaveGate) == NoDamageOnSaveSuccess),
       assert(saveGatedDamageType(ViciousMockerySaveGate) == Psychic),
@@ -9983,17 +10045,18 @@ module battleRuntime {
       assert(saveGatedTargeting(HellishRebukeSaveGate) == SingleSaveTarget),
       assert(saveGatedDamageSuccess(HellishRebukeSaveGate) == HalfDamageOnSaveSuccess),
       assert(saveGatedDamageType(HellishRebukeSaveGate) == Fire),
-      assert(spellInvocationSpendsLevelOneSlot(DissonantWhispers)),
-      assert(spellInvocationSpendsLevelOneSlot(HellishRebuke)),
-      assert(spellInvocationSpendsLevelOneSlot(IceKnife)),
-      assert(spellInvocationSpendsLevelOneSlot(AnimalFriendship)),
-      assert(spellInvocationSpendsLevelOneSlot(CharmPerson)),
-      assert(spellInvocationSpendsLevelOneSlot(ProtectionFromEvilAndGood)),
-      assert(spellInvocationSpendsLevelOneSlot(DivineFavor)),
-      assert(spellInvocationSpendsLevelOneSlot(DivineSmite)),
-      assert(spellInvocationSpendsLevelOneSlot(HuntersMark)),
-      assert(spellInvocationSpendsLevelOneSlot(Hex)),
-      assert(spellInvocationSpendsLevelOneSlot(FogCloud)),
+      assert(spellInvocationSpendsSpellSlot(DissonantWhispers)),
+      assert(spellInvocationSpendsSpellSlot(Fireball)),
+      assert(spellInvocationSpendsSpellSlot(HellishRebuke)),
+      assert(spellInvocationSpendsSpellSlot(IceKnife)),
+      assert(spellInvocationSpendsSpellSlot(AnimalFriendship)),
+      assert(spellInvocationSpendsSpellSlot(CharmPerson)),
+      assert(spellInvocationSpendsSpellSlot(ProtectionFromEvilAndGood)),
+      assert(spellInvocationSpendsSpellSlot(DivineFavor)),
+      assert(spellInvocationSpendsSpellSlot(DivineSmite)),
+      assert(spellInvocationSpendsSpellSlot(HuntersMark)),
+      assert(spellInvocationSpendsSpellSlot(Hex)),
+      assert(spellInvocationSpendsSpellSlot(FogCloud)),
       assert(fighterDivineFavorDamage(3, Set(DivineFavorWeaponDamageRider({ durationTicks: 1 }))) == 3),
       assert(fighterDivineFavorDamage(3, Set()) == 0),
       assert(divineSmiteDamageDice(1, HumanoidCreature) == 2),
@@ -10341,6 +10404,8 @@ module battleRuntime {
       assert(saveGatedDamageReplayHoles(InflictWoundsSaveGate, true, true, true, true) == Set(DamageRoll)),
       assert(saveGatedDamageReplayHoles(BurningHandsSaveGate, true, true, false, false) == Set(SavingThrowOutcome)),
       assert(saveGatedDamageReplayHoles(BurningHandsSaveGate, true, true, true, true) == Set(DamageRoll)),
+      assert(saveGatedDamageReplayHoles(FireballSaveGate, true, true, false, false) == Set(SavingThrowOutcome)),
+      assert(saveGatedDamageReplayHoles(FireballSaveGate, true, true, true, true) == Set(DamageRoll)),
       assert(saveGatedConditionReplayHoles(ColorSpraySaveGate, true, true, false) == Set(SavingThrowOutcome)),
       assert(saveGatedConditionReplayHoles(ColorSpraySaveGate, true, true, true) == Set()),
       assert(saveGatedConditionReplayHoles(ColorSpraySaveGate, true, false, true) == Set()),
@@ -10387,6 +10452,26 @@ module battleRuntime {
 
   run test_burning_hands_empty_area_spends_slot_without_damage = {
     val result = resolveBurningHandsEmptyArea(initialState)
+    all {
+      assert(result.actionAvailable == false),
+      assert(battleActorHasCommittedSpellSlotUse(result, Fighter)),
+      assert(result.fighter.hp == 12),
+      assert(result.goblin.hp == 10),
+    }
+  }
+
+  run test_fireball_area_save_damage_halves_success_and_spends_slot = {
+    val result = resolveFireball(initialState, false, true, 8, true, true)
+    all {
+      assert(result.actionAvailable == false),
+      assert(battleActorHasCommittedSpellSlotUse(result, Fighter)),
+      assert(result.fighter.hp == 4),
+      assert(result.goblin.hp == 6),
+    }
+  }
+
+  run test_fireball_empty_area_spends_slot_without_damage = {
+    val result = resolveFireballEmptyArea(initialState)
     all {
       assert(result.actionAvailable == false),
       assert(battleActorHasCommittedSpellSlotUse(result, Fighter)),
@@ -11273,7 +11358,7 @@ module battleRuntime {
       assert(result.stable),
       assert(result.deathSuccesses == 0),
       assert(result.deathFailures == 0),
-      assert(spellInvocationSpendsLevelOneSlot(SpareTheDying) == false),
+      assert(spellInvocationSpendsSpellSlot(SpareTheDying) == false),
     }
   }
 
@@ -11687,7 +11772,7 @@ module battleRuntime {
       assert(hit.goblin.hp == 0),
       assert(not(hit.actionAvailable)),
       assert(not(battleActorHasSpellSlotUse(hit, Fighter))),
-      assert(spellInvocationSpendsLevelOneSlot(TrueStrike) == false),
+      assert(spellInvocationSpendsSpellSlot(TrueStrike) == false),
       assert(trueStrikeWeaponAttackModifier(3, 3) == 6),
       assert(trueStrikeDamageAfterAdjustments(4, 5, 3, 5, Radiant) == 12),
     }

@@ -537,6 +537,7 @@ export function resolvePreparedSlotSpellAct(input: {
       state: nextState,
       subject: input.input.subject,
       events: afterDamageEvents,
+      objectIgnitions: [],
       suppressedReactionTrigger: input.input.suppressedReactionTrigger,
     });
     if (afterDamageReactionWindow.tag === "needsHoles") {

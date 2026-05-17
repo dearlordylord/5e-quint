@@ -157,6 +157,15 @@ type ModifyRollAdvantageEffect = Extract<
   { readonly kind: "modify_roll_advantage" }
 >;
 
+const FIREBALL_SPELL_NAME = "Fireball";
+const FIREBALL_PROVENANCE_SECTION = "Spells/Descriptions-E-L#Fireball";
+const FIREBALL_BASE_SPELL_LEVEL = 3;
+const FIREBALL_RANGE_FEET = 150;
+const FIREBALL_AREA_RADIUS_FEET = 20;
+const FIREBALL_BASE_DAMAGE_DICE = 8;
+const FIREBALL_DAMAGE_DIE_SIZE = 6;
+const FIREBALL_SLOT_DAMAGE_DICE_INCREMENT = 1;
+
 export function hasSaveGateRepeatSaves(
   phase: ActivationPhase | undefined,
 ): boolean {
@@ -1023,10 +1032,16 @@ export function supportedSaveGateDamageProfile(
   const phase = spell.mechanics.phases[0];
   const postSaveAreaEffect =
     phase?.kind === "save_gate"
-      ? thunderwavePostSaveAreaEffect(spell, phase, spell.mechanics.phases[1])
+      ? saveGatedDamagePostSaveAreaEffect(
+          spell,
+          phase,
+          spell.mechanics.phases[1],
+        )
       : null;
   const targeting =
-    phase?.kind === "save_gate" ? saveGateTargeting(phase.attachment) : null;
+    phase?.kind === "save_gate"
+      ? saveGatedDamageTargeting(spell, phase.attachment)
+      : null;
   const rangeFeet =
     targeting?.kind === "singleCombatant"
       ? singleTargetSpellRangeFeet(spell.mechanics.range)
@@ -1145,6 +1160,40 @@ export function saveGateTargeting(
     return {
       kind: "selfOriginCone",
       lengthFeet: movementFeet(value.shape.lengthFeet),
+    };
+  }
+  return null;
+}
+
+function saveGatedDamageTargeting(
+  spell: SpellRecord,
+  attachment: Attachment,
+): SpellTargeting | null {
+  return (
+    saveGateTargeting(attachment) ??
+    fireballPointOriginSphereTargeting(spell, attachment)
+  );
+}
+
+function fireballPointOriginSphereTargeting(
+  spell: SpellRecord,
+  attachment: Attachment,
+): Extract<SpellTargeting, { readonly kind: "pointOriginSphere" }> | null {
+  const value = attachment.kind === "hole" ? attachment.value : attachment;
+  if (
+    spell.name === FIREBALL_SPELL_NAME &&
+    spell.provenance.kind === "srd-5.2.1" &&
+    spell.provenance.section === FIREBALL_PROVENANCE_SECTION &&
+    spell.mechanics.level === FIREBALL_BASE_SPELL_LEVEL &&
+    spell.mechanics.castingTime.kind === "action" &&
+    value.kind === "area" &&
+    value.origin.kind === "point_within_range" &&
+    value.shape.kind === "sphere" &&
+    value.shape.radiusFeet === FIREBALL_AREA_RADIUS_FEET
+  ) {
+    return {
+      kind: "pointOriginSphere",
+      radiusFeet: movementFeet(value.shape.radiusFeet),
     };
   }
   return null;
@@ -1539,6 +1588,67 @@ function isDissonantWhispersFailedSaveDamageShape(
     amount.perLevel.dieSize === undefined &&
     amount.perLevel.flat === undefined
   );
+}
+
+function saveGatedDamagePostSaveAreaEffect(
+  spell: SpellRecord,
+  phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
+  directPhase: SpellActivationPhase | undefined,
+): SpellPostSaveAreaEffect | null {
+  return (
+    fireballPostSaveAreaEffect(spell, phase, directPhase) ??
+    thunderwavePostSaveAreaEffect(spell, phase, directPhase)
+  );
+}
+
+function fireballPostSaveAreaEffect(
+  spell: SpellRecord,
+  phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
+  directPhase: SpellActivationPhase | undefined,
+): SpellPostSaveAreaEffect | null {
+  const damage = phase.onFail;
+  const ignite =
+    directPhase?.kind === "direct" ? directPhase.effects?.[0] : undefined;
+  if (
+    spell.name !== FIREBALL_SPELL_NAME ||
+    spell.provenance.kind !== "srd-5.2.1" ||
+    spell.provenance.section !== FIREBALL_PROVENANCE_SECTION ||
+    spell.mechanics.level !== FIREBALL_BASE_SPELL_LEVEL ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "point" ||
+    spell.mechanics.range.feet !== FIREBALL_RANGE_FEET ||
+    spell.mechanics.duration.kind !== "instantaneous" ||
+    phase.ability !== "dex" ||
+    phase.dc.kind !== "caster_spell_save_dc" ||
+    phase.onSuccess.kind !== "half_damage" ||
+    phase.attachment.kind !== "hole" ||
+    phase.attachment.value.kind !== "area" ||
+    phase.attachment.value.origin.kind !== "point_within_range" ||
+    phase.attachment.value.shape.kind !== "sphere" ||
+    phase.attachment.value.shape.radiusFeet !== FIREBALL_AREA_RADIUS_FEET ||
+    damage.kind !== "damage" ||
+    damage.damageType !== "fire" ||
+    damage.amount.kind !== "linear_per_level" ||
+    damage.amount.axis !== "slot" ||
+    damage.amount.startingAtLevel !== FIREBALL_BASE_SPELL_LEVEL ||
+    damage.amount.base.dice !== FIREBALL_BASE_DAMAGE_DICE ||
+    damage.amount.base.dieSize !== FIREBALL_DAMAGE_DIE_SIZE ||
+    damage.amount.perLevel.dice !== FIREBALL_SLOT_DAMAGE_DICE_INCREMENT ||
+    directPhase?.kind !== "direct" ||
+    directPhase.attachment.kind !== "hole" ||
+    directPhase.attachment.value.kind !== "area" ||
+    directPhase.attachment.value.origin.kind !== "point_within_range" ||
+    directPhase.attachment.value.shape.kind !== "sphere" ||
+    directPhase.attachment.value.shape.radiusFeet !==
+      FIREBALL_AREA_RADIUS_FEET ||
+    directPhase.effects?.length !== 1 ||
+    ignite?.kind !== "ignite_objects" ||
+    ignite.filter.material !== "flammable" ||
+    ignite.filter.heldOrWorn !== "forbidden"
+  ) {
+    return null;
+  }
+  return { kind: "fireballObjectIgnition" };
 }
 
 function thunderwavePostSaveAreaEffect(

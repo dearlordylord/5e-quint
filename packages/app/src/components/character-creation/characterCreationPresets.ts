@@ -54,6 +54,12 @@ type CharacterCreationPreset = {
   readonly draft: CharacterDraft
 }
 
+const FIGHTER_WEAPON_MASTERY_CHOICE_COUNT = 3
+const FIGHTER_PRESET_WEAPON_MASTERY_OPTION_IDS = PHASE1_WEAPON_MASTERY_UNIT_IDS.slice(
+  0,
+  FIGHTER_WEAPON_MASTERY_CHOICE_COUNT
+).map(creationChoiceOptionId)
+
 function presetChoiceFill(
   holeId: ReturnType<typeof draftHoleId>,
   ...optionIds: ReadonlyArray<CreationChoiceOptionId>
@@ -182,11 +188,7 @@ function completeFighterPreset(draftId: string, initialProgressionOptionId: Crea
       CLASS_FEATURE_FEAT_CHOICE_KEY,
       creationChoiceOptionId(PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID)
     ),
-    unitChoiceKeyFill(
-      draft,
-      WEAPON_MASTERY_OPTIONS_CHOICE_KEY,
-      ...PHASE1_WEAPON_MASTERY_UNIT_IDS.map(creationChoiceOptionId)
-    ),
+    unitChoiceKeyFill(draft, WEAPON_MASTERY_OPTIONS_CHOICE_KEY, ...FIGHTER_PRESET_WEAPON_MASTERY_OPTION_IDS),
     unitChoiceFill(
       draft,
       PHASE1_BACKGROUND_SOLDIER_UNIT_ID,
