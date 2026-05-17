@@ -81,6 +81,7 @@
 {"unitId":"fighter_tactical_mind","evidence":{"tag":"selected-identity-mbt","taskId":"L1H-FIGHTER-TACTICAL-MIND","ownerPath":"packages/battle-runtime/src/rule-core-features.mbt.test.ts"}}
 {"unitId":"bard_bardic_inspiration","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV72A","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"bard_bardic_inspiration","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV72B","ownerPath":"packages/battle-runtime/src/index.test.ts"}}
+{"unitId":"bard_bardic_inspiration","evidence":{"tag":"selected-identity-mbt","taskId":"L1D2-BARDIC-INSPIRATION-SCALING","ownerPath":"packages/battle-runtime/src/bardic-inspiration-selected-identity.mbt.test.ts"}}
 {"unitId":"sorcerer_innate_sorcery","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV75A","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"sorcerer_innate_sorcery","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV75B","ownerPath":"packages/battle-runtime/src/index.test.ts"}}
 {"unitId":"bard_cutting_words","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT65","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}

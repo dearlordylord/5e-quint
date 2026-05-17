@@ -71,6 +71,18 @@ export const WEAPON_MASTERY_SAP_SUPPORT_PROFILE = "weaponMasterySap";
 export const WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE = "weaponMasteryTopple";
 export const WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE = "weaponMasteryCleave";
 const BARDIC_INSPIRATION_RANGE_FEET = 60;
+const BARDIC_INSPIRATION_BASE_DIE_SIZE = 6;
+const BARDIC_INSPIRATION_DIE_TIERS = [
+  { atLevel: 5, dieSize: 8 },
+  { atLevel: 10, dieSize: 10 },
+  { atLevel: 15, dieSize: 12 },
+] as const satisfies ReadonlyArray<{
+  readonly atLevel: number;
+  readonly dieSize: DamageDieSize;
+}>;
+type BardicInspirationDieSize =
+  | typeof BARDIC_INSPIRATION_BASE_DIE_SIZE
+  | (typeof BARDIC_INSPIRATION_DIE_TIERS)[number]["dieSize"];
 export const ALTERNATE_ACTION_COST_ACTIONS = [
   "dash",
   "disengage",
@@ -134,6 +146,14 @@ export type BattleAttackActionAttackCountScalingSupportProfile = {
   readonly kind: typeof ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE;
   readonly additionalAttacks: 1;
 };
+type GrantDieTokenEffect = Extract<
+  EffectAtom,
+  { readonly kind: "grant_die_token" }
+>;
+type ThresholdTierDieAmount = Extract<
+  GrantDieTokenEffect["die"],
+  { readonly kind: "threshold_tiers" }
+>;
 export type BonusActionDashTemporaryHitPointsProfile = {
   readonly activationCost: {
     readonly kind: "bonusAction";
@@ -2148,17 +2168,10 @@ function bardicInspirationReactionReduction(
   return {
     kind: "resourceDie",
     dice: 1,
-    dieSize: bardicInspirationDieSize(classLevel),
+    dieSize: bardicInspirationSrdDieSizeAtClassLevel(classLevel),
     flatModifier: 0,
     spends: { resourceUnitId: unit.id, amount: 1 },
   };
-}
-
-function bardicInspirationDieSize(classLevel: ClassLevel): 6 | 8 | 10 | 12 {
-  if (classLevel >= 15) return 12;
-  if (classLevel >= 10) return 10;
-  if (classLevel >= 5) return 8;
-  return 6;
 }
 
 function reactionRollOrDamageReductionKindsUnique(
@@ -2353,38 +2366,73 @@ function parseBardicInspirationGrantUnitFeatureProfile(
     return null;
   }
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(effect.duration);
-  if (
-    effect.die.base.dieSize !== 6 ||
-    bardicInspirationLaterLevelDieSizeApplies(effect.die, classLevel) ||
-    Either.isLeft(durationTicks)
-  ) {
+  const dieSize = bardicInspirationDieSizeAtClassLevel(
+    effect.die,
+    classLevel,
+  );
+  if (dieSize === null || Either.isLeft(durationTicks)) {
     return null;
   }
   return {
     kind: "bardicInspirationGrant",
     unit,
     rangeFeet: movementFeet(BARDIC_INSPIRATION_RANGE_FEET),
-    dieSize: 6,
+    dieSize,
     durationTicks: durationTicks.right,
     spends: { resourceUnitId: unit.id, amount: 1 },
   };
 }
 
-function bardicInspirationLaterLevelDieSizeApplies(
-  die: {
-    readonly tiers?: readonly {
-      readonly atLevel: number;
-      readonly override: { readonly dieSize?: number };
-    }[];
-    readonly base: { readonly dieSize?: number };
-  },
+function bardicInspirationDieSizeAtClassLevel(
+  die: ThresholdTierDieAmount,
   classLevel: ClassLevel,
+): BardicInspirationDieSize | null {
+  if (!isSrdBardicInspirationDieTable(die)) {
+    return null;
+  }
+  return bardicInspirationSrdDieSizeAtClassLevel(classLevel);
+}
+
+function isSrdBardicInspirationDieTable(
+  die: ThresholdTierDieAmount,
 ): boolean {
-  return (die.tiers ?? []).some(
-    (tier) =>
-      classLevel >= tier.atLevel &&
-      tier.override.dieSize !== undefined &&
-      tier.override.dieSize !== 6,
+  if (
+    die.base.dice !== 1 ||
+    die.base.dieSize !== BARDIC_INSPIRATION_BASE_DIE_SIZE ||
+    die.base.flat !== undefined ||
+    die.base.spellcastingMod !== undefined ||
+    die.base.abilityModifier !== undefined ||
+    die.tiers.length !== BARDIC_INSPIRATION_DIE_TIERS.length
+  ) {
+    return false;
+  }
+
+  return BARDIC_INSPIRATION_DIE_TIERS.every((expected) =>
+    die.tiers.some((tier) => bardicInspirationDieTierMatches(tier, expected)),
+  );
+}
+
+function bardicInspirationDieTierMatches(
+  tier: ThresholdTierDieAmount["tiers"][number],
+  expected: (typeof BARDIC_INSPIRATION_DIE_TIERS)[number],
+): boolean {
+  return (
+    tier.atLevel === expected.atLevel &&
+    tier.override.dice === undefined &&
+    tier.override.flat === undefined &&
+    tier.override.dieSize === expected.dieSize
+  );
+}
+
+function bardicInspirationSrdDieSizeAtClassLevel(
+  classLevel: ClassLevel,
+): BardicInspirationDieSize {
+  return (
+    BARDIC_INSPIRATION_DIE_TIERS.filter(
+      (candidate) => classLevel >= candidate.atLevel,
+    )
+      .sort((left, right) => left.atLevel - right.atLevel)
+      .at(-1)?.dieSize ?? BARDIC_INSPIRATION_BASE_DIE_SIZE
   );
 }
 

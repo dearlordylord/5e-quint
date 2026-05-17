@@ -574,15 +574,25 @@ describe("QMBT65 Cutting Words deterministic Unit profile admission", () => {
     );
   });
 
-  test("bard_bardic_inspiration grant profile stays scoped to the d6 slice", () => {
-    const unit = unitLibrary.requireUnit(bardBardicInspirationUnitId);
+  test.each([
+    { level: 1, dieSize: 6 },
+    { level: 5, dieSize: 8 },
+    { level: 10, dieSize: 10 },
+    { level: 15, dieSize: 12 },
+  ] as const)(
+    "bard_bardic_inspiration grant profile projects the Bardic die at Bard level $level",
+    ({ level, dieSize }) => {
+      const unit = unitLibrary.requireUnit(bardBardicInspirationUnitId);
 
-    expect(
-      parseSupportedUnitFeatureProfile(unit, [
-        { className: "bard", level: classLevel(5) },
-      ]),
-    ).toBeNull();
-  });
+      expect(
+        parseSupportedUnitFeatureProfile(unit, [
+          { className: "bard", level: classLevel(level) },
+        ]),
+      ).toEqual(
+        expect.objectContaining({ kind: "bardicInspirationGrant", dieSize }),
+      );
+    },
+  );
 
   test("bard_bardic_inspiration rejects malformed grant mechanics", () => {
     const unit = unitLibrary.requireUnit(bardBardicInspirationUnitId);
@@ -606,6 +616,92 @@ describe("QMBT65 Cutting Words deterministic Unit profile admission", () => {
     expect(battleBardicInspirationGrantSupportForUnit(malformedUnit)).toBe(
       "unsupported",
     );
+  });
+
+  test("bard_bardic_inspiration rejects non-SRD Bardic die tier tables", () => {
+    const unit = unitLibrary.requireUnit(bardBardicInspirationUnitId);
+    if (
+      unit.kind !== "class_feature" ||
+      unit.mechanics.family !== "activation"
+    ) {
+      throw new Error("Expected Bardic Inspiration activation mechanics.");
+    }
+    const phase = unit.mechanics.phases[0];
+    if (phase?.kind !== "direct") {
+      throw new Error("Expected Bardic Inspiration direct phase.");
+    }
+    const effect = phase.effects?.[0];
+    if (
+      effect?.kind !== "grant_die_token" ||
+      effect.die.kind !== "threshold_tiers"
+    ) {
+      throw new Error("Expected Bardic Inspiration grant-die token.");
+    }
+    const die = effect.die;
+    const malformedDice = [
+      {
+        name: "wrong_base_die",
+        die: { ...die, base: { ...die.base, dieSize: 4 } },
+      },
+      {
+        name: "wrong_threshold",
+        die: {
+          ...die,
+          tiers: die.tiers.map((tier) =>
+            tier.atLevel === 5 ? { ...tier, atLevel: 4 } : tier,
+          ),
+        },
+      },
+      {
+        name: "wrong_tier_die",
+        die: {
+          ...die,
+          tiers: die.tiers.map((tier) =>
+            tier.atLevel === 10
+              ? { ...tier, override: { ...tier.override, dieSize: 12 } }
+              : tier,
+          ),
+        },
+      },
+      {
+        name: "missing_tier",
+        die: {
+          ...die,
+          tiers: die.tiers.filter((tier) => tier.atLevel !== 15),
+        },
+      },
+      {
+        name: "extra_tier",
+        die: {
+          ...die,
+          tiers: [...die.tiers, { atLevel: 20, override: { dieSize: 12 } }],
+        },
+      },
+    ];
+
+    for (const malformed of malformedDice) {
+      const malformedUnit = unitMechanicsVariant(unit, {
+        id: `bard_bardic_inspiration_${malformed.name}`,
+        mechanics: {
+          ...unit.mechanics,
+          phases: [
+            {
+              ...phase,
+              effects: [{ ...effect, die: malformed.die }],
+            },
+          ],
+        },
+      });
+
+      expect(
+        parseSupportedUnitFeatureProfile(malformedUnit, [
+          { className: "bard", level: classLevel(15) },
+        ]),
+      ).toBeNull();
+      expect(battleBardicInspirationGrantSupportForUnit(malformedUnit)).toBe(
+        "unsupported",
+      );
+    }
   });
 
   test("bard_cutting_words is admitted from reaction roll-or-damage reduction mechanics", () => {

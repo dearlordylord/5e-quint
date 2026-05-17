@@ -3937,14 +3937,8 @@
         "state": "installed",
         "unitId": "bard_bardic_inspiration"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV78 later-level scaling",
-        "reason": "The remaining Bardic Inspiration die-size changes occur only after level 1."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",

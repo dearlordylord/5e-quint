@@ -13324,7 +13324,7 @@ describe("battle runtime", () => {
     });
   });
 
-  test("Bardic Inspiration grants one one-hour d6 die and spends Bonus Action and Charisma-derived use", () => {
+  test("Bardic Inspiration grants one one-hour d6 die at Bard level 1 and spends Bonus Action and Charisma-derived use", () => {
     const bardicInspiration = bardicInspirationUnit();
     const state = bardicInspirationBattle({ charismaModifier: 3 });
     const subject = bardicInspirationSubject(bardicInspiration.id);
@@ -13365,6 +13365,34 @@ describe("battle runtime", () => {
           durationTicks: requireElapsedHours(1),
         },
       },
+    ]);
+  });
+
+  test("Bardic Inspiration grants the SRD-scaled die at later Bard levels", () => {
+    const bardicInspiration = bardicInspirationUnit();
+    const state = bardicInspirationBattle({
+      bardLevel: 15,
+      charismaModifier: 3,
+    });
+    const subject = bardicInspirationSubject(bardicInspiration.id);
+    const target = findHole(
+      findAct(state, subject).initialHoles,
+      "targetChoice",
+    );
+
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [bardicInspirationTargetFill(target, goblinId)],
+      }),
+    );
+
+    expect(resolved.state.combatants.get(goblinId)?.activeEffects).toEqual([
+      expect.objectContaining({
+        kind: "bardicInspirationDie",
+        dieSize: 12,
+      }),
     ]);
   });
 
@@ -28477,6 +28505,7 @@ function bardicInspirationResource(input: {
 }
 
 function bardicInspirationBattle(input: {
+  readonly bardLevel?: number;
   readonly charismaModifier: number;
   readonly bardHidden?: boolean;
   readonly targetConditions?: readonly Condition[];
@@ -28488,7 +28517,7 @@ function bardicInspirationBattle(input: {
         combatantId: fighterId,
         displayName: "Bard",
         initiative: 20,
-        classLevels: [{ className: "bard", level: 1 }],
+        classLevels: [{ className: "bard", level: input.bardLevel ?? 1 }],
         attack: null,
         resources: [
           bardicInspirationResource({

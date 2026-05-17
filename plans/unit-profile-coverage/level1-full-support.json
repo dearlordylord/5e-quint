@@ -79,35 +79,6 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "later-level-only"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "The remaining Bardic Inspiration die-size changes occur only after level 1.",
-      "sourceRecordPath": "packages/surface/content/bard_bardic_inspiration.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Bard Bardic Inspiration",
-          "id": "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
-          "levelBand": "level-1",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 68,
-            "lineStart": 57,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        }
-      ],
-      "status": "closed-later-level-only",
-      "strictTargetClosed": true,
-      "unitId": "bard_bardic_inspiration"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
         "social-knowledge-effect"
       ],
       "collectionId": "srd-5.2.1",
@@ -1253,7 +1224,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 69,
+      "count": 70,
       "description": "Full support exists at the Unit profile boundary for strict level-1 accounting.",
       "status": "supported-profile",
       "unitIds": [
@@ -1262,6 +1233,7 @@
         "bane",
         "barbarian_rage",
         "barbarian_unarmored_defense",
+        "bard_bardic_inspiration",
         "bless",
         "burning_hands",
         "chill_touch",
@@ -1360,12 +1332,11 @@
       ]
     },
     {
-      "count": 5,
+      "count": 4,
       "description": "The level-1 behavior is complete and every remaining residual is later-level-only.",
       "status": "closed-later-level-only",
       "unitIds": [
         "barbarian_weapon_mastery",
-        "bard_bardic_inspiration",
         "fighter_weapon_mastery",
         "monk_martial_arts",
         "ranger_favored_enemy"
@@ -1393,8 +1364,8 @@
     },
     "strictRuntimeProfileSupport": {
       "denominator": 93,
-      "numerator": 69,
-      "percent": "74.2%"
+      "numerator": 70,
+      "percent": "75.3%"
     },
     "strictTargetClosure": {
       "denominator": 93,
@@ -3694,18 +3665,18 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 120,
     "groupsByClaimTag": {
-      "profile-subset-supported": 13,
-      "supported-profile": 69,
+      "profile-subset-supported": 12,
+      "supported-profile": 70,
       "unsupported-profile": 11
     },
     "groupsByStatus": {
       "closed-character-fact-and-runtime-detached-split": 2,
-      "closed-later-level-only": 5,
+      "closed-later-level-only": 4,
       "closed-runtime-detached-table-adjudication": 10,
       "open-profile-accounting": 7,
-      "supported-profile": 69
+      "supported-profile": 70
     },
-    "nonSupportedFrontier": 24,
+    "nonSupportedFrontier": 23,
     "strictDenominator": 93
   }
 }
