@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "L1K-ZONE-WALL-CANDIDATES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Zone Wall Emanation Spell Candidate Intake"
     },
     {
@@ -139,7 +139,7 @@ Every task runs:
 | 3 | L1K-CONDITION-CONTROL-CANDIDATES - Condition Control Spell Candidate Intake | done | 1 | candidate split for condition/control spells outside D |
 | 4 | L1K-PROTECTION-RESTORATION-CANDIDATES - Protection Restoration Spell Candidate Intake | done | 1 | candidate split for protection/restoration spells outside D |
 | 5 | L1K-MOBILITY-TRANSFORMATION-CANDIDATES - Mobility Transformation Spell Candidate Intake | done | 1 | candidate split for mobility/transformation spells outside D |
-| 6 | L1K-ZONE-WALL-CANDIDATES - Zone Wall Emanation Spell Candidate Intake | ready-for-research | 1 | candidate split for zones/walls/emanations outside D |
+| 6 | L1K-ZONE-WALL-CANDIDATES - Zone Wall Emanation Spell Candidate Intake | done | 1 | candidate split for zones/walls/emanations outside D |
 | 7 | L1K-DETECTION-COMMUNICATION-CANDIDATES - Detection Communication Spell Candidate Intake | ready-for-research | 1 | runtime-detached versus runtime-witness split for detection/communication spells |
 | 8 | L1K-COUNTER-DISPEL-CANDIDATES - Counter Dispel Spell Candidate Intake | ready-for-research | 1 | candidate split for counter/dispel/anti-magic spells |
 | 9 | L1K-WEAPON-ITEM-HOSTED-CANDIDATES - Weapon Item Hosted Spell Candidate Intake | ready-for-research | 1 | candidate split for weapon/item hosted spells |
@@ -254,7 +254,7 @@ behavior, or MBT evidence.
 
 ### Task 6 - L1K-ZONE-WALL-CANDIDATES - Zone Wall Emanation Spell Candidate Intake
 
-Status: `ready-for-research`
+Status: `done`
 
 Initial candidates: `web`, `moonbeam`, `spike_growth`, `wall_of_fire`,
 `wall_of_force`, `wall_of_stone`, `stinking_cloud`,
@@ -264,6 +264,24 @@ Do not convert table-owned area membership/pathfinding into runtime-owned map
 automation. Treat `conjure_minor_elementals` and `conjure_woodland_beings` as
 self-origin Emanation candidates under SRD 5.2.1, not companion/summon
 lifecycle exclusions.
+
+Decision artifact:
+`plans/unit-profile-coverage/L1K_ZONE_WALL_EMANATION_SPELL_CANDIDATE_INTAKE.md`.
+
+Final split:
+
+- composite zone hazard needs: `web`, `stinking_cloud`;
+- recurring area-damage lifecycle needs: `moonbeam`, `wall_of_fire`,
+  `conjure_woodland_beings`;
+- movement-metered terrain damage need: `spike_growth`;
+- self-origin Emanation attack-rider terrain need:
+  `conjure_minor_elementals`;
+- barrier and wall object lifecycle needs: `wall_of_force`, `wall_of_stone`.
+
+No candidate is an exact existing-profile fit. The decision artifact records
+table-owned area membership, movement, pathfinding, wall geometry, and
+obscurement boundaries; this intake task does not add Unit claims, catalog
+admission, QNT behavior, battle reducer behavior, or MBT evidence.
 
 ### Task 7 - L1K-DETECTION-COMMUNICATION-CANDIDATES - Detection Communication Spell Candidate Intake
 
