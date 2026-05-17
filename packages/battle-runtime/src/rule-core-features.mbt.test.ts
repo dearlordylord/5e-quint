@@ -5,6 +5,9 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt QMBT31 feat_savage_attacker
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt passive-and-zero-hp-features defense feat_archery orc_relentless_endurance
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt reaction-interruption bard_cutting_words monk_deflect_attacks
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-FIGHTER-TACTICAL-MIND fighter_tactical_mind
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-BOON-COMBAT-PROWESS feat_boon_of_combat_prowess
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-MYCELIUM-STEP mycelium_step
 // UNIT-IDENTITY-MBT-REPLAY: QMBT7 fighter_second_wind doDiscoverSecondWind doResolveSecondWindLow doResolveSecondWindHigh
 // UNIT-IDENTITY-MBT-REPLAY: QMBT9 fighter_action_surge doActionSurgeActivate doActionSurgeRejectTwice
 // UNIT-IDENTITY-MBT-REPLAY: QMBT9 fighter_improved_critical doImprovedCritical
@@ -20,6 +23,9 @@
 // UNIT-IDENTITY-MBT-REPLAY: passive-and-zero-hp-features orc_relentless_endurance doZeroHitPointReplacement
 // UNIT-IDENTITY-MBT-REPLAY: reaction-interruption bard_cutting_words doCuttingWordsDamage
 // UNIT-IDENTITY-MBT-REPLAY: reaction-interruption monk_deflect_attacks doDeflectAttacksDamageReduction
+// UNIT-IDENTITY-MBT-REPLAY: L1H-FIGHTER-TACTICAL-MIND fighter_tactical_mind doTacticalMindConvertedSuccess doTacticalMindStillFailed
+// UNIT-IDENTITY-MBT-REPLAY: L1H-BOON-COMBAT-PROWESS feat_boon_of_combat_prowess doCombatProwessMissToHit
+// UNIT-IDENTITY-MBT-REPLAY: L1H-MYCELIUM-STEP mycelium_step doMyceliumStepDash
 import * as path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
@@ -27,11 +33,13 @@ import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
 
+import myceliumStepInput from "../../../plans/unit-profile-coverage/fixtures/classic-non-srd/mycelium_step.json";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
   abilityModifier,
   attackBonus,
+  difficultyClass,
   DieRollResult,
   Hp,
   movementFeet,
@@ -64,6 +72,7 @@ import {
   initiativeScore,
   resolveBattleReaction,
   resolveBattleSubject,
+  resolveFailedAbilityCheckResourceBoost,
   snapshotBattle,
   startBattle,
   type BattleCreatureInit,
@@ -76,6 +85,10 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { parseSupportedUnitFeatureProfile } from "./unit-feature-support.ts";
+import {
+  mechanicsOnlyMyceliumStepUnit,
+  myceliumStepUnitId,
+} from "./classic-non-srd-mechanics-test-fixtures.ts";
 
 const ruleCoreFeatureMbtHoles = [
   "DamageRoll",
@@ -117,6 +130,8 @@ type RuleCoreFeatureProjection = {
   readonly incomingAttackAdvantage: boolean;
   readonly sneakAttackUsedThisTurn: boolean;
   readonly lastDamageAmount: number;
+  readonly abilityCheckBoostedTotal: number;
+  readonly abilityCheckBoostedSucceeded: boolean;
   readonly critical: boolean;
   readonly actorArmorClass: number;
   readonly holes: readonly RuleCoreFeatureMbtHole[];
@@ -165,9 +180,12 @@ const driverSchema = {
   doDiscoverSecondWind: {},
   doResolveSecondWindLow: {},
   doResolveSecondWindHigh: {},
+  doTacticalMindConvertedSuccess: {},
+  doTacticalMindStillFailed: {},
   doCunningDash: {},
   doCunningDisengage: {},
   doCunningHide: {},
+  doMyceliumStepDash: {},
   doRageActivateAndDamage: {},
   doRecklessAttack: {},
   doSneakAttack: {},
@@ -179,6 +197,7 @@ const driverSchema = {
   doUncannyDodge: {},
   doDefenseArmorClass: {},
   doArcheryAttackRollBonus: {},
+  doCombatProwessMissToHit: {},
   doSavageAttackerDamage: {},
   doZeroHitPointReplacement: {},
   step: {},
@@ -198,7 +217,10 @@ type SelectedUnitIdentityReplay = {
     | "QMBT9"
     | "QMBT31"
     | "passive-and-zero-hp-features"
-    | "reaction-interruption";
+    | "reaction-interruption"
+    | "L1H-FIGHTER-TACTICAL-MIND"
+    | "L1H-BOON-COMBAT-PROWESS"
+    | "L1H-MYCELIUM-STEP";
   readonly unitId: string;
   readonly actions: readonly RuleCoreFeatureDriverAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
@@ -444,6 +466,67 @@ const selectedUnitIdentityReplays = [
     ],
   },
   {
+    taskId: "L1H-FIGHTER-TACTICAL-MIND",
+    unitId: "fighter_tactical_mind",
+    actions: ["doTacticalMindConvertedSuccess", "doTacticalMindStillFailed"],
+    sequences: [
+      {
+        name: "converted-success",
+        actions: ["doTacticalMindConvertedSuccess"],
+        expected: expectedProjection({
+          featureUsesRemaining: 0,
+          abilityCheckBoostedTotal: 16,
+          abilityCheckBoostedSucceeded: true,
+          lastResult: "resolved",
+        }),
+      },
+      {
+        name: "still-failed",
+        actions: ["doTacticalMindStillFailed"],
+        expected: expectedProjection({
+          featureUsesRemaining: 1,
+          abilityCheckBoostedTotal: 14,
+          abilityCheckBoostedSucceeded: false,
+          lastResult: "resolved",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "L1H-BOON-COMBAT-PROWESS",
+    unitId: "feat_boon_of_combat_prowess",
+    actions: ["doCombatProwessMissToHit"],
+    sequences: [
+      {
+        name: "miss-to-hit",
+        actions: ["doCombatProwessMissToHit"],
+        expected: expectedProjection({
+          actionAvailable: false,
+          featureUsesRemaining: 0,
+          targetHp: 8,
+          lastDamageAmount: 4,
+          lastResult: "resolved",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "L1H-MYCELIUM-STEP",
+    unitId: "mycelium_step",
+    actions: ["doMyceliumStepDash"],
+    sequences: [
+      {
+        name: "dash-as-bonus-action",
+        actions: ["doMyceliumStepDash"],
+        expected: expectedProjection({
+          bonusActionAvailable: false,
+          dashBonusFeet: 30,
+          lastResult: "resolved",
+        }),
+      },
+    ],
+  },
+  {
     taskId: "reaction-interruption",
     unitId: "bard_cutting_words",
     actions: ["doCuttingWordsDamage"],
@@ -551,6 +634,8 @@ function expectedProjection(
     incomingAttackAdvantage: false,
     sneakAttackUsedThisTurn: false,
     lastDamageAmount: 0,
+    abilityCheckBoostedTotal: 0,
+    abilityCheckBoostedSucceeded: false,
     critical: false,
     actorArmorClass: featureMbtBaselineArmorClass,
     holes: [],
@@ -580,6 +665,8 @@ function createRuleCoreFeatureDriver() {
     let lastInvalidReason: RuleCoreFeatureProjection["lastInvalidReason"] =
       "none";
     let lastDamageAmount = 0;
+    let abilityCheckBoostedTotal = 0;
+    let abilityCheckBoostedSucceeded = false;
     let critical = false;
     let actorArmorClass = featureMbtBaselineArmorClass;
     let featureUsesRemaining = 1;
@@ -595,6 +682,8 @@ function createRuleCoreFeatureDriver() {
       lastResult = "init";
       lastInvalidReason = "none";
       lastDamageAmount = 0;
+      abilityCheckBoostedTotal = 0;
+      abilityCheckBoostedSucceeded = false;
       critical = false;
       actorArmorClass = featureMbtBaselineArmorClass;
       featureUsesRemaining = 1;
@@ -641,10 +730,12 @@ function createRuleCoreFeatureDriver() {
         { readonly tag: "action"; readonly action: "attack" }
       >;
       readonly naturalD20?: number;
+      readonly attackRollTotal?: number;
       readonly damageRoll: number;
       readonly damageGroups?: readonly (readonly number[])[];
       readonly rollMode?: AttackRollMode;
       readonly activatedOngoingFeatureUnitId?: string;
+      readonly missToHitReplacementUnitId?: string;
       readonly selectedAttackDamageRiderUnitIds?: readonly string[];
       readonly weaponDamageDiceRollChoice?: Extract<
         BattleFill,
@@ -672,7 +763,7 @@ function createRuleCoreFeatureDriver() {
         "attackRoll",
       );
       const rollValue = {
-        total: input.naturalD20 ?? 15,
+        total: input.attackRollTotal ?? input.naturalD20 ?? 15,
         naturalD20: input.naturalD20 ?? 10,
         ...(input.rollMode === undefined ? {} : { rollMode: input.rollMode }),
         ...(input.activatedOngoingFeatureUnitId === undefined
@@ -680,6 +771,11 @@ function createRuleCoreFeatureDriver() {
           : {
               activatedOngoingFeatureUnitId:
                 input.activatedOngoingFeatureUnitId,
+            }),
+        ...(input.missToHitReplacementUnitId === undefined
+          ? {}
+          : {
+              missToHitReplacementUnitId: input.missToHitReplacementUnitId,
             }),
       };
       const damage = requireHole(
@@ -778,12 +874,25 @@ function createRuleCoreFeatureDriver() {
       },
       doResolveSecondWindLow: () => resolveSecondWind(1),
       doResolveSecondWindHigh: () => resolveSecondWind(8),
+      doTacticalMindConvertedSuccess: () =>
+        resolveTacticalMind({
+          originalTotal: 13,
+          boostRoll: 3,
+        }),
+      doTacticalMindStillFailed: () =>
+        resolveTacticalMind({
+          originalTotal: 10,
+          boostRoll: 4,
+        }),
       doCunningDash: () => resolveCunningAction("dash"),
       doCunningDisengage: () => resolveCunningAction("disengage"),
       doCunningHide: () => {
         state = cunningActionBattle();
         resetProjection();
-        const subject = bonusActionStandardActionSubject("hide");
+        const subject = bonusActionStandardActionSubject(
+          "rogue_cunning_action",
+          "hide",
+        );
         const act = findAct(state, subject);
         recordResult(
           resolveBattleSubject({
@@ -795,6 +904,20 @@ function createRuleCoreFeatureDriver() {
                 16,
               ),
             ],
+          }),
+        );
+      },
+      doMyceliumStepDash: () => {
+        state = myceliumStepBattle();
+        resetProjection();
+        recordResult(
+          resolveBattleSubject({
+            state,
+            subject: bonusActionStandardActionSubject(
+              myceliumStepUnitId,
+              "dash",
+            ),
+            fills: [],
           }),
         );
       },
@@ -1063,12 +1186,29 @@ function createRuleCoreFeatureDriver() {
         actorArmorClass = 9;
         critical = false;
       },
+      doCombatProwessMissToHit: () => {
+        state = combatProwessBattle();
+        resetProjection();
+        resolveActorAttack({
+          state,
+          naturalD20: 2,
+          attackRollTotal: 1,
+          damageRoll: 4,
+          missToHitReplacementUnitId: recordSelectedUnitRuntimeBoundaryId(
+            "feat_boon_of_combat_prowess",
+          ),
+        });
+        featureUsesRemaining = combatProwessUsesRemaining(state);
+        lastDamageAmount = 4;
+      },
       step: () => {},
       getState: () =>
         projectRuleCoreFeatureState({
           state,
           holes,
           lastDamageAmount,
+          abilityCheckBoostedTotal,
+          abilityCheckBoostedSucceeded,
           critical,
           actorArmorClass,
           featureUsesRemaining,
@@ -1096,13 +1236,47 @@ function createRuleCoreFeatureDriver() {
       lastDamageAmount = roll === 1 ? 3 : 8;
     }
 
+    function resolveTacticalMind(input: {
+      readonly originalTotal: number;
+      readonly boostRoll: number;
+    }): void {
+      const unit = tacticalMindUnit();
+      state = tacticalMindBattle(unit);
+      resetProjection();
+      const result = resolveFailedAbilityCheckResourceBoost({
+        state,
+        unitId: recordSelectedUnitRuntimeBoundaryId(unit.id),
+        abilityCheck: {
+          actorId,
+          ability: "int",
+          skillOrToolLabel: "Investigation",
+          originalTotal: input.originalTotal,
+          dc: difficultyClass(15),
+        },
+        boostRoll: input.boostRoll,
+      });
+      recordResult(result);
+      featureUsesRemaining = resourceUsesRemaining(
+        state,
+        "fighter_second_wind",
+      );
+      if (result.tag === "resolved") {
+        abilityCheckBoostedTotal = result.abilityCheckBoost.boostedTotal;
+        abilityCheckBoostedSucceeded =
+          result.abilityCheckBoost.boostedSucceeded;
+      }
+    }
+
     function resolveCunningAction(action: "dash" | "disengage"): void {
       state = cunningActionBattle();
       resetProjection();
       recordResult(
         resolveBattleSubject({
           state,
-          subject: bonusActionStandardActionSubject(action),
+          subject: bonusActionStandardActionSubject(
+            "rogue_cunning_action",
+            action,
+          ),
           fills: [],
         }),
       );
@@ -1395,6 +1569,31 @@ function secondWindBattle(): BattleState {
   });
 }
 
+function tacticalMindBattle(
+  unit: Extract<UnitRecord, { readonly kind: "class_feature" }>,
+): BattleState {
+  const unitRef = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
+  });
+  if (Either.isLeft(unitRef)) {
+    throw new Error(unitRef.left.message);
+  }
+  return startBattleRight({
+    battleId: battleId("rule-core-tactical-mind"),
+    combatants: [
+      featureActor({
+        initiative: 20,
+        classLevels: [{ className: "fighter", level: 2 }],
+        resources: [unitResource("fighter_second_wind")],
+        unitFeatures: [{ unit }],
+        characterUnitRefs: [unitRef.right],
+      }),
+      featureTarget(10),
+    ],
+  });
+}
+
 function cunningActionBattle(): BattleState {
   return startBattleRight({
     battleId: battleId("rule-core-cunning-action"),
@@ -1416,6 +1615,27 @@ function cunningActionBattle(): BattleState {
         { kind: "coverOutOfEnemyLineOfSight" as const, cover: "total" },
       ],
     ]),
+  });
+}
+
+function myceliumStepBattle(): BattleState {
+  const unit = mechanicsOnlyMyceliumStepUnit(myceliumStepInput);
+  const unitRef = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: recordSelectedUnitRuntimeBoundaryId(unit.id) },
+    unit,
+  });
+  if (Either.isLeft(unitRef)) {
+    throw new Error(unitRef.left.message);
+  }
+  return startBattleRight({
+    battleId: battleId("rule-core-mycelium-step"),
+    combatants: [
+      featureActor({
+        initiative: 20,
+        characterUnitRefs: [unitRef.right],
+      }),
+      featureTarget(10),
+    ],
   });
 }
 
@@ -1514,6 +1734,29 @@ function savageAttackerBattle(): BattleState {
             supportProfiles: [WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE],
           },
         ],
+      }),
+      featureTarget(10),
+    ],
+  });
+}
+
+function combatProwessBattle(): BattleState {
+  const unit = unitLibrary.requireUnit(
+    recordSelectedUnitRuntimeBoundaryId("feat_boon_of_combat_prowess"),
+  );
+  const unitRef = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
+  });
+  if (Either.isLeft(unitRef)) {
+    throw new Error(unitRef.left.message);
+  }
+  return startBattleRight({
+    battleId: battleId("rule-core-combat-prowess"),
+    combatants: [
+      featureActor({
+        initiative: 20,
+        characterUnitRefs: [unitRef.right],
       }),
       featureTarget(10),
     ],
@@ -1800,13 +2043,14 @@ function unitFeatureSubject(
 }
 
 function bonusActionStandardActionSubject(
+  sourceUnitId: string,
   action: "dash" | "disengage" | "hide",
 ): Extract<BattleSubject, { readonly tag: "bonusActionStandardAction" }> {
   if (action === "dash") {
     return {
       tag: "bonusActionStandardAction",
       actorId,
-      sourceUnitId: recordSelectedUnitRuntimeBoundaryId("rogue_cunning_action"),
+      sourceUnitId: recordSelectedUnitRuntimeBoundaryId(sourceUnitId),
       action,
       speedKind: "walk",
     };
@@ -1814,7 +2058,7 @@ function bonusActionStandardActionSubject(
   return {
     tag: "bonusActionStandardAction",
     actorId,
-    sourceUnitId: recordSelectedUnitRuntimeBoundaryId("rogue_cunning_action"),
+    sourceUnitId: recordSelectedUnitRuntimeBoundaryId(sourceUnitId),
     action,
   };
 }
@@ -1905,6 +2149,7 @@ function attackRollFill(
     readonly naturalD20: number;
     readonly rollMode?: AttackRollMode;
     readonly activatedOngoingFeatureUnitId?: string;
+    readonly missToHitReplacementUnitId?: string;
   },
 ): BattleFill {
   if (hole.kind !== "attackRoll") throw new Error("Expected attackRoll.");
@@ -1920,6 +2165,9 @@ function attackRollFill(
         : {
             activatedOngoingFeatureUnitId: value.activatedOngoingFeatureUnitId,
           }),
+      ...(value.missToHitReplacementUnitId === undefined
+        ? {}
+        : { missToHitReplacementUnitId: value.missToHitReplacementUnitId }),
     },
   };
 }
@@ -2075,10 +2323,24 @@ function resourceUsesRemaining(
   return "usesRemaining" in resource ? resource.usesRemaining : 1;
 }
 
+function combatProwessUsesRemaining(state: BattleState): number {
+  const actor = state.combatants.get(actorId);
+  if (actor === undefined) {
+    throw new Error("Expected Combat Prowess actor.");
+  }
+  return actor.attackRollMissToHitReplacementsUsedSinceTurnStart.some(
+    (usage) => usage.unitId === "feat_boon_of_combat_prowess",
+  )
+    ? 0
+    : 1;
+}
+
 function projectRuleCoreFeatureState(input: {
   readonly state: BattleState;
   readonly holes: readonly BattleHole[];
   readonly lastDamageAmount: number;
+  readonly abilityCheckBoostedTotal: number;
+  readonly abilityCheckBoostedSucceeded: boolean;
   readonly critical: boolean;
   readonly actorArmorClass: number;
   readonly featureUsesRemaining: number;
@@ -2124,6 +2386,8 @@ function projectRuleCoreFeatureState(input: {
           used.attackerId === actorId && used.unitId === "rogue_sneak_attack",
       ),
     lastDamageAmount: input.lastDamageAmount,
+    abilityCheckBoostedTotal: input.abilityCheckBoostedTotal,
+    abilityCheckBoostedSucceeded: input.abilityCheckBoostedSucceeded,
     critical: input.critical,
     actorArmorClass: input.actorArmorClass,
     holes: input.holes.map(projectFeatureHole),
@@ -2224,6 +2488,14 @@ function normalizeRuleCoreFeatureQuintState(
       state["qLastDamageAmount"],
       "qLastDamageAmount",
     ),
+    abilityCheckBoostedTotal: numberFromQuintInt(
+      state["qAbilityCheckBoostedTotal"],
+      "qAbilityCheckBoostedTotal",
+    ),
+    abilityCheckBoostedSucceeded: booleanField(
+      state,
+      "qAbilityCheckBoostedSucceeded",
+    ),
     critical: booleanField(state, "qCritical"),
     actorArmorClass: numberFromQuintInt(
       state["qActorArmorClass"],
@@ -2291,6 +2563,20 @@ function cuttingWordsUnit(): Extract<
     unit.mechanics.family !== "reaction_roll_or_damage_reduction"
   ) {
     throw new Error("Expected Cutting Words reaction Unit.");
+  }
+  return unit;
+}
+
+function tacticalMindUnit(): Extract<
+  UnitRecord,
+  { readonly kind: "class_feature" }
+> {
+  const unit = unitLibrary.requireUnit("fighter_tactical_mind");
+  if (
+    unit.kind !== "class_feature" ||
+    unit.mechanics.family !== "failed_ability_check_resource_boost"
+  ) {
+    throw new Error("Expected Tactical Mind failed ability-check Unit.");
   }
   return unit;
 }

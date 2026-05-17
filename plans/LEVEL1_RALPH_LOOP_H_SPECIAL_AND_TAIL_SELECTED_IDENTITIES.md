@@ -55,37 +55,37 @@
     {
       "number": 9,
       "id": "L1H-FIGHTER-TACTICAL-MIND",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Fighter Tactical Mind Selected Identity Replay"
     },
     {
       "number": 10,
       "id": "L1H-BOON-COMBAT-PROWESS",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Boon Of Combat Prowess Selected Identity Replay"
     },
     {
       "number": 11,
       "id": "L1H-ORC-ADRENALINE-RUSH",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Orc Adrenaline Rush Selected Identity Replay"
     },
     {
       "number": 12,
       "id": "L1H-PALADIN-EXTRA-ATTACK",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Paladin Extra Attack Selected Identity Replay"
     },
     {
       "number": 13,
       "id": "L1H-RANGER-EXTRA-ATTACK",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Ranger Extra Attack Selected Identity Replay"
     },
     {
       "number": 14,
       "id": "L1H-MYCELIUM-STEP",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Mycelium Step Selected Identity Replay"
     }
   ]
@@ -246,7 +246,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-M-P.md` Mass Healing Word.
 
 ### Task 9 - L1H-FIGHTER-TACTICAL-MIND - Fighter Tactical Mind Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `fighter_tactical_mind` if it remains in the
 supported selected identity denominator after the precheck.
@@ -255,7 +255,7 @@ RAW: `.references/srd-5.2.1/Classes/Fighter.md` Tactical Mind.
 
 ### Task 10 - L1H-BOON-COMBAT-PROWESS - Boon Of Combat Prowess Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `feat_boon_of_combat_prowess` if it remains
 in the supported selected identity denominator after the precheck.
@@ -264,7 +264,7 @@ RAW: `.references/srd-5.2.1/Feats.md` Boon of Combat Prowess.
 
 ### Task 11 - L1H-ORC-ADRENALINE-RUSH - Orc Adrenaline Rush Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `orc_adrenaline_rush` if it remains in the
 supported selected identity denominator after the precheck.
@@ -273,7 +273,7 @@ RAW: `.references/srd-5.2.1/Character-Origins.md` Orc Adrenaline Rush.
 
 ### Task 12 - L1H-PALADIN-EXTRA-ATTACK - Paladin Extra Attack Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `paladin_extra_attack`, reusing the existing
 extra-attack count scaling profile without conflating it with Fighter's Unit id.
@@ -282,7 +282,7 @@ RAW: `.references/srd-5.2.1/Classes/Paladin.md` Extra Attack.
 
 ### Task 13 - L1H-RANGER-EXTRA-ATTACK - Ranger Extra Attack Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `ranger_extra_attack`, reusing the existing
 extra-attack count scaling profile without conflating it with Fighter or Paladin.
@@ -291,7 +291,7 @@ RAW: `.references/srd-5.2.1/Classes/Ranger.md` Extra Attack.
 
 ### Task 14 - L1H-MYCELIUM-STEP - Mycelium Step Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `mycelium_step` if it remains in the
 supported selected identity denominator after the SRD tail tasks. Keep this as

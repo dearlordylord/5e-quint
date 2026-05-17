@@ -1,6 +1,10 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points spell.invocation-beam-sequence spell.invocation-sleep-repeat-save-lifecycle spell.scalar-buff
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt extra-attack-count-scaling fighter_extra_attack
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt extra-attack-count-scaling fighter_extra_attack paladin_extra_attack ranger_extra_attack
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-ORC-ADRENALINE-RUSH orc_adrenaline_rush
 // UNIT-IDENTITY-MBT-REPLAY: extra-attack-count-scaling fighter_extra_attack doResolveFirstExtraAttackMiss doResolveSecondExtraAttackMiss
+// UNIT-IDENTITY-MBT-REPLAY: extra-attack-count-scaling paladin_extra_attack doResolveFirstExtraAttackMiss doResolveSecondExtraAttackMiss
+// UNIT-IDENTITY-MBT-REPLAY: extra-attack-count-scaling ranger_extra_attack doResolveFirstExtraAttackMiss doResolveSecondExtraAttackMiss
+// UNIT-IDENTITY-MBT-REPLAY: L1H-ORC-ADRENALINE-RUSH orc_adrenaline_rush doAdrenalineRushDash doRejectSecondDash
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -385,54 +389,201 @@ type ExtraAttackDriverAction = Exclude<
   keyof typeof extraAttackDriverSchema,
   "init" | "step"
 >;
-type SelectedUnitIdentityReplaySequence = {
-  readonly name: string;
-  readonly actions: readonly ExtraAttackDriverAction[];
-  readonly expected: ExtraAttackMbtProjection;
-};
-type SelectedUnitIdentityReplay = {
+type AdrenalineRushDriverAction = Exclude<
+  keyof typeof adrenalineRushDriverSchema,
+  "init" | "step"
+>;
+const extraAttackSelectedUnitIds = [
+  "fighter_extra_attack",
+  "paladin_extra_attack",
+  "ranger_extra_attack",
+] as const;
+type ExtraAttackSelectedUnitId = (typeof extraAttackSelectedUnitIds)[number];
+type SelectedUnitIdentityReplaySequence<ActionName extends string, Projection> =
+  {
+    readonly name: string;
+    readonly actions: readonly ActionName[];
+    readonly expected: Projection;
+  };
+type ExtraAttackSelectedUnitIdentityReplay = {
+  readonly driver: "extraAttack";
   readonly taskId: "extra-attack-count-scaling";
-  readonly unitId: "fighter_extra_attack";
+  readonly unitId: ExtraAttackSelectedUnitId;
   readonly actions: readonly ExtraAttackDriverAction[];
-  readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
+  readonly sequences: readonly SelectedUnitIdentityReplaySequence<
+    ExtraAttackDriverAction,
+    ExtraAttackMbtProjection
+  >[];
+};
+type AdrenalineRushSelectedUnitIdentityReplay = {
+  readonly driver: "adrenalineRush";
+  readonly taskId: "L1H-ORC-ADRENALINE-RUSH";
+  readonly unitId: "orc_adrenaline_rush";
+  readonly actions: readonly AdrenalineRushDriverAction[];
+  readonly sequences: readonly SelectedUnitIdentityReplaySequence<
+    AdrenalineRushDriverAction,
+    AdrenalineRushMbtProjection
+  >[];
+};
+type SelectedUnitIdentityReplay =
+  | ExtraAttackSelectedUnitIdentityReplay
+  | AdrenalineRushSelectedUnitIdentityReplay;
+type SelectedUnitIdentityReplayUnitId = SelectedUnitIdentityReplay["unitId"];
+type SelectedReplayDriver<ActionName extends string, Projection> = {
+  readonly actions: Readonly<
+    Record<
+      ActionName,
+      { readonly handler: (input: Record<string, never>) => unknown }
+    >
+  >;
+  readonly getState?: () => Projection;
 };
 
+async function runSelectedIdentityReplay<ActionName extends string, Projection>(
+  replay: {
+    readonly unitId: SelectedUnitIdentityReplayUnitId;
+    readonly actions: readonly ActionName[];
+    readonly sequences: readonly SelectedUnitIdentityReplaySequence<
+      ActionName,
+      Projection
+    >[];
+  },
+  createDriver: () => SelectedReplayDriver<ActionName, Projection>,
+): Promise<void> {
+  const replayedActions = new Set<ActionName>();
+
+  for (const sequence of replay.sequences) {
+    const driver = createDriver();
+
+    for (const actionName of sequence.actions) {
+      resetSelectedUnitRuntimeBoundaryIds();
+      replayedActions.add(actionName);
+      await driver.actions[actionName].handler({});
+      expect(
+        selectedUnitRuntimeBoundaryIds.has(replay.unitId),
+        `${replay.unitId}:${sequence.name}:${actionName} must bind its Unit id`,
+      ).toBe(true);
+    }
+
+    const runtime = driver.getState?.();
+    if (runtime === undefined) {
+      throw new Error("Selected identity replay driver must expose getState.");
+    }
+    expect(runtime, `${replay.unitId}:${sequence.name}`).toEqual(
+      sequence.expected,
+    );
+  }
+
+  expect(replayedActions).toEqual(new Set(replay.actions));
+}
+
+async function runSelectedUnitIdentityReplay(
+  replay: SelectedUnitIdentityReplay,
+): Promise<void> {
+  if (replay.driver === "extraAttack") {
+    await runSelectedIdentityReplay(
+      replay,
+      createExtraAttackDriver(replay.unitId),
+    );
+    return;
+  }
+  await runSelectedIdentityReplay(replay, createAdrenalineRushDriver());
+}
+
 const selectedUnitRuntimeBoundaryIds = new Set<string>();
+
+const extraAttackSelectedIdentitySequences = [
+  {
+    name: "attack-action-opens-extra-attack-slot",
+    actions: ["doResolveFirstExtraAttackMiss"],
+    expected: {
+      skeletonHp: 13,
+      actionAvailable: false,
+      extraAttackSlotsAvailable: 1,
+      movementSpentFeet: 0,
+      lastResult: "resolved",
+      lastInvalidReason: "",
+    },
+  },
+  {
+    name: "extra-attack-slot-spent-without-action-cost",
+    actions: [
+      "doResolveFirstExtraAttackMiss",
+      "doResolveSecondExtraAttackMiss",
+    ],
+    expected: {
+      skeletonHp: 13,
+      actionAvailable: false,
+      extraAttackSlotsAvailable: 0,
+      movementSpentFeet: 0,
+      lastResult: "resolved",
+      lastInvalidReason: "",
+    },
+  },
+] as const satisfies readonly SelectedUnitIdentityReplaySequence<
+  ExtraAttackDriverAction,
+  ExtraAttackMbtProjection
+>[];
 
 const selectedUnitIdentityReplays = [
   {
     taskId: "extra-attack-count-scaling",
     unitId: "fighter_extra_attack",
+    driver: "extraAttack",
     actions: [
       "doResolveFirstExtraAttackMiss",
       "doResolveSecondExtraAttackMiss",
     ],
+    sequences: [...extraAttackSelectedIdentitySequences],
+  },
+  {
+    taskId: "extra-attack-count-scaling",
+    unitId: "paladin_extra_attack",
+    driver: "extraAttack",
+    actions: [
+      "doResolveFirstExtraAttackMiss",
+      "doResolveSecondExtraAttackMiss",
+    ],
+    sequences: [...extraAttackSelectedIdentitySequences],
+  },
+  {
+    taskId: "extra-attack-count-scaling",
+    unitId: "ranger_extra_attack",
+    driver: "extraAttack",
+    actions: [
+      "doResolveFirstExtraAttackMiss",
+      "doResolveSecondExtraAttackMiss",
+    ],
+    sequences: [...extraAttackSelectedIdentitySequences],
+  },
+  {
+    taskId: "L1H-ORC-ADRENALINE-RUSH",
+    unitId: "orc_adrenaline_rush",
+    driver: "adrenalineRush",
+    actions: ["doAdrenalineRushDash", "doRejectSecondDash"],
     sequences: [
       {
-        name: "attack-action-opens-extra-attack-slot",
-        actions: ["doResolveFirstExtraAttackMiss"],
+        name: "bonus-action-dash-grants-temporary-hit-points",
+        actions: ["doAdrenalineRushDash"],
         expected: {
-          skeletonHp: 13,
-          actionAvailable: false,
-          extraAttackSlotsAvailable: 1,
-          movementSpentFeet: 0,
+          actorTempHp: 3,
+          bonusActionAvailable: false,
+          dashBonusFeet: 30,
+          featureUsesRemaining: 2,
           lastResult: "resolved",
           lastInvalidReason: "",
         },
       },
       {
-        name: "extra-attack-slot-spent-without-action-cost",
-        actions: [
-          "doResolveFirstExtraAttackMiss",
-          "doResolveSecondExtraAttackMiss",
-        ],
+        name: "spent-bonus-action-rejects-second-dash",
+        actions: ["doAdrenalineRushDash", "doRejectSecondDash"],
         expected: {
-          skeletonHp: 13,
-          actionAvailable: false,
-          extraAttackSlotsAvailable: 0,
-          movementSpentFeet: 0,
-          lastResult: "resolved",
-          lastInvalidReason: "",
+          actorTempHp: 3,
+          bonusActionAvailable: false,
+          dashBonusFeet: 30,
+          featureUsesRemaining: 2,
+          lastResult: "invalid",
+          lastInvalidReason: "staleSubject",
         },
       },
     ],
@@ -594,15 +745,17 @@ function createBattleRuntimeDriver() {
   });
 }
 
-function createExtraAttackDriver() {
+function createExtraAttackDriver(
+  unitId: ExtraAttackSelectedUnitId = "fighter_extra_attack",
+) {
   return defineDriver(extraAttackDriverSchema, () => {
-    let state = extraAttackBattle();
+    let state = extraAttackBattle(unitId);
     let subject: BattleSubject = fighterAttackSubject();
     let lastResult: ExtraAttackMbtProjection["lastResult"] = "init";
     let lastInvalidReason: ExtraAttackMbtProjection["lastInvalidReason"] = "";
 
     function reset(): void {
-      state = extraAttackBattle();
+      state = extraAttackBattle(unitId);
       subject = fighterAttackSubject();
       lastResult = "init";
       lastInvalidReason = "";
@@ -624,7 +777,7 @@ function createExtraAttackDriver() {
     }
 
     function resolveAttackMiss(): void {
-      recordExtraAttackBoundaryFromState(state);
+      recordExtraAttackBoundaryFromState(state, unitId);
       subject = fighterAttackSubject();
       const target = requireHole(
         discoverAttackHoles(state, subject),
@@ -645,7 +798,7 @@ function createExtraAttackDriver() {
           ],
         }),
       );
-      recordExtraAttackBoundaryFromState(state);
+      recordExtraAttackBoundaryFromState(state, unitId);
     }
 
     return {
@@ -1476,37 +1629,7 @@ const sleepRepeatSaveStateCheck = stateCheck(
 describe("battle-runtime MBT", () => {
   it("replays selected Unit identities deterministically", async () => {
     for (const replay of selectedUnitIdentityReplays) {
-      const replayedActions = new Set<ExtraAttackDriverAction>();
-
-      for (const sequence of replay.sequences) {
-        const driver = createExtraAttackDriver()();
-
-        for (const actionName of sequence.actions) {
-          resetSelectedUnitRuntimeBoundaryIds();
-          replayedActions.add(actionName);
-          const action = driver.actions[actionName];
-          if (action === undefined) {
-            throw new Error(
-              `Missing battle-runtime driver action ${actionName}.`,
-            );
-          }
-          await action.handler({});
-          expect(
-            selectedUnitRuntimeBoundaryIds.has(replay.unitId),
-            `${replay.unitId}:${sequence.name}:${actionName} must bind its Unit id`,
-          ).toBe(true);
-        }
-
-        const runtime = driver.getState?.();
-        if (runtime === undefined) {
-          throw new Error("Extra Attack driver must expose getState.");
-        }
-        expect(runtime, `${replay.unitId}:${sequence.name}`).toEqual(
-          sequence.expected,
-        );
-      }
-
-      expect(replayedActions).toEqual(new Set(replay.actions));
+      await runSelectedUnitIdentityReplay(replay);
     }
   });
 
@@ -1753,15 +1876,18 @@ function projectExtraAttackMbtState(input: {
   };
 }
 
-function recordExtraAttackBoundaryFromState(state: BattleState): void {
+function recordExtraAttackBoundaryFromState(
+  state: BattleState,
+  unitId: ExtraAttackSelectedUnitId,
+): void {
   if (
     state.currentTurnResources.actionResources.some(
       (resource) =>
         resource.source === "classFeatureExtraAttack" &&
-        resource.sourceUnitId === "fighter_extra_attack",
+        resource.sourceUnitId === unitId,
     )
   ) {
-    recordSelectedUnitRuntimeBoundaryId("fighter_extra_attack");
+    recordSelectedUnitRuntimeBoundaryId(unitId);
   }
 }
 
@@ -2031,7 +2157,7 @@ function adrenalineRushDashSubject(): Extract<
   return {
     tag: "bonusActionStandardAction",
     actorId: fighterId,
-    sourceUnitId: "orc_adrenaline_rush",
+    sourceUnitId: recordSelectedUnitRuntimeBoundaryId("orc_adrenaline_rush"),
     action: "dash",
     speedKind: "walk",
   };
@@ -2145,11 +2271,13 @@ function fighterVsSkeletonBattle(): BattleState {
   });
 }
 
-function extraAttackBattle(): BattleState {
+function extraAttackBattle(
+  unitId: ExtraAttackSelectedUnitId = "fighter_extra_attack",
+): BattleState {
   return startBattleRight({
     battleId: battleId("battle-runtime-mbt-extra-attack"),
     combatants: [
-      extraAttackCreatureInit({ initiative: 20 }),
+      extraAttackCreatureInit({ initiative: 20, unitId }),
       skeletonCreatureInit({ initiative: 10 }),
     ],
   });
@@ -2346,18 +2474,22 @@ function rogueCreatureInit(input: {
 
 function extraAttackCreatureInit(input: {
   readonly initiative: number;
+  readonly unitId: ExtraAttackSelectedUnitId;
 }): BattleCreatureInit {
-  const unit = unitLibrary.requireUnit("fighter_extra_attack");
+  const unit = unitLibrary.requireUnit(input.unitId);
+  if (unit.kind !== "class_feature") {
+    throw new Error("Expected Extra Attack class-feature Unit.");
+  }
   return {
     combatantId: fighterId,
-    displayName: "Fighter",
+    displayName: `${unit.className} Extra Attacker`,
     initiative: initiativeScore(input.initiative),
     side: partySide,
     creatureInit: {
       kind: "character",
-      characterId: characterId("extra-attack-fighter-character"),
+      characterId: characterId(`extra-attack-${unit.className}-character`),
       characterUnitRefs: [extraAttackUnitRef(unit)],
-      classLevels: [{ className: "fighter", level: 5 }],
+      classLevels: [{ className: unit.className, level: 5 }],
       armorClass: {
         ...defaultArmorClassState(),
         rightHandUse: "mainWeapon",
