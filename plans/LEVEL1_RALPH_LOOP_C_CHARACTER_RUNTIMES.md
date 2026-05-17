@@ -73,7 +73,7 @@
     {
       "number": 18,
       "id": "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Warlock Pact Magic Advancement"
     },
     {
@@ -281,7 +281,7 @@ For `AT-L1-08`:
 | 8 | L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT - Fighter Fighting Style Advancement Replacement | done | L1C-AT03 | Retargeted remaining all-level work to `L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE`. |
 | 17 | L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE - Character Advancement Replacement Lifecycle | done | L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT | Shared CharacterBuild class-level gain boundary promoted `fighter_fighting_style` to all-level support. |
 | 9 | L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE - Warlock Eldritch Invocation Lifecycle | done | L1C-AT05 | Invocation gain, replacement, repeatable-selection identity, duplicate-selection enforcement, and prerequisite-retention are owned over existing CharacterBuild facts. |
-| 18 | L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT - Warlock Pact Magic Advancement | ready-for-research | L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE | Advance Warlock cantrip, prepared-spell, and Pact Slot CharacterBuild facts on later Warlock levels before `warlock_eldritch_invocations` can claim full all-level prerequisite ownership. |
+| 18 | L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT - Warlock Pact Magic Advancement | done | L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE | Advance Warlock cantrip, prepared-spell, and Pact Slot CharacterBuild facts on later Warlock levels before `warlock_eldritch_invocations` can claim full all-level prerequisite ownership. |
 | 10 | L1C-L1X-01 - Create Or Destroy Water No-Matrix Decision | ready-for-research | none | Decide environment/fog owner; no Unit claim without admitted UnitRecord. |
 | 11 | L1C-L1X-05 - Floating Disk No-Matrix Decision | ready-for-research | none | Decide object/inventory movement owner. |
 | 12 | L1C-L1X-06 - Goodberry No-Matrix Decision | ready-for-research | none | Decide Character Sheet consumable/inventory owner. |
@@ -683,7 +683,7 @@ Plan Impact:
 
 ### Task 18 - L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT - Warlock Pact Magic Advancement
 
-Status: `ready-for-research`
+Status: `done`
 
 Research and implement the Warlock Pact Magic CharacterBuild advancement facts
 that Task 9 deliberately does not own.
