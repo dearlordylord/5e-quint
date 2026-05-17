@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "L1K-COMPANION-EXCLUSION-CANDIDATES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Companion Summon Exclusion Candidate Intake"
     }
   ]
@@ -143,7 +143,7 @@ Every task runs:
 | 7 | L1K-DETECTION-COMMUNICATION-CANDIDATES - Detection Communication Spell Candidate Intake | done | 1 | runtime-detached versus runtime-witness split for detection/communication spells |
 | 8 | L1K-COUNTER-DISPEL-CANDIDATES - Counter Dispel Spell Candidate Intake | done | 1 | candidate split for counter/dispel/anti-magic spells |
 | 9 | L1K-WEAPON-ITEM-HOSTED-CANDIDATES - Weapon Item Hosted Spell Candidate Intake | done | 1 | candidate split for weapon/item hosted spells |
-| 10 | L1K-COMPANION-EXCLUSION-CANDIDATES - Companion Summon Exclusion Candidate Intake | ready-for-research | 1 | explicit companion/summon exclusions or handoff targets |
+| 10 | L1K-COMPANION-EXCLUSION-CANDIDATES - Companion Summon Exclusion Candidate Intake | done | 1 | explicit companion/summon exclusions or handoff targets |
 
 ### Task 1 - L1K-PRECHECK - Non-D Spell Candidate Precheck
 
@@ -364,10 +364,28 @@ reducer behavior, or MBT evidence.
 
 ### Task 10 - L1K-COMPANION-EXCLUSION-CANDIDATES - Companion Summon Exclusion Candidate Intake
 
-Status: `ready-for-research`
+Status: `done`
 
 Initial candidates: `find_steed`, `animate_dead`, `animate_objects`, and
 `summon_dragon`.
 
 Record companion/summon exclusions or handoff targets only. Do not implement
 companion behavior in this loop.
+
+Decision artifact:
+`plans/unit-profile-coverage/L1K_COMPANION_EXCLUSION_SPELL_CANDIDATE_INTAKE.md`.
+
+Final split:
+
+- reanimated Undead control lifecycle: `animate_dead`;
+- templated Construct creature lifecycle: `animate_objects`;
+- summoned mount companion lifecycle: `find_steed`;
+- stat-block summon lifecycle with shared Resistance: `summon_dragon`.
+
+No candidate is an exact existing-profile fit, and none should be admitted by
+stretching `spell.find-familiar-lifecycle`. The decision artifact records the
+companion/summon occurrence, source-owned creature identity, command protocol,
+turn ownership, mount/rider, object reversion, reassert-control, and shared
+Resistance/Breath Weapon coupling boundaries; this intake task does not add
+Unit claims, catalog admission, QNT behavior, battle reducer behavior, or MBT
+evidence.
