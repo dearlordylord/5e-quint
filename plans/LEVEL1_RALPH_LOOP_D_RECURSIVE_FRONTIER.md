@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "L1D2-MYCELIUM-STEP",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Mycelium Step Selected Identity Replay"
     },
     {
@@ -278,7 +278,7 @@ lane.
 | 3 | L1D2-MONK-UNARMORED-DEFENSE - Monk Unarmored Defense Selected Identity Replay | done | none | Distinct Monk AC formula selected identity. |
 | 4 | L1D2-WIZARD-RITUAL-ADEPT - Wizard Ritual Adept Selected Identity Replay | done | none | Spellbook ritual invocation selected identity. |
 | 5 | L1D2-SORCERER-INNATE-SORCERY - Sorcerer Innate Sorcery Selected Identity Replay | done | none | Supported activation/profile identity. |
-| 6 | L1D2-MYCELIUM-STEP - Mycelium Step Selected Identity Replay | ready-for-implementation-after-light-research | none | Classic non-SRD mechanics gate identity; keep out of SRD provenance. |
+| 6 | L1D2-MYCELIUM-STEP - Mycelium Step Selected Identity Replay | done | none | Classic non-SRD mechanics gate identity; keep out of SRD provenance. |
 | 7 | L1D2-WIZARD-ARCANE-RECOVERY - Wizard Arcane Recovery Selected Identity Replay | blocked | Loop C merge evidence | Unblock only after `wizard_arcane_recovery` is supported-profile on master. |
 | 8 | L1D2-FIGHTER-FIGHTING-STYLE - Fighter Fighting Style Selected Identity Replay | blocked | Loop C merge evidence | Unblock only after Fighting Style replacement/lifecycle support lands on master. |
 | 9 | L1D2-CLERIC-DRUID-ORDER - Cleric And Druid Order Selected Identity Replay | blocked | Loop C merge evidence | Unblock only after Divine/Primal Order support lands on master. |
@@ -361,7 +361,7 @@ RAW: `.references/srd-5.2.1/Classes/Sorcerer.md` Innate Sorcery.
 
 ### Task 6 - L1D2-MYCELIUM-STEP - Mycelium Step Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `mycelium_step`, the Classic non-SRD
 mechanics fixture that is already installed and supported. Keep provenance

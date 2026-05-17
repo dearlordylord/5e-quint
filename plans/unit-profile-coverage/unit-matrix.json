@@ -93,8 +93,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 94,
-      "numerator": 77,
-      "percent": "81.9%"
+      "numerator": 78,
+      "percent": "83%"
     },
     "supportedProfileCoverage": {
       "denominator": 118,
@@ -12711,6 +12711,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "QMBT21"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/mycelium-step-feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1D2-MYCELIUM-STEP"
         }
       ],
       "executableMechanics": true,
