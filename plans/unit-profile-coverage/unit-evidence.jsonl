@@ -181,6 +181,7 @@
 {"unitId":"barbarian_unarmored_defense","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV91B","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"barbarian_unarmored_defense","evidence":{"tag":"selected-identity-mbt","taskId":"armor-class-base-formula","ownerPath":"packages/character-sheet-runtime/src/armor-class-base-selected-identity.mbt.test.ts"}}
 {"unitId":"monk_unarmored_defense","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV91B","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
+{"unitId":"monk_unarmored_defense","evidence":{"tag":"selected-identity-mbt","taskId":"armor-class-base-formula","ownerPath":"packages/character-sheet-runtime/src/armor-class-base-selected-identity.mbt.test.ts"}}
 {"unitId":"paladin_lay_on_hands","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV91B","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"paladin_lay_on_hands","evidence":{"tag":"selected-identity-mbt","taskId":"healing-stabilization","ownerPath":"packages/character-sheet-runtime/src/healing-resource-selected-identity.mbt.test.ts"}}
 {"unitId":"wizard_arcane_recovery","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV91B","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}

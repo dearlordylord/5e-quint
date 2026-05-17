@@ -1,5 +1,6 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt armor-class-base-formula barbarian_unarmored_defense
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt armor-class-base-formula barbarian_unarmored_defense monk_unarmored_defense
 // UNIT-IDENTITY-MBT-REPLAY: armor-class-base-formula barbarian_unarmored_defense doSelectBarbarianUnarmoredDefense doSelectBarbarianUnarmoredDefenseWithShield
+// UNIT-IDENTITY-MBT-REPLAY: armor-class-base-formula monk_unarmored_defense doSelectMonkUnarmoredDefense
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -23,10 +24,32 @@ import { describe, expect, it } from "vitest";
 
 import { characterSheetArmorClassState } from "./index.ts";
 
+const BARBARIAN_UNARMORED_DEFENSE_UNIT_ID = "barbarian_unarmored_defense";
+const MONK_UNARMORED_DEFENSE_UNIT_ID = "monk_unarmored_defense";
+const SELECTED_UNARMORED_DEFENSE_UNIT_IDS = [
+  BARBARIAN_UNARMORED_DEFENSE_UNIT_ID,
+  MONK_UNARMORED_DEFENSE_UNIT_ID,
+] as const;
+type ArmorClassAbilityModifier = Extract<
+  ArmorClassState["base"],
+  { readonly kind: "ability_sum" }
+>["abilityModifiers"][number];
+const BARBARIAN_UNARMORED_DEFENSE_ABILITY_MODIFIERS = [
+  "dex",
+  "con",
+] as const satisfies ReadonlyArray<ArmorClassAbilityModifier>;
+const MONK_UNARMORED_DEFENSE_ABILITY_MODIFIERS = [
+  "dex",
+  "wis",
+] as const satisfies ReadonlyArray<ArmorClassAbilityModifier>;
+type SelectedUnarmoredDefenseUnitId =
+  (typeof SELECTED_UNARMORED_DEFENSE_UNIT_IDS)[number];
+
 const armorClassBaseSelectedIdentityDriverSchema = {
   init: {},
   doSelectBarbarianUnarmoredDefense: {},
   doSelectBarbarianUnarmoredDefenseWithShield: {},
+  doSelectMonkUnarmoredDefense: {},
   step: {},
 } as const;
 type ArmorClassBaseSelectedIdentityDriverAction = Exclude<
@@ -49,19 +72,48 @@ type ArmorClassBaseSelectedIdentityProjection =
     }
   | {
       readonly lastResult: "selected";
-      readonly base: {
-        readonly source: "unarmored_defense";
-        readonly sourceUnitId: "barbarian_unarmored_defense";
-        readonly baseArmorClass: number;
-        readonly abilityModifiers: {
-          readonly dex: true;
-          readonly con: true;
-        };
-      };
+      readonly base: SelectedArmorClassBaseProjection;
       readonly shieldBonus: number;
       readonly armorClass: number;
     };
+type SelectedArmorClassBaseProjection =
+  | {
+      readonly source: "unarmored_defense";
+      readonly sourceUnitId: typeof BARBARIAN_UNARMORED_DEFENSE_UNIT_ID;
+      readonly baseArmorClass: number;
+      readonly abilityModifiers: {
+        readonly dex: true;
+        readonly con: true;
+      };
+    }
+  | {
+      readonly source: "unarmored_defense";
+      readonly sourceUnitId: typeof MONK_UNARMORED_DEFENSE_UNIT_ID;
+      readonly baseArmorClass: number;
+      readonly abilityModifiers: {
+        readonly dex: true;
+        readonly wis: true;
+      };
+    };
 type SelectedBarbarianProjection = Extract<
+  ArmorClassBaseSelectedIdentityProjection,
+  { readonly lastResult: "selected" }
+> & {
+  readonly base: Extract<
+    SelectedArmorClassBaseProjection,
+    { readonly sourceUnitId: typeof BARBARIAN_UNARMORED_DEFENSE_UNIT_ID }
+  >;
+};
+type SelectedMonkProjection = Extract<
+  ArmorClassBaseSelectedIdentityProjection,
+  { readonly lastResult: "selected" }
+> & {
+  readonly base: Extract<
+    SelectedArmorClassBaseProjection,
+    { readonly sourceUnitId: typeof MONK_UNARMORED_DEFENSE_UNIT_ID }
+  >;
+};
+type SelectedUnarmoredDefenseProjection = Extract<
   ArmorClassBaseSelectedIdentityProjection,
   { readonly lastResult: "selected" }
 >;
@@ -72,7 +124,7 @@ type SelectedUnitIdentityReplaySequence = {
 };
 type SelectedUnitIdentityReplay = {
   readonly taskId: "armor-class-base-formula";
-  readonly unitId: "barbarian_unarmored_defense";
+  readonly unitId: SelectedUnarmoredDefenseUnitId;
   readonly actions: readonly ArmorClassBaseSelectedIdentityDriverAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
 };
@@ -109,6 +161,20 @@ const selectedUnitIdentityReplays = [
         actions: ["doSelectBarbarianUnarmoredDefenseWithShield"],
         expected: selectedBarbarianProjection({
           shieldBonus: 2,
+          armorClass: 15,
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "armor-class-base-formula",
+    unitId: "monk_unarmored_defense",
+    actions: ["doSelectMonkUnarmoredDefense"],
+    sequences: [
+      {
+        name: "selected-monk-unarmored-defense-base-formula",
+        actions: ["doSelectMonkUnarmoredDefense"],
+        expected: selectedMonkProjection({
           armorClass: 15,
         }),
       },
@@ -189,6 +255,9 @@ function createArmorClassBaseSelectedIdentityDriver() {
           shield: true,
         });
       },
+      doSelectMonkUnarmoredDefense: () => {
+        projection = selectedMonkUnarmoredDefenseProjection();
+      },
       step: () => {},
       getState: () => projection,
     };
@@ -209,10 +278,31 @@ function selectedBarbarianUnarmoredDefenseProjection(input: {
         unitLibrary,
         baseChoice: {
           kind: "class_feature",
-          unitId: "barbarian_unarmored_defense",
+          unitId: BARBARIAN_UNARMORED_DEFENSE_UNIT_ID,
         },
       }),
     ),
+    BARBARIAN_UNARMORED_DEFENSE_UNIT_ID,
+  );
+}
+
+function selectedMonkUnarmoredDefenseProjection(): SelectedMonkProjection {
+  return projectArmorClassBaseSelectedIdentityState(
+    requireRight(
+      characterSheetArmorClassState({
+        build: armorClassBuild({
+          startingClass: "class_barbarian",
+          advancements: ["class_monk"],
+          shield: false,
+        }),
+        unitLibrary,
+        baseChoice: {
+          kind: "class_feature",
+          unitId: MONK_UNARMORED_DEFENSE_UNIT_ID,
+        },
+      }),
+    ),
+    MONK_UNARMORED_DEFENSE_UNIT_ID,
   );
 }
 
@@ -237,11 +327,27 @@ function selectedBarbarianProjection(input: {
     lastResult: "selected",
     base: {
       source: "unarmored_defense",
-      sourceUnitId: "barbarian_unarmored_defense",
+      sourceUnitId: BARBARIAN_UNARMORED_DEFENSE_UNIT_ID,
       baseArmorClass: 10,
       abilityModifiers: { dex: true, con: true },
     },
     shieldBonus: input.shieldBonus,
+    armorClass: input.armorClass,
+  };
+}
+
+function selectedMonkProjection(input: {
+  readonly armorClass: number;
+}): SelectedMonkProjection {
+  return {
+    lastResult: "selected",
+    base: {
+      source: "unarmored_defense",
+      sourceUnitId: MONK_UNARMORED_DEFENSE_UNIT_ID,
+      baseArmorClass: 10,
+      abilityModifiers: { dex: true, wis: true },
+    },
+    shieldBonus: 0,
     armorClass: input.armorClass,
   };
 }
@@ -255,7 +361,9 @@ function armorClassBuild(input: {
     input.shield === true
       ? characterEquipmentItemId({
           slot: "shield",
-          unitId: requireRight(characterEquipmentItemUnitId("equipment_shield")),
+          unitId: requireRight(
+            characterEquipmentItemUnitId("equipment_shield"),
+          ),
         })
       : undefined;
   return {
@@ -287,16 +395,33 @@ function armorClassBuild(input: {
         shieldItemId === undefined
           ? []
           : [{ itemId: shieldItemId, unitId: "equipment_shield" }],
-      loadout:
-        shieldItemId === undefined ? {} : { shield: shieldItemId },
+      loadout: shieldItemId === undefined ? {} : { shield: shieldItemId },
     },
   };
 }
 
 function projectArmorClassBaseSelectedIdentityState(
   state: ArmorClassState,
-): SelectedBarbarianProjection {
-  const base = requireBarbarianUnarmoredDefenseBase(state.base);
+  expectedSourceUnitId: typeof BARBARIAN_UNARMORED_DEFENSE_UNIT_ID,
+): SelectedBarbarianProjection;
+function projectArmorClassBaseSelectedIdentityState(
+  state: ArmorClassState,
+  expectedSourceUnitId: typeof MONK_UNARMORED_DEFENSE_UNIT_ID,
+): SelectedMonkProjection;
+function projectArmorClassBaseSelectedIdentityState(
+  state: ArmorClassState,
+  expectedSourceUnitId: SelectedUnarmoredDefenseUnitId,
+): SelectedUnarmoredDefenseProjection;
+function projectArmorClassBaseSelectedIdentityState(
+  state: ArmorClassState,
+  expectedSourceUnitId: SelectedUnarmoredDefenseUnitId,
+): SelectedUnarmoredDefenseProjection {
+  const base = requireUnarmoredDefenseBase(state.base);
+  if (base.sourceUnitId !== expectedSourceUnitId) {
+    throw new Error(
+      `Expected selected Armor Class base source ${expectedSourceUnitId}, got ${base.sourceUnitId}.`,
+    );
+  }
   const shieldBonus = state.bonuses
     .filter((bonus) => bonus.kind === "shield")
     .reduce((total, bonus) => total + Number(bonus.bonus), 0);
@@ -308,34 +433,71 @@ function projectArmorClassBaseSelectedIdentityState(
   };
 }
 
-function requireBarbarianUnarmoredDefenseBase(
+function requireUnarmoredDefenseBase(
   base: ArmorClassState["base"],
-): SelectedBarbarianProjection["base"] {
+): SelectedArmorClassBaseProjection {
   if (
     base.kind !== "ability_sum" ||
     base.source !== "unarmored_defense" ||
     !("sourceUnitId" in base) ||
-    base.sourceUnitId !== "barbarian_unarmored_defense"
+    !isSelectedUnarmoredDefenseUnitId(base.sourceUnitId)
   ) {
     throw new Error(
-      `Expected Barbarian Unarmored Defense ability-sum base, got ${base.kind}.`,
+      `Expected selected Unarmored Defense ability-sum base, got ${base.kind}.`,
     );
   }
+  if (base.sourceUnitId === BARBARIAN_UNARMORED_DEFENSE_UNIT_ID) {
+    if (
+      !hasOnlyAbilityModifiers(
+        base.abilityModifiers,
+        BARBARIAN_UNARMORED_DEFENSE_ABILITY_MODIFIERS,
+      )
+    ) {
+      throw new Error(
+        `Expected Barbarian Unarmored Defense to use Dexterity and Constitution modifiers, got ${base.abilityModifiers.join(",")}.`,
+      );
+    }
+    return {
+      source: "unarmored_defense",
+      sourceUnitId: base.sourceUnitId,
+      baseArmorClass: Number(base.base),
+      abilityModifiers: { dex: true, con: true },
+    };
+  }
   if (
-    !base.abilityModifiers.includes("dex") ||
-    !base.abilityModifiers.includes("con") ||
-    base.abilityModifiers.includes("wis")
+    !hasOnlyAbilityModifiers(
+      base.abilityModifiers,
+      MONK_UNARMORED_DEFENSE_ABILITY_MODIFIERS,
+    )
   ) {
     throw new Error(
-      `Expected Barbarian Unarmored Defense to use Dexterity and Constitution modifiers, got ${base.abilityModifiers.join(",")}.`,
+      `Expected Monk Unarmored Defense to use Dexterity and Wisdom modifiers, got ${base.abilityModifiers.join(",")}.`,
     );
   }
   return {
     source: "unarmored_defense",
     sourceUnitId: base.sourceUnitId,
     baseArmorClass: Number(base.base),
-    abilityModifiers: { dex: true, con: true },
+    abilityModifiers: { dex: true, wis: true },
   };
+}
+
+function hasOnlyAbilityModifiers(
+  actual: readonly ArmorClassAbilityModifier[],
+  expected: readonly ArmorClassAbilityModifier[],
+): boolean {
+  return (
+    actual.length === expected.length &&
+    expected.every((modifier) => actual.includes(modifier))
+  );
+}
+
+function isSelectedUnarmoredDefenseUnitId(
+  unitId: string,
+): unitId is SelectedUnarmoredDefenseUnitId {
+  return SELECTED_UNARMORED_DEFENSE_UNIT_IDS.some(
+    (selectedUnitId) => selectedUnitId === unitId,
+  );
 }
 
 function requireRight<T, E>(result: Either.Either<T, E>): T {
@@ -368,29 +530,53 @@ function normalizeArmorClassBaseSelectedIdentityQuintState(
     assertNumberField(state, "qArmorClass", 12);
     return initialProjection();
   }
-  assertStringField(
-    state,
-    "qSourceUnitId",
-    "barbarian_unarmored_defense",
-  );
+  const sourceUnitId = selectedUnarmoredDefenseUnitIdField(state);
   assertStringField(state, "qBaseSource", "unarmored_defense");
   assertBooleanField(state, "qUsesDex", true);
-  assertBooleanField(state, "qUsesCon", true);
-  assertBooleanField(state, "qUsesWis", false);
+  const usesBarbarianFormula =
+    sourceUnitId === BARBARIAN_UNARMORED_DEFENSE_UNIT_ID;
+  assertBooleanField(state, "qUsesCon", usesBarbarianFormula);
+  assertBooleanField(state, "qUsesWis", !usesBarbarianFormula);
+  const baseArmorClass = numberFromQuintInt(
+    state["qBaseArmorClass"],
+    "qBaseArmorClass",
+  );
+  const shieldBonus = numberFromQuintInt(state["qShieldBonus"], "qShieldBonus");
+  const armorClass = numberFromQuintInt(state["qArmorClass"], "qArmorClass");
+  if (usesBarbarianFormula) {
+    return {
+      lastResult,
+      base: {
+        source: "unarmored_defense",
+        sourceUnitId,
+        baseArmorClass,
+        abilityModifiers: { dex: true, con: true },
+      },
+      shieldBonus,
+      armorClass,
+    };
+  }
   return {
     lastResult,
     base: {
       source: "unarmored_defense",
-      sourceUnitId: "barbarian_unarmored_defense",
-      baseArmorClass: numberFromQuintInt(
-        state["qBaseArmorClass"],
-        "qBaseArmorClass",
-      ),
-      abilityModifiers: { dex: true, con: true },
+      sourceUnitId,
+      baseArmorClass,
+      abilityModifiers: { dex: true, wis: true },
     },
-    shieldBonus: numberFromQuintInt(state["qShieldBonus"], "qShieldBonus"),
-    armorClass: numberFromQuintInt(state["qArmorClass"], "qArmorClass"),
+    shieldBonus,
+    armorClass,
   };
+}
+
+function selectedUnarmoredDefenseUnitIdField(
+  state: Readonly<Record<string, unknown>>,
+): SelectedUnarmoredDefenseUnitId {
+  const sourceUnitId = stringField(state, "qSourceUnitId");
+  if (isSelectedUnarmoredDefenseUnitId(sourceUnitId)) return sourceUnitId;
+  throw new Error(
+    `Unexpected selected Unarmored Defense Unit ${sourceUnitId}.`,
+  );
 }
 
 function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
@@ -422,7 +608,9 @@ function assertStringField(
 ): void {
   const value = stringField(state, field);
   if (value !== expected) {
-    throw new Error(`Expected Quint string field ${field} to equal ${expected}.`);
+    throw new Error(
+      `Expected Quint string field ${field} to equal ${expected}.`,
+    );
   }
 }
 
@@ -442,7 +630,9 @@ function assertBooleanField(
 ): void {
   const value = booleanField(state, field);
   if (value !== expected) {
-    throw new Error(`Expected Quint boolean field ${field} to equal ${expected}.`);
+    throw new Error(
+      `Expected Quint boolean field ${field} to equal ${expected}.`,
+    );
   }
 }
 
@@ -453,7 +643,9 @@ function assertNumberField(
 ): void {
   const value = numberFromQuintInt(state[field], field);
   if (value !== expected) {
-    throw new Error(`Expected Quint integer field ${field} to equal ${expected}.`);
+    throw new Error(
+      `Expected Quint integer field ${field} to equal ${expected}.`,
+    );
   }
 }
 

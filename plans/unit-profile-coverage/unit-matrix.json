@@ -93,8 +93,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 94,
-      "numerator": 74,
-      "percent": "78.7%"
+      "numerator": 75,
+      "percent": "79.8%"
     },
     "supportedProfileCoverage": {
       "denominator": 118,
@@ -5316,6 +5316,11 @@
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV91B"
+        },
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/armor-class-base-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "armor-class-base-formula"
         }
       ],
       "executableMechanics": true,

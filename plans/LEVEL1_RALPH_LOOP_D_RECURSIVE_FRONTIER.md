@@ -275,7 +275,7 @@ lane.
 | ---: | --- | --- | --- | --- |
 | 1 | L1D2-FRONTIER-PRECHECK - Active Lane And Metric Reconciliation | done | none | No C/E/F/H integration head is merged into `master`; D frontier remains Tasks 2-6 plus C-blocked Tasks 7-12. |
 | 2 | L1D2-BARBARIAN-UNARMORED-DEFENSE - Barbarian Unarmored Defense Selected Identity Replay | done | none | Character Sheet AC formula selected identity. |
-| 3 | L1D2-MONK-UNARMORED-DEFENSE - Monk Unarmored Defense Selected Identity Replay | ready-for-implementation-after-light-research | none | Distinct Monk AC formula selected identity. |
+| 3 | L1D2-MONK-UNARMORED-DEFENSE - Monk Unarmored Defense Selected Identity Replay | done | none | Distinct Monk AC formula selected identity. |
 | 4 | L1D2-WIZARD-RITUAL-ADEPT - Wizard Ritual Adept Selected Identity Replay | ready-for-implementation-after-light-research | none | Spellbook ritual invocation selected identity. |
 | 5 | L1D2-SORCERER-INNATE-SORCERY - Sorcerer Innate Sorcery Selected Identity Replay | ready-for-implementation-after-light-research | none | Supported activation/profile identity. |
 | 6 | L1D2-MYCELIUM-STEP - Mycelium Step Selected Identity Replay | ready-for-implementation-after-light-research | none | Classic non-SRD mechanics gate identity; keep out of SRD provenance. |
@@ -332,7 +332,7 @@ RAW: `.references/srd-5.2.1/Classes/Barbarian.md` Unarmored Defense.
 
 ### Task 3 - L1D2-MONK-UNARMORED-DEFENSE - Monk Unarmored Defense Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `monk_unarmored_defense`, proving the Monk
 Armor Class base formula is selected from the authored Unit and remains

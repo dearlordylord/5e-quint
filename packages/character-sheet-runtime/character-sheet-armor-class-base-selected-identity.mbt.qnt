@@ -45,8 +45,14 @@ module characterSheetArmorClassBaseSelectedIdentityMbt {
     recordProjection("barbarian_unarmored_defense", "unarmored_defense", 10, true, true, false, 2, 15, "selected"),
   }
 
+  action doSelectMonkUnarmoredDefense = all {
+    qLastResult == "init",
+    recordProjection("monk_unarmored_defense", "unarmored_defense", 10, true, false, true, 0, 15, "selected"),
+  }
+
   action step = any {
     doSelectBarbarianUnarmoredDefense,
     doSelectBarbarianUnarmoredDefenseWithShield,
+    doSelectMonkUnarmoredDefense,
   }
 }
