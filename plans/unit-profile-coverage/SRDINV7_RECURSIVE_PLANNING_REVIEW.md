@@ -71,7 +71,7 @@ This deliberately does not start spell runtime, authored Surface records, or MBT
 work. Those remain downstream of the next recursive review, once the first
 Surface blocker families have either landed or produced sharper gaps.
 
-## /simplify Convergence
+## reviewer loop Convergence
 
 - Round 1: kept the batch at blocker-family granularity instead of one task per
   class or one generic Surface gate. This weakens coupling between unrelated

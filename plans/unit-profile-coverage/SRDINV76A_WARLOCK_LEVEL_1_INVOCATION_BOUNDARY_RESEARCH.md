@@ -218,7 +218,7 @@ Scope:
 - Keep Pact of the Chain and Pact of the Tome behind explicit companion and
   spell-access boundary research before any runtime promotion.
 
-## /simplify Convergence
+## reviewer loop Convergence
 
 - Round 1: rejected treating Pact of the Blade as representative support for
   `warlock_eldritch_invocations`. The container is a character-creation choice

@@ -149,7 +149,7 @@ Then implement `AT-L1-14`:
 - Run `pnpm unit-profile-coverage:check --write`.
 - Run `pnpm unit-profile-coverage:check`.
 - Run targeted checker self-test if added.
-- Run `/simplify` to convergence, minimum two rounds.
+- Run reviewer loop to convergence, minimum two rounds.
 - Do not run MBT for this strict-support metric loop unless promoted battle
   behavior unexpectedly changes; selected identity MBT work remains in the
   separate selected-MBT lane.
@@ -203,7 +203,7 @@ Verification:
 - `pnpm unit-profile-coverage:check --write`
 - `pnpm unit-profile-coverage:check`
 - targeted checker self-test if added
-- `/simplify` convergence, minimum two rounds
+- reviewer loop convergence, minimum two rounds
 
 Plan Impact:
 
@@ -238,7 +238,7 @@ Verification:
 
 - `pnpm unit-profile-coverage:check --write`
 - `pnpm unit-profile-coverage:check`
-- `/simplify` convergence, minimum two rounds
+- reviewer loop convergence, minimum two rounds
 
 Plan Impact:
 
@@ -265,7 +265,7 @@ Scope:
 Verification:
 
 - `pnpm unit-profile-coverage:check`
-- `/simplify` is not required unless code or generated artifacts change.
+- reviewer loop is not required unless code or generated artifacts change.
 
 Plan Impact:
 
@@ -441,7 +441,7 @@ Verification:
 - `pnpm unit-profile-coverage:check --write`
 - `pnpm unit-profile-coverage:check`
 - `pnpm unit-profile-coverage:check:self-test`
-- `/simplify` convergence, minimum two rounds if generated/report code changes.
+- reviewer loop convergence, minimum two rounds if generated/report code changes.
 
 Plan Impact:
 

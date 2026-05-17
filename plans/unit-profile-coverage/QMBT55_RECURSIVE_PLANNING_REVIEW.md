@@ -90,9 +90,9 @@ append the next bounded batch rather than letting planning drift.
   anchors listed in `Source Check`; QMBT55 did not model a new rule directly.
 - PRD status notes were refreshed to reflect QMBT53-QMBT55, current matrix
   metrics, and the appended QMBT56-QMBT58 batch.
-- `/simplify` round 1: kept the appended batch tied to the already selected
+- reviewer loop round 1: kept the appended batch tied to the already selected
   Peerless Aim implementation before another feature selection task.
-- `/simplify` round 2: no important changes found; the batch still has one
+- reviewer loop round 2: no important changes found; the batch still has one
   implementation task, one post-implementation feature selection task, and one
   recursive review.
 - `pnpm unit-profile-coverage:check` remains the matrix gate if generated

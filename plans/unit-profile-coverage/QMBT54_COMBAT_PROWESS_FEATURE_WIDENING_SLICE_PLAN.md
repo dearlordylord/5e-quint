@@ -199,7 +199,7 @@ Additional candidate RAW checked:
 - `pnpm unit-profile-coverage:check`.
 - Relevant package typecheck/tests.
 - `pnpm quality` for the production behavior change.
-- `/simplify` convergence, minimum two rounds.
+- reviewer loop convergence, minimum two rounds.
 
 ## Task 149 Verification
 
@@ -210,11 +210,11 @@ Additional candidate RAW checked:
 - Active-plan consistency updated in the Ralph task index, DAG row, and task
   detail for QMBT54 so each marks the task done and links this decision
   artifact. QMBT55 is unblocked for recursive planning review.
-- `/simplify` round 1: selected the installed SRD attack replacement pressure
+- reviewer loop round 1: selected the installed SRD attack replacement pressure
   rather than ability-check, healing-pool, AC-formula, resistance, Weapon
   Mastery, spell, or magic-item pressure; kept the boundary tied to one
   attack-roll miss-to-hit replacement.
-- `/simplify` round 2: no important changes found; the plan still selects one
+- reviewer loop round 2: no important changes found; the plan still selects one
   feature profile and avoids duplicate attack result state by requiring the
   existing attack-roll outcome path as the executable boundary.
 - MBT not run: Task 149 is research-only and makes no promoted battle-runtime

@@ -134,7 +134,7 @@ closed the Find Familiar companion-runtime operational owner gap, and SRDINV86
 closed the evidence-only drift. Remaining subset-supported rows are already
 assigned to existing owners or explicitly outside promoted battle execution.
 
-## /simplify Convergence
+## reviewer loop Convergence
 
 - Round 1: found the missing `find_familiar` deterministic
   admission/projection evidence marker. The runtime profile and tests existed,

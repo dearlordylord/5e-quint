@@ -108,7 +108,7 @@ Out of scope for that slice:
 - Opportunity Attack derivation from falling movement, because RAW excludes
   falling past an enemy from provoking Opportunity Attacks.
 
-## /simplify Convergence
+## reviewer loop Convergence
 
 - Round 1: rejected a prerequisite generic falling hazard runtime. Feather Fall
   can be executed from table-supplied fall-start and landing events.

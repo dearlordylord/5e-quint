@@ -175,7 +175,7 @@ catalog admission alone.
 Verification completed:
 RAW/source review for the residual Unit families in local SRD 5.2.1 text;
 `UBIQUITOUS_LANGUAGE.md` terminology check; active-plan consistency across Ralph
-index, DAG table, and task details; two-round `/simplify` convergence recorded
+index, DAG table, and task details; two-round reviewer loop convergence recorded
 in the SRDINV89D review note.
 
 ### Task 334 - SRDINV90A - Model Battle Readiness Owner-Accepted Closures
@@ -219,7 +219,7 @@ Verification completed:
 RAW/source review for changed closure families in local SRD 5.2.1 text;
 `UBIQUITOUS_LANGUAGE.md` terminology check; `pnpm unit-profile-coverage:check
 --write`; `pnpm unit-profile-coverage:check`; active-plan consistency across
-Ralph index, DAG table, and task details; two-round `/simplify` convergence.
+Ralph index, DAG table, and task details; two-round reviewer loop convergence.
 
 ### Task 335 - SRDINV90B - Recursive Level-1 Battle Readiness Closure Review
 
@@ -251,7 +251,7 @@ Verification: RAW/source review for any newly selected rule slices and
 `UBIQUITOUS_LANGUAGE.md`; active-plan consistency across Ralph index, DAG table,
 and task details; `pnpm unit-profile-coverage:check --write` if matrix artifacts
 change; a short review note that reports product acceptance percentage
-separately from supported executable Unit coverage; `/simplify` convergence,
+separately from supported executable Unit coverage; reviewer loop convergence,
 minimum two rounds unless the final changeset is trivial.
 
 Completed: closed the level-1 battle readiness lane after confirming the
@@ -267,7 +267,7 @@ Verification completed:
 RAW/source review for the accepted closure families in local SRD 5.2.1 text;
 `UBIQUITOUS_LANGUAGE.md` terminology check; `pnpm unit-profile-coverage:check`;
 active-plan consistency across Ralph index, DAG table, and task details;
-two-round `/simplify` convergence recorded in the SRDINV90B review note.
+two-round reviewer loop convergence recorded in the SRDINV90B review note.
 
 ### Task 336 - SRDINV91A - Recursive Battle Runtime Coverage Frontier Review
 
@@ -307,7 +307,7 @@ profile/proof/admission/MBT metrics.
 Verification: RAW/source review for any newly selected rule slices and
 `UBIQUITOUS_LANGUAGE.md`; active-plan consistency across Ralph index, DAG table,
 and task details; `pnpm unit-profile-coverage:check`; a short review note if
-new frontier facts are recorded; `/simplify` convergence, minimum two rounds
+new frontier facts are recorded; reviewer loop convergence, minimum two rounds
 unless the final changeset is trivial.
 
 Completed: reviewed the remaining non-terminal metrics after SRDINV90B without
@@ -323,7 +323,7 @@ Verification completed:
 RAW/source review for the newly selected follow-up slices in local SRD 5.2.1
 text; `UBIQUITOUS_LANGUAGE.md` terminology check; `pnpm
 unit-profile-coverage:check`; active-plan consistency across Ralph index, DAG
-table, and task details; two-round `/simplify` convergence recorded in the
+table, and task details; two-round reviewer loop convergence recorded in the
 SRDINV91A review note.
 
 ### Task 337 - SRDINV91B - Close Deterministic Admission Projection Stragglers
@@ -366,7 +366,7 @@ or each remaining gap names an exact typed blocker. `UNIT_REPORT.md` and
 Verification: RAW/source review for the seven supported-profile identities and
 `UBIQUITOUS_LANGUAGE.md`; `pnpm unit-profile-coverage:check --write` if
 generated artifacts change; `pnpm unit-profile-coverage:check`; focused package
-tests for any touched admission/projection files; `/simplify` convergence,
+tests for any touched admission/projection files; reviewer loop convergence,
 minimum two rounds unless the final changeset is trivial.
 
 Completed: added deterministic admission/projection evidence for
@@ -384,7 +384,7 @@ unit-profile-coverage:check --write`; `pnpm unit-profile-coverage:check`;
 `pnpm --filter @dnd/character-sheet-runtime exec vitest run src/index.test.ts`;
 `pnpm --filter @dnd/character-battle-runtime exec vitest run src/index.test.ts`;
 `pnpm --filter @dnd/character-sheet-runtime typecheck`; `pnpm --filter
-@dnd/character-battle-runtime typecheck`; two local simplify passes. `pnpm
+@dnd/character-battle-runtime typecheck`; two local reviewer-loop passes. `pnpm
 quality` stopped on unrelated baseline lint in `packages/mcp/src/battle-tools.ts`
 (`max-lines`, 432 > 420), outside the SRDINV91B touched surface. MBT was not
 run because no reducer or QNT semantics changed.
@@ -423,7 +423,7 @@ is replaced by a precise proof blocker. The profile claim for
 Verification: RAW/source review for Color Spray, Entangle, condition, and
 Saving Throw text plus `UBIQUITOUS_LANGUAGE.md`; package-local Quint proof/test
 command appropriate to the changed QNT file; `pnpm unit-profile-coverage:check`;
-`/simplify` convergence, minimum two rounds unless the final changeset is
+reviewer loop convergence, minimum two rounds unless the final changeset is
 trivial.
 
 Completed: added QNT-visible save-ability facts for save-gated condition
@@ -437,7 +437,7 @@ RAW/source review for Color Spray, Entangle, Blinded, Restrained, Saving Throw,
 and `UBIQUITOUS_LANGUAGE.md`; focused package-local Quint tests for shared
 spell procedure profiles, the battle-runtime spell bridge, and promoted
 battle-runtime Color Spray/Entangle witnesses; `pnpm
-unit-profile-coverage:check`; two local simplify passes. `pnpm quality` remains
+unit-profile-coverage:check`; two local reviewer-loop passes. `pnpm quality` remains
 blocked by unrelated baseline lint in `packages/mcp/src/battle-tools.ts`
 (`max-lines`, 432 > 420), outside the SRDINV91C touched surface.
 
@@ -486,7 +486,7 @@ Verification: RAW/source review for any newly selected rule identities and
 `UBIQUITOUS_LANGUAGE.md`; focused deterministic tests first; one battle-runtime
 MBT run only if completed behavior/evidence requires it, using the required
 background/timing protocol and prior-run checks; `pnpm
-unit-profile-coverage:check`; `/simplify` convergence, minimum two rounds
+unit-profile-coverage:check`; reviewer loop convergence, minimum two rounds
 unless the final changeset is trivial.
 
 Verification completed:
@@ -500,5 +500,5 @@ prior-run checks and timing wrapper; `pnpm unit-profile-coverage:check --write`;
 `pnpm unit-profile-coverage:check`; `pnpm --filter @dnd/battle-runtime
 typecheck`; touched-file Prettier check; `pnpm quality` attempted and stopped
 at unrelated baseline lint in `packages/mcp/src/battle-tools.ts` (`max-lines`,
-432 > 420), outside the SRDINV91D touched surface; two-round `/simplify`
+432 > 420), outside the SRDINV91D touched surface; two-round reviewer loop
 convergence recorded in the SRDINV91D evidence note.
