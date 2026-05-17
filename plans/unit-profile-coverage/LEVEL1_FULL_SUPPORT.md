@@ -8,8 +8,8 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 
 | Metric | Covered |
 | --- | ---: |
-| Strict runtime/profile support | 75/93 (80.6%) |
-| Strict target closure | 91/93 (97.8%) |
+| Strict runtime/profile support | 78/93 (83.9%) |
+| Strict target closure | 93/93 (100%) |
 | Product readiness | 367/367 (100%) |
 
 ## Scope
@@ -21,23 +21,22 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | SRD pressure with no Unit matrix row | 14 |
 | Non-executable class containers | 12 |
 | Strict executable denominator | 93 |
-| Non-supported frontier | 18 |
+| Non-supported frontier | 15 |
 
 ## Status Groups
 
 | Status | Count | Units |
 | --- | ---: | --- |
-| supported-profile | 75 | `acid_splash`, `animal_friendship`, `bane`, `barbarian_rage`, `barbarian_unarmored_defense`, `bless`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_divine_order`, `color_spray`, `command`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `druid_primal_order`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feather_fall`, `fighter_fighting_style`, `fighter_second_wind`, `fire_bolt`, `fog_cloud`, `grease`, `guidance`, `guiding_bolt`, `healing_word`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `ice_knife`, `inflict_wounds`, `jump`, `light`, `longstrider`, `mage_armor`, `magic_missile`, `monk_unarmored_defense`, `paladin_lay_on_hands`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `ranger_weapon_mastery`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_expertise`, `rogue_sneak_attack`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `searing_smite`, `shield`, `shield_of_faith`, `shillelagh`, `shocking_grasp`, `sleep`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `starry_wisp`, `thunderwave`, `true_strike`, `vicious_mockery`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `wizard_ritual_adept` |
+| supported-profile | 78 | `acid_splash`, `animal_friendship`, `bane`, `barbarian_rage`, `barbarian_unarmored_defense`, `bard_bardic_inspiration`, `bless`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_divine_order`, `color_spray`, `command`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `druid_primal_order`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feather_fall`, `fighter_fighting_style`, `fighter_second_wind`, `fire_bolt`, `fog_cloud`, `grease`, `guidance`, `guiding_bolt`, `healing_word`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hunters_mark`, `ice_knife`, `inflict_wounds`, `jump`, `light`, `longstrider`, `mage_armor`, `magic_missile`, `monk_martial_arts`, `monk_unarmored_defense`, `paladin_lay_on_hands`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `ranger_weapon_mastery`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_expertise`, `rogue_sneak_attack`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `searing_smite`, `shield`, `shield_of_faith`, `shillelagh`, `shocking_grasp`, `sleep`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `starry_wisp`, `thunderwave`, `true_strike`, `vicious_mockery`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `wizard_ritual_adept` |
 | closed-runtime-detached-table-adjudication | 10 | `alarm`, `charm_person`, `comprehend_languages`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `identify`, `minor_illusion`, `silent_image`, `speak_with_animals` |
-| closed-later-level-only | 4 | `barbarian_weapon_mastery`, `bard_bardic_inspiration`, `fighter_weapon_mastery`, `monk_martial_arts` |
+| closed-later-level-only | 3 | `barbarian_weapon_mastery`, `fighter_weapon_mastery`, `ranger_favored_enemy` |
 | closed-character-fact-and-runtime-detached-split | 2 | `druid_druidic`, `rogue_thieves_cant` |
-| open-profile-accounting | 2 | `hunters_mark`, `ranger_favored_enemy` |
 
 ## Open Frontier
 
 | Status | Count | Units |
 | --- | ---: | --- |
-| open-profile-accounting | 2 | `hunters_mark`, `ranger_favored_enemy` |
+| _none_ | 0 | _none_ |
 
 ## Non-Supported Frontier Detail
 
@@ -45,19 +44,16 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | --- | --- | --- | --- | --- | --- |
 | `alarm` | closed-runtime-detached-table-adjudication | unsupported-profile | not-in-unit-catalog | outside-runtime-presentation-exploration | Alarm is an exploration/table procedure; promoted battle runtime does not own hidden monitoring, map patrol, or notification adjudication. |
 | `barbarian_weapon_mastery` | closed-later-level-only | profile-subset-supported | installed | later-level-only | The remaining Barbarian Weapon Mastery selected-weapon count increases occur only after level 1. |
-| `bard_bardic_inspiration` | closed-later-level-only | profile-subset-supported | installed | later-level-only | The remaining Bardic Inspiration die-size changes occur only after level 1. |
-| `charm_person` | closed-runtime-detached-table-adjudication | profile-subset-supported | installed | social-knowledge-effect | Friendly disposition, social interaction effects, and target knowledge when the spell ends are social/knowledge state outside promoted battle runtime. |
+| `charm_person` | closed-runtime-detached-table-adjudication | profile-subset-supported | installed | social-knowledge-effect | Friendly disposition, the Charmed condition's Social Advantage, social interaction adjudication, and target knowledge when the spell ends are social/knowledge facts outside promoted battle runtime state. |
 | `comprehend_languages` | closed-runtime-detached-table-adjudication | unsupported-profile | not-in-unit-catalog | outside-runtime-presentation-exploration | Language comprehension and secret-message adjudication are table-owned communication facts outside promoted battle runtime. |
 | `detect_evil_and_good` | closed-runtime-detached-table-adjudication | unsupported-profile | installed | outside-runtime-presentation-exploration | Sensing, occlusion, and Hallow discovery are exploration/detection state outside promoted battle runtime. |
 | `detect_magic` | closed-runtime-detached-table-adjudication | unsupported-profile | installed | outside-runtime-presentation-exploration | Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime. |
 | `detect_poison_and_disease` | closed-runtime-detached-table-adjudication | unsupported-profile | installed | outside-runtime-presentation-exploration | Poison, disease, creature-kind sensing, occlusion, and identification are exploration/detection state outside promoted battle runtime. |
 | `druid_druidic` | closed-character-fact-and-runtime-detached-split | unsupported-profile | installed | character-fact-and-runtime-detached-split | Druidic hidden-message spotting, Investigation adjudication, and deciphering are runtime-detached table adjudication outside promoted battle runtime; Druidic language and always-prepared Speak with Animals Spell Access remain character-owned CharacterBuild facts derived from authored Surface content. |
 | `fighter_weapon_mastery` | closed-later-level-only | profile-subset-supported | installed | later-level-only | The remaining Fighter Weapon Mastery selected-weapon count increases occur only after level 1. |
-| `hunters_mark` | open-profile-accounting | profile-subset-supported | installed | social-knowledge-effect | Wisdom (Perception or Survival) Advantage to find the marked target is ability-check roll-mode state outside the promoted damage-rider runtime. |
 | `identify` | closed-runtime-detached-table-adjudication | unsupported-profile | not-in-unit-catalog | outside-runtime-presentation-exploration | Identification facts are supplied by the table or item/knowledge owner; promoted battle runtime does not model discovery of hidden item or spell facts. |
 | `minor_illusion` | closed-runtime-detached-table-adjudication | unsupported-profile | installed | outside-runtime-presentation-exploration | Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are illusion/exploration state outside promoted battle runtime. |
-| `monk_martial_arts` | closed-later-level-only | profile-subset-supported | installed | later-level-only | The remaining Martial Arts die-size changes occur only after level 1. |
-| `ranger_favored_enemy` | open-profile-accounting | profile-subset-supported | installed | later-level-only, social-knowledge-effect | The remaining Favored Enemy free-cast count changes occur only after level 1.; Hunter's Mark finding Advantage is an ability-check roll-mode projection, not additional battle reducer behavior for Favored Enemy. |
+| `ranger_favored_enemy` | closed-later-level-only | profile-subset-supported | installed | later-level-only | The remaining Favored Enemy free-cast count changes occur only after level 1. |
 | `rogue_thieves_cant` | closed-character-fact-and-runtime-detached-split | unsupported-profile | installed | character-fact-and-runtime-detached-split | Thieves' Cant communication adjudication is runtime-detached table adjudication outside promoted battle runtime; Thieves' Cant and the additional Character Creation language choice remain character-owned CharacterBuild facts derived from authored Surface content. |
 | `silent_image` | closed-runtime-detached-table-adjudication | unsupported-profile | not-in-unit-catalog | outside-runtime-presentation-exploration | Silent Image creates table-adjudicated illusion and presentation state; promoted battle runtime does not own image rendering or discovery adjudication. |
 | `speak_with_animals` | closed-runtime-detached-table-adjudication | unsupported-profile | not-in-unit-catalog | outside-runtime-presentation-exploration | Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes. |

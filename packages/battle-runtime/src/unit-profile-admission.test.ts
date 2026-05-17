@@ -575,15 +575,25 @@ describe("QMBT65 Cutting Words deterministic Unit profile admission", () => {
     );
   });
 
-  test("bard_bardic_inspiration grant profile stays scoped to the d6 slice", () => {
-    const unit = unitLibrary.requireUnit(bardBardicInspirationUnitId);
+  test.each([
+    { level: 1, dieSize: 6 },
+    { level: 5, dieSize: 8 },
+    { level: 10, dieSize: 10 },
+    { level: 15, dieSize: 12 },
+  ] as const)(
+    "bard_bardic_inspiration grant profile projects the Bardic die at Bard level $level",
+    ({ level, dieSize }) => {
+      const unit = unitLibrary.requireUnit(bardBardicInspirationUnitId);
 
-    expect(
-      parseSupportedUnitFeatureProfile(unit, [
-        { className: "bard", level: classLevel(5) },
-      ]),
-    ).toBeNull();
-  });
+      expect(
+        parseSupportedUnitFeatureProfile(unit, [
+          { className: "bard", level: classLevel(level) },
+        ]),
+      ).toEqual(
+        expect.objectContaining({ kind: "bardicInspirationGrant", dieSize }),
+      );
+    },
+  );
 
   test("bard_bardic_inspiration rejects malformed grant mechanics", () => {
     const unit = unitLibrary.requireUnit(bardBardicInspirationUnitId);
@@ -607,6 +617,92 @@ describe("QMBT65 Cutting Words deterministic Unit profile admission", () => {
     expect(battleBardicInspirationGrantSupportForUnit(malformedUnit)).toBe(
       "unsupported",
     );
+  });
+
+  test("bard_bardic_inspiration rejects non-SRD Bardic die tier tables", () => {
+    const unit = unitLibrary.requireUnit(bardBardicInspirationUnitId);
+    if (
+      unit.kind !== "class_feature" ||
+      unit.mechanics.family !== "activation"
+    ) {
+      throw new Error("Expected Bardic Inspiration activation mechanics.");
+    }
+    const phase = unit.mechanics.phases[0];
+    if (phase?.kind !== "direct") {
+      throw new Error("Expected Bardic Inspiration direct phase.");
+    }
+    const effect = phase.effects?.[0];
+    if (
+      effect?.kind !== "grant_die_token" ||
+      effect.die.kind !== "threshold_tiers"
+    ) {
+      throw new Error("Expected Bardic Inspiration grant-die token.");
+    }
+    const die = effect.die;
+    const malformedDice = [
+      {
+        name: "wrong_base_die",
+        die: { ...die, base: { ...die.base, dieSize: 4 } },
+      },
+      {
+        name: "wrong_threshold",
+        die: {
+          ...die,
+          tiers: die.tiers.map((tier) =>
+            tier.atLevel === 5 ? { ...tier, atLevel: 4 } : tier,
+          ),
+        },
+      },
+      {
+        name: "wrong_tier_die",
+        die: {
+          ...die,
+          tiers: die.tiers.map((tier) =>
+            tier.atLevel === 10
+              ? { ...tier, override: { ...tier.override, dieSize: 12 } }
+              : tier,
+          ),
+        },
+      },
+      {
+        name: "missing_tier",
+        die: {
+          ...die,
+          tiers: die.tiers.filter((tier) => tier.atLevel !== 15),
+        },
+      },
+      {
+        name: "extra_tier",
+        die: {
+          ...die,
+          tiers: [...die.tiers, { atLevel: 20, override: { dieSize: 12 } }],
+        },
+      },
+    ];
+
+    for (const malformed of malformedDice) {
+      const malformedUnit = unitMechanicsVariant(unit, {
+        id: `bard_bardic_inspiration_${malformed.name}`,
+        mechanics: {
+          ...unit.mechanics,
+          phases: [
+            {
+              ...phase,
+              effects: [{ ...effect, die: malformed.die }],
+            },
+          ],
+        },
+      });
+
+      expect(
+        parseSupportedUnitFeatureProfile(malformedUnit, [
+          { className: "bard", level: classLevel(15) },
+        ]),
+      ).toBeNull();
+      expect(battleBardicInspirationGrantSupportForUnit(malformedUnit)).toBe(
+        "unsupported",
+      );
+    }
   });
 
   test("bard_cutting_words is admitted from reaction roll-or-damage reduction mechanics", () => {
@@ -847,7 +943,7 @@ describe("SRDINV75A Innate Sorcery deterministic Unit profile admission", () => 
 });
 
 describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () => {
-  test("monk_martial_arts is admitted as a level-1 attack projection profile", () => {
+  test("monk_martial_arts is admitted as an attack projection profile", () => {
     const unit = unitLibrary.requireUnit(monkMartialArtsUnitId);
 
     expect(
@@ -918,27 +1014,119 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
     ).toBeNull();
   });
 
-  test("monk_martial_arts keeps Dexterous Attacks while deferring later die scaling", () => {
-    const unit = unitLibrary.requireUnit(monkMartialArtsUnitId);
+  test.each([
+    { level: 1, dieSize: 6 },
+    { level: 5, dieSize: 8 },
+    { level: 11, dieSize: 10 },
+    { level: 17, dieSize: 12 },
+  ] as const)(
+    "monk_martial_arts attack projection uses the Martial Arts die at Monk level $level",
+    ({ level, dieSize }) => {
+      const unit = unitLibrary.requireUnit(monkMartialArtsUnitId);
 
-    expect(
-      parseSupportedUnitFeatureProfile(unit, [
-        { className: "monk", level: classLevel(5) },
-      ]),
-    ).toEqual(
-      expect.objectContaining({
-        kind: "martialArtsAttackProjection",
-        classLevel: classLevel(5),
-        martialArts: expect.objectContaining({
-          damageReplacement: null,
-          abilitySubstitution: {
-            use: "dex",
-            replaces: "str",
-            on: ["attackRoll", "damageRoll", "unarmedStrikeSaveDc"],
-          },
+      expect(
+        parseSupportedUnitFeatureProfile(unit, [
+          { className: "monk", level: classLevel(level) },
+        ]),
+      ).toEqual(
+        expect.objectContaining({
+          kind: "martialArtsAttackProjection",
+          classLevel: classLevel(level),
+          martialArts: expect.objectContaining({
+            damageReplacement: {
+              scope: "unarmedOrMonkWeapon",
+              dice: 1,
+              dieSize,
+            },
+            abilitySubstitution: {
+              use: "dex",
+              replaces: "str",
+              on: ["attackRoll", "damageRoll", "unarmedStrikeSaveDc"],
+            },
+          }),
         }),
-      }),
+      );
+    },
+  );
+
+  test("monk_martial_arts rejects non-SRD Martial Arts die tier tables", () => {
+    const unit = unitLibrary.requireUnit(monkMartialArtsUnitId);
+    if (unit.kind !== "class_feature" || unit.mechanics.family !== "passive") {
+      throw new Error("Expected Monk Martial Arts passive mechanics.");
+    }
+    const effect = unit.mechanics.grants.find(
+      (grant) => grant.kind === "replace_damage_die",
     );
+    if (effect?.kind !== "replace_damage_die") {
+      throw new Error("Expected Monk Martial Arts damage replacement.");
+    }
+    if (effect.die.kind !== "threshold_tiers") {
+      throw new Error("Expected Monk Martial Arts threshold tiers.");
+    }
+    const die = effect.die;
+    const malformedDice = [
+      {
+        name: "wrong_base_die",
+        die: { ...die, base: { ...die.base, dieSize: 4 } },
+      },
+      {
+        name: "wrong_threshold",
+        die: {
+          ...die,
+          tiers: die.tiers.map((tier) =>
+            tier.atLevel === 11 ? { ...tier, atLevel: 10 } : tier,
+          ),
+        },
+      },
+      {
+        name: "wrong_tier_die",
+        die: {
+          ...die,
+          tiers: die.tiers.map((tier) =>
+            tier.atLevel === 17
+              ? { ...tier, override: { ...tier.override, dieSize: 10 } }
+              : tier,
+          ),
+        },
+      },
+      {
+        name: "missing_tier",
+        die: {
+          ...die,
+          tiers: die.tiers.filter((tier) => tier.atLevel !== 17),
+        },
+      },
+      {
+        name: "extra_tier",
+        die: {
+          ...die,
+          tiers: [...die.tiers, { atLevel: 20, override: { dieSize: 12 } }],
+        },
+      },
+    ];
+
+    for (const malformed of malformedDice) {
+      const malformedUnit = unitMechanicsVariant(unit, {
+        id: `monk_martial_arts_${malformed.name}`,
+        mechanics: {
+          ...unit.mechanics,
+          grants: unit.mechanics.grants.map((grant) =>
+            grant.kind === "replace_damage_die"
+              ? { ...grant, die: malformed.die }
+              : grant,
+          ),
+        },
+      });
+
+      expect(
+        parseSupportedUnitFeatureProfile(malformedUnit, [
+          { className: "monk", level: classLevel(17) },
+        ]),
+      ).toBeNull();
+      expect(
+        battleMartialArtsAttackProjectionSupportForUnit(malformedUnit),
+      ).toBe("unsupported");
+    }
   });
 
   test("monk_deflect_attacks projects zero-damage redirect executable facts", () => {

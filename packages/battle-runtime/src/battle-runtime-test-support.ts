@@ -2690,6 +2690,7 @@ function bardicInspirationResource(input: {
 }
 
 export function bardicInspirationBattle(input: {
+  readonly bardLevel?: number;
   readonly charismaModifier: number;
   readonly bardHidden?: boolean;
   readonly targetConditions?: readonly Condition[];
@@ -2701,7 +2702,7 @@ export function bardicInspirationBattle(input: {
         combatantId: fighterId,
         displayName: "Bard",
         initiative: 20,
-        classLevels: [{ className: "bard", level: 1 }],
+        classLevels: [{ className: "bard", level: input.bardLevel ?? 1 }],
         attack: null,
         resources: [
           bardicInspirationResource({

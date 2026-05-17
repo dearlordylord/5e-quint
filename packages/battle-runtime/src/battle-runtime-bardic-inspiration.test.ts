@@ -38,7 +38,7 @@ import {
 import { describe, expect, test } from "vitest";
 
 describe("battle runtime: Bardic Inspiration", () => {
-  test("Bardic Inspiration grants one one-hour d6 die and spends Bonus Action and Charisma-derived use", () => {
+  test("Bardic Inspiration grants one one-hour d6 die at Bard level 1 and spends Bonus Action and Charisma-derived use", () => {
     const bardicInspiration = bardicInspirationUnit();
     const state = bardicInspirationBattle({ charismaModifier: 3 });
     const subject = bardicInspirationSubject(bardicInspiration.id);
@@ -79,6 +79,34 @@ describe("battle runtime: Bardic Inspiration", () => {
           durationTicks: requireElapsedHours(1),
         },
       },
+    ]);
+  });
+
+  test("Bardic Inspiration grants the SRD-scaled die at later Bard levels", () => {
+    const bardicInspiration = bardicInspirationUnit();
+    const state = bardicInspirationBattle({
+      bardLevel: 15,
+      charismaModifier: 3,
+    });
+    const subject = bardicInspirationSubject(bardicInspiration.id);
+    const target = findHole(
+      findAct(state, subject).initialHoles,
+      "targetChoice",
+    );
+
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [bardicInspirationTargetFill(target, goblinId)],
+      }),
+    );
+
+    expect(resolved.state.combatants.get(goblinId)?.activeEffects).toEqual([
+      expect.objectContaining({
+        kind: "bardicInspirationDie",
+        dieSize: 12,
+      }),
     ]);
   });
 

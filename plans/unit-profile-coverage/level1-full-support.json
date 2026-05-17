@@ -79,41 +79,12 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "later-level-only"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "The remaining Bardic Inspiration die-size changes occur only after level 1.",
-      "sourceRecordPath": "packages/surface/content/bard_bardic_inspiration.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Bard Bardic Inspiration",
-          "id": "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
-          "levelBand": "level-1",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 68,
-            "lineStart": 57,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        }
-      ],
-      "status": "closed-later-level-only",
-      "strictTargetClosed": true,
-      "unitId": "bard_bardic_inspiration"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
         "social-knowledge-effect"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are social/knowledge state outside promoted battle runtime.",
+      "reason": "Friendly disposition, the Charmed condition's Social Advantage, social interaction adjudication, and target knowledge when the spell ends are social/knowledge facts outside promoted battle runtime state.",
       "sourceRecordPath": "packages/surface/content/charm_person.json",
       "sourceRows": [
         {
@@ -529,35 +500,6 @@
       "unitId": "fighter_weapon_mastery"
     },
     {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "social-knowledge-effect"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Wisdom (Perception or Survival) Advantage to find the marked target is ability-check roll-mode state outside the promoted damage-rider runtime.",
-      "sourceRecordPath": "packages/surface/content/hunters_mark.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Ranger spell list Hunter's Mark",
-          "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_hunters_mark",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 173,
-            "lineStart": 173,
-            "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "hunters_mark"
-    },
-    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -677,37 +619,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "The remaining Martial Arts die-size changes occur only after level 1.",
-      "sourceRecordPath": "packages/surface/content/monk_martial_arts.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Monk Martial Arts",
-          "id": "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
-          "levelBand": "level-1",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 71,
-            "lineStart": 57,
-            "path": ".references/srd-5.2.1/Classes/Monk.md"
-          }
-        }
-      ],
-      "status": "closed-later-level-only",
-      "strictTargetClosed": true,
-      "unitId": "monk_martial_arts"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "later-level-only",
-        "social-knowledge-effect"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "The remaining Favored Enemy free-cast count changes occur only after level 1.; Hunter's Mark finding Advantage is an ability-check roll-mode projection, not additional battle reducer behavior for Favored Enemy.",
+      "reason": "The remaining Favored Enemy free-cast count changes occur only after level 1.",
       "sourceRecordPath": "packages/surface/content/ranger_favored_enemy.json",
       "sourceRows": [
         {
@@ -723,8 +635,8 @@
           }
         }
       ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
+      "status": "closed-later-level-only",
+      "strictTargetClosed": true,
       "unitId": "ranger_favored_enemy"
     },
     {
@@ -888,7 +800,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 75,
+      "count": 78,
       "description": "Full support exists at the Unit profile boundary for strict level-1 accounting.",
       "status": "supported-profile",
       "unitIds": [
@@ -897,6 +809,7 @@
         "bane",
         "barbarian_rage",
         "barbarian_unarmored_defense",
+        "bard_bardic_inspiration",
         "bless",
         "burning_hands",
         "chill_touch",
@@ -929,6 +842,7 @@
         "heroism",
         "hex",
         "hideous_laughter",
+        "hunters_mark",
         "ice_knife",
         "inflict_wounds",
         "jump",
@@ -936,6 +850,7 @@
         "longstrider",
         "mage_armor",
         "magic_missile",
+        "monk_martial_arts",
         "monk_unarmored_defense",
         "paladin_lay_on_hands",
         "paladin_weapon_mastery",
@@ -987,14 +902,13 @@
       ]
     },
     {
-      "count": 4,
+      "count": 3,
       "description": "The level-1 behavior is complete and every remaining residual is later-level-only.",
       "status": "closed-later-level-only",
       "unitIds": [
         "barbarian_weapon_mastery",
-        "bard_bardic_inspiration",
         "fighter_weapon_mastery",
-        "monk_martial_arts"
+        "ranger_favored_enemy"
       ]
     },
     {
@@ -1004,15 +918,6 @@
       "unitIds": [
         "druid_druidic",
         "rogue_thieves_cant"
-      ]
-    },
-    {
-      "count": 2,
-      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
-      "status": "open-profile-accounting",
-      "unitIds": [
-        "hunters_mark",
-        "ranger_favored_enemy"
       ]
     }
   ],
@@ -1028,26 +933,16 @@
     },
     "strictRuntimeProfileSupport": {
       "denominator": 93,
-      "numerator": 75,
-      "percent": "80.6%"
+      "numerator": 78,
+      "percent": "83.9%"
     },
     "strictTargetClosure": {
       "denominator": 93,
-      "numerator": 91,
-      "percent": "97.8%"
+      "numerator": 93,
+      "percent": "100%"
     }
   },
-  "openFrontier": [
-    {
-      "count": 2,
-      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
-      "status": "open-profile-accounting",
-      "unitIds": [
-        "hunters_mark",
-        "ranger_favored_enemy"
-      ]
-    }
-  ],
+  "openFrontier": [],
   "outsideDenominator": {
     "companionWorktree": [
       {
@@ -3324,18 +3219,17 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 120,
     "groupsByClaimTag": {
-      "profile-subset-supported": 7,
-      "supported-profile": 75,
+      "profile-subset-supported": 4,
+      "supported-profile": 78,
       "unsupported-profile": 11
     },
     "groupsByStatus": {
       "closed-character-fact-and-runtime-detached-split": 2,
-      "closed-later-level-only": 4,
+      "closed-later-level-only": 3,
       "closed-runtime-detached-table-adjudication": 10,
-      "open-profile-accounting": 2,
-      "supported-profile": 75
+      "supported-profile": 78
     },
-    "nonSupportedFrontier": 18,
+    "nonSupportedFrontier": 15,
     "strictDenominator": 93
   }
 }

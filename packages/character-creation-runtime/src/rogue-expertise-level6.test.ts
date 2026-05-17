@@ -23,7 +23,6 @@ import {
   type CreationChoiceOptionId,
   type CreationFill,
   type CreationHole,
-  type UnitCatalog,
 } from "./index.ts";
 import { parseCharacterProgressionShape } from "./character-progression-algebra.ts";
 import {

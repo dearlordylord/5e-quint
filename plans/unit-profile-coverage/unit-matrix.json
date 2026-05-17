@@ -62,8 +62,8 @@
       "value": 159
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 102,
-      "numerator": 102,
+      "denominator": 105,
+      "numerator": 105,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 102,
-      "numerator": 92,
-      "percent": "90.2%"
+      "denominator": 105,
+      "numerator": 104,
+      "percent": "99%"
     },
     "supportedProfileCoverage": {
       "denominator": 127,
-      "numerator": 102,
-      "percent": "80.3%"
+      "numerator": 105,
+      "percent": "82.7%"
     }
   },
   "metricSemantics": [
@@ -295,10 +295,11 @@
         "packages/character-battle-runtime/src/battle-character-build-projection.ts",
         "packages/battle-runtime/src/battle-reducer/movement-speed.ts"
       ],
-      "sourceBoundary": "Character build class levels, retained monk_martial_arts Unit support profile, and canonical character loadout weapon/armor/shield facts",
+      "sourceBoundary": "Character build class levels, retained monk_martial_arts Unit support profile, authored Martial Arts die tiers, and canonical character loadout weapon/armor/shield facts",
       "taskRefs": [
         "SRDINV73A",
-        "SRDINV73B"
+        "SRDINV73B",
+        "L1D2-MONK-MARTIAL-ARTS-SCALING"
       ],
       "title": "Unit feature projects eligible Monk Martial Arts Bonus Action Unarmed Strike, attack ability, damage die, and Grapple/Shove save DC facts",
       "verificationOwners": [
@@ -386,9 +387,10 @@
         "packages/battle-runtime/src/unit-feature-support.ts",
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
-      "sourceBoundary": "Caller-supplied range and hearing facts plus existing visibility state; runtime owns Bonus Action/resource spending, one held die per target, one-hour duration, and d6 grant at Bard level 1. Failed D20 Test die use is represented by unit-feature.bardic-inspiration-failed-d20-test.",
+      "sourceBoundary": "Caller-supplied range and hearing facts plus existing visibility state; runtime owns Bonus Action/resource spending, one held die per target, one-hour duration, and Bard-level d6/d8/d10/d12 die projection from the authored Bardic Inspiration Unit. Failed D20 Test die use is represented by unit-feature.bardic-inspiration-failed-d20-test.",
       "taskRefs": [
-        "SRDINV72A"
+        "SRDINV72A",
+        "L1D2-BARDIC-INSPIRATION-SCALING"
       ],
       "title": "Unit feature spends a Bonus Action and Bardic Inspiration use to grant a one-hour die",
       "verificationOwners": [
@@ -2618,7 +2620,7 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Promoted battle-runtime Quint facts for Bardic Inspiration's Bonus Action grant admission, 60-foot sight-or-hearing target gate, one held die per target, one-hour duration, and Charisma-modifier use pool minimum.",
+      "note": "Promoted battle-runtime Quint facts for Bardic Inspiration's Bonus Action grant admission, 60-foot sight-or-hearing target gate, one held d6 die per target, one-hour duration, and Charisma-modifier use pool minimum.",
       "profileIds": [
         "unit-feature.bardic-inspiration-grant"
       ],
@@ -2626,11 +2628,43 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime reducer and admission tests cover Bardic Inspiration target facts, Bonus Action and Charisma-derived resource spending, one held die, one-hour duration, and duplicate-die rejection.",
+      "note": "Focused battle-runtime reducer and admission tests cover Bardic Inspiration target facts, Bonus Action and Charisma-derived resource spending, one held d6 die, one-hour duration, and duplicate-die rejection.",
       "profileIds": [
         "unit-feature.bardic-inspiration-grant"
       ],
       "taskId": "SRDINV72A"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Task 15 promotes Bardic Inspiration grant scaling by modeling the SRD Bard-level d6, d8, d10, and d12 die-size thresholds in battle-runtime Quint and using that projection for grant effects.",
+      "profileIds": [
+        "unit-feature.bardic-inspiration-grant"
+      ],
+      "taskId": "L1D2-BARDIC-INSPIRATION-SCALING"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission, reducer, and selected-identity MBT tests cover Bard-level d6, d8, d10, and d12 Bardic Inspiration grant projection from the authored Unit tiers.",
+      "profileIds": [
+        "unit-feature.bardic-inspiration-grant"
+      ],
+      "taskId": "L1D2-BARDIC-INSPIRATION-SCALING"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Task 16 promotes Martial Arts die scaling by modeling the SRD Monk-level d6, d8, d10, and d12 thresholds in shared Unit feature and promoted battle-runtime Quint facts.",
+      "profileIds": [
+        "unit-feature.martial-arts-attack-projection"
+      ],
+      "taskId": "L1D2-MONK-MARTIAL-ARTS-SCALING"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission, character-battle-runtime, and selected-identity MBT tests cover Monk-level d6, d8, d10, and d12 Martial Arts attack projection from the authored Unit tiers.",
+      "profileIds": [
+        "unit-feature.martial-arts-attack-projection"
+      ],
+      "taskId": "L1D2-MONK-MARTIAL-ARTS-SCALING"
     },
     {
       "claimKind": "qnt-proof",
@@ -3470,7 +3504,7 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Shared Unit feature and promoted battle-runtime Quint facts cover Martial Arts eligibility, Dexterity attack/damage choice, level-1 d6 damage replacement, and Dexterity-based Grapple/Shove save DC projection for the promoted Unarmed Strike Grapple and Shove actions.",
+      "note": "Shared Unit feature and promoted battle-runtime Quint facts cover Martial Arts eligibility, Dexterity attack/damage choice, authored damage replacement, and Dexterity-based Grapple/Shove save DC projection for the promoted Unarmed Strike Grapple and Shove actions.",
       "profileIds": [
         "unit-feature.martial-arts-attack-projection"
       ],
@@ -3478,7 +3512,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused admission and character-battle-runtime tests cover monk_martial_arts profile recognition, d6-slice scoping, canonical loadout eligibility, Dexterity-vs-Strength projection, and Grapple/Shove save DC projection through the promoted Unarmed Strike Grapple and Shove actions.",
+      "note": "Focused admission and character-battle-runtime tests cover monk_martial_arts profile recognition, canonical loadout eligibility, Dexterity-vs-Strength projection, and Grapple/Shove save DC projection through the promoted Unarmed Strike Grapple and Shove actions.",
       "profileIds": [
         "unit-feature.martial-arts-attack-projection"
       ],
@@ -4284,6 +4318,11 @@
           "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "AT-L1-03"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/fighter-fighting-style-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1D2-FIGHTER-FIGHTING-STYLE"
         }
       ],
       "executableMechanics": true,
@@ -5045,17 +5084,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "later-level-only",
-              "owner": "SRDINV78 later-level scaling",
-              "reason": "The remaining Bardic Inspiration die-size changes occur only after level 1."
-            },
-            "followUpTaskId": "SRDINV78",
-            "mechanic": "later-level Bardic Inspiration die size increases beyond d6"
-          }
-        ],
         "profileIds": [
           "unit-feature.bardic-inspiration-grant",
           "unit-feature.bardic-inspiration-failed-d20-test"
@@ -5067,10 +5095,11 @@
           "Bonus Action grant to another creature within 60 feet who can see or hear the Bard",
           "one Bardic Inspiration die per creature",
           "one-hour die ownership",
-          "d6 grant and Charisma-modifier use pool minimum",
+          "d6, d8, d10, and d12 Bardic die scaling by Bard level",
+          "Charisma-modifier use pool minimum",
           "spending the Bardic Inspiration die after an already-failed attack roll, Saving Throw, or Ability Check"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -5083,6 +5112,11 @@
           "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV72B"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/bardic-inspiration-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1D2-BARDIC-INSPIRATION-SCALING"
         }
       ],
       "executableMechanics": true,
@@ -5098,9 +5132,10 @@
             "packages/battle-runtime/src/unit-feature-support.ts",
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
-          "sourceBoundary": "Caller-supplied range and hearing facts plus existing visibility state; runtime owns Bonus Action/resource spending, one held die per target, one-hour duration, and d6 grant at Bard level 1. Failed D20 Test die use is represented by unit-feature.bardic-inspiration-failed-d20-test.",
+          "sourceBoundary": "Caller-supplied range and hearing facts plus existing visibility state; runtime owns Bonus Action/resource spending, one held die per target, one-hour duration, and Bard-level d6/d8/d10/d12 die projection from the authored Bardic Inspiration Unit. Failed D20 Test die use is represented by unit-feature.bardic-inspiration-failed-d20-test.",
           "taskRefs": [
-            "SRDINV72A"
+            "SRDINV72A",
+            "L1D2-BARDIC-INSPIRATION-SCALING"
           ],
           "title": "Unit feature spends a Bonus Action and Bardic Inspiration use to grant a one-hour die",
           "verificationOwners": [
@@ -5244,6 +5279,11 @@
           "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "AT-L1-06"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/cleric-druid-order-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1D2-CLERIC-DRUID-ORDER"
         }
       ],
       "executableMechanics": true,
@@ -5319,6 +5359,11 @@
           "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "AT-L1-06"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/cleric-druid-order-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1D2-CLERIC-DRUID-ORDER"
         }
       ],
       "executableMechanics": true,
@@ -5354,17 +5399,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "later-level-only",
-              "owner": "SRDINV78 later-level scaling",
-              "reason": "The remaining Martial Arts die-size changes occur only after level 1."
-            },
-            "followUpTaskId": "SRDINV78",
-            "mechanic": "later-level Martial Arts die size increases beyond d6"
-          }
-        ],
         "profileIds": [
           "unit-feature.martial-arts-attack-projection"
         ],
@@ -5373,11 +5407,11 @@
         ],
         "supportedMechanics": [
           "while unarmored and not wielding a Shield, and unarmed or wielding only Monk weapons, eligible Unarmed Strikes and Monk weapons may use Dexterity instead of Strength for attack and damage rolls",
-          "eligible Unarmed Strikes and eligible one-die Monk weapons may replace lower damage dice with the level-1 d6 Martial Arts die",
+          "eligible Unarmed Strikes and eligible one-die Monk weapons may replace lower damage dice with the Monk-level d6, d8, d10, or d12 Martial Arts die",
           "eligible promoted Unarmed Strike Grapple and Shove save DCs may use Dexterity through the projected Unarmed Strike ability modifier",
           "while the same Martial Arts eligibility gate holds, the Monk can make an Unarmed Strike as a Bonus Action without an Attack-action prerequisite"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -5385,6 +5419,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV73A"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/monk-martial-arts-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1D2-MONK-MARTIAL-ARTS-SCALING"
         }
       ],
       "executableMechanics": true,
@@ -5406,10 +5445,11 @@
             "packages/character-battle-runtime/src/battle-character-build-projection.ts",
             "packages/battle-runtime/src/battle-reducer/movement-speed.ts"
           ],
-          "sourceBoundary": "Character build class levels, retained monk_martial_arts Unit support profile, and canonical character loadout weapon/armor/shield facts",
+          "sourceBoundary": "Character build class levels, retained monk_martial_arts Unit support profile, authored Martial Arts die tiers, and canonical character loadout weapon/armor/shield facts",
           "taskRefs": [
             "SRDINV73A",
-            "SRDINV73B"
+            "SRDINV73B",
+            "L1D2-MONK-MARTIAL-ARTS-SCALING"
           ],
           "title": "Unit feature projects eligible Monk Martial Arts Bonus Action Unarmed Strike, attack ability, damage die, and Grapple/Shove save DC facts",
           "verificationOwners": [
@@ -5569,15 +5609,6 @@
             },
             "followUpTaskId": "SRDINV78",
             "mechanic": "later-level Favored Enemy free-cast count scaling beyond two uses"
-          },
-          {
-            "battleReadinessClosure": {
-              "kind": "social-knowledge-effect",
-              "owner": "SRDINV66 ability-check roll-mode owner",
-              "reason": "Hunter's Mark finding Advantage is an ability-check roll-mode projection, not additional battle reducer behavior for Favored Enemy."
-            },
-            "followUpTaskId": "SRDINV66",
-            "mechanic": "Hunter's Mark Perception/Survival finding Advantage remains deferred to ability-check roll-mode work"
           }
         ],
         "profileIds": [
@@ -5871,6 +5902,11 @@
           "ownerPath": "packages/character-creation-runtime/src/rogue-expertise-level6.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/rogue-expertise-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1D2-ROGUE-EXPERTISE"
         }
       ],
       "executableMechanics": true,
@@ -6092,6 +6128,11 @@
           "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/warlock-eldritch-invocations-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1D2-WARLOCK-ELDRITCH-INVOCATIONS"
         }
       ],
       "executableMechanics": true,
@@ -6233,6 +6274,11 @@
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV91B"
+        },
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/arcane-recovery-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "short-rest-spell-slot-recovery"
         }
       ],
       "executableMechanics": true,
@@ -6668,6 +6714,16 @@
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "AT-L1-04"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1D2-WEAPON-MASTERY-CONTAINERS"
+        },
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1D2-WEAPON-MASTERY-CONTAINERS"
         }
       ],
       "executableMechanics": true,
@@ -6868,6 +6924,16 @@
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "AT-L1-04"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1D2-WEAPON-MASTERY-CONTAINERS"
+        },
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1D2-WEAPON-MASTERY-CONTAINERS"
         }
       ],
       "executableMechanics": true,
@@ -6945,6 +7011,16 @@
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "AT-L1-04"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1D2-WEAPON-MASTERY-CONTAINERS"
+        },
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1D2-WEAPON-MASTERY-CONTAINERS"
         }
       ],
       "executableMechanics": true,
@@ -9809,17 +9885,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "social-knowledge-effect",
-              "owner": "SRDINV66 ability-check roll-mode owner",
-              "reason": "Wisdom (Perception or Survival) Advantage to find the marked target is ability-check roll-mode state outside the promoted damage-rider runtime."
-            },
-            "followUpTaskId": "SRDINV66",
-            "mechanic": "classified gap: caller-supplied Wisdom (Perception or Survival) Advantage roll-mode projection to find the marked target; no dedicated SRDINV63 implementation task"
-          }
-        ],
         "profileIds": [
           "spell.invocation-marked-damage-rider"
         ],
@@ -9830,11 +9895,12 @@
           "Bonus Action cast with Spell Slot spend",
           "Concentration-owned mark identity on one combatant target",
           "extra Force damage when the caster hits the marked target with an Attack Roll",
+          "caller-supplied Wisdom (Perception or Survival) Advantage roll-mode projection to find the marked target",
           "Bonus Action transfer only after the marked target drops to 0 Hit Points",
           "slot-scaled Concentration maximum of 1 hour at slots 1-2, 8 hours at slots 3-4, and 24 hours at slots 5+",
           "Concentration cleanup and maximum-duration expiration remove the marked-target damage rider"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -12586,10 +12652,10 @@
             "battleReadinessClosure": {
               "kind": "social-knowledge-effect",
               "owner": "SRDINV41 social/knowledge owner",
-              "reason": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are social/knowledge state outside promoted battle runtime."
+              "reason": "Friendly disposition, the Charmed condition's Social Advantage, social interaction adjudication, and target knowledge when the spell ends are social/knowledge facts outside promoted battle runtime state."
             },
             "followUpTaskId": "SRDINV41",
-            "mechanic": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are not represented in battle runtime state"
+            "mechanic": "Friendly disposition, the Charmed condition's Social Advantage, social interaction adjudication, and target knowledge when the spell ends remain runtime-detached social/knowledge state"
           }
         ],
         "profileIds": [
@@ -12600,7 +12666,7 @@
         ],
         "supportedMechanics": [
           "Humanoid creature-type target filter",
-          "Wisdom save-gated Charmed condition",
+          "Wisdom save-gated battle-visible Charmed condition application and cleanup",
           "hostile-target Wisdom save Advantage",
           "1-hour spell-owned condition duration",
           "spell ends if caster or one of the caster's allies deals damage to the target",

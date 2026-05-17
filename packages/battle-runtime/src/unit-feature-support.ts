@@ -24,6 +24,7 @@ import type {
   Ability,
   ActionRestriction,
   ClassName,
+  DiceAmount,
   DamageType,
   EffectAtom,
   StandardActionKind,
@@ -71,6 +72,30 @@ export const WEAPON_MASTERY_SAP_SUPPORT_PROFILE = "weaponMasterySap";
 export const WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE = "weaponMasteryTopple";
 export const WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE = "weaponMasteryCleave";
 const BARDIC_INSPIRATION_RANGE_FEET = 60;
+const BARDIC_INSPIRATION_BASE_DIE_SIZE = 6;
+const BARDIC_INSPIRATION_DIE_TIERS = [
+  { atLevel: 5, dieSize: 8 },
+  { atLevel: 10, dieSize: 10 },
+  { atLevel: 15, dieSize: 12 },
+] as const satisfies ReadonlyArray<{
+  readonly atLevel: number;
+  readonly dieSize: DamageDieSize;
+}>;
+type BardicInspirationDieSize =
+  | typeof BARDIC_INSPIRATION_BASE_DIE_SIZE
+  | (typeof BARDIC_INSPIRATION_DIE_TIERS)[number]["dieSize"];
+const MARTIAL_ARTS_BASE_DIE_SIZE = 6;
+const MARTIAL_ARTS_DIE_TIERS = [
+  { atLevel: 5, dieSize: 8 },
+  { atLevel: 11, dieSize: 10 },
+  { atLevel: 17, dieSize: 12 },
+] as const satisfies ReadonlyArray<{
+  readonly atLevel: number;
+  readonly dieSize: DamageDieSize;
+}>;
+type MartialArtsDieSize =
+  | typeof MARTIAL_ARTS_BASE_DIE_SIZE
+  | (typeof MARTIAL_ARTS_DIE_TIERS)[number]["dieSize"];
 export const ALTERNATE_ACTION_COST_ACTIONS = [
   "dash",
   "disengage",
@@ -134,6 +159,10 @@ export type BattleAttackActionAttackCountScalingSupportProfile = {
   readonly kind: typeof ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE;
   readonly additionalAttacks: 1;
 };
+type ThresholdTierDieAmount = Extract<
+  DiceAmount,
+  { readonly kind: "threshold_tiers" }
+>;
 export type BonusActionDashTemporaryHitPointsProfile = {
   readonly activationCost: {
     readonly kind: "bonusAction";
@@ -761,11 +790,8 @@ function parseAuthoredAttackDamageReductionZeroDamageRedirect(
   };
 }
 
-function martialArtsDieSize(classLevel: ClassLevel): DamageDieSize {
-  if (classLevel >= 17) return 12;
-  if (classLevel >= 11) return 10;
-  if (classLevel >= 5) return 8;
-  return 6;
+function martialArtsDieSize(classLevel: ClassLevel): MartialArtsDieSize {
+  return martialArtsSrdDieSizeAtClassLevel(classLevel);
 }
 
 export type ReactionReductionResourceSpend = {
@@ -819,7 +845,7 @@ export type MartialArtsAttackProjectionProfile = {
   readonly bonusActionAttack: {
     readonly kind: "unarmedStrike";
   };
-  readonly damageReplacement: MartialArtsDamageReplacementProfile | null;
+  readonly damageReplacement: MartialArtsDamageReplacementProfile;
   readonly abilitySubstitution: {
     readonly use: "dex";
     readonly replaces: "str";
@@ -829,7 +855,7 @@ export type MartialArtsAttackProjectionProfile = {
 export type MartialArtsDamageReplacementProfile = {
   readonly scope: "unarmedOrMonkWeapon";
   readonly dice: 1;
-  readonly dieSize: 6;
+  readonly dieSize: MartialArtsDieSize;
 };
 
 export type SupportedUnitFeatureProfile =
@@ -1883,7 +1909,10 @@ export function martialArtsAttackProjectionProfileForUnit(
     classLevel: monkLevel,
     martialArts: {
       ...martialArts,
-      damageReplacement: monkLevel < 5 ? martialArts.damageReplacement : null,
+      damageReplacement: {
+        ...martialArts.damageReplacement,
+        dieSize: martialArtsSrdDieSizeAtClassLevel(monkLevel),
+      },
     },
   };
 }
@@ -1942,8 +1971,7 @@ function martialArtsAttackProjectionMechanicsForUnit(
     damageReplacement?.scope !== "unarmed_or_monk_weapon" ||
     damageReplacement.die.kind !== "threshold_tiers" ||
     damageReplacement.die.axis !== "class" ||
-    damageReplacement.die.base.dice !== 1 ||
-    damageReplacement.die.base.dieSize !== 6 ||
+    !isSrdMartialArtsDieTable(damageReplacement.die) ||
     abilitySubstitution?.scope !== "unarmed_or_monk_weapon" ||
     abilitySubstitution.use !== "dex" ||
     abilitySubstitution.replaces !== "str" ||
@@ -1966,7 +1994,7 @@ function martialArtsAttackProjectionMechanicsForUnit(
     damageReplacement: {
       scope: "unarmedOrMonkWeapon",
       dice: 1,
-      dieSize: 6,
+      dieSize: MARTIAL_ARTS_BASE_DIE_SIZE,
     },
     abilitySubstitution: {
       use: "dex",
@@ -2148,17 +2176,10 @@ function bardicInspirationReactionReduction(
   return {
     kind: "resourceDie",
     dice: 1,
-    dieSize: bardicInspirationDieSize(classLevel),
+    dieSize: bardicInspirationSrdDieSizeAtClassLevel(classLevel),
     flatModifier: 0,
     spends: { resourceUnitId: unit.id, amount: 1 },
   };
-}
-
-function bardicInspirationDieSize(classLevel: ClassLevel): 6 | 8 | 10 | 12 {
-  if (classLevel >= 15) return 12;
-  if (classLevel >= 10) return 10;
-  if (classLevel >= 5) return 8;
-  return 6;
 }
 
 function reactionRollOrDamageReductionKindsUnique(
@@ -2353,38 +2374,103 @@ function parseBardicInspirationGrantUnitFeatureProfile(
     return null;
   }
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(effect.duration);
-  if (
-    effect.die.base.dieSize !== 6 ||
-    bardicInspirationLaterLevelDieSizeApplies(effect.die, classLevel) ||
-    Either.isLeft(durationTicks)
-  ) {
+  const dieSize = bardicInspirationDieSizeAtClassLevel(effect.die, classLevel);
+  if (dieSize === null || Either.isLeft(durationTicks)) {
     return null;
   }
   return {
     kind: "bardicInspirationGrant",
     unit,
     rangeFeet: movementFeet(BARDIC_INSPIRATION_RANGE_FEET),
-    dieSize: 6,
+    dieSize,
     durationTicks: durationTicks.right,
     spends: { resourceUnitId: unit.id, amount: 1 },
   };
 }
 
-function bardicInspirationLaterLevelDieSizeApplies(
-  die: {
-    readonly tiers?: readonly {
-      readonly atLevel: number;
-      readonly override: { readonly dieSize?: number };
-    }[];
-    readonly base: { readonly dieSize?: number };
-  },
+function bardicInspirationDieSizeAtClassLevel(
+  die: ThresholdTierDieAmount,
   classLevel: ClassLevel,
+): BardicInspirationDieSize | null {
+  if (!isSrdBardicInspirationDieTable(die)) {
+    return null;
+  }
+  return bardicInspirationSrdDieSizeAtClassLevel(classLevel);
+}
+
+function isSrdBardicInspirationDieTable(die: ThresholdTierDieAmount): boolean {
+  return thresholdTierDieTableMatches(die, {
+    baseDieSize: BARDIC_INSPIRATION_BASE_DIE_SIZE,
+    tiers: BARDIC_INSPIRATION_DIE_TIERS,
+  });
+}
+
+function isSrdMartialArtsDieTable(die: ThresholdTierDieAmount): boolean {
+  return thresholdTierDieTableMatches(die, {
+    baseDieSize: MARTIAL_ARTS_BASE_DIE_SIZE,
+    tiers: MARTIAL_ARTS_DIE_TIERS,
+  });
+}
+
+function thresholdTierDieTableMatches(
+  die: ThresholdTierDieAmount,
+  expected: {
+    readonly baseDieSize: DamageDieSize;
+    readonly tiers: ReadonlyArray<{
+      readonly atLevel: number;
+      readonly dieSize: DamageDieSize;
+    }>;
+  },
 ): boolean {
-  return (die.tiers ?? []).some(
-    (tier) =>
-      classLevel >= tier.atLevel &&
-      tier.override.dieSize !== undefined &&
-      tier.override.dieSize !== 6,
+  if (
+    die.base.dice !== 1 ||
+    die.base.dieSize !== expected.baseDieSize ||
+    die.base.flat !== undefined ||
+    die.base.spellcastingMod !== undefined ||
+    die.base.abilityModifier !== undefined ||
+    die.tiers.length !== expected.tiers.length
+  ) {
+    return false;
+  }
+
+  return expected.tiers.every((expectedTier) =>
+    die.tiers.some((tier) => thresholdDieTierMatches(tier, expectedTier)),
+  );
+}
+
+function thresholdDieTierMatches(
+  tier: ThresholdTierDieAmount["tiers"][number],
+  expected: { readonly atLevel: number; readonly dieSize: DamageDieSize },
+): boolean {
+  return (
+    tier.atLevel === expected.atLevel &&
+    tier.override.dice === undefined &&
+    tier.override.flat === undefined &&
+    tier.override.dieSize === expected.dieSize
+  );
+}
+
+function bardicInspirationSrdDieSizeAtClassLevel(
+  classLevel: ClassLevel,
+): BardicInspirationDieSize {
+  return (
+    BARDIC_INSPIRATION_DIE_TIERS.filter(
+      (candidate) => classLevel >= candidate.atLevel,
+    )
+      .sort((left, right) => left.atLevel - right.atLevel)
+      .at(-1)?.dieSize ?? BARDIC_INSPIRATION_BASE_DIE_SIZE
+  );
+}
+
+function martialArtsSrdDieSizeAtClassLevel(
+  classLevel: ClassLevel,
+): MartialArtsDieSize {
+  return (
+    MARTIAL_ARTS_DIE_TIERS.filter(
+      (candidate) => classLevel >= candidate.atLevel,
+    )
+      .sort((left, right) => left.atLevel - right.atLevel)
+      .at(-1)?.dieSize ?? MARTIAL_ARTS_BASE_DIE_SIZE
   );
 }
 
