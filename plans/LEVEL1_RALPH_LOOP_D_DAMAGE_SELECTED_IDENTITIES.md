@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "L1D-SORCEROUS-BURST",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Sorcerous Burst Selected Identity Replay"
     },
     {
@@ -207,7 +207,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-S-Z.md` Sacred Flame.
 
 ### Task 7 - L1D-SORCEROUS-BURST - Sorcerous Burst Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `sorcerous_burst`, including the supported
 attack/damage identity and any existing burst-specific projection in runtime.

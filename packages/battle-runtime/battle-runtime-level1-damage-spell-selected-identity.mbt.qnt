@@ -107,6 +107,19 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
     ),
   }
 
+  action doResolveSorcerousBurstSpellAttackDamage = all {
+    qLastResult == "init",
+    recordProjection(
+      false,
+      false,
+      1,
+      2,
+      false,
+      12,
+      "sorcerousBurstSpellAttackDamage",
+    ),
+  }
+
   action step = any {
     doResolveBurningHandsMixedConeSavingThrows,
     doResolveIceKnifeHitAttackDamageAndBurstSavingThrows,
@@ -114,5 +127,6 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
     doResolvePoisonSpraySpellAttackDamage,
     doResolveRayOfSicknessSpellAttackDamageAndPoisoned,
     doResolveSacredFlameDexteritySavingThrowRadiantDamage,
+    doResolveSorcerousBurstSpellAttackDamage,
   }
 }

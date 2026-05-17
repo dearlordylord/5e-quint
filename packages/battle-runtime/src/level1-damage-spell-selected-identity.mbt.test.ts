@@ -1,9 +1,10 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt level1-damage-spell-selected-identity burning_hands ice_knife poison_spray ray_of_sickness sacred_flame
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt level1-damage-spell-selected-identity burning_hands ice_knife poison_spray ray_of_sickness sacred_flame sorcerous_burst
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity burning_hands doResolveBurningHandsMixedConeSavingThrows
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity ice_knife doResolveIceKnifeHitAttackDamageAndBurstSavingThrows doResolveIceKnifeMissBurstSavingThrows
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity poison_spray doResolvePoisonSpraySpellAttackDamage
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity ray_of_sickness doResolveRayOfSicknessSpellAttackDamageAndPoisoned
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity sacred_flame doResolveSacredFlameDexteritySavingThrowRadiantDamage
+// UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity sorcerous_burst doResolveSorcerousBurstSpellAttackDamage
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -54,6 +55,7 @@ const level1DamageSpellSelectedIdentityDriverSchema = {
   doResolvePoisonSpraySpellAttackDamage: {},
   doResolveRayOfSicknessSpellAttackDamageAndPoisoned: {},
   doResolveSacredFlameDexteritySavingThrowRadiantDamage: {},
+  doResolveSorcerousBurstSpellAttackDamage: {},
   step: {},
 } as const;
 type Level1DamageSpellSelectedIdentityDriverAction = Exclude<
@@ -67,6 +69,7 @@ const level1DamageSpellUnitIds = [
   "poison_spray",
   "ray_of_sickness",
   "sacred_flame",
+  "sorcerous_burst",
 ] as const;
 type Level1DamageSpellUnitId = (typeof level1DamageSpellUnitIds)[number];
 const level1DamageSpellSelectedIdentityResults = [
@@ -77,6 +80,7 @@ const level1DamageSpellSelectedIdentityResults = [
   "poisonSpraySpellAttackDamage",
   "rayOfSicknessSpellAttackDamageAndPoisoned",
   "sacredFlameDexteritySavingThrowRadiantDamage",
+  "sorcerousBurstSpellAttackDamage",
 ] as const;
 type Level1DamageSpellSelectedIdentityResult =
   (typeof level1DamageSpellSelectedIdentityResults)[number];
@@ -162,9 +166,25 @@ const level1DamageSpellInvocationProfiles = {
     tag: "cantrip",
     procedure: "saveGatedDamage",
   },
+  sorcerous_burst: {
+    tag: "cantrip",
+    procedure: "spellAttackDamage",
+  },
 } as const satisfies Record<
   Level1DamageSpellUnitId,
   Level1DamageSpellInvocationProfile
+>;
+
+const sorcerousBurstDamageTypes = [
+  "acid",
+  "cold",
+  "fire",
+  "lightning",
+  "poison",
+  "psychic",
+  "thunder",
+] as const satisfies ReadonlyArray<
+  Extract<BattleFill, { readonly kind: "damageTypeChoice" }>["value"]
 >;
 
 const casterId = combatantId("level1-damage-spell-caster");
@@ -295,6 +315,25 @@ const selectedUnitIdentityReplays = [
       },
     ],
   },
+  {
+    taskId: "level1-damage-spell-selected-identity",
+    unitId: "sorcerous_burst",
+    actions: ["doResolveSorcerousBurstSpellAttackDamage"],
+    sequences: [
+      {
+        name: "cantrip-ranged-spell-attack-selected-thunder-exploding-d8-damage",
+        actions: ["doResolveSorcerousBurstSpellAttackDamage"],
+        expected: expectedProjection({
+          actionAvailable: false,
+          spellSlotSpentThisTurn: false,
+          level1SlotsRemaining: 1,
+          primaryTargetHp: 2,
+          secondaryTargetHp: 12,
+          lastResult: "sorcerousBurstSpellAttackDamage",
+        }),
+      },
+    ],
+  },
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
 describe("Level 1 damage spell selected identity MBT", () => {
@@ -418,6 +457,13 @@ function createLevel1DamageSpellSelectedIdentityDriver() {
         recordResolvedResult(
           resolveSacredFlameDexteritySavingThrowRadiantDamage(state),
           "sacredFlameDexteritySavingThrowRadiantDamage",
+        );
+      },
+      doResolveSorcerousBurstSpellAttackDamage: () => {
+        state = level1DamageSpellBattle(srdSpellRecord("sorcerous_burst"));
+        recordResolvedResult(
+          resolveSorcerousBurstSpellAttackDamage(state),
+          "sorcerousBurstSpellAttackDamage",
         );
       },
       step: () => {},
@@ -598,6 +644,54 @@ function resolveSacredFlameDexteritySavingThrowRadiantDamage(
     state,
     subject: act.subject,
     fills: [targetChoice, savingThrowFill, damageRollFill(damage, [7])],
+  });
+}
+
+function resolveSorcerousBurstSpellAttackDamage(
+  state: BattleState,
+): BattleResolutionResult {
+  const act = actionSpellAct(state, "sorcerous_burst");
+  const damageType = requireHole(act.initialHoles, "damageTypeChoice");
+  assertSorcerousBurstDamageTypeChoiceProfile(damageType);
+  const target = requireHole(act.initialHoles, "targetChoice");
+  assertSinglePrimaryTargetChoiceProfile(target, "Sorcerous Burst");
+  const damageTypeChoice = damageTypeChoiceFill(damageType, "thunder");
+  const targetChoice = spellTargetFill(
+    target,
+    "sorcerous_burst",
+    primaryTargetId,
+  );
+  const attack = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [damageTypeChoice, targetChoice],
+    }),
+    "attackRoll",
+  );
+  assertSorcerousBurstAttackRollProfile(attack);
+  const attackRoll = attackRollFill(attack, {
+    total: 15,
+    naturalD20: 10,
+  });
+  const damage = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [damageTypeChoice, targetChoice, attackRoll],
+    }),
+    "rolledDice",
+  );
+  assertSorcerousBurstDamageProfile(damage);
+  return resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [
+      damageTypeChoice,
+      targetChoice,
+      attackRoll,
+      damageRollFill(damage, [8, 2]),
+    ],
   });
 }
 
@@ -864,6 +958,17 @@ function attackRollFill(
       total: value.total,
       naturalD20: DieRollResult(value.naturalD20),
     },
+  };
+}
+
+function damageTypeChoiceFill(
+  hole: Extract<BattleHole, { readonly kind: "damageTypeChoice" }>,
+  value: Extract<BattleFill, { readonly kind: "damageTypeChoice" }>["value"],
+): Extract<BattleFill, { readonly kind: "damageTypeChoice" }> {
+  return {
+    kind: "damageTypeChoice",
+    holeId: hole.holeId,
+    value,
   };
 }
 
@@ -1221,6 +1326,93 @@ function assertSacredFlameDamageProfile(
   ) {
     throw new Error("Sacred Flame damage profile drifted.");
   }
+}
+
+function assertSorcerousBurstDamageTypeChoiceProfile(
+  hole: Extract<BattleHole, { readonly kind: "damageTypeChoice" }>,
+): void {
+  const invocation = hole.spell;
+  if (
+    invocation.procedure !== "spellAttackDamage" ||
+    invocation.spell.id !== "sorcerous_burst" ||
+    invocation.resource.tag !== "none" ||
+    invocation.targeting.kind !== "singleCreatureOrObject" ||
+    invocation.attackKind !== "ranged_spell_attack" ||
+    invocation.damage.kind !== "sorcerousBurstDamageTypeChoice" ||
+    invocation.damage.expr.dice !== 1 ||
+    invocation.damage.expr.dieSize !== 8 ||
+    invocation.damage.maxDieAdditionalDiceLimit !== 3 ||
+    !sameStringSet(hole.choices, sorcerousBurstDamageTypes) ||
+    !sameStringSet(
+      invocation.damage.damageTypeChoices,
+      sorcerousBurstDamageTypes,
+    ) ||
+    Number(invocation.rangeFeet) !== 120
+  ) {
+    throw new Error("Sorcerous Burst damage type choice profile drifted.");
+  }
+}
+
+function assertSorcerousBurstAttackRollProfile(
+  hole: Extract<BattleHole, { readonly kind: "attackRoll" }>,
+): void {
+  if (!("spell" in hole)) {
+    throw new Error("Expected Sorcerous Burst spell Attack Roll hole.");
+  }
+  const invocation = hole.spell;
+  if (
+    invocation.procedure !== "spellAttackDamage" ||
+    invocation.spell.id !== "sorcerous_burst" ||
+    invocation.resource.tag !== "none" ||
+    invocation.targeting.kind !== "singleCreatureOrObject" ||
+    invocation.attackKind !== "ranged_spell_attack" ||
+    invocation.damage.kind !== "selectedSorcerousBurstDamage" ||
+    invocation.damage.expr.dice !== 1 ||
+    invocation.damage.expr.dieSize !== 8 ||
+    invocation.damage.damageType !== "thunder" ||
+    invocation.damage.maxDieAdditionalDiceLimit !== 3 ||
+    Number(invocation.rangeFeet) !== 120
+  ) {
+    throw new Error("Sorcerous Burst Attack Roll profile drifted.");
+  }
+}
+
+function assertSorcerousBurstDamageProfile(
+  hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
+): void {
+  if (!("spell" in hole) || !("critical" in hole)) {
+    throw new Error("Expected Sorcerous Burst damage roll hole.");
+  }
+  const invocation = hole.spell;
+  if (
+    invocation.procedure !== "spellAttackDamage" ||
+    invocation.spell.id !== "sorcerous_burst" ||
+    invocation.resource.tag !== "none" ||
+    invocation.damage.kind !== "selectedSorcerousBurstDamage" ||
+    invocation.damage.expr.dice !== 1 ||
+    invocation.damage.expr.dieSize !== 8 ||
+    invocation.damage.damageType !== "thunder" ||
+    invocation.damage.maxDieAdditionalDiceLimit !== 3 ||
+    invocation.postDamageRiders.length !== 0 ||
+    hole.label !== "Sorcerous Burst damage (1d8-thunder)" ||
+    hole.critical
+  ) {
+    throw new Error("Sorcerous Burst damage profile drifted.");
+  }
+}
+
+function sameStringSet(
+  left: readonly string[],
+  right: readonly string[],
+): boolean {
+  const leftValues = new Set(left);
+  const rightValues = new Set(right);
+  return (
+    leftValues.size === left.length &&
+    rightValues.size === right.length &&
+    left.length === right.length &&
+    left.every((value) => rightValues.has(value))
+  );
 }
 
 function projectLevel1DamageSpellSelectedIdentityState(
