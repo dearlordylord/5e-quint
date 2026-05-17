@@ -2196,6 +2196,40 @@ describe("character creation finalization", () => {
     );
   });
 
+  test("rejects Rogue Expertise choices that are not already skill proficiencies", () => {
+    const rogue = completeSupportedProgressionDraft({
+      draftId: "draft:srd-level-1-rogue-invalid-expertise",
+      progression: testProgression("class_rogue", 1),
+    });
+    const invalidExpertise: CharacterDraft = {
+      ...rogue,
+      selections: {
+        ...rogue.selections,
+        choices: rogue.selections.choices.map((choice) =>
+          choice.kind === "unitChoice" &&
+          choice.source.unitId === "rogue_expertise" &&
+          choice.source.choiceKey === "class_feature_proficiency_choice"
+            ? {
+                ...choice,
+                options: choice.options.map((option, index) =>
+                  index === 0
+                    ? {
+                        ...option,
+                        optionId: creationChoiceOptionId("arcana"),
+                      }
+                    : option,
+                ),
+              }
+            : choice,
+        ),
+      },
+    };
+
+    expect(
+      finalizeCharacterDraft({ draft: invalidExpertise, unitLibrary }),
+    ).toMatchObject({ tag: "invalid" });
+  });
+
   test("finalizes non-Wizard level-1 Spell Access from Surface class spellcasting facts", () => {
     const spellAccessClassUnitIds = [
       "class_bard",
