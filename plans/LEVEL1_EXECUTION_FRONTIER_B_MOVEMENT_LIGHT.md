@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L1XB-PRECHECK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Movement Light Frontier Precheck"
     },
     {
@@ -97,7 +97,7 @@ Every task runs:
 
 | Order | Task | Status | Blocks On | Output |
 | ---: | --- | --- | --- | --- |
-| 1 | L1XB-PRECHECK - Movement Light Frontier Precheck | ready-for-research | none | decision artifact listing current claims/evidence and confirming A/B/D/K ownership split |
+| 1 | L1XB-PRECHECK - Movement Light Frontier Precheck | done | none | decision artifact listing current claims/evidence and confirming A/B/D/K ownership split |
 | 2 | L1XB-FEATHER-FALL-CLOSURE - Feather Fall Runtime Boundary Closure | ready-for-research | 1 | `feather_fall` removed from strict open-profile-accounting or blocked with exact missing runtime mechanic |
 | 3 | L1XB-JUMP-CLOSURE - Jump Runtime Boundary Closure | ready-for-research | 1 | `jump` removed from strict open-profile-accounting or blocked with exact missing runtime mechanic |
 | 4 | L1XB-LIGHT-CLOSURE - Light Runtime Boundary Closure | ready-for-research | 1 | `light` removed from strict open-profile-accounting or blocked with exact missing runtime mechanic |
@@ -105,7 +105,7 @@ Every task runs:
 
 ### Task 1 - L1XB-PRECHECK - Movement Light Frontier Precheck
 
-Status: `ready-for-research`
+Status: `done`
 
 Inputs:
 
