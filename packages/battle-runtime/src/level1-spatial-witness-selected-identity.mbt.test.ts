@@ -1,7 +1,8 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt level1-spatial-witness dancing_lights faerie_fire feather_fall
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt level1-spatial-witness dancing_lights faerie_fire feather_fall fog_cloud
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness dancing_lights doDancingLightsMovableDimLight
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness faerie_fire doFaerieFireOutlineAdvantageInvisibleDimLight
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness feather_fall doFeatherFallReactionMitigationLanding
+// UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness fog_cloud doFogCloudAreaIdentityObscurementStrongWindCleanup
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -20,6 +21,7 @@ import {
   applyCondition,
   hasCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
+import { elapsedTimeTicksFromHours } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   ATTACK_ROLL_MODES,
   type AttackRollMode,
@@ -59,12 +61,14 @@ import {
   snapshotBattle,
   startBattle,
   type AvailableBattleAct,
+  type BattleActiveEffect,
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
   type BattleIllumination,
   type BattleLightEmitter,
   type BattleLightEmitterProjectionFact,
+  type BattleObscurementZone,
   type BattleObjectId,
   type BattleResolutionResult,
   type BattleSightObscurement,
@@ -79,6 +83,7 @@ const level1SpatialWitnessSelectedIdentityDriverSchema = {
   doDancingLightsMovableDimLight: {},
   doFaerieFireOutlineAdvantageInvisibleDimLight: {},
   doFeatherFallReactionMitigationLanding: {},
+  doFogCloudAreaIdentityObscurementStrongWindCleanup: {},
   step: {},
 } as const;
 type Level1SpatialWitnessSelectedIdentityDriverAction = Exclude<
@@ -107,6 +112,15 @@ type Level1SpatialWitnessSelectedIdentityProjection = {
   readonly featherFallLandingFallingPronePrevented: boolean;
   readonly featherFallLandedTargetMitigationCleared: boolean;
   readonly featherFallOtherTargetStillMitigated: boolean;
+  readonly fogCloudAreaIdentityRetained: boolean;
+  readonly fogCloudHeavilyObscuredZoneCount: number;
+  readonly fogCloudRadiusFeet: number;
+  readonly fogCloudDurationTicks: number;
+  readonly fogCloudStrongWindCommandOffered: boolean;
+  readonly fogCloudCleanupClearedEffect: boolean;
+  readonly fogCloudCleanupClearedZone: boolean;
+  readonly fogCloudCleanupClearedConcentration: boolean;
+  readonly fogCloudSlotExpended: boolean;
   readonly projectedIllumination: BattleIllumination;
   readonly ordinarySightObscurement: BattleSightObscurement;
   readonly darkvisionSightObscurement: BattleSightObscurement;
@@ -119,17 +133,20 @@ type Level1SpatialWitnessSelectedIdentityProjection = {
     | "init"
     | "dancingLightsMovableDimLight"
     | "faerieFireOutlineAdvantageInvisibleDimLight"
-    | "featherFallReactionMitigationLanding";
+    | "featherFallReactionMitigationLanding"
+    | "fogCloudAreaIdentityObscurementStrongWindCleanup";
 };
 type ProjectedAttackRollMode = AttackRollMode;
 const dancingLightsUnitId = "dancing_lights";
 const faerieFireUnitId = "faerie_fire";
 const featherFallUnitId = "feather_fall";
+const fogCloudUnitId = "fog_cloud";
 const starryWispUnitId = "starry_wisp";
 const level1SpatialWitnessSelectedUnitIds = [
   dancingLightsUnitId,
   faerieFireUnitId,
   featherFallUnitId,
+  fogCloudUnitId,
 ] as const;
 type Level1SpatialWitnessSelectedUnitId =
   (typeof level1SpatialWitnessSelectedUnitIds)[number];
@@ -160,6 +177,20 @@ type BonusActionSpellAct = AvailableBattleAct & {
     { readonly tag: "bonusActionSpell" }
   >;
 };
+type FogCloudStrongWindDispersalAct = AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "runtimeCommand"; readonly command: "disperseFogCloud" }
+  >;
+};
+type FogCloudObscurementEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "fogCloudObscurement" }
+>;
+type SpellObscurementZone = Extract<
+  BattleObscurementZone,
+  { readonly kind: "spellObscurementZone" }
+>;
 type SpellLightEmitter = Extract<
   BattleLightEmitter,
   { readonly kind: "spellLightEmitter" }
@@ -183,6 +214,17 @@ type FeatherFallProjection = {
   readonly landedTargetMitigationCleared: boolean;
   readonly otherTargetStillMitigated: boolean;
 };
+type FogCloudProjection = {
+  readonly areaIdentityRetained: boolean;
+  readonly heavilyObscuredZoneCount: number;
+  readonly radiusFeet: number;
+  readonly durationTicks: number;
+  readonly strongWindCommandOffered: boolean;
+  readonly cleanupClearedEffect: boolean;
+  readonly cleanupClearedZone: boolean;
+  readonly cleanupClearedConcentration: boolean;
+  readonly slotExpended: boolean;
+};
 
 const casterId = combatantId("level1-spatial-witness-caster");
 const observerId = combatantId("level1-spatial-witness-observer");
@@ -202,6 +244,9 @@ const faerieFireObjectId = battleObjectId("level1-faerie-fire-object");
 const faerieFireObjectArmorClass = armorClass(13);
 const starryWispObjectTargetRangeFeet = movementFeet(60);
 const darkvisionWitnessRangeFeet = movementFeet(60);
+const fogCloudAreaId = "level1-fog-cloud-area";
+const fogCloudLevelOneRadiusFeet = movementFeet(20);
+const fogCloudOneHourDurationTicks = requireElapsedHours(1);
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -293,6 +338,31 @@ const selectedUnitIdentityReplays = [
       },
     ],
   },
+  {
+    taskId: "level1-spatial-witness",
+    unitId: "fog_cloud",
+    actions: ["doFogCloudAreaIdentityObscurementStrongWindCleanup"],
+    sequences: [
+      {
+        name: "table-supplied-area-obscurement-duration-and-strong-wind-cleanup",
+        actions: ["doFogCloudAreaIdentityObscurementStrongWindCleanup"],
+        expected: expectedProjection({
+          fogCloudAreaIdentityRetained: true,
+          fogCloudHeavilyObscuredZoneCount: 1,
+          fogCloudRadiusFeet: Number(fogCloudLevelOneRadiusFeet),
+          fogCloudDurationTicks: Number(fogCloudOneHourDurationTicks),
+          fogCloudStrongWindCommandOffered: true,
+          fogCloudCleanupClearedEffect: true,
+          fogCloudCleanupClearedZone: true,
+          fogCloudCleanupClearedConcentration: true,
+          fogCloudSlotExpended: true,
+          magicActionAvailable: false,
+          bonusActionAvailable: true,
+          lastResult: "fogCloudAreaIdentityObscurementStrongWindCleanup",
+        }),
+      },
+    ],
+  },
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
 describe("Level 1 spatial witness selected identity MBT", () => {
@@ -356,6 +426,7 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
       "normal";
     let faerieFireObjectAttackRollMode: ProjectedAttackRollMode = "normal";
     let featherFallProjection = emptyFeatherFallProjection();
+    let fogCloudProjection = emptyFogCloudProjection();
     let lastResult: Level1SpatialWitnessSelectedIdentityProjection["lastResult"] =
       "init";
 
@@ -366,6 +437,7 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
       faerieFireInvisibleCreatureAttackRollMode = "normal";
       faerieFireObjectAttackRollMode = "normal";
       featherFallProjection = emptyFeatherFallProjection();
+      fogCloudProjection = emptyFogCloudProjection();
       lastResult = "init";
     }
 
@@ -538,6 +610,44 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
         state = landing.state;
         lastResult = "featherFallReactionMitigationLanding";
       },
+      doFogCloudAreaIdentityObscurementStrongWindCleanup: () => {
+        state = fogCloudBattle();
+        retainedLightIdentityCount = 0;
+        const act = fogCloudAct(state);
+        const area = requireHole(act.initialHoles, "spellAreaChoice");
+        const cast = resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [fogCloudAreaFill(area)],
+        });
+        if (cast.tag !== "resolved") {
+          throw new Error(
+            `Expected Fog Cloud cast to resolve, got ${cast.tag}.`,
+          );
+        }
+
+        const command = fogCloudStrongWindDispersalAct(cast.state);
+        const dispersed = resolveBattleSubject({
+          state: cast.state,
+          subject: command.subject,
+          fills: [],
+        });
+        if (dispersed.tag !== "resolved") {
+          throw new Error(
+            `Expected Fog Cloud strong-wind cleanup to resolve, got ${dispersed.tag}.`,
+          );
+        }
+
+        fogCloudProjection = projectFogCloudReplay(
+          cast.state,
+          dispersed.state,
+          {
+            strongWindCommandOffered: true,
+          },
+        );
+        state = dispersed.state;
+        lastResult = "fogCloudAreaIdentityObscurementStrongWindCleanup";
+      },
       step: () => {},
       getState: () =>
         projectLevel1SpatialWitnessSelectedIdentityState(
@@ -547,10 +657,19 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
           faerieFireInvisibleCreatureAttackRollMode,
           faerieFireObjectAttackRollMode,
           featherFallProjection,
+          fogCloudProjection,
           lastResult,
         ),
     };
   });
+}
+
+function requireElapsedHours(hours: number) {
+  const ticks = elapsedTimeTicksFromHours(hours);
+  if (Either.isLeft(ticks)) {
+    throw new Error(`Expected valid elapsed hours: ${hours}.`);
+  }
+  return ticks.right;
 }
 
 function expectedProjection(
@@ -577,6 +696,15 @@ function expectedProjection(
     featherFallLandingFallingPronePrevented: false,
     featherFallLandedTargetMitigationCleared: false,
     featherFallOtherTargetStillMitigated: false,
+    fogCloudAreaIdentityRetained: false,
+    fogCloudHeavilyObscuredZoneCount: 0,
+    fogCloudRadiusFeet: 0,
+    fogCloudDurationTicks: 0,
+    fogCloudStrongWindCommandOffered: false,
+    fogCloudCleanupClearedEffect: false,
+    fogCloudCleanupClearedZone: false,
+    fogCloudCleanupClearedConcentration: false,
+    fogCloudSlotExpended: false,
     projectedIllumination: "darkness",
     ordinarySightObscurement: "heavilyObscured",
     darkvisionSightObscurement: "lightlyObscured",
@@ -602,6 +730,20 @@ function emptyFeatherFallProjection(): FeatherFallProjection {
     landingFallingPronePrevented: false,
     landedTargetMitigationCleared: false,
     otherTargetStillMitigated: false,
+  };
+}
+
+function emptyFogCloudProjection(): FogCloudProjection {
+  return {
+    areaIdentityRetained: false,
+    heavilyObscuredZoneCount: 0,
+    radiusFeet: 0,
+    durationTicks: 0,
+    strongWindCommandOffered: false,
+    cleanupClearedEffect: false,
+    cleanupClearedZone: false,
+    cleanupClearedConcentration: false,
+    slotExpended: false,
   };
 }
 
@@ -723,6 +865,43 @@ function featherFallBattle(): BattleState {
   return result.right;
 }
 
+function fogCloudBattle(): BattleState {
+  const fogCloud = spellRecord(fogCloudUnitId);
+  const result = startBattle({
+    battleId: battleId("level1-spatial-witness-selected-identity"),
+    combatants: [
+      spatialWitnessCreature({
+        combatantId: casterId,
+        displayName: "Fog Cloud caster",
+        initiative: 20,
+        side: partySide,
+        spellcasting: {
+          sourceClassName: "druid",
+          spellcastingAbilityModifier: abilityModifier(3),
+          proficiencyBonus: proficiencyBonus(2),
+          canCastSpells: true,
+          cantrips: [],
+          preparedSpells: [fogCloud],
+          featurePreparedSpells: [],
+          invocationSpellAccesses: [],
+          spellbookRitualSpellAccesses: [],
+          spellSlots: [{ spellLevel: 1, count: 1 }],
+        },
+      }),
+      spatialWitnessCreature({
+        combatantId: observerId,
+        displayName: "Fog Cloud observer",
+        initiative: 10,
+        side: oppositionSide,
+      }),
+    ],
+  });
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
 function spatialWitnessCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
@@ -819,6 +998,19 @@ function faerieFireAct(state: BattleState): ActionSpellAct {
   );
   if (act === undefined) {
     throw new Error("Expected Faerie Fire save-gated outline action.");
+  }
+  return act;
+}
+
+function fogCloudAct(state: BattleState): ActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.spellId === fogCloudUnitId &&
+      candidate.subject.invocation.procedure === "fogCloudObscurement",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Fog Cloud obscurement action.");
   }
   return act;
 }
@@ -961,6 +1153,33 @@ function featherFallTargetListFill(
       rangeFeet: movementFeet(60),
     })),
   };
+}
+
+function fogCloudAreaFill(
+  hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>,
+): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
+  return {
+    kind: "spellAreaChoice",
+    holeId: hole.holeId,
+    value: { kind: "fogCloudArea", areaId: fogCloudAreaId },
+  };
+}
+
+function fogCloudStrongWindDispersalAct(
+  state: BattleState,
+): FogCloudStrongWindDispersalAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is FogCloudStrongWindDispersalAct =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "disperseFogCloud" &&
+      candidate.subject.sourceCombatantId === casterId &&
+      candidate.subject.sourceSpellId === fogCloudUnitId &&
+      candidate.subject.areaId === fogCloudAreaId,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Fog Cloud strong-wind dispersal command.");
+  }
+  return act;
 }
 
 function reactionDecisionFill(
@@ -1143,6 +1362,100 @@ function spellObjectTargetFill(
   };
 }
 
+function projectFogCloudReplay(
+  activeState: BattleState,
+  cleanupState: BattleState,
+  input: { readonly strongWindCommandOffered: boolean },
+): FogCloudProjection {
+  const activeEffect = fogCloudActiveEffect(activeState);
+  const activeZone = fogCloudObscurementZone(activeState);
+  const radiusMatches =
+    activeEffect?.radiusFeet === fogCloudLevelOneRadiusFeet &&
+    activeZone?.area.radiusFeet === fogCloudLevelOneRadiusFeet;
+  return {
+    areaIdentityRetained:
+      activeEffect?.areaId === fogCloudAreaId &&
+      activeZone?.area.areaId === fogCloudAreaId,
+    heavilyObscuredZoneCount: fogCloudHeavilyObscuredZoneCount(activeState),
+    radiusFeet: radiusMatches ? Number(fogCloudLevelOneRadiusFeet) : 0,
+    durationTicks: fogCloudMatchingDurationTicks(activeEffect, activeZone),
+    strongWindCommandOffered: input.strongWindCommandOffered,
+    cleanupClearedEffect: fogCloudActiveEffect(cleanupState) === undefined,
+    cleanupClearedZone: fogCloudObscurementZone(cleanupState) === undefined,
+    cleanupClearedConcentration:
+      cleanupState.combatants.get(casterId)?.concentration === null,
+    slotExpended: fogCloudCasterSlotExpended(activeState),
+  };
+}
+
+function fogCloudActiveEffect(
+  state: BattleState,
+): FogCloudObscurementEffect | undefined {
+  return state.combatants
+    .get(casterId)
+    ?.activeEffects.find(
+      (effect): effect is FogCloudObscurementEffect =>
+        effect.kind === "fogCloudObscurement" &&
+        effect.sourceSpellId === fogCloudUnitId &&
+        effect.sourceCombatantId === casterId &&
+        effect.areaId === fogCloudAreaId,
+    );
+}
+
+function fogCloudObscurementZone(
+  state: BattleState,
+): SpellObscurementZone | undefined {
+  return battleObscurementZones(state).find(
+    (zone): zone is SpellObscurementZone =>
+      zone.kind === "spellObscurementZone" &&
+      zone.sourceSpellId === fogCloudUnitId &&
+      zone.sourceCombatantId === casterId &&
+      zone.obscurement === "heavilyObscured" &&
+      zone.area.kind === "pointOriginSphere" &&
+      zone.area.areaId === fogCloudAreaId,
+  );
+}
+
+function fogCloudHeavilyObscuredZoneCount(state: BattleState): number {
+  return battleObscurementZones(state).filter(
+    (zone) =>
+      zone.kind === "spellObscurementZone" &&
+      zone.sourceSpellId === fogCloudUnitId &&
+      zone.sourceCombatantId === casterId &&
+      zone.obscurement === "heavilyObscured" &&
+      zone.area.areaId === fogCloudAreaId,
+  ).length;
+}
+
+function fogCloudMatchingDurationTicks(
+  activeEffect: FogCloudObscurementEffect | undefined,
+  activeZone: SpellObscurementZone | undefined,
+): number {
+  if (
+    activeEffect === undefined ||
+    activeZone === undefined ||
+    activeEffect.expiresAt.combatantId !== casterId ||
+    activeZone.expiresAt.combatantId !== casterId ||
+    activeEffect.expiresAt.durationTicks !== fogCloudOneHourDurationTicks ||
+    activeZone.expiresAt.durationTicks !== activeEffect.expiresAt.durationTicks
+  ) {
+    return 0;
+  }
+  return Number(activeEffect.expiresAt.durationTicks);
+}
+
+function fogCloudCasterSlotExpended(state: BattleState): boolean {
+  const caster = state.combatants.get(casterId);
+  if (caster?.origin.kind !== "character") {
+    throw new Error("Expected Fog Cloud caster to be a character.");
+  }
+  return (
+    caster.origin.spellcasting?.spellSlots.some(
+      (slot) => slot.spellLevel === 1 && slot.expended === 1,
+    ) ?? false
+  );
+}
+
 function projectLevel1SpatialWitnessSelectedIdentityState(
   state: BattleState,
   retainedLightIdentityCount: number,
@@ -1150,6 +1463,7 @@ function projectLevel1SpatialWitnessSelectedIdentityState(
   faerieFireInvisibleCreatureAttackRollMode: ProjectedAttackRollMode,
   faerieFireObjectAttackRollMode: ProjectedAttackRollMode,
   featherFallProjection: FeatherFallProjection,
+  fogCloudProjection: FogCloudProjection,
   lastResult: Level1SpatialWitnessSelectedIdentityProjection["lastResult"],
 ): Level1SpatialWitnessSelectedIdentityProjection {
   const snapshot = snapshotBattle(state);
@@ -1195,6 +1509,18 @@ function projectLevel1SpatialWitnessSelectedIdentityState(
       featherFallProjection.landedTargetMitigationCleared,
     featherFallOtherTargetStillMitigated:
       featherFallProjection.otherTargetStillMitigated,
+    fogCloudAreaIdentityRetained: fogCloudProjection.areaIdentityRetained,
+    fogCloudHeavilyObscuredZoneCount:
+      fogCloudProjection.heavilyObscuredZoneCount,
+    fogCloudRadiusFeet: fogCloudProjection.radiusFeet,
+    fogCloudDurationTicks: fogCloudProjection.durationTicks,
+    fogCloudStrongWindCommandOffered:
+      fogCloudProjection.strongWindCommandOffered,
+    fogCloudCleanupClearedEffect: fogCloudProjection.cleanupClearedEffect,
+    fogCloudCleanupClearedZone: fogCloudProjection.cleanupClearedZone,
+    fogCloudCleanupClearedConcentration:
+      fogCloudProjection.cleanupClearedConcentration,
+    fogCloudSlotExpended: fogCloudProjection.slotExpended,
     projectedIllumination,
     ordinarySightObscurement: battleSightObscurement(projectedIllumination),
     darkvisionSightObscurement: battleSightObscurement(projectedIllumination, {
@@ -1239,7 +1565,10 @@ function casterConcentratingOnSelectedUnit(
   if (lastResult === "init") {
     return false;
   }
-  if (lastResult === "featherFallReactionMitigationLanding") {
+  if (
+    lastResult === "featherFallReactionMitigationLanding" ||
+    lastResult === "fogCloudAreaIdentityObscurementStrongWindCleanup"
+  ) {
     return false;
   }
   const sourceSpellId =
@@ -1539,6 +1868,39 @@ function normalizeLevel1SpatialWitnessSelectedIdentityQuintState(
       state,
       "qFeatherFallOtherTargetStillMitigated",
     ),
+    fogCloudAreaIdentityRetained: booleanField(
+      state,
+      "qFogCloudAreaIdentityRetained",
+    ),
+    fogCloudHeavilyObscuredZoneCount: numberFromQuintInt(
+      state["qFogCloudHeavilyObscuredZoneCount"],
+      "qFogCloudHeavilyObscuredZoneCount",
+    ),
+    fogCloudRadiusFeet: numberFromQuintInt(
+      state["qFogCloudRadiusFeet"],
+      "qFogCloudRadiusFeet",
+    ),
+    fogCloudDurationTicks: numberFromQuintInt(
+      state["qFogCloudDurationTicks"],
+      "qFogCloudDurationTicks",
+    ),
+    fogCloudStrongWindCommandOffered: booleanField(
+      state,
+      "qFogCloudStrongWindCommandOffered",
+    ),
+    fogCloudCleanupClearedEffect: booleanField(
+      state,
+      "qFogCloudCleanupClearedEffect",
+    ),
+    fogCloudCleanupClearedZone: booleanField(
+      state,
+      "qFogCloudCleanupClearedZone",
+    ),
+    fogCloudCleanupClearedConcentration: booleanField(
+      state,
+      "qFogCloudCleanupClearedConcentration",
+    ),
+    fogCloudSlotExpended: booleanField(state, "qFogCloudSlotExpended"),
     projectedIllumination: mbtIllumination(state["qProjectedIllumination"]),
     ordinarySightObscurement: mbtSightObscurement(
       state["qOrdinarySightObscurement"],
@@ -1620,7 +1982,8 @@ function mbtLastResult(
     raw === "init" ||
     raw === "dancingLightsMovableDimLight" ||
     raw === "faerieFireOutlineAdvantageInvisibleDimLight" ||
-    raw === "featherFallReactionMitigationLanding"
+    raw === "featherFallReactionMitigationLanding" ||
+    raw === "fogCloudAreaIdentityObscurementStrongWindCleanup"
   ) {
     return raw;
   }

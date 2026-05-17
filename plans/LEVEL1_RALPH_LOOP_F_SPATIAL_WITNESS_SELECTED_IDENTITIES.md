@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "L1F-FOG-CLOUD",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Fog Cloud Selected Identity Replay"
     },
     {
@@ -201,13 +201,21 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-E-L.md` Feather Fall.
 
 ### Task 5 - L1F-FOG-CLOUD - Fog Cloud Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `fog_cloud`, proving the supported
 caller-supplied fog area identity, Heavily Obscured projection, duration, and
 strong-wind cleanup.
 
 RAW: `.references/srd-5.2.1/Spells/Descriptions-E-L.md` Fog Cloud.
+
+Result: `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts`
+and
+`packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt`
+record the selected-identity replay for Fog Cloud caller-supplied area identity,
+level-one 20-foot-radius Heavily Obscured projection, one-hour Concentration
+duration, level-one Spell Slot spend, and strong-wind cleanup without
+runtime-owned area membership, line-of-sight, or map automation.
 
 ### Task 6 - L1F-GREASE-CAST - Grease Cast Hazard Selected Identity Replay
 
