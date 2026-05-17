@@ -93,8 +93,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 94,
-      "numerator": 65,
-      "percent": "69.1%"
+      "numerator": 72,
+      "percent": "76.6%"
     },
     "supportedProfileCoverage": {
       "denominator": 118,
@@ -7287,6 +7287,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV30C"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/creature-type-protection-and-charm-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1H-ANIMAL-FRIENDSHIP"
         }
       ],
       "executableMechanics": true,
@@ -10068,6 +10073,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV60A"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/creature-type-protection-and-charm-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1H-PROTECTION-EVIL-GOOD"
         }
       ],
       "executableMechanics": true,
@@ -10644,6 +10654,11 @@
           "ownerPath": "packages/battle-runtime/src/sanctuary-targeting-interdiction.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV84G"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/sanctuary-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1H-SANCTUARY"
         }
       ],
       "executableMechanics": true,
@@ -11275,6 +11290,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "QMBT14"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/mage-armor-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1H-MAGE-ARMOR"
         }
       ],
       "executableMechanics": true,
@@ -11489,6 +11509,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "QMBT34"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1H-MASS-CURE-WOUNDS"
         }
       ],
       "executableMechanics": true,
@@ -11546,6 +11571,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "QMBT32"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1H-MASS-HEALING-WORD"
         }
       ],
       "executableMechanics": true,
@@ -12112,6 +12142,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV39"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/beam-sequence-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1H-ELDRITCH-BLAST"
         }
       ],
       "executableMechanics": true,

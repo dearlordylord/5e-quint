@@ -466,6 +466,14 @@ type TurnAnchoredBattleActiveEffectExpiration = Exclude<
 export type BattleSpellEffectEarlyEnd =
   | { readonly kind: "targetDonsArmor" }
   | { readonly kind: "concentrationBroken" };
+type BattleTargetDonsArmorEarlyEnd = Extract<
+  BattleSpellEffectEarlyEnd,
+  { readonly kind: "targetDonsArmor" }
+>;
+type BattleConcentrationBrokenEarlyEnd = Extract<
+  BattleSpellEffectEarlyEnd,
+  { readonly kind: "concentrationBroken" }
+>;
 type BattleSpellEffectBase = {
   readonly sourceSpellId: SpellRecord["id"];
   readonly sourceCombatantId: CombatantId;
@@ -561,9 +569,22 @@ export type BattleActiveEffect =
       readonly kind: "spellBaseArmorClass";
       readonly base: number;
       readonly ability: "dex";
-      readonly earlyEnds: readonly BattleSpellEffectEarlyEnd[];
-      readonly durationTicks: ElapsedTimeTicks;
-    })
+    } & (
+      | {
+          readonly earlyEnds: readonly [BattleTargetDonsArmorEarlyEnd];
+          readonly expiresAt: Extract<
+            BattleActiveEffectExpiration,
+            { readonly kind: "duration" }
+          >;
+        }
+      | {
+          readonly earlyEnds: readonly [BattleConcentrationBrokenEarlyEnd];
+          readonly expiresAt: Extract<
+            BattleActiveEffectExpiration,
+            { readonly kind: "concentration" }
+          >;
+        }
+    ))
   | (BattleSpellEffectBase & {
       readonly kind: "spellCondition";
       readonly condition: Condition;

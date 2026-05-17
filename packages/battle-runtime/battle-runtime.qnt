@@ -420,7 +420,7 @@ module battleRuntime {
     itemDropBoundaryEvents: Set[FindFamiliarItemDropBoundaryEvent],
     magicActionSpent: bool,
   }
-  type ActiveEffect = BardicInspirationDie({ source: Actor, dieSize: int, durationTicks: int }) | MageArmor | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | HexDamageRider({ target: Actor, ability: Ability, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | RayOfSicknessPoisoned | ChillTouchHitPointRegainPrevented({ source: Actor, expiresAtRound: int }) | StarryWispInvisibleBenefitDenied({ source: Actor, expiresAtRound: int }) | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | WeaponMasterySapNextAttackDisadvantage({ source: Actor }) | ColorSprayBlinded({ source: Actor, expiresAtRound: int }) | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireOutline | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionRelevantCharmed({ source: Actor, durationTicks: int }) | ProtectionRelevantFrightened({ source: Actor, durationTicks: int }) | ProtectionRelevantPossession({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodCreatureTypeProtection | DancingLightsEffect({ combined: bool, lightCount: int, light1Position: int, light2Position: int, light3Position: int, light4Position: int, durationTicks: int }) | ProduceFlameHeldLight({ durationTicks: int }) | ShillelaghWeaponAttackOverride({ weapon: ShillelaghWeapon, damageDice: int, damageDieSize: int, spellcastingAbilityModifier: int, durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SanctuaryWard({ source: Actor, durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | HideousLaughterEffect({ source: Actor, target: Actor, hadProne: bool, hadIncapacitated: bool, durationTicks: int }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | FogCloudObscurement({ areaId: int, radiusFeet: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
+  type ActiveEffect = BardicInspirationDie({ source: Actor, dieSize: int, durationTicks: int }) | MageArmor({ durationTicks: int }) | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | HexDamageRider({ target: Actor, ability: Ability, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | RayOfSicknessPoisoned | ChillTouchHitPointRegainPrevented({ source: Actor, expiresAtRound: int }) | StarryWispInvisibleBenefitDenied({ source: Actor, expiresAtRound: int }) | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | WeaponMasterySapNextAttackDisadvantage({ source: Actor }) | ColorSprayBlinded({ source: Actor, expiresAtRound: int }) | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireOutline | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionRelevantCharmed({ source: Actor, durationTicks: int }) | ProtectionRelevantFrightened({ source: Actor, durationTicks: int }) | ProtectionRelevantPossession({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodCreatureTypeProtection | DancingLightsEffect({ combined: bool, lightCount: int, light1Position: int, light2Position: int, light3Position: int, light4Position: int, durationTicks: int }) | ProduceFlameHeldLight({ durationTicks: int }) | ShillelaghWeaponAttackOverride({ weapon: ShillelaghWeapon, damageDice: int, damageDieSize: int, spellcastingAbilityModifier: int, durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SanctuaryWard({ source: Actor, durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | HideousLaughterEffect({ source: Actor, target: Actor, hadProne: bool, hadIncapacitated: bool, durationTicks: int }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | FogCloudObscurement({ areaId: int, radiusFeet: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
   type PreventedProtectionCondition = PreventedCharmed | PreventedFrightened
   type PossessionAttemptDisposition = PossessionPreventedByCreatureTypeProtection | PossessionUnprevented
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
@@ -1317,6 +1317,31 @@ module battleRuntime {
       | _ => true
     })
 
+  pure def mageArmorDurationTicks: int = 8 * 60 * 10
+
+  pure def mageArmorActiveEffect(durationTicks: int): ActiveEffect =
+    MageArmor({ durationTicks: durationTicks })
+
+  pure def activeEffectsContainMageArmor(effects: Set[ActiveEffect]): bool =
+    effects.exists(effect => match effect {
+      | MageArmor(_) => true
+      | _ => false
+    })
+
+  pure def activeEffectsWithoutMageArmor(effects: Set[ActiveEffect]): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | MageArmor(_) => false
+      | _ => true
+    })
+
+  pure def activeEffectsMageArmorDurationTicks(effects: Set[ActiveEffect]): int =
+    effects
+      .map(effect => match effect {
+        | MageArmor(data) => data.durationTicks
+        | _ => 0
+      })
+      .fold(0, (highest, durationTicks) => if (highest > durationTicks) highest else durationTicks)
+
   pure def lightEmittersWithoutExpiredEndOfTurnEmitters(
     emitters: Set[LightEmitter],
     actor: Actor,
@@ -1476,6 +1501,9 @@ module battleRuntime {
   pure def tickDurationActiveEffects(effects: Set[ActiveEffect]): Set[ActiveEffect] =
     effects
       .map(effect => match effect {
+        | MageArmor(data) => MageArmor({
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
         | DivineFavorWeaponDamageRider(data) => DivineFavorWeaponDamageRider({
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
@@ -1556,6 +1584,7 @@ module battleRuntime {
         | _ => effect
       })
       .filter(effect => match effect {
+        | MageArmor(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | DivineFavorWeaponDamageRider(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | HuntersMarkDamageRider(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | HexDamageRider(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
@@ -1698,7 +1727,7 @@ module battleRuntime {
     {
       val base = if (effects.exists(effect => match effect {
         | BardicInspirationDie(_) => false
-        | MageArmor => true
+        | MageArmor(_) => true
         | RayOfFrostSpeedDelta => false
         | ShieldArmorClassBonus => false
         | LongstriderSpeedDelta => false
@@ -3123,7 +3152,7 @@ module battleRuntime {
     {
       ...withoutSpellEffectConcentration,
       concentrating: false,
-      activeEffects: activeEffectsWithoutMarkedDamageRider(withoutSpellEffectConcentration.activeEffects).exclude(Set(MageArmor)),
+      activeEffects: activeEffectsWithoutMarkedDamageRider(withoutSpellEffectConcentration.activeEffects),
     }
   }
 
@@ -3302,10 +3331,10 @@ module battleRuntime {
     { ...breakConcentration(target), hp: 1, unconscious: true, knockedOut: true }
 
   pure def applyMageArmor(target: Combatant): Combatant =
-    if (target.activeEffects.contains(MageArmor))
-      target
-    else
-      { ...target, activeEffects: target.activeEffects.union(Set(MageArmor)) }
+    {
+      ...target,
+      activeEffects: activeEffectsWithoutMageArmor(target.activeEffects).union(Set(mageArmorActiveEffect(mageArmorDurationTicks))),
+    }
 
   pure def resolveArmorOfShadowsMageArmor(state: BattleState): BattleState =
     if (
@@ -3321,7 +3350,7 @@ module battleRuntime {
       { ...state, fighter: applyMageArmor(state.fighter), actionAvailable: false }
 
   pure def targetDonsArmor(target: Combatant): Combatant =
-    { ...target, activeEffects: target.activeEffects.exclude(Set(MageArmor)) }
+    { ...target, activeEffects: activeEffectsWithoutMageArmor(target.activeEffects) }
 
   pure def readySpell(state: BattleState): BattleState =
     if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or state.fighterReadiedSpellHeld)
@@ -8725,7 +8754,7 @@ module battleRuntime {
   }
 
   run test_attack_damage_concentration_interrupt_resolves_before_damage = {
-    val concentratingGoblin = { ...initialState, goblin: { ...initialState.goblin, concentrating: true, activeEffects: Set(MageArmor) } }
+    val concentratingGoblin = { ...initialState, goblin: { ...initialState.goblin, concentrating: true, activeEffects: Set(GuidanceAbilityCheckBonus) } }
     val pending = resumeReactionContinuation(concentratingGoblin, ResumeAttack({ damage: 4 }))
     val resolved = resolveAttackDamageConcentration(pending, false)
     all {
@@ -8739,7 +8768,7 @@ module battleRuntime {
   }
 
   run test_zero_damage_reaction_attack_continuation_does_not_open_concentration_interrupt = {
-    val concentratingGoblin = { ...initialState, goblin: { ...initialState.goblin, concentrating: true, activeEffects: Set(MageArmor) } }
+    val concentratingGoblin = { ...initialState, goblin: { ...initialState.goblin, concentrating: true, activeEffects: Set(GuidanceAbilityCheckBonus) } }
     val resolved = resumeReactionContinuation(concentratingGoblin, ResumeAttack({ damage: 0 }))
     all {
       assert(resolved.interruptStack == []),
@@ -8876,7 +8905,7 @@ module battleRuntime {
   }
 
   run test_rage_breaks_concentration_and_blocks_spells = {
-    val concentrating = { ...initialState, fighter: { ...initialState.fighter, concentrating: true, activeEffects: Set(MageArmor) } }
+    val concentrating = { ...initialState, fighter: { ...initialState.fighter, concentrating: true, activeEffects: Set(GuidanceAbilityCheckBonus) } }
     val raging = startRage(concentrating, 2).state
     all {
       assert(not(raging.fighter.concentrating)),
@@ -10014,12 +10043,12 @@ module battleRuntime {
   }
 
   run test_ice_knife_combines_attack_and_burst_damage_for_concentration = {
-    val concentratingGoblin = { ...initialState, goblin: { ...initialState.goblin, concentrating: true, reactionAvailable: false, activeEffects: Set(MageArmor) } }
+    val concentratingGoblin = { ...initialState, goblin: { ...initialState.goblin, concentrating: true, reactionAvailable: false, activeEffects: Set(GuidanceAbilityCheckBonus) } }
     val result = resolveIceKnife(concentratingGoblin, 15, 10, 4, false, false, false, 6, false, true)
     all {
       assert(result.goblin.hp == 0),
       assert(not(result.goblin.concentrating)),
-      assert(not(result.goblin.activeEffects.contains(MageArmor))),
+      assert(not(result.goblin.activeEffects.contains(GuidanceAbilityCheckBonus))),
     }
   }
 
@@ -10260,12 +10289,12 @@ module battleRuntime {
   run test_sleep_failed_initial_save_breaks_target_concentration = {
     val concentratingGoblin = {
       ...initialState,
-      goblin: { ...initialState.goblin, concentrating: true, activeEffects: Set(MageArmor) },
+      goblin: { ...initialState.goblin, concentrating: true, activeEffects: Set(GuidanceAbilityCheckBonus) },
     }
     val slept = resolveSleepTargetAdmission(concentratingGoblin, false, false, false)
     all {
       assert(not(slept.goblin.concentrating)),
-      assert(not(slept.goblin.activeEffects.contains(MageArmor))),
+      assert(not(slept.goblin.activeEffects.contains(GuidanceAbilityCheckBonus))),
       assert(slept.goblin.activeEffects.contains(SleepPendingRepeatSave({
         source: Fighter,
         repeatAtActor: Goblin,
@@ -10304,12 +10333,12 @@ module battleRuntime {
     val goblinTurn = endTurn(slept)
     val concentratingGoblinTurn = {
       ...goblinTurn,
-      goblin: { ...goblinTurn.goblin, concentrating: true, activeEffects: goblinTurn.goblin.activeEffects.union(Set(MageArmor)) },
+      goblin: { ...goblinTurn.goblin, concentrating: true, activeEffects: goblinTurn.goblin.activeEffects.union(Set(GuidanceAbilityCheckBonus)) },
     }
     val repeated = endTurnWithSleepRepeatSave(concentratingGoblinTurn, false)
     all {
       assert(not(repeated.goblin.concentrating)),
-      assert(not(repeated.goblin.activeEffects.contains(MageArmor))),
+      assert(not(repeated.goblin.activeEffects.contains(GuidanceAbilityCheckBonus))),
       assert(repeated.goblin.activeEffects.contains(SleepUnconscious({
         source: Fighter,
         hadUnconscious: false,
@@ -10916,7 +10945,7 @@ module battleRuntime {
 
   run test_mage_armor_sets_base_ac_plus_dex = {
     all {
-      assert(activeEffectArmorClass(10, 2, Set(MageArmor)) == 15),
+      assert(activeEffectArmorClass(10, 2, Set(mageArmorActiveEffect(mageArmorDurationTicks))) == 15),
       assert(activeEffectArmorClass(10, 2, Set(RayOfFrostSpeedDelta)) == 10),
     }
   }
@@ -10924,7 +10953,7 @@ module battleRuntime {
   run test_armor_of_shadows_mage_armor_spends_action_not_spell_slot = {
     val result = resolveArmorOfShadowsMageArmor(initialState)
     all {
-      assert(result.fighter.activeEffects.contains(MageArmor)),
+      assert(result.fighter.activeEffects.contains(mageArmorActiveEffect(mageArmorDurationTicks))),
       assert(not(result.actionAvailable)),
       assert(not(result.spellSlotExpendedThisTurn)),
     }
@@ -10934,19 +10963,38 @@ module battleRuntime {
     val armored = { ...initialState, fighter: { ...initialState.fighter, wearingHeavyArmor: true } }
     val result = resolveArmorOfShadowsMageArmor(armored)
     all {
-      assert(not(result.fighter.activeEffects.contains(MageArmor))),
+      assert(not(activeEffectsContainMageArmor(result.fighter.activeEffects))),
       assert(result.actionAvailable),
       assert(not(result.spellSlotExpendedThisTurn)),
     }
   }
 
-  run test_armor_of_shadows_mage_armor_reuses_existing_effect = {
-    val protected = { ...initialState, fighter: applyMageArmor(initialState.fighter) }
+  run test_armor_of_shadows_mage_armor_replaces_existing_effect_duration = {
+    val protected = { ...initialState, fighter: { ...initialState.fighter, activeEffects: Set(mageArmorActiveEffect(1)) } }
     val result = resolveArmorOfShadowsMageArmor(protected)
     all {
-      assert(result.fighter.activeEffects == Set(MageArmor)),
+      assert(result.fighter.activeEffects == Set(mageArmorActiveEffect(mageArmorDurationTicks))),
       assert(not(result.actionAvailable)),
       assert(not(result.spellSlotExpendedThisTurn)),
+    }
+  }
+
+  run test_mage_armor_expires_after_duration_tick = {
+    val nearlyExpired = {
+      ...resolveArmorOfShadowsMageArmor(initialState),
+      fighter: {
+        ...initialState.fighter,
+        activeEffects: Set(mageArmorActiveEffect(1)),
+      },
+    }
+    val stillSameRound = endTurn(nearlyExpired)
+    val nextRound = endTurn(stillSameRound)
+    all {
+      assert(activeEffectsContainMageArmor(stillSameRound.fighter.activeEffects)),
+      assert(activeEffectsMageArmorDurationTicks(stillSameRound.fighter.activeEffects) == 1),
+      assert(not(activeEffectsContainMageArmor(nextRound.fighter.activeEffects))),
+      assert(combatantArmorClass(stillSameRound.fighter) == 13),
+      assert(combatantArmorClass(nextRound.fighter) == 10),
     }
   }
 
@@ -11594,7 +11642,7 @@ module battleRuntime {
   }
 
   run test_concentration_breaks_on_failed_damage_save = {
-    val concentrating = { ...initialState.fighter, concentrating: true, activeEffects: Set(MageArmor) }
+    val concentrating = { ...initialState.fighter, concentrating: true, activeEffects: Set(GuidanceAbilityCheckBonus) }
     val result = applyDamage(concentrating, 5, 1, false)
     all {
       assert(not(result.concentrating)),
@@ -11603,7 +11651,7 @@ module battleRuntime {
   }
 
   run test_attack_action_can_break_target_concentration = {
-    val concentratingGoblin = { ...initialState, goblin: { ...initialState.goblin, concentrating: true, activeEffects: Set(MageArmor) } }
+    val concentratingGoblin = { ...initialState, goblin: { ...initialState.goblin, concentrating: true, activeEffects: Set(GuidanceAbilityCheckBonus) } }
     val result = resolveAttack(concentratingGoblin, 15, 10, fighterWeaponAttackDamageRoll(4), false)
     all {
       assert(result.goblin.hp == 3),
@@ -11613,7 +11661,7 @@ module battleRuntime {
   }
 
   run test_goblin_attack_action_can_break_target_concentration = {
-    val concentratingFighter = { ...endTurn(initialState), fighter: { ...initialState.fighter, concentrating: true, activeEffects: Set(MageArmor) } }
+    val concentratingFighter = { ...endTurn(initialState), fighter: { ...initialState.fighter, concentrating: true, activeEffects: Set(GuidanceAbilityCheckBonus) } }
     val result = resolveGoblinAttack(concentratingFighter, 20, 18, 5, false)
     all {
       assert(result.fighter.hp == 5),
@@ -11623,7 +11671,7 @@ module battleRuntime {
   }
 
   run test_acid_splash_damage_can_break_target_concentration = {
-    val concentratingGoblin = { ...initialState, goblin: { ...initialState.goblin, concentrating: true, activeEffects: Set(MageArmor) } }
+    val concentratingGoblin = { ...initialState, goblin: { ...initialState.goblin, concentrating: true, activeEffects: Set(GuidanceAbilityCheckBonus) } }
     val result = resolveAcidSplash(concentratingGoblin, false, true, 4, true, false)
     all {
       assert(result.goblin.hp == 6),

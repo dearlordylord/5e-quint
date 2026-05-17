@@ -23,7 +23,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Runtime mapping coverage | 62/62 | 100% |
 | Runtime parity coverage | 62/62 | 100% |
 | Deterministic admission/projection coverage | 94/94 | 100% |
-| Selected identity MBT coverage | 65/94 | 69.1% |
+| Selected identity MBT coverage | 72/94 | 76.6% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -916,6 +916,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `mastery_topple` | `unit-feature.weapon-mastery-topple` | weapon-mastery-properties | `packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts` |
 | `orc_relentless_endurance` | `unit-feature.zero-hit-point-replacement` | passive-and-zero-hp-features | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `acid_splash` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | spell-procedure-core | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
+| `animal_friendship` | `spell.creature-type-protection-and-charm` | L1H-ANIMAL-FRIENDSHIP | `packages/battle-runtime/src/creature-type-protection-and-charm-selected-identity.mbt.test.ts` |
 | `bane` | `spell.invocation-roll-modifier` | roll-modifier-buff | `packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts` |
 | `bless` | `spell.invocation-roll-modifier` | roll-modifier-buff | `packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts` |
 | `burning_hands` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | level1-damage-spell-selected-identity | `packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts` |
@@ -941,21 +942,27 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `inflict_wounds` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | attack-spell-shape | `packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts` |
 | `longstrider` | `spell.scalar-buff` | L1E-LONGSTRIDER | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
 | `poison_spray` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | level1-damage-spell-selected-identity | `packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts` |
+| `protection_from_evil_and_good` | `spell.creature-type-protection-and-charm` | L1H-PROTECTION-EVIL-GOOD | `packages/battle-runtime/src/creature-type-protection-and-charm-selected-identity.mbt.test.ts` |
 | `produce_flame` | `spell.invocation-damage-save-or-attack`, `spell.invocation-held-light-emitter` | level1-spatial-witness | `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts` |
 | `ray_of_frost` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | spell-procedure-core | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
 | `ray_of_sickness` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | level1-damage-spell-selected-identity | `packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts` |
 | `resistance` | `spell.invocation-damage-reduction` | roll-modifier-buff | `packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts` |
 | `sacred_flame` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | level1-damage-spell-selected-identity | `packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts` |
+| `sanctuary` | `spell.invocation-sanctuary-targeting-interdiction` | L1H-SANCTUARY | `packages/battle-runtime/src/sanctuary-selected-identity.mbt.test.ts` |
 | `shocking_grasp` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | attack-spell-shape | `packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts` |
 | `sorcerous_burst` | `spell.invocation-damage-save-or-attack` | level1-damage-spell-selected-identity | `packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts` |
 | `spare_the_dying` | `spell.invocation-make-stable` | healing-stabilization | `packages/battle-runtime/src/healing-stabilization-selected-identity.mbt.test.ts` |
 | `starry_wisp` | `spell.invocation-damage-save-or-attack` | level1-damage-spell-selected-identity | `packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts` |
 | `vicious_mockery` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | level1-damage-spell-selected-identity | `packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts` |
+| `mage_armor` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | L1H-MAGE-ARMOR | `packages/battle-runtime/src/mage-armor-selected-identity.mbt.test.ts` |
 | `magic_missile` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | spell-procedure-core | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
+| `mass_cure_wounds` | `spell.hit-point-restoration` | L1H-MASS-CURE-WOUNDS | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
+| `mass_healing_word` | `spell.hit-point-restoration` | L1H-MASS-HEALING-WORD | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
 | `healing_word` | `spell.hit-point-restoration` | healing-stabilization | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
 | `shield` | `spell.reaction-shield` | reaction-interruption | `packages/battle-runtime/src/reaction-spell-selected-identity.mbt.test.ts` |
 | `shield_of_faith` | `spell.scalar-buff` | roll-modifier-buff | `packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts` |
 | `sleep` | `spell.invocation-sleep-target-admission`, `spell.invocation-sleep-repeat-save-lifecycle` | condition-saving-throw-lifecycle | `packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts` |
+| `eldritch_blast` | `spell.invocation-beam-sequence` | L1H-ELDRITCH-BLAST | `packages/battle-runtime/src/beam-sequence-selected-identity.mbt.test.ts` |
 | `hellish_rebuke` | `spell.reaction-hellish-rebuke`, `spell.invocation-damage-save-or-attack` | reaction-interruption | `packages/battle-runtime/src/reaction-spell-selected-identity.mbt.test.ts` |
 | `hideous_laughter` | `spell.invocation-hideous-laughter-repeat-save-lifecycle` | condition-saving-throw-lifecycle | `packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts` |
 
