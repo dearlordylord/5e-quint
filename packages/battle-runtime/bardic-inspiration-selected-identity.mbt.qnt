@@ -2,6 +2,7 @@
 
 module bardicInspirationSelectedIdentityMbt {
   import battleRuntime.* from "./battle-runtime"
+  import battleRuntimeModel.* from "./battle-runtime-model"
 
   var qBonusActionAvailable: bool
   var qFeatureUsesRemaining: int

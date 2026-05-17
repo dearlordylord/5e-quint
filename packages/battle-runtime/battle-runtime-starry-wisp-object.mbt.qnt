@@ -2,6 +2,7 @@
 
 module battleRuntimeStarryWispObjectMbt {
   import battleRuntime.* from "./battle-runtime"
+  import battleRuntimeModel.* from "./battle-runtime-model"
 
   type ObjectDamageOutcomeOption =
     | NoObjectDamage

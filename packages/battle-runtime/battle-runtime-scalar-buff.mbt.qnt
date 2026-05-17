@@ -2,6 +2,7 @@
 
 module battleRuntimeScalarBuffMbt {
   import battleRuntime.* from "./battle-runtime"
+  import battleRuntimeModel.* from "./battle-runtime-model"
 
   var qFighterSpeed: int
   var qGoblinSpeed: int

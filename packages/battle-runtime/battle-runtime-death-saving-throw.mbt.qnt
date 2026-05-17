@@ -2,6 +2,7 @@
 
 module battleRuntimeDeathSavingThrowMbt {
   import battleRuntime.* from "./battle-runtime"
+  import battleRuntimeModel.* from "./battle-runtime-model"
 
   var qCurrentTurnRole: str
   var qTargetHp: int

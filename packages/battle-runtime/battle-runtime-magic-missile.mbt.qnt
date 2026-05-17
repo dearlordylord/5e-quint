@@ -2,6 +2,7 @@
 
 module battleRuntimeMagicMissileMbt {
   import battleRuntime.* from "./battle-runtime"
+  import battleRuntimeModel.* from "./battle-runtime-model"
 
   var qSkeletonHp: int
   var qSkeletonDead: bool
