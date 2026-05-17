@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "L1H-ELDRITCH-BLAST",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Eldritch Blast Selected Identity Replay"
     },
     {
@@ -197,7 +197,7 @@ and Good.
 
 ### Task 4 - L1H-ELDRITCH-BLAST - Eldritch Blast Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `eldritch_blast`, covering the supported
 beam sequence and target allocation. Do not add invocation option behavior here.

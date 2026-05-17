@@ -93,8 +93,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 93,
-      "numerator": 49,
-      "percent": "52.7%"
+      "numerator": 50,
+      "percent": "53.8%"
     },
     "supportedProfileCoverage": {
       "denominator": 117,
@@ -11101,6 +11101,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV39"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/beam-sequence-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1H-ELDRITCH-BLAST"
         }
       ],
       "executableMechanics": true,
