@@ -1,8 +1,9 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt level1-spatial-witness dancing_lights faerie_fire feather_fall fog_cloud
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt level1-spatial-witness dancing_lights faerie_fire feather_fall fog_cloud grease
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness dancing_lights doDancingLightsMovableDimLight
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness faerie_fire doFaerieFireOutlineAdvantageInvisibleDimLight
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness feather_fall doFeatherFallReactionMitigationLanding
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness fog_cloud doFogCloudAreaIdentityObscurementStrongWindCleanup
+// UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness grease doGreaseCastGroundHazardSavingThrows
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -21,7 +22,10 @@ import {
   applyCondition,
   hasCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
-import { elapsedTimeTicksFromHours } from "@dnd/shared-algebras/elapsed-time-algebra";
+import {
+  elapsedTimeTicksFromHours,
+  elapsedTimeTicksFromMinutes,
+} from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   ATTACK_ROLL_MODES,
   type AttackRollMode,
@@ -84,6 +88,7 @@ const level1SpatialWitnessSelectedIdentityDriverSchema = {
   doFaerieFireOutlineAdvantageInvisibleDimLight: {},
   doFeatherFallReactionMitigationLanding: {},
   doFogCloudAreaIdentityObscurementStrongWindCleanup: {},
+  doGreaseCastGroundHazardSavingThrows: {},
   step: {},
 } as const;
 type Level1SpatialWitnessSelectedIdentityDriverAction = Exclude<
@@ -121,6 +126,14 @@ type Level1SpatialWitnessSelectedIdentityProjection = {
   readonly fogCloudCleanupClearedZone: boolean;
   readonly fogCloudCleanupClearedConcentration: boolean;
   readonly fogCloudSlotExpended: boolean;
+  readonly greaseAreaIdentityRetained: boolean;
+  readonly greaseActiveHazardCount: number;
+  readonly greaseDurationTicks: number;
+  readonly greaseAffectedTargetOutcomeCount: number;
+  readonly greaseFailedTargetProne: boolean;
+  readonly greaseSucceededTargetProne: boolean;
+  readonly greaseMismatchedAffectedTargetRejected: boolean;
+  readonly greaseSlotExpended: boolean;
   readonly projectedIllumination: BattleIllumination;
   readonly ordinarySightObscurement: BattleSightObscurement;
   readonly darkvisionSightObscurement: BattleSightObscurement;
@@ -134,19 +147,22 @@ type Level1SpatialWitnessSelectedIdentityProjection = {
     | "dancingLightsMovableDimLight"
     | "faerieFireOutlineAdvantageInvisibleDimLight"
     | "featherFallReactionMitigationLanding"
-    | "fogCloudAreaIdentityObscurementStrongWindCleanup";
+    | "fogCloudAreaIdentityObscurementStrongWindCleanup"
+    | "greaseCastGroundHazardSavingThrows";
 };
 type ProjectedAttackRollMode = AttackRollMode;
 const dancingLightsUnitId = "dancing_lights";
 const faerieFireUnitId = "faerie_fire";
 const featherFallUnitId = "feather_fall";
 const fogCloudUnitId = "fog_cloud";
+const greaseUnitId = "grease";
 const starryWispUnitId = "starry_wisp";
 const level1SpatialWitnessSelectedUnitIds = [
   dancingLightsUnitId,
   faerieFireUnitId,
   featherFallUnitId,
   fogCloudUnitId,
+  greaseUnitId,
 ] as const;
 type Level1SpatialWitnessSelectedUnitId =
   (typeof level1SpatialWitnessSelectedUnitIds)[number];
@@ -225,6 +241,24 @@ type FogCloudProjection = {
   readonly cleanupClearedConcentration: boolean;
   readonly slotExpended: boolean;
 };
+type GreaseGroundHazardEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "greaseGroundHazard" }
+>;
+type GreaseProjection = {
+  readonly areaIdentityRetained: boolean;
+  readonly activeHazardCount: number;
+  readonly durationTicks: number;
+  readonly affectedTargetOutcomeCount: number;
+  readonly failedTargetProne: boolean;
+  readonly succeededTargetProne: boolean;
+  readonly mismatchedAffectedTargetRejected: boolean;
+  readonly slotExpended: boolean;
+};
+type GreaseSavingThrowOutcome = {
+  readonly targetId: CombatantId;
+  readonly succeeded: boolean;
+};
 
 const casterId = combatantId("level1-spatial-witness-caster");
 const observerId = combatantId("level1-spatial-witness-observer");
@@ -234,6 +268,16 @@ const featherFallFallingAllyId = combatantId(
 const featherFallOtherFallingAllyId = combatantId(
   "level1-spatial-witness-feather-fall-ally-b",
 );
+const greaseFailedTargetId = combatantId(
+  "level1-spatial-witness-grease-failed-target",
+);
+const greaseSuccessfulTargetId = combatantId(
+  "level1-spatial-witness-grease-successful-target",
+);
+const greaseAffectedTargetIds = [
+  greaseFailedTargetId,
+  greaseSuccessfulTargetId,
+] as const satisfies ReadonlyArray<CombatantId>;
 const partySide = battleCombatantSide("party");
 const oppositionSide = battleCombatantSide("opposition");
 const dancingLightsDimLightRadiusFeet = movementFeet(10);
@@ -247,6 +291,8 @@ const darkvisionWitnessRangeFeet = movementFeet(60);
 const fogCloudAreaId = "level1-fog-cloud-area";
 const fogCloudLevelOneRadiusFeet = movementFeet(20);
 const fogCloudOneHourDurationTicks = requireElapsedHours(1);
+const greaseAreaId = "level1-grease-ground-area";
+const greaseOneMinuteDurationTicks = requireElapsedMinutes(1);
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -363,6 +409,30 @@ const selectedUnitIdentityReplays = [
       },
     ],
   },
+  {
+    taskId: "level1-spatial-witness",
+    unitId: "grease",
+    actions: ["doGreaseCastGroundHazardSavingThrows"],
+    sequences: [
+      {
+        name: "table-supplied-ground-area-on-cast-dexterity-saving-throws",
+        actions: ["doGreaseCastGroundHazardSavingThrows"],
+        expected: expectedProjection({
+          greaseAreaIdentityRetained: true,
+          greaseActiveHazardCount: 1,
+          greaseDurationTicks: Number(greaseOneMinuteDurationTicks),
+          greaseAffectedTargetOutcomeCount: 2,
+          greaseFailedTargetProne: true,
+          greaseSucceededTargetProne: false,
+          greaseMismatchedAffectedTargetRejected: true,
+          greaseSlotExpended: true,
+          magicActionAvailable: false,
+          bonusActionAvailable: true,
+          lastResult: "greaseCastGroundHazardSavingThrows",
+        }),
+      },
+    ],
+  },
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
 describe("Level 1 spatial witness selected identity MBT", () => {
@@ -427,6 +497,7 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
     let faerieFireObjectAttackRollMode: ProjectedAttackRollMode = "normal";
     let featherFallProjection = emptyFeatherFallProjection();
     let fogCloudProjection = emptyFogCloudProjection();
+    let greaseProjection = emptyGreaseProjection();
     let lastResult: Level1SpatialWitnessSelectedIdentityProjection["lastResult"] =
       "init";
 
@@ -438,6 +509,7 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
       faerieFireObjectAttackRollMode = "normal";
       featherFallProjection = emptyFeatherFallProjection();
       fogCloudProjection = emptyFogCloudProjection();
+      greaseProjection = emptyGreaseProjection();
       lastResult = "init";
     }
 
@@ -648,6 +720,55 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
         state = dispersed.state;
         lastResult = "fogCloudAreaIdentityObscurementStrongWindCleanup";
       },
+      doGreaseCastGroundHazardSavingThrows: () => {
+        state = greaseBattle();
+        retainedLightIdentityCount = 0;
+        const act = greaseAct(state);
+        const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+        const savingThrowOutcomes = greaseCastSavingThrowOutcomes();
+        const mismatched = resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [
+            greaseSavingThrowOutcomeFill(
+              savingThrow,
+              greaseAffectedTargetIds,
+              [
+                { targetId: greaseFailedTargetId, succeeded: false },
+                { targetId: casterId, succeeded: true },
+              ],
+            ),
+          ],
+        });
+        const mismatchedAffectedTargetRejected =
+          mismatched.tag === "invalid" &&
+          mismatched.message ===
+            "Grease Saving Throw outcomes must match the table-supplied ground-area affected targets.";
+
+        const cast = resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [
+            greaseSavingThrowOutcomeFill(
+              savingThrow,
+              greaseAffectedTargetIds,
+              savingThrowOutcomes,
+            ),
+          ],
+        });
+        if (cast.tag !== "resolved") {
+          throw new Error(
+            `Expected Grease cast to resolve, got ${cast.tag}.`,
+          );
+        }
+
+        greaseProjection = projectGreaseReplay(cast.state, {
+          mismatchedAffectedTargetRejected,
+          affectedTargetOutcomeCount: savingThrowOutcomes.length,
+        });
+        state = cast.state;
+        lastResult = "greaseCastGroundHazardSavingThrows";
+      },
       step: () => {},
       getState: () =>
         projectLevel1SpatialWitnessSelectedIdentityState(
@@ -658,6 +779,7 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
           faerieFireObjectAttackRollMode,
           featherFallProjection,
           fogCloudProjection,
+          greaseProjection,
           lastResult,
         ),
     };
@@ -668,6 +790,14 @@ function requireElapsedHours(hours: number) {
   const ticks = elapsedTimeTicksFromHours(hours);
   if (Either.isLeft(ticks)) {
     throw new Error(`Expected valid elapsed hours: ${hours}.`);
+  }
+  return ticks.right;
+}
+
+function requireElapsedMinutes(minutes: number) {
+  const ticks = elapsedTimeTicksFromMinutes(minutes);
+  if (Either.isLeft(ticks)) {
+    throw new Error(`Expected valid elapsed minutes: ${minutes}.`);
   }
   return ticks.right;
 }
@@ -705,6 +835,14 @@ function expectedProjection(
     fogCloudCleanupClearedZone: false,
     fogCloudCleanupClearedConcentration: false,
     fogCloudSlotExpended: false,
+    greaseAreaIdentityRetained: false,
+    greaseActiveHazardCount: 0,
+    greaseDurationTicks: 0,
+    greaseAffectedTargetOutcomeCount: 0,
+    greaseFailedTargetProne: false,
+    greaseSucceededTargetProne: false,
+    greaseMismatchedAffectedTargetRejected: false,
+    greaseSlotExpended: false,
     projectedIllumination: "darkness",
     ordinarySightObscurement: "heavilyObscured",
     darkvisionSightObscurement: "lightlyObscured",
@@ -743,6 +881,19 @@ function emptyFogCloudProjection(): FogCloudProjection {
     cleanupClearedEffect: false,
     cleanupClearedZone: false,
     cleanupClearedConcentration: false,
+    slotExpended: false,
+  };
+}
+
+function emptyGreaseProjection(): GreaseProjection {
+  return {
+    areaIdentityRetained: false,
+    activeHazardCount: 0,
+    durationTicks: 0,
+    affectedTargetOutcomeCount: 0,
+    failedTargetProne: false,
+    succeededTargetProne: false,
+    mismatchedAffectedTargetRejected: false,
     slotExpended: false,
   };
 }
@@ -902,6 +1053,49 @@ function fogCloudBattle(): BattleState {
   return result.right;
 }
 
+function greaseBattle(): BattleState {
+  const grease = spellRecord(greaseUnitId);
+  const result = startBattle({
+    battleId: battleId("level1-spatial-witness-selected-identity"),
+    combatants: [
+      spatialWitnessCreature({
+        combatantId: casterId,
+        displayName: "Grease caster",
+        initiative: 20,
+        side: partySide,
+        spellcasting: {
+          sourceClassName: "wizard",
+          spellcastingAbilityModifier: abilityModifier(3),
+          proficiencyBonus: proficiencyBonus(2),
+          canCastSpells: true,
+          cantrips: [],
+          preparedSpells: [grease],
+          featurePreparedSpells: [],
+          invocationSpellAccesses: [],
+          spellbookRitualSpellAccesses: [],
+          spellSlots: [{ spellLevel: 1, count: 1 }],
+        },
+      }),
+      spatialWitnessCreature({
+        combatantId: greaseFailedTargetId,
+        displayName: "Grease failed target",
+        initiative: 10,
+        side: oppositionSide,
+      }),
+      spatialWitnessCreature({
+        combatantId: greaseSuccessfulTargetId,
+        displayName: "Grease successful target",
+        initiative: 5,
+        side: oppositionSide,
+      }),
+    ],
+  });
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
 function spatialWitnessCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
@@ -1015,6 +1209,19 @@ function fogCloudAct(state: BattleState): ActionSpellAct {
   return act;
 }
 
+function greaseAct(state: BattleState): ActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.spellId === greaseUnitId &&
+      candidate.subject.invocation.procedure === "greaseGroundHazard",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Grease ground-hazard action.");
+  }
+  return act;
+}
+
 function separateCastPlacement(
   hole: Extract<BattleHole, { readonly kind: "dancingLightsPlacement" }>,
 ): Extract<BattleFill, { readonly kind: "dancingLightsPlacement" }> {
@@ -1095,6 +1302,33 @@ function faerieFireSavingThrowOutcomeFill(
       outcomes,
     },
   };
+}
+
+function greaseSavingThrowOutcomeFill(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+  affectedTargetIds: readonly CombatantId[],
+  outcomes: readonly GreaseSavingThrowOutcome[],
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    value: {
+      area: {
+        kind: "greaseGroundArea",
+        areaId: greaseAreaId,
+        originAnchorId: casterId,
+        affectedTargetIds,
+      },
+      outcomes,
+    },
+  };
+}
+
+function greaseCastSavingThrowOutcomes(): readonly GreaseSavingThrowOutcome[] {
+  return [
+    { targetId: greaseFailedTargetId, succeeded: false },
+    { targetId: greaseSuccessfulTargetId, succeeded: true },
+  ];
 }
 
 function openFeatherFallWindow(
@@ -1456,6 +1690,72 @@ function fogCloudCasterSlotExpended(state: BattleState): boolean {
   );
 }
 
+function projectGreaseReplay(
+  activeState: BattleState,
+  input: {
+    readonly mismatchedAffectedTargetRejected: boolean;
+    readonly affectedTargetOutcomeCount: number;
+  },
+): GreaseProjection {
+  const activeEffects = greaseActiveEffects(activeState);
+  const activeEffect =
+    activeEffects.length === 1 ? activeEffects[0] : undefined;
+  return {
+    areaIdentityRetained: activeEffect?.areaId === greaseAreaId,
+    activeHazardCount: activeEffects.length,
+    durationTicks:
+      activeEffect?.expiresAt.kind === "duration" &&
+      activeEffect.expiresAt.durationTicks === greaseOneMinuteDurationTicks
+        ? Number(activeEffect.expiresAt.durationTicks)
+        : 0,
+    affectedTargetOutcomeCount: input.affectedTargetOutcomeCount,
+    failedTargetProne: greaseTargetProne(activeState, greaseFailedTargetId),
+    succeededTargetProne: greaseTargetProne(
+      activeState,
+      greaseSuccessfulTargetId,
+    ),
+    mismatchedAffectedTargetRejected:
+      input.mismatchedAffectedTargetRejected,
+    slotExpended: greaseCasterSlotExpended(activeState),
+  };
+}
+
+function greaseActiveEffects(
+  state: BattleState,
+): readonly GreaseGroundHazardEffect[] {
+  return greaseCombatant(state, casterId).activeEffects.filter(
+    (effect): effect is GreaseGroundHazardEffect =>
+      effect.kind === "greaseGroundHazard" &&
+      effect.sourceSpellId === greaseUnitId &&
+      effect.sourceCombatantId === casterId &&
+      effect.areaId === greaseAreaId,
+  );
+}
+
+function greaseTargetProne(state: BattleState, targetId: CombatantId): boolean {
+  return hasCondition(greaseCombatant(state, targetId).conditions, "prone");
+}
+
+function greaseCasterSlotExpended(state: BattleState): boolean {
+  const caster = greaseCombatant(state, casterId);
+  if (caster.origin.kind !== "character") {
+    throw new Error("Expected Grease caster to be a character.");
+  }
+  return (
+    caster.origin.spellcasting?.spellSlots.some(
+      (slot) => slot.spellLevel === 1 && slot.expended === 1,
+    ) ?? false
+  );
+}
+
+function greaseCombatant(state: BattleState, id: CombatantId) {
+  const combatant = state.combatants.get(id);
+  if (combatant === undefined) {
+    throw new Error(`Expected Grease combatant ${id}.`);
+  }
+  return combatant;
+}
+
 function projectLevel1SpatialWitnessSelectedIdentityState(
   state: BattleState,
   retainedLightIdentityCount: number,
@@ -1464,6 +1764,7 @@ function projectLevel1SpatialWitnessSelectedIdentityState(
   faerieFireObjectAttackRollMode: ProjectedAttackRollMode,
   featherFallProjection: FeatherFallProjection,
   fogCloudProjection: FogCloudProjection,
+  greaseProjection: GreaseProjection,
   lastResult: Level1SpatialWitnessSelectedIdentityProjection["lastResult"],
 ): Level1SpatialWitnessSelectedIdentityProjection {
   const snapshot = snapshotBattle(state);
@@ -1521,6 +1822,16 @@ function projectLevel1SpatialWitnessSelectedIdentityState(
     fogCloudCleanupClearedConcentration:
       fogCloudProjection.cleanupClearedConcentration,
     fogCloudSlotExpended: fogCloudProjection.slotExpended,
+    greaseAreaIdentityRetained: greaseProjection.areaIdentityRetained,
+    greaseActiveHazardCount: greaseProjection.activeHazardCount,
+    greaseDurationTicks: greaseProjection.durationTicks,
+    greaseAffectedTargetOutcomeCount:
+      greaseProjection.affectedTargetOutcomeCount,
+    greaseFailedTargetProne: greaseProjection.failedTargetProne,
+    greaseSucceededTargetProne: greaseProjection.succeededTargetProne,
+    greaseMismatchedAffectedTargetRejected:
+      greaseProjection.mismatchedAffectedTargetRejected,
+    greaseSlotExpended: greaseProjection.slotExpended,
     projectedIllumination,
     ordinarySightObscurement: battleSightObscurement(projectedIllumination),
     darkvisionSightObscurement: battleSightObscurement(projectedIllumination, {
@@ -1567,7 +1878,8 @@ function casterConcentratingOnSelectedUnit(
   }
   if (
     lastResult === "featherFallReactionMitigationLanding" ||
-    lastResult === "fogCloudAreaIdentityObscurementStrongWindCleanup"
+    lastResult === "fogCloudAreaIdentityObscurementStrongWindCleanup" ||
+    lastResult === "greaseCastGroundHazardSavingThrows"
   ) {
     return false;
   }
@@ -1901,6 +2213,35 @@ function normalizeLevel1SpatialWitnessSelectedIdentityQuintState(
       "qFogCloudCleanupClearedConcentration",
     ),
     fogCloudSlotExpended: booleanField(state, "qFogCloudSlotExpended"),
+    greaseAreaIdentityRetained: booleanField(
+      state,
+      "qGreaseAreaIdentityRetained",
+    ),
+    greaseActiveHazardCount: numberFromQuintInt(
+      state["qGreaseActiveHazardCount"],
+      "qGreaseActiveHazardCount",
+    ),
+    greaseDurationTicks: numberFromQuintInt(
+      state["qGreaseDurationTicks"],
+      "qGreaseDurationTicks",
+    ),
+    greaseAffectedTargetOutcomeCount: numberFromQuintInt(
+      state["qGreaseAffectedTargetOutcomeCount"],
+      "qGreaseAffectedTargetOutcomeCount",
+    ),
+    greaseFailedTargetProne: booleanField(
+      state,
+      "qGreaseFailedTargetProne",
+    ),
+    greaseSucceededTargetProne: booleanField(
+      state,
+      "qGreaseSucceededTargetProne",
+    ),
+    greaseMismatchedAffectedTargetRejected: booleanField(
+      state,
+      "qGreaseMismatchedAffectedTargetRejected",
+    ),
+    greaseSlotExpended: booleanField(state, "qGreaseSlotExpended"),
     projectedIllumination: mbtIllumination(state["qProjectedIllumination"]),
     ordinarySightObscurement: mbtSightObscurement(
       state["qOrdinarySightObscurement"],
@@ -1983,7 +2324,8 @@ function mbtLastResult(
     raw === "dancingLightsMovableDimLight" ||
     raw === "faerieFireOutlineAdvantageInvisibleDimLight" ||
     raw === "featherFallReactionMitigationLanding" ||
-    raw === "fogCloudAreaIdentityObscurementStrongWindCleanup"
+    raw === "fogCloudAreaIdentityObscurementStrongWindCleanup" ||
+    raw === "greaseCastGroundHazardSavingThrows"
   ) {
     return raw;
   }

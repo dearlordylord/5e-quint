@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "L1F-GREASE-CAST",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Grease Cast Hazard Selected Identity Replay"
     },
     {
@@ -219,12 +219,22 @@ runtime-owned area membership, line-of-sight, or map automation.
 
 ### Task 6 - L1F-GREASE-CAST - Grease Cast Hazard Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `grease` cast-time ground hazard creation and
 on-cast saving throw outcomes over caller-supplied affected targets.
 
 RAW: `.references/srd-5.2.1/Spells/Descriptions-E-L.md` Grease.
+
+Result: `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts`
+and
+`packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt`
+record the selected-identity replay for Grease caller-supplied ground-area
+identity, one-minute ground-hazard duration, level-one Spell Slot spend, Magic
+Action spend, cast-time affected-target saving throw membership, failed-save
+Prone application, successful-save non-Prone outcome, and mismatched
+affected-target rejection. Task 7 remains the executable owner for Grease
+movement cost, enter-area, and end-turn trigger replay.
 
 ### Task 7 - L1F-GREASE-MOVEMENT - Grease Movement And Turn Trigger Selected Identity Replay
 

@@ -3,6 +3,7 @@
 module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
   val qFogCloudLevelOneRadiusFeet = 20
   val qFogCloudOneHourDurationTicks = 600
+  val qGreaseOneMinuteDurationTicks = 10
 
   var qLightEmitterCount: int
   var qDimLightEmitterCount: int
@@ -33,6 +34,14 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
   var qFogCloudCleanupClearedZone: bool
   var qFogCloudCleanupClearedConcentration: bool
   var qFogCloudSlotExpended: bool
+  var qGreaseAreaIdentityRetained: bool
+  var qGreaseActiveHazardCount: int
+  var qGreaseDurationTicks: int
+  var qGreaseAffectedTargetOutcomeCount: int
+  var qGreaseFailedTargetProne: bool
+  var qGreaseSucceededTargetProne: bool
+  var qGreaseMismatchedAffectedTargetRejected: bool
+  var qGreaseSlotExpended: bool
   var qProjectedIllumination: str
   var qOrdinarySightObscurement: str
   var qDarkvisionSightObscurement: str
@@ -73,6 +82,14 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     fogCloudCleanupClearedZone: bool,
     fogCloudCleanupClearedConcentration: bool,
     fogCloudSlotExpended: bool,
+    greaseAreaIdentityRetained: bool,
+    greaseActiveHazardCount: int,
+    greaseDurationTicks: int,
+    greaseAffectedTargetOutcomeCount: int,
+    greaseFailedTargetProne: bool,
+    greaseSucceededTargetProne: bool,
+    greaseMismatchedAffectedTargetRejected: bool,
+    greaseSlotExpended: bool,
     projectedIllumination: str,
     ordinarySightObscurement: str,
     darkvisionSightObscurement: str,
@@ -112,6 +129,14 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     qFogCloudCleanupClearedZone' = fogCloudCleanupClearedZone,
     qFogCloudCleanupClearedConcentration' = fogCloudCleanupClearedConcentration,
     qFogCloudSlotExpended' = fogCloudSlotExpended,
+    qGreaseAreaIdentityRetained' = greaseAreaIdentityRetained,
+    qGreaseActiveHazardCount' = greaseActiveHazardCount,
+    qGreaseDurationTicks' = greaseDurationTicks,
+    qGreaseAffectedTargetOutcomeCount' = greaseAffectedTargetOutcomeCount,
+    qGreaseFailedTargetProne' = greaseFailedTargetProne,
+    qGreaseSucceededTargetProne' = greaseSucceededTargetProne,
+    qGreaseMismatchedAffectedTargetRejected' = greaseMismatchedAffectedTargetRejected,
+    qGreaseSlotExpended' = greaseSlotExpended,
     qProjectedIllumination' = projectedIllumination,
     qOrdinarySightObscurement' = ordinarySightObscurement,
     qDarkvisionSightObscurement' = darkvisionSightObscurement,
@@ -129,6 +154,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       0, 0, "normal", "normal", "normal", false, false,
       false, false, false, false, 0, 0, false, false, false, false,
       false, 0, 0, 0, false, false, false, false, false,
+      false, 0, 0, 0, false, false, false, false,
       "darkness", "heavilyObscured", "lightlyObscured", "darkness",
       0, false, true, true,
       "init",
@@ -141,6 +167,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       0, 0, "normal", "normal", "normal", false, false,
       false, false, false, false, 0, 0, false, false, false, false,
       false, 0, 0, 0, false, false, false, false, false,
+      false, 0, 0, 0, false, false, false, false,
       "dimLight", "lightlyObscured", "unobscured", "darkness",
       0, true, false, false,
       "dancingLightsMovableDimLight",
@@ -154,6 +181,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       1, 1, "advantage", "advantage", "advantage", true, true,
       false, false, false, false, 0, 0, false, false, false, false,
       false, 0, 0, 0, false, false, false, false, false,
+      false, 0, 0, 0, false, false, false, false,
       "dimLight", "lightlyObscured", "unobscured", "darkness",
       0, true, true, true,
       "faerieFireOutlineAdvantageInvisibleDimLight",
@@ -167,6 +195,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       0, 0, "normal", "normal", "normal", false, false,
       true, true, true, true, 2, 60, true, true, true, true,
       false, 0, 0, 0, false, false, false, false, false,
+      false, 0, 0, 0, false, false, false, false,
       "darkness", "heavilyObscured", "lightlyObscured", "darkness",
       0, false, true, true,
       "featherFallReactionMitigationLanding",
@@ -181,9 +210,24 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       false, false, false, false, 0, 0, false, false, false, false,
       true, 1, qFogCloudLevelOneRadiusFeet, qFogCloudOneHourDurationTicks,
       true, true, true, true, true,
+      false, 0, 0, 0, false, false, false, false,
       "darkness", "heavilyObscured", "lightlyObscured", "darkness",
       0, false, false, true,
       "fogCloudAreaIdentityObscurementStrongWindCleanup",
+    ),
+  }
+
+  action doGreaseCastGroundHazardSavingThrows = all {
+    qLastResult == "init",
+    recordProjection(
+      0, 0, 0,
+      0, 0, "normal", "normal", "normal", false, false,
+      false, false, false, false, 0, 0, false, false, false, false,
+      false, 0, 0, 0, false, false, false, false, false,
+      true, 1, qGreaseOneMinuteDurationTicks, 2, true, false, true, true,
+      "darkness", "heavilyObscured", "lightlyObscured", "darkness",
+      0, false, false, true,
+      "greaseCastGroundHazardSavingThrows",
     ),
   }
 
@@ -192,5 +236,6 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     doFaerieFireOutlineAdvantageInvisibleDimLight,
     doFeatherFallReactionMitigationLanding,
     doFogCloudAreaIdentityObscurementStrongWindCleanup,
+    doGreaseCastGroundHazardSavingThrows,
   }
 }
