@@ -343,7 +343,7 @@ The inventory now records `class-container-owned-source-fact` for level-1
 `core-trait`, `equipment-pressure`, and `multiclass-entry` rows, and
 `non-runtime-table-summary` for `class-table-summary` rows.
 
-`/simplify` convergence:
+reviewer loop convergence:
 
 - Round 1: kept the classification at the existing SRD row-kind boundary
   instead of adding standalone evidence rows or duplicating class-container
@@ -375,7 +375,7 @@ character-creation owner evidence manifest. Warlock Pact Magic remains a
 class-feature Surface-widening row because the SRD names it as the class feature
 that owns Warlock spell access and Pact Slot recovery.
 
-`/simplify` convergence:
+reviewer loop convergence:
 
 - Round 1: kept Spell Access rows separate from individual Spell Unit pressure
   and added named Surface blockers instead of generic missing authored-record
@@ -405,7 +405,7 @@ catalog-only/dead-for-now rows. The remaining authoring-ready rows are
 Surface detection atoms, with promoted detection/occlusion runtime ownership
 left for future exploration support.
 
-`/simplify` convergence:
+reviewer loop convergence:
 
 - Round 1: kept the classification table keyed by Spell Definition Unit id
   rather than duplicating decisions across class spell-list rows.
@@ -435,7 +435,7 @@ Thunderwave rows keep named Surface/runtime projection blockers; Detect Magic
 and Light rows are explicit catalog-only/dead-for-now closures. Installed Spell
 Unit rows no longer fall back to `catalog-installed-needs-owner-evidence`.
 
-`/simplify` convergence:
+reviewer loop convergence:
 
 - Round 1: kept support facts derived from `unit-claims.jsonl` and
   `unit-evidence.jsonl` instead of adding a parallel installed-spell support
@@ -487,7 +487,7 @@ Spell Unit pressure row is classified by the SRDINV5D review table, and that a
 Spell Definition cannot be both a catalog-only closure and an executable
 follow-up.
 
-`/simplify` convergence:
+reviewer loop convergence:
 
 - Round 1: split executable authored Spell Definitions out of
   `catalog-only/dead-for-now` instead of preserving a misleading dead-for-now
@@ -530,7 +530,7 @@ The generator now validates that any future nonspell catalog-only/dead-for-now
 row that is not an installed owner-evidence closure must have an explicit
 SRDINV6 reason.
 
-`/simplify` convergence:
+reviewer loop convergence:
 
 - Round 1: kept the closure reasons in the generator rather than editing only
   generated Markdown/JSON, so regenerated inventory cannot lose them.
@@ -558,7 +558,7 @@ proficiency, spell-access, pool/spend, d20 roll, Reaction, Armor Class, and
 Concentration terms used by the batch. Detailed notes are in
 `plans/unit-profile-coverage/SRDINV7_RECURSIVE_PLANNING_REVIEW.md`.
 
-`/simplify` convergence:
+reviewer loop convergence:
 
 - Round 1: grouped the next work by Surface blocker family rather than by class
   row or a generic gate.
@@ -585,7 +585,7 @@ Spell Access, Spell Definition, Spell Slot, Pact Slot, Pool, Spend,
 Proficiency Bonus, Proficiency Level, Weapon Mastery, Ability Check, Attack
 Roll, Saving Throw, Reaction, and Concentration.
 
-`/simplify` convergence:
+reviewer loop convergence:
 
 - Round 1: chose expressible level-1 authoring before spell runtime or spell
   Surface blockers because the refreshed level-1 denominator has no active
@@ -613,7 +613,7 @@ Local SRD source review checked the level-1 Weapon Mastery passages in
 `UBIQUITOUS_LANGUAGE.md` was checked for Weapon Mastery, Class, Character
 Sheet, Proficiency Level, and Long Rest.
 
-`/simplify` convergence:
+reviewer loop convergence:
 
 - Round 1: kept Weapon Mastery eligibility as a projection from each owning
   class record's weapon proficiencies, so the authored feature records do not
@@ -644,7 +644,7 @@ Slot, Pact Slot, Proficiency Bonus, Proficiency Level, Weapon Mastery,
 Multiclassing, Ability Check, Attack Roll, Saving Throw, Armor Class, and the
 Character Sheet versus Stat Block ownership distinction.
 
-`/simplify` convergence:
+reviewer loop convergence:
 
 - Round 1: chose character-creation owner-evidence closure before spell Unit
   Surface blockers or authored executable spell runtime because the refreshed

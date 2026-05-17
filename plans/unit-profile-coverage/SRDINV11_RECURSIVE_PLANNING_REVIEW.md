@@ -72,7 +72,7 @@ MBT planning. Those remain downstream of the next recursive review, once the
 expressible level-1 authoring backlog has either landed or exposed sharper
 typed gaps.
 
-## /simplify Convergence
+## reviewer loop Convergence
 
 - Round 1: selected authoring records made expressible by SRDINV8-SRDINV10
   instead of jumping to spell runtime. This keeps the next tasks aligned with

@@ -94,7 +94,7 @@ Remaining Surface blockers such as Fire Bolt object ignition, Fog Cloud, Hex,
 Hideous Laughter, Sanctuary, Shillelagh, Sorcerous Burst, and Spare the Dying
 remain counted for SRDINV48 or later batches.
 
-## /simplify Convergence
+## reviewer loop Convergence
 
 - Round 1: rejected the false Hellish Rebuke QNT proof/runtime-parity promotion
   and kept its inventory row owner-evidence-required until the authoritative

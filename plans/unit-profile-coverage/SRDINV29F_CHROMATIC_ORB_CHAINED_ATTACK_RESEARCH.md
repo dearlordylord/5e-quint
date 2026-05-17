@@ -178,4 +178,4 @@ Implementation tasks should verify:
 - `pnpm unit-profile-coverage:check` after evidence updates;
 - Tier 1 battle-runtime MBT only after the promoted runtime behavior changes;
 - `pnpm quality`;
-- `/simplify` convergence, minimum two rounds for implementation slices.
+- reviewer loop convergence, minimum two rounds for implementation slices.

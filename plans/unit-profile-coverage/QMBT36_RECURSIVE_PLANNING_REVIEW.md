@@ -71,9 +71,9 @@ and area/attack replacement traits should not be mixed into one slice.
 - Active-plan consistency was checked across the Ralph task index, DAG rows,
   and task details for QMBT36-QMBT39.
 - `pnpm unit-profile-coverage:check` passed.
-- `/simplify` round 1: kept the appended batch tied to the already selected
+- reviewer loop round 1: kept the appended batch tied to the already selected
   Extra Attack implementation before any further feature selection.
-- `/simplify` round 2: no important changes found; the batch still has one
+- reviewer loop round 2: no important changes found; the batch still has one
   implementation task, one post-implementation feature selection task, and one
   recursive review.
 - MBT not run: QMBT36 is planning-only and makes no promoted battle-runtime

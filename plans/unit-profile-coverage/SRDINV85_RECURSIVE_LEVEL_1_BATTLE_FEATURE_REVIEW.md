@@ -140,7 +140,7 @@ split in order:
 - `SRDINV84I5`: promote Pact of the Chain familiar Reaction attack.
 - `SRDINV86`: recursive review after those slices land.
 
-## /simplify Convergence
+## reviewer loop Convergence
 
 - Round 1: found the Spare the Dying evidence drift. The Unit claim and runtime
   tests existed, but `unit-evidence.jsonl` and the checker marker were missing,

@@ -125,5 +125,5 @@ and next-action labels.
   matrix, or claim/evidence changes.
 - Do not run MBT for catalog planning alone. Use MBT only if the task also
   promotes runtime behavior.
-- Run `/simplify` for at least two rounds unless the final changeset is
+- Run reviewer loop for at least two rounds unless the final changeset is
   trivial.
