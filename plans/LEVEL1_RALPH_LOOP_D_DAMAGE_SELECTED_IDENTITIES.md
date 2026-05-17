@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L1D-BURNING-HANDS",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Burning Hands Selected Identity Replay"
     },
     {
@@ -159,7 +159,7 @@ no MBT.
 
 ### Task 2 - L1D-BURNING-HANDS - Burning Hands Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `burning_hands`. The replay should bind the
 authored Unit id through production spell discovery/resolution and assert the

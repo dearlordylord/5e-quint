@@ -73,6 +73,7 @@
 {"unitId":"bard_cutting_words","evidence":{"tag":"selected-identity-mbt","taskId":"reaction-interruption","ownerPath":"packages/battle-runtime/src/rule-core-features.mbt.test.ts"}}
 {"unitId":"monk_martial_arts","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV73A","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"burning_hands","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV29A","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
+{"unitId":"burning_hands","evidence":{"tag":"selected-identity-mbt","taskId":"level1-damage-spell-selected-identity","ownerPath":"packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts"}}
 {"unitId":"chromatic_orb","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV29F3","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"color_spray","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV29B","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"color_spray","evidence":{"tag":"selected-identity-mbt","taskId":"condition-saving-throw-lifecycle","ownerPath":"packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts"}}
