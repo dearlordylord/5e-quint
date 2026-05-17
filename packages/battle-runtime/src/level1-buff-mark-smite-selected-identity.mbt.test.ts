@@ -3,11 +3,13 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-ENSNARING-STRIKE ensnaring_strike
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-FALSE-LIFE false_life
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-HEROISM heroism
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-HEX hex
 // UNIT-IDENTITY-MBT-REPLAY: L1E-DIVINE-FAVOR divine_favor doDivineFavorWeaponDamageRider
 // UNIT-IDENTITY-MBT-REPLAY: L1E-DIVINE-SMITE divine_smite doDivineSmiteAfterHitDamage
 // UNIT-IDENTITY-MBT-REPLAY: L1E-ENSNARING-STRIKE ensnaring_strike doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape
 // UNIT-IDENTITY-MBT-REPLAY: L1E-FALSE-LIFE false_life doFalseLifeTemporaryHitPoints
 // UNIT-IDENTITY-MBT-REPLAY: L1E-HEROISM heroism doHeroismFrightenedImmunityTurnStartTemporaryHitPoints
+// UNIT-IDENTITY-MBT-REPLAY: L1E-HEX hex doHexMarkedDamageRiderAndLaterTurnTransfer
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -29,7 +31,11 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import type { SpellRecord } from "@dnd/surface/surface/types";
+import {
+  buildStatBlockCatalog,
+  srdStatBlockCollection,
+} from "@dnd/surface/surface/stat-block-catalog";
+import type { SpellRecord, StatBlockRecord } from "@dnd/surface/surface/types";
 
 import {
   battleCombatantSide,
@@ -56,7 +62,12 @@ import {
   type BattleSubject,
   type CombatantId,
 } from "./index.ts";
-import type { BattleSpellTurnStartDamageRollHole } from "./battle-reducer.ts";
+import type {
+  BattleActiveEffect,
+  BattleSpellTurnStartDamageRollHole,
+} from "./battle-reducer.ts";
+import { KnockedOutConditionState } from "./battle-reducer.ts";
+import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
 
 const level1BuffMarkSmiteSelectedIdentityDriverSchema = {
   init: {},
@@ -65,6 +76,7 @@ const level1BuffMarkSmiteSelectedIdentityDriverSchema = {
   doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape: {},
   doFalseLifeTemporaryHitPoints: {},
   doHeroismFrightenedImmunityTurnStartTemporaryHitPoints: {},
+  doHexMarkedDamageRiderAndLaterTurnTransfer: {},
   step: {},
 } as const;
 type Level1BuffMarkSmiteSelectedIdentityDriverAction = Exclude<
@@ -77,12 +89,14 @@ const divineSmiteUnitId = "divine_smite";
 const ensnaringStrikeUnitId = "ensnaring_strike";
 const falseLifeUnitId = "false_life";
 const heroismUnitId = "heroism";
+const hexUnitId = "hex";
 const level1BuffMarkSmiteSpellIds = [
   divineFavorUnitId,
   divineSmiteUnitId,
   ensnaringStrikeUnitId,
   falseLifeUnitId,
   heroismUnitId,
+  hexUnitId,
 ] as const;
 type Level1BuffMarkSmiteSpellId = (typeof level1BuffMarkSmiteSpellIds)[number];
 const damageRiderSourceSpellIds = [
@@ -92,14 +106,34 @@ const damageRiderSourceSpellIds = [
 type DamageRiderSourceSpellId =
   | (typeof damageRiderSourceSpellIds)[number]
   | "none";
+const hexDamageHoleSourceSpellIds = [
+  hexUnitId,
+] as const satisfies ReadonlyArray<Level1BuffMarkSmiteSpellId>;
+type HexSourceSpellId = (typeof hexDamageHoleSourceSpellIds)[number] | "none";
 type EnsnaringStrikeSourceSpellId = typeof ensnaringStrikeUnitId | "none";
-type BonusActionCastSpellId = typeof divineFavorUnitId;
+type BonusActionCastSpellId = typeof divineFavorUnitId | typeof hexUnitId;
 type AttackHitBonusActionSpellId =
   | typeof divineSmiteUnitId
   | typeof ensnaringStrikeUnitId;
 type ActionCastSpellId = typeof falseLifeUnitId | typeof heroismUnitId;
 type TemporaryHitPointsSourceSpellId = typeof falseLifeUnitId | "none";
 type HeroismSourceSpellId = typeof heroismUnitId | "none";
+type HeroismFrightenedImmunityEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "conditionImmunity" }
+>;
+type HeroismTurnStartTemporaryHitPointsEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "turnStartTemporaryHitPoints" }
+>;
+type HexMarkedTarget = "target" | "transferTarget" | "none";
+type HexTransferKind = "awaitingTargetDrop" | "availableAfterTurn" | "none";
+type HexRetargetTiming = "laterTurn" | "none";
+type HexAbilityCheckAbility = "wis" | "none";
+type HexActiveMarkEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "spellMarkedDamageRider" }
+>;
 type CharacterCreatureInit = Extract<
   BattleCreatureInit["creatureInit"],
   { readonly kind: "character" }
@@ -137,13 +171,25 @@ type Level1BuffMarkSmiteSelectedIdentityProjection = {
   readonly turnStartDamageDieSize: number;
   readonly escapeCheckAbility: "str" | "none";
   readonly escapeCheckSkill: "athletics" | "none";
+  readonly hexDamageHoleSourceSpellId: HexSourceSpellId;
+  readonly hexDamageHoleDamageType: "necrotic" | "none";
+  readonly hexDamageHoleDice: number;
+  readonly hexDamageHoleDieSize: number;
+  readonly hexActiveMarkSourceSpellId: HexSourceSpellId;
+  readonly hexActiveMarkTarget: HexMarkedTarget;
+  readonly hexAbilityCheckAbility: HexAbilityCheckAbility;
+  readonly hexTransferKindOnDropTurn: HexTransferKind;
+  readonly hexActiveMarkTransferKind: HexTransferKind;
+  readonly hexActiveMarkRetargetTiming: HexRetargetTiming;
+  readonly hexTransferVisibleOnDropTurn: boolean;
   readonly lastResult:
     | "init"
     | "divineFavor"
     | "divineSmite"
     | "ensnaringStrike"
     | "falseLife"
-    | "heroism";
+    | "heroism"
+    | "hex";
 };
 type EnsnaringStrikeLifecycleProjection = Pick<
   Level1BuffMarkSmiteSelectedIdentityProjection,
@@ -171,6 +217,21 @@ type HeroismEffectsProjection = Pick<
   | "turnStartTemporaryHitPointsSourceSpellId"
   | "turnStartTemporaryHitPointsAmount"
 >;
+type HexDamageHoleProjection = Pick<
+  Level1BuffMarkSmiteSelectedIdentityProjection,
+  | "hexDamageHoleSourceSpellId"
+  | "hexDamageHoleDamageType"
+  | "hexDamageHoleDice"
+  | "hexDamageHoleDieSize"
+>;
+type HexActiveMarkProjection = Pick<
+  Level1BuffMarkSmiteSelectedIdentityProjection,
+  | "hexActiveMarkSourceSpellId"
+  | "hexActiveMarkTarget"
+  | "hexAbilityCheckAbility"
+  | "hexActiveMarkTransferKind"
+  | "hexActiveMarkRetargetTiming"
+>;
 type SelectedUnitIdentityReplaySequence = {
   readonly name: string;
   readonly actions: readonly Level1BuffMarkSmiteSelectedIdentityDriverAction[];
@@ -182,7 +243,8 @@ type SelectedUnitIdentityReplay = {
     | "L1E-DIVINE-SMITE"
     | "L1E-ENSNARING-STRIKE"
     | "L1E-FALSE-LIFE"
-    | "L1E-HEROISM";
+    | "L1E-HEROISM"
+    | "L1E-HEX";
   readonly unitId: Level1BuffMarkSmiteSpellId;
   readonly actions: readonly Level1BuffMarkSmiteSelectedIdentityDriverAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
@@ -214,6 +276,9 @@ type ScalarBuffTemporaryHitPointsRollHole = BattleSpellHealingRollHole & {
 
 const casterId = combatantId("level1-buff-mark-smite-caster");
 const targetId = combatantId("level1-buff-mark-smite-target");
+const hexTransferTargetId = combatantId(
+  "level1-buff-mark-smite-hex-transfer-target",
+);
 const partySide = battleCombatantSide("party");
 const oppositionSide = battleCombatantSide("opposition");
 
@@ -226,6 +291,15 @@ if (unitCatalogResult.tag !== "ok") {
   );
 }
 const unitLibrary = unitCatalogResult.catalog;
+const statBlockCatalogResult = buildStatBlockCatalog({
+  collections: [srdStatBlockCollection],
+});
+if (statBlockCatalogResult.tag !== "ok") {
+  throw new Error(
+    "Level 1 buff mark smite selected identity Stat Block catalog must build.",
+  );
+}
+const statBlockLibrary = statBlockCatalogResult.catalog;
 
 const selectedUnitIdentityReplays = [
   {
@@ -342,6 +416,35 @@ const selectedUnitIdentityReplays = [
       },
     ],
   },
+  {
+    taskId: "L1E-HEX",
+    unitId: "hex",
+    actions: ["doHexMarkedDamageRiderAndLaterTurnTransfer"],
+    sequences: [
+      {
+        name: "marked-necrotic-damage-and-later-turn-transfer",
+        actions: ["doHexMarkedDamageRiderAndLaterTurnTransfer"],
+        expected: expectedProjection({
+          targetHp: 0,
+          spellSlotSpentThisTurn: false,
+          level1SlotsRemaining: 1,
+          casterConcentrating: true,
+          hexDamageHoleSourceSpellId: "hex",
+          hexDamageHoleDamageType: "necrotic",
+          hexDamageHoleDice: 1,
+          hexDamageHoleDieSize: 6,
+          hexActiveMarkSourceSpellId: "hex",
+          hexActiveMarkTarget: "transferTarget",
+          hexAbilityCheckAbility: "wis",
+          hexTransferKindOnDropTurn: "availableAfterTurn",
+          hexActiveMarkTransferKind: "awaitingTargetDrop",
+          hexActiveMarkRetargetTiming: "laterTurn",
+          hexTransferVisibleOnDropTurn: false,
+          lastResult: "hex",
+        }),
+      },
+    ],
+  },
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
 describe("Level 1 buff mark smite selected identity MBT", () => {
@@ -402,6 +505,11 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
     let damageRider:
       | NonNullable<BattleDamageRollHole["spellWeaponDamageRiders"]>[number]
       | undefined;
+    let hexDamageHoleRider:
+      | NonNullable<BattleDamageRollHole["spellMarkedDamageRiders"]>[number]
+      | undefined;
+    let hexTransferKindOnDropTurn: HexTransferKind = "none";
+    let hexTransferVisibleOnDropTurn = false;
     let ensnaringStrikeLifecycle = defaultEnsnaringStrikeLifecycleProjection();
     let falseLifeTemporaryHitPoints =
       defaultFalseLifeTemporaryHitPointsProjection();
@@ -409,13 +517,20 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
     let lastResult: Level1BuffMarkSmiteSelectedIdentityProjection["lastResult"] =
       "init";
 
-    function reset(): void {
-      state = level1BuffMarkSmiteBattle();
+    function resetProcedureProjections(): void {
       damageRider = undefined;
+      hexDamageHoleRider = undefined;
+      hexTransferKindOnDropTurn = "none";
+      hexTransferVisibleOnDropTurn = false;
       ensnaringStrikeLifecycle = defaultEnsnaringStrikeLifecycleProjection();
       falseLifeTemporaryHitPoints =
         defaultFalseLifeTemporaryHitPointsProjection();
       heroismEffects = defaultHeroismEffectsProjection();
+    }
+
+    function reset(): void {
+      state = level1BuffMarkSmiteBattle();
+      resetProcedureProjections();
       lastResult = "init";
     }
 
@@ -441,11 +556,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
         state = level1BuffMarkSmiteBattle({
           preparedSpells: [spellRecord(divineFavorUnitId)],
         });
-        damageRider = undefined;
-        ensnaringStrikeLifecycle = defaultEnsnaringStrikeLifecycleProjection();
-        falseLifeTemporaryHitPoints =
-          defaultFalseLifeTemporaryHitPointsProjection();
-        heroismEffects = defaultHeroismEffectsProjection();
+        resetProcedureProjections();
 
         const cast = resolveBattleSubject({
           state,
@@ -465,11 +576,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
         state = level1BuffMarkSmiteBattle({
           preparedSpells: [spellRecord(divineSmiteUnitId)],
         });
-        damageRider = undefined;
-        ensnaringStrikeLifecycle = defaultEnsnaringStrikeLifecycleProjection();
-        falseLifeTemporaryHitPoints =
-          defaultFalseLifeTemporaryHitPointsProjection();
-        heroismEffects = defaultHeroismEffectsProjection();
+        resetProcedureProjections();
 
         const hit = resolveLongswordHitWithAttackRoll({ state });
         const attackHitWindow = requireAttackHitWindow(hit.afterAttackRoll);
@@ -513,11 +620,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
           preparedSpells: [spellRecord(ensnaringStrikeUnitId)],
           sourceClassName: "ranger",
         });
-        damageRider = undefined;
-        ensnaringStrikeLifecycle = defaultEnsnaringStrikeLifecycleProjection();
-        falseLifeTemporaryHitPoints =
-          defaultFalseLifeTemporaryHitPointsProjection();
-        heroismEffects = defaultHeroismEffectsProjection();
+        resetProcedureProjections();
 
         const hit = resolveLongswordHitWithAttackRoll({ state });
         const attackHitWindow = requireAttackHitWindow(hit.afterAttackRoll);
@@ -625,9 +728,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
           preparedSpells: [spellRecord(falseLifeUnitId)],
           sourceClassName: "wizard",
         });
-        damageRider = undefined;
-        ensnaringStrikeLifecycle = defaultEnsnaringStrikeLifecycleProjection();
-        heroismEffects = defaultHeroismEffectsProjection();
+        resetProcedureProjections();
 
         const act = actionSpellAct(state, falseLifeUnitId);
         const temporaryHitPointsRoll =
@@ -658,14 +759,12 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
           ...state,
           combatants: new Map(state.combatants).set(casterId, {
             ...caster,
-            conditions: applyCondition(caster.conditions, "frightened"),
+            conditions: KnockedOutConditionState(
+              applyCondition(caster.conditions, "frightened"),
+            ),
           }),
         };
-        damageRider = undefined;
-        ensnaringStrikeLifecycle = defaultEnsnaringStrikeLifecycleProjection();
-        falseLifeTemporaryHitPoints =
-          defaultFalseLifeTemporaryHitPointsProjection();
-        heroismEffects = defaultHeroismEffectsProjection();
+        resetProcedureProjections();
 
         const act = actionSpellAct(state, heroismUnitId);
         const target = requireHole(act.initialHoles, "targetChoice");
@@ -696,11 +795,101 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
         );
         heroismEffects = heroismEffectsProjection(state);
       },
+      doHexMarkedDamageRiderAndLaterTurnTransfer: () => {
+        state = level1BuffMarkSmiteBattle({
+          preparedSpells: [spellRecord(hexUnitId)],
+          sourceClassName: "warlock",
+          targetKind: "statBlock",
+          includeHexTransferTarget: true,
+        });
+        resetProcedureProjections();
+
+        const castAct = bonusActionSpellAct(state, hexUnitId);
+        const castTarget = requireHole(castAct.initialHoles, "targetChoice");
+        const chosenAbility = requireHole(
+          castAct.initialHoles,
+          "abilityChoice",
+        );
+        const cast = resolveBattleSubject({
+          state,
+          subject: castAct.subject,
+          fills: [
+            spellTargetFill(castTarget, hexUnitId, casterId, targetId),
+            abilityChoiceFill(chosenAbility, "wis"),
+          ],
+        });
+        if (cast.tag !== "resolved") {
+          throw new Error(`Expected Hex to resolve, got ${cast.tag}.`);
+        }
+
+        state = advanceHexRoundToCasterTurn(cast.state);
+        const hit = resolveLongswordHitWithAttackRoll({ state });
+        const damage = requireDamageRollHole(
+          requireNeedsHoles(hit.afterAttackRoll),
+        );
+        hexDamageHoleRider = spellMarkedDamageRider(damage, hexUnitId);
+        const damaged = resolveBattleSubject({
+          state,
+          subject: hit.subject,
+          fills: [
+            hit.targetFill,
+            hit.attackFill,
+            damageRollFillWithGroups(damage, [[4], [5]]),
+          ],
+        });
+        if (damaged.tag !== "resolved") {
+          throw new Error(
+            `Expected Hex attack to resolve, got ${damaged.tag}.`,
+          );
+        }
+
+        state = advanceHexRoundToCasterTurn(damaged.state);
+        const cursedTarget = state.combatants.get(targetId);
+        if (cursedTarget === undefined) {
+          throw new Error("Expected Hex cursed target.");
+        }
+        state = applyBattleHitPointDamage({
+          state,
+          target: cursedTarget,
+          damageAmount: 1,
+          deathFailuresAtZeroHp: 1,
+          damageSourceId: casterId,
+        });
+        hexTransferVisibleOnDropTurn = hexTransferActVisible(state);
+        hexTransferKindOnDropTurn = hexActiveMarkTransferKind(
+          hexActiveMarkEffect(state),
+        );
+
+        state = advanceHexRoundToCasterTurn(state);
+        const transferAct = bonusActionSpellAct(state, hexUnitId);
+        const transferTarget = requireHole(
+          transferAct.initialHoles,
+          "targetChoice",
+        );
+        recordResolvedResult(
+          resolveBattleSubject({
+            state,
+            subject: transferAct.subject,
+            fills: [
+              spellTargetFill(
+                transferTarget,
+                hexUnitId,
+                casterId,
+                hexTransferTargetId,
+              ),
+            ],
+          }),
+          "hex",
+        );
+      },
       step: () => {},
       getState: () =>
         projectLevel1BuffMarkSmiteSelectedIdentityState(
           state,
           damageRider,
+          hexDamageHoleRider,
+          hexTransferKindOnDropTurn,
+          hexTransferVisibleOnDropTurn,
           ensnaringStrikeLifecycle,
           falseLifeTemporaryHitPoints,
           heroismEffects,
@@ -743,6 +932,17 @@ function expectedProjection(
     turnStartDamageDieSize: 0,
     escapeCheckAbility: "none",
     escapeCheckSkill: "none",
+    hexDamageHoleSourceSpellId: "none",
+    hexDamageHoleDamageType: "none",
+    hexDamageHoleDice: 0,
+    hexDamageHoleDieSize: 0,
+    hexActiveMarkSourceSpellId: "none",
+    hexActiveMarkTarget: "none",
+    hexAbilityCheckAbility: "none",
+    hexTransferKindOnDropTurn: "none",
+    hexActiveMarkTransferKind: "none",
+    hexActiveMarkRetargetTiming: "none",
+    hexTransferVisibleOnDropTurn: false,
     lastResult: "init",
     ...overrides,
   };
@@ -784,9 +984,26 @@ function level1BuffMarkSmiteBattle(
   input: {
     readonly preparedSpells?: readonly SpellRecord[];
     readonly sourceClassName?: CharacterClassName;
+    readonly targetKind?: "character" | "statBlock";
+    readonly includeHexTransferTarget?: boolean;
   } = {},
 ): BattleState {
   const sourceClassName = input.sourceClassName ?? "paladin";
+  const target =
+    input.targetKind === "statBlock"
+      ? level1BuffMarkSmiteStatBlockCreature({
+          combatantId: targetId,
+          displayName: "Level 1 buff target",
+          initiative: 10,
+          side: oppositionSide,
+        })
+      : level1BuffMarkSmiteCreature({
+          combatantId: targetId,
+          displayName: "Level 1 buff target",
+          initiative: 10,
+          side: oppositionSide,
+          className: "fighter",
+        });
   const result = startBattle({
     battleId: battleId("level1-buff-mark-smite-selected-identity"),
     combatants: [
@@ -810,13 +1027,17 @@ function level1BuffMarkSmiteBattle(
           spellSlots: [{ spellLevel: 1, count: 2 }],
         },
       }),
-      level1BuffMarkSmiteCreature({
-        combatantId: targetId,
-        displayName: "Level 1 buff target",
-        initiative: 10,
-        side: oppositionSide,
-        className: "fighter",
-      }),
+      target,
+      ...(input.includeHexTransferTarget === true
+        ? [
+            level1BuffMarkSmiteStatBlockCreature({
+              combatantId: hexTransferTargetId,
+              displayName: "Level 1 buff Hex transfer target",
+              initiative: 5,
+              side: oppositionSide,
+            }),
+          ]
+        : []),
     ],
   });
   if (Either.isLeft(result)) {
@@ -888,6 +1109,42 @@ function level1BuffMarkSmiteCreature(input: {
         : { spellcasting: input.spellcasting }),
     },
   };
+}
+
+function level1BuffMarkSmiteStatBlockCreature(input: {
+  readonly combatantId: CombatantId;
+  readonly displayName: string;
+  readonly initiative: number;
+  readonly side: typeof partySide | typeof oppositionSide;
+}): BattleCreatureInit {
+  const statBlock = statBlockLibrary.requireStatBlock(
+    "stat_block_goblin_warrior",
+  );
+  const maxHp = statBlockHp(statBlock);
+  return {
+    combatantId: input.combatantId,
+    displayName: input.displayName,
+    initiative: initiativeScore(input.initiative),
+    side: input.side,
+    creatureInit: {
+      kind: "statBlock",
+      statBlock,
+      currentHp: maxHp,
+      maxHp,
+      tempHp: Hp(0),
+    },
+  };
+}
+
+function statBlockHp(statBlock: StatBlockRecord): Hp {
+  const hp = statBlock.statBlock.hp;
+  if (typeof hp === "number") {
+    return Hp(hp);
+  }
+  if (hp.kind === "literal") {
+    return Hp(hp.value);
+  }
+  throw new Error("Expected literal Stat Block Hit Points.");
 }
 
 function spellRecord(spellId: Level1BuffMarkSmiteSpellId): SpellRecord {
@@ -1132,6 +1389,13 @@ function savingThrowOutcomeFill(
   };
 }
 
+function abilityChoiceFill(
+  hole: Extract<BattleHole, { readonly kind: "abilityChoice" }>,
+  value: Exclude<HexAbilityCheckAbility, "none">,
+): Extract<BattleFill, { readonly kind: "abilityChoice" }> {
+  return { kind: "abilityChoice", holeId: hole.holeId, value };
+}
+
 function abilityCheckFill(
   hole: Extract<BattleHole, { readonly kind: "abilityCheck" }>,
   total: number,
@@ -1152,6 +1416,19 @@ function spellWeaponDamageRider(
   );
   if (rider === undefined) {
     throw new Error(`Expected ${spellId} spell weapon damage rider.`);
+  }
+  return rider;
+}
+
+function spellMarkedDamageRider(
+  hole: BattleDamageRollHole,
+  spellId: Exclude<HexSourceSpellId, "none">,
+): NonNullable<BattleDamageRollHole["spellMarkedDamageRiders"]>[number] {
+  const rider = hole.spellMarkedDamageRiders?.find(
+    (candidate) => candidate.sourceSpellId === spellId,
+  );
+  if (rider === undefined) {
+    throw new Error(`Expected ${spellId} spell marked damage rider.`);
   }
   return rider;
 }
@@ -1235,6 +1512,39 @@ function requireAttackHitWindow(
     throw new Error("Expected attack-hit reaction window.");
   }
   return result;
+}
+
+function advanceHexRoundToCasterTurn(state: BattleState): BattleState {
+  const targetTurn = requireResolvedResult(
+    endTurn({ state, actorId: casterId }),
+    "Expected Hex caster turn to end.",
+  ).state;
+  const transferTargetTurn = requireResolvedResult(
+    endTurn({ state: targetTurn, actorId: targetId }),
+    "Expected Hex target turn to end.",
+  ).state;
+  return requireResolvedResult(
+    endTurn({ state: transferTargetTurn, actorId: hexTransferTargetId }),
+    "Expected Hex transfer target turn to end.",
+  ).state;
+}
+
+function requireResolvedResult(
+  result: BattleResolutionResult,
+  message: string,
+): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
+  if (result.tag !== "resolved") {
+    throw new Error(`${message} Got ${result.tag}.`);
+  }
+  return result;
+}
+
+function hexTransferActVisible(state: BattleState): boolean {
+  return discoverBattleActs(state).some(
+    (candidate) =>
+      candidate.subject.tag === "bonusActionSpell" &&
+      candidate.subject.invocation.spellId === hexUnitId,
+  );
 }
 
 function attackHitBonusActionSpellChoice(
@@ -1331,6 +1641,11 @@ function projectLevel1BuffMarkSmiteSelectedIdentityState(
   damageRider:
     | NonNullable<BattleDamageRollHole["spellWeaponDamageRiders"]>[number]
     | undefined,
+  hexDamageHoleRider:
+    | NonNullable<BattleDamageRollHole["spellMarkedDamageRiders"]>[number]
+    | undefined,
+  hexTransferKindOnDropTurn: HexTransferKind,
+  hexTransferVisibleOnDropTurn: boolean,
   ensnaringStrikeLifecycle: EnsnaringStrikeLifecycleProjection,
   falseLifeTemporaryHitPoints: FalseLifeTemporaryHitPointsProjection,
   heroismEffects: HeroismEffectsProjection,
@@ -1367,6 +1682,10 @@ function projectLevel1BuffMarkSmiteSelectedIdentityState(
     targetRestrained: snapshotHasCondition(target.conditions, "restrained"),
     casterConcentrating: caster.concentrating,
     ...ensnaringStrikeLifecycle,
+    ...hexDamageHoleProjection(hexDamageHoleRider),
+    ...hexActiveMarkProjection(state),
+    hexTransferKindOnDropTurn,
+    hexTransferVisibleOnDropTurn,
     lastResult,
   };
 }
@@ -1402,13 +1721,13 @@ function heroismEffectsProjection(
     throw new Error("Expected Heroism caster.");
   }
   const frightenedImmunity = caster.activeEffects.find(
-    (effect) =>
+    (effect): effect is HeroismFrightenedImmunityEffect =>
       effect.kind === "conditionImmunity" &&
       effect.sourceSpellId === heroismUnitId &&
       effect.sourceCombatantId === casterId,
   );
   const turnStartTemporaryHitPoints = caster.activeEffects.find(
-    (effect) =>
+    (effect): effect is HeroismTurnStartTemporaryHitPointsEffect =>
       effect.kind === "turnStartTemporaryHitPoints" &&
       effect.sourceSpellId === heroismUnitId &&
       effect.sourceCombatantId === casterId,
@@ -1451,6 +1770,119 @@ function heroismSourceSpellId(
   }
   throw new Error(
     `Unexpected Heroism source spell id ${effect.sourceSpellId}.`,
+  );
+}
+
+function hexDamageHoleProjection(
+  rider:
+    | NonNullable<BattleDamageRollHole["spellMarkedDamageRiders"]>[number]
+    | undefined,
+): HexDamageHoleProjection {
+  return {
+    hexDamageHoleSourceSpellId: hexSourceSpellId(rider),
+    hexDamageHoleDamageType:
+      rider?.damage.damageType === "necrotic" ? "necrotic" : "none",
+    hexDamageHoleDice: rider?.damage.expr.dice ?? 0,
+    hexDamageHoleDieSize: rider?.damage.expr.dieSize ?? 0,
+  };
+}
+
+function hexActiveMarkProjection(state: BattleState): HexActiveMarkProjection {
+  const effect = hexActiveMarkEffect(state);
+  return {
+    hexActiveMarkSourceSpellId: hexSourceSpellId(effect),
+    hexActiveMarkTarget: hexActiveMarkTarget(effect),
+    hexAbilityCheckAbility: hexAbilityCheckAbility(effect),
+    hexActiveMarkTransferKind: hexActiveMarkTransferKind(effect),
+    hexActiveMarkRetargetTiming: hexActiveMarkRetargetTiming(effect),
+  };
+}
+
+function hexActiveMarkEffect(
+  state: BattleState,
+): HexActiveMarkEffect | undefined {
+  const caster = state.combatants.get(casterId);
+  if (caster === undefined) {
+    throw new Error("Expected Hex caster.");
+  }
+  return caster.activeEffects.find(
+    (effect): effect is HexActiveMarkEffect =>
+      effect.kind === "spellMarkedDamageRider" &&
+      effect.sourceSpellId === hexUnitId &&
+      effect.sourceCombatantId === casterId,
+  );
+}
+
+function hexSourceSpellId(
+  effect: { readonly sourceSpellId: string } | undefined,
+): HexSourceSpellId {
+  if (effect === undefined) {
+    return "none";
+  }
+  if (effect.sourceSpellId === hexUnitId) {
+    return hexUnitId;
+  }
+  throw new Error(`Unexpected Hex source spell id ${effect.sourceSpellId}.`);
+}
+
+function hexActiveMarkTarget(
+  effect: Pick<HexActiveMarkEffect, "targetCombatantId"> | undefined,
+): HexMarkedTarget {
+  if (effect === undefined) {
+    return "none";
+  }
+  if (effect.targetCombatantId === targetId) {
+    return "target";
+  }
+  if (effect.targetCombatantId === hexTransferTargetId) {
+    return "transferTarget";
+  }
+  throw new Error(
+    `Unexpected Hex marked target id ${effect.targetCombatantId}.`,
+  );
+}
+
+function hexAbilityCheckAbility(
+  effect: Pick<HexActiveMarkEffect, "abilityCheckBehavior"> | undefined,
+): HexAbilityCheckAbility {
+  if (effect === undefined || effect.abilityCheckBehavior.kind === "none") {
+    return "none";
+  }
+  if (
+    effect.abilityCheckBehavior.kind === "abilityDisadvantage" &&
+    effect.abilityCheckBehavior.ability === "wis"
+  ) {
+    return "wis";
+  }
+  throw new Error("Unexpected Hex ability check behavior.");
+}
+
+function hexActiveMarkTransferKind(
+  effect: Pick<HexActiveMarkEffect, "transfer"> | undefined,
+): HexTransferKind {
+  if (effect === undefined) {
+    return "none";
+  }
+  if (
+    effect.transfer.kind === "awaitingTargetDrop" ||
+    effect.transfer.kind === "availableAfterTurn"
+  ) {
+    return effect.transfer.kind;
+  }
+  throw new Error(`Unexpected Hex transfer kind ${effect.transfer.kind}.`);
+}
+
+function hexActiveMarkRetargetTiming(
+  effect: Pick<HexActiveMarkEffect, "transfer"> | undefined,
+): HexRetargetTiming {
+  if (effect === undefined) {
+    return "none";
+  }
+  if (effect.transfer.retargetTiming === "laterTurn") {
+    return "laterTurn";
+  }
+  throw new Error(
+    `Unexpected Hex retarget timing ${effect.transfer.retargetTiming}.`,
   );
 }
 
@@ -1597,6 +2029,42 @@ function normalizeLevel1BuffMarkSmiteSelectedIdentityQuintState(
       "escape check",
     ),
     escapeCheckSkill: athleticsSkillFromQuint(state["qEscapeCheckSkill"]),
+    hexDamageHoleSourceSpellId: hexSourceSpellIdFromQuint(
+      state["qHexDamageHoleSourceSpellId"],
+    ),
+    hexDamageHoleDamageType: hexDamageTypeFromQuint(
+      state["qHexDamageHoleDamageType"],
+    ),
+    hexDamageHoleDice: numberFromQuintInt(
+      state["qHexDamageHoleDice"],
+      "qHexDamageHoleDice",
+    ),
+    hexDamageHoleDieSize: numberFromQuintInt(
+      state["qHexDamageHoleDieSize"],
+      "qHexDamageHoleDieSize",
+    ),
+    hexActiveMarkSourceSpellId: hexSourceSpellIdFromQuint(
+      state["qHexActiveMarkSourceSpellId"],
+    ),
+    hexActiveMarkTarget: hexMarkedTargetFromQuint(
+      state["qHexActiveMarkTarget"],
+    ),
+    hexAbilityCheckAbility: hexAbilityFromQuint(
+      state["qHexAbilityCheckAbility"],
+    ),
+    hexTransferKindOnDropTurn: hexTransferKindFromQuint(
+      state["qHexTransferKindOnDropTurn"],
+    ),
+    hexActiveMarkTransferKind: hexTransferKindFromQuint(
+      state["qHexActiveMarkTransferKind"],
+    ),
+    hexActiveMarkRetargetTiming: hexRetargetTimingFromQuint(
+      state["qHexActiveMarkRetargetTiming"],
+    ),
+    hexTransferVisibleOnDropTurn: booleanField(
+      state,
+      "qHexTransferVisibleOnDropTurn",
+    ),
     lastResult: mbtLastResult(state["qLastResult"]),
   };
 }
@@ -1707,6 +2175,54 @@ function athleticsSkillFromQuint(raw: unknown): "athletics" | "none" {
   throw new Error(`Unexpected escape check skill ${String(raw)}.`);
 }
 
+function hexSourceSpellIdFromQuint(raw: unknown): HexSourceSpellId {
+  if (raw === "none" || raw === hexUnitId) {
+    return raw;
+  }
+  throw new Error(`Unexpected Hex source spell id ${String(raw)}.`);
+}
+
+function hexDamageTypeFromQuint(
+  raw: unknown,
+): Level1BuffMarkSmiteSelectedIdentityProjection["hexDamageHoleDamageType"] {
+  if (raw === "necrotic" || raw === "none") {
+    return raw;
+  }
+  throw new Error(`Unexpected Hex damage type ${String(raw)}.`);
+}
+
+function hexMarkedTargetFromQuint(raw: unknown): HexMarkedTarget {
+  if (raw === "target" || raw === "transferTarget" || raw === "none") {
+    return raw;
+  }
+  throw new Error(`Unexpected Hex marked target ${String(raw)}.`);
+}
+
+function hexAbilityFromQuint(raw: unknown): HexAbilityCheckAbility {
+  if (raw === "wis" || raw === "none") {
+    return raw;
+  }
+  throw new Error(`Unexpected Hex ability ${String(raw)}.`);
+}
+
+function hexTransferKindFromQuint(raw: unknown): HexTransferKind {
+  if (
+    raw === "awaitingTargetDrop" ||
+    raw === "availableAfterTurn" ||
+    raw === "none"
+  ) {
+    return raw;
+  }
+  throw new Error(`Unexpected Hex transfer kind ${String(raw)}.`);
+}
+
+function hexRetargetTimingFromQuint(raw: unknown): HexRetargetTiming {
+  if (raw === "laterTurn" || raw === "none") {
+    return raw;
+  }
+  throw new Error(`Unexpected Hex retarget timing ${String(raw)}.`);
+}
+
 function mbtLastResult(
   raw: unknown,
 ): Level1BuffMarkSmiteSelectedIdentityProjection["lastResult"] {
@@ -1716,7 +2232,8 @@ function mbtLastResult(
     raw === "divineSmite" ||
     raw === "ensnaringStrike" ||
     raw === "falseLife" ||
-    raw === "heroism"
+    raw === "heroism" ||
+    raw === "hex"
   ) {
     return raw;
   }

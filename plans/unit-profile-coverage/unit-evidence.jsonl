@@ -116,6 +116,7 @@
 {"unitId":"spare_the_dying","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84C","ownerPath":"packages/battle-runtime/src/index.test.ts"}}
 {"unitId":"spare_the_dying","evidence":{"tag":"selected-identity-mbt","taskId":"healing-stabilization","ownerPath":"packages/battle-runtime/src/healing-stabilization-selected-identity.mbt.test.ts"}}
 {"unitId":"hex","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84D","ownerPath":"packages/battle-runtime/src/index.test.ts"}}
+{"unitId":"hex","evidence":{"tag":"selected-identity-mbt","taskId":"L1E-HEX","ownerPath":"packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts"}}
 {"unitId":"starry_wisp","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV59B","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"light","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV70B","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"sleep","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV38A","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}

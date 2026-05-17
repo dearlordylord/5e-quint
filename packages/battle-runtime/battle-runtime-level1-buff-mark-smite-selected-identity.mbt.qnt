@@ -30,6 +30,17 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
   var qTurnStartDamageDieSize: int
   var qEscapeCheckAbility: str
   var qEscapeCheckSkill: str
+  var qHexDamageHoleSourceSpellId: str
+  var qHexDamageHoleDamageType: str
+  var qHexDamageHoleDice: int
+  var qHexDamageHoleDieSize: int
+  var qHexActiveMarkSourceSpellId: str
+  var qHexActiveMarkTarget: str
+  var qHexAbilityCheckAbility: str
+  var qHexTransferKindOnDropTurn: str
+  var qHexActiveMarkTransferKind: str
+  var qHexActiveMarkRetargetTiming: str
+  var qHexTransferVisibleOnDropTurn: bool
   var qLastResult: str
 
   action recordProjection(
@@ -62,6 +73,17 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     turnStartDamageDieSize: int,
     escapeCheckAbility: str,
     escapeCheckSkill: str,
+    hexDamageHoleSourceSpellId: str,
+    hexDamageHoleDamageType: str,
+    hexDamageHoleDice: int,
+    hexDamageHoleDieSize: int,
+    hexActiveMarkSourceSpellId: str,
+    hexActiveMarkTarget: str,
+    hexAbilityCheckAbility: str,
+    hexTransferKindOnDropTurn: str,
+    hexActiveMarkTransferKind: str,
+    hexActiveMarkRetargetTiming: str,
+    hexTransferVisibleOnDropTurn: bool,
     lastResult: str,
   ): bool = all {
     qDivineFavorActiveRiderCount' = divineFavorActiveRiderCount,
@@ -93,10 +115,96 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     qTurnStartDamageDieSize' = turnStartDamageDieSize,
     qEscapeCheckAbility' = escapeCheckAbility,
     qEscapeCheckSkill' = escapeCheckSkill,
+    qHexDamageHoleSourceSpellId' = hexDamageHoleSourceSpellId,
+    qHexDamageHoleDamageType' = hexDamageHoleDamageType,
+    qHexDamageHoleDice' = hexDamageHoleDice,
+    qHexDamageHoleDieSize' = hexDamageHoleDieSize,
+    qHexActiveMarkSourceSpellId' = hexActiveMarkSourceSpellId,
+    qHexActiveMarkTarget' = hexActiveMarkTarget,
+    qHexAbilityCheckAbility' = hexAbilityCheckAbility,
+    qHexTransferKindOnDropTurn' = hexTransferKindOnDropTurn,
+    qHexActiveMarkTransferKind' = hexActiveMarkTransferKind,
+    qHexActiveMarkRetargetTiming' = hexActiveMarkRetargetTiming,
+    qHexTransferVisibleOnDropTurn' = hexTransferVisibleOnDropTurn,
     qLastResult' = lastResult,
   }
 
-  action init = recordProjection(
+  action recordNonHexProjection(
+    divineFavorActiveRiderCount: int,
+    targetHp: int,
+    casterTempHp: int,
+    casterFrightened: bool,
+    spellSlotSpentThisTurn: bool,
+    level1SlotsRemaining: int,
+    damageRiderSourceSpellId: str,
+    damageRiderDamageType: str,
+    damageRiderDice: int,
+    damageRiderDieSize: int,
+    temporaryHitPointsSourceSpellId: str,
+    temporaryHitPointsDice: int,
+    temporaryHitPointsDieSize: int,
+    temporaryHitPointsFlat: int,
+    frightenedImmunitySourceSpellId: str,
+    frightenedImmunityCondition: str,
+    turnStartTemporaryHitPointsSourceSpellId: str,
+    turnStartTemporaryHitPointsAmount: int,
+    ensnaringStrikeRestrainedBeforeEscape: bool,
+    targetRestrained: bool,
+    casterConcentrating: bool,
+    ensnaringStrikeSaveSourceSpellId: str,
+    ensnaringStrikeSaveAbility: str,
+    turnStartDamageSourceSpellId: str,
+    turnStartDamageDamageType: str,
+    turnStartDamageDice: int,
+    turnStartDamageDieSize: int,
+    escapeCheckAbility: str,
+    escapeCheckSkill: str,
+    lastResult: str,
+  ): bool = recordProjection(
+    divineFavorActiveRiderCount,
+    targetHp,
+    casterTempHp,
+    casterFrightened,
+    spellSlotSpentThisTurn,
+    level1SlotsRemaining,
+    damageRiderSourceSpellId,
+    damageRiderDamageType,
+    damageRiderDice,
+    damageRiderDieSize,
+    temporaryHitPointsSourceSpellId,
+    temporaryHitPointsDice,
+    temporaryHitPointsDieSize,
+    temporaryHitPointsFlat,
+    frightenedImmunitySourceSpellId,
+    frightenedImmunityCondition,
+    turnStartTemporaryHitPointsSourceSpellId,
+    turnStartTemporaryHitPointsAmount,
+    ensnaringStrikeRestrainedBeforeEscape,
+    targetRestrained,
+    casterConcentrating,
+    ensnaringStrikeSaveSourceSpellId,
+    ensnaringStrikeSaveAbility,
+    turnStartDamageSourceSpellId,
+    turnStartDamageDamageType,
+    turnStartDamageDice,
+    turnStartDamageDieSize,
+    escapeCheckAbility,
+    escapeCheckSkill,
+    "none",
+    "none",
+    0,
+    0,
+    "none",
+    "none",
+    "none",
+    "none",
+    "none",
+    "none",
+    false,
+    lastResult,
+  )
+
+  action init = recordNonHexProjection(
     0, 12, 0, false, false, 2, "none", "none", 0, 0,
     "none", 0, 0, 0,
     "none", "none", "none", 0,
@@ -106,7 +214,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
 
   action doDivineFavorWeaponDamageRider = all {
     qLastResult == "init",
-    recordProjection(
+    recordNonHexProjection(
       1, 5, 0, false, true, 1, "divine_favor", "radiant", 1, 4,
       "none", 0, 0, 0,
       "none", "none", "none", 0,
@@ -117,7 +225,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
 
   action doDivineSmiteAfterHitDamage = all {
     qLastResult == "init",
-    recordProjection(
+    recordNonHexProjection(
       0, 1, 0, false, true, 1, "divine_smite", "radiant", 2, 8,
       "none", 0, 0, 0,
       "none", "none", "none", 0,
@@ -128,7 +236,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
 
   action doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape = all {
     qLastResult == "init",
-    recordProjection(
+    recordNonHexProjection(
       0, 5, 0, false, false, 1, "none", "none", 0, 0,
       "none", 0, 0, 0,
       "none", "none", "none", 0,
@@ -142,7 +250,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
 
   action doFalseLifeTemporaryHitPoints = all {
     qLastResult == "init",
-    recordProjection(
+    recordNonHexProjection(
       0, 12, 11, false, true, 1, "none", "none", 0, 0,
       "false_life", 2, 4, 4,
       "none", "none", "none", 0,
@@ -153,12 +261,26 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
 
   action doHeroismFrightenedImmunityTurnStartTemporaryHitPoints = all {
     qLastResult == "init",
-    recordProjection(
+    recordNonHexProjection(
       0, 12, 3, false, false, 1, "none", "none", 0, 0,
       "none", 0, 0, 0,
       "heroism", "frightened", "heroism", 3,
       false, false, true, "none", "none", "none", "none", 0, 0, "none", "none",
       "heroism",
+    ),
+  }
+
+  action doHexMarkedDamageRiderAndLaterTurnTransfer = all {
+    qLastResult == "init",
+    recordProjection(
+      0, 0, 0, false, false, 1, "none", "none", 0, 0,
+      "none", 0, 0, 0,
+      "none", "none", "none", 0,
+      false, false, true, "none", "none", "none", "none", 0, 0, "none", "none",
+      "hex", "necrotic", 1, 6,
+      "hex", "transferTarget", "wis",
+      "availableAfterTurn", "awaitingTargetDrop", "laterTurn", false,
+      "hex",
     ),
   }
 
@@ -168,5 +290,6 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape,
     doFalseLifeTemporaryHitPoints,
     doHeroismFrightenedImmunityTurnStartTemporaryHitPoints,
+    doHexMarkedDamageRiderAndLaterTurnTransfer,
   }
 }

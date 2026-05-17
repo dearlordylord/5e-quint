@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "L1E-HEX",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Hex Selected Identity Replay"
     },
     {
@@ -198,7 +198,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-E-L.md` Heroism.
 
 ### Task 7 - L1E-HEX - Hex Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `hex`, binding the authored Unit through the
 supported marked damage rider and supported transfer/lifecycle boundary.
