@@ -2399,9 +2399,9 @@
       ]
     },
     "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations": {
-      "taskId": "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE",
+      "taskId": "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT",
       "profile": "all-level Warlock Eldritch Invocation choice and advancement support profile",
-      "summary": "Eldritch Invocations are discovered from the Warlock feature-choice Surface record and the runtime SRD invocation option catalog, filled through the eldritch_invocations support profile, finalized as selected invocation ownership, and advanced through the CharacterBuild class-level gain boundary. Warlock-level gains derive counts from the Surface Warlock Invocations column, replacement validates final prerequisites and prerequisite-retention lockout, non-Repeatable duplicate selections are rejected, and invocation options are not treated as retained Unit refs.",
+      "summary": "Eldritch Invocations are discovered from the Warlock feature-choice Surface record and the runtime SRD invocation option catalog, filled through the eldritch_invocations support profile, finalized as selected invocation ownership, and advanced through the CharacterBuild class-level gain boundary. Warlock-level gains derive counts from the Surface Warlock Invocations column, replacement validates final prerequisites and prerequisite-retention lockout, non-Repeatable duplicate selections are rejected, and invocation options are not treated as retained Unit refs. Warlock cantrip prerequisites consume the CharacterBuild Pact Magic cantrip facts after Warlock class-level gains apply Pact Magic cantrip changes.",
       "discovery": [
         "packages/character-creation-runtime/src/discovery.ts:classFeatureGrantChoiceHoles",
         "packages/character-creation-runtime/src/eldritch-invocations.ts:levelOneEldritchInvocationChoiceOptions"
@@ -2417,34 +2417,38 @@
       "buildProjection": [
         "packages/character-creation-runtime/src/finalization.ts:finalizedClassChoiceFeaturesForSupportedChoices",
         "packages/character-creation-runtime/src/eldritch-invocations.ts:selectedEldritchInvocationFeatures",
-        "packages/character-creation-runtime/src/character-build-advancement.ts:warlockLevelGainWithEldritchInvocations"
+        "packages/character-creation-runtime/src/character-build-advancement.ts:warlockLevelGain"
       ],
       "tests": [
         "packages/character-creation-runtime/src/index.test.ts:discovers level-1 Warlock Eldritch Invocation options from the invocation catalog",
         "packages/character-creation-runtime/src/index.test.ts:finalizes a selected Warlock Eldritch Invocation as option ownership, not a retained Unit ref",
         "packages/character-creation-runtime/src/index.test.ts:advances a finalized Warlock build and gains invocations from the Warlock table",
         "packages/character-creation-runtime/src/index.test.ts:blocks replacing an invocation required by another selected invocation",
-        "packages/character-creation-runtime/src/index.test.ts:enforces duplicate invocation selections except Repeatable invocations"
+        "packages/character-creation-runtime/src/index.test.ts:enforces duplicate invocation selection identity for Repeatable and non-Repeatable invocations",
+        "packages/character-creation-runtime/src/index.test.ts:checks invocation cantrip prerequisites against Pact Magic facts after a Warlock cantrip gain"
       ]
     },
     "srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic": {
-      "taskId": "SRDINV18",
-      "profile": "level-1 Warlock class-feature support profile",
-      "summary": "Pact Magic is retained through the finalized CharacterBuild feature Unit refs for supported Warlock progressions; executable feature behavior remains owned by downstream feature/runtime projections.",
+      "taskId": "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT",
+      "profile": "Warlock Pact Magic CharacterBuild spellcasting advancement support profile",
+      "summary": "Pact Magic is read from the Surface Warlock class spellcasting facts, discovered as cantrip and prepared-spell choices, finalized into a CharacterBuild Warlock spellcasting source plus Pact Magic slot pool, and advanced through the CharacterBuild class-level gain boundary from the Surface Warlock Pact Magic progression rows. Spell execution remains owned by selected spell profiles.",
       "discovery": [
-        "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
+        "packages/character-creation-runtime/src/discovery.ts:discoverClassSpellcastingHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
-        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+        "packages/character-creation-runtime/src/finalization.ts:supportedFinalizationChoiceHoles"
       ],
       "buildProjection": [
-        "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds"
+        "packages/character-creation-runtime/src/finalization.ts:finalizedBuildSpellcasting",
+        "packages/character-creation-runtime/src/character-build-advancement.ts:warlockLevelGain"
       ],
       "tests": [
-        "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
+        "packages/character-creation-runtime/src/index.test.ts:finalizes Warlock level-1 Pact Magic spellcasting facts",
+        "packages/character-creation-runtime/src/index.test.ts:advances a finalized Warlock build and gains invocations from the Warlock table",
+        "packages/character-creation-runtime/src/index.test.ts:checks invocation cantrip prerequisites against Pact Magic facts after a Warlock cantrip gain"
       ]
     },
     "srd521:classes/bard:level-1:spell-access:bard_spellcasting": {

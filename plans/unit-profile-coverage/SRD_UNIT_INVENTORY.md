@@ -19,8 +19,8 @@ This is the default `%` for level-1 readiness questions. A row counts only when 
 
 #### Level-1 Battle Readiness by Status
 
-- accepted: 279
-- accepted-no-battle-effect: 88
+- accepted: 278
+- accepted-no-battle-effect: 89
 
 ### Level-1 Rows by Disposition
 
@@ -267,7 +267,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Sorcerer multiclass entry traits|character-creation or progression mechanic|class-container-owned-source-fact|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Sorcerer.md:22|
 |Sorcerer Spellcasting|spell access/list pressure||current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Sorcerer.md:56|
 |Warlock class container|class container||current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Warlock.md:3|
-|Warlock Eldritch Invocations|class feature||current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted|profile-subset-remaining-mechanics-closed: future Warlock Pact Magic advancement task|Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Warlock.md:56|
+|Warlock Eldritch Invocations|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted-no-battle-effect|selection-grant-container: selected Eldritch Invocation option profiles|Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Warlock.md:56|
 |Warlock Pact Magic|class feature||current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Warlock.md:68|
 |Warlock level 1 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Warlock.md:35|
 |Warlock Armor Training|character-creation or progression mechanic|class-container-owned-source-fact|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Warlock.md:12|

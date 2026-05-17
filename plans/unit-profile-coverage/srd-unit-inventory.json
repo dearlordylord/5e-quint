@@ -164,8 +164,8 @@
       "numerator": 367,
       "percent": "100%",
       "rowsByStatus": {
-        "accepted": 279,
-        "accepted-no-battle-effect": 88
+        "accepted": 278,
+        "accepted-no-battle-effect": 89
       }
     },
     "levelOneClassContainers": 12,
@@ -15595,13 +15595,13 @@
         "state": "installed",
         "unitId": "warlock_eldritch_invocations"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "future Warlock Pact Magic advancement task",
-        "reason": "Warlock Pact Magic cantrip increases at levels 4 and 10, prepared-spell changes, and Pact Slot progression must be advanced before all-level invocation prerequisite checks can claim full lifecycle ownership."
+        "source": "unit-claim",
+        "kind": "selection-grant-container",
+        "owner": "selected Eldritch Invocation option profiles",
+        "reason": "The class feature owns selection and Warlock-level lifecycle, including Pact Magic prerequisite facts; selected invocation option profiles own executable battle behavior."
       },
       "ownerEvidence": [
         {
@@ -15611,12 +15611,12 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE all-level Warlock Eldritch Invocation choice and advancement support profile; Eldritch Invocations are discovered from the Warlock feature-choice Surface record and the runtime SRD invocation option catalog, filled through the eldritch_invocations support profile, finalized as selected invocation ownership, and advanced through the CharacterBuild class-level gain boundary. Warlock-level gains derive counts from the Surface Warlock Invocations column, replacement validates final prerequisites and prerequisite-retention lockout, non-Repeatable duplicate selections are rejected, and invocation options are not treated as retained Unit refs.",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT all-level Warlock Eldritch Invocation choice and advancement support profile; Eldritch Invocations are discovered from the Warlock feature-choice Surface record and the runtime SRD invocation option catalog, filled through the eldritch_invocations support profile, finalized as selected invocation ownership, and advanced through the CharacterBuild class-level gain boundary. Warlock-level gains derive counts from the Surface Warlock Invocations column, replacement validates final prerequisites and prerequisite-retention lockout, non-Repeatable duplicate selections are rejected, and invocation options are not treated as retained Unit refs. Warlock cantrip prerequisites consume the CharacterBuild Pact Magic cantrip facts after Warlock class-level gains apply Pact Magic cantrip changes.",
           "status": "owner evidence present"
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "accepted"
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic",
@@ -15654,7 +15654,7 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV18 level-1 Warlock class-feature support profile; Pact Magic is retained through the finalized CharacterBuild feature Unit refs for supported Warlock progressions; executable feature behavior remains owned by downstream feature/runtime projections.",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT Warlock Pact Magic CharacterBuild spellcasting advancement support profile; Pact Magic is read from the Surface Warlock class spellcasting facts, discovered as cantrip and prepared-spell choices, finalized into a CharacterBuild Warlock spellcasting source plus Pact Magic slot pool, and advanced through the CharacterBuild class-level gain boundary from the Surface Warlock Pact Magic progression rows. Spell execution remains owned by selected spell profiles.",
           "status": "owner evidence present"
         }
       ],

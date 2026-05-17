@@ -21,7 +21,10 @@ let warlock =
           }
       , name = "Warlock"
       , primaryAbilities = { abilities = [ "cha" ], kind = "all_of" }
-      , provenance = { kind = "srd-5.2.1", section = "Classes/Warlock.md:3-24,35" }
+      , provenance =
+        { kind = "srd-5.2.1"
+        , section = "Classes/Warlock.md:3-24,31-54,68-88"
+        }
       , savingThrowProficiencies = [ "wis", "cha" ]
       , skillProficiencyChoice =
         { choose = 2
@@ -42,6 +45,128 @@ let warlock =
               , resetCadence = { kind = "short_or_long_rest" }
               , spellLevel = 1
               }
+          , pactMagicProgression =
+            [ { atLevel = 1
+              , cantripTotal = 2
+              , pactSlotCount = 1
+              , pactSlotLevel = 1
+              , preparedSpellTotal = 2
+              }
+            , { atLevel = 2
+              , cantripTotal = 2
+              , pactSlotCount = 2
+              , pactSlotLevel = 1
+              , preparedSpellTotal = 3
+              }
+            , { atLevel = 3
+              , cantripTotal = 2
+              , pactSlotCount = 2
+              , pactSlotLevel = 2
+              , preparedSpellTotal = 4
+              }
+            , { atLevel = 4
+              , cantripTotal = 3
+              , pactSlotCount = 2
+              , pactSlotLevel = 2
+              , preparedSpellTotal = 5
+              }
+            , { atLevel = 5
+              , cantripTotal = 3
+              , pactSlotCount = 2
+              , pactSlotLevel = 3
+              , preparedSpellTotal = 6
+              }
+            , { atLevel = 6
+              , cantripTotal = 3
+              , pactSlotCount = 2
+              , pactSlotLevel = 3
+              , preparedSpellTotal = 7
+              }
+            , { atLevel = 7
+              , cantripTotal = 3
+              , pactSlotCount = 2
+              , pactSlotLevel = 4
+              , preparedSpellTotal = 8
+              }
+            , { atLevel = 8
+              , cantripTotal = 3
+              , pactSlotCount = 2
+              , pactSlotLevel = 4
+              , preparedSpellTotal = 9
+              }
+            , { atLevel = 9
+              , cantripTotal = 3
+              , pactSlotCount = 2
+              , pactSlotLevel = 5
+              , preparedSpellTotal = 10
+              }
+            , { atLevel = 10
+              , cantripTotal = 4
+              , pactSlotCount = 2
+              , pactSlotLevel = 5
+              , preparedSpellTotal = 10
+              }
+            , { atLevel = 11
+              , cantripTotal = 4
+              , pactSlotCount = 3
+              , pactSlotLevel = 5
+              , preparedSpellTotal = 11
+              }
+            , { atLevel = 12
+              , cantripTotal = 4
+              , pactSlotCount = 3
+              , pactSlotLevel = 5
+              , preparedSpellTotal = 11
+              }
+            , { atLevel = 13
+              , cantripTotal = 4
+              , pactSlotCount = 3
+              , pactSlotLevel = 5
+              , preparedSpellTotal = 12
+              }
+            , { atLevel = 14
+              , cantripTotal = 4
+              , pactSlotCount = 3
+              , pactSlotLevel = 5
+              , preparedSpellTotal = 12
+              }
+            , { atLevel = 15
+              , cantripTotal = 4
+              , pactSlotCount = 3
+              , pactSlotLevel = 5
+              , preparedSpellTotal = 13
+              }
+            , { atLevel = 16
+              , cantripTotal = 4
+              , pactSlotCount = 3
+              , pactSlotLevel = 5
+              , preparedSpellTotal = 13
+              }
+            , { atLevel = 17
+              , cantripTotal = 4
+              , pactSlotCount = 4
+              , pactSlotLevel = 5
+              , preparedSpellTotal = 14
+              }
+            , { atLevel = 18
+              , cantripTotal = 4
+              , pactSlotCount = 4
+              , pactSlotLevel = 5
+              , preparedSpellTotal = 14
+              }
+            , { atLevel = 19
+              , cantripTotal = 4
+              , pactSlotCount = 4
+              , pactSlotLevel = 5
+              , preparedSpellTotal = 15
+              }
+            , { atLevel = 20
+              , cantripTotal = 4
+              , pactSlotCount = 4
+              , pactSlotLevel = 5
+              , preparedSpellTotal = 15
+              }
+            ]
           , preparedAccess =
               { changeOn = { kind = "class_level", replacementCount = 1 }
               , choose = 2

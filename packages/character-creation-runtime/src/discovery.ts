@@ -296,6 +296,29 @@ export function classSpellcastingChoiceHoles(
     ]);
   }
 
+  if (isPactMagicSpellcastingCreation(spellcasting)) {
+    return compactChoiceHoles([
+      choiceHole({
+        source: unitSource(classUnitId, CLASS_CANTRIP_CHOICE_KEY),
+        cardinality: exactChoiceCardinality(spellcasting.cantripAccess.choose),
+        options: spellcasting.cantripAccess.spellIds.map((spellId) => ({
+          optionId: creationChoiceOptionId(spellId),
+          label: spellId,
+          unitRef: { unitId: spellId },
+        })),
+      }),
+      choiceHole({
+        source: unitSource(classUnitId, CLASS_PREPARED_SPELL_CHOICE_KEY),
+        cardinality: exactChoiceCardinality(spellcasting.preparedAccess.choose),
+        options: spellcasting.preparedAccess.spells.map((spell) => ({
+          optionId: creationChoiceOptionId(spell.spellId),
+          label: spell.spellId,
+          unitRef: { unitId: spell.spellId },
+        })),
+      }),
+    ]);
+  }
+
   if (!isWizardSpellcastingCreation(spellcasting)) {
     return [];
   }
@@ -355,6 +378,15 @@ function isListPreparedSpellcastingCreation(
   spellcasting: ReadableClassSpellcasting,
 ): spellcasting is ListPreparedSpellcastingCreation {
   return spellcasting.kind === "list_prepared_spellcasting_creation";
+}
+
+function isPactMagicSpellcastingCreation(
+  spellcasting: ReadableClassSpellcasting,
+): spellcasting is Extract<
+  ClassSpellcastingCreation,
+  { readonly kind: "pact_magic_spellcasting_creation" }
+> {
+  return spellcasting.kind === "pact_magic_spellcasting_creation";
 }
 
 function isWizardSpellcastingCreation(

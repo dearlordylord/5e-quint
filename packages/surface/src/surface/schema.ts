@@ -187,6 +187,7 @@ export {
   allCantripsFromClassSpellList,
   allLeveledSpellsFromAnyClassSpellList,
   allPreparedSpellsFromClassSpellList,
+  classSpellListPreparedSpellLevel,
   AlternateActionCostMechanicsSchema,
   AttackRollMissReplacementEffectSchema,
   AttackRollMissReplacementTriggerSchema,

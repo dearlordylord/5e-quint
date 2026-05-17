@@ -149,6 +149,7 @@ export {
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.class-feature-option-projection
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.skill-expertise-choice
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.class-feature-advancement-replacement
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.warlock-pact-magic-advancement
 
 export {
   LEVEL_ONE_ELDRITCH_INVOCATION_OPTIONS,
@@ -219,13 +220,14 @@ export {
   fighterLevelGainWithFightingStyleReplacement,
   fightingStyleFeatUnitId,
   warlockClassUnitId,
-  warlockLevelGainWithEldritchInvocations,
+  warlockLevelGain,
   type CharacterBuildAdvancementIssue,
   type CharacterBuildClassLevelGain,
   type CharacterBuildFighterFightingStyleReplacementLevelGain,
   type CharacterBuildPlainClassLevelGain,
-  type CharacterBuildWarlockEldritchInvocationLevelGain,
   type CharacterBuildWarlockEldritchInvocationSelectionInput,
+  type CharacterBuildWarlockLevelGain,
+  type CharacterBuildWarlockPactMagicLevelGain,
   type FighterClassUnitId,
   type FightingStyleFeatUnitId,
   type WarlockClassUnitId,

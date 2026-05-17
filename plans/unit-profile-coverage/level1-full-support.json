@@ -1278,41 +1278,12 @@
       "status": "open-profile-accounting",
       "strictTargetClosed": false,
       "unitId": "thunderwave"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "later-level-only"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "Warlock Pact Magic cantrip increases at levels 4 and 10, prepared-spell changes, and Pact Slot progression must be advanced before all-level invocation prerequisite checks can claim full lifecycle ownership.",
-      "sourceRecordPath": "packages/surface/content/warlock_eldritch_invocations.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Warlock Eldritch Invocations",
-          "id": "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations",
-          "levelBand": "level-1",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 67,
-            "lineStart": 56,
-            "path": ".references/srd-5.2.1/Classes/Warlock.md"
-          }
-        }
-      ],
-      "status": "closed-later-level-only",
-      "strictTargetClosed": true,
-      "unitId": "warlock_eldritch_invocations"
     }
   ],
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 67,
+      "count": 68,
       "description": "Full support exists at the Unit profile boundary for strict level-1 accounting.",
       "status": "supported-profile",
       "unitIds": [
@@ -1381,6 +1352,7 @@
         "starry_wisp",
         "true_strike",
         "vicious_mockery",
+        "warlock_eldritch_invocations",
         "wizard_arcane_recovery",
         "wizard_ritual_adept"
       ]
@@ -1419,15 +1391,14 @@
       ]
     },
     {
-      "count": 5,
+      "count": 4,
       "description": "The level-1 behavior is complete and every remaining residual is later-level-only.",
       "status": "closed-later-level-only",
       "unitIds": [
         "barbarian_weapon_mastery",
         "bard_bardic_inspiration",
         "fighter_weapon_mastery",
-        "monk_martial_arts",
-        "warlock_eldritch_invocations"
+        "monk_martial_arts"
       ]
     },
     {
@@ -1446,14 +1417,14 @@
       "numerator": 367,
       "percent": "100%",
       "rowsByStatus": {
-        "accepted": 279,
-        "accepted-no-battle-effect": 88
+        "accepted": 278,
+        "accepted-no-battle-effect": 89
       }
     },
     "strictRuntimeProfileSupport": {
       "denominator": 93,
-      "numerator": 67,
-      "percent": "72%"
+      "numerator": 68,
+      "percent": "73.1%"
     },
     "strictTargetClosure": {
       "denominator": 93,
@@ -3755,18 +3726,18 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 120,
     "groupsByClaimTag": {
-      "profile-subset-supported": 15,
-      "supported-profile": 67,
+      "profile-subset-supported": 14,
+      "supported-profile": 68,
       "unsupported-profile": 11
     },
     "groupsByStatus": {
       "closed-character-fact-and-runtime-detached-split": 2,
-      "closed-later-level-only": 5,
+      "closed-later-level-only": 4,
       "closed-runtime-detached-table-adjudication": 10,
       "open-profile-accounting": 9,
-      "supported-profile": 67
+      "supported-profile": 68
     },
-    "nonSupportedFrontier": 26,
+    "nonSupportedFrontier": 25,
     "strictDenominator": 93
   }
 }

@@ -1,12 +1,17 @@
 import { Brand, Either, Match, Option } from "effect";
 import type { ClassName } from "@dnd/shared/game-facts";
 import { readClassCreationFacts } from "@dnd/surface/surface/character-creation-readers";
-import { allCantripsFromClassSpellList } from "@dnd/surface/surface/schema";
+import {
+  allCantripsFromClassSpellList,
+  classSpellListPreparedSpellLevel,
+} from "@dnd/surface/surface/schema";
 import type {
+  ClassSpellcastingCreation,
   ClassFeatureRecord,
   ClassRecord,
   EffectAtom,
   FeatRecord,
+  PactMagicSpellcastingCreation,
   UnitRecord,
 } from "@dnd/surface/surface/types";
 
@@ -32,6 +37,8 @@ import {
   type CharacterBuild,
   type CharacterBuildEldritchInvocationRepeatableChoice,
   type CharacterBuildFeature,
+  type CharacterBuildPactMagicSlotPool,
+  type CharacterBuildSpellcasting,
   type CharacterBuildSpellcastingSource,
   type ChoiceCreationHole,
   type EldritchInvocationId,
@@ -51,6 +58,10 @@ const FIGHTER_CLASS_NAME = "fighter" as const satisfies ClassName;
 const WARLOCK_CLASS_NAME = "warlock" as const satisfies ClassName;
 const FIGHTING_STYLE_FEAT_CATEGORY =
   "fighting_style" as const satisfies FeatRecord["category"];
+const EMPTY_WARLOCK_PACT_MAGIC_LEVEL_GAIN = {
+  gainedCantrips: [],
+  gainedPreparedSpells: [],
+} as const satisfies CharacterBuildWarlockPactMagicLevelGain;
 
 export type FighterClassUnitId = ClassUnitId &
   Brand.Brand<"FighterClassUnitId">;
@@ -79,10 +90,24 @@ export type CharacterBuildFighterFightingStyleReplacementLevelGain = {
   };
 };
 
-export type CharacterBuildWarlockEldritchInvocationLevelGain = {
-  readonly tag: "warlockLevelGainWithEldritchInvocations";
+export type CharacterBuildWarlockPactMagicLevelGain = {
+  readonly gainedCantrips: readonly UnitRecord["id"][];
+  readonly cantripReplacement?: {
+    readonly replaceCantripId: UnitRecord["id"];
+    readonly selectedCantripId: UnitRecord["id"];
+  };
+  readonly gainedPreparedSpells: readonly UnitRecord["id"][];
+  readonly preparedSpellReplacement?: {
+    readonly replaceSpellId: UnitRecord["id"];
+    readonly selectedSpellId: UnitRecord["id"];
+  };
+};
+
+export type CharacterBuildWarlockLevelGain = {
+  readonly tag: "warlockLevelGain";
   readonly classUnitId: WarlockClassUnitId;
   readonly hitPointRule: FixedHigherLevelClassHitPointRule;
+  readonly pactMagic: CharacterBuildWarlockPactMagicLevelGain;
   readonly eldritchInvocations: {
     readonly gainedInvocations: readonly EldritchInvocationSelection[];
     readonly replacement?: {
@@ -106,7 +131,7 @@ export type CharacterBuildWarlockEldritchInvocationSelectionInput =
 export type CharacterBuildClassLevelGain =
   | CharacterBuildPlainClassLevelGain
   | CharacterBuildFighterFightingStyleReplacementLevelGain
-  | CharacterBuildWarlockEldritchInvocationLevelGain;
+  | CharacterBuildWarlockLevelGain;
 
 export type CharacterBuildAdvancementIssue =
   | {
@@ -245,6 +270,88 @@ export type CharacterBuildAdvancementIssue =
       readonly message: string;
     }
   | {
+      readonly code: "missingWarlockPactMagicSpellcasting";
+      readonly classUnitId: UnitRecord["id"];
+      readonly message: string;
+    }
+  | {
+      readonly code: "invalidWarlockPactMagicCantripSelectionCount";
+      readonly warlockLevel: number;
+      readonly expectedCount: number;
+      readonly actualCount: number;
+      readonly message: string;
+    }
+  | {
+      readonly code: "invalidWarlockPactMagicCantripGainCount";
+      readonly warlockLevel: number;
+      readonly expectedGains: number;
+      readonly actualGains: number;
+      readonly message: string;
+    }
+  | {
+      readonly code: "invalidWarlockPactMagicPreparedSpellSelectionCount";
+      readonly warlockLevel: number;
+      readonly expectedCount: number;
+      readonly actualCount: number;
+      readonly message: string;
+    }
+  | {
+      readonly code: "invalidWarlockPactMagicPreparedSpellGainCount";
+      readonly warlockLevel: number;
+      readonly expectedGains: number;
+      readonly actualGains: number;
+      readonly message: string;
+    }
+  | {
+      readonly code: "invalidWarlockPactMagicSlotProjection";
+      readonly warlockLevel: number;
+      readonly expectedCount: number;
+      readonly expectedSlotLevel: number;
+      readonly actualCount?: number;
+      readonly actualSlotLevel?: number;
+      readonly message: string;
+    }
+  | {
+      readonly code: "invalidWarlockPactMagicCantripChoice";
+      readonly cantripId: UnitRecord["id"];
+      readonly message: string;
+    }
+  | {
+      readonly code: "invalidWarlockPactMagicPreparedSpellChoice";
+      readonly spellId: UnitRecord["id"];
+      readonly message: string;
+    }
+  | {
+      readonly code: "missingWarlockPactMagicCantripReplacement";
+      readonly cantripId: UnitRecord["id"];
+      readonly message: string;
+    }
+  | {
+      readonly code: "missingWarlockPactMagicPreparedSpellReplacement";
+      readonly spellId: UnitRecord["id"];
+      readonly message: string;
+    }
+  | {
+      readonly code: "sameWarlockPactMagicCantripReplacement";
+      readonly cantripId: UnitRecord["id"];
+      readonly message: string;
+    }
+  | {
+      readonly code: "sameWarlockPactMagicPreparedSpellReplacement";
+      readonly spellId: UnitRecord["id"];
+      readonly message: string;
+    }
+  | {
+      readonly code: "duplicateWarlockPactMagicCantrip";
+      readonly cantripId: UnitRecord["id"];
+      readonly message: string;
+    }
+  | {
+      readonly code: "duplicateWarlockPactMagicPreparedSpell";
+      readonly spellId: UnitRecord["id"];
+      readonly message: string;
+    }
+  | {
       readonly code: "unmetEldritchInvocationPrerequisite";
       readonly invocationId: EldritchInvocationId;
       readonly prerequisite: EldritchInvocationPrerequisite;
@@ -261,7 +368,7 @@ type FightingStyleGrantFeat = Extract<
   { readonly kind: "grant_feat" }
 >;
 type EldritchInvocationReplacement = NonNullable<
-  CharacterBuildWarlockEldritchInvocationLevelGain["eldritchInvocations"]["replacement"]
+  CharacterBuildWarlockLevelGain["eldritchInvocations"]["replacement"]
 >;
 type SelectedEldritchInvocationFeature = Extract<
   CharacterBuildFeature,
@@ -277,6 +384,8 @@ type EldritchInvocationFeatureChoice = {
     }
   >;
 };
+type PactMagicProgressionRow =
+  PactMagicSpellcastingCreation["pactMagicProgression"][number];
 
 export function fighterClassUnitId(input: {
   readonly unitLibrary: UnitCatalog;
@@ -400,17 +509,18 @@ export function fighterLevelGainWithFightingStyleReplacement(input: {
   });
 }
 
-export function warlockLevelGainWithEldritchInvocations(input: {
+export function warlockLevelGain(input: {
   readonly unitLibrary: UnitCatalog;
   readonly classUnitId: ClassUnitId;
   readonly hitPointRule: FixedHigherLevelClassHitPointRule;
+  readonly pactMagic?: CharacterBuildWarlockPactMagicLevelGain;
   readonly gainedInvocations: readonly CharacterBuildWarlockEldritchInvocationSelectionInput[];
   readonly replacement?: {
     readonly replaceInvocation: CharacterBuildWarlockEldritchInvocationSelectionInput;
     readonly selectedInvocation: CharacterBuildWarlockEldritchInvocationSelectionInput;
   };
 }): Either.Either<
-  CharacterBuildWarlockEldritchInvocationLevelGain,
+  CharacterBuildWarlockLevelGain,
   CharacterBuildAdvancementIssue
 > {
   const classUnitId = warlockClassUnitId(input);
@@ -436,9 +546,10 @@ export function warlockLevelGainWithEldritchInvocations(input: {
   }
 
   return Either.right({
-    tag: "warlockLevelGainWithEldritchInvocations",
+    tag: "warlockLevelGain",
     classUnitId: classUnitId.right,
     hitPointRule: input.hitPointRule,
+    pactMagic: input.pactMagic ?? EMPTY_WARLOCK_PACT_MAGIC_LEVEL_GAIN,
     eldritchInvocations: {
       gainedInvocations: gainedInvocations.right,
       ...(replacement === undefined ? {} : { replacement: replacement.right }),
@@ -457,10 +568,17 @@ export function advanceCharacterBuildClassLevel(input: {
   });
   if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
 
+  const spellcasting = updateSpellcastingForClassLevelGain(input);
+  if (Either.isLeft(spellcasting)) return Either.left(spellcasting.left);
+  const buildForFeatureUpdate = characterBuildWithSpellcasting(
+    input.build,
+    spellcasting.right,
+  );
+
   const features = Match.value(input.levelGain).pipe(
     Match.when({ tag: "classLevelGain" }, (levelGain) =>
       plainClassLevelGainFeatures({
-        build: input.build,
+        build: buildForFeatureUpdate,
         unitLibrary: input.unitLibrary,
         levelGain,
       }),
@@ -469,19 +587,17 @@ export function advanceCharacterBuildClassLevel(input: {
       { tag: "fighterLevelGainWithFightingStyleReplacement" },
       (levelGain) =>
         replaceFightingStyleSelectedFeature({
-          build: input.build,
+          build: buildForFeatureUpdate,
           unitLibrary: input.unitLibrary,
           levelGain,
         }),
     ),
-    Match.when(
-      { tag: "warlockLevelGainWithEldritchInvocations" },
-      (levelGain) =>
-        updateWarlockEldritchInvocations({
-          build: input.build,
-          unitLibrary: input.unitLibrary,
-          levelGain,
-        }),
+    Match.when({ tag: "warlockLevelGain" }, (levelGain) =>
+      updateWarlockEldritchInvocations({
+        build: buildForFeatureUpdate,
+        unitLibrary: input.unitLibrary,
+        levelGain,
+      }),
     ),
     Match.exhaustive,
   );
@@ -501,10 +617,74 @@ export function advanceCharacterBuildClassLevel(input: {
   }
 
   return Either.right({
-    ...input.build,
+    ...buildForFeatureUpdate,
     progression: progression.right,
     features: features.right,
   });
+}
+
+function characterBuildWithSpellcasting(
+  build: CharacterBuild,
+  spellcasting: CharacterBuild["spellcasting"],
+): CharacterBuild {
+  const { spellcasting: _spellcasting, ...buildWithoutSpellcasting } = build;
+  return spellcasting === undefined
+    ? buildWithoutSpellcasting
+    : { ...buildWithoutSpellcasting, spellcasting };
+}
+
+function updateSpellcastingForClassLevelGain(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly levelGain: CharacterBuildClassLevelGain;
+}): Either.Either<
+  CharacterBuild["spellcasting"],
+  CharacterBuildAdvancementIssue
+> {
+  if (input.levelGain.tag === "warlockLevelGain") {
+    return updateWarlockPactMagic({
+      build: input.build,
+      unitLibrary: input.unitLibrary,
+      levelGain: input.levelGain,
+    });
+  }
+
+  if (input.levelGain.tag !== "classLevelGain") {
+    return Either.right(input.build.spellcasting);
+  }
+
+  const classUnit = classUnitRecord({
+    unitLibrary: input.unitLibrary,
+    classUnitId: input.levelGain.classUnitId,
+  });
+  if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
+
+  const facts = readClassCreationFacts(classUnit.right);
+  if (
+    facts.tag !== "readable" ||
+    facts.value.className !== WARLOCK_CLASS_NAME
+  ) {
+    return Either.right(input.build.spellcasting);
+  }
+
+  const currentWarlockLevel = classLevelForUnit(
+    input.build.progression,
+    input.levelGain.classUnitId,
+  );
+  const warlockSpellcasting =
+    "spellcasting" in facts.value ? facts.value.spellcasting : undefined;
+  const unchanged = warlockPactMagicCanRemainUnchanged({
+    build: input.build,
+    classUnitId: WarlockClassUnitId(input.levelGain.classUnitId),
+    currentWarlockLevel,
+    nextWarlockLevel: currentWarlockLevel + 1,
+    ...(warlockSpellcasting === undefined
+      ? {}
+      : { spellcasting: warlockSpellcasting }),
+  });
+  if (Either.isLeft(unchanged)) return Either.left(unchanged.left);
+
+  return Either.right(input.build.spellcasting);
 }
 
 function classUnitRecord(input: {
@@ -594,7 +774,7 @@ function parseEldritchInvocationSelection(input: {
       invocationId: invocationId.right,
       message:
         "Repeatable Eldritch Invocation selections must include the associated cantrip or Origin feat choice.",
-      });
+    });
   }
   const repeatableChoice = input.selection.repeatableChoice;
 
@@ -822,7 +1002,7 @@ function replaceFightingStyleSelectedFeature(input: {
 function updateWarlockEldritchInvocations(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
-  readonly levelGain: CharacterBuildWarlockEldritchInvocationLevelGain;
+  readonly levelGain: CharacterBuildWarlockLevelGain;
 }): Either.Either<
   readonly CharacterBuildFeature[],
   CharacterBuildAdvancementIssue
@@ -999,6 +1179,409 @@ function replaceEldritchInvocationSelection(input: {
   return Either.right(
     input.selectedInvocations.map((selection, index) =>
       index === replaceIndex ? replacement.selectedInvocation : selection,
+    ),
+  );
+}
+
+function updateWarlockPactMagic(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly levelGain: CharacterBuildWarlockLevelGain;
+}): Either.Either<CharacterBuildSpellcasting, CharacterBuildAdvancementIssue> {
+  const spellcasting = input.build.spellcasting;
+  const source = warlockSpellcastingSource(
+    input.build,
+    input.levelGain.classUnitId,
+  );
+  const facts = warlockPactMagicSpellcastingForClass({
+    unitLibrary: input.unitLibrary,
+    classUnitId: input.levelGain.classUnitId,
+  });
+  if (Either.isLeft(facts)) return Either.left(facts.left);
+
+  if (spellcasting === undefined || source === undefined) {
+    return Either.left({
+      code: "missingWarlockPactMagicSpellcasting",
+      classUnitId: input.levelGain.classUnitId,
+      message:
+        "Cannot advance Warlock Pact Magic because the build has no Warlock spellcasting source.",
+    });
+  }
+
+  const currentWarlockLevel = classLevelForUnit(
+    input.build.progression,
+    input.levelGain.classUnitId,
+  );
+  const currentProgression = pactMagicProgressionAtLevel(
+    facts.right,
+    currentWarlockLevel,
+  );
+  const nextProgression = pactMagicProgressionAtLevel(
+    facts.right,
+    currentWarlockLevel + 1,
+  );
+
+  const currentIssue = currentPactMagicStateIssue({
+    source,
+    progression: currentProgression,
+    ...(spellcasting.slotPools.pactMagic === undefined
+      ? {}
+      : { pactMagicSlotPool: spellcasting.slotPools.pactMagic }),
+  });
+  if (currentIssue !== undefined) return Either.left(currentIssue);
+
+  const cantrips = applyWarlockPactMagicCantripChanges({
+    currentCantrips: source.cantrips,
+    pactMagic: input.levelGain.pactMagic,
+    currentProgression,
+    nextProgression,
+  });
+  if (Either.isLeft(cantrips)) return Either.left(cantrips.left);
+
+  const preparedSpells = applyWarlockPactMagicPreparedSpellChanges({
+    currentPreparedSpells: source.preparedSpells,
+    pactMagic: input.levelGain.pactMagic,
+    currentProgression,
+    nextProgression,
+  });
+  if (Either.isLeft(preparedSpells)) return Either.left(preparedSpells.left);
+
+  return Either.right({
+    ...spellcasting,
+    sources: mapCharacterBuildSpellcastingSources(
+      spellcasting.sources,
+      (candidate) =>
+        candidate.sourceUnitId === input.levelGain.classUnitId
+          ? {
+              ...candidate,
+              cantrips: cantrips.right,
+              preparedSpells: preparedSpells.right,
+            }
+          : candidate,
+    ),
+    slotPools: {
+      ...spellcasting.slotPools,
+      pactMagic: pactMagicSlotPoolFromProgression(nextProgression),
+    },
+  });
+}
+
+function mapCharacterBuildSpellcastingSources(
+  sources: CharacterBuildSpellcasting["sources"],
+  f: (
+    source: CharacterBuildSpellcastingSource,
+  ) => CharacterBuildSpellcastingSource,
+): CharacterBuildSpellcasting["sources"] {
+  const [firstSource, ...remainingSources] = sources;
+  return [f(firstSource), ...remainingSources.map(f)];
+}
+
+function warlockPactMagicCanRemainUnchanged(input: {
+  readonly build: CharacterBuild;
+  readonly classUnitId: WarlockClassUnitId;
+  readonly currentWarlockLevel: number;
+  readonly nextWarlockLevel: number;
+  readonly spellcasting?: ClassSpellcastingCreation;
+}): Either.Either<void, CharacterBuildAdvancementIssue> {
+  if (input.spellcasting?.kind !== "pact_magic_spellcasting_creation") {
+    return Either.left({
+      code: "missingWarlockPactMagicSpellcasting",
+      classUnitId: input.classUnitId,
+      message:
+        "Cannot advance Warlock Pact Magic because the class has no Pact Magic facts.",
+    });
+  }
+
+  const source = warlockSpellcastingSource(input.build, input.classUnitId);
+  const pactMagicSlotPool = input.build.spellcasting?.slotPools.pactMagic;
+  if (source === undefined || pactMagicSlotPool === undefined) {
+    return Either.left({
+      code: "missingWarlockPactMagicSpellcasting",
+      classUnitId: input.classUnitId,
+      message:
+        "Cannot advance Warlock Pact Magic because the build has no Pact Magic spellcasting facts.",
+    });
+  }
+
+  const currentProgression = pactMagicProgressionAtLevel(
+    input.spellcasting,
+    input.currentWarlockLevel,
+  );
+  const nextProgression = pactMagicProgressionAtLevel(
+    input.spellcasting,
+    input.nextWarlockLevel,
+  );
+  const currentIssue = currentPactMagicStateIssue({
+    source,
+    pactMagicSlotPool,
+    progression: currentProgression,
+  });
+  if (currentIssue !== undefined) return Either.left(currentIssue);
+
+  if (source.cantrips.length !== nextProgression.cantripTotal) {
+    return Either.left({
+      code: "invalidWarlockPactMagicCantripGainCount",
+      warlockLevel: input.nextWarlockLevel,
+      expectedGains:
+        nextProgression.cantripTotal - currentProgression.cantripTotal,
+      actualGains: 0,
+      message:
+        "A plain Warlock level gain would leave the build with the wrong number of Pact Magic cantrips.",
+    });
+  }
+  if (source.preparedSpells.length !== nextProgression.preparedSpellTotal) {
+    return Either.left({
+      code: "invalidWarlockPactMagicPreparedSpellGainCount",
+      warlockLevel: input.nextWarlockLevel,
+      expectedGains:
+        nextProgression.preparedSpellTotal -
+        currentProgression.preparedSpellTotal,
+      actualGains: 0,
+      message:
+        "A plain Warlock level gain would leave the build with the wrong number of Pact Magic prepared spells.",
+    });
+  }
+  if (
+    pactMagicSlotPool.count !== nextProgression.pactSlotCount ||
+    pactMagicSlotPool.slotLevel !== nextProgression.pactSlotLevel
+  ) {
+    return Either.left(
+      invalidPactMagicSlotProjectionIssue({
+        warlockLevel: input.nextWarlockLevel,
+        progression: nextProgression,
+        pactMagicSlotPool,
+      }),
+    );
+  }
+
+  return Either.right(undefined);
+}
+
+function applyWarlockPactMagicCantripChanges(input: {
+  readonly currentCantrips: readonly UnitRecord["id"][];
+  readonly pactMagic: CharacterBuildWarlockPactMagicLevelGain;
+  readonly currentProgression: PactMagicProgressionRow;
+  readonly nextProgression: PactMagicProgressionRow;
+}): Either.Either<readonly UnitRecord["id"][], CharacterBuildAdvancementIssue> {
+  if (input.currentCantrips.length !== input.currentProgression.cantripTotal) {
+    return Either.left({
+      code: "invalidWarlockPactMagicCantripSelectionCount",
+      warlockLevel: input.currentProgression.atLevel,
+      expectedCount: input.currentProgression.cantripTotal,
+      actualCount: input.currentCantrips.length,
+      message:
+        "Cannot advance Warlock Pact Magic from a build whose current cantrip count does not match its Warlock level.",
+    });
+  }
+
+  const expectedGains =
+    input.nextProgression.cantripTotal - input.currentProgression.cantripTotal;
+  if (input.pactMagic.gainedCantrips.length !== expectedGains) {
+    return Either.left({
+      code: "invalidWarlockPactMagicCantripGainCount",
+      warlockLevel: input.nextProgression.atLevel,
+      expectedGains,
+      actualGains: input.pactMagic.gainedCantrips.length,
+      message:
+        "Warlock Pact Magic cantrip gains must match the Warlock Features table.",
+    });
+  }
+
+  const replacedCantrips = replaceWarlockPactMagicCantrip({
+    currentCantrips: input.currentCantrips,
+    replacement: input.pactMagic.cantripReplacement,
+  });
+  if (Either.isLeft(replacedCantrips))
+    return Either.left(replacedCantrips.left);
+
+  const finalCantrips = [
+    ...replacedCantrips.right,
+    ...input.pactMagic.gainedCantrips,
+  ];
+  const invalidCantrip = finalCantrips.find(
+    (cantripId) => !isWarlockCantrip(cantripId),
+  );
+  if (invalidCantrip !== undefined) {
+    return Either.left({
+      code: "invalidWarlockPactMagicCantripChoice",
+      cantripId: invalidCantrip,
+      message:
+        "Warlock Pact Magic cantrips must be chosen from the Warlock cantrip list.",
+    });
+  }
+
+  const duplicateCantrip = duplicateValue(finalCantrips);
+  if (duplicateCantrip !== undefined) {
+    return Either.left({
+      code: "duplicateWarlockPactMagicCantrip",
+      cantripId: duplicateCantrip,
+      message: "Warlock Pact Magic cantrips must be distinct.",
+    });
+  }
+
+  return finalCantrips.length === input.nextProgression.cantripTotal
+    ? Either.right(finalCantrips)
+    : Either.left({
+        code: "invalidWarlockPactMagicCantripSelectionCount",
+        warlockLevel: input.nextProgression.atLevel,
+        expectedCount: input.nextProgression.cantripTotal,
+        actualCount: finalCantrips.length,
+        message:
+          "Warlock Pact Magic cantrip changes must leave the build with the table count for the new Warlock level.",
+      });
+}
+
+function applyWarlockPactMagicPreparedSpellChanges(input: {
+  readonly currentPreparedSpells: readonly UnitRecord["id"][];
+  readonly pactMagic: CharacterBuildWarlockPactMagicLevelGain;
+  readonly currentProgression: PactMagicProgressionRow;
+  readonly nextProgression: PactMagicProgressionRow;
+}): Either.Either<readonly UnitRecord["id"][], CharacterBuildAdvancementIssue> {
+  if (
+    input.currentPreparedSpells.length !==
+    input.currentProgression.preparedSpellTotal
+  ) {
+    return Either.left({
+      code: "invalidWarlockPactMagicPreparedSpellSelectionCount",
+      warlockLevel: input.currentProgression.atLevel,
+      expectedCount: input.currentProgression.preparedSpellTotal,
+      actualCount: input.currentPreparedSpells.length,
+      message:
+        "Cannot advance Warlock Pact Magic from a build whose current prepared-spell count does not match its Warlock level.",
+    });
+  }
+
+  const expectedGains =
+    input.nextProgression.preparedSpellTotal -
+    input.currentProgression.preparedSpellTotal;
+  if (input.pactMagic.gainedPreparedSpells.length !== expectedGains) {
+    return Either.left({
+      code: "invalidWarlockPactMagicPreparedSpellGainCount",
+      warlockLevel: input.nextProgression.atLevel,
+      expectedGains,
+      actualGains: input.pactMagic.gainedPreparedSpells.length,
+      message:
+        "Warlock Pact Magic prepared-spell gains must match the Warlock Features table.",
+    });
+  }
+
+  const replacedPreparedSpells = replaceWarlockPactMagicPreparedSpell({
+    currentPreparedSpells: input.currentPreparedSpells,
+    replacement: input.pactMagic.preparedSpellReplacement,
+  });
+  if (Either.isLeft(replacedPreparedSpells)) {
+    return Either.left(replacedPreparedSpells.left);
+  }
+
+  const finalPreparedSpells = [
+    ...replacedPreparedSpells.right,
+    ...input.pactMagic.gainedPreparedSpells,
+  ];
+  const invalidSpell = finalPreparedSpells.find(
+    (spellId) =>
+      !warlockPreparedSpellIsEligible({
+        spellId,
+        maximumSpellLevel: input.nextProgression.pactSlotLevel,
+      }),
+  );
+  if (invalidSpell !== undefined) {
+    return Either.left({
+      code: "invalidWarlockPactMagicPreparedSpellChoice",
+      spellId: invalidSpell,
+      message:
+        "Warlock Pact Magic prepared spells must be Warlock spells no higher than the Pact Slot level for the new Warlock level.",
+    });
+  }
+
+  const duplicateSpell = duplicateValue(finalPreparedSpells);
+  if (duplicateSpell !== undefined) {
+    return Either.left({
+      code: "duplicateWarlockPactMagicPreparedSpell",
+      spellId: duplicateSpell,
+      message: "Warlock Pact Magic prepared spells must be distinct.",
+    });
+  }
+
+  return finalPreparedSpells.length === input.nextProgression.preparedSpellTotal
+    ? Either.right(finalPreparedSpells)
+    : Either.left({
+        code: "invalidWarlockPactMagicPreparedSpellSelectionCount",
+        warlockLevel: input.nextProgression.atLevel,
+        expectedCount: input.nextProgression.preparedSpellTotal,
+        actualCount: finalPreparedSpells.length,
+        message:
+          "Warlock Pact Magic prepared-spell changes must leave the build with the table count for the new Warlock level.",
+      });
+}
+
+function replaceWarlockPactMagicCantrip(input: {
+  readonly currentCantrips: readonly UnitRecord["id"][];
+  readonly replacement?: CharacterBuildWarlockPactMagicLevelGain["cantripReplacement"];
+}): Either.Either<readonly UnitRecord["id"][], CharacterBuildAdvancementIssue> {
+  if (input.replacement === undefined) {
+    return Either.right(input.currentCantrips);
+  }
+
+  if (
+    input.replacement.replaceCantripId === input.replacement.selectedCantripId
+  ) {
+    return Either.left({
+      code: "sameWarlockPactMagicCantripReplacement",
+      cantripId: input.replacement.selectedCantripId,
+      message:
+        "Warlock Pact Magic cantrip replacement must choose a different Warlock cantrip.",
+    });
+  }
+
+  if (!input.currentCantrips.includes(input.replacement.replaceCantripId)) {
+    return Either.left({
+      code: "missingWarlockPactMagicCantripReplacement",
+      cantripId: input.replacement.replaceCantripId,
+      message:
+        "Cannot replace a Pact Magic cantrip that the build does not know.",
+    });
+  }
+
+  return Either.right(
+    input.currentCantrips.map((cantripId) =>
+      cantripId === input.replacement?.replaceCantripId
+        ? input.replacement.selectedCantripId
+        : cantripId,
+    ),
+  );
+}
+
+function replaceWarlockPactMagicPreparedSpell(input: {
+  readonly currentPreparedSpells: readonly UnitRecord["id"][];
+  readonly replacement?: CharacterBuildWarlockPactMagicLevelGain["preparedSpellReplacement"];
+}): Either.Either<readonly UnitRecord["id"][], CharacterBuildAdvancementIssue> {
+  if (input.replacement === undefined) {
+    return Either.right(input.currentPreparedSpells);
+  }
+
+  if (input.replacement.replaceSpellId === input.replacement.selectedSpellId) {
+    return Either.left({
+      code: "sameWarlockPactMagicPreparedSpellReplacement",
+      spellId: input.replacement.selectedSpellId,
+      message:
+        "Warlock Pact Magic prepared-spell replacement must choose a different Warlock spell.",
+    });
+  }
+
+  if (!input.currentPreparedSpells.includes(input.replacement.replaceSpellId)) {
+    return Either.left({
+      code: "missingWarlockPactMagicPreparedSpellReplacement",
+      spellId: input.replacement.replaceSpellId,
+      message:
+        "Cannot replace a Pact Magic prepared spell that the build does not have prepared.",
+    });
+  }
+
+  return Either.right(
+    input.currentPreparedSpells.map((spellId) =>
+      spellId === input.replacement?.replaceSpellId
+        ? input.replacement.selectedSpellId
+        : spellId,
     ),
   );
 }
@@ -1467,6 +2050,157 @@ function warlockSpellcastingSource(
   return build.spellcasting?.sources.find(
     (source) => source.sourceUnitId === classUnitId,
   );
+}
+
+function warlockPactMagicSpellcastingForClass(input: {
+  readonly unitLibrary: UnitCatalog;
+  readonly classUnitId: WarlockClassUnitId;
+}): Either.Either<
+  PactMagicSpellcastingCreation,
+  CharacterBuildAdvancementIssue
+> {
+  const classUnit = classUnitRecord(input);
+  if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
+
+  const facts = readClassCreationFacts(classUnit.right);
+  if (facts.tag !== "readable") {
+    return Either.left({
+      code: "unreadableClassUnit",
+      classUnitId: input.classUnitId,
+      message: `Cannot read class creation facts for ${input.classUnitId}.`,
+    });
+  }
+
+  if (facts.value.spellcasting?.kind !== "pact_magic_spellcasting_creation") {
+    return Either.left({
+      code: "missingWarlockPactMagicSpellcasting",
+      classUnitId: input.classUnitId,
+      message: "Cannot find Warlock Pact Magic class spellcasting facts.",
+    });
+  }
+
+  return Either.right(facts.value.spellcasting);
+}
+
+function pactMagicProgressionAtLevel(
+  spellcasting: PactMagicSpellcastingCreation,
+  warlockLevel: number,
+): PactMagicProgressionRow {
+  const row = spellcasting.pactMagicProgression.reduce<
+    PactMagicProgressionRow | undefined
+  >(
+    (best, candidate) =>
+      candidate.atLevel <= warlockLevel &&
+      (best === undefined || candidate.atLevel > best.atLevel)
+        ? candidate
+        : best,
+    undefined,
+  );
+  const firstRow = spellcasting.pactMagicProgression[0];
+  return row ?? firstRow;
+}
+
+function currentPactMagicStateIssue(input: {
+  readonly source: CharacterBuildSpellcastingSource;
+  readonly pactMagicSlotPool?: CharacterBuildPactMagicSlotPool;
+  readonly progression: PactMagicProgressionRow;
+}): CharacterBuildAdvancementIssue | undefined {
+  if (input.source.cantrips.length !== input.progression.cantripTotal) {
+    return {
+      code: "invalidWarlockPactMagicCantripSelectionCount",
+      warlockLevel: input.progression.atLevel,
+      expectedCount: input.progression.cantripTotal,
+      actualCount: input.source.cantrips.length,
+      message:
+        "Cannot advance Warlock Pact Magic from a build whose current cantrip count does not match its Warlock level.",
+    };
+  }
+
+  if (
+    input.source.preparedSpells.length !== input.progression.preparedSpellTotal
+  ) {
+    return {
+      code: "invalidWarlockPactMagicPreparedSpellSelectionCount",
+      warlockLevel: input.progression.atLevel,
+      expectedCount: input.progression.preparedSpellTotal,
+      actualCount: input.source.preparedSpells.length,
+      message:
+        "Cannot advance Warlock Pact Magic from a build whose current prepared-spell count does not match its Warlock level.",
+    };
+  }
+
+  if (
+    input.pactMagicSlotPool?.count !== input.progression.pactSlotCount ||
+    input.pactMagicSlotPool?.slotLevel !== input.progression.pactSlotLevel
+  ) {
+    return invalidPactMagicSlotProjectionIssue({
+      warlockLevel: input.progression.atLevel,
+      progression: input.progression,
+      ...(input.pactMagicSlotPool === undefined
+        ? {}
+        : { pactMagicSlotPool: input.pactMagicSlotPool }),
+    });
+  }
+
+  return undefined;
+}
+
+function invalidPactMagicSlotProjectionIssue(input: {
+  readonly warlockLevel: number;
+  readonly progression: PactMagicProgressionRow;
+  readonly pactMagicSlotPool?: CharacterBuildPactMagicSlotPool;
+}): CharacterBuildAdvancementIssue {
+  return {
+    code: "invalidWarlockPactMagicSlotProjection",
+    warlockLevel: input.warlockLevel,
+    expectedCount: input.progression.pactSlotCount,
+    expectedSlotLevel: input.progression.pactSlotLevel,
+    ...(input.pactMagicSlotPool === undefined
+      ? {}
+      : {
+          actualCount: input.pactMagicSlotPool.count,
+          actualSlotLevel: input.pactMagicSlotPool.slotLevel,
+        }),
+    message:
+      "Warlock Pact Magic slot capacity must match the Warlock Features table.",
+  };
+}
+
+function pactMagicSlotPoolFromProgression(
+  progression: PactMagicProgressionRow,
+): CharacterBuildPactMagicSlotPool {
+  return {
+    kind: "pactMagic",
+    count: progression.pactSlotCount,
+    slotLevel: progression.pactSlotLevel,
+  };
+}
+
+function isWarlockCantrip(cantripId: UnitRecord["id"]): boolean {
+  return allCantripsFromClassSpellList(WARLOCK_CLASS_NAME, [cantripId]);
+}
+
+function warlockPreparedSpellIsEligible(input: {
+  readonly spellId: UnitRecord["id"];
+  readonly maximumSpellLevel: number;
+}): boolean {
+  const spellLevel = classSpellListPreparedSpellLevel(
+    WARLOCK_CLASS_NAME,
+    input.spellId,
+  );
+  return spellLevel !== undefined && spellLevel <= input.maximumSpellLevel;
+}
+
+function duplicateValue<T>(values: readonly T[]): T | undefined {
+  const seen = new Set<T>();
+  for (const value of values) {
+    if (seen.has(value)) {
+      return value;
+    }
+    seen.add(value);
+  }
+
+  return undefined;
 }
 
 function classFeatureGrantsFightingStyleFeat(

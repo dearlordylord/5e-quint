@@ -62,8 +62,8 @@
       "value": 144
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 93,
-      "numerator": 93,
+      "denominator": 94,
+      "numerator": 94,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 93,
+      "denominator": 94,
       "numerator": 47,
-      "percent": "50.5%"
+      "percent": "50%"
     },
     "supportedProfileCoverage": {
       "denominator": 117,
-      "numerator": 93,
-      "percent": "79.5%"
+      "numerator": 94,
+      "percent": "80.3%"
     }
   },
   "metricSemantics": [
@@ -2206,12 +2206,32 @@
       "runtimeOwners": [
         "packages/character-creation-runtime/src/index.ts"
       ],
-      "sourceBoundary": "CharacterBuild progression plus Surface class-feature choice facts; replacement and gain choices are accepted only as part of a class-level gain and rewrite existing CharacterBuild feature refs or selected invocation ownership without parallel selected-option state.",
+      "sourceBoundary": "CharacterBuild progression plus Surface class-feature and class spellcasting facts; replacement and gain choices are accepted only as part of a class-level gain and rewrite existing CharacterBuild feature refs, selected invocation ownership, or Warlock Pact Magic spellcasting facts without parallel selected-option state.",
       "taskRefs": [
         "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE",
-        "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE"
+        "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE",
+        "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
       ],
       "title": "Character Creation advances CharacterBuild class levels with class-feature replacement and gain choices",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-creation.warlock-pact-magic-advancement",
+      "profileKind": "character-creation",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "Surface Warlock Pact Magic progression rows and class spell list facts project into the CharacterBuild Warlock spellcasting source and Pact Magic slot pool during Warlock class-level gains; spell execution and selected invocation execution remain owned by selected spell and invocation profiles.",
+      "taskRefs": [
+        "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
+      ],
+      "title": "Character Creation advances Warlock Pact Magic build facts from Surface progression",
       "verificationOwners": [
         {
           "kind": "runtime-test",
@@ -2246,10 +2266,11 @@
       "runtimeOwners": [
         "packages/character-creation-runtime/src/index.ts"
       ],
-      "sourceBoundary": "Warlock Eldritch Invocations class-feature choice, Surface Warlock invocation count facts, and the runtime SRD invocation option catalog; CharacterBuild stores selected invocation ownership plus Repeatable associated choice identity while selected invocation execution remains owned by selected invocation profiles.",
+      "sourceBoundary": "Warlock Eldritch Invocations class-feature choice, Surface Warlock invocation count facts, current CharacterBuild Warlock Pact Magic cantrip facts, and the runtime SRD invocation option catalog; CharacterBuild stores selected invocation ownership plus Repeatable associated choice identity while selected invocation execution remains owned by selected invocation profiles.",
       "taskRefs": [
         "AT-L1-03S",
-        "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE"
+        "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE",
+        "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
       ],
       "title": "Character Creation finalizes and advances Eldritch Invocation choices as selected invocation ownership",
       "verificationOwners": [
@@ -3799,6 +3820,16 @@
         "character-creation.class-feature-advancement-replacement"
       ],
       "taskId": "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused character-creation runtime tests cover Warlock Pact Magic advancement from Surface progression facts, including cantrip and prepared-spell gains, Warlock-level cantrip and prepared-spell replacement, Pact Slot count and slot-level projection, and invocation prerequisite checks against freshly updated Warlock cantrip facts.",
+      "profileIds": [
+        "character-creation.warlock-pact-magic-advancement",
+        "character-creation.eldritch-invocation-choice",
+        "character-creation.class-feature-advancement-replacement"
+      ],
+      "taskId": "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
     }
   ],
   "units": [
@@ -4151,10 +4182,11 @@
           "runtimeOwners": [
             "packages/character-creation-runtime/src/index.ts"
           ],
-          "sourceBoundary": "CharacterBuild progression plus Surface class-feature choice facts; replacement and gain choices are accepted only as part of a class-level gain and rewrite existing CharacterBuild feature refs or selected invocation ownership without parallel selected-option state.",
+          "sourceBoundary": "CharacterBuild progression plus Surface class-feature and class spellcasting facts; replacement and gain choices are accepted only as part of a class-level gain and rewrite existing CharacterBuild feature refs, selected invocation ownership, or Warlock Pact Magic spellcasting facts without parallel selected-option state.",
           "taskRefs": [
             "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE",
-            "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE"
+            "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE",
+            "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
           ],
           "title": "Character Creation advances CharacterBuild class levels with class-feature replacement and gain choices",
           "verificationOwners": [
@@ -5876,33 +5908,30 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "later-level-only",
-              "owner": "future Warlock Pact Magic advancement task",
-              "reason": "Warlock Pact Magic cantrip increases at levels 4 and 10, prepared-spell changes, and Pact Slot progression must be advanced before all-level invocation prerequisite checks can claim full lifecycle ownership."
-            },
-            "followUpTaskId": "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT",
-            "mechanic": "Warlock Pact Magic cantrip, prepared-spell, and Pact Slot facts are only finalized at level 1; advancing those spellcasting facts on later Warlock levels remains outside this task, so invocation known-cantrip prerequisites consume current CharacterBuild spellcasting facts without owning Pact Magic advancement."
-          }
-        ],
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "selected Eldritch Invocation option profiles",
+          "reason": "The class feature owns selection and Warlock-level lifecycle, including Pact Magic prerequisite facts; selected invocation option profiles own executable battle behavior."
+        },
         "profileIds": [
           "character-creation.eldritch-invocation-choice",
-          "character-creation.class-feature-advancement-replacement"
+          "character-creation.class-feature-advancement-replacement",
+          "character-creation.warlock-pact-magic-advancement"
         ],
         "supportedMechanics": [
           "Level 1 Warlock character creation discovers the Eldritch Invocation choice from the Surface class-feature record",
           "Character Creation admits the level-1 eligible invocation options by filtering the SRD invocation option catalog to options with no prerequisites at level 1",
           "Character Creation finalizes one selected invocation as selected Eldritch Invocation ownership with selectedFromUnitId warlock_eldritch_invocations",
+          "Character Creation finalizes Warlock level-1 Pact Magic cantrips, prepared spells, and Pact Slot capacity from Surface class spellcasting facts",
           "When a Warlock level is gained, Character Creation derives the required selected invocation count from the Surface Warlock Invocations column and requires exactly the newly gained invocation choices",
           "When a Warlock level is gained, Character Creation can replace one selected invocation selection, including one Repeatable invocation instance identified by its associated choice, with another invocation selection for which the final build qualifies",
-          "Invocation prerequisite gating checks minimum Warlock level, selected prerequisite invocations, and known Warlock cantrip damage prerequisites from current CharacterBuild spellcasting facts",
+          "When a Warlock level is gained, Character Creation advances Pact Magic cantrip totals, prepared-spell totals, Pact Slot count and slot level, and optional cantrip or prepared-spell replacement from the Surface Warlock table before checking invocation prerequisites",
+          "Invocation prerequisite gating checks minimum Warlock level, selected prerequisite invocations, and known Warlock cantrip damage prerequisites from current CharacterBuild spellcasting facts after Pact Magic advancement",
           "Invocation replacement is blocked when another retained selected invocation has the replaced invocation as a prerequisite",
           "Duplicate non-Repeatable selected invocations are rejected; Repeatable selected invocations require distinct associated choices",
           "Selected invocation execution remains owned by the selected invocation option profiles"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -5922,10 +5951,11 @@
           "runtimeOwners": [
             "packages/character-creation-runtime/src/index.ts"
           ],
-          "sourceBoundary": "Warlock Eldritch Invocations class-feature choice, Surface Warlock invocation count facts, and the runtime SRD invocation option catalog; CharacterBuild stores selected invocation ownership plus Repeatable associated choice identity while selected invocation execution remains owned by selected invocation profiles.",
+          "sourceBoundary": "Warlock Eldritch Invocations class-feature choice, Surface Warlock invocation count facts, current CharacterBuild Warlock Pact Magic cantrip facts, and the runtime SRD invocation option catalog; CharacterBuild stores selected invocation ownership plus Repeatable associated choice identity while selected invocation execution remains owned by selected invocation profiles.",
           "taskRefs": [
             "AT-L1-03S",
-            "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE"
+            "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE",
+            "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
           ],
           "title": "Character Creation finalizes and advances Eldritch Invocation choices as selected invocation ownership",
           "verificationOwners": [
@@ -5942,12 +5972,32 @@
           "runtimeOwners": [
             "packages/character-creation-runtime/src/index.ts"
           ],
-          "sourceBoundary": "CharacterBuild progression plus Surface class-feature choice facts; replacement and gain choices are accepted only as part of a class-level gain and rewrite existing CharacterBuild feature refs or selected invocation ownership without parallel selected-option state.",
+          "sourceBoundary": "CharacterBuild progression plus Surface class-feature and class spellcasting facts; replacement and gain choices are accepted only as part of a class-level gain and rewrite existing CharacterBuild feature refs, selected invocation ownership, or Warlock Pact Magic spellcasting facts without parallel selected-option state.",
           "taskRefs": [
             "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE",
-            "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE"
+            "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE",
+            "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
           ],
           "title": "Character Creation advances CharacterBuild class levels with class-feature replacement and gain choices",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-creation.warlock-pact-magic-advancement",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface Warlock Pact Magic progression rows and class spell list facts project into the CharacterBuild Warlock spellcasting source and Pact Magic slot pool during Warlock class-level gains; spell execution and selected invocation execution remain owned by selected spell and invocation profiles.",
+          "taskRefs": [
+            "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
+          ],
+          "title": "Character Creation advances Warlock Pact Magic build facts from Surface progression",
           "verificationOwners": [
             {
               "kind": "runtime-test",

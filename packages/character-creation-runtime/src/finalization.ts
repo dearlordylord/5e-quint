@@ -119,6 +119,7 @@ import {
   type CharacterBuildProficiencies,
   type CharacterBuildProficiencyChoiceSubject,
   type CharacterBuildResource,
+  type CharacterBuildPactMagicSlotPool,
   type CharacterBuildSpellcasting,
   type CharacterBuildSpellcastingSource,
   type CharacterBuildSpellcastingSlotPool,
@@ -1829,6 +1830,7 @@ function finalizedBuildEquipmentForSupportedLoadoutChoices(
 type FinalizedSpellcastingSourceProjection = {
   readonly source: CharacterBuildSpellcastingSource;
   readonly spellcastingSlotPool?: CharacterBuildSpellcastingSlotPool;
+  readonly pactMagicSlotPool?: CharacterBuildPactMagicSlotPool;
 };
 
 export function finalizedBuildSpellcasting(input: {
@@ -1866,6 +1868,10 @@ export function finalizedBuildSpellcasting(input: {
   if (Either.isLeft(spellcastingSlotPool)) {
     return Either.left([spellcastingSlotPool.left]);
   }
+  const pactMagicSlotPool = singlePactMagicSlotPool(projections);
+  if (Either.isLeft(pactMagicSlotPool)) {
+    return Either.left([pactMagicSlotPool.left]);
+  }
 
   return Either.right({
     sources,
@@ -1873,6 +1879,9 @@ export function finalizedBuildSpellcasting(input: {
       ...(spellcastingSlotPool.right === undefined
         ? {}
         : { spellcasting: spellcastingSlotPool.right }),
+      ...(pactMagicSlotPool.right === undefined
+        ? {}
+        : { pactMagic: pactMagicSlotPool.right }),
     },
   });
 }
@@ -1926,6 +1935,40 @@ function finalizedBuildSpellcastingSource(input: {
       spellcastingSlotPool: {
         kind: "spellcasting",
         slots: spellcasting.spellSlotProjection.slots,
+      },
+    };
+  }
+
+  if (isPactMagicSpellcastingCreation(spellcasting)) {
+    const cantrips = selectedUnitRefsForChoiceSource(
+      supportedSelections.unitChoices,
+      unitSource(classUnitId, CLASS_CANTRIP_CHOICE_KEY),
+    );
+    const preparedSpells = selectedUnitRefsForChoiceSource(
+      supportedSelections.unitChoices,
+      unitSource(classUnitId, CLASS_PREPARED_SPELL_CHOICE_KEY),
+    );
+    if (
+      !input.includeEmptySource &&
+      cantrips.length === 0 &&
+      preparedSpells.length === 0
+    ) {
+      return undefined;
+    }
+
+    return {
+      source: {
+        sourceUnitId: classUnitId,
+        spellcastingAbility: spellcasting.spellcastingAbility,
+        cantrips,
+        spellbook: [],
+        preparedSpells,
+        spellcastingFocuses: [spellcasting.spellcastingFocus],
+      },
+      pactMagicSlotPool: {
+        kind: "pactMagic",
+        slotLevel: spellcasting.pactSlotProjection.spellLevel,
+        count: spellcasting.pactSlotProjection.count,
       },
     };
   }
@@ -2022,6 +2065,30 @@ function singleSpellcastingSlotPool(
   );
 }
 
+function singlePactMagicSlotPool(
+  projections: readonly FinalizedSpellcastingSourceProjection[],
+): Either.Either<
+  CharacterBuildPactMagicSlotPool | undefined,
+  CreationFinalizationIssue
+> {
+  const pools = projections.flatMap((projection) =>
+    projection.pactMagicSlotPool === undefined
+      ? []
+      : [projection.pactMagicSlotPool],
+  );
+  const first = pools[0];
+  if (first === undefined) {
+    return Either.right(undefined);
+  }
+  if (pools.length === 1) {
+    return Either.right(first);
+  }
+
+  return Either.left(
+    illegalFinalizationIssue("Cannot finalize multiple Pact Magic slot pools."),
+  );
+}
+
 function ownedEquipmentDefaultSlot(
   unitLibrary: UnitCatalog,
   unitId: UnitRecord["id"],
@@ -2059,6 +2126,15 @@ function isListPreparedSpellcastingCreation(
   spellcasting: ReadableClassSpellcasting,
 ): spellcasting is ListPreparedSpellcastingCreation {
   return spellcasting.kind === "list_prepared_spellcasting_creation";
+}
+
+function isPactMagicSpellcastingCreation(
+  spellcasting: ReadableClassSpellcasting,
+): spellcasting is Extract<
+  ClassSpellcastingCreation,
+  { readonly kind: "pact_magic_spellcasting_creation" }
+> {
+  return spellcasting.kind === "pact_magic_spellcasting_creation";
 }
 
 function isWizardSpellcastingCreation(
