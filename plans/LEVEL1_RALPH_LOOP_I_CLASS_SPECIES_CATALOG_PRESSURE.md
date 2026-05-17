@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "L1I-PALADIN-SMITE-STYLE-SURFACE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Paladin Smite And Fighting Style Surface Pressure"
     },
     {
@@ -87,6 +87,12 @@
       "id": "L1I-BARBARIAN-DANGER-SENSE-ROLL-MODE",
       "status": "ready-for-research",
       "title": "Barbarian Danger Sense Saving Throw Roll-Mode Profile"
+    },
+    {
+      "number": 15,
+      "id": "L1I-PALADIN-SMITE-FREE-CAST-PROFILE",
+      "status": "blocked",
+      "title": "Paladin's Smite Free-Cast Spell Access Profile"
     }
   ]
 }
@@ -161,7 +167,7 @@ Every task runs:
 | 3 | L1I-EPIC-BOON-CONTAINERS - Epic Boon Class Feature Container Closure | done | 1 | closure artifact and unsupported-profile claims for Epic Boon container records |
 | 4 | L1I-BARD-KNOWLEDGE-FEATURES - Bard Knowledge Feature Catalog Pressure | done | 1 | closure artifact and unsupported-profile claims for Bard knowledge-feature records |
 | 5 | L1I-BARBARIAN-LATER-FEATURES - Barbarian Later Feature Catalog Pressure | done | 1 | closure artifact and unsupported-profile claims for Barbarian later-feature records |
-| 6 | L1I-PALADIN-SMITE-STYLE-SURFACE - Paladin Smite And Fighting Style Surface Pressure | ready-for-research | 1 | Paladin feature disposition without stealing D container work |
+| 6 | L1I-PALADIN-SMITE-STYLE-SURFACE - Paladin Smite And Fighting Style Surface Pressure | done | 1 | closure artifact and unsupported-profile claims for Paladin Fighting Style and Paladin's Smite |
 | 7 | L1I-RANGER-LATER-FEATURES - Ranger Later Feature Catalog Pressure | ready-for-research | 1 | Ranger feature disposition without stealing D Favored Enemy work |
 | 8 | L1I-MONK-BODY-AND-MIND - Monk Body And Mind Catalog Pressure | ready-for-research | 1 | Monk feature disposition without stealing D Martial Arts scaling |
 | 9 | L1I-WARLOCK-WIZARD-KNOWLEDGE-FEATURES - Warlock Wizard Knowledge Feature Catalog Pressure | ready-for-research | 1 | Warlock/Wizard knowledge-feature disposition without stealing D invocation work |
@@ -170,6 +176,7 @@ Every task runs:
 | 12 | L1I-BARD-JACK-OF-ALL-TRADES-PROFILE - Bard Jack Of All Trades Ability Check Profile | ready-for-research | 4 | decide the smallest skill-proficiency-aware Ability Check half-Proficiency Bonus profile boundary |
 | 13 | L1I-WORDS-OF-CREATION-POWER-WORD-RIDER - Words Of Creation Power Word Rider Profile | blocked | supported `power_word_heal` and `power_word_kill` spell invocation profiles | second-target rider support after host Power Word spells are promoted |
 | 14 | L1I-BARBARIAN-DANGER-SENSE-ROLL-MODE - Barbarian Danger Sense Saving Throw Roll-Mode Profile | ready-for-research | 5 | decide the smallest passive Dexterity Saving Throw Advantage profile boundary |
+| 15 | L1I-PALADIN-SMITE-FREE-CAST-PROFILE - Paladin's Smite Free-Cast Spell Access Profile | blocked | owner decision to expand Paladin battle support past level 1 | future Spell Access and class-feature free-cast support that reuses `divine_smite` |
 
 ### Task 1 - L1I-PRECHECK - Non-D Class Species Pressure Precheck
 
@@ -264,13 +271,27 @@ promoted battle Unit profile.
 
 ### Task 6 - L1I-PALADIN-SMITE-STYLE-SURFACE - Paladin Smite And Fighting Style Surface Pressure
 
-Status: `ready-for-research`
+Status: `done`
 
 Units: `paladin_fighting_style`, `paladin_paladins_smite`.
 
 Do not duplicate D's Weapon Mastery or selected spell identity work. Decide
 whether these are selection/grant containers, character facts, or need future
 profile support.
+
+Result:
+`plans/unit-profile-coverage/L1I_CLASS_SPECIES_PALADIN_SMITE_STYLE_CLOSURE.md`.
+Both Paladin level-2 records are closed as explicit `unsupported-profile`
+claims. `paladin_fighting_style` is a selection-grant container: selected
+Fighting Style feat Units own executable feat behavior, while Blessed Warrior
+cantrip access and replacement belong to future Character Sheet Spell Access
+and advancement owners. `paladin_paladins_smite` is Spell Access plus a
+once-per-Long-Rest Divine Smite free-cast grant; `divine_smite` already owns
+the supported after-hit damage invocation, and any future all-level Paladin
+free-cast owner must reuse that spell procedure rather than duplicate selected
+spell identity or D-owned Weapon Mastery work. Task 15 keeps that future
+runtime work visible and blocked on the owner decision to expand Paladin battle
+support past level 1.
 
 ### Task 7 - L1I-RANGER-LATER-FEATURES - Ranger Later Feature Catalog Pressure
 
@@ -361,3 +382,17 @@ the Barbarian must not have the Incapacitated condition. Do not admit the
 existing generic `modify_roll_advantage` surface shape as a supported profile
 until the Saving Throw ability filter and condition suppression gate are
 executable at the owning boundary.
+
+### Task 15 - L1I-PALADIN-SMITE-FREE-CAST-PROFILE - Paladin's Smite Free-Cast Spell Access Profile
+
+Status: `blocked`
+
+Unit: `paladin_paladins_smite`.
+
+Follow-up from Task 6. Blocked on an explicit owner decision to expand Paladin
+battle support past level 1. If unblocked, decide the smallest supported
+profile owner for Paladin's Smite Spell Access and its one-use Long Rest
+class-feature free-cast resource. The owner must retain `paladin_paladins_smite`
+as the source Unit and reuse the existing `divine_smite` after-hit spell
+invocation procedure instead of duplicating selected spell identity or D-owned
+Weapon Mastery work.
