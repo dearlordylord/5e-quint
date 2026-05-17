@@ -8699,7 +8699,7 @@ module battleRuntime {
       assert(hexAbilityCheckRollMode(Set(HexDamageRider({ target: Goblin, ability: WisAbility, transfer: AwaitingTargetDrop, durationTicks: 600 })), Goblin, StrAbility) == NormalAbilityCheck),
       assert(thaumaturgyBoomingVoiceDurationTicks == 10),
       assert(thaumaturgyMaxActiveOneMinuteEffects == 3),
-      assert(not(spellInvocationSpendsLevelOneSlot(Thaumaturgy))),
+      assert(not(spellInvocationSpendsSpellSlot(Thaumaturgy))),
       assert(thaumaturgyBoomingVoiceAbilityCheckRollMode(Set(thaumaturgyBoomingVoiceActiveEffect(Fighter)), Fighter, ChaAbility, IntimidationSkill) == AdvantageAbilityCheck),
       assert(thaumaturgyBoomingVoiceAbilityCheckRollMode(Set(thaumaturgyBoomingVoiceActiveEffect(Fighter)), Fighter, WisAbility, IntimidationSkill) == NormalAbilityCheck),
       assert(thaumaturgyBoomingVoiceAbilityCheckRollMode(Set(thaumaturgyBoomingVoiceActiveEffect(Fighter)), Fighter, ChaAbility, PerceptionSkill) == NormalAbilityCheck),
