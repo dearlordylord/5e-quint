@@ -79,7 +79,7 @@
     {
       "number": 13,
       "id": "L1H-RANGER-EXTRA-ATTACK",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Ranger Extra Attack Selected Identity Replay"
     },
     {
@@ -282,7 +282,7 @@ RAW: `.references/srd-5.2.1/Classes/Paladin.md` Extra Attack.
 
 ### Task 13 - L1H-RANGER-EXTRA-ATTACK - Ranger Extra Attack Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `ranger_extra_attack`, reusing the existing
 extra-attack count scaling profile without conflating it with Fighter or Paladin.

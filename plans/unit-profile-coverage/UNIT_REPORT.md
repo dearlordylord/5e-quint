@@ -23,7 +23,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Runtime mapping coverage | 62/62 | 100% |
 | Runtime parity coverage | 62/62 | 100% |
 | Deterministic admission/projection coverage | 94/94 | 100% |
-| Selected identity MBT coverage | 77/94 | 81.9% |
+| Selected identity MBT coverage | 78/94 | 83% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -913,6 +913,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `feat_savage_attacker` | `unit-feature.weapon-damage-dice-roll-choice` | QMBT31 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `paladin_lay_on_hands` | `character-sheet.healing-resource-action` | healing-stabilization | `packages/character-sheet-runtime/src/healing-resource-selected-identity.mbt.test.ts` |
 | `paladin_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | extra-attack-count-scaling | `packages/battle-runtime/src/battle-runtime.mbt.test.ts` |
+| `ranger_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | extra-attack-count-scaling | `packages/battle-runtime/src/battle-runtime.mbt.test.ts` |
 | `ranger_roving` | `unit-feature.passive-speed-kind-grants` | movement-forced-movement | `packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts` |
 | `mastery_cleave` | `unit-feature.weapon-mastery-cleave` | weapon-mastery-properties | `packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts` |
 | `mastery_sap` | `unit-feature.weapon-mastery-sap` | weapon-mastery-properties | `packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts` |

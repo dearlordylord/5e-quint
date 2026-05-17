@@ -52,6 +52,7 @@
 {"unitId":"paladin_extra_attack","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT37","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"paladin_extra_attack","evidence":{"tag":"selected-identity-mbt","taskId":"extra-attack-count-scaling","ownerPath":"packages/battle-runtime/src/battle-runtime.mbt.test.ts"}}
 {"unitId":"ranger_extra_attack","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT37","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
+{"unitId":"ranger_extra_attack","evidence":{"tag":"selected-identity-mbt","taskId":"extra-attack-count-scaling","ownerPath":"packages/battle-runtime/src/battle-runtime.mbt.test.ts"}}
 {"unitId":"barbarian_fast_movement","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT40","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"barbarian_fast_movement","evidence":{"tag":"selected-identity-mbt","taskId":"movement-forced-movement","ownerPath":"packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts"}}
 {"unitId":"ranger_roving","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT44","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
