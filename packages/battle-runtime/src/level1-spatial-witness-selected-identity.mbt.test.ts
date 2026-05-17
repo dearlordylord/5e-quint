@@ -1,10 +1,11 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt level1-spatial-witness dancing_lights faerie_fire feather_fall fog_cloud grease jump
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt level1-spatial-witness dancing_lights faerie_fire feather_fall fog_cloud grease jump light
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness dancing_lights doDancingLightsMovableDimLight
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness faerie_fire doFaerieFireOutlineAdvantageInvisibleDimLight
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness feather_fall doFeatherFallReactionMitigationLanding
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness fog_cloud doFogCloudAreaIdentityObscurementStrongWindCleanup
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness grease doGreaseCastGroundHazardSavingThrows doGreaseMovementAndTurnTriggers
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness jump doJumpMovementReplacementLandingWitness
+// UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness light doLightObjectEmitterProjectionReplacementCleanup
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -24,8 +25,10 @@ import {
   hasCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
 import {
+  elapsedTimeTicks,
   elapsedTimeTicksFromHours,
   elapsedTimeTicksFromMinutes,
+  type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   ATTACK_ROLL_MODES,
@@ -93,6 +96,7 @@ const level1SpatialWitnessSelectedIdentityDriverSchema = {
   doGreaseCastGroundHazardSavingThrows: {},
   doGreaseMovementAndTurnTriggers: {},
   doJumpMovementReplacementLandingWitness: {},
+  doLightObjectEmitterProjectionReplacementCleanup: {},
   step: {},
 } as const;
 type Level1SpatialWitnessSelectedIdentityDriverAction = Exclude<
@@ -104,6 +108,13 @@ type Level1SpatialWitnessSelectedIdentityProjection = {
   readonly lightEmitterCount: number;
   readonly dimLightEmitterCount: number;
   readonly retainedLightIdentityCount: number;
+  readonly lightObjectAdmitted: boolean;
+  readonly lightInvalidObjectRejectionCount: number;
+  readonly lightDurationTicks: number;
+  readonly lightBrightProjectionIllumination: BattleIllumination;
+  readonly lightOpaqueCoverIllumination: BattleIllumination;
+  readonly lightRecastReplacedPriorEmitter: boolean;
+  readonly lightDurationCleanupClearedEmitter: boolean;
   readonly faerieFireOutlinedCreatureCount: number;
   readonly faerieFireOutlinedObjectCount: number;
   readonly faerieFireCreatureAttackRollMode: ProjectedAttackRollMode;
@@ -172,7 +183,8 @@ type Level1SpatialWitnessSelectedIdentityProjection = {
     | "fogCloudAreaIdentityObscurementStrongWindCleanup"
     | "greaseCastGroundHazardSavingThrows"
     | "greaseMovementAndTurnTriggers"
-    | "jumpMovementReplacementLandingWitness";
+    | "jumpMovementReplacementLandingWitness"
+    | "lightObjectEmitterProjectionReplacementCleanup";
 };
 type ProjectedAttackRollMode = AttackRollMode;
 const dancingLightsUnitId = "dancing_lights";
@@ -181,6 +193,7 @@ const featherFallUnitId = "feather_fall";
 const fogCloudUnitId = "fog_cloud";
 const greaseUnitId = "grease";
 const jumpUnitId = "jump";
+const lightUnitId = "light";
 const starryWispUnitId = "starry_wisp";
 const level1SpatialWitnessSelectedUnitIds = [
   dancingLightsUnitId,
@@ -189,6 +202,7 @@ const level1SpatialWitnessSelectedUnitIds = [
   fogCloudUnitId,
   greaseUnitId,
   jumpUnitId,
+  lightUnitId,
 ] as const;
 type Level1SpatialWitnessSelectedUnitId =
   (typeof level1SpatialWitnessSelectedUnitIds)[number];
@@ -261,6 +275,13 @@ type SpellLightEmitter = Extract<
   BattleLightEmitter,
   { readonly kind: "spellLightEmitter" }
 >;
+type ObjectLightAttachment = Extract<
+  SpellLightEmitter["attachment"],
+  { readonly kind: "object" }
+>;
+type ObjectLightEmitter = SpellLightEmitter & {
+  readonly attachment: ObjectLightAttachment;
+};
 type DancingLightAttachment = Extract<
   SpellLightEmitter["attachment"],
   { readonly kind: "dancingLight" }
@@ -333,6 +354,19 @@ type JumpProjection = {
   readonly failedLandingProne: boolean;
   readonly slotExpended: boolean;
 };
+type LightObjectTargetFact = Extract<
+  BattleTargetSpatialFact,
+  { readonly kind: "spellObjectLightTarget" }
+>;
+type LightProjection = {
+  readonly objectAdmitted: boolean;
+  readonly invalidObjectRejectionCount: number;
+  readonly durationTicks: number;
+  readonly brightProjectionIllumination: BattleIllumination;
+  readonly opaqueCoverIllumination: BattleIllumination;
+  readonly recastReplacedPriorEmitter: boolean;
+  readonly durationCleanupClearedEmitter: boolean;
+};
 
 const casterId = combatantId("level1-spatial-witness-caster");
 const observerId = combatantId("level1-spatial-witness-observer");
@@ -370,6 +404,8 @@ const greaseAreaId = "level1-grease-ground-area";
 const staleGreaseAreaId = "level1-stale-grease-ground-area";
 const greaseOneMinuteDurationTicks = requireElapsedMinutes(1);
 const jumpOneMinuteDurationTicks = requireElapsedMinutes(1);
+const lightOneHourDurationTicks = requireElapsedHours(1);
+const lightExpiringDurationTicks = elapsedTimeTicks(1);
 const greaseTotalMovementDistanceFeet = movementFeet(10);
 const greaseDifficultTerrainDistanceFeet = movementFeet(5);
 const greaseDifficultTerrainMovementCostFeet = movementFeet(
@@ -378,6 +414,15 @@ const greaseDifficultTerrainMovementCostFeet = movementFeet(
 );
 const jumpMovementCostFeet = movementFeet(10);
 const jumpMaxDistanceFeet = movementFeet(30);
+const lightBrightRadiusFeet = movementFeet(20);
+const lightDimAdditionalFeet = movementFeet(20);
+const lightDimProjectionDistanceFeet = movementFeet(
+  Number(lightBrightRadiusFeet) + Number(lightDimAdditionalFeet),
+);
+const lightObjectId = battleObjectId("level1-light-object");
+const lightRecastObjectId = battleObjectId("level1-light-recast-object");
+const lightStaleObjectId = battleObjectId("level1-light-stale-object");
+const lightExpiringObjectId = battleObjectId("level1-light-expiring-object");
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -576,6 +621,33 @@ const selectedUnitIdentityReplays = [
       },
     ],
   },
+  {
+    taskId: "level1-spatial-witness",
+    unitId: "light",
+    actions: ["doLightObjectEmitterProjectionReplacementCleanup"],
+    sequences: [
+      {
+        name: "object-admission-emitter-projection-recast-and-cleanup",
+        actions: ["doLightObjectEmitterProjectionReplacementCleanup"],
+        expected: expectedProjection({
+          lightEmitterCount: 1,
+          lightObjectAdmitted: true,
+          lightInvalidObjectRejectionCount: 3,
+          lightDurationTicks: Number(lightOneHourDurationTicks),
+          lightBrightProjectionIllumination: "brightLight",
+          lightOpaqueCoverIllumination: "darkness",
+          lightRecastReplacedPriorEmitter: true,
+          lightDurationCleanupClearedEmitter: true,
+          projectedIllumination: "dimLight",
+          ordinarySightObscurement: "lightlyObscured",
+          darkvisionSightObscurement: "unobscured",
+          magicActionAvailable: false,
+          bonusActionAvailable: true,
+          lastResult: "lightObjectEmitterProjectionReplacementCleanup",
+        }),
+      },
+    ],
+  },
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
 describe("Level 1 spatial witness selected identity MBT", () => {
@@ -642,6 +714,7 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
     let fogCloudProjection = emptyFogCloudProjection();
     let greaseProjection = emptyGreaseProjection();
     let jumpProjection = emptyJumpProjection();
+    let lightProjection = emptyLightProjection();
     let lastResult: Level1SpatialWitnessSelectedIdentityProjection["lastResult"] =
       "init";
 
@@ -655,6 +728,7 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
       fogCloudProjection = emptyFogCloudProjection();
       greaseProjection = emptyGreaseProjection();
       jumpProjection = emptyJumpProjection();
+      lightProjection = emptyLightProjection();
       lastResult = "init";
     }
 
@@ -1193,6 +1267,142 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
         state = failedLanding.state;
         lastResult = "jumpMovementReplacementLandingWitness";
       },
+      doLightObjectEmitterProjectionReplacementCleanup: () => {
+        state = lightBattle();
+        retainedLightIdentityCount = 0;
+        const act = lightAct(state);
+        const targetHole = requireHole(act.initialHoles, "objectTargetChoice");
+        const tooLarge = resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [
+            lightObjectTargetFill(targetHole, {
+              objectId: lightObjectId,
+              size: "huge",
+            }),
+          ],
+        });
+        const wornBySomeoneElse = resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [
+            lightObjectTargetFill(targetHole, {
+              objectId: lightObjectId,
+              wornOrCarried: { kind: "someoneElse", relation: "worn" },
+            }),
+          ],
+        });
+        const carriedBySomeoneElse = resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [
+            lightObjectTargetFill(targetHole, {
+              objectId: lightObjectId,
+              wornOrCarried: { kind: "someoneElse", relation: "carried" },
+            }),
+          ],
+        });
+        const admitted = resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [
+            lightObjectTargetFill(targetHole, {
+              objectId: lightObjectId,
+              size: "large",
+              wornOrCarried: { kind: "caster" },
+            }),
+          ],
+        });
+        if (admitted.tag !== "resolved") {
+          throw new Error(`Expected Light cast to resolve, got ${admitted.tag}.`);
+        }
+
+        const initialEmitter = lightObjectEmitter(
+          admitted.state,
+          lightObjectId,
+        );
+        const nextObserverTurn = resolveEndTurn(
+          admitted.state,
+          casterId,
+          "Light caster",
+        );
+        const nextCasterTurn = resolveEndTurn(
+          nextObserverTurn,
+          observerId,
+          "Light observer",
+        );
+        const recastAct = lightAct(nextCasterTurn);
+        const recast = resolveBattleSubject({
+          state: nextCasterTurn,
+          subject: recastAct.subject,
+          fills: [
+            lightObjectTargetFill(
+              requireHole(recastAct.initialHoles, "objectTargetChoice"),
+              {
+                objectId: lightRecastObjectId,
+                size: "large",
+              },
+            ),
+          ],
+        });
+        if (recast.tag !== "resolved") {
+          throw new Error(
+            `Expected Light recast to resolve, got ${recast.tag}.`,
+          );
+        }
+
+        const cleanupFirstTurn = resolveEndTurn(
+          lightOneRoundRemainingBattle(),
+          casterId,
+          "Light expiring caster",
+        );
+        const cleanupSecondTurn = resolveEndTurn(
+          cleanupFirstTurn,
+          observerId,
+          "Light expiring observer",
+        );
+        lightProjection = {
+          objectAdmitted: lightObjectAdmissionMatches(initialEmitter),
+          invalidObjectRejectionCount: [
+            tooLarge,
+            wornBySomeoneElse,
+            carriedBySomeoneElse,
+          ].filter(lightObjectTargetRejected).length,
+          durationTicks: lightObjectDurationTicks(initialEmitter),
+          brightProjectionIllumination: battleIlluminationFromLightEmitters(
+            recast.snapshot.lightEmitters,
+            [
+              lightObjectProjectionFact(
+                lightRecastObjectId,
+                lightBrightRadiusFeet,
+                false,
+              ),
+            ],
+          ),
+          opaqueCoverIllumination: battleIlluminationFromLightEmitters(
+            recast.snapshot.lightEmitters,
+            [
+              lightObjectProjectionFact(
+                lightRecastObjectId,
+                lightBrightRadiusFeet,
+                true,
+              ),
+            ],
+          ),
+          recastReplacedPriorEmitter:
+            lightObjectEmitters(recast.state).length === 1 &&
+            lightObjectEmitter(recast.state, lightRecastObjectId) !==
+              undefined &&
+            lightObjectEmitter(recast.state, lightObjectId) === undefined,
+          durationCleanupClearedEmitter:
+            lightObjectEmitter(
+              cleanupSecondTurn,
+              lightExpiringObjectId,
+            ) === undefined,
+        };
+        state = recast.state;
+        lastResult = "lightObjectEmitterProjectionReplacementCleanup";
+      },
       step: () => {},
       getState: () =>
         projectLevel1SpatialWitnessSelectedIdentityState(
@@ -1205,6 +1415,7 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
           fogCloudProjection,
           greaseProjection,
           jumpProjection,
+          lightProjection,
           lastResult,
         ),
     };
@@ -1234,6 +1445,13 @@ function expectedProjection(
     lightEmitterCount: 0,
     dimLightEmitterCount: 0,
     retainedLightIdentityCount: 0,
+    lightObjectAdmitted: false,
+    lightInvalidObjectRejectionCount: 0,
+    lightDurationTicks: 0,
+    lightBrightProjectionIllumination: "darkness",
+    lightOpaqueCoverIllumination: "darkness",
+    lightRecastReplacedPriorEmitter: false,
+    lightDurationCleanupClearedEmitter: false,
     faerieFireOutlinedCreatureCount: 0,
     faerieFireOutlinedObjectCount: 0,
     faerieFireCreatureAttackRollMode: "normal",
@@ -1361,6 +1579,18 @@ function emptyJumpProjection(): JumpProjection {
     missingLandingFactRejected: false,
     failedLandingProne: false,
     slotExpended: false,
+  };
+}
+
+function emptyLightProjection(): LightProjection {
+  return {
+    objectAdmitted: false,
+    invalidObjectRejectionCount: 0,
+    durationTicks: 0,
+    brightProjectionIllumination: "darkness",
+    opaqueCoverIllumination: "darkness",
+    recastReplacedPriorEmitter: false,
+    durationCleanupClearedEmitter: false,
   };
 }
 
@@ -1599,6 +1829,55 @@ function jumpBattle(): BattleState {
   return result.right;
 }
 
+function lightBattle(): BattleState {
+  const light = spellRecord(lightUnitId);
+  const result = startBattle({
+    battleId: battleId("level1-spatial-witness-selected-identity"),
+    combatants: [
+      spatialWitnessCreature({
+        combatantId: casterId,
+        displayName: "Light caster",
+        initiative: 20,
+        side: partySide,
+        spellcasting: {
+          sourceClassName: "wizard",
+          spellcastingAbilityModifier: abilityModifier(3),
+          proficiencyBonus: proficiencyBonus(2),
+          canCastSpells: true,
+          cantrips: [light],
+          preparedSpells: [],
+          featurePreparedSpells: [],
+          invocationSpellAccesses: [],
+          spellbookRitualSpellAccesses: [],
+          spellSlots: [],
+        },
+      }),
+      spatialWitnessCreature({
+        combatantId: observerId,
+        displayName: "Light observer",
+        initiative: 10,
+        side: oppositionSide,
+      }),
+    ],
+  });
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
+function lightOneRoundRemainingBattle(): BattleState {
+  return {
+    ...lightBattle(),
+    lightEmitters: [
+      lightObjectSpellEmitter({
+        objectId: lightExpiringObjectId,
+        durationTicks: lightExpiringDurationTicks,
+      }),
+    ],
+  };
+}
+
 function spatialWitnessCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
@@ -1768,6 +2047,19 @@ function jumpCastAct(state: BattleState): BonusActionSpellAct {
   );
   if (act === undefined) {
     throw new Error("Expected Jump movement replacement Bonus Action spell.");
+  }
+  return act;
+}
+
+function lightAct(state: BattleState): ActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.spellId === lightUnitId &&
+      candidate.subject.invocation.procedure === "objectLight",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Light object-emitter action.");
   }
   return act;
 }
@@ -1999,6 +2291,44 @@ function jumpMovementReplacementFill(
         },
       },
     },
+  };
+}
+
+function lightObjectTargetFill(
+  hole: Extract<BattleHole, { readonly kind: "objectTargetChoice" }>,
+  input: {
+    readonly objectId: BattleObjectId;
+    readonly size?: LightObjectTargetFact["size"];
+    readonly wornOrCarried?: LightObjectTargetFact["wornOrCarried"];
+  },
+): Extract<BattleFill, { readonly kind: "objectTargetChoice" }> {
+  return {
+    kind: "objectTargetChoice",
+    holeId: hole.holeId,
+    value: input.objectId,
+    spatialFacts: [
+      {
+        kind: "spellObjectLightTarget",
+        casterId,
+        objectId: input.objectId,
+        spellId: lightUnitId,
+        size: input.size ?? "medium",
+        wornOrCarried: input.wornOrCarried ?? { kind: "nobody" },
+      },
+    ],
+  };
+}
+
+function lightObjectProjectionFact(
+  objectId: BattleObjectId,
+  distanceFeet: MovementFeet,
+  opaqueCover: boolean,
+): BattleLightEmitterProjectionFact {
+  return {
+    kind: "object",
+    objectId,
+    distanceFeet,
+    opaqueCover,
   };
 }
 
@@ -2544,6 +2874,7 @@ function projectLevel1SpatialWitnessSelectedIdentityState(
   fogCloudProjection: FogCloudProjection,
   greaseProjection: GreaseProjection,
   jumpProjection: JumpProjection,
+  lightProjection: LightProjection,
   lastResult: Level1SpatialWitnessSelectedIdentityProjection["lastResult"],
 ): Level1SpatialWitnessSelectedIdentityProjection {
   const snapshot = snapshotBattle(state);
@@ -2564,6 +2895,17 @@ function projectLevel1SpatialWitnessSelectedIdentityState(
         emitter.emission.radiusFeet === dimLightRadiusFeet(lastResult),
     ).length,
     retainedLightIdentityCount,
+    lightObjectAdmitted: lightProjection.objectAdmitted,
+    lightInvalidObjectRejectionCount:
+      lightProjection.invalidObjectRejectionCount,
+    lightDurationTicks: lightProjection.durationTicks,
+    lightBrightProjectionIllumination:
+      lightProjection.brightProjectionIllumination,
+    lightOpaqueCoverIllumination: lightProjection.opaqueCoverIllumination,
+    lightRecastReplacedPriorEmitter:
+      lightProjection.recastReplacedPriorEmitter,
+    lightDurationCleanupClearedEmitter:
+      lightProjection.durationCleanupClearedEmitter,
     faerieFireOutlinedCreatureCount: faerieFireOutlinedCreatureCount(state),
     faerieFireOutlinedObjectCount: faerieFireOutlinedObjectCount(state),
     faerieFireCreatureAttackRollMode,
@@ -2661,12 +3003,18 @@ function selectedLightEmitters(
   if (lastResult === "faerieFireOutlineAdvantageInvisibleDimLight") {
     return faerieFireEmitters(state);
   }
+  if (lastResult === "lightObjectEmitterProjectionReplacementCleanup") {
+    return lightObjectEmitters(state);
+  }
   return [];
 }
 
 function dimLightRadiusFeet(
   lastResult: Level1SpatialWitnessSelectedIdentityProjection["lastResult"],
 ) {
+  if (lastResult === "lightObjectEmitterProjectionReplacementCleanup") {
+    return lightDimProjectionDistanceFeet;
+  }
   return lastResult === "faerieFireOutlineAdvantageInvisibleDimLight"
     ? faerieFireDimLightRadiusFeet
     : dancingLightsDimLightRadiusFeet;
@@ -2684,7 +3032,8 @@ function casterConcentratingOnSelectedUnit(
     lastResult === "fogCloudAreaIdentityObscurementStrongWindCleanup" ||
     lastResult === "greaseCastGroundHazardSavingThrows" ||
     lastResult === "greaseMovementAndTurnTriggers" ||
-    lastResult === "jumpMovementReplacementLandingWitness"
+    lastResult === "jumpMovementReplacementLandingWitness" ||
+    lastResult === "lightObjectEmitterProjectionReplacementCleanup"
   ) {
     return false;
   }
@@ -2719,6 +3068,16 @@ function faerieFireEmitters(state: BattleState): readonly SpellLightEmitter[] {
   );
 }
 
+function lightObjectEmitters(state: BattleState): readonly ObjectLightEmitter[] {
+  return snapshotBattle(state).lightEmitters.filter(
+    (emitter): emitter is ObjectLightEmitter =>
+      emitter.kind === "spellLightEmitter" &&
+      emitter.sourceSpellId === lightUnitId &&
+      emitter.sourceCombatantId === casterId &&
+      emitter.attachment.kind === "object",
+  );
+}
+
 function matchingProjectionFacts(
   state: BattleState,
   lastResult: Level1SpatialWitnessSelectedIdentityProjection["lastResult"],
@@ -2730,6 +3089,15 @@ function matchingProjectionFacts(
     return [
       faerieFireCombatantProjectionFact(observerId),
       faerieFireObjectProjectionFact(faerieFireObjectId),
+    ];
+  }
+  if (lastResult === "lightObjectEmitterProjectionReplacementCleanup") {
+    return [
+      lightObjectProjectionFact(
+        lightRecastObjectId,
+        lightDimProjectionDistanceFeet,
+        false,
+      ),
     ];
   }
   return [];
@@ -2749,6 +3117,15 @@ function mismatchedProjectionFacts(
       ),
       faerieFireObjectProjectionFact(
         battleObjectId("level1-faerie-fire-stale-object"),
+      ),
+    ];
+  }
+  if (lastResult === "lightObjectEmitterProjectionReplacementCleanup") {
+    return [
+      lightObjectProjectionFact(
+        lightStaleObjectId,
+        lightDimProjectionDistanceFeet,
+        false,
       ),
     ];
   }
@@ -2909,6 +3286,70 @@ function retainedIdentityCount(
   ).length;
 }
 
+function lightObjectEmitter(
+  state: BattleState,
+  objectId: BattleObjectId,
+): ObjectLightEmitter | undefined {
+  return lightObjectEmitters(state).find(
+    (emitter) => emitter.attachment.objectId === objectId,
+  );
+}
+
+function lightObjectAdmissionMatches(
+  emitter: ObjectLightEmitter | undefined,
+): boolean {
+  return (
+    emitter !== undefined &&
+    emitter.attachment.objectId === lightObjectId &&
+    emitter.emission.kind === "brightAndDim" &&
+    emitter.emission.brightRadiusFeet === lightBrightRadiusFeet &&
+    emitter.emission.dimAdditionalFeet === lightDimAdditionalFeet &&
+    emitter.opaqueCoverInteraction.kind === "blocksEmission" &&
+    lightObjectDurationTicks(emitter) === Number(lightOneHourDurationTicks)
+  );
+}
+
+function lightObjectDurationTicks(
+  emitter: ObjectLightEmitter | undefined,
+): number {
+  return emitter?.expiresAt.kind === "duration" &&
+    emitter.expiresAt.durationTicks === lightOneHourDurationTicks
+    ? Number(emitter.expiresAt.durationTicks)
+    : 0;
+}
+
+function lightObjectTargetRejected(result: BattleResolutionResult): boolean {
+  return (
+    result.tag === "invalid" &&
+    result.reason === "invalidFill"
+  );
+}
+
+function lightObjectSpellEmitter(input: {
+  readonly objectId: BattleObjectId;
+  readonly durationTicks: ElapsedTimeTicks;
+}): ObjectLightEmitter {
+  return {
+    kind: "spellLightEmitter",
+    sourceSpellId: lightUnitId,
+    sourceCombatantId: casterId,
+    attachment: {
+      kind: "object",
+      objectId: input.objectId,
+    },
+    emission: {
+      kind: "brightAndDim",
+      brightRadiusFeet: lightBrightRadiusFeet,
+      dimAdditionalFeet: lightDimAdditionalFeet,
+    },
+    opaqueCoverInteraction: { kind: "blocksEmission" },
+    expiresAt: {
+      kind: "duration",
+      durationTicks: input.durationTicks,
+    },
+  };
+}
+
 function normalizeLevel1SpatialWitnessSelectedIdentityQuintState(
   raw: unknown,
 ): Level1SpatialWitnessSelectedIdentityProjection {
@@ -2925,6 +3366,29 @@ function normalizeLevel1SpatialWitnessSelectedIdentityQuintState(
     retainedLightIdentityCount: numberFromQuintInt(
       state["qRetainedLightIdentityCount"],
       "qRetainedLightIdentityCount",
+    ),
+    lightObjectAdmitted: booleanField(state, "qLightObjectAdmitted"),
+    lightInvalidObjectRejectionCount: numberFromQuintInt(
+      state["qLightInvalidObjectRejectionCount"],
+      "qLightInvalidObjectRejectionCount",
+    ),
+    lightDurationTicks: numberFromQuintInt(
+      state["qLightDurationTicks"],
+      "qLightDurationTicks",
+    ),
+    lightBrightProjectionIllumination: mbtIllumination(
+      state["qLightBrightProjectionIllumination"],
+    ),
+    lightOpaqueCoverIllumination: mbtIllumination(
+      state["qLightOpaqueCoverIllumination"],
+    ),
+    lightRecastReplacedPriorEmitter: booleanField(
+      state,
+      "qLightRecastReplacedPriorEmitter",
+    ),
+    lightDurationCleanupClearedEmitter: booleanField(
+      state,
+      "qLightDurationCleanupClearedEmitter",
     ),
     faerieFireOutlinedCreatureCount: numberFromQuintInt(
       state["qFaerieFireOutlinedCreatureCount"],
@@ -3195,7 +3659,8 @@ function mbtLastResult(
     raw === "fogCloudAreaIdentityObscurementStrongWindCleanup" ||
     raw === "greaseCastGroundHazardSavingThrows" ||
     raw === "greaseMovementAndTurnTriggers" ||
-    raw === "jumpMovementReplacementLandingWitness"
+    raw === "jumpMovementReplacementLandingWitness" ||
+    raw === "lightObjectEmitterProjectionReplacementCleanup"
   ) {
     return raw;
   }

@@ -115,6 +115,7 @@
 {"unitId":"hex","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84D","ownerPath":"packages/battle-runtime/src/index.test.ts"}}
 {"unitId":"starry_wisp","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV59B","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"light","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV70B","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
+{"unitId":"light","evidence":{"tag":"selected-identity-mbt","taskId":"level1-spatial-witness","ownerPath":"packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts"}}
 {"unitId":"sleep","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV38A","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"sleep","evidence":{"tag":"selected-identity-mbt","taskId":"condition-saving-throw-lifecycle","ownerPath":"packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts"}}
 {"unitId":"hideous_laughter","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84F","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}

@@ -9,10 +9,18 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
   val qGreaseDifficultTerrainExpectedMovementCostFeet =
     qGreaseDifficultTerrainTotalDistanceFeet + qGreaseDifficultTerrainDistanceFeet
   val qJumpMovementCostFeet = 10
+  val qLightOneHourDurationTicks = 600
 
   var qLightEmitterCount: int
   var qDimLightEmitterCount: int
   var qRetainedLightIdentityCount: int
+  var qLightObjectAdmitted: bool
+  var qLightInvalidObjectRejectionCount: int
+  var qLightDurationTicks: int
+  var qLightBrightProjectionIllumination: str
+  var qLightOpaqueCoverIllumination: str
+  var qLightRecastReplacedPriorEmitter: bool
+  var qLightDurationCleanupClearedEmitter: bool
   var qFaerieFireOutlinedCreatureCount: int
   var qFaerieFireOutlinedObjectCount: int
   var qFaerieFireCreatureAttackRollMode: str
@@ -79,6 +87,13 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     lightEmitterCount: int,
     dimLightEmitterCount: int,
     retainedLightIdentityCount: int,
+    lightObjectAdmitted: bool,
+    lightInvalidObjectRejectionCount: int,
+    lightDurationTicks: int,
+    lightBrightProjectionIllumination: str,
+    lightOpaqueCoverIllumination: str,
+    lightRecastReplacedPriorEmitter: bool,
+    lightDurationCleanupClearedEmitter: bool,
     faerieFireOutlinedCreatureCount: int,
     faerieFireOutlinedObjectCount: int,
     faerieFireCreatureAttackRollMode: str,
@@ -144,6 +159,13 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     qLightEmitterCount' = lightEmitterCount,
     qDimLightEmitterCount' = dimLightEmitterCount,
     qRetainedLightIdentityCount' = retainedLightIdentityCount,
+    qLightObjectAdmitted' = lightObjectAdmitted,
+    qLightInvalidObjectRejectionCount' = lightInvalidObjectRejectionCount,
+    qLightDurationTicks' = lightDurationTicks,
+    qLightBrightProjectionIllumination' = lightBrightProjectionIllumination,
+    qLightOpaqueCoverIllumination' = lightOpaqueCoverIllumination,
+    qLightRecastReplacedPriorEmitter' = lightRecastReplacedPriorEmitter,
+    qLightDurationCleanupClearedEmitter' = lightDurationCleanupClearedEmitter,
     qFaerieFireOutlinedCreatureCount' = faerieFireOutlinedCreatureCount,
     qFaerieFireOutlinedObjectCount' = faerieFireOutlinedObjectCount,
     qFaerieFireCreatureAttackRollMode' = faerieFireCreatureAttackRollMode,
@@ -210,6 +232,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
   action init =
     recordProjection(
       0, 0, 0,
+      false, 0, 0, "darkness", "darkness", false, false,
       0, 0, "normal", "normal", "normal", false, false,
       false, false, false, false, 0, 0, false, false, false, false,
       false, 0, 0, 0, false, false, false, false, false,
@@ -225,6 +248,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     qLastResult == "init",
     recordProjection(
       2, 2, 2,
+      false, 0, 0, "darkness", "darkness", false, false,
       0, 0, "normal", "normal", "normal", false, false,
       false, false, false, false, 0, 0, false, false, false, false,
       false, 0, 0, 0, false, false, false, false, false,
@@ -241,6 +265,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     qLastResult == "init",
     recordProjection(
       2, 2, 0,
+      false, 0, 0, "darkness", "darkness", false, false,
       1, 1, "advantage", "advantage", "advantage", true, true,
       false, false, false, false, 0, 0, false, false, false, false,
       false, 0, 0, 0, false, false, false, false, false,
@@ -257,6 +282,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     qLastResult == "init",
     recordProjection(
       0, 0, 0,
+      false, 0, 0, "darkness", "darkness", false, false,
       0, 0, "normal", "normal", "normal", false, false,
       true, true, true, true, 2, 60, true, true, true, true,
       false, 0, 0, 0, false, false, false, false, false,
@@ -273,6 +299,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     qLastResult == "init",
     recordProjection(
       0, 0, 0,
+      false, 0, 0, "darkness", "darkness", false, false,
       0, 0, "normal", "normal", "normal", false, false,
       false, false, false, false, 0, 0, false, false, false, false,
       true, 1, qFogCloudLevelOneRadiusFeet, qFogCloudOneHourDurationTicks,
@@ -290,6 +317,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     qLastResult == "init",
     recordProjection(
       0, 0, 0,
+      false, 0, 0, "darkness", "darkness", false, false,
       0, 0, "normal", "normal", "normal", false, false,
       false, false, false, false, 0, 0, false, false, false, false,
       false, 0, 0, 0, false, false, false, false, false,
@@ -306,6 +334,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     qLastResult == "init",
     recordProjection(
       0, 0, 0,
+      false, 0, 0, "darkness", "darkness", false, false,
       0, 0, "normal", "normal", "normal", false, false,
       false, false, false, false, 0, 0, false, false, false, false,
       false, 0, 0, 0, false, false, false, false, false,
@@ -324,6 +353,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     qLastResult == "init",
     recordProjection(
       0, 0, 0,
+      false, 0, 0, "darkness", "darkness", false, false,
       0, 0, "normal", "normal", "normal", false, false,
       false, false, false, false, 0, 0, false, false, false, false,
       false, 0, 0, 0, false, false, false, false, false,
@@ -336,6 +366,23 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     ),
   }
 
+  action doLightObjectEmitterProjectionReplacementCleanup = all {
+    qLastResult == "init",
+    recordProjection(
+      1, 0, 0,
+      true, 3, qLightOneHourDurationTicks, "brightLight", "darkness", true, true,
+      0, 0, "normal", "normal", "normal", false, false,
+      false, false, false, false, 0, 0, false, false, false, false,
+      false, 0, 0, 0, false, false, false, false, false,
+      false, 0, 0, 0, false, false, false,
+      0, 0, false, false, false, false, false, false, false, false, false,
+      false, 0, false, false, false, false, false, false,
+      "dimLight", "lightlyObscured", "unobscured", "darkness",
+      0, false, false, true,
+      "lightObjectEmitterProjectionReplacementCleanup",
+    ),
+  }
+
   action step = any {
     doDancingLightsMovableDimLight,
     doFaerieFireOutlineAdvantageInvisibleDimLight,
@@ -344,5 +391,6 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     doGreaseCastGroundHazardSavingThrows,
     doGreaseMovementAndTurnTriggers,
     doJumpMovementReplacementLandingWitness,
+    doLightObjectEmitterProjectionReplacementCleanup,
   }
 }

@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "L1F-LIGHT",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Light Selected Identity Replay"
     },
     {
@@ -278,12 +278,21 @@ derivation.
 
 ### Task 9 - L1F-LIGHT - Light Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `light`, proving object admission, emitter
 projection, recast replacement, duration cleanup, and opaque-cover witness use.
 
 RAW: `.references/srd-5.2.1/Spells/Descriptions-E-L.md` Light.
+
+Result: `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts`
+and
+`packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt`
+record the selected-identity replay for Light's touched Large-or-smaller object
+admission, someone-else worn/carried rejection, object-attached Bright and Dim
+Light emitter projection, opaque-cover suppression, same-caster recast
+replacement, one-hour duration, and duration cleanup without adding
+runtime-owned geometry, line-of-sight, or colored-light rendering.
 
 ### Task 10 - L1F-PRODUCE-FLAME - Produce Flame Selected Identity Replay
 
