@@ -62,8 +62,8 @@
       "value": 146
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 95,
-      "numerator": 95,
+      "denominator": 99,
+      "numerator": 99,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 95,
-      "numerator": 85,
-      "percent": "89.5%"
+      "denominator": 99,
+      "numerator": 89,
+      "percent": "89.9%"
     },
     "supportedProfileCoverage": {
       "denominator": 119,
-      "numerator": 95,
-      "percent": "79.8%"
+      "numerator": 99,
+      "percent": "83.2%"
     }
   },
   "metricSemantics": [
@@ -2898,7 +2898,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime admission and reducer tests for Faerie Fire point-origin Cube targeting, Dexterity save outcomes, concentration cleanup, and one concentration-owned outline effect that grants sight-gated attack-roll Advantage and denies Invisible benefits for failed-save creatures. Dim Light remains deferred.",
+      "note": "Focused battle-runtime admission and reducer tests for Faerie Fire point-origin Cube targeting, Dexterity save outcomes, concentration cleanup, and one concentration-owned outline effect that grants sight-gated attack-roll Advantage and denies Invisible benefits for failed-save creatures.",
       "profileIds": [
         "spell.invocation-attack-roll-advantage-save"
       ],
@@ -8677,17 +8677,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "table/spatial and presentation owners",
-              "reason": "Color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the runtime boundary."
-            },
-            "followUpTaskId": "SRDINV89D",
-            "mechanic": "color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the runtime boundary"
-          }
-        ],
         "profileIds": [
           "spell.invocation-attack-roll-advantage-save"
         ],
@@ -8704,7 +8693,7 @@
           "caller-supplied emitter projection facts derive Dim Light illumination from Faerie Fire object and creature emitters",
           "derived Dim Light illumination projects Lightly Obscured sight consequences and Darkvision-adjusted sight consequences without duplicating emitter state"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -9095,17 +9084,11 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "SRDINV66 table/spatial owner",
-              "reason": "Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain table/spatial derivations."
-            },
-            "followUpTaskId": "SRDINV66",
-            "mechanic": "automatic area membership, line of sight, map illumination, pathfinding, and wind derivation"
-          }
-        ],
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "table/spatial owner",
+          "reason": "Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain runtime-detached table/spatial derivations outside the Fog Cloud runtime profile."
+        },
         "profileIds": [
           "spell.invocation-fog-cloud-obscurement"
         ],
@@ -9119,7 +9102,7 @@
           "one-hour Concentration duration cleanup",
           "table-supplied strong-wind dispersal cleanup"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -9234,17 +9217,11 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "SRDINV66 table/spatial owner",
-              "reason": "Automatic area membership, pathfinding, and grid geometry derivation remain table/spatial derivations."
-            },
-            "followUpTaskId": "SRDINV66",
-            "mechanic": "automatic area membership, pathfinding, and grid geometry derivation for Grease movement"
-          }
-        ],
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "table/spatial owner",
+          "reason": "Automatic area membership, pathfinding, and grid geometry derivation remain runtime-detached table/spatial derivations outside the Grease runtime profile."
+        },
         "profileIds": [
           "spell.invocation-grease-ground-hazard"
         ],
@@ -9258,7 +9235,7 @@
           "table-triggered enter-area and end-turn-in-area Dexterity save procedures",
           "caller-supplied Grease Difficult Terrain movement facts that validate active hazard identity and spend total Movement distance plus one extra foot per foot moved through Grease"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -12126,26 +12103,11 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "SRDINV55 table/spatial owner",
-              "reason": "Runtime-owned push geometry, collision/pathfinding, and final-position derivation remain table/spatial derivations."
-            },
-            "followUpTaskId": "SRDINV55",
-            "mechanic": "runtime-owned push geometry, collision/pathfinding, and final-position derivation"
-          },
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "SRDINV55 table/spatial owner",
-              "reason": "Broad object inventory simulation and sound propagation simulation remain table/spatial derivations."
-            },
-            "followUpTaskId": "SRDINV55",
-            "mechanic": "broad object inventory simulation and sound propagation simulation"
-          }
-        ],
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "table/spatial owner",
+          "reason": "Push geometry, collision/pathfinding, final-position derivation, broad object inventory simulation, and sound propagation simulation remain runtime-detached table/spatial derivations outside the Thunderwave runtime profile."
+        },
         "profileIds": [
           "spell.invocation-damage-save-or-attack"
         ],
@@ -12159,7 +12121,7 @@
           "unsecured-object push disposition consumed from caller-supplied object facts",
           "audible thunderous boom evidence within 300 feet"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [

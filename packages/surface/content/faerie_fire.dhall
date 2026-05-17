@@ -9,27 +9,19 @@
 --   "Attack rolls against an affected creature or object have
 --    Advantage if the attacker can see it."
 --
--- ZERO-WIDENING VALIDATION REFERENCE. This is the save-gated
--- ongoing-effect pattern (sub-agent's "bane" / "save_gated_ongoing"
--- proposal, see plans/CONTENT_SURFACE_DEFERRED.md A3) authored
--- using existing surface: activation family + save_gate phase +
--- modify_roll_advantage on-fail + concentration duration. The
--- advantage modifier persists for the concentration window exactly
--- because the spell's duration is concentration; no new family is
--- needed.
+-- Runtime boundary:
+--   The promoted battle-runtime profile owns the point-origin Cube Saving
+--   Throw boundary, failed-save creature outline, object outline projections
+--   from caller/table-supplied object ids, sight-gated Attack Roll Advantage,
+--   Invisible-benefit denial, and source-owned Dim Light emitter projections
+--   for outlined creatures and objects.
 --
--- Objects are NOT gated by the save ("Objects...are outlined"
--- unconditionally); only creatures save. Modeling the object-branch
--- separately would require object attachment — DEFERRED to when a
--- second object-only unit surfaces.
---
--- "Dim Light 10 ft" emanation remains a visibility predicate (DM agenda
--- per ARCHITECTURE.md §1). The failed-save creature outline is promoted as
--- a single durable effect whose executable consequences are sight-gated
--- attack-roll Advantage and Invisible-benefit denial.
---
--- The caster's choice of color (blue/green/violet) is pure narrative
--- flavor with no mechanical consequence; omitted.
+-- Table/presentation witnesses:
+--   Cube creature membership, object ids, object sight, and emitter-distance
+--   facts are supplied by the caller/table at the relevant holes. The runtime
+--   does not derive map geometry, pathfinding, automatic line of sight, or
+--   color rendering. The caster's blue/green/violet choice has no mechanical
+--   consequence and is intentionally omitted from structured mechanics.
 
 let faerieFire =
       { kind = "spell"

@@ -5316,14 +5316,8 @@
         "state": "installed",
         "unitId": "faerie_fire"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "table/spatial and presentation owners",
-        "reason": "Color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the runtime boundary."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -5772,13 +5766,13 @@
         "state": "installed",
         "unitId": "thunderwave"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV55 table/spatial owner",
-        "reason": "Runtime-owned push geometry, collision/pathfinding, and final-position derivation remain table/spatial derivations.; Broad object inventory simulation and sound propagation simulation remain table/spatial derivations."
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial owner",
+        "reason": "Push geometry, collision/pathfinding, final-position derivation, broad object inventory simulation, and sound propagation simulation remain runtime-detached table/spatial derivations outside the Thunderwave runtime profile."
       },
       "ownerEvidence": [
         {
@@ -8700,14 +8694,8 @@
         "state": "installed",
         "unitId": "faerie_fire"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "table/spatial and presentation owners",
-        "reason": "Color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the runtime boundary."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -8749,13 +8737,13 @@
         "state": "installed",
         "unitId": "fog_cloud"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV66 table/spatial owner",
-        "reason": "Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain table/spatial derivations."
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial owner",
+        "reason": "Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain runtime-detached table/spatial derivations outside the Fog Cloud runtime profile."
       },
       "ownerEvidence": [
         {
@@ -9115,13 +9103,13 @@
         "state": "installed",
         "unitId": "thunderwave"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV55 table/spatial owner",
-        "reason": "Runtime-owned push geometry, collision/pathfinding, and final-position derivation remain table/spatial derivations.; Broad object inventory simulation and sound propagation simulation remain table/spatial derivations."
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial owner",
+        "reason": "Push geometry, collision/pathfinding, final-position derivation, broad object inventory simulation, and sound propagation simulation remain runtime-detached table/spatial derivations outside the Thunderwave runtime profile."
       },
       "ownerEvidence": [
         {
@@ -12481,13 +12469,13 @@
         "state": "installed",
         "unitId": "fog_cloud"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV66 table/spatial owner",
-        "reason": "Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain table/spatial derivations."
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial owner",
+        "reason": "Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain runtime-detached table/spatial derivations outside the Fog Cloud runtime profile."
       },
       "ownerEvidence": [
         {
@@ -15060,13 +15048,13 @@
         "state": "installed",
         "unitId": "fog_cloud"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV66 table/spatial owner",
-        "reason": "Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain table/spatial derivations."
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial owner",
+        "reason": "Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain runtime-detached table/spatial derivations outside the Fog Cloud runtime profile."
       },
       "ownerEvidence": [
         {
@@ -15109,13 +15097,13 @@
         "state": "installed",
         "unitId": "grease"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV66 table/spatial owner",
-        "reason": "Automatic area membership, pathfinding, and grid geometry derivation remain table/spatial derivations."
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial owner",
+        "reason": "Automatic area membership, pathfinding, and grid geometry derivation remain runtime-detached table/spatial derivations outside the Grease runtime profile."
       },
       "ownerEvidence": [
         {
@@ -15503,13 +15491,13 @@
         "state": "installed",
         "unitId": "thunderwave"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV55 table/spatial owner",
-        "reason": "Runtime-owned push geometry, collision/pathfinding, and final-position derivation remain table/spatial derivations.; Broad object inventory simulation and sound propagation simulation remain table/spatial derivations."
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial owner",
+        "reason": "Push geometry, collision/pathfinding, final-position derivation, broad object inventory simulation, and sound propagation simulation remain runtime-detached table/spatial derivations outside the Thunderwave runtime profile."
       },
       "ownerEvidence": [
         {
@@ -18618,13 +18606,13 @@
         "state": "installed",
         "unitId": "fog_cloud"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV66 table/spatial owner",
-        "reason": "Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain table/spatial derivations."
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial owner",
+        "reason": "Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain runtime-detached table/spatial derivations outside the Fog Cloud runtime profile."
       },
       "ownerEvidence": [
         {
@@ -18667,13 +18655,13 @@
         "state": "installed",
         "unitId": "grease"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV66 table/spatial owner",
-        "reason": "Automatic area membership, pathfinding, and grid geometry derivation remain table/spatial derivations."
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial owner",
+        "reason": "Automatic area membership, pathfinding, and grid geometry derivation remain runtime-detached table/spatial derivations outside the Grease runtime profile."
       },
       "ownerEvidence": [
         {
@@ -19257,13 +19245,13 @@
         "state": "installed",
         "unitId": "thunderwave"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV55 table/spatial owner",
-        "reason": "Runtime-owned push geometry, collision/pathfinding, and final-position derivation remain table/spatial derivations.; Broad object inventory simulation and sound propagation simulation remain table/spatial derivations."
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial owner",
+        "reason": "Push geometry, collision/pathfinding, final-position derivation, broad object inventory simulation, and sound propagation simulation remain runtime-detached table/spatial derivations outside the Thunderwave runtime profile."
       },
       "ownerEvidence": [
         {
