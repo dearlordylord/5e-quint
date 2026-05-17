@@ -1,4 +1,4 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt level1-spatial-witness dancing_lights faerie_fire feather_fall fog_cloud grease jump light
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt level1-spatial-witness dancing_lights faerie_fire feather_fall fog_cloud grease jump light produce_flame
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness dancing_lights doDancingLightsMovableDimLight
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness faerie_fire doFaerieFireOutlineAdvantageInvisibleDimLight
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness feather_fall doFeatherFallReactionMitigationLanding
@@ -6,6 +6,7 @@
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness grease doGreaseCastGroundHazardSavingThrows doGreaseMovementAndTurnTriggers
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness jump doJumpMovementReplacementLandingWitness
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness light doLightObjectEmitterProjectionReplacementCleanup
+// UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness produce_flame doProduceFlameHeldLightProjectionHurlCleanup
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -35,6 +36,7 @@ import {
   type AttackRollMode,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
+  DieRollResult,
   Hp,
   type MovementFeet,
   abilityModifier,
@@ -80,6 +82,7 @@ import {
   type BattleObscurementZone,
   type BattleObjectId,
   type BattleResolutionResult,
+  type BattleRolledDiceFill,
   type BattleSightObscurement,
   type BattleState,
   type BattleSubject,
@@ -97,6 +100,7 @@ const level1SpatialWitnessSelectedIdentityDriverSchema = {
   doGreaseMovementAndTurnTriggers: {},
   doJumpMovementReplacementLandingWitness: {},
   doLightObjectEmitterProjectionReplacementCleanup: {},
+  doProduceFlameHeldLightProjectionHurlCleanup: {},
   step: {},
 } as const;
 type Level1SpatialWitnessSelectedIdentityDriverAction = Exclude<
@@ -167,6 +171,13 @@ type Level1SpatialWitnessSelectedIdentityProjection = {
   readonly jumpMissingLandingFactRejected: boolean;
   readonly jumpFailedLandingProne: boolean;
   readonly jumpSlotExpended: boolean;
+  readonly produceFlameHeldLightInstalled: boolean;
+  readonly produceFlameDurationTicks: number;
+  readonly produceFlameBrightProjectionIllumination: BattleIllumination;
+  readonly produceFlameHurlOffered: boolean;
+  readonly produceFlameHurlTargetDamaged: boolean;
+  readonly produceFlameHurlCleanupClearedEmitter: boolean;
+  readonly produceFlameDurationCleanupClearedEmitter: boolean;
   readonly projectedIllumination: BattleIllumination;
   readonly ordinarySightObscurement: BattleSightObscurement;
   readonly darkvisionSightObscurement: BattleSightObscurement;
@@ -184,7 +195,8 @@ type Level1SpatialWitnessSelectedIdentityProjection = {
     | "greaseCastGroundHazardSavingThrows"
     | "greaseMovementAndTurnTriggers"
     | "jumpMovementReplacementLandingWitness"
-    | "lightObjectEmitterProjectionReplacementCleanup";
+    | "lightObjectEmitterProjectionReplacementCleanup"
+    | "produceFlameHeldLightProjectionHurlCleanup";
 };
 type ProjectedAttackRollMode = AttackRollMode;
 const dancingLightsUnitId = "dancing_lights";
@@ -194,6 +206,7 @@ const fogCloudUnitId = "fog_cloud";
 const greaseUnitId = "grease";
 const jumpUnitId = "jump";
 const lightUnitId = "light";
+const produceFlameUnitId = "produce_flame";
 const starryWispUnitId = "starry_wisp";
 const level1SpatialWitnessSelectedUnitIds = [
   dancingLightsUnitId,
@@ -203,6 +216,7 @@ const level1SpatialWitnessSelectedUnitIds = [
   greaseUnitId,
   jumpUnitId,
   lightUnitId,
+  produceFlameUnitId,
 ] as const;
 type Level1SpatialWitnessSelectedUnitId =
   (typeof level1SpatialWitnessSelectedUnitIds)[number];
@@ -289,6 +303,13 @@ type DancingLightAttachment = Extract<
 type DancingLightEmitter = SpellLightEmitter & {
   readonly attachment: DancingLightAttachment;
 };
+type CombatantLightAttachment = Extract<
+  SpellLightEmitter["attachment"],
+  { readonly kind: "combatant" }
+>;
+type CombatantLightEmitter = SpellLightEmitter & {
+  readonly attachment: CombatantLightAttachment;
+};
 type FeatherFallProjection = {
   readonly triggerOffered: boolean;
   readonly unwitnessedTriggerRejected: boolean;
@@ -354,6 +375,15 @@ type JumpProjection = {
   readonly failedLandingProne: boolean;
   readonly slotExpended: boolean;
 };
+type ProduceFlameProjection = {
+  readonly heldLightInstalled: boolean;
+  readonly durationTicks: number;
+  readonly brightProjectionIllumination: BattleIllumination;
+  readonly hurlOffered: boolean;
+  readonly hurlTargetDamaged: boolean;
+  readonly hurlCleanupClearedEmitter: boolean;
+  readonly durationCleanupClearedEmitter: boolean;
+};
 type LightObjectTargetFact = Extract<
   BattleTargetSpatialFact,
   { readonly kind: "spellObjectLightTarget" }
@@ -406,6 +436,8 @@ const greaseOneMinuteDurationTicks = requireElapsedMinutes(1);
 const jumpOneMinuteDurationTicks = requireElapsedMinutes(1);
 const lightOneHourDurationTicks = requireElapsedHours(1);
 const lightExpiringDurationTicks = elapsedTimeTicks(1);
+const produceFlameTenMinuteDurationTicks = requireElapsedMinutes(10);
+const produceFlameExpiringDurationTicks = elapsedTimeTicks(1);
 const greaseTotalMovementDistanceFeet = movementFeet(10);
 const greaseDifficultTerrainDistanceFeet = movementFeet(5);
 const greaseDifficultTerrainMovementCostFeet = movementFeet(
@@ -418,6 +450,11 @@ const lightBrightRadiusFeet = movementFeet(20);
 const lightDimAdditionalFeet = movementFeet(20);
 const lightDimProjectionDistanceFeet = movementFeet(
   Number(lightBrightRadiusFeet) + Number(lightDimAdditionalFeet),
+);
+const produceFlameBrightRadiusFeet = movementFeet(20);
+const produceFlameDimAdditionalFeet = movementFeet(20);
+const produceFlameDimProjectionDistanceFeet = movementFeet(
+  Number(produceFlameBrightRadiusFeet) + Number(produceFlameDimAdditionalFeet),
 );
 const lightObjectId = battleObjectId("level1-light-object");
 const lightRecastObjectId = battleObjectId("level1-light-recast-object");
@@ -648,6 +685,33 @@ const selectedUnitIdentityReplays = [
       },
     ],
   },
+  {
+    taskId: "level1-spatial-witness",
+    unitId: "produce_flame",
+    actions: ["doProduceFlameHeldLightProjectionHurlCleanup"],
+    sequences: [
+      {
+        name: "held-flame-emitter-projection-hurl-and-cleanup",
+        actions: ["doProduceFlameHeldLightProjectionHurlCleanup"],
+        expected: expectedProjection({
+          lightEmitterCount: 1,
+          produceFlameHeldLightInstalled: true,
+          produceFlameDurationTicks: Number(produceFlameTenMinuteDurationTicks),
+          produceFlameBrightProjectionIllumination: "brightLight",
+          produceFlameHurlOffered: true,
+          produceFlameHurlTargetDamaged: true,
+          produceFlameHurlCleanupClearedEmitter: true,
+          produceFlameDurationCleanupClearedEmitter: true,
+          projectedIllumination: "dimLight",
+          ordinarySightObscurement: "lightlyObscured",
+          darkvisionSightObscurement: "unobscured",
+          magicActionAvailable: true,
+          bonusActionAvailable: false,
+          lastResult: "produceFlameHeldLightProjectionHurlCleanup",
+        }),
+      },
+    ],
+  },
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
 describe("Level 1 spatial witness selected identity MBT", () => {
@@ -715,6 +779,7 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
     let greaseProjection = emptyGreaseProjection();
     let jumpProjection = emptyJumpProjection();
     let lightProjection = emptyLightProjection();
+    let produceFlameProjection = emptyProduceFlameProjection();
     let lastResult: Level1SpatialWitnessSelectedIdentityProjection["lastResult"] =
       "init";
 
@@ -729,6 +794,7 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
       greaseProjection = emptyGreaseProjection();
       jumpProjection = emptyJumpProjection();
       lightProjection = emptyLightProjection();
+      produceFlameProjection = emptyProduceFlameProjection();
       lastResult = "init";
     }
 
@@ -949,14 +1015,10 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
           state,
           subject: act.subject,
           fills: [
-            greaseSavingThrowOutcomeFill(
-              savingThrow,
-              greaseAffectedTargetIds,
-              [
-                { targetId: greaseFailedTargetId, succeeded: false },
-                { targetId: casterId, succeeded: true },
-              ],
-            ),
+            greaseSavingThrowOutcomeFill(savingThrow, greaseAffectedTargetIds, [
+              { targetId: greaseFailedTargetId, succeeded: false },
+              { targetId: casterId, succeeded: true },
+            ]),
           ],
         });
         const mismatchedAffectedTargetRejected =
@@ -976,9 +1038,7 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
           ],
         });
         if (cast.tag !== "resolved") {
-          throw new Error(
-            `Expected Grease cast to resolve, got ${cast.tag}.`,
-          );
+          throw new Error(`Expected Grease cast to resolve, got ${cast.tag}.`);
         }
 
         greaseProjection = projectGreaseReplay(cast.state, {
@@ -998,14 +1058,10 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
           state,
           subject: act.subject,
           fills: [
-            greaseSavingThrowOutcomeFill(
-              savingThrow,
-              greaseAffectedTargetIds,
-              [
-                { targetId: greaseFailedTargetId, succeeded: false },
-                { targetId: casterId, succeeded: true },
-              ],
-            ),
+            greaseSavingThrowOutcomeFill(savingThrow, greaseAffectedTargetIds, [
+              { targetId: greaseFailedTargetId, succeeded: false },
+              { targetId: casterId, succeeded: true },
+            ]),
           ],
         });
         const mismatchedAffectedTargetRejected =
@@ -1025,9 +1081,7 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
           ],
         });
         if (cast.tag !== "resolved") {
-          throw new Error(
-            `Expected Grease cast to resolve, got ${cast.tag}.`,
-          );
+          throw new Error(`Expected Grease cast to resolve, got ${cast.tag}.`);
         }
 
         const movementAct = greaseMovementAct(cast.state);
@@ -1181,11 +1235,7 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
         }
 
         const targetEffectInstalled = jumpTargetEffectInstalled(cast.state);
-        const targetTurn = resolveEndTurn(
-          cast.state,
-          casterId,
-          "Jump caster",
-        );
+        const targetTurn = resolveEndTurn(cast.state, casterId, "Jump caster");
         const jumpAct = jumpMovementReplacementAct(targetTurn, jumpTargetId);
         const movement = requireHole(jumpAct.initialHoles, "movement");
         const missingLandingFact = resolveBattleSubject({
@@ -1314,7 +1364,9 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
           ],
         });
         if (admitted.tag !== "resolved") {
-          throw new Error(`Expected Light cast to resolve, got ${admitted.tag}.`);
+          throw new Error(
+            `Expected Light cast to resolve, got ${admitted.tag}.`,
+          );
         }
 
         const initialEmitter = lightObjectEmitter(
@@ -1395,13 +1447,110 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
               undefined &&
             lightObjectEmitter(recast.state, lightObjectId) === undefined,
           durationCleanupClearedEmitter:
-            lightObjectEmitter(
-              cleanupSecondTurn,
-              lightExpiringObjectId,
-            ) === undefined,
+            lightObjectEmitter(cleanupSecondTurn, lightExpiringObjectId) ===
+            undefined,
         };
         state = recast.state;
         lastResult = "lightObjectEmitterProjectionReplacementCleanup";
+      },
+      doProduceFlameHeldLightProjectionHurlCleanup: () => {
+        state = produceFlameBattle();
+        retainedLightIdentityCount = 0;
+        const act = produceFlameHeldLightAct(state);
+        const lit = resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [],
+        });
+        if (lit.tag !== "resolved") {
+          throw new Error(
+            `Expected Produce Flame held light to resolve, got ${lit.tag}.`,
+          );
+        }
+
+        const hurlAct = produceFlameHurlAct(lit.state);
+        const hurlOffered = hurlAct.initialHoles.some(
+          (hole) => hole.kind === "targetChoice",
+        );
+        const target = requireHole(hurlAct.initialHoles, "targetChoice");
+        const targetFill = spellTargetFill(
+          target,
+          produceFlameUnitId,
+          casterId,
+          observerId,
+        );
+        const attack = requireResultHole(
+          resolveBattleSubject({
+            state: lit.state,
+            subject: hurlAct.subject,
+            fills: [targetFill],
+          }),
+          "attackRoll",
+        );
+        const damage = requireResultHole(
+          resolveBattleSubject({
+            state: lit.state,
+            subject: hurlAct.subject,
+            fills: [
+              targetFill,
+              attackRollFill(attack, { total: 18, naturalD20: 12 }),
+            ],
+          }),
+          "rolledDice",
+        );
+        const hurled = resolveBattleSubject({
+          state: lit.state,
+          subject: hurlAct.subject,
+          fills: [
+            targetFill,
+            attackRollFill(attack, { total: 18, naturalD20: 12 }),
+            damageRollFillWithGroups(damage, [[5]]),
+          ],
+        });
+        if (hurled.tag !== "resolved") {
+          throw new Error(
+            `Expected Produce Flame hurl to resolve, got ${hurled.tag}.`,
+          );
+        }
+
+        const cleanupFirstTurn = resolveEndTurn(
+          produceFlameOneRoundRemainingBattle(),
+          casterId,
+          "Produce Flame expiring caster",
+        );
+        const cleanupSecondTurn = resolveEndTurn(
+          cleanupFirstTurn,
+          observerId,
+          "Produce Flame expiring observer",
+        );
+        produceFlameProjection = {
+          heldLightInstalled: produceFlameHeldLightMatches(
+            produceFlameHeldLightEffect(lit.state),
+          ),
+          durationTicks: produceFlameHeldLightDurationTicks(
+            produceFlameHeldLightEffect(lit.state),
+          ),
+          brightProjectionIllumination: battleIlluminationFromLightEmitters(
+            lit.snapshot.lightEmitters,
+            [
+              produceFlameProjectionFact(
+                casterId,
+                produceFlameBrightRadiusFeet,
+              ),
+            ],
+          ),
+          hurlOffered,
+          hurlTargetDamaged:
+            produceFlameCombatant(hurled.state, observerId).hp === Hp(7),
+          hurlCleanupClearedEmitter:
+            produceFlameHeldLightEffect(hurled.state) === undefined &&
+            produceFlameHeldLightEmitters(hurled.state).length === 0,
+          durationCleanupClearedEmitter:
+            produceFlameHeldLightEffect(cleanupSecondTurn) === undefined &&
+            produceFlameHeldLightEmitters(cleanupSecondTurn).length === 0,
+        };
+        state = lit.state;
+        lastResult = "produceFlameHeldLightProjectionHurlCleanup";
       },
       step: () => {},
       getState: () =>
@@ -1416,6 +1565,7 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
           greaseProjection,
           jumpProjection,
           lightProjection,
+          produceFlameProjection,
           lastResult,
         ),
     };
@@ -1504,6 +1654,13 @@ function expectedProjection(
     jumpMissingLandingFactRejected: false,
     jumpFailedLandingProne: false,
     jumpSlotExpended: false,
+    produceFlameHeldLightInstalled: false,
+    produceFlameDurationTicks: 0,
+    produceFlameBrightProjectionIllumination: "darkness",
+    produceFlameHurlOffered: false,
+    produceFlameHurlTargetDamaged: false,
+    produceFlameHurlCleanupClearedEmitter: false,
+    produceFlameDurationCleanupClearedEmitter: false,
     projectedIllumination: "darkness",
     ordinarySightObscurement: "heavilyObscured",
     darkvisionSightObscurement: "lightlyObscured",
@@ -1590,6 +1747,18 @@ function emptyLightProjection(): LightProjection {
     brightProjectionIllumination: "darkness",
     opaqueCoverIllumination: "darkness",
     recastReplacedPriorEmitter: false,
+    durationCleanupClearedEmitter: false,
+  };
+}
+
+function emptyProduceFlameProjection(): ProduceFlameProjection {
+  return {
+    heldLightInstalled: false,
+    durationTicks: 0,
+    brightProjectionIllumination: "darkness",
+    hurlOffered: false,
+    hurlTargetDamaged: false,
+    hurlCleanupClearedEmitter: false,
     durationCleanupClearedEmitter: false,
   };
 }
@@ -1878,6 +2047,58 @@ function lightOneRoundRemainingBattle(): BattleState {
   };
 }
 
+function produceFlameBattle(): BattleState {
+  const produceFlame = spellRecord(produceFlameUnitId);
+  const result = startBattle({
+    battleId: battleId("level1-spatial-witness-selected-identity"),
+    combatants: [
+      spatialWitnessCreature({
+        combatantId: casterId,
+        displayName: "Produce Flame caster",
+        initiative: 20,
+        side: partySide,
+        spellcasting: {
+          sourceClassName: "druid",
+          spellcastingAbilityModifier: abilityModifier(3),
+          proficiencyBonus: proficiencyBonus(2),
+          canCastSpells: true,
+          cantrips: [produceFlame],
+          preparedSpells: [],
+          featurePreparedSpells: [],
+          invocationSpellAccesses: [],
+          spellbookRitualSpellAccesses: [],
+          spellSlots: [],
+        },
+      }),
+      spatialWitnessCreature({
+        combatantId: observerId,
+        displayName: "Produce Flame target",
+        initiative: 10,
+        side: oppositionSide,
+      }),
+    ],
+  });
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
+function produceFlameOneRoundRemainingBattle(): BattleState {
+  const battle = produceFlameBattle();
+  const caster = produceFlameCombatant(battle, casterId);
+  return {
+    ...battle,
+    combatants: new Map(battle.combatants).set(casterId, {
+      ...caster,
+      activeEffects: [
+        ...caster.activeEffects,
+        produceFlameHeldLightEffectValue(produceFlameExpiringDurationTicks),
+      ],
+    }),
+  };
+}
+
 function spatialWitnessCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
@@ -2060,6 +2281,32 @@ function lightAct(state: BattleState): ActionSpellAct {
   );
   if (act === undefined) {
     throw new Error("Expected Light object-emitter action.");
+  }
+  return act;
+}
+
+function produceFlameHeldLightAct(state: BattleState): BonusActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is BonusActionSpellAct =>
+      candidate.subject.tag === "bonusActionSpell" &&
+      candidate.subject.invocation.spellId === produceFlameUnitId &&
+      candidate.subject.invocation.procedure === "heldLight",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Produce Flame held-light Bonus Action spell.");
+  }
+  return act;
+}
+
+function produceFlameHurlAct(state: BattleState): ActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.spellId === produceFlameUnitId &&
+      candidate.subject.invocation.procedure === "heldLightHurl",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Produce Flame hurl Magic Action spell.");
   }
   return act;
 }
@@ -2435,6 +2682,80 @@ function reactionDecisionFill(
   return { kind: "reactionDecision", holeId: hole.holeId, value };
 }
 
+function spellTargetFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  spellId: Level1SpatialWitnessCatalogSpellId,
+  sourceCombatantId: CombatantId,
+  targetId: CombatantId,
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  return {
+    kind: "targetChoice",
+    holeId: hole.holeId,
+    value: targetId,
+    spatialFacts: [
+      {
+        kind: "spellTarget",
+        casterId: sourceCombatantId,
+        targetId,
+        spellId,
+      },
+    ],
+  };
+}
+
+function attackRollFill(
+  hole: Extract<BattleHole, { readonly kind: "attackRoll" }>,
+  value: { readonly total: number; readonly naturalD20: number },
+): Extract<BattleFill, { readonly kind: "attackRoll" }> {
+  return {
+    kind: "attackRoll",
+    holeId: hole.holeId,
+    value: {
+      total: value.total,
+      naturalD20: DieRollResult(value.naturalD20),
+    },
+  };
+}
+
+function damageRollFillWithGroups(
+  hole: Pick<BattleHole, "kind" | "holeId">,
+  groups: readonly (readonly number[])[],
+): BattleRolledDiceFill {
+  if (hole.kind !== "rolledDice") {
+    throw new Error("Expected rolledDice hole.");
+  }
+  return {
+    kind: "rolledDice",
+    holeId: hole.holeId,
+    value: rolledDiceGroups(groups),
+  };
+}
+
+function rolledDiceGroups(
+  groups: readonly (readonly number[])[],
+): BattleRolledDiceFill["value"] {
+  const [firstGroup, ...restGroups] = groups;
+  if (firstGroup === undefined) {
+    throw new Error("Expected at least one rolled dice group.");
+  }
+  return [
+    rolledDiceGroup(firstGroup),
+    ...restGroups.map((group) => rolledDiceGroup(group)),
+  ];
+}
+
+function rolledDiceGroup(
+  group: readonly number[],
+): BattleRolledDiceFill["value"][number] {
+  const [firstRoll, ...restRolls] = group;
+  if (firstRoll === undefined) {
+    throw new Error("Expected at least one die result.");
+  }
+  return {
+    results: [DieRollResult(firstRoll), ...restRolls.map(DieRollResult)],
+  };
+}
+
 function requireHole<K extends BattleHole["kind"]>(
   holes: readonly BattleHole[],
   kind: K,
@@ -2726,8 +3047,7 @@ function projectGreaseReplay(
       activeState,
       greaseSuccessfulTargetId,
     ),
-    mismatchedAffectedTargetRejected:
-      input.mismatchedAffectedTargetRejected,
+    mismatchedAffectedTargetRejected: input.mismatchedAffectedTargetRejected,
     difficultTerrainMovementCostFeet: 0,
     movementSpentFeet: 0,
     mismatchedMovementAreaRejected: false,
@@ -2780,8 +3100,7 @@ function projectGreaseMovementAndTurnTriggerReplay(input: {
     ),
     endTurnAdvancedToCaster:
       snapshotBattle(input.endTurnState).currentActorId === casterId,
-    endTurnMismatchedTargetRejected:
-      input.endTurnMismatchedTargetRejected,
+    endTurnMismatchedTargetRejected: input.endTurnMismatchedTargetRejected,
   };
 }
 
@@ -2875,6 +3194,7 @@ function projectLevel1SpatialWitnessSelectedIdentityState(
   greaseProjection: GreaseProjection,
   jumpProjection: JumpProjection,
   lightProjection: LightProjection,
+  produceFlameProjection: ProduceFlameProjection,
   lastResult: Level1SpatialWitnessSelectedIdentityProjection["lastResult"],
 ): Level1SpatialWitnessSelectedIdentityProjection {
   const snapshot = snapshotBattle(state);
@@ -2902,8 +3222,7 @@ function projectLevel1SpatialWitnessSelectedIdentityState(
     lightBrightProjectionIllumination:
       lightProjection.brightProjectionIllumination,
     lightOpaqueCoverIllumination: lightProjection.opaqueCoverIllumination,
-    lightRecastReplacedPriorEmitter:
-      lightProjection.recastReplacedPriorEmitter,
+    lightRecastReplacedPriorEmitter: lightProjection.recastReplacedPriorEmitter,
     lightDurationCleanupClearedEmitter:
       lightProjection.durationCleanupClearedEmitter,
     faerieFireOutlinedCreatureCount: faerieFireOutlinedCreatureCount(state),
@@ -2962,10 +3281,8 @@ function projectLevel1SpatialWitnessSelectedIdentityState(
     greaseEntryMismatchedTargetRejected:
       greaseProjection.entryMismatchedTargetRejected,
     greaseEndTurnSaveOffered: greaseProjection.endTurnSaveOffered,
-    greaseEndTurnFailedTargetProne:
-      greaseProjection.endTurnFailedTargetProne,
-    greaseEndTurnAdvancedToCaster:
-      greaseProjection.endTurnAdvancedToCaster,
+    greaseEndTurnFailedTargetProne: greaseProjection.endTurnFailedTargetProne,
+    greaseEndTurnAdvancedToCaster: greaseProjection.endTurnAdvancedToCaster,
     greaseEndTurnMismatchedTargetRejected:
       greaseProjection.endTurnMismatchedTargetRejected,
     greaseSlotExpended: greaseProjection.slotExpended,
@@ -2977,6 +3294,16 @@ function projectLevel1SpatialWitnessSelectedIdentityState(
     jumpMissingLandingFactRejected: jumpProjection.missingLandingFactRejected,
     jumpFailedLandingProne: jumpProjection.failedLandingProne,
     jumpSlotExpended: jumpProjection.slotExpended,
+    produceFlameHeldLightInstalled: produceFlameProjection.heldLightInstalled,
+    produceFlameDurationTicks: produceFlameProjection.durationTicks,
+    produceFlameBrightProjectionIllumination:
+      produceFlameProjection.brightProjectionIllumination,
+    produceFlameHurlOffered: produceFlameProjection.hurlOffered,
+    produceFlameHurlTargetDamaged: produceFlameProjection.hurlTargetDamaged,
+    produceFlameHurlCleanupClearedEmitter:
+      produceFlameProjection.hurlCleanupClearedEmitter,
+    produceFlameDurationCleanupClearedEmitter:
+      produceFlameProjection.durationCleanupClearedEmitter,
     projectedIllumination,
     ordinarySightObscurement: battleSightObscurement(projectedIllumination),
     darkvisionSightObscurement: battleSightObscurement(projectedIllumination, {
@@ -3006,6 +3333,9 @@ function selectedLightEmitters(
   if (lastResult === "lightObjectEmitterProjectionReplacementCleanup") {
     return lightObjectEmitters(state);
   }
+  if (lastResult === "produceFlameHeldLightProjectionHurlCleanup") {
+    return produceFlameHeldLightEmitters(state);
+  }
   return [];
 }
 
@@ -3014,6 +3344,9 @@ function dimLightRadiusFeet(
 ) {
   if (lastResult === "lightObjectEmitterProjectionReplacementCleanup") {
     return lightDimProjectionDistanceFeet;
+  }
+  if (lastResult === "produceFlameHeldLightProjectionHurlCleanup") {
+    return produceFlameDimProjectionDistanceFeet;
   }
   return lastResult === "faerieFireOutlineAdvantageInvisibleDimLight"
     ? faerieFireDimLightRadiusFeet
@@ -3033,7 +3366,8 @@ function casterConcentratingOnSelectedUnit(
     lastResult === "greaseCastGroundHazardSavingThrows" ||
     lastResult === "greaseMovementAndTurnTriggers" ||
     lastResult === "jumpMovementReplacementLandingWitness" ||
-    lastResult === "lightObjectEmitterProjectionReplacementCleanup"
+    lastResult === "lightObjectEmitterProjectionReplacementCleanup" ||
+    lastResult === "produceFlameHeldLightProjectionHurlCleanup"
   ) {
     return false;
   }
@@ -3068,13 +3402,28 @@ function faerieFireEmitters(state: BattleState): readonly SpellLightEmitter[] {
   );
 }
 
-function lightObjectEmitters(state: BattleState): readonly ObjectLightEmitter[] {
+function lightObjectEmitters(
+  state: BattleState,
+): readonly ObjectLightEmitter[] {
   return snapshotBattle(state).lightEmitters.filter(
     (emitter): emitter is ObjectLightEmitter =>
       emitter.kind === "spellLightEmitter" &&
       emitter.sourceSpellId === lightUnitId &&
       emitter.sourceCombatantId === casterId &&
       emitter.attachment.kind === "object",
+  );
+}
+
+function produceFlameHeldLightEmitters(
+  state: BattleState,
+): readonly CombatantLightEmitter[] {
+  return snapshotBattle(state).lightEmitters.filter(
+    (emitter): emitter is CombatantLightEmitter =>
+      emitter.kind === "spellLightEmitter" &&
+      emitter.sourceSpellId === produceFlameUnitId &&
+      emitter.sourceCombatantId === casterId &&
+      emitter.attachment.kind === "combatant" &&
+      emitter.attachment.combatantId === casterId,
   );
 }
 
@@ -3097,6 +3446,14 @@ function matchingProjectionFacts(
         lightRecastObjectId,
         lightDimProjectionDistanceFeet,
         false,
+      ),
+    ];
+  }
+  if (lastResult === "produceFlameHeldLightProjectionHurlCleanup") {
+    return [
+      produceFlameProjectionFact(
+        casterId,
+        produceFlameDimProjectionDistanceFeet,
       ),
     ];
   }
@@ -3126,6 +3483,14 @@ function mismatchedProjectionFacts(
         lightStaleObjectId,
         lightDimProjectionDistanceFeet,
         false,
+      ),
+    ];
+  }
+  if (lastResult === "produceFlameHeldLightProjectionHurlCleanup") {
+    return [
+      produceFlameProjectionFact(
+        combatantId("level1-produce-flame-stale-combatant"),
+        produceFlameDimProjectionDistanceFeet,
       ),
     ];
   }
@@ -3167,6 +3532,17 @@ function faerieFireCombatantProjectionFact(
     kind: "combatant",
     combatantId,
     distanceFeet: faerieFireDimLightRadiusFeet,
+  };
+}
+
+function produceFlameProjectionFact(
+  combatantId: CombatantId,
+  distanceFeet: MovementFeet,
+): BattleLightEmitterProjectionFact {
+  return {
+    kind: "combatant",
+    combatantId,
+    distanceFeet,
   };
 }
 
@@ -3319,10 +3695,7 @@ function lightObjectDurationTicks(
 }
 
 function lightObjectTargetRejected(result: BattleResolutionResult): boolean {
-  return (
-    result.tag === "invalid" &&
-    result.reason === "invalidFill"
-  );
+  return result.tag === "invalid" && result.reason === "invalidFill";
 }
 
 function lightObjectSpellEmitter(input: {
@@ -3348,6 +3721,68 @@ function lightObjectSpellEmitter(input: {
       durationTicks: input.durationTicks,
     },
   };
+}
+
+function produceFlameHeldLightEffect(
+  state: BattleState,
+): Extract<BattleActiveEffect, { readonly kind: "heldLight" }> | undefined {
+  return produceFlameCombatant(state, casterId).activeEffects.find(
+    (
+      effect,
+    ): effect is Extract<BattleActiveEffect, { readonly kind: "heldLight" }> =>
+      effect.kind === "heldLight" &&
+      effect.sourceSpellId === produceFlameUnitId &&
+      effect.sourceCombatantId === casterId,
+  );
+}
+
+function produceFlameHeldLightMatches(
+  effect:
+    | Extract<BattleActiveEffect, { readonly kind: "heldLight" }>
+    | undefined,
+): boolean {
+  return (
+    effect !== undefined &&
+    effect.brightRadiusFeet === produceFlameBrightRadiusFeet &&
+    effect.dimAdditionalFeet === produceFlameDimAdditionalFeet &&
+    produceFlameHeldLightDurationTicks(effect) ===
+      Number(produceFlameTenMinuteDurationTicks)
+  );
+}
+
+function produceFlameHeldLightDurationTicks(
+  effect:
+    | Extract<BattleActiveEffect, { readonly kind: "heldLight" }>
+    | undefined,
+): number {
+  return effect?.expiresAt.kind === "duration" &&
+    effect.expiresAt.durationTicks === produceFlameTenMinuteDurationTicks
+    ? Number(effect.expiresAt.durationTicks)
+    : 0;
+}
+
+function produceFlameHeldLightEffectValue(
+  durationTicks: ElapsedTimeTicks,
+): Extract<BattleActiveEffect, { readonly kind: "heldLight" }> {
+  return {
+    kind: "heldLight",
+    sourceSpellId: produceFlameUnitId,
+    sourceCombatantId: casterId,
+    brightRadiusFeet: produceFlameBrightRadiusFeet,
+    dimAdditionalFeet: produceFlameDimAdditionalFeet,
+    expiresAt: {
+      kind: "duration",
+      durationTicks,
+    },
+  };
+}
+
+function produceFlameCombatant(state: BattleState, id: CombatantId) {
+  const combatant = state.combatants.get(id);
+  if (combatant === undefined) {
+    throw new Error(`Expected Produce Flame combatant ${id}.`);
+  }
+  return combatant;
 }
 
 function normalizeLevel1SpatialWitnessSelectedIdentityQuintState(
@@ -3498,10 +3933,7 @@ function normalizeLevel1SpatialWitnessSelectedIdentityQuintState(
       state["qGreaseAffectedTargetOutcomeCount"],
       "qGreaseAffectedTargetOutcomeCount",
     ),
-    greaseFailedTargetProne: booleanField(
-      state,
-      "qGreaseFailedTargetProne",
-    ),
+    greaseFailedTargetProne: booleanField(state, "qGreaseFailedTargetProne"),
     greaseSucceededTargetProne: booleanField(
       state,
       "qGreaseSucceededTargetProne",
@@ -3522,10 +3954,7 @@ function normalizeLevel1SpatialWitnessSelectedIdentityQuintState(
       state,
       "qGreaseMismatchedMovementAreaRejected",
     ),
-    greaseEntrySaveOffered: booleanField(
-      state,
-      "qGreaseEntrySaveOffered",
-    ),
+    greaseEntrySaveOffered: booleanField(state, "qGreaseEntrySaveOffered"),
     greaseEntryFailedTargetProne: booleanField(
       state,
       "qGreaseEntryFailedTargetProne",
@@ -3534,10 +3963,7 @@ function normalizeLevel1SpatialWitnessSelectedIdentityQuintState(
       state,
       "qGreaseEntryMismatchedTargetRejected",
     ),
-    greaseEndTurnSaveOffered: booleanField(
-      state,
-      "qGreaseEndTurnSaveOffered",
-    ),
+    greaseEndTurnSaveOffered: booleanField(state, "qGreaseEndTurnSaveOffered"),
     greaseEndTurnFailedTargetProne: booleanField(
       state,
       "qGreaseEndTurnFailedTargetProne",
@@ -3560,10 +3986,7 @@ function normalizeLevel1SpatialWitnessSelectedIdentityQuintState(
       "qJumpMovementSpentFeet",
     ),
     jumpUsedMarkerSet: booleanField(state, "qJumpUsedMarkerSet"),
-    jumpSameTurnUnavailable: booleanField(
-      state,
-      "qJumpSameTurnUnavailable",
-    ),
+    jumpSameTurnUnavailable: booleanField(state, "qJumpSameTurnUnavailable"),
     jumpNextTargetTurnAvailable: booleanField(
       state,
       "qJumpNextTargetTurnAvailable",
@@ -3574,6 +3997,30 @@ function normalizeLevel1SpatialWitnessSelectedIdentityQuintState(
     ),
     jumpFailedLandingProne: booleanField(state, "qJumpFailedLandingProne"),
     jumpSlotExpended: booleanField(state, "qJumpSlotExpended"),
+    produceFlameHeldLightInstalled: booleanField(
+      state,
+      "qProduceFlameHeldLightInstalled",
+    ),
+    produceFlameDurationTicks: numberFromQuintInt(
+      state["qProduceFlameDurationTicks"],
+      "qProduceFlameDurationTicks",
+    ),
+    produceFlameBrightProjectionIllumination: mbtIllumination(
+      state["qProduceFlameBrightProjectionIllumination"],
+    ),
+    produceFlameHurlOffered: booleanField(state, "qProduceFlameHurlOffered"),
+    produceFlameHurlTargetDamaged: booleanField(
+      state,
+      "qProduceFlameHurlTargetDamaged",
+    ),
+    produceFlameHurlCleanupClearedEmitter: booleanField(
+      state,
+      "qProduceFlameHurlCleanupClearedEmitter",
+    ),
+    produceFlameDurationCleanupClearedEmitter: booleanField(
+      state,
+      "qProduceFlameDurationCleanupClearedEmitter",
+    ),
     projectedIllumination: mbtIllumination(state["qProjectedIllumination"]),
     ordinarySightObscurement: mbtSightObscurement(
       state["qOrdinarySightObscurement"],
@@ -3660,7 +4107,8 @@ function mbtLastResult(
     raw === "greaseCastGroundHazardSavingThrows" ||
     raw === "greaseMovementAndTurnTriggers" ||
     raw === "jumpMovementReplacementLandingWitness" ||
-    raw === "lightObjectEmitterProjectionReplacementCleanup"
+    raw === "lightObjectEmitterProjectionReplacementCleanup" ||
+    raw === "produceFlameHeldLightProjectionHurlCleanup"
   ) {
     return raw;
   }

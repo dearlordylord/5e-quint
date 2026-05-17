@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "L1F-PRODUCE-FLAME",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Produce Flame Selected Identity Replay"
     },
     {
@@ -296,12 +296,21 @@ runtime-owned geometry, line-of-sight, or colored-light rendering.
 
 ### Task 10 - L1F-PRODUCE-FLAME - Produce Flame Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `produce_flame`, covering held-light emitter
 projection and hurl cleanup within existing runtime support.
 
 RAW: `.references/srd-5.2.1/Spells/Descriptions-M-P.md` Produce Flame.
+
+Result: `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts`
+and
+`packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt`
+record the selected-identity replay for Produce Flame's held caster-attached
+Bright and Dim Light emitter projection, ten-minute held-light duration,
+Magic Action hurl availability, ranged spell attack Fire damage, hurl cleanup,
+and duration cleanup without adding runtime-owned geometry or line-of-sight
+automation.
 
 ### Task 11 - L1F-THUNDERWAVE - Thunderwave Selected Identity Replay
 
