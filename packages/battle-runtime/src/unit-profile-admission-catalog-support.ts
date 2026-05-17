@@ -1,0 +1,310 @@
+import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
+import {
+  buildStatBlockCatalog,
+  srdStatBlockCollection,
+} from "@dnd/surface/surface/stat-block-catalog";
+import type { UnitRecord } from "@dnd/surface/surface/types";
+import {
+  buildUnitCatalog,
+  srdUnitCollection,
+} from "@dnd/surface/surface/unit-catalog";
+import {
+  ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
+  ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
+  battleCombatantSide,
+  battleObjectId,
+  combatantId,
+  PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
+  type AvailableBattleAct,
+  type BattleSubject,
+} from "./index.ts";
+
+export const unitCatalogResult = buildUnitCatalog({
+  collections: [srdUnitCollection],
+});
+
+export const statBlockCatalogResult = buildStatBlockCatalog({
+  collections: [srdStatBlockCollection],
+});
+
+if (unitCatalogResult.tag !== "ok") {
+  throw new Error("QMBT7 Unit profile admission Unit catalog must build.");
+}
+
+export const unitLibrary = unitCatalogResult.catalog;
+
+if (statBlockCatalogResult.tag !== "ok") {
+  throw new Error(
+    "QMBT7 Unit profile admission Stat Block catalog must build.",
+  );
+}
+
+export const statBlockCatalog = statBlockCatalogResult.catalog;
+
+export const fighterSecondWindUnitId = "fighter_second_wind";
+
+export const fighterActionSurgeUnitId = "fighter_action_surge";
+
+export const fighterTacticalMindUnitId = "fighter_tactical_mind";
+
+export const fighterImprovedCriticalUnitId = "fighter_improved_critical";
+
+export const fighterExtraAttackUnitId = "fighter_extra_attack";
+
+export const barbarianRageUnitId = "barbarian_rage";
+
+export const barbarianRecklessAttackUnitId = "barbarian_reckless_attack";
+
+export const barbarianFastMovementUnitId = "barbarian_fast_movement";
+
+export const rangerRovingUnitId = "ranger_roving";
+
+export const orcAdrenalineRushUnitId = "orc_adrenaline_rush";
+
+export const orcRelentlessEnduranceUnitId = "orc_relentless_endurance";
+
+export const rogueCunningActionUnitId = "rogue_cunning_action";
+
+export const rogueEvasionUnitId = "rogue_evasion";
+
+export const rogueUncannyDodgeUnitId = "rogue_uncanny_dodge";
+
+export const rogueSneakAttackUnitId = "rogue_sneak_attack";
+
+export const bardBardicInspirationUnitId = "bard_bardic_inspiration";
+
+export const bardCuttingWordsUnitId = "bard_cutting_words";
+
+export const sorcererInnateSorceryUnitId = "sorcerer_innate_sorcery";
+
+export const monkMartialArtsUnitId = "monk_martial_arts";
+
+export const baneUnitId = "bane";
+
+export const blessUnitId = "bless";
+
+export const burningHandsUnitId = "burning_hands";
+
+export const chromaticOrbUnitId = "chromatic_orb";
+
+export const colorSprayUnitId = "color_spray";
+
+export const counterspellUnitId = "counterspell";
+
+export const entangleUnitId = "entangle";
+
+export const eldritchBlastUnitId = "eldritch_blast";
+
+export const ensnaringStrikeUnitId = "ensnaring_strike";
+
+export const expeditiousRetreatUnitId = "expeditious_retreat";
+
+export const jumpUnitId = "jump";
+
+export const searingSmiteUnitId = "searing_smite";
+
+export const trueStrikeUnitId = "true_strike";
+
+export const iceKnifeUnitId = "ice_knife";
+
+export const sleepUnitId = "sleep";
+
+export const hideousLaughterUnitId = "hideous_laughter";
+
+export const hideousLaughterDurationTicks = elapsedTimeTicks(10);
+
+export const thunderwaveUnitId = "thunderwave";
+
+export const dissonantWhispersUnitId = "dissonant_whispers";
+
+export const monkDeflectAttacksUnitId = "monk_deflect_attacks";
+
+export const defenseUnitId = "defense";
+
+export const divineFavorUnitId = "divine_favor";
+
+export const divineSmiteUnitId = "divine_smite";
+
+export const divineFavorDurationTicks = elapsedTimeTicks(10);
+
+export const archeryUnitId = "feat_archery";
+
+export const boonOfCombatProwessUnitId = "feat_boon_of_combat_prowess";
+
+export const savageAttackerUnitId = "feat_savage_attacker";
+
+export const acidSplashUnitId = "acid_splash";
+
+export const animalFriendshipUnitId = "animal_friendship";
+
+export const charmPersonUnitId = "charm_person";
+
+export const chillTouchUnitId = "chill_touch";
+
+export const commandUnitId = "command";
+
+export const commandLegendaryActorId = combatantId(
+  "unit-profile-command-legendary",
+);
+
+export const fireBoltUnitId = "fire_bolt";
+
+export const falseLifeUnitId = "false_life";
+
+export const faerieFireUnitId = "faerie_fire";
+
+export const guidingBoltUnitId = "guiding_bolt";
+
+export const guidanceUnitId = "guidance";
+
+export const greaseUnitId = "grease";
+
+export const heroismUnitId = "heroism";
+
+export const hellishRebukeUnitId = "hellish_rebuke";
+
+export const inflictWoundsUnitId = "inflict_wounds";
+
+export const lightUnitId = "light";
+
+export const longstriderUnitId = "longstrider";
+
+export const mageArmorUnitId = "mage_armor";
+
+export const magicMissileUnitId = "magic_missile";
+
+export const poisonSprayUnitId = "poison_spray";
+
+export const protectionFromEvilAndGoodUnitId = "protection_from_evil_and_good";
+
+export const produceFlameUnitId = "produce_flame";
+
+export const resistanceUnitId = "resistance";
+
+export const sacredFlameUnitId = "sacred_flame";
+
+export const shillelaghUnitId = "shillelagh";
+
+export const sorcerousBurstUnitId = "sorcerous_burst";
+
+export const cureWoundsUnitId = "cure_wounds";
+
+export const dancingLightsUnitId = "dancing_lights";
+
+export const healingWordUnitId = "healing_word";
+
+export const massCureWoundsUnitId = "mass_cure_wounds";
+
+export const massHealingWordUnitId = "mass_healing_word";
+
+export const rayOfFrostUnitId = "ray_of_frost";
+
+export const rayOfSicknessUnitId = "ray_of_sickness";
+
+export const shieldUnitId = "shield";
+
+export const shieldOfFaithUnitId = "shield_of_faith";
+
+export const shockingGraspUnitId = "shocking_grasp";
+
+export const starryWispUnitId = "starry_wisp";
+
+export const viciousMockeryUnitId = "vicious_mockery";
+
+export const paladinExtraAttackUnitId = "paladin_extra_attack";
+
+export const rangerExtraAttackUnitId = "ranger_extra_attack";
+
+export const archerySupportProfile = {
+  kind: PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
+  attackRoll: {
+    bonus: 2,
+    weaponFilter: { kind: "weaponCategory", category: "ranged" },
+  },
+} as const;
+
+export const extraAttackSupportProfile = {
+  kind: ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
+  additionalAttacks: 1,
+} as const;
+
+export const combatProwessSupportProfile = {
+  kind: ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
+  replacement: {
+    optional: true,
+    trigger: "missWithAttackRoll",
+    effect: "replaceMissWithHit",
+    resetCadence: "startOfNextTurn",
+  },
+} as const;
+
+export const spellCasterId = combatantId("unit-profile-spell-caster");
+
+export const spellTargetId = combatantId("unit-profile-spell-target");
+
+export const thunderwaveSecondTargetId = combatantId(
+  "unit-profile-thunderwave-target-2",
+);
+
+export const ensnaringStrikeHelperId = combatantId(
+  "unit-profile-ensnaring-helper",
+);
+
+export const greaseAreaId = "unit-profile-grease-ground-area";
+
+export const thunderwaveObjectId = battleObjectId(
+  "unit-profile-thunderwave-object",
+);
+
+export const massHealingTargetIds = [
+  spellTargetId,
+  combatantId("unit-profile-spell-target-2"),
+  combatantId("unit-profile-spell-target-3"),
+  combatantId("unit-profile-spell-target-4"),
+  combatantId("unit-profile-spell-target-5"),
+  combatantId("unit-profile-spell-target-6"),
+  combatantId("unit-profile-spell-target-7"),
+] as const;
+
+export const partySide = battleCombatantSide("party");
+
+export const oppositionSide = battleCombatantSide("opposition");
+
+export type ActionSpellAct = AvailableBattleAct & {
+  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+};
+
+export type BonusActionSpellAct = AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "bonusActionSpell" }
+  >;
+};
+
+export type BonusActionDashSpellAct = AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "bonusActionDashSpell" }
+  >;
+};
+
+export type PassiveFeatUnit = Extract<UnitRecord, { readonly kind: "feat" }> & {
+  readonly mechanics: Extract<
+    Extract<UnitRecord, { readonly kind: "feat" }>["mechanics"],
+    { readonly family: "passive" }
+  >;
+};
+
+export function unitMechanicsVariant(
+  base: UnitRecord,
+  overrides: {
+    readonly id: string;
+    readonly mechanics: unknown;
+  },
+): UnitRecord {
+  return {
+    ...base,
+    id: overrides.id,
+    mechanics: overrides.mechanics,
+  } as UnitRecord;
+}

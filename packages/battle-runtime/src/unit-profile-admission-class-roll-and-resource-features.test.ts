@@ -6,28 +6,30 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bardic-inspiration-grant unit-feature.failed-ability-check-resource-boost unit-feature.innate-sorcery-activation unit-feature.reaction-roll-or-damage-reduction
 import { describe, expect, test } from "vitest";
 import {
-  BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE,
-  Either,
-  FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE,
-  REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
-  SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   barbarianRecklessAttackUnitId,
   bardBardicInspirationUnitId,
   bardCuttingWordsUnitId,
+  fighterSecondWindUnitId,
+  fighterTacticalMindUnitId,
+  rogueEvasionUnitId,
+  sorcererInnateSorceryUnitId,
+  unitLibrary,
+  unitMechanicsVariant,
+} from "./unit-profile-admission-catalog-support.ts";
+import {
+  BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE,
   battleBardicInspirationGrantSupportForUnit,
   battleFailedAbilityCheckResourceBoostSupportForUnit,
   battleReactionRollOrDamageReductionSupportForUnit,
   battleUnitRefWithSupportProfiles,
   classLevel,
+  Either,
   elapsedTimeTicks,
-  fighterSecondWindUnitId,
-  fighterTacticalMindUnitId,
+  FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE,
   movementFeet,
   parseSupportedUnitFeatureProfile,
-  rogueEvasionUnitId,
-  sorcererInnateSorceryUnitId,
-  unitMechanicsVariant,
-  unitLibrary,
+  REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
+  SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
 } from "./unit-profile-admission-test-support.ts";
 import type { UnitRecord } from "./unit-profile-admission-test-support.ts";
 

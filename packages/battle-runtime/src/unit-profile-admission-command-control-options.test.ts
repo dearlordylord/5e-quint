@@ -2,29 +2,35 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-command-drop-held-object spell.invocation-command-halt-grovel
 import { describe, expect, test } from "vitest";
 import {
-  battleObjectId,
-  combatantId,
   commandLegendaryActorId,
   commandUnitId,
-  discoverBattleActs,
-  endTurn,
+  spellCasterId,
+  spellTargetId,
+} from "./unit-profile-admission-catalog-support.ts";
+import {
   legendaryActionStatBlock,
-  movementFeet,
   requireCombatant,
   requireHole,
   requireResultHole,
-  resolveBattleSubject,
+  zeroAbilityWeaponAttack,
+} from "./unit-profile-admission-creature-fixture-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import {
   savingThrowOutcomeFill,
   spellAct,
   spellActInvocation,
-  spellBattle,
-  spellCasterId,
-  spellId,
-  spellRecord,
-  spellSlotInvocationRef,
-  spellTargetId,
   spellTargetListFill,
-  zeroAbilityWeaponAttack,
+} from "./unit-profile-admission-spell-fill-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import {
+  battleObjectId,
+  combatantId,
+  discoverBattleActs,
+  endTurn,
+  movementFeet,
+  resolveBattleSubject,
+  spellId,
+  spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
 import type {
   AvailableBattleAct,

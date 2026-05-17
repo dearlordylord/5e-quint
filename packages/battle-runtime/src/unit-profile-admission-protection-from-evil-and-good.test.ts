@@ -2,38 +2,44 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.creature-type-protection-and-charm
 import { describe, expect, test } from "vitest";
 import {
+  charmPersonUnitId,
+  oppositionSide,
+  protectionFromEvilAndGoodUnitId,
+  spellCasterId,
+  spellTargetId,
+} from "./unit-profile-admission-catalog-support.ts";
+import {
+  attackTargetFill,
+  requireCombatant,
+  requireHole,
+  requireResultHole,
+  statBlockAttackAct,
+  statBlockWithCreatureType,
+} from "./unit-profile-admission-creature-fixture-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import {
+  knownWillingSpellTargetFill,
+  savingThrowOutcomeFill,
+  spellAct,
+  spellActInvocation,
+  spellTargetFill,
+} from "./unit-profile-admission-spell-fill-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import {
   applyCondition,
   applyFailedSaveSpellConditionEffects,
-  attackTargetFill,
   battleCreatureStateWithKnockOutPreservedConditions,
   breakBattleConcentration,
-  charmPersonUnitId,
   combatantId,
   conditionApplicationPreventedByCreatureTypeProtection,
   difficultyClass,
   discoverBattleActs,
   elapsedTimeTicks,
   endTurn,
-  knownWillingSpellTargetFill,
-  oppositionSide,
-  protectionFromEvilAndGoodUnitId,
-  requireCombatant,
-  requireHole,
-  requireResultHole,
   resolveBattlePossessionAttempt,
   resolveBattleSubject,
-  savingThrowOutcomeFill,
-  spellAct,
-  spellActInvocation,
-  spellBattle,
-  spellCasterId,
   spellId,
-  spellRecord,
   spellSavingThrowOutcomeHole,
-  spellTargetFill,
-  spellTargetId,
-  statBlockAttackAct,
-  statBlockWithCreatureType,
 } from "./unit-profile-admission-test-support.ts";
 import type {
   BattleActiveEffect,

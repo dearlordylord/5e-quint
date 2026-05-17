@@ -2,31 +2,37 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-roll-miss-to-hit-replacement
 import { describe, expect, test } from "vitest";
 import {
-  Either,
+  boonOfCombatProwessUnitId,
+  combatProwessSupportProfile,
+  rayOfFrostUnitId,
+  shieldUnitId,
+  spellCasterId,
+  spellTargetId,
+  unitLibrary,
+} from "./unit-profile-admission-catalog-support.ts";
+import {
   attackRollFill,
   attackTargetFill,
-  battleUnitRefWithSupportProfiles,
-  boonOfCombatProwessUnitId,
-  combatProwessBattle,
-  combatProwessSupportProfile,
   damageRollFillWithGroups,
-  parseSupportedUnitFeatureProfile,
-  rayOfFrostUnitId,
   reactionDecisionFill,
   requireHole,
   requireResultHole,
-  resolveBattleReaction,
-  resolveBattleSubject,
-  shieldUnitId,
-  spellAct,
-  spellCasterId,
-  spellRecord,
-  spellTargetFill,
-  spellTargetId,
-  unitLibrary,
   weaponAttackRollHole,
   weaponAttackSubject,
   zeroAbilityWeaponAttack,
+} from "./unit-profile-admission-creature-fixture-support.ts";
+import { combatProwessBattle } from "./unit-profile-admission-feature-fixture-support.ts";
+import {
+  spellAct,
+  spellTargetFill,
+} from "./unit-profile-admission-spell-fill-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import {
+  battleUnitRefWithSupportProfiles,
+  Either,
+  parseSupportedUnitFeatureProfile,
+  resolveBattleReaction,
+  resolveBattleSubject,
 } from "./unit-profile-admission-test-support.ts";
 import type {
   BattleSubject,

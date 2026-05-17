@@ -3,41 +3,49 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.zero-hit-point-replacement
 import { describe, expect, test } from "vitest";
 import {
-  Either,
-  ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
   acidSplashUnitId,
+  orcAdrenalineRushUnitId,
+  orcRelentlessEnduranceUnitId,
+  rayOfFrostUnitId,
+  spellCasterId,
+  spellTargetId,
+  unitLibrary,
+  unitMechanicsVariant,
+} from "./unit-profile-admission-catalog-support.ts";
+import {
+  attackDamageDispositionFill,
+  attackRollFill,
+  damageRollFillWithGroups,
+  requireHole,
+  requireResultHole,
+  weaponAttackSubject,
+} from "./unit-profile-admission-creature-fixture-support.ts";
+import {
   adrenalineRushBattle,
   adrenalineRushDashAct,
   adrenalineRushDashSubject,
   adrenalineRushProfilePayload,
   adrenalineRushSupportProfile,
-  attackDamageDispositionFill,
-  attackRollFill,
-  battleUnitRefWithSupportProfiles,
-  bonusActionDashTemporaryHitPointsProfileForUnit,
-  characterBattleResourceForUnit,
-  damageRollFillWithGroups,
-  discoverBattleActs,
-  orcAdrenalineRushUnitId,
-  orcRelentlessEnduranceUnitId,
-  parseSupportedUnitFeatureProfile,
-  rayOfFrostUnitId,
   relentlessEnduranceBattle,
   relentlessEnduranceDamageResult,
   relentlessEnduranceDisposition,
-  requireHole,
-  requireResultHole,
-  resolveBattleSubject,
+} from "./unit-profile-admission-feature-fixture-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import {
   savingThrowOutcomeFill,
   spellAct,
-  spellBattle,
-  spellCasterId,
-  spellRecord,
   spellTargetFill,
-  spellTargetId,
-  unitLibrary,
-  unitMechanicsVariant,
-  weaponAttackSubject,
+} from "./unit-profile-admission-spell-fill-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import {
+  battleUnitRefWithSupportProfiles,
+  bonusActionDashTemporaryHitPointsProfileForUnit,
+  characterBattleResourceForUnit,
+  discoverBattleActs,
+  Either,
+  parseSupportedUnitFeatureProfile,
+  resolveBattleSubject,
+  ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
 } from "./unit-profile-admission-test-support.ts";
 import type { UnitRecord } from "./unit-profile-admission-test-support.ts";
 

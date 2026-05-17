@@ -4,28 +4,30 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.martial-arts-attack-projection unit-feature.reaction-roll-or-damage-reduction
 import { describe, expect, test } from "vitest";
 import {
-  ALTERNATE_ACTION_COST_ACTIONS,
-  ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
-  ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
-  Either,
-  MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE,
-  REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
-  WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   barbarianRageUnitId,
-  battleMartialArtsAttackProjectionSupportForUnit,
-  battleReactionRollOrDamageReductionSupportForUnit,
-  battleUnitRefWithSupportProfiles,
-  classLevel,
   fighterActionSurgeUnitId,
   fighterImprovedCriticalUnitId,
   monkDeflectAttacksUnitId,
   monkMartialArtsUnitId,
-  parseSupportedUnitFeatureProfile,
   rogueCunningActionUnitId,
   rogueSneakAttackUnitId,
   rogueUncannyDodgeUnitId,
-  unitMechanicsVariant,
   unitLibrary,
+  unitMechanicsVariant,
+} from "./unit-profile-admission-catalog-support.ts";
+import {
+  ALTERNATE_ACTION_COST_ACTIONS,
+  ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
+  ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
+  battleMartialArtsAttackProjectionSupportForUnit,
+  battleReactionRollOrDamageReductionSupportForUnit,
+  battleUnitRefWithSupportProfiles,
+  classLevel,
+  Either,
+  MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE,
+  parseSupportedUnitFeatureProfile,
+  REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
+  WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
 } from "./unit-profile-admission-test-support.ts";
 import type { UnitRecord } from "./unit-profile-admission-test-support.ts";
 

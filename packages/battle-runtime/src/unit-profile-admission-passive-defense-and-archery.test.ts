@@ -2,21 +2,27 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT27 feat_archery
 import { describe, expect, test } from "vitest";
 import {
-  Either,
-  PASSIVE_ARMOR_CLASS_BONUS_SUPPORT_PROFILE,
-  archeryBattle,
-  archeryBattleUnitRef,
-  archeryFeatureUnit,
   archerySupportProfile,
   archeryUnitId,
-  battleUnitRefWithSupportProfiles,
   defenseUnitId,
-  parseSupportedUnitFeatureProfile,
   spellCasterId,
   spellTargetId,
   unitLibrary,
+} from "./unit-profile-admission-catalog-support.ts";
+import {
   weaponAttackRollHole,
   zeroAbilityWeaponAttack,
+} from "./unit-profile-admission-creature-fixture-support.ts";
+import {
+  archeryBattle,
+  archeryBattleUnitRef,
+  archeryFeatureUnit,
+} from "./unit-profile-admission-feature-fixture-support.ts";
+import {
+  battleUnitRefWithSupportProfiles,
+  Either,
+  parseSupportedUnitFeatureProfile,
+  PASSIVE_ARMOR_CLASS_BONUS_SUPPORT_PROFILE,
 } from "./unit-profile-admission-test-support.ts";
 import type { UnitRecord } from "./unit-profile-admission-test-support.ts";
 

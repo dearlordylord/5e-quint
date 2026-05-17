@@ -6,38 +6,44 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-marked-damage-rider
 import { describe, expect, test } from "vitest";
 import {
-  Hp,
+  counterspellUnitId,
+  fireBoltUnitId,
+  shieldUnitId,
+  sorcerousBurstUnitId,
+  spellCasterId,
+  spellTargetId,
+  starryWispUnitId,
+} from "./unit-profile-admission-catalog-support.ts";
+import {
   attackRollFill,
+  damageRollFillWithGroups,
+  requireHole,
+  requireResultHole,
+} from "./unit-profile-admission-creature-fixture-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import {
+  isSelectedSorcerousBurstDamageInvocation,
+  maybeSpellAct,
+  spellAct,
+  spellHoleInvocation,
+  spellObjectTargetFill,
+  spellTargetFill,
+} from "./unit-profile-admission-spell-fill-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import {
   battleObjectId,
   cantripSpellInvocationRef,
   classLevel,
-  counterspellUnitId,
   damageAmount,
-  damageRollFillWithGroups,
   decodeUnitRecordSync,
   discoverBattleActs,
-  fireBoltUnitId,
-  isSelectedSorcerousBurstDamageInvocation,
-  maybeSpellAct,
+  Hp,
   movementFeet,
   objectInvisibleBenefitDenied,
-  requireHole,
-  requireResultHole,
   resolveBattleSubject,
-  shieldUnitId,
-  sorcerousBurstUnitId,
-  spellAct,
-  spellBattle,
-  spellCasterId,
   spellDamageHole,
-  spellHoleInvocation,
   spellId,
-  spellObjectTargetFill,
-  spellRecord,
-  spellTargetFill,
-  spellTargetId,
   starryWispInput,
-  starryWispUnitId,
   validateSpellDamageFill,
 } from "./unit-profile-admission-test-support.ts";
 import type { SpellMarkedDamageRider } from "./unit-profile-admission-test-support.ts";

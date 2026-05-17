@@ -3,35 +3,39 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save
 import { describe, expect, test } from "vitest";
 import {
-  Hp,
-  abilityCheckFill,
-  abilityModifier,
-  attackRollFill,
-  attackTargetFill,
-  cantripSpellInvocationRef,
-  damageRollFillWithGroups,
-  discoverBattleActs,
-  elapsedTimeTicks,
-  endTurn,
   ensnaringStrikeHelperId,
   ensnaringStrikeUnitId,
-  proficiencyBonus,
   rayOfFrostUnitId,
+  searingSmiteUnitId,
+  spellCasterId,
+  spellTargetId,
+} from "./unit-profile-admission-catalog-support.ts";
+import {
+  abilityCheckFill,
+  attackRollFill,
+  attackTargetFill,
+  damageRollFillWithGroups,
   reactionDecisionFill,
   requireCombatant,
   requireHole,
   requireResultHole,
-  resolveBattleReaction,
-  resolveBattleSubject,
-  savingThrowOutcomeFill,
-  searingSmiteUnitId,
-  spellBattle,
-  spellCasterId,
-  spellRecord,
-  spellSlotInvocationRef,
-  spellTargetId,
   weaponAttackSubject,
   zeroAbilityWeaponAttack,
+} from "./unit-profile-admission-creature-fixture-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import { savingThrowOutcomeFill } from "./unit-profile-admission-spell-fill-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import {
+  abilityModifier,
+  cantripSpellInvocationRef,
+  discoverBattleActs,
+  elapsedTimeTicks,
+  endTurn,
+  Hp,
+  proficiencyBonus,
+  resolveBattleReaction,
+  resolveBattleSubject,
+  spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
 
 describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", () => {
