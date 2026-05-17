@@ -128,7 +128,7 @@ Every task runs:
 | 7 | L1J-RANGED-WEAPON-DATA - Ranged Weapon Non Runtime Data Closure | done | 1 | explicit closure for ranged authored records |
 | 8 | L1J-THROWN-FINESSE-WEAPON-DATA - Thrown Finesse Weapon Non Runtime Data Closure | done | 1 | explicit closure for thrown/finesse authored records |
 | 9 | L1J-FIREARM-EXOTIC-WEAPON-DATA - Firearm Exotic Weapon Non Runtime Data Closure | done | 1 | explicit closure for firearm/exotic authored records |
-| 10 | L1J-INSTALLED-EQUIPMENT-ROW-ALIGNMENT - Installed Equipment Row Alignment | ready-for-research | 1 | align existing installed equipment/weapon unsupported rows with the same closure language |
+| 10 | L1J-INSTALLED-EQUIPMENT-ROW-ALIGNMENT - Installed Equipment Row Alignment | done | 1 | generated report summary alignment and decision artifact for installed equipment/weapon unsupported rows |
 
 ### Task 1 - L1J-PRECHECK - Non-D Equipment Data Precheck
 
@@ -230,7 +230,7 @@ Decision artifact:
 
 ### Task 10 - L1J-INSTALLED-EQUIPMENT-ROW-ALIGNMENT - Installed Equipment Row Alignment
 
-Status: `ready-for-research`
+Status: `done`
 
 Align existing installed unsupported rows `armor_chain_mail`,
 `equipment_shield`, `weapon_club`, `weapon_dagger`, `weapon_flail`,
@@ -238,3 +238,6 @@ Align existing installed unsupported rows `armor_chain_mail`,
 `weapon_shortbow`, `weapon_shortsword`, and `weapon_spear` with the same
 non-runtime authored-data wording if the generated report still presents them as
 unassigned pressure.
+
+Decision artifact:
+`plans/unit-profile-coverage/L1J_INSTALLED_EQUIPMENT_ROW_ALIGNMENT.md`.
