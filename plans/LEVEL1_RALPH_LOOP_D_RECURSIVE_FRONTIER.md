@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L1D2-MONK-UNARMORED-DEFENSE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Monk Unarmored Defense Selected Identity Replay"
     },
     {
