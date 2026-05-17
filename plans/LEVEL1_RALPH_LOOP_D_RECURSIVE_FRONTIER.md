@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "L1D2-WIZARD-RITUAL-ADEPT",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Wizard Ritual Adept Selected Identity Replay"
     },
     {
@@ -276,7 +276,7 @@ lane.
 | 1 | L1D2-FRONTIER-PRECHECK - Active Lane And Metric Reconciliation | done | none | No C/E/F/H integration head is merged into `master`; D frontier remains Tasks 2-6 plus C-blocked Tasks 7-12. |
 | 2 | L1D2-BARBARIAN-UNARMORED-DEFENSE - Barbarian Unarmored Defense Selected Identity Replay | done | none | Character Sheet AC formula selected identity. |
 | 3 | L1D2-MONK-UNARMORED-DEFENSE - Monk Unarmored Defense Selected Identity Replay | done | none | Distinct Monk AC formula selected identity. |
-| 4 | L1D2-WIZARD-RITUAL-ADEPT - Wizard Ritual Adept Selected Identity Replay | ready-for-implementation-after-light-research | none | Spellbook ritual invocation selected identity. |
+| 4 | L1D2-WIZARD-RITUAL-ADEPT - Wizard Ritual Adept Selected Identity Replay | done | none | Spellbook ritual invocation selected identity. |
 | 5 | L1D2-SORCERER-INNATE-SORCERY - Sorcerer Innate Sorcery Selected Identity Replay | ready-for-implementation-after-light-research | none | Supported activation/profile identity. |
 | 6 | L1D2-MYCELIUM-STEP - Mycelium Step Selected Identity Replay | ready-for-implementation-after-light-research | none | Classic non-SRD mechanics gate identity; keep out of SRD provenance. |
 | 7 | L1D2-WIZARD-ARCANE-RECOVERY - Wizard Arcane Recovery Selected Identity Replay | blocked | Loop C merge evidence | Unblock only after `wizard_arcane_recovery` is supported-profile on master. |
@@ -342,7 +342,7 @@ RAW: `.references/srd-5.2.1/Classes/Monk.md` Unarmored Defense.
 
 ### Task 4 - L1D2-WIZARD-RITUAL-ADEPT - Wizard Ritual Adept Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `wizard_ritual_adept`, proving spellbook
 ritual invocation ownership without treating prepared-only spells as eligible.

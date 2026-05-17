@@ -93,8 +93,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 94,
-      "numerator": 75,
-      "percent": "79.8%"
+      "numerator": 76,
+      "percent": "80.9%"
     },
     "supportedProfileCoverage": {
       "denominator": 118,
@@ -6038,6 +6038,11 @@
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV91B"
+        },
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/spellbook-ritual-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "spellbook-ritual-invocation"
         }
       ],
       "executableMechanics": true,

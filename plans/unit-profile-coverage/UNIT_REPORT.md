@@ -23,7 +23,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Runtime mapping coverage | 62/62 | 100% |
 | Runtime parity coverage | 62/62 | 100% |
 | Deterministic admission/projection coverage | 94/94 | 100% |
-| Selected identity MBT coverage | 75/94 | 79.8% |
+| Selected identity MBT coverage | 76/94 | 80.9% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -908,6 +908,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `rogue_evasion` | `unit-feature.save-damage-replacement` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `rogue_uncanny_dodge` | `unit-feature.reaction-roll-or-damage-reduction` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `rogue_sneak_attack` | `unit-feature.attack-damage-rider` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `wizard_ritual_adept` | `character-sheet.spellbook-ritual-invocation` | spellbook-ritual-invocation | `packages/character-sheet-runtime/src/spellbook-ritual-selected-identity.mbt.test.ts` |
 | `feat_archery` | `unit-feature.passive-ranged-attack-roll-bonus` | passive-and-zero-hp-features | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `defense` | `unit-feature.passive-armor-class-bonus` | passive-and-zero-hp-features | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `feat_savage_attacker` | `unit-feature.weapon-damage-dice-roll-choice` | QMBT31 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
