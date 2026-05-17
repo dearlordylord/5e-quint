@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L1K-CONDITION-CONTROL-CANDIDATES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Condition Control Spell Candidate Intake"
     },
     {
@@ -136,7 +136,7 @@ Every task runs:
 | ---: | --- | --- | --- | --- |
 | 1 | L1K-PRECHECK - Non-D Spell Candidate Precheck | done | none | refreshed non-D spell candidate set and exclusion list |
 | 2 | L1K-DAMAGE-SPELL-CANDIDATES - Damage Spell Candidate Intake | done | 1 | candidate split for damage spells outside D |
-| 3 | L1K-CONDITION-CONTROL-CANDIDATES - Condition Control Spell Candidate Intake | ready-for-research | 1 | candidate split for condition/control spells outside D |
+| 3 | L1K-CONDITION-CONTROL-CANDIDATES - Condition Control Spell Candidate Intake | done | 1 | candidate split for condition/control spells outside D |
 | 4 | L1K-PROTECTION-RESTORATION-CANDIDATES - Protection Restoration Spell Candidate Intake | ready-for-research | 1 | candidate split for protection/restoration spells outside D |
 | 5 | L1K-MOBILITY-TRANSFORMATION-CANDIDATES - Mobility Transformation Spell Candidate Intake | ready-for-research | 1 | candidate split for mobility/transformation spells outside D |
 | 6 | L1K-ZONE-WALL-CANDIDATES - Zone Wall Emanation Spell Candidate Intake | ready-for-research | 1 | candidate split for zones/walls/emanations outside D |
@@ -177,12 +177,27 @@ Final split:
 
 ### Task 3 - L1K-CONDITION-CONTROL-CANDIDATES - Condition Control Spell Candidate Intake
 
-Status: `ready-for-research`
+Status: `done`
 
 Initial candidates: `blindness_deafness`, `hold_person`, `fear`,
 `hypnotic_pattern`, `ray_of_enfeeblement`, and `dominate_person`.
 
 Split social/control and combat-condition pressure precisely.
+
+Decision artifact:
+`plans/unit-profile-coverage/L1K_CONDITION_CONTROL_SPELL_CANDIDATE_INTAKE.md`.
+
+Final split:
+
+- combat-condition save lifecycle widening: `hold_person`,
+  `blindness_deafness`;
+- combat-control condition/effect bundle needs: `fear`, `hypnotic_pattern`;
+- non-condition roll and damage debuff need: `ray_of_enfeeblement`;
+- social and agency-control queue: `dominate_person`.
+
+No candidate is an exact existing-profile fit. The decision artifact records
+the future runtime slice shape; this intake task does not add Unit claims,
+catalog admission, QNT behavior, battle reducer behavior, or MBT evidence.
 
 ### Task 4 - L1K-PROTECTION-RESTORATION-CANDIDATES - Protection Restoration Spell Candidate Intake
 
