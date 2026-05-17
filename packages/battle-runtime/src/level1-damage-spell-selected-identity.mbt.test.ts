@@ -1,6 +1,7 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt level1-damage-spell-selected-identity burning_hands ice_knife
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt level1-damage-spell-selected-identity burning_hands ice_knife poison_spray
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity burning_hands doResolveBurningHandsMixedConeSavingThrows
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity ice_knife doResolveIceKnifeHitAttackDamageAndBurstSavingThrows doResolveIceKnifeMissBurstSavingThrows
+// UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity poison_spray doResolvePoisonSpraySpellAttackDamage
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -48,6 +49,7 @@ const level1DamageSpellSelectedIdentityDriverSchema = {
   doResolveBurningHandsMixedConeSavingThrows: {},
   doResolveIceKnifeHitAttackDamageAndBurstSavingThrows: {},
   doResolveIceKnifeMissBurstSavingThrows: {},
+  doResolvePoisonSpraySpellAttackDamage: {},
   step: {},
 } as const;
 type Level1DamageSpellSelectedIdentityDriverAction = Exclude<
@@ -55,13 +57,18 @@ type Level1DamageSpellSelectedIdentityDriverAction = Exclude<
   "init" | "step"
 >;
 
-const level1DamageSpellUnitIds = ["burning_hands", "ice_knife"] as const;
+const level1DamageSpellUnitIds = [
+  "burning_hands",
+  "ice_knife",
+  "poison_spray",
+] as const;
 type Level1DamageSpellUnitId = (typeof level1DamageSpellUnitIds)[number];
 const level1DamageSpellSelectedIdentityResults = [
   "init",
   "burningHandsMixedConeSavingThrows",
   "iceKnifeHitAttackDamageAndBurstSavingThrows",
   "iceKnifeMissBurstSavingThrows",
+  "poisonSpraySpellAttackDamage",
 ] as const;
 type Level1DamageSpellSelectedIdentityResult =
   (typeof level1DamageSpellSelectedIdentityResults)[number];
@@ -108,6 +115,36 @@ type IceKnifeAttackOutcome =
       readonly attackRollTotal: number;
       readonly naturalD20: number;
     };
+type Level1DamageSpellInvocationProfile =
+  | {
+      readonly tag: "cantrip";
+      readonly procedure: "spellAttackDamage";
+    }
+  | {
+      readonly tag: "spellSlot";
+      readonly slotLevel: 1;
+      readonly procedure: "attackBurstSaveDamage" | "saveGatedDamage";
+    };
+
+const level1DamageSpellInvocationProfiles = {
+  burning_hands: {
+    tag: "spellSlot",
+    slotLevel: 1,
+    procedure: "saveGatedDamage",
+  },
+  ice_knife: {
+    tag: "spellSlot",
+    slotLevel: 1,
+    procedure: "attackBurstSaveDamage",
+  },
+  poison_spray: {
+    tag: "cantrip",
+    procedure: "spellAttackDamage",
+  },
+} as const satisfies Record<
+  Level1DamageSpellUnitId,
+  Level1DamageSpellInvocationProfile
+>;
 
 const casterId = combatantId("level1-damage-spell-caster");
 const primaryTargetId = combatantId("level1-damage-spell-primary-target");
@@ -175,6 +212,25 @@ const selectedUnitIdentityReplays = [
           primaryTargetHp: 8,
           secondaryTargetHp: 12,
           lastResult: "iceKnifeMissBurstSavingThrows",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "level1-damage-spell-selected-identity",
+    unitId: "poison_spray",
+    actions: ["doResolvePoisonSpraySpellAttackDamage"],
+    sequences: [
+      {
+        name: "cantrip-ranged-spell-attack-poison-damage",
+        actions: ["doResolvePoisonSpraySpellAttackDamage"],
+        expected: expectedProjection({
+          actionAvailable: false,
+          spellSlotSpentThisTurn: false,
+          level1SlotsRemaining: 1,
+          primaryTargetHp: 5,
+          secondaryTargetHp: 12,
+          lastResult: "poisonSpraySpellAttackDamage",
         }),
       },
     ],
@@ -283,6 +339,13 @@ function createLevel1DamageSpellSelectedIdentityDriver() {
           "iceKnifeMissBurstSavingThrows",
         );
       },
+      doResolvePoisonSpraySpellAttackDamage: () => {
+        state = level1DamageSpellBattle(srdSpellRecord("poison_spray"));
+        recordResolvedResult(
+          resolvePoisonSpraySpellAttackDamage(state),
+          "poisonSpraySpellAttackDamage",
+        );
+      },
       step: () => {},
       getState: () =>
         projectLevel1DamageSpellSelectedIdentityState(state, lastResult),
@@ -351,6 +414,42 @@ function resolveIceKnifeMissBurstSavingThrows(
   });
 }
 
+function resolvePoisonSpraySpellAttackDamage(
+  state: BattleState,
+): BattleResolutionResult {
+  const act = actionSpellAct(state, "poison_spray");
+  const target = requireHole(act.initialHoles, "targetChoice");
+  assertPoisonSprayTargetProfile(target);
+  const targetChoice = spellTargetFill(target, "poison_spray", primaryTargetId);
+  const attack = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetChoice],
+    }),
+    "attackRoll",
+  );
+  assertPoisonSprayAttackRollProfile(attack);
+  const attackRoll = attackRollFill(attack, {
+    total: 15,
+    naturalD20: 10,
+  });
+  const damage = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetChoice, attackRoll],
+    }),
+    "rolledDice",
+  );
+  assertPoisonSprayDamageProfile(damage);
+  return resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [targetChoice, attackRoll, damageRollFill(damage, [7])],
+  });
+}
+
 function resolveIceKnifeAttackAndBurstSavingThrows(
   state: BattleState,
   attackOutcome: IceKnifeAttackOutcome,
@@ -358,7 +457,7 @@ function resolveIceKnifeAttackAndBurstSavingThrows(
   const act = actionSpellAct(state, "ice_knife");
   const target = requireHole(act.initialHoles, "targetChoice");
   assertIceKnifeTargetProfile(target);
-  const targetChoice = iceKnifeTargetFill(target, primaryTargetId);
+  const targetChoice = spellTargetFill(target, "ice_knife", primaryTargetId);
   const attack = requireResultHole(
     resolveBattleSubject({
       state,
@@ -450,6 +549,7 @@ function srdSpellRecord(unitId: Level1DamageSpellUnitId): SpellRecord {
 }
 
 function level1DamageSpellBattle(spell: SpellRecord): BattleState {
+  const isCantrip = spell.mechanics.level === 0;
   const result = startBattle({
     battleId: battleId(`level1-damage-spell-selected-identity-${spell.id}`),
     combatants: [
@@ -464,8 +564,8 @@ function level1DamageSpellBattle(spell: SpellRecord): BattleState {
           spellcastingAbilityModifier: abilityModifier(3),
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
-          cantrips: [],
-          preparedSpells: [spell],
+          cantrips: isCantrip ? [spell] : [],
+          preparedSpells: isCantrip ? [] : [spell],
           featurePreparedSpells: [],
           invocationSpellAccesses: [],
           spellbookRitualSpellAccesses: [],
@@ -545,9 +645,10 @@ function actionSpellAct(
   const act = discoverBattleActs(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      candidate.subject.invocation.tag === "spellSlot" &&
-      candidate.subject.invocation.spellId === spellId &&
-      Number(candidate.subject.invocation.slotLevel) === 1,
+      isExpectedLevel1DamageSpellInvocation(
+        candidate.subject.invocation,
+        spellId,
+      ),
   );
   if (act === undefined) {
     throw new Error(`Expected ${spellId} action Spell act.`);
@@ -555,8 +656,32 @@ function actionSpellAct(
   return act;
 }
 
-function iceKnifeTargetFill(
+function isExpectedLevel1DamageSpellInvocation(
+  invocation: ActionSpellAct["subject"]["invocation"],
+  spellId: Level1DamageSpellUnitId,
+): boolean {
+  const profile = level1DamageSpellInvocationProfiles[spellId];
+  if (invocation.spellId !== spellId) {
+    return false;
+  }
+  if (
+    invocation.tag !== profile.tag ||
+    invocation.procedure !== profile.procedure
+  ) {
+    return false;
+  }
+  if (profile.tag === "spellSlot") {
+    return (
+      invocation.tag === "spellSlot" &&
+      Number(invocation.slotLevel) === profile.slotLevel
+    );
+  }
+  return true;
+}
+
+function spellTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  spellId: Level1DamageSpellUnitId,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   return {
@@ -568,7 +693,7 @@ function iceKnifeTargetFill(
         kind: "spellTarget",
         casterId,
         targetId,
-        spellId: "ice_knife",
+        spellId,
       },
     ],
   };
@@ -787,6 +912,58 @@ function assertIceKnifeBurstDamageProfile(
     hole.critical
   ) {
     throw new Error("Ice Knife burst damage profile drifted.");
+  }
+}
+
+function assertPoisonSprayTargetProfile(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+): void {
+  if (
+    !hole.choices.includes(primaryTargetId) ||
+    hole.requiresTableSpatialFact !== true
+  ) {
+    throw new Error("Poison Spray target profile drifted.");
+  }
+}
+
+function assertPoisonSprayAttackRollProfile(
+  hole: Extract<BattleHole, { readonly kind: "attackRoll" }>,
+): void {
+  if (!("spell" in hole)) {
+    throw new Error("Expected Poison Spray spell Attack Roll hole.");
+  }
+  const invocation = hole.spell;
+  if (
+    invocation.procedure !== "spellAttackDamage" ||
+    invocation.spell.id !== "poison_spray" ||
+    invocation.resource.tag !== "none" ||
+    invocation.targeting.kind !== "singleCombatant" ||
+    invocation.attackKind !== "ranged_spell_attack" ||
+    Number(invocation.rangeFeet) !== 30
+  ) {
+    throw new Error("Poison Spray Attack Roll profile drifted.");
+  }
+}
+
+function assertPoisonSprayDamageProfile(
+  hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
+): void {
+  if (!("spell" in hole) || !("critical" in hole)) {
+    throw new Error("Expected Poison Spray damage roll hole.");
+  }
+  const invocation = hole.spell;
+  if (
+    invocation.procedure !== "spellAttackDamage" ||
+    invocation.spell.id !== "poison_spray" ||
+    invocation.resource.tag !== "none" ||
+    invocation.damage.kind !== "fixedSpellAttackDamage" ||
+    invocation.damage.expr.dice !== 1 ||
+    invocation.damage.expr.dieSize !== 12 ||
+    invocation.damage.damageType !== "poison" ||
+    invocation.postDamageRiders.length !== 0 ||
+    hole.critical
+  ) {
+    throw new Error("Poison Spray damage profile drifted.");
   }
 }
 

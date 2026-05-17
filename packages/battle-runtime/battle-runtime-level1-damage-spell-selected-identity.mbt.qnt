@@ -48,9 +48,15 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
     recordProjection(false, true, 0, 8, 12, "iceKnifeMissBurstSavingThrows"),
   }
 
+  action doResolvePoisonSpraySpellAttackDamage = all {
+    qLastResult == "init",
+    recordProjection(false, false, 1, 5, 12, "poisonSpraySpellAttackDamage"),
+  }
+
   action step = any {
     doResolveBurningHandsMixedConeSavingThrows,
     doResolveIceKnifeHitAttackDamageAndBurstSavingThrows,
     doResolveIceKnifeMissBurstSavingThrows,
+    doResolvePoisonSpraySpellAttackDamage,
   }
 }

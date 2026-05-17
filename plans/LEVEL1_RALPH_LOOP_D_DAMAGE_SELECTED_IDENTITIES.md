@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "L1D-POISON-SPRAY",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Poison Spray Selected Identity Replay"
     },
     {
@@ -180,7 +180,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-E-L.md` Ice Knife.
 
 ### Task 4 - L1D-POISON-SPRAY - Poison Spray Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `poison_spray`, binding the authored cantrip
 Unit through the supported damage save or attack profile.

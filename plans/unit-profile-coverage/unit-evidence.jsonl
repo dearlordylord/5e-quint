@@ -33,6 +33,7 @@
 {"unitId":"chill_touch","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV89A","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"chill_touch","evidence":{"tag":"selected-identity-mbt","taskId":"attack-spell-shape","ownerPath":"packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts"}}
 {"unitId":"poison_spray","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV28B","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
+{"unitId":"poison_spray","evidence":{"tag":"selected-identity-mbt","taskId":"level1-damage-spell-selected-identity","ownerPath":"packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts"}}
 {"unitId":"sacred_flame","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV28B","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"vicious_mockery","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV28D","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"mycelium_step","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT21","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
