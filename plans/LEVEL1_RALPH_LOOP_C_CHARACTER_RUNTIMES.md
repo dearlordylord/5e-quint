@@ -103,7 +103,7 @@
     {
       "number": 14,
       "id": "L1C-L1X-09",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Mending No-Matrix Decision"
     },
     {
