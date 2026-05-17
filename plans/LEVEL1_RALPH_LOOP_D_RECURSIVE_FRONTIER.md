@@ -73,7 +73,7 @@
     {
       "number": 12,
       "id": "L1D2-WEAPON-MASTERY-CONTAINERS",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Weapon Mastery Container Selected Identity Replays"
     },
     {
@@ -421,7 +421,7 @@ task was appended; `find_familiar` stays excluded.
 | 9 | L1D2-CLERIC-DRUID-ORDER - Cleric And Druid Order Selected Identity Replay | done | none | Unblocked by Task 13 refreshed matrix evidence. |
 | 10 | L1D2-ROGUE-EXPERTISE - Rogue Expertise Selected Identity Replay | done | none | Unblocked by Task 13 refreshed matrix evidence. |
 | 11 | L1D2-WARLOCK-ELDRITCH-INVOCATIONS - Warlock Eldritch Invocations Selected Identity Replay | done | none | Unblocked by Task 13 refreshed matrix evidence. |
-| 12 | L1D2-WEAPON-MASTERY-CONTAINERS - Weapon Mastery Container Selected Identity Replays | ready-for-implementation-after-light-research | none | Unblocked for supported-profile container Units by Task 13 refreshed matrix evidence. |
+| 12 | L1D2-WEAPON-MASTERY-CONTAINERS - Weapon Mastery Container Selected Identity Replays | done | none | Selected identity evidence landed for supported-profile container Units. |
 | 13 | L1D2-REPLENISH-001 - Recursive Frontier Replenishment 001 | done | none | Appended Tasks 14-25 plus `L1D2-REPLENISH-002`; refreshed coverage artifacts were unchanged. |
 | 14 | L1D2-HUNTERS-MARK-FAVORED-ENEMY-ACCOUNTING - Hunter's Mark And Ranger Favored Enemy Profile Accounting Closure | ready-for-research | none | Close the two D-owned strict open-profile-accounting items not owned by execution frontiers A/B. |
 | 15 | L1D2-BARDIC-INSPIRATION-SCALING - Bardic Inspiration Die Scaling Support | ready-for-research | Task 14 or explicit deferral | Adjacent profile-expansion task after the strict frontier is D-closed or active-lane-blocked. |
@@ -580,7 +580,7 @@ RAW: `.references/srd-5.2.1/Classes/Warlock.md` Eldritch Invocations.
 
 ### Task 12 - L1D2-WEAPON-MASTERY-CONTAINERS - Weapon Mastery Container Selected Identity Replays
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Unblocked by Task 13 refreshed matrix evidence for the supported-profile
 container Units `paladin_weapon_mastery`, `ranger_weapon_mastery`, and

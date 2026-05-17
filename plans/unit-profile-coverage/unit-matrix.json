@@ -93,8 +93,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 94,
-      "numerator": 91,
-      "percent": "96.8%"
+      "numerator": 94,
+      "percent": "100%"
     },
     "supportedProfileCoverage": {
       "denominator": 118,
@@ -6565,6 +6565,16 @@
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "AT-L1-04"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1D2-WEAPON-MASTERY-CONTAINERS"
+        },
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1D2-WEAPON-MASTERY-CONTAINERS"
         }
       ],
       "executableMechanics": true,
@@ -6765,6 +6775,16 @@
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "AT-L1-04"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1D2-WEAPON-MASTERY-CONTAINERS"
+        },
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1D2-WEAPON-MASTERY-CONTAINERS"
         }
       ],
       "executableMechanics": true,
@@ -6842,6 +6862,16 @@
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "AT-L1-04"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1D2-WEAPON-MASTERY-CONTAINERS"
+        },
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1D2-WEAPON-MASTERY-CONTAINERS"
         }
       ],
       "executableMechanics": true,
