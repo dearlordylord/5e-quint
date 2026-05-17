@@ -451,7 +451,7 @@ Cross-referencing the table against SRD 5.2.1 and current code revealed these ga
 3. Tier 1 MBT — battle parity after predicate rewrite
 4. `tsc` after TS table + scattered-check rewrite
 5. Tier 2 MBT (10 seeds) — Quint-TS parity across rewritten surface
-6. `/simplify` x2 — convergence on new table + rewritten functions
+6. Reviewer loop x2 — convergence on new table + rewritten functions
 
 ## Quint Impact
 
