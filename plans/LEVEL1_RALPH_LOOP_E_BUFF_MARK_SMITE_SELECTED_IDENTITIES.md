@@ -73,7 +73,7 @@
     {
       "number": 12,
       "id": "L1E-TRUE-STRIKE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "True Strike Selected Identity Replay"
     }
   ]
@@ -245,7 +245,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-S-Z.md` Shillelagh.
 
 ### Task 12 - L1E-TRUE-STRIKE - True Strike Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `true_strike`, proving spell-hosted weapon
 attack support without duplicating weapon state.
