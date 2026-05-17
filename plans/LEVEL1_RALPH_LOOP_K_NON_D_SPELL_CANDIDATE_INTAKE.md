@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L1K-PRECHECK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Non-D Spell Candidate Precheck"
     },
     {
@@ -38,7 +38,7 @@
       "number": 6,
       "id": "L1K-ZONE-WALL-CANDIDATES",
       "status": "ready-for-research",
-      "title": "Zone Wall Spell Candidate Intake"
+      "title": "Zone Wall Emanation Spell Candidate Intake"
     },
     {
       "number": 7,
@@ -80,7 +80,9 @@ selected identity Units.
 
 Companion/familiar behavior is excluded. If a spell candidate requires a
 companion/summon lifecycle, record the exclusion or route it to the separate
-companion worktree; do not implement it here.
+companion worktree; do not implement it here. Self-origin Emanation spells are
+area-effect candidates, not companion exclusions solely because their spell
+names use "Conjure."
 
 ## Worktree Safety Prefix
 
@@ -125,12 +127,12 @@ Every task runs:
 
 | Order | Task | Status | Blocks On | Output |
 | ---: | --- | --- | --- | --- |
-| 1 | L1K-PRECHECK - Non-D Spell Candidate Precheck | ready-for-research | none | refreshed non-D spell candidate set and exclusion list |
+| 1 | L1K-PRECHECK - Non-D Spell Candidate Precheck | done | none | refreshed non-D spell candidate set and exclusion list |
 | 2 | L1K-DAMAGE-SPELL-CANDIDATES - Damage Spell Candidate Intake | ready-for-research | 1 | candidate split for damage spells outside D |
 | 3 | L1K-CONDITION-CONTROL-CANDIDATES - Condition Control Spell Candidate Intake | ready-for-research | 1 | candidate split for condition/control spells outside D |
 | 4 | L1K-PROTECTION-RESTORATION-CANDIDATES - Protection Restoration Spell Candidate Intake | ready-for-research | 1 | candidate split for protection/restoration spells outside D |
 | 5 | L1K-MOBILITY-TRANSFORMATION-CANDIDATES - Mobility Transformation Spell Candidate Intake | ready-for-research | 1 | candidate split for mobility/transformation spells outside D |
-| 6 | L1K-ZONE-WALL-CANDIDATES - Zone Wall Spell Candidate Intake | ready-for-research | 1 | candidate split for zones/walls outside D |
+| 6 | L1K-ZONE-WALL-CANDIDATES - Zone Wall Emanation Spell Candidate Intake | ready-for-research | 1 | candidate split for zones/walls/emanations outside D |
 | 7 | L1K-DETECTION-COMMUNICATION-CANDIDATES - Detection Communication Spell Candidate Intake | ready-for-research | 1 | runtime-detached versus runtime-witness split for detection/communication spells |
 | 8 | L1K-COUNTER-DISPEL-CANDIDATES - Counter Dispel Spell Candidate Intake | ready-for-research | 1 | candidate split for counter/dispel/anti-magic spells |
 | 9 | L1K-WEAPON-ITEM-HOSTED-CANDIDATES - Weapon Item Hosted Spell Candidate Intake | ready-for-research | 1 | candidate split for weapon/item hosted spells |
@@ -138,11 +140,13 @@ Every task runs:
 
 ### Task 1 - L1K-PRECHECK - Non-D Spell Candidate Precheck
 
-Status: `ready-for-research`
+Status: `done`
 
 Refresh the authored spell candidate set from `UNIT_REPORT.md` and
 `srd-unit-inventory.json`. Produce a decision artifact with the non-D spell
 groups this loop owns and the D/companion exclusions.
+
+Decision artifact: `plans/unit-profile-coverage/L1K_NON_D_SPELL_CANDIDATE_PRECHECK.md`.
 
 ### Task 2 - L1K-DAMAGE-SPELL-CANDIDATES - Damage Spell Candidate Intake
 
@@ -182,15 +186,18 @@ Initial candidates: `misty_step`, `fly`, `spider_climb`,
 
 Keep table geometry and companion/stat-block replacement boundaries explicit.
 
-### Task 6 - L1K-ZONE-WALL-CANDIDATES - Zone Wall Spell Candidate Intake
+### Task 6 - L1K-ZONE-WALL-CANDIDATES - Zone Wall Emanation Spell Candidate Intake
 
 Status: `ready-for-research`
 
 Initial candidates: `web`, `moonbeam`, `spike_growth`, `wall_of_fire`,
-`wall_of_force`, `wall_of_stone`, and `stinking_cloud`.
+`wall_of_force`, `wall_of_stone`, `stinking_cloud`,
+`conjure_minor_elementals`, and `conjure_woodland_beings`.
 
 Do not convert table-owned area membership/pathfinding into runtime-owned map
-automation.
+automation. Treat `conjure_minor_elementals` and `conjure_woodland_beings` as
+self-origin Emanation candidates under SRD 5.2.1, not companion/summon
+lifecycle exclusions.
 
 ### Task 7 - L1K-DETECTION-COMMUNICATION-CANDIDATES - Detection Communication Spell Candidate Intake
 
@@ -225,8 +232,8 @@ from D's selected identity work.
 
 Status: `ready-for-research`
 
-Initial candidates: `find_steed`, `animate_dead`, `animate_objects`,
-`conjure_minor_elementals`, `conjure_woodland_beings`, and `summon_dragon`.
+Initial candidates: `find_steed`, `animate_dead`, `animate_objects`, and
+`summon_dragon`.
 
 Record companion/summon exclusions or handoff targets only. Do not implement
 companion behavior in this loop.
