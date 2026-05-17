@@ -12354,10 +12354,10 @@
             "battleReadinessClosure": {
               "kind": "social-knowledge-effect",
               "owner": "SRDINV41 social/knowledge owner",
-              "reason": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are social/knowledge state outside promoted battle runtime."
+              "reason": "Friendly disposition, the Charmed condition's Social Advantage, social interaction adjudication, and target knowledge when the spell ends are social/knowledge facts outside promoted battle runtime state."
             },
             "followUpTaskId": "SRDINV41",
-            "mechanic": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are not represented in battle runtime state"
+            "mechanic": "Friendly disposition, the Charmed condition's Social Advantage, social interaction adjudication, and target knowledge when the spell ends remain runtime-detached social/knowledge state"
           }
         ],
         "profileIds": [
@@ -12368,7 +12368,7 @@
         ],
         "supportedMechanics": [
           "Humanoid creature-type target filter",
-          "Wisdom save-gated Charmed condition",
+          "Wisdom save-gated battle-visible Charmed condition application and cleanup",
           "hostile-target Wisdom save Advantage",
           "1-hour spell-owned condition duration",
           "spell ends if caster or one of the caster's allies deals damage to the target",

@@ -4979,7 +4979,7 @@
         "source": "deferred-mechanics",
         "kind": "profile-subset-remaining-mechanics-closed",
         "owner": "SRDINV41 social/knowledge owner",
-        "reason": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are social/knowledge state outside promoted battle runtime."
+        "reason": "Friendly disposition, the Charmed condition's Social Advantage, social interaction adjudication, and target knowledge when the spell ends are social/knowledge facts outside promoted battle runtime state."
       },
       "ownerEvidence": [
         {
@@ -8438,7 +8438,7 @@
         "source": "deferred-mechanics",
         "kind": "profile-subset-remaining-mechanics-closed",
         "owner": "SRDINV41 social/knowledge owner",
-        "reason": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are social/knowledge state outside promoted battle runtime."
+        "reason": "Friendly disposition, the Charmed condition's Social Advantage, social interaction adjudication, and target knowledge when the spell ends are social/knowledge facts outside promoted battle runtime state."
       },
       "ownerEvidence": [
         {
@@ -14662,7 +14662,7 @@
         "source": "deferred-mechanics",
         "kind": "profile-subset-remaining-mechanics-closed",
         "owner": "SRDINV41 social/knowledge owner",
-        "reason": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are social/knowledge state outside promoted battle runtime."
+        "reason": "Friendly disposition, the Charmed condition's Social Advantage, social interaction adjudication, and target knowledge when the spell ends are social/knowledge facts outside promoted battle runtime state."
       },
       "ownerEvidence": [
         {
@@ -16426,7 +16426,7 @@
         "source": "deferred-mechanics",
         "kind": "profile-subset-remaining-mechanics-closed",
         "owner": "SRDINV41 social/knowledge owner",
-        "reason": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are social/knowledge state outside promoted battle runtime."
+        "reason": "Friendly disposition, the Charmed condition's Social Advantage, social interaction adjudication, and target knowledge when the spell ends are social/knowledge facts outside promoted battle runtime state."
       },
       "ownerEvidence": [
         {
@@ -18142,7 +18142,7 @@
         "source": "deferred-mechanics",
         "kind": "profile-subset-remaining-mechanics-closed",
         "owner": "SRDINV41 social/knowledge owner",
-        "reason": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are social/knowledge state outside promoted battle runtime."
+        "reason": "Friendly disposition, the Charmed condition's Social Advantage, social interaction adjudication, and target knowledge when the spell ends are social/knowledge facts outside promoted battle runtime state."
       },
       "ownerEvidence": [
         {
