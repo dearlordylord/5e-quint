@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "L1J-INSTALLED-EQUIPMENT-ROW-ALIGNMENT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Installed Equipment Row Alignment"
     }
   ]
