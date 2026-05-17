@@ -93,8 +93,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 94,
-      "numerator": 73,
-      "percent": "77.7%"
+      "numerator": 74,
+      "percent": "78.7%"
     },
     "supportedProfileCoverage": {
       "denominator": 118,
@@ -4488,6 +4488,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "QMBT62"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1H-FIGHTER-TACTICAL-MIND"
         }
       ],
       "executableMechanics": true,

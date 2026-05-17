@@ -32,6 +32,8 @@ module ruleCoreFeaturesMbt {
   var qIncomingAttackAdvantage: bool
   var qSneakAttackUsedThisTurn: bool
   var qLastDamageAmount: int
+  var qAbilityCheckBoostedTotal: int
+  var qAbilityCheckBoostedSucceeded: bool
   var qActorArmorClass: int
   var qCritical: bool
   var qHoles: Set[str]
@@ -72,7 +74,7 @@ module ruleCoreFeaturesMbt {
 
   pure def featureMbtBaselineArmorClass: int = 10
 
-  action recordProjection(
+  action recordBaseProjection(
     actionAvailable: bool,
     bonusActionAvailable: bool,
     reactionAvailable: bool,
@@ -116,6 +118,76 @@ module ruleCoreFeaturesMbt {
     qPendingReaction' = pendingReaction,
     qLastResult' = result,
     qLastInvalidReason' = invalidReason,
+  }
+
+  action recordProjection(
+    actionAvailable: bool,
+    bonusActionAvailable: bool,
+    reactionAvailable: bool,
+    featureUsesRemaining: int,
+    actionSurgeGrant: ActionSurgeActionGrant,
+    actorHp: int,
+    targetHp: int,
+    dashBonusFeet: int,
+    disengaged: bool,
+    hidden: bool,
+    rageActive: bool,
+    recklessActive: bool,
+    incomingAttackAdvantage: bool,
+    sneakAttackUsedThisTurn: bool,
+    lastDamageAmount: int,
+    critical: bool,
+    actorArmorClass: int,
+    holes: Set[str],
+    pendingReaction: bool,
+    result: str,
+    invalidReason: str,
+  ): bool = all {
+    recordBaseProjection(
+      actionAvailable, bonusActionAvailable, reactionAvailable,
+      featureUsesRemaining, actionSurgeGrant, actorHp, targetHp,
+      dashBonusFeet, disengaged, hidden, rageActive, recklessActive,
+      incomingAttackAdvantage, sneakAttackUsedThisTurn, lastDamageAmount,
+      critical, actorArmorClass, holes, pendingReaction, result, invalidReason
+    ),
+    qAbilityCheckBoostedTotal' = 0,
+    qAbilityCheckBoostedSucceeded' = false,
+  }
+
+  action recordAbilityCheckBoostProjection(
+    actionAvailable: bool,
+    bonusActionAvailable: bool,
+    reactionAvailable: bool,
+    featureUsesRemaining: int,
+    actionSurgeGrant: ActionSurgeActionGrant,
+    actorHp: int,
+    targetHp: int,
+    dashBonusFeet: int,
+    disengaged: bool,
+    hidden: bool,
+    rageActive: bool,
+    recklessActive: bool,
+    incomingAttackAdvantage: bool,
+    sneakAttackUsedThisTurn: bool,
+    lastDamageAmount: int,
+    abilityCheckBoostedTotal: int,
+    abilityCheckBoostedSucceeded: bool,
+    critical: bool,
+    actorArmorClass: int,
+    holes: Set[str],
+    pendingReaction: bool,
+    result: str,
+    invalidReason: str,
+  ): bool = all {
+    recordBaseProjection(
+      actionAvailable, bonusActionAvailable, reactionAvailable,
+      featureUsesRemaining, actionSurgeGrant, actorHp, targetHp,
+      dashBonusFeet, disengaged, hidden, rageActive, recklessActive,
+      incomingAttackAdvantage, sneakAttackUsedThisTurn, lastDamageAmount,
+      critical, actorArmorClass, holes, pendingReaction, result, invalidReason
+    ),
+    qAbilityCheckBoostedTotal' = abilityCheckBoostedTotal,
+    qAbilityCheckBoostedSucceeded' = abilityCheckBoostedSucceeded,
   }
 
   action init = recordProjection(
@@ -220,6 +292,38 @@ module ruleCoreFeaturesMbt {
         NoActionSurgeActionGrant, result.recovery.vitals.hitPoints, 12, 0,
         false, false, false, false, false, false,
         result.recovery.hitPointsRegained, false, featureMbtBaselineArmorClass, Set(), false, "resolved", "none"
+      ),
+    }
+  }
+
+  action doTacticalMindConvertedSuccess = {
+    val result = resolveFailedAbilityCheckResourceBoost(
+      { usesRemaining: 1, maximumUses: 1 },
+      { originalTotal: 13, dc: 15, boostRoll: 3 }
+    )
+    all {
+      qHoles == Set(),
+      recordAbilityCheckBoostProjection(
+        true, true, true, result.pool.usesRemaining, NoActionSurgeActionGrant,
+        12, 12, 0, false, false, false, false, false, false, 0,
+        result.boostedTotal, result.boostedSucceeded, false,
+        featureMbtBaselineArmorClass, Set(), false, "resolved", "none"
+      ),
+    }
+  }
+
+  action doTacticalMindStillFailed = {
+    val result = resolveFailedAbilityCheckResourceBoost(
+      { usesRemaining: 1, maximumUses: 1 },
+      { originalTotal: 10, dc: 15, boostRoll: 4 }
+    )
+    all {
+      qHoles == Set(),
+      recordAbilityCheckBoostProjection(
+        true, true, true, result.pool.usesRemaining, NoActionSurgeActionGrant,
+        12, 12, 0, false, false, false, false, false, false, 0,
+        result.boostedTotal, result.boostedSucceeded, false,
+        featureMbtBaselineArmorClass, Set(), false, "resolved", "none"
       ),
     }
   }
@@ -534,6 +638,8 @@ module ruleCoreFeaturesMbt {
     doDiscoverSecondWind,
     doResolveSecondWindLow,
     doResolveSecondWindHigh,
+    doTacticalMindConvertedSuccess,
+    doTacticalMindStillFailed,
     doCunningDash,
     doCunningDisengage,
     doCunningHide,

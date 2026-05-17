@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "L1H-FIGHTER-TACTICAL-MIND",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Fighter Tactical Mind Selected Identity Replay"
     },
     {
@@ -246,7 +246,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-M-P.md` Mass Healing Word.
 
 ### Task 9 - L1H-FIGHTER-TACTICAL-MIND - Fighter Tactical Mind Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `fighter_tactical_mind` if it remains in the
 supported selected identity denominator after the precheck.
