@@ -151,7 +151,7 @@
     {
       "number": 25,
       "id": "L1D2-UNSEEN-SERVANT-NO-MATRIX",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Unseen Servant No-Matrix Decision"
     },
     {
@@ -439,7 +439,7 @@ task was appended; `find_familiar` stays excluded.
 | 22 | L1D2-MESSAGE-DECISION-INTEGRATION - Message Frontier Decision Integration | done | Task 14 or explicit deferral | Consume the existing decision artifact; do not reclassify the row. |
 | 23 | L1D2-PRESTIDIGITATION-DECISION-INTEGRATION - Prestidigitation Frontier Decision Integration | done | Task 14 or explicit deferral | Consume the existing decision artifact; do not reclassify the row. |
 | 24 | L1D2-THAUMATURGY-BOOMING-VOICE - Thaumaturgy Booming Voice Ability Check Support | done | Task 14 or explicit deferral | Booming Voice support promoted; other minor wonders remain runtime-detached. |
-| 25 | L1D2-UNSEEN-SERVANT-NO-MATRIX - Unseen Servant No-Matrix Decision | ready-for-research | Task 14 or explicit deferral | Remaining no-matrix strict SRD pressure row without an existing frontier decision artifact. |
+| 25 | L1D2-UNSEEN-SERVANT-NO-MATRIX - Unseen Servant No-Matrix Decision | done | Task 14 or explicit deferral | Remaining no-matrix strict SRD pressure row without an existing frontier decision artifact. |
 | 26 | L1D2-REPLENISH-002 - Recursive Frontier Replenishment 002 | ready-for-research | Tasks 14-25 done or intentionally deferred | Refresh the frontier again and append the next concrete batch. |
 
 ## Task Details
@@ -1120,7 +1120,7 @@ Verification:
 
 ### Task 25 - L1D2-UNSEEN-SERVANT-NO-MATRIX - Unseen Servant No-Matrix Decision
 
-Status: `ready-for-research`
+Status: `done`
 
 Classify the strict SRD pressure row for `unseen_servant`, which currently has
 no Unit matrix row and is not owned by Loop C. Decide whether it should be an
