@@ -136,6 +136,7 @@
 {"unitId":"dissonant_whispers","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV52","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"dissonant_whispers","evidence":{"tag":"selected-identity-mbt","taskId":"movement-forced-movement","ownerPath":"packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts"}}
 {"unitId":"sanctuary","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84G","ownerPath":"packages/battle-runtime/src/sanctuary-targeting-interdiction.test.ts"}}
+{"unitId":"sanctuary","evidence":{"tag":"selected-identity-mbt","taskId":"L1H-SANCTUARY","ownerPath":"packages/battle-runtime/src/sanctuary-selected-identity.mbt.test.ts"}}
 {"unitId":"shillelagh","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84H","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"find_familiar","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84I5","ownerPath":"packages/battle-runtime/src/find-familiar-lifecycle.test.ts"}}
 {"unitId":"barbarian_unarmored_defense","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV91B","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}

@@ -93,8 +93,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 93,
-      "numerator": 51,
-      "percent": "54.8%"
+      "numerator": 52,
+      "percent": "55.9%"
     },
     "supportedProfileCoverage": {
       "denominator": 117,
@@ -9667,6 +9667,11 @@
           "ownerPath": "packages/battle-runtime/src/sanctuary-targeting-interdiction.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV84G"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/sanctuary-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1H-SANCTUARY"
         }
       ],
       "executableMechanics": true,

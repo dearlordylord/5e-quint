@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "L1H-SANCTUARY",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Sanctuary Selected Identity Replay"
     },
     {
@@ -216,7 +216,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-M-P.md` Mage Armor.
 
 ### Task 6 - L1H-SANCTUARY - Sanctuary Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `sanctuary`, covering ward creation, direct
 targeting interdiction, Wisdom save outcome, replacement target boundary, and
