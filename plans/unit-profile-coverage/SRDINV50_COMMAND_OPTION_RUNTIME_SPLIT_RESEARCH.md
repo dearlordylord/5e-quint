@@ -163,7 +163,7 @@ Out of scope:
 - treating "fastest available means" as permission to invent non-RAW movement
   modes.
 
-## /simplify Convergence
+## reviewer loop Convergence
 
 - Round 1: rejected one omnibus Command runtime task. The route, held-object,
   action suppression, and condition/end-turn clauses require different runtime

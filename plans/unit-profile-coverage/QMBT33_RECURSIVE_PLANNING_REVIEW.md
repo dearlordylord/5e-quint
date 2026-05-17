@@ -77,10 +77,10 @@ family into the plan.
   and task details for QMBT33-QMBT36.
 - `pnpm unit-profile-coverage:check` passed. Matrix docs and generated
   artifacts were not changed.
-- `/simplify` round 1: selected `mass_cure_wounds` as the next spell widening
+- reviewer loop round 1: selected `mass_cure_wounds` as the next spell widening
   because the only new executable boundary over QMBT32 is point-origin Sphere
   target selection.
-- `/simplify` round 2: no important changes found after the next batch was
+- reviewer loop round 2: no important changes found after the next batch was
   narrowed to one spell implementation, one feature selection, and one
   recursive review.
 - MBT not run: QMBT33 is planning-only and makes no promoted battle-runtime

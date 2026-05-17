@@ -92,7 +92,7 @@ downstream of the next recursive review after the level-1 character-creation
 evidence denominator has been reduced and the remaining non-character-creation
 evidence rows are explicit.
 
-## /simplify Convergence
+## reviewer loop Convergence
 
 - Round 1: selected character-creation owner-evidence closure because the
   refreshed level-1 denominator has no missing class containers and no

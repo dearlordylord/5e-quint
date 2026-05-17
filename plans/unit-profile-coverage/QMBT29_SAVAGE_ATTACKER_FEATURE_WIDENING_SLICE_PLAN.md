@@ -162,7 +162,7 @@ Local RAW anchors read for this decision:
 - `pnpm unit-profile-coverage:check`.
 - Relevant package typecheck/tests.
 - `pnpm quality` for the production behavior change.
-- `/simplify` convergence, minimum two rounds.
+- reviewer loop convergence, minimum two rounds.
 
 ## Task 124 Verification
 
@@ -173,11 +173,11 @@ Local RAW anchors read for this decision:
 - `UBIQUITOUS_LANGUAGE.md` checked for Attack Roll, Critical Hit, Damage Roll,
   Attack Damage Rider, Pool, Quota, Spend, Weapon Property, Mastery Property,
   and Weapon Mastery terminology.
-- `/simplify` round 1: kept `feat_savage_attacker` selected, retained the
+- reviewer loop round 1: kept `feat_savage_attacker` selected, retained the
   Critical Hit interaction as an explicit implementation-time RAW/assumption
   check, and kept deferred candidates separated by domain boundary instead of
   broad feature-family grouping.
-- `/simplify` round 2: no important changes found; the plan still has one
+- reviewer loop round 2: no important changes found; the plan still has one
   selected executable feature slice, no runtime implementation, and no mixed
   movement, resource, resistance, attack-count, spell, or mastery scope.
 - MBT not run: Task 124 is research-only and makes no promoted battle-runtime

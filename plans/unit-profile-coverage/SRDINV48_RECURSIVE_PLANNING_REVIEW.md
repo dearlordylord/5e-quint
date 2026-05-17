@@ -113,7 +113,7 @@ Remaining Surface blockers such as Fire Bolt object ignition, Fog Cloud, Hex,
 Hideous Laughter, Sanctuary, Shillelagh, Sorcerous Burst, and Spare the Dying
 remain counted for SRDINV55 or later batches.
 
-## /simplify Convergence
+## reviewer loop Convergence
 
 - Round 1: rejected an omnibus runtime batch for all six widened spells.
   Command and Feather Fall need research; Dissonant Whispers and Jump should

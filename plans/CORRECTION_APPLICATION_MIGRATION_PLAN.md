@@ -373,7 +373,7 @@ CAM20 closeout checks:
   remains traced through the SRD-backed manifest, Surface records, and
   `UBIQUITOUS_LANGUAGE.md` terms such as Attack Roll, Initiative, Hit Points,
   and Damage Type.
-- `/simplify` convergence: round 1 replaced remaining active route-isolation
+- reviewer loop convergence: round 1 replaced remaining active route-isolation
   wording in this plan with MCP/runtime terminology and added this closeout
   note; round 2 rechecked MCP/runtime paths for `@dnd/core` and
   projected-executable vocabulary and found no further important fixes.
@@ -420,7 +420,7 @@ rather than being represented by projected-executable vocabulary.
 
 Required before marking this plan complete:
 
-1. RAW agent check: before implementing each phase-1 rule, read the relevant SRD passage in `.references/srd-5.2.1/` and check `UBIQUITOUS_LANGUAGE.md`. Each modeled rule must trace to SRD 5.2.1 or ASSUMPTIONS.md. If implementation requires a new interpretation or narrower phase-1 modeling choice not directly stated by SRD, stop and add/obtain an ASSUMPTIONS.md entry before coding.
+1. RAW/ubiquitous-language reviewer check: before implementing each phase-1 rule, read the relevant SRD passage in `.references/srd-5.2.1/` and check `UBIQUITOUS_LANGUAGE.md`. Each modeled rule must trace to SRD 5.2.1 or ASSUMPTIONS.md. If implementation requires a new interpretation or narrower phase-1 modeling choice not directly stated by SRD, stop and add/obtain an ASSUMPTIONS.md entry before coding.
 2. Character runtime QNT/parity passes.
 3. Battle runtime QNT/parity checks pass.
 4. MCP full vertical test passes.
@@ -436,7 +436,7 @@ Required before marking this plan complete:
    Ledger and proceeds through the post-BA queue in `plans/ACTIVE_PLAN.md`.
 9. Command-level verification is added once packages exist, using `pnpm` only. Battle MBT must follow the repo MBT run protocol, including zombie evaluator checks before the run. Typecheck scope must include MCP and the new runtime packages.
 10. Documentation stays synchronized with code changes. Tasks that change reducer behavior, shared algebras, action resources, hole/fill semantics, Surface record boundaries, or runtime package architecture must update the docs owned by the changed package in the same change. Battle runtime changes update `packages/battle-runtime/README.md` and `packages/battle-runtime/ARCHITECTURE_GRAPH.md`; character-creation changes update `packages/character-creation-runtime/README.md` and package vocabulary; shared algebra changes update `packages/shared-algebras` docs or package-local MBT docs. Deleted `packages/surface-runtime-correction/*` docs are historical source material only; use `git show <sha>:packages/surface-runtime-correction/<file>` if a restore task needs the old baseline.
-11. `/simplify` convergence: minimum two rounds after implementation, continuing until no important fixes remain.
+11. reviewer loop convergence: minimum two rounds after implementation, continuing until no important fixes remain.
 
 ## Explicit Non-Goals For Phase 1
 

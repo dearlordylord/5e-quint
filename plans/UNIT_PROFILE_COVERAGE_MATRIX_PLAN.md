@@ -459,5 +459,5 @@ Every implementation phase must include:
       when RAW requirement links change.
 - [ ] Runtime parity gate: run promoted or focused MBT only after completed
       behavior changes, not for matrix-only edits.
-- [ ] `/simplify` convergence: after implementation, run `/simplify` for at
+- [ ] reviewer loop convergence: after implementation, run reviewer loop for at
       least two rounds and continue until no important fixes remain.

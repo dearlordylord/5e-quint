@@ -204,7 +204,7 @@ or plan closeout notes:
 
 ## Verification
 
-- RAW agent check: confirm all modeled Speed and Movement cost rules trace to
+- RAW/ubiquitous-language reviewer check: confirm all modeled Speed and Movement cost rules trace to
   the listed SRD 5.2.1 passages and `UBIQUITOUS_LANGUAGE.md`; do not browse
   external rules sources.
 - Run focused deterministic tests:
@@ -217,7 +217,7 @@ or plan closeout notes:
   `pnpm --filter @dnd/battle-runtime test -- src/unit-profile-admission.test.ts src/index.test.ts src/rule-core-movement.mbt.test.ts`
 - Run battle MBT only after battle integration is complete, and only once:
   `cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=6 pnpm exec vitest run src/battle-runtime.mbt.test.ts`
-- `/simplify` convergence: run at least 2 rounds immediately after
+- reviewer loop convergence: run at least 2 rounds immediately after
   implementation. Continue until each round finds fewer issues and no important
   fixes remain.
 

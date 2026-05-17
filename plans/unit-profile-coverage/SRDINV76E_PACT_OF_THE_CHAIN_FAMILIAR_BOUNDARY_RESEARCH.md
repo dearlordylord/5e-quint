@@ -189,7 +189,7 @@ Out of scope:
 - Add SRDINV76E2 only after a companion owner can represent familiar turns,
   present/dismissed state, Reaction availability, and stat-block attacks.
 
-## /simplify Convergence
+## reviewer loop Convergence
 
 - Round 1: rejected treating Surface `find_familiar` catalog admission as Pact
   of the Chain support. Pact of the Chain changes Spell Access, casting

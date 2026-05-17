@@ -268,4 +268,4 @@ Branding strategy:
   tests.
 - Battle-runtime MBT only after implementation is complete, one run using the
   mandatory timed background protocol.
-- `/simplify` convergence, minimum two rounds.
+- reviewer loop convergence, minimum two rounds.
