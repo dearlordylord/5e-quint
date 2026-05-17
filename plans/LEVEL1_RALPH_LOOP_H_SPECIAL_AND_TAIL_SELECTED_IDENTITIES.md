@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L1H-PROTECTION-EVIL-GOOD",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Protection From Evil And Good Selected Identity Replay"
     },
     {
@@ -187,7 +187,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-A-D.md` Animal Friendship.
 
 ### Task 3 - L1H-PROTECTION-EVIL-GOOD - Protection From Evil And Good Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `protection_from_evil_and_good`, binding the
 authored Unit through supported creature-type protection and charm boundary.

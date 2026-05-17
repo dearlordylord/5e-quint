@@ -93,8 +93,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 93,
-      "numerator": 48,
-      "percent": "51.6%"
+      "numerator": 49,
+      "percent": "52.7%"
     },
     "supportedProfileCoverage": {
       "denominator": 117,
@@ -9101,6 +9101,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV60A"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/creature-type-protection-and-charm-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1H-PROTECTION-EVIL-GOOD"
         }
       ],
       "executableMechanics": true,
