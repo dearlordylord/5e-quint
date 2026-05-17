@@ -272,6 +272,6 @@ When an actionable item is promoted into implementation, the batch should:
 1. add deterministic tests first
 2. trace the rule to local SRD text before changing semantics
 3. run the smallest relevant verification set
-4. run `/simplify` until convergence after implementation
+4. run the reviewer loop until convergence after implementation
 
 Use Tier 1 MBT only if the batch changes authoritative battle semantics.
