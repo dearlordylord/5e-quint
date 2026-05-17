@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L1J-PRECHECK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Non-D Equipment Data Precheck"
     },
     {
@@ -119,7 +119,7 @@ Every task runs:
 
 | Order | Task | Status | Blocks On | Output |
 | ---: | --- | --- | --- | --- |
-| 1 | L1J-PRECHECK - Non-D Equipment Data Precheck | ready-for-research | none | refreshed non-runtime armor/weapon inventory, excluding D-owned mastery work |
+| 1 | L1J-PRECHECK - Non-D Equipment Data Precheck | done | none | decision artifact with exact non-runtime armor/weapon/Shield ownership, excluding D-owned mastery work |
 | 2 | L1J-LIGHT-MEDIUM-ARMOR-DATA - Light Medium Armor Non Runtime Data Closure | ready-for-research | 1 | explicit closure for light/medium armor authored records |
 | 3 | L1J-HEAVY-ARMOR-DATA - Heavy Armor Non Runtime Data Closure | ready-for-research | 1 | explicit closure for heavy armor authored records |
 | 4 | L1J-SIMPLE-MELEE-WEAPON-DATA - Simple Melee Weapon Non Runtime Data Closure | ready-for-research | 1 | explicit closure for simple melee authored records |
@@ -132,12 +132,15 @@ Every task runs:
 
 ### Task 1 - L1J-PRECHECK - Non-D Equipment Data Precheck
 
-Status: `ready-for-research`
+Status: `done`
 
 Read `UNIT_REPORT.md`, `srd-unit-inventory.json`, authored Surface equipment
 records, and existing weapon/armor Unit claims. Produce a decision artifact that
 states the exact rows this loop owns and confirms D-owned Weapon Mastery
 selected identity/container work is excluded.
+
+Decision artifact:
+`plans/unit-profile-coverage/L1J_EQUIPMENT_DATA_PRECHECK.md`.
 
 ### Task 2 - L1J-LIGHT-MEDIUM-ARMOR-DATA - Light Medium Armor Non Runtime Data Closure
 
@@ -191,14 +194,18 @@ Status: `ready-for-research`
 
 Units include `weapon_blowgun`, `weapon_hand_crossbow`,
 `weapon_heavy_crossbow`, `weapon_light_crossbow`, `weapon_longbow`,
-`weapon_shortbow`, and `weapon_sling`.
+and `weapon_sling`.
+
+Installed `weapon_shortbow` belongs to Task 10.
 
 ### Task 8 - L1J-THROWN-FINESSE-WEAPON-DATA - Thrown Finesse Weapon Non Runtime Data Closure
 
 Status: `ready-for-research`
 
-Units include `weapon_dart`, `weapon_javelin`, and any thrown/finesse rows not
-closed by Tasks 4-7.
+Units include `weapon_dart` and `weapon_javelin`.
+
+Installed thrown/finesse rows such as `weapon_dagger` and `weapon_spear` belong
+to Task 10.
 
 ### Task 9 - L1J-FIREARM-EXOTIC-WEAPON-DATA - Firearm Exotic Weapon Non Runtime Data Closure
 
@@ -213,7 +220,9 @@ pressure.
 
 Status: `ready-for-research`
 
-Align existing installed unsupported rows such as `armor_chain_mail`,
-`equipment_shield`, and installed weapon data rows with the same non-runtime
-authored-data wording if the generated report still presents them as unassigned
-pressure.
+Align existing installed unsupported rows `armor_chain_mail`,
+`equipment_shield`, `weapon_club`, `weapon_dagger`, `weapon_flail`,
+`weapon_greataxe`, `weapon_longsword`, `weapon_quarterstaff`,
+`weapon_shortbow`, `weapon_shortsword`, and `weapon_spear` with the same
+non-runtime authored-data wording if the generated report still presents them as
+unassigned pressure.
