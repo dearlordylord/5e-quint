@@ -62,8 +62,8 @@
       "value": 145
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 96,
-      "numerator": 96,
+      "denominator": 97,
+      "numerator": 97,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 96,
-      "numerator": 87,
-      "percent": "90.6%"
+      "denominator": 97,
+      "numerator": 88,
+      "percent": "90.7%"
     },
     "supportedProfileCoverage": {
       "denominator": 118,
-      "numerator": 96,
-      "percent": "81.4%"
+      "numerator": 97,
+      "percent": "82.2%"
     }
   },
   "metricSemantics": [
@@ -9813,17 +9813,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "table/spatial and presentation owners",
-              "reason": "Colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the object-emitter runtime boundary."
-            },
-            "followUpTaskId": "SRDINV89D",
-            "mechanic": "colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the object-emitter runtime boundary"
-          }
-        ],
         "profileIds": [
           "spell.invocation-object-light"
         ],
@@ -9839,9 +9828,10 @@
           "one-hour duration cleanup",
           "same-caster recast replacement of the prior Light emitter",
           "caller-supplied emitter projection facts derive Bright Light, Dim Light, and opaque-cover suppression from the existing Light object emitter",
-          "derived Dim Light illumination projects Lightly Obscured sight consequences and Darkvision-adjusted sight consequences without duplicating emitter state"
+          "derived Dim Light illumination projects Lightly Obscured sight consequences and Darkvision-adjusted sight consequences without duplicating emitter state",
+          "colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the object-emitter runtime boundary"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [

@@ -22,6 +22,7 @@ import {
   AbilitySchema,
   DamageTypeSchema,
   DcSourceSchema,
+  SizeSchema,
 } from "@dnd/surface/surface/schema";
 import {
   SKILLS as SURFACE_SKILLS,
@@ -869,6 +870,7 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       actionCost: Schema.Literal("magicAction"),
       targeting: Schema.Struct({
         kind: Schema.Literal("singleObject"),
+        maxSize: SizeSchema,
       }),
       light: Schema.Struct({
         kind: Schema.Literal("brightAndDim"),

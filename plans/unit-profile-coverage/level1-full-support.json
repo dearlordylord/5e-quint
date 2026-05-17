@@ -752,71 +752,6 @@
     },
     {
       "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "table-spatial-derivation"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the object-emitter runtime boundary.",
-      "sourceRecordPath": "packages/surface/content/light.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Bard spell list Light",
-          "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_light",
-          "levelBand": "spell-level-0",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 148,
-            "lineStart": 148,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Cleric spell list Light",
-          "id": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_light",
-          "levelBand": "spell-level-0",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 151,
-            "lineStart": 151,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Light",
-          "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_light",
-          "levelBand": "spell-level-0",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 228,
-            "lineStart": 228,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Light",
-          "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_light",
-          "levelBand": "spell-level-0",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 147,
-            "lineStart": 147,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "light"
-    },
-    {
-      "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
         "outside-runtime-presentation-exploration"
@@ -1165,7 +1100,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 70,
+      "count": 71,
       "description": "Full support exists at the Unit profile boundary for strict level-1 accounting.",
       "status": "supported-profile",
       "unitIds": [
@@ -1206,6 +1141,7 @@
         "ice_knife",
         "inflict_wounds",
         "jump",
+        "light",
         "longstrider",
         "mage_armor",
         "magic_missile",
@@ -1259,7 +1195,7 @@
       ]
     },
     {
-      "count": 7,
+      "count": 6,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
@@ -1267,7 +1203,6 @@
         "fog_cloud",
         "grease",
         "hunters_mark",
-        "light",
         "ranger_favored_enemy",
         "thunderwave"
       ]
@@ -1305,18 +1240,18 @@
     },
     "strictRuntimeProfileSupport": {
       "denominator": 93,
-      "numerator": 70,
-      "percent": "75.3%"
+      "numerator": 71,
+      "percent": "76.3%"
     },
     "strictTargetClosure": {
       "denominator": 93,
-      "numerator": 86,
-      "percent": "92.5%"
+      "numerator": 87,
+      "percent": "93.5%"
     }
   },
   "openFrontier": [
     {
-      "count": 7,
+      "count": 6,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
@@ -1324,7 +1259,6 @@
         "fog_cloud",
         "grease",
         "hunters_mark",
-        "light",
         "ranger_favored_enemy",
         "thunderwave"
       ]
@@ -3606,18 +3540,18 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 120,
     "groupsByClaimTag": {
-      "profile-subset-supported": 12,
-      "supported-profile": 70,
+      "profile-subset-supported": 11,
+      "supported-profile": 71,
       "unsupported-profile": 11
     },
     "groupsByStatus": {
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 4,
       "closed-runtime-detached-table-adjudication": 10,
-      "open-profile-accounting": 7,
-      "supported-profile": 70
+      "open-profile-accounting": 6,
+      "supported-profile": 71
     },
-    "nonSupportedFrontier": 23,
+    "nonSupportedFrontier": 22,
     "strictDenominator": 93
   }
 }
