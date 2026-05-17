@@ -46,6 +46,20 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
     ),
   }
 
+  action doResolveChromaticOrbDuplicateDamageLeap = all {
+    qLastResult == "init",
+    recordProjection(
+      false,
+      true,
+      0,
+      3,
+      false,
+      false,
+      9,
+      "chromaticOrbDuplicateDamageLeap",
+    ),
+  }
+
   action doResolveIceKnifeHitAttackDamageAndBurstSavingThrows = all {
     qLastResult == "init",
     recordProjection(
@@ -160,6 +174,7 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
 
   action step = any {
     doResolveBurningHandsMixedConeSavingThrows,
+    doResolveChromaticOrbDuplicateDamageLeap,
     doResolveIceKnifeHitAttackDamageAndBurstSavingThrows,
     doResolveIceKnifeMissBurstSavingThrows,
     doResolvePoisonSpraySpellAttackDamage,

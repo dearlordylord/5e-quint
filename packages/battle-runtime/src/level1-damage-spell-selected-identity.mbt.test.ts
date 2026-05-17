@@ -1,5 +1,6 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt level1-damage-spell-selected-identity burning_hands ice_knife poison_spray ray_of_sickness sacred_flame sorcerous_burst starry_wisp vicious_mockery
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt level1-damage-spell-selected-identity burning_hands chromatic_orb ice_knife poison_spray ray_of_sickness sacred_flame sorcerous_burst starry_wisp vicious_mockery
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity burning_hands doResolveBurningHandsMixedConeSavingThrows
+// UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity chromatic_orb doResolveChromaticOrbDuplicateDamageLeap
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity ice_knife doResolveIceKnifeHitAttackDamageAndBurstSavingThrows doResolveIceKnifeMissBurstSavingThrows
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity poison_spray doResolvePoisonSpraySpellAttackDamage
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity ray_of_sickness doResolveRayOfSicknessSpellAttackDamageAndPoisoned
@@ -55,10 +56,15 @@ import {
   type CombatantId,
   type SupportedSpellInvocation,
 } from "./index.ts";
+import {
+  CHROMATIC_ORB_DAMAGE_TYPES,
+  CHROMATIC_ORB_LEAP_RANGE_FEET,
+} from "./battle-reducer/domain-constants.ts";
 
 const level1DamageSpellSelectedIdentityDriverSchema = {
   init: {},
   doResolveBurningHandsMixedConeSavingThrows: {},
+  doResolveChromaticOrbDuplicateDamageLeap: {},
   doResolveIceKnifeHitAttackDamageAndBurstSavingThrows: {},
   doResolveIceKnifeMissBurstSavingThrows: {},
   doResolvePoisonSpraySpellAttackDamage: {},
@@ -77,6 +83,7 @@ type Level1DamageSpellSelectedIdentityDriverAction = Exclude<
 
 const level1DamageSpellUnitIds = [
   "burning_hands",
+  "chromatic_orb",
   "ice_knife",
   "poison_spray",
   "ray_of_sickness",
@@ -89,6 +96,7 @@ type Level1DamageSpellUnitId = (typeof level1DamageSpellUnitIds)[number];
 const level1DamageSpellSelectedIdentityResults = [
   "init",
   "burningHandsMixedConeSavingThrows",
+  "chromaticOrbDuplicateDamageLeap",
   "iceKnifeHitAttackDamageAndBurstSavingThrows",
   "iceKnifeMissBurstSavingThrows",
   "poisonSpraySpellAttackDamage",
@@ -134,6 +142,10 @@ type SpellAttackDamageInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "spellAttackDamage" }
 >;
+type ChainedSpellAttackDamageInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "chainedSpellAttackDamage" }
+>;
 type SaveGatedDamageInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "saveGatedDamage" }
@@ -171,6 +183,7 @@ type Level1DamageSpellInvocationProfile =
       readonly slotLevel: 1;
       readonly procedure:
         | "attackBurstSaveDamage"
+        | "chainedSpellAttackDamage"
         | "saveGatedDamage"
         | "spellAttackDamage";
     };
@@ -180,6 +193,11 @@ const level1DamageSpellInvocationProfiles = {
     tag: "spellSlot",
     slotLevel: 1,
     procedure: "saveGatedDamage",
+  },
+  chromatic_orb: {
+    tag: "spellSlot",
+    slotLevel: 1,
+    procedure: "chainedSpellAttackDamage",
   },
   ice_knife: {
     tag: "spellSlot",
@@ -268,6 +286,25 @@ const selectedUnitIdentityReplays = [
           primaryTargetHp: 6,
           secondaryTargetHp: 9,
           lastResult: "burningHandsMixedConeSavingThrows",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "level1-damage-spell-selected-identity",
+    unitId: "chromatic_orb",
+    actions: ["doResolveChromaticOrbDuplicateDamageLeap"],
+    sequences: [
+      {
+        name: "ranged-spell-attack-selected-fire-damage-and-level-1-leap",
+        actions: ["doResolveChromaticOrbDuplicateDamageLeap"],
+        expected: expectedProjection({
+          actionAvailable: false,
+          spellSlotSpentThisTurn: true,
+          level1SlotsRemaining: 0,
+          primaryTargetHp: 3,
+          secondaryTargetHp: 9,
+          lastResult: "chromaticOrbDuplicateDamageLeap",
         }),
       },
     ],
@@ -517,6 +554,13 @@ function createLevel1DamageSpellSelectedIdentityDriver() {
           "burningHandsMixedConeSavingThrows",
         );
       },
+      doResolveChromaticOrbDuplicateDamageLeap: () => {
+        state = level1DamageSpellBattle(srdSpellRecord("chromatic_orb"));
+        recordResolvedResult(
+          resolveChromaticOrbDuplicateDamageLeap(state),
+          "chromaticOrbDuplicateDamageLeap",
+        );
+      },
       doResolveIceKnifeHitAttackDamageAndBurstSavingThrows: () => {
         state = level1DamageSpellBattle(srdSpellRecord("ice_knife"));
         recordResolvedResult(
@@ -622,6 +666,105 @@ function resolveBurningHandsMixedConeSavingThrows(
     state,
     subject: act.subject,
     fills: [savingThrowFill, damageRollFill(damage, [2, 2, 2])],
+  });
+}
+
+function resolveChromaticOrbDuplicateDamageLeap(
+  state: BattleState,
+): BattleResolutionResult {
+  const act = actionSpellAct(state, "chromatic_orb");
+  const damageType = requireHole(act.initialHoles, "damageTypeChoice");
+  assertChromaticOrbDamageTypeChoiceProfile(damageType);
+  const damageTypeChoice = damageTypeChoiceFill(damageType, "fire");
+  const primaryTarget = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [damageTypeChoice],
+    }),
+    "targetChoice",
+  );
+  assertSinglePrimaryTargetChoiceProfile(primaryTarget, "Chromatic Orb");
+  const primaryTargetChoice = spellTargetFill(
+    primaryTarget,
+    "chromatic_orb",
+    primaryTargetId,
+  );
+  const primaryAttack = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [damageTypeChoice, primaryTargetChoice],
+    }),
+    "attackRoll",
+  );
+  assertChromaticOrbAttackRollProfile(primaryAttack);
+  const primaryAttackRoll = attackRollFill(primaryAttack, {
+    total: 15,
+    naturalD20: 10,
+  });
+  const primaryDamage = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [damageTypeChoice, primaryTargetChoice, primaryAttackRoll],
+    }),
+    "rolledDice",
+  );
+  assertChromaticOrbDamageProfile(primaryDamage);
+  const primaryDamageRoll = damageRollFill(primaryDamage, [2, 2, 5]);
+  const firstStepFills = [
+    damageTypeChoice,
+    primaryTargetChoice,
+    primaryAttackRoll,
+    primaryDamageRoll,
+  ];
+  const leapTarget = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: firstStepFills,
+    }),
+    "targetChoice",
+  );
+  assertChromaticOrbLeapTargetProfile(leapTarget);
+  const leapTargetChoice = spellLeapTargetFill(
+    leapTarget,
+    "chromatic_orb",
+    primaryTargetId,
+    secondaryTargetId,
+  );
+  const leapAttack = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [...firstStepFills, leapTargetChoice],
+    }),
+    "attackRoll",
+  );
+  assertChromaticOrbAttackRollProfile(leapAttack);
+  const leapAttackRoll = attackRollFill(leapAttack, {
+    total: 15,
+    naturalD20: 10,
+  });
+  const leapDamage = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [...firstStepFills, leapTargetChoice, leapAttackRoll],
+    }),
+    "rolledDice",
+  );
+  assertChromaticOrbDamageProfile(leapDamage);
+  return resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [
+      ...firstStepFills,
+      leapTargetChoice,
+      leapAttackRoll,
+      damageRollFill(leapDamage, [1, 1, 1]),
+    ],
   });
 }
 
@@ -1141,6 +1284,28 @@ function spellTargetFill(
   };
 }
 
+function spellLeapTargetFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  spellId: Level1DamageSpellUnitId,
+  previousTargetId: CombatantId,
+  targetId: CombatantId,
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  return {
+    kind: "targetChoice",
+    holeId: hole.holeId,
+    value: targetId,
+    spatialFacts: [
+      {
+        kind: "spellLeapTargetWithinRange",
+        previousTargetId,
+        targetId,
+        spellId,
+        rangeFeet: CHROMATIC_ORB_LEAP_RANGE_FEET,
+      },
+    ],
+  };
+}
+
 function starryWispObjectTargetFill(
   hole: Extract<BattleHole, { readonly kind: "objectTargetChoice" }>,
   objectId: ObjectTargetChoiceFill["value"],
@@ -1313,6 +1478,68 @@ function assertBurningHandsDamageProfile(
     hole.critical
   ) {
     throw new Error("Burning Hands damage profile drifted.");
+  }
+}
+
+function assertChromaticOrbDamageTypeChoiceProfile(
+  hole: Extract<BattleHole, { readonly kind: "damageTypeChoice" }>,
+): void {
+  assertChromaticOrbInvocationProfile(hole.spell);
+  if (!sameStringSet(hole.choices, CHROMATIC_ORB_DAMAGE_TYPES)) {
+    throw new Error("Chromatic Orb damage type choice profile drifted.");
+  }
+}
+
+function assertChromaticOrbAttackRollProfile(
+  hole: Extract<BattleHole, { readonly kind: "attackRoll" }>,
+): void {
+  if (!("spell" in hole)) {
+    throw new Error("Expected Chromatic Orb spell Attack Roll hole.");
+  }
+  assertChromaticOrbInvocationProfile(hole.spell);
+}
+
+function assertChromaticOrbDamageProfile(
+  hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
+): void {
+  if (!("spell" in hole) || !("critical" in hole)) {
+    throw new Error("Expected Chromatic Orb damage roll hole.");
+  }
+  assertChromaticOrbInvocationProfile(hole.spell);
+  if (hole.critical) {
+    throw new Error("Chromatic Orb damage profile drifted.");
+  }
+}
+
+function assertChromaticOrbLeapTargetProfile(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+): void {
+  if (
+    !hole.choices.includes(secondaryTargetId) ||
+    hole.choices.includes(primaryTargetId) ||
+    hole.requiresTableSpatialFact !== true
+  ) {
+    throw new Error("Chromatic Orb leap target profile drifted.");
+  }
+}
+
+function assertChromaticOrbInvocationProfile(
+  invocation: SupportedSpellInvocation,
+): asserts invocation is ChainedSpellAttackDamageInvocation {
+  if (
+    invocation.procedure !== "chainedSpellAttackDamage" ||
+    invocation.spell.id !== "chromatic_orb" ||
+    invocation.resource.tag !== "spellSlot" ||
+    Number(invocation.resource.slotLevel) !== 1 ||
+    invocation.targeting.kind !== "singleCombatant" ||
+    invocation.attackKind !== "ranged_spell_attack" ||
+    invocation.damage.expr.dice !== 3 ||
+    invocation.damage.expr.dieSize !== 8 ||
+    !sameStringSet(invocation.damageTypeChoices, CHROMATIC_ORB_DAMAGE_TYPES) ||
+    Number(invocation.rangeFeet) !== 90 ||
+    Number(invocation.leapRangeFeet) !== Number(CHROMATIC_ORB_LEAP_RANGE_FEET)
+  ) {
+    throw new Error("Chromatic Orb chained spell profile drifted.");
   }
 }
 

@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "L1D-CHROMATIC-ORB",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Chromatic Orb Selected Identity Replay"
     }
   ]
@@ -236,7 +236,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-S-Z.md` Vicious Mockery.
 
 ### Task 10 - L1D-CHROMATIC-ORB - Chromatic Orb Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `chromatic_orb`, binding the authored spell
 Unit through the existing chained attack/damage support. Do not broaden the
