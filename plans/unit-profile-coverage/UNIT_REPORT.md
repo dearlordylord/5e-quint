@@ -8,16 +8,16 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Metric | Value |
 | --- | ---: |
-| Installed collection inventory count | 146 Units |
+| Installed collection inventory count | 159 Units |
 
 ## Coverage Metrics
 
 | Metric | Covered | Percent |
 | --- | ---: | ---: |
-| Authored Surface Unit catalog admission | 145/429 | 33.8% |
-| Authored Surface executable catalog admission | 118/362 | 32.6% |
-| Installed Unit profile classification coverage | 146/146 | 100% |
-| Supported executable Unit coverage | 102/119 | 85.7% |
+| Authored Surface Unit catalog admission | 158/434 | 36.4% |
+| Authored Surface executable catalog admission | 126/362 | 34.8% |
+| Installed Unit profile classification coverage | 159/159 | 100% |
+| Supported executable Unit coverage | 102/127 | 80.3% |
 | QNT profile modeling coverage | 63/63 | 100% |
 | QNT proof coverage | 63/63 | 100% |
 | Runtime mapping coverage | 63/63 | 100% |
@@ -174,7 +174,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | class_feature | 29 | `barbarian_ability_score_improvement_l4`, `barbarian_danger_sense`, `barbarian_primal_champion`, `bard_ability_score_improvement_l4`, `bard_bonus_proficiencies`, `bard_epic_boon`, `bard_jack_of_all_trades`, `bard_words_of_creation`, `cleric_ability_score_improvement_l4`, `cleric_epic_boon`, `druid_ability_score_improvement_l4`, `druid_epic_boon`, `druid_natures_ward`, `fighter_epic_boon`, `monk_ability_score_improvement_l4`, `monk_body_and_mind`, `monk_epic_boon`, `paladin_epic_boon`, `paladin_fighting_style`, `paladin_paladins_smite`, `ranger_ability_score_improvement_l4`, `ranger_feral_senses`, `ranger_tireless`, `rogue_ability_score_improvement_l4`, `sorcerer_ability_score_improvement_l4`, `warlock_contact_patron`, `warlock_fiend_spells`, `wizard_ability_score_improvement_l4`, `wizard_scholar` |
 | weapon | 29 | `weapon_battleaxe`, `weapon_blowgun`, `weapon_dart`, `weapon_glaive`, `weapon_greatclub`, `weapon_greatsword`, `weapon_halberd`, `weapon_hand_crossbow`, `weapon_handaxe`, `weapon_heavy_crossbow`, `weapon_javelin`, `weapon_lance`, `weapon_light_crossbow`, `weapon_light_hammer`, `weapon_longbow`, `weapon_mace`, `weapon_maul`, `weapon_morningstar`, `weapon_musket`, `weapon_pike`, `weapon_pistol`, `weapon_rapier`, `weapon_scimitar`, `weapon_sickle`, `weapon_sling`, `weapon_trident`, `weapon_war_pick`, `weapon_warhammer`, `weapon_whip` |
 | armor | 11 | `armor_breastplate`, `armor_chain_shirt`, `armor_half_plate_armor`, `armor_hide_armor`, `armor_leather`, `armor_padded_armor`, `armor_plate`, `armor_ring_mail`, `armor_scale_mail`, `armor_splint_armor`, `armor_studded_leather_armor` |
-| species_trait | 8 | `elf_darkvision`, `species_dragonborn_breath_weapon`, `species_dragonborn_damage_resistance`, `species_dragonborn_darkvision`, `dwarf_darkvision`, `dwarf_dwarven_resilience`, `species_goliath_powerful_build`, `species_tiefling_darkvision` |
 | armor_template | 3 | `magic_item_adamantine_armor`, `magic_item_armor_1_2_or_3`, `magic_item_mithral_armor` |
 | weapon_template | 3 | `magic_item_ammunition_1_2_or_3`, `magic_item_defender`, `magic_item_weapon_1_2_or_3` |
 | feat | 2 | `alert`, `alert` |
@@ -187,7 +186,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | srd-candidate | QMBT14-QMBT16 | 126 | spell: 126 | SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane. |
 | intentional-backlog | future magic item profile intake | 79 | magic_item: 71, armor_template: 3, weapon_template: 3, shield_template: 2 | SRD magic item mechanics are authored, but this QMBT lane is focused on Unit feature and spell admission. |
 | non-runtime-authored-data | no promoted runtime lane | 40 | weapon: 29, armor: 11 | Authored SRD data has no mechanics payload, so catalog absence is not promoted runtime execution pressure. |
-| unsupported-widening-pressure | QMBT18 | 37 | class_feature: 29, species_trait: 8 | Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice. |
+| unsupported-widening-pressure | QMBT18 | 29 | class_feature: 29 | Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice. |
 | duplicate-content-issue | content cleanup | 2 | feat: 2 | More than one authored Surface record declares this Unit id; clean up the duplicate before treating it as catalog pressure. |
 
 | Unit | Disposition | Planning lane | Kind | Mechanics | Source |
@@ -249,7 +248,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `continual_flame` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/continual_flame.json` |
 | `create_food_and_water` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/create_food_and_water.json` |
 | `create_undead` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/create_undead.json` |
-| `elf_darkvision` | unsupported-widening-pressure | QMBT18 | species_trait | yes | `packages/surface/content/darkvision_elf.json` |
 | `daylight` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/daylight.json` |
 | `death_ward` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/death_ward.json` |
 | `dimension_door` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/dimension_door.json` |
@@ -409,13 +407,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `silent_image` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/silent_image.json` |
 | `sorcerer_ability_score_improvement_l4` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/sorcerer_ability_score_improvement_l4.json` |
 | `speak_with_animals` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/speak_with_animals.json` |
-| `species_dragonborn_breath_weapon` | unsupported-widening-pressure | QMBT18 | species_trait | yes | `packages/surface/content/species_dragonborn_breath_weapon.json` |
-| `species_dragonborn_damage_resistance` | unsupported-widening-pressure | QMBT18 | species_trait | yes | `packages/surface/content/species_dragonborn_damage_resistance.json` |
-| `species_dragonborn_darkvision` | unsupported-widening-pressure | QMBT18 | species_trait | yes | `packages/surface/content/species_dragonborn_darkvision.json` |
-| `dwarf_darkvision` | unsupported-widening-pressure | QMBT18 | species_trait | yes | `packages/surface/content/species_dwarf_darkvision.json` |
-| `dwarf_dwarven_resilience` | unsupported-widening-pressure | QMBT18 | species_trait | yes | `packages/surface/content/species_dwarf_dwarven_resilience.json` |
-| `species_goliath_powerful_build` | unsupported-widening-pressure | QMBT18 | species_trait | yes | `packages/surface/content/species_goliath_powerful_build.json` |
-| `species_tiefling_darkvision` | unsupported-widening-pressure | QMBT18 | species_trait | yes | `packages/surface/content/species_tiefling_darkvision.json` |
 | `spider_climb` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/spider_climb.json` |
 | `spike_growth` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/spike_growth.json` |
 | `spirit_guardians` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/spirit_guardians.json` |
@@ -538,7 +529,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `continual_flame` | spell | yes | `packages/surface/content/continual_flame.json` |
 | `create_food_and_water` | spell | yes | `packages/surface/content/create_food_and_water.json` |
 | `create_undead` | spell | yes | `packages/surface/content/create_undead.json` |
-| `elf_darkvision` | species_trait | yes | `packages/surface/content/darkvision_elf.json` |
 | `daylight` | spell | yes | `packages/surface/content/daylight.json` |
 | `death_ward` | spell | yes | `packages/surface/content/death_ward.json` |
 | `dimension_door` | spell | yes | `packages/surface/content/dimension_door.json` |
@@ -698,13 +688,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `silent_image` | spell | yes | `packages/surface/content/silent_image.json` |
 | `sorcerer_ability_score_improvement_l4` | class_feature | yes | `packages/surface/content/sorcerer_ability_score_improvement_l4.json` |
 | `speak_with_animals` | spell | yes | `packages/surface/content/speak_with_animals.json` |
-| `species_dragonborn_breath_weapon` | species_trait | yes | `packages/surface/content/species_dragonborn_breath_weapon.json` |
-| `species_dragonborn_damage_resistance` | species_trait | yes | `packages/surface/content/species_dragonborn_damage_resistance.json` |
-| `species_dragonborn_darkvision` | species_trait | yes | `packages/surface/content/species_dragonborn_darkvision.json` |
-| `dwarf_darkvision` | species_trait | yes | `packages/surface/content/species_dwarf_darkvision.json` |
-| `dwarf_dwarven_resilience` | species_trait | yes | `packages/surface/content/species_dwarf_dwarven_resilience.json` |
-| `species_goliath_powerful_build` | species_trait | yes | `packages/surface/content/species_goliath_powerful_build.json` |
-| `species_tiefling_darkvision` | species_trait | yes | `packages/surface/content/species_tiefling_darkvision.json` |
 | `spider_climb` | spell | yes | `packages/surface/content/spider_climb.json` |
 | `spike_growth` | spell | yes | `packages/surface/content/spike_growth.json` |
 | `spirit_guardians` | spell | yes | `packages/surface/content/spirit_guardians.json` |
@@ -792,7 +775,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `rogue_expertise` | `character-creation.skill-expertise-choice` | L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT | `packages/character-creation-runtime/src/rogue-expertise-level6.test.ts` |
 | `rogue_sneak_attack` | `unit-feature.attack-damage-rider` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `sorcerer_innate_sorcery` | `unit-feature.innate-sorcery-activation` | SRDINV75A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `sorcerer_innate_sorcery` | `unit-feature.innate-sorcery-activation` | SRDINV75B | `packages/battle-runtime/src/index.test.ts` |
+| `sorcerer_innate_sorcery` | `unit-feature.innate-sorcery-activation` | SRDINV75B | `packages/battle-runtime/src/battle-runtime-test-support.ts` |
 | `warlock_eldritch_invocations` | `character-creation.eldritch-invocation-choice`, `character-creation.class-feature-advancement-replacement`, `character-creation.warlock-pact-magic-advancement` | L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE | `packages/character-creation-runtime/src/index.test.ts` |
 | `wizard_ritual_adept` | `character-sheet.spellbook-ritual-invocation` | SRDINV91B | `packages/character-sheet-runtime/src/index.test.ts` |
 | `wizard_arcane_recovery` | `character-sheet.short-rest-spell-slot-recovery` | SRDINV91B | `packages/character-sheet-runtime/src/index.test.ts` |
@@ -834,12 +817,12 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `feather_fall` | `spell.invocation-feather-fall-mitigation` | SRDINV56A | `packages/battle-runtime/src/feather-fall-reaction-spell.test.ts` |
 | `false_life` | `spell.scalar-buff` | SRDINV30A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `fire_bolt` | `spell.invocation-damage-save-or-attack` | SRDINV84A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `fog_cloud` | `spell.invocation-fog-cloud-obscurement` | SRDINV84E | `packages/battle-runtime/src/index.test.ts` |
+| `fog_cloud` | `spell.invocation-fog-cloud-obscurement` | SRDINV84E | `packages/battle-runtime/src/battle-runtime-test-support.ts` |
 | `guidance` | `spell.invocation-roll-modifier` | SRDINV30B | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `grease` | `spell.invocation-grease-ground-hazard` | SRDINV40 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `guiding_bolt` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28D | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `heroism` | `spell.invocation-condition-immunity-turn-start-temporary-hit-points` | SRDINV30D | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `hex` | `spell.invocation-marked-damage-rider` | SRDINV84D | `packages/battle-runtime/src/index.test.ts` |
+| `hex` | `spell.invocation-marked-damage-rider` | SRDINV84D | `packages/battle-runtime/src/battle-runtime-test-support.ts` |
 | `ice_knife` | `spell.invocation-damage-save-or-attack` | SRDINV29E | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `inflict_wounds` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28B | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `jump` | `spell.invocation-jump-movement-replacement` | SRDINV53 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
@@ -856,7 +839,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `searing_smite` | `spell.invocation-after-hit-timed-damage-save` | SRDINV31E | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `shocking_grasp` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28D | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `sorcerous_burst` | `spell.invocation-damage-save-or-attack` | SRDINV84B | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `spare_the_dying` | `spell.invocation-make-stable` | SRDINV84C | `packages/battle-runtime/src/index.test.ts` |
+| `spare_the_dying` | `spell.invocation-make-stable` | SRDINV84C | `packages/battle-runtime/src/battle-runtime-test-support.ts` |
 | `starry_wisp` | `spell.invocation-damage-save-or-attack` | SRDINV59B | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `vicious_mockery` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28D | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `mage_armor` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
@@ -882,9 +865,9 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `fighter_weapon_mastery` | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` | AT-L1-04 | `packages/character-sheet-runtime/src/index.test.ts` | later-level Fighter Weapon Mastery selected-weapon count increases beyond the three level-1 selections (SRDINV78) |
 | `barbarian_weapon_mastery` | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` | AT-L1-04 | `packages/character-sheet-runtime/src/index.test.ts` | later-level Barbarian Weapon Mastery selected-weapon count increases beyond the two level-1 selections (SRDINV78) |
 | `bard_bardic_inspiration` | `unit-feature.bardic-inspiration-grant`, `unit-feature.bardic-inspiration-failed-d20-test` | SRDINV72A | `packages/battle-runtime/src/unit-profile-admission.test.ts` | later-level Bardic Inspiration die size increases beyond d6 (SRDINV78) |
-| `bard_bardic_inspiration` | `unit-feature.bardic-inspiration-grant`, `unit-feature.bardic-inspiration-failed-d20-test` | SRDINV72B | `packages/battle-runtime/src/index.test.ts` | later-level Bardic Inspiration die size increases beyond d6 (SRDINV78) |
+| `bard_bardic_inspiration` | `unit-feature.bardic-inspiration-grant`, `unit-feature.bardic-inspiration-failed-d20-test` | SRDINV72B | `packages/battle-runtime/src/battle-runtime-test-support.ts` | later-level Bardic Inspiration die size increases beyond d6 (SRDINV78) |
 | `monk_martial_arts` | `unit-feature.martial-arts-attack-projection` | SRDINV73A | `packages/battle-runtime/src/unit-profile-admission.test.ts` | later-level Martial Arts die size increases beyond d6 (SRDINV78) |
-| `ranger_favored_enemy` | `spell.invocation-marked-damage-rider` | SRDINV87C | `packages/battle-runtime/src/index.test.ts` | later-level Favored Enemy free-cast count scaling beyond two uses (SRDINV78); Hunter's Mark Perception/Survival finding Advantage remains deferred to ability-check roll-mode work (SRDINV66) |
+| `ranger_favored_enemy` | `spell.invocation-marked-damage-rider` | SRDINV87C | `packages/battle-runtime/src/battle-runtime-test-support.ts` | later-level Favored Enemy free-cast count scaling beyond two uses (SRDINV78); Hunter's Mark Perception/Survival finding Advantage remains deferred to ability-check roll-mode work (SRDINV66) |
 | `find_familiar` | `spell.find-familiar-lifecycle` | SRDINV84I5 | `packages/battle-runtime/src/find-familiar-lifecycle.test.ts` | unsupported familiar form attacks and generic command AI (SRDINV86) |
 | `hunters_mark` | `spell.invocation-marked-damage-rider` | SRDINV31B | `packages/battle-runtime/src/unit-profile-admission.test.ts` | classified gap: caller-supplied Wisdom (Perception or Survival) Advantage roll-mode projection to find the marked target; no dedicated SRDINV63 implementation task (SRDINV66) |
 | `charm_person` | `spell.creature-type-protection-and-charm` | SRDINV37 | `packages/battle-runtime/src/unit-profile-admission.test.ts` | Friendly disposition, social interaction effects, and target knowledge when the spell ends are not represented in battle runtime state (SRDINV41) |
@@ -1004,7 +987,12 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `class_warlock` | unsupported-profile | Class container record; battle/runtime executable mechanics live on granted feature Units. |
 | `class_wizard` | unsupported-profile | Class container and spell access record; executable pressure is carried by spell Units and class features. |
 | `background_soldier` | unsupported-profile | Character-creation authored data only; no promoted execution profile yet. |
+| `species_dragonborn` | unsupported-profile | Species admission container record; character creation retains the selected species source fact and authored trait Unit refs, while executable battle pressure lives on species trait Units. |
+| `species_dwarf` | unsupported-profile | Species admission container record; character creation retains the selected species source fact and authored trait Unit refs, while executable battle pressure lives on species trait Units. |
+| `species_elf` | unsupported-profile | Species admission container record; character creation retains the selected species source fact and authored trait Unit refs, while executable battle pressure lives on species trait Units. |
+| `species_goliath` | unsupported-profile | Species admission container record; character creation retains the selected species source fact and authored trait Unit refs, while executable battle pressure lives on species trait Units. |
 | `species_orc` | unsupported-profile | Species container record; executable pressure lives on species trait Units. |
+| `species_tiefling` | unsupported-profile | Species admission container record; character creation retains the selected species source fact and authored trait Unit refs, while executable battle pressure lives on species trait Units. |
 | `subclass_fighter_champion` | unsupported-profile | Subclass container record; executable pressure lives on granted feature Units. |
 | `subclass_wizard_evoker` | unsupported-profile | Subclass container record; no promoted execution profile yet. |
 | `fighter_weapon_mastery` | profile-subset-supported | supported subset: Level 1 Fighter character creation discovers and finalizes three selected Weapon Mastery weapon refs from the Surface class-feature record; Character Sheet Long Rest reselection reads the Surface feature's one-choice Long Rest change count and eligible Simple or Martial weapon facts, then replaces the selected CharacterBuild class-choice refs without parallel state; Selected mastery-property execution remains owned by selected Mastery Property Unit profiles; deferred: later-level Fighter Weapon Mastery selected-weapon count increases beyond the three level-1 selections (SRDINV78) |
@@ -1016,6 +1004,14 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `rogue_thieves_cant` | unsupported-profile | Thieves' Cant and the additional language choice are character-owned CharacterBuild facts derived from authored Surface content; communication adjudication is runtime-detached table adjudication, so no battle Unit profile is promoted. |
 | `feat_ability_score_improvement` | unsupported-profile | Character-creation ability score mutation is outside promoted battle Unit profile scope. |
 | `orc_darkvision` | unsupported-profile | Sense grant is authored data with no promoted execution profile. |
+| `elf_darkvision` | unsupported-profile | Darkvision is an authored species sense fact with no standalone promoted Unit profile. |
+| `species_dragonborn_breath_weapon` | unsupported-profile | Breath Weapon is a level-1 species attack replacement with area save-gated damage, Draconic Ancestry damage type, shape choice, character-level dice scaling, and a Proficiency Bonus Long Rest use pool; no broad species runtime profile is promoted in this task. |
+| `species_dragonborn_damage_resistance` | unsupported-profile | Dragonborn Damage Resistance is a passive target-side Resistance trait keyed to Draconic Ancestry; no promoted species trait resistance profile is claimed. |
+| `species_dragonborn_darkvision` | unsupported-profile | Darkvision is an authored species sense fact with no standalone promoted Unit profile. |
+| `dwarf_darkvision` | unsupported-profile | Darkvision is an authored species sense fact with no standalone promoted Unit profile. |
+| `dwarf_dwarven_resilience` | unsupported-profile | Dwarven Resilience combines Poison Resistance with Advantage on saving throws to avoid or end the Poisoned condition; no promoted species trait resistance or save roll-mode profile is claimed. |
+| `species_goliath_powerful_build` | unsupported-profile | Powerful Build splits into a durable carrying-capacity character fact and an Ability Check Advantage fact for ending the Grappled condition; no standalone promoted battle Unit profile is claimed. |
+| `species_tiefling_darkvision` | unsupported-profile | Darkvision is an authored species sense fact with no standalone promoted Unit profile. |
 | `fireball` | unsupported-profile | Fireball is installed as SRD spell catalog data for the non-level-1 spell expansion lane, but no promoted battle-runtime Fireball invocation profile is claimed yet. |
 | `find_familiar` | profile-subset-supported | supported subset: present familiar combatant insertion with its own Initiative turn, action, Reaction, and Movement resources; chosen named form and CR 0 Beast Stat Block resolution from the SRD form catalog; caster-chosen Celestial, Fey, or Fiend creature type override projection; one-familiar-per-caster lifecycle and atomic recast replacement; caller-supplied Initiative and unoccupied-space placement facts; ordinary Find Familiar attack and Opportunity Attack rejection while allowing supported non-attack actions; Magic-action temporary dismissal and reappearance, permanent dismissal, 0-HP disappearance, and held-item drop boundary events for 0-HP disappearance and pocket-dimension entry; 100-foot telepathic connection projection without shared-language requirement; Bonus Action shared sight, hearing, and special-sense benefits until the start of the caster's next turn; Touch-range spell delivery through a present familiar within 100 feet, atomically spending the familiar's Reaction with the spell invocation; Pact of the Chain selected-invocation exception that atomically forgoes one owner Attack-action attack, spends the present owned familiar's Reaction, and resolves a supported familiar Stat Block action attack; deferred: unsupported familiar form attacks and generic command AI (SRDINV86) |
 | `hunters_mark` | profile-subset-supported | supported subset: Bonus Action cast with Spell Slot spend; Concentration-owned mark identity on one combatant target; extra Force damage when the caster hits the marked target with an Attack Roll; Bonus Action transfer only after the marked target drops to 0 Hit Points; slot-scaled Concentration maximum of 1 hour at slots 1-2, 8 hours at slots 3-4, and 24 hours at slots 5+; Concentration cleanup and maximum-duration expiration remove the marked-target damage rider; deferred: classified gap: caller-supplied Wisdom (Perception or Survival) Advantage roll-mode projection to find the marked target; no dedicated SRDINV63 implementation task (SRDINV66) |
@@ -1036,16 +1032,45 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `weapon_shortsword` | unsupported-profile | Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix. |
 | `weapon_quarterstaff` | unsupported-profile | Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix. |
 | `alarm` | unsupported-profile | Alarm setup, warded-area monitoring, creature-size/travel adjudication, audible or mental notification, and sleep-wake handling are runtime-detached table/exploration state outside promoted battle Unit profiles. |
+| `barbarian_ability_score_improvement_l4` | unsupported-profile | Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `barbarian_danger_sense` | unsupported-profile | Danger Sense is a level-2 passive Dexterity Saving Throw Advantage feature; no promoted Unit profile is claimed until a passive Saving Throw roll-mode profile can execute the Dexterity ability filter and Incapacitated suppression gate together. |
+| `barbarian_primal_champion` | unsupported-profile | Primal Champion is a level-20 permanent Strength and Constitution Ability Score increase; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `bard_ability_score_improvement_l4` | unsupported-profile | Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `bard_bonus_proficiencies` | unsupported-profile | College of Lore Bonus Proficiencies is a level-3 subclass skill-proficiency choice; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `bard_epic_boon` | unsupported-profile | Level 19 Epic Boon is a later-level feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `bard_jack_of_all_trades` | unsupported-profile | Jack of All Trades is a level-2 passive Ability Check proficiency supplement; no promoted Unit profile is claimed until a Character Sheet Ability Check Proficiency Bonus projection can execute the skill-proficiency and no-other-Proficiency-Bonus gates. |
+| `bard_words_of_creation` | unsupported-profile | Words of Creation is a level-20 always-prepared spell-access grant plus a Power Word casting rider; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `cleric_ability_score_improvement_l4` | unsupported-profile | Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `cleric_epic_boon` | unsupported-profile | Level 19 Epic Boon is a later-level feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
 | `comprehend_languages` | unsupported-profile | Language comprehension, text interpretation, and secret-message limitations are runtime-detached table/communication adjudication outside promoted battle Unit profiles. |
+| `druid_ability_score_improvement_l4` | unsupported-profile | Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `druid_epic_boon` | unsupported-profile | Level 19 Epic Boon is a later-level feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `druid_natures_ward` | unsupported-profile | Nature's Ward is a level-10 Circle of the Land subclass feature with Poisoned condition immunity plus land-choice-derived Resistance; no standalone promoted Unit profile is claimed until the selected-land source fact and passive target-side projection are modeled together. |
+| `fighter_epic_boon` | unsupported-profile | Level 19 Epic Boon is a later-level feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
 | `identify` | unsupported-profile | Magic-item identification, attunement/property discovery, and spell-affecting-object or spell-affecting-creature identification are runtime-detached table adjudication outside promoted battle Unit profiles. |
+| `monk_ability_score_improvement_l4` | unsupported-profile | Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `monk_body_and_mind` | unsupported-profile | Body and Mind is a level-20 permanent Dexterity and Wisdom Ability Score increase; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `monk_epic_boon` | unsupported-profile | Level 19 Epic Boon is a later-level feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `paladin_epic_boon` | unsupported-profile | Level 19 Epic Boon is a later-level feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `paladin_fighting_style` | unsupported-profile | Paladin Fighting Style is a level-2 Fighting Style feat or Blessed Warrior cantrip-selection grant; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `paladin_paladins_smite` | unsupported-profile | Paladin's Smite is a level-2 Divine Smite Spell Access and once-per-Long-Rest free-cast grant; no standalone promoted battle Unit profile is claimed for the authored class-feature record until class-feature free-cast support is widened beyond Favored Enemy. |
+| `ranger_ability_score_improvement_l4` | unsupported-profile | Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `ranger_feral_senses` | unsupported-profile | Feral Senses is a level-18 Blindsight sense grant; no standalone promoted battle Unit profile is claimed for the authored class-feature record until class-feature sense grants have a sight projection owner. |
+| `ranger_tireless` | unsupported-profile | Tireless is a level-10 two-part feature: a Magic action Wisdom-derived Temporary Hit Points use pool plus Short Rest Exhaustion reduction; no standalone promoted battle Unit profile is claimed for the partial authored action shape. |
+| `rogue_ability_score_improvement_l4` | unsupported-profile | Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
 | `silent_image` | unsupported-profile | Illusory image placement, investigation, physical-interaction reveal, and presentation are runtime-detached illusion/exploration adjudication outside promoted battle Unit profiles. |
+| `sorcerer_ability_score_improvement_l4` | unsupported-profile | Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
 | `speak_with_animals` | unsupported-profile | Beast communication, information exchange, and table-mediated social outcomes are runtime-detached exploration/social adjudication outside promoted battle Unit profiles. |
+| `warlock_contact_patron` | unsupported-profile | Contact Patron is a level-9 always-prepared Contact Other Plane Spell Access and once-per-Long-Rest patron-contact no-slot cast with a feature-scoped automatic Intelligence Saving Throw success; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `warlock_fiend_spells` | unsupported-profile | Fiend Spells is a level-3 subclass always-prepared Spell Access progression across Warlock levels 3, 5, 7, and 9; no standalone promoted battle Unit profile is claimed for the partial authored class-feature record. |
+| `wizard_ability_score_improvement_l4` | unsupported-profile | Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `wizard_scholar` | unsupported-profile | Scholar is a level-2 build-time Expertise choice constrained to one of six skills in which the character already has proficiency; no standalone promoted battle Unit profile is claimed until the constrained Character Creation Expertise choice is modeled. |
 
 ## Unsupported Pressure Summary
 
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
-| srd-5.2.1 | unassigned | unsupported-profile | 30 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `druid_druidic`, `rogue_thieves_cant`, `feat_ability_score_improvement`, `orc_darkvision`, `fireball`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `minor_illusion`, `alarm`, `comprehend_languages`, `identify`, `silent_image`, `speak_with_animals` |
+| srd-5.2.1 | unassigned | unsupported-profile | 72 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_dragonborn`, `species_dwarf`, `species_elf`, `species_goliath`, `species_orc`, `species_tiefling`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `druid_druidic`, `rogue_thieves_cant`, `feat_ability_score_improvement`, `orc_darkvision`, `elf_darkvision`, `species_dragonborn_breath_weapon`, `species_dragonborn_damage_resistance`, `species_dragonborn_darkvision`, `dwarf_darkvision`, `dwarf_dwarven_resilience`, `species_goliath_powerful_build`, `species_tiefling_darkvision`, `fireball`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `minor_illusion`, `alarm`, `barbarian_ability_score_improvement_l4`, `barbarian_danger_sense`, `barbarian_primal_champion`, `bard_ability_score_improvement_l4`, `bard_bonus_proficiencies`, `bard_epic_boon`, `bard_jack_of_all_trades`, `bard_words_of_creation`, `cleric_ability_score_improvement_l4`, `cleric_epic_boon`, `comprehend_languages`, `druid_ability_score_improvement_l4`, `druid_epic_boon`, `druid_natures_ward`, `fighter_epic_boon`, `identify`, `monk_ability_score_improvement_l4`, `monk_body_and_mind`, `monk_epic_boon`, `paladin_epic_boon`, `paladin_fighting_style`, `paladin_paladins_smite`, `ranger_ability_score_improvement_l4`, `ranger_feral_senses`, `ranger_tireless`, `rogue_ability_score_improvement_l4`, `silent_image`, `sorcerer_ability_score_improvement_l4`, `speak_with_animals`, `warlock_contact_patron`, `warlock_fiend_spells`, `wizard_ability_score_improvement_l4`, `wizard_scholar` |
 | srd-5.2.1 | no promoted runtime lane | non-runtime-authored-data | 11 | `armor_chain_mail`, `equipment_shield`, `weapon_club`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff` |
 | srd-5.2.1 | unassigned | profile-subset-supported | 8 | `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `bard_bardic_inspiration`, `monk_martial_arts`, `ranger_favored_enemy`, `find_familiar`, `hunters_mark`, `charm_person` |
 

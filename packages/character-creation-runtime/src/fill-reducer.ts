@@ -25,11 +25,13 @@ import {
 import {
   creationFillIndex,
   draftRevision,
+  isCharacterSpeciesSizeSelection,
   nonEmptyReadonlyArray,
   type BackgroundAbilityScoreIncreaseSelection,
   type CharacterAlignment,
   type CharacterDraft,
   type CharacterDraftSelections,
+  type CharacterSpeciesSizeSelection,
   choiceCardinalityBounds,
   type ChoiceCreationHole,
   type CreationBatchFillInput,
@@ -305,6 +307,12 @@ type AcceptedDraftFill =
       readonly species: UnitRecord["id"];
     }
   | {
+      readonly tag: "speciesSize";
+      readonly hole: DraftSourcedChoiceCreationHole;
+      readonly fill: SingleChoiceFill;
+      readonly size: CharacterSpeciesSizeSelection;
+    }
+  | {
       readonly tag: "abilityScoreGeneration";
       readonly hole: DraftSourcedAbilityScoreCreationHole;
       readonly fill: AbilityScoreFill;
@@ -561,6 +569,25 @@ function acceptedDraftFill(
         });
   }
 
+  if (path === "draft.speciesSize") {
+    const singleFill = singleChoiceFill(choiceFill.right.fill, fillIndex);
+    if (Either.isLeft(singleFill))
+      return applyCreationFillIssue(singleFill.left);
+    const size = speciesSizeSelection(
+      singleFill.right,
+      fillIndex,
+      singleFill.right.optionIds[0],
+    );
+    return Either.isLeft(size)
+      ? applyCreationFillIssue(size.left)
+      : Either.right({
+          tag: "speciesSize",
+          hole: choiceFill.right.hole,
+          fill: singleFill.right,
+          size: size.right,
+        });
+  }
+
   if (path === "draft.languages") {
     const languages = startingLanguages(choiceFill.right.fill, fillIndex);
     return Either.isLeft(languages)
@@ -773,6 +800,13 @@ export function applyDraftFill(
     });
   }
 
+  if (acceptedFill.tag === "speciesSize") {
+    return Either.right({
+      ...selections,
+      speciesSize: acceptedFill.size,
+    });
+  }
+
   if (acceptedFill.tag === "abilityScoreGeneration") {
     return Either.right({
       ...selections,
@@ -951,6 +985,18 @@ function alignmentSelection(
   return alignment == null
     ? Either.left(invalidChoiceIssue(fill, fillIndex, optionId))
     : Either.right(alignment);
+}
+
+function speciesSizeSelection(
+  fill: ChoiceFill,
+  fillIndex: FillIndex,
+  optionId: CreationChoiceOptionId,
+): ApplyCreationFillResult<CharacterSpeciesSizeSelection> {
+  if (isCharacterSpeciesSizeSelection(optionId)) {
+    return Either.right(optionId);
+  }
+
+  return Either.left(invalidChoiceIssue(fill, fillIndex, optionId));
 }
 
 function startingLanguages(

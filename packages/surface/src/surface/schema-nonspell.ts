@@ -2108,22 +2108,109 @@ export const OrcSpeciesTraitsSchema = Schema.Struct({
   relentlessEndurance: Schema.Literal("orc_relentless_endurance"),
 });
 
-export const OrcSpeciesRecordSchema = Schema.Struct({
+const FixedMediumSpeciesSizeSchema = Schema.Struct({
+  kind: Schema.Literal("fixed"),
+  size: Schema.Literal("medium"),
+});
+
+const SmallMediumSpeciesSizeChoiceSchema = Schema.Struct({
+  kind: Schema.Literal("choice"),
+  options: Schema.Tuple(Schema.Literal("medium"), Schema.Literal("small")),
+});
+
+const SpeciesSpeed30Schema = Schema.Struct({
+  walkFeet: Schema.Literal(30),
+});
+
+const SpeciesSpeed35Schema = Schema.Struct({
+  walkFeet: Schema.Literal(35),
+});
+
+const SpeciesRecordBaseSchema = Schema.Struct({
   ...UnitMetadataSchema.fields,
   kind: SpeciesRecordKindSchema,
-  species: Schema.Literal("orc"),
   creatureType: Schema.Literal("humanoid"),
-  size: Schema.Struct({
-    kind: Schema.Literal("fixed"),
-    size: Schema.Literal("medium"),
-  }),
-  speed: Schema.Struct({
-    walkFeet: Schema.Literal(30),
-  }),
+});
+
+export const DragonbornSpeciesTraitsSchema = Schema.Struct({
+  breathWeapon: Schema.Literal("species_dragonborn_breath_weapon"),
+  damageResistance: Schema.Literal("species_dragonborn_damage_resistance"),
+  darkvision: Schema.Literal("species_dragonborn_darkvision"),
+});
+
+export const DragonbornSpeciesRecordSchema = Schema.Struct({
+  ...SpeciesRecordBaseSchema.fields,
+  species: Schema.Literal("dragonborn"),
+  size: FixedMediumSpeciesSizeSchema,
+  speed: SpeciesSpeed30Schema,
+  traits: DragonbornSpeciesTraitsSchema,
+});
+
+export const DwarfSpeciesTraitsSchema = Schema.Struct({
+  darkvision: Schema.Literal("dwarf_darkvision"),
+  dwarvenResilience: Schema.Literal("dwarf_dwarven_resilience"),
+});
+
+export const DwarfSpeciesRecordSchema = Schema.Struct({
+  ...SpeciesRecordBaseSchema.fields,
+  species: Schema.Literal("dwarf"),
+  size: FixedMediumSpeciesSizeSchema,
+  speed: SpeciesSpeed30Schema,
+  traits: DwarfSpeciesTraitsSchema,
+});
+
+export const ElfSpeciesTraitsSchema = Schema.Struct({
+  darkvision: Schema.Literal("elf_darkvision"),
+});
+
+export const ElfSpeciesRecordSchema = Schema.Struct({
+  ...SpeciesRecordBaseSchema.fields,
+  species: Schema.Literal("elf"),
+  size: FixedMediumSpeciesSizeSchema,
+  speed: SpeciesSpeed30Schema,
+  traits: ElfSpeciesTraitsSchema,
+});
+
+export const GoliathSpeciesTraitsSchema = Schema.Struct({
+  powerfulBuild: Schema.Literal("species_goliath_powerful_build"),
+});
+
+export const GoliathSpeciesRecordSchema = Schema.Struct({
+  ...SpeciesRecordBaseSchema.fields,
+  species: Schema.Literal("goliath"),
+  size: FixedMediumSpeciesSizeSchema,
+  speed: SpeciesSpeed35Schema,
+  traits: GoliathSpeciesTraitsSchema,
+});
+
+export const OrcSpeciesRecordSchema = Schema.Struct({
+  ...SpeciesRecordBaseSchema.fields,
+  species: Schema.Literal("orc"),
+  size: FixedMediumSpeciesSizeSchema,
+  speed: SpeciesSpeed30Schema,
   traits: OrcSpeciesTraitsSchema,
 });
 
-export const SpeciesRecordSchema = OrcSpeciesRecordSchema;
+export const TieflingSpeciesTraitsSchema = Schema.Struct({
+  darkvision: Schema.Literal("species_tiefling_darkvision"),
+});
+
+export const TieflingSpeciesRecordSchema = Schema.Struct({
+  ...SpeciesRecordBaseSchema.fields,
+  species: Schema.Literal("tiefling"),
+  size: SmallMediumSpeciesSizeChoiceSchema,
+  speed: SpeciesSpeed30Schema,
+  traits: TieflingSpeciesTraitsSchema,
+});
+
+export const SpeciesRecordSchema = Schema.Union(
+  DragonbornSpeciesRecordSchema,
+  DwarfSpeciesRecordSchema,
+  ElfSpeciesRecordSchema,
+  GoliathSpeciesRecordSchema,
+  OrcSpeciesRecordSchema,
+  TieflingSpeciesRecordSchema,
+);
 
 export const MagicItemComponentMechanicsSchema = Schema.Union(
   PassiveMechanicsSchema,

@@ -81,9 +81,9 @@
 {"unitId":"fighter_tactical_mind","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT62","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"fighter_tactical_mind","evidence":{"tag":"selected-identity-mbt","taskId":"L1H-FIGHTER-TACTICAL-MIND","ownerPath":"packages/battle-runtime/src/rule-core-features.mbt.test.ts"}}
 {"unitId":"bard_bardic_inspiration","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV72A","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
-{"unitId":"bard_bardic_inspiration","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV72B","ownerPath":"packages/battle-runtime/src/index.test.ts"}}
+{"unitId":"bard_bardic_inspiration","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV72B","ownerPath":"packages/battle-runtime/src/battle-runtime-test-support.ts"}}
 {"unitId":"sorcerer_innate_sorcery","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV75A","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
-{"unitId":"sorcerer_innate_sorcery","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV75B","ownerPath":"packages/battle-runtime/src/index.test.ts"}}
+{"unitId":"sorcerer_innate_sorcery","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV75B","ownerPath":"packages/battle-runtime/src/battle-runtime-test-support.ts"}}
 {"unitId":"bard_cutting_words","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT65","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"bard_cutting_words","evidence":{"tag":"selected-identity-mbt","taskId":"reaction-interruption","ownerPath":"packages/battle-runtime/src/rule-core-features.mbt.test.ts"}}
 {"unitId":"monk_martial_arts","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV73A","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
@@ -132,7 +132,7 @@
 {"unitId":"true_strike","evidence":{"tag":"selected-identity-mbt","taskId":"L1E-TRUE-STRIKE","ownerPath":"packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts"}}
 {"unitId":"hunters_mark","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV31B","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"hunters_mark","evidence":{"tag":"selected-identity-mbt","taskId":"L1E-HUNTERS-MARK","ownerPath":"packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts"}}
-{"unitId":"ranger_favored_enemy","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV87C","ownerPath":"packages/battle-runtime/src/index.test.ts"}}
+{"unitId":"ranger_favored_enemy","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV87C","ownerPath":"packages/battle-runtime/src/battle-runtime-test-support.ts"}}
 {"unitId":"produce_flame","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV87A","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"produce_flame","evidence":{"tag":"selected-identity-mbt","taskId":"level1-spatial-witness","ownerPath":"packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts"}}
 {"unitId":"dancing_lights","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV88A","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
@@ -141,9 +141,9 @@
 {"unitId":"fire_bolt","evidence":{"tag":"selected-identity-mbt","taskId":"attack-spell-shape","ownerPath":"packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts"}}
 {"unitId":"sorcerous_burst","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84B","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"sorcerous_burst","evidence":{"tag":"selected-identity-mbt","taskId":"level1-damage-spell-selected-identity","ownerPath":"packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts"}}
-{"unitId":"spare_the_dying","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84C","ownerPath":"packages/battle-runtime/src/index.test.ts"}}
+{"unitId":"spare_the_dying","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84C","ownerPath":"packages/battle-runtime/src/battle-runtime-test-support.ts"}}
 {"unitId":"spare_the_dying","evidence":{"tag":"selected-identity-mbt","taskId":"healing-stabilization","ownerPath":"packages/battle-runtime/src/healing-stabilization-selected-identity.mbt.test.ts"}}
-{"unitId":"hex","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84D","ownerPath":"packages/battle-runtime/src/index.test.ts"}}
+{"unitId":"hex","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84D","ownerPath":"packages/battle-runtime/src/battle-runtime-test-support.ts"}}
 {"unitId":"hex","evidence":{"tag":"selected-identity-mbt","taskId":"L1E-HEX","ownerPath":"packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts"}}
 {"unitId":"starry_wisp","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV59B","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"starry_wisp","evidence":{"tag":"selected-identity-mbt","taskId":"level1-damage-spell-selected-identity","ownerPath":"packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts"}}
@@ -159,7 +159,7 @@
 {"unitId":"eldritch_blast","evidence":{"tag":"selected-identity-mbt","taskId":"L1H-ELDRITCH-BLAST","ownerPath":"packages/battle-runtime/src/beam-sequence-selected-identity.mbt.test.ts"}}
 {"unitId":"grease","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV40","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"grease","evidence":{"tag":"selected-identity-mbt","taskId":"level1-spatial-witness","ownerPath":"packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts"}}
-{"unitId":"fog_cloud","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84E","ownerPath":"packages/battle-runtime/src/index.test.ts"}}
+{"unitId":"fog_cloud","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84E","ownerPath":"packages/battle-runtime/src/battle-runtime-test-support.ts"}}
 {"unitId":"fog_cloud","evidence":{"tag":"selected-identity-mbt","taskId":"level1-spatial-witness","ownerPath":"packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts"}}
 {"unitId":"expeditious_retreat","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV49","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"expeditious_retreat","evidence":{"tag":"selected-identity-mbt","taskId":"movement-forced-movement","ownerPath":"packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts"}}

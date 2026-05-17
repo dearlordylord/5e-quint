@@ -1,0 +1,22 @@
+{
+  "creatureType": "humanoid",
+  "description": "Goliath species source facts for character creation admission.",
+  "id": "species_goliath",
+  "kind": "species",
+  "name": "Goliath",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Character-Creation.md:87-91; Character-Origins.md:194-213"
+  },
+  "size": {
+    "kind": "fixed",
+    "size": "medium"
+  },
+  "species": "goliath",
+  "speed": {
+    "walkFeet": 35
+  },
+  "traits": {
+    "powerfulBuild": "species_goliath_powerful_build"
+  }
+}

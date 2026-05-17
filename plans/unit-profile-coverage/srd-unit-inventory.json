@@ -3953,7 +3953,7 @@
         },
         {
           "owner": "battle-runtime",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV72B at packages/battle-runtime/src/index.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV72B at packages/battle-runtime/src/battle-runtime-test-support.ts",
           "status": "owner evidence present"
         }
       ],
@@ -6601,7 +6601,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV84C at packages/battle-runtime/src/index.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV84C at packages/battle-runtime/src/battle-runtime-test-support.ts",
           "status": "owner evidence present"
         }
       ],
@@ -8295,7 +8295,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV84C at packages/battle-runtime/src/index.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV84C at packages/battle-runtime/src/battle-runtime-test-support.ts",
           "status": "owner evidence present"
         }
       ],
@@ -8735,7 +8735,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV84E at packages/battle-runtime/src/index.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV84E at packages/battle-runtime/src/battle-runtime-test-support.ts",
           "status": "owner evidence present"
         }
       ],
@@ -11583,7 +11583,7 @@
         },
         {
           "owner": "battle-runtime",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV87C at packages/battle-runtime/src/index.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV87C at packages/battle-runtime/src/battle-runtime-test-support.ts",
           "status": "owner evidence present"
         }
       ],
@@ -12461,7 +12461,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV84E at packages/battle-runtime/src/index.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV84E at packages/battle-runtime/src/battle-runtime-test-support.ts",
           "status": "owner evidence present"
         }
       ],
@@ -13454,7 +13454,7 @@
         },
         {
           "owner": "battle-runtime",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV75B at packages/battle-runtime/src/index.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV75B at packages/battle-runtime/src/battle-runtime-test-support.ts",
           "status": "owner evidence present"
         }
       ],
@@ -15022,7 +15022,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV84E at packages/battle-runtime/src/index.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV84E at packages/battle-runtime/src/battle-runtime-test-support.ts",
           "status": "owner evidence present"
         }
       ],
@@ -16610,7 +16610,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV84D at packages/battle-runtime/src/index.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV84D at packages/battle-runtime/src/battle-runtime-test-support.ts",
           "status": "owner evidence present"
         }
       ],
@@ -18562,7 +18562,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV84E at packages/battle-runtime/src/index.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV84E at packages/battle-runtime/src/battle-runtime-test-support.ts",
           "status": "owner evidence present"
         }
       ],

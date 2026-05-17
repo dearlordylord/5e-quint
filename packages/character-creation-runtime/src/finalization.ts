@@ -92,6 +92,7 @@ import {
   supportedLoadoutChoiceForSource,
   supportedLoadoutChoices,
   supportedPurchasableEquipmentUnitIdsForClass,
+  supportedSpeciesUnitIds,
   unitRefsForSupportedClassChoice,
 } from "./support-gates.ts";
 import {
@@ -257,6 +258,9 @@ export function finalizedSelections(
     abilityScoreGeneration: selections.abilityScoreGeneration,
     backgroundAbilityScoreIncrease: selections.backgroundAbilityScoreIncrease,
     species: selections.species,
+    ...(selections.speciesSize === undefined
+      ? {}
+      : { speciesSize: selections.speciesSize }),
     languages: selections.languages,
     alignment: selections.alignment,
     choices: selections.choices,
@@ -278,9 +282,12 @@ export function executableSupportIssues(
       "Finalized build must use the supported manifest background.",
     ),
     ...expectedValueIssue(
-      selections.species ===
-        CHARACTER_CREATION_SUPPORT_PROFILE.manifest.speciesUnitId,
-      "Finalized build must use the supported manifest species.",
+      supportedSpeciesUnitIds().includes(selections.species),
+      "Finalized build must use a supported species.",
+    ),
+    ...expectedValueIssue(
+      speciesSizeSelectionMatchesSurface(selections, unitLibrary),
+      "Finalized build species size selection must match the selected species Surface facts.",
     ),
     ...expectedValueIssue(
       isSupportedFinalizableProgression(selections),
@@ -429,6 +436,24 @@ export function expectedValueIssue(
   message: string,
 ): readonly CreationFinalizationIssue[] {
   return condition ? [] : [unsupportedFinalizationIssue(message)];
+}
+
+function speciesSizeSelectionMatchesSurface(
+  selections: Pick<FinalizedCharacterSelections, "species" | "speciesSize">,
+  unitLibrary: UnitCatalog,
+): boolean {
+  const speciesUnit = unitLibrary.getUnit(selections.species);
+  if (Option.isNone(speciesUnit)) return false;
+  const facts = readSpeciesCreationFacts(speciesUnit.value);
+  if (facts.tag !== "readable") return false;
+  if (facts.value.size.kind === "fixed") {
+    return selections.speciesSize === undefined;
+  }
+
+  return (
+    selections.speciesSize !== undefined &&
+    facts.value.size.options.some((size) => size === selections.speciesSize)
+  );
 }
 
 export function illegalFinalizationIssue(
@@ -698,6 +723,9 @@ export function buildCharacterBuild(input: {
     progression,
     background: selections.background,
     species: selections.species,
+    ...(selections.speciesSize === undefined
+      ? {}
+      : { speciesSize: selections.speciesSize }),
     originLanguages: selections.languages,
     alignment: selections.alignment,
     abilityScores: finalAbilityScores,
