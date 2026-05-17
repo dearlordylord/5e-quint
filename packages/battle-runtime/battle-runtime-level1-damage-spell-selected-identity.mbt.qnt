@@ -120,6 +120,19 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
     ),
   }
 
+  action doResolveStarryWispObjectSpellAttackDamageAndDimLight = all {
+    qLastResult == "init",
+    recordProjection(
+      false,
+      false,
+      1,
+      12,
+      false,
+      12,
+      "starryWispObjectSpellAttackDamageAndDimLight",
+    ),
+  }
+
   action step = any {
     doResolveBurningHandsMixedConeSavingThrows,
     doResolveIceKnifeHitAttackDamageAndBurstSavingThrows,
@@ -128,5 +141,6 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
     doResolveRayOfSicknessSpellAttackDamageAndPoisoned,
     doResolveSacredFlameDexteritySavingThrowRadiantDamage,
     doResolveSorcerousBurstSpellAttackDamage,
+    doResolveStarryWispObjectSpellAttackDamageAndDimLight,
   }
 }

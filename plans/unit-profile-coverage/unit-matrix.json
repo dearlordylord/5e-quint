@@ -93,8 +93,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 93,
-      "numerator": 53,
-      "percent": "57%"
+      "numerator": 54,
+      "percent": "58.1%"
     },
     "supportedProfileCoverage": {
       "denominator": 117,
@@ -10051,6 +10051,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV59B"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "level1-damage-spell-selected-identity"
         }
       ],
       "executableMechanics": true,

@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "L1D-STARRY-WISP",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Starry Wisp Selected Identity Replay"
     },
     {
@@ -216,7 +216,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-S-Z.md` Sorcerous Burst.
 
 ### Task 8 - L1D-STARRY-WISP - Starry Wisp Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `starry_wisp`, binding the authored cantrip
 Unit and asserting the supported attack/damage and object-light interaction

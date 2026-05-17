@@ -1,17 +1,21 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt level1-damage-spell-selected-identity burning_hands ice_knife poison_spray ray_of_sickness sacred_flame sorcerous_burst
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt level1-damage-spell-selected-identity burning_hands ice_knife poison_spray ray_of_sickness sacred_flame sorcerous_burst starry_wisp
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity burning_hands doResolveBurningHandsMixedConeSavingThrows
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity ice_knife doResolveIceKnifeHitAttackDamageAndBurstSavingThrows doResolveIceKnifeMissBurstSavingThrows
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity poison_spray doResolvePoisonSpraySpellAttackDamage
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity ray_of_sickness doResolveRayOfSicknessSpellAttackDamageAndPoisoned
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity sacred_flame doResolveSacredFlameDexteritySavingThrowRadiantDamage
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity sorcerous_burst doResolveSorcerousBurstSpellAttackDamage
+// UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity starry_wisp doResolveStarryWispObjectSpellAttackDamageAndDimLight
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
 
-import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
+import {
+  armorClass,
+  defaultArmorClassState,
+} from "@dnd/shared-algebras/armor-class-algebra";
 import {
   DieRollResult,
   Hp,
@@ -29,10 +33,12 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
   battleCombatantSide,
   battleId,
+  battleObjectId,
   characterId,
   combatantId,
   discoverBattleActs,
   initiativeScore,
+  objectInvisibleBenefitDenied,
   resolveBattleSubject,
   snapshotBattle,
   startBattle,
@@ -40,11 +46,13 @@ import {
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
+  type BattleObjectDamageDisposition,
   type BattleResolutionResult,
   type BattleRolledDiceFill,
   type BattleState,
   type BattleSubject,
   type CombatantId,
+  type SupportedSpellInvocation,
 } from "./index.ts";
 
 const level1DamageSpellSelectedIdentityDriverSchema = {
@@ -56,6 +64,7 @@ const level1DamageSpellSelectedIdentityDriverSchema = {
   doResolveRayOfSicknessSpellAttackDamageAndPoisoned: {},
   doResolveSacredFlameDexteritySavingThrowRadiantDamage: {},
   doResolveSorcerousBurstSpellAttackDamage: {},
+  doResolveStarryWispObjectSpellAttackDamageAndDimLight: {},
   step: {},
 } as const;
 type Level1DamageSpellSelectedIdentityDriverAction = Exclude<
@@ -70,6 +79,7 @@ const level1DamageSpellUnitIds = [
   "ray_of_sickness",
   "sacred_flame",
   "sorcerous_burst",
+  "starry_wisp",
 ] as const;
 type Level1DamageSpellUnitId = (typeof level1DamageSpellUnitIds)[number];
 const level1DamageSpellSelectedIdentityResults = [
@@ -81,6 +91,7 @@ const level1DamageSpellSelectedIdentityResults = [
   "rayOfSicknessSpellAttackDamageAndPoisoned",
   "sacredFlameDexteritySavingThrowRadiantDamage",
   "sorcerousBurstSpellAttackDamage",
+  "starryWispObjectSpellAttackDamageAndDimLight",
 ] as const;
 type Level1DamageSpellSelectedIdentityResult =
   (typeof level1DamageSpellSelectedIdentityResults)[number];
@@ -109,6 +120,16 @@ type SelectedUnitIdentityReplay = {
 type ActionSpellAct = AvailableBattleAct & {
   readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
 };
+type ObjectTargetChoiceFill = Extract<
+  BattleFill,
+  { readonly kind: "objectTargetChoice" }
+>;
+type SpellAttackDamageInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "spellAttackDamage" }
+>;
+type SpellPostDamageRider =
+  SpellAttackDamageInvocation["postDamageRiders"][number];
 type CharacterCreatureInit = Extract<
   BattleCreatureInit["creatureInit"],
   { readonly kind: "character" }
@@ -170,6 +191,10 @@ const level1DamageSpellInvocationProfiles = {
     tag: "cantrip",
     procedure: "spellAttackDamage",
   },
+  starry_wisp: {
+    tag: "cantrip",
+    procedure: "spellAttackDamage",
+  },
 } as const satisfies Record<
   Level1DamageSpellUnitId,
   Level1DamageSpellInvocationProfile
@@ -190,6 +215,14 @@ const sorcerousBurstDamageTypes = [
 const casterId = combatantId("level1-damage-spell-caster");
 const primaryTargetId = combatantId("level1-damage-spell-primary-target");
 const secondaryTargetId = combatantId("level1-damage-spell-secondary-target");
+const starryWispObjectId = battleObjectId(
+  "level1-damage-spell-starry-wisp-object",
+);
+const starryWispRangeFeet = 60;
+const starryWispObjectArmorClass = armorClass(13);
+const starryWispObjectHitPoints = Hp(5);
+const starryWispObjectDamageRoll = 6;
+const starryWispDimLightRadiusFeet = 10;
 const partySide = battleCombatantSide("party");
 const oppositionSide = battleCombatantSide("opposition");
 
@@ -334,6 +367,25 @@ const selectedUnitIdentityReplays = [
       },
     ],
   },
+  {
+    taskId: "level1-damage-spell-selected-identity",
+    unitId: "starry_wisp",
+    actions: ["doResolveStarryWispObjectSpellAttackDamageAndDimLight"],
+    sequences: [
+      {
+        name: "cantrip-object-ranged-spell-attack-radiant-damage-and-dim-light",
+        actions: ["doResolveStarryWispObjectSpellAttackDamageAndDimLight"],
+        expected: expectedProjection({
+          actionAvailable: false,
+          spellSlotSpentThisTurn: false,
+          level1SlotsRemaining: 1,
+          primaryTargetHp: 12,
+          secondaryTargetHp: 12,
+          lastResult: "starryWispObjectSpellAttackDamageAndDimLight",
+        }),
+      },
+    ],
+  },
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
 describe("Level 1 damage spell selected identity MBT", () => {
@@ -464,6 +516,13 @@ function createLevel1DamageSpellSelectedIdentityDriver() {
         recordResolvedResult(
           resolveSorcerousBurstSpellAttackDamage(state),
           "sorcerousBurstSpellAttackDamage",
+        );
+      },
+      doResolveStarryWispObjectSpellAttackDamageAndDimLight: () => {
+        state = level1DamageSpellBattle(srdSpellRecord("starry_wisp"));
+        recordResolvedResult(
+          resolveStarryWispObjectSpellAttackDamageAndDimLight(state),
+          "starryWispObjectSpellAttackDamageAndDimLight",
         );
       },
       step: () => {},
@@ -693,6 +752,52 @@ function resolveSorcerousBurstSpellAttackDamage(
       damageRollFill(damage, [8, 2]),
     ],
   });
+}
+
+function resolveStarryWispObjectSpellAttackDamageAndDimLight(
+  state: BattleState,
+): BattleResolutionResult {
+  const act = actionSpellAct(state, "starry_wisp");
+  const objectTarget = requireHole(act.initialHoles, "objectTargetChoice");
+  assertStarryWispObjectTargetProfile(objectTarget);
+  const objectChoice = starryWispObjectTargetFill(
+    objectTarget,
+    starryWispObjectId,
+    { kind: "hitPoints", hitPoints: starryWispObjectHitPoints },
+  );
+  const attack = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [objectChoice],
+    }),
+    "attackRoll",
+  );
+  assertStarryWispAttackRollProfile(attack);
+  const attackRoll = attackRollFill(attack, {
+    total: 18,
+    naturalD20: 12,
+  });
+  const damage = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [objectChoice, attackRoll],
+    }),
+    "rolledDice",
+  );
+  assertStarryWispDamageProfile(damage);
+  const result = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [
+      objectChoice,
+      attackRoll,
+      damageRollFill(damage, [starryWispObjectDamageRoll]),
+    ],
+  });
+  assertStarryWispObjectResolution(result);
+  return result;
 }
 
 function resolveIceKnifeAttackAndBurstSavingThrows(
@@ -939,6 +1044,29 @@ function spellTargetFill(
         casterId,
         targetId,
         spellId,
+      },
+    ],
+  };
+}
+
+function starryWispObjectTargetFill(
+  hole: Extract<BattleHole, { readonly kind: "objectTargetChoice" }>,
+  objectId: ObjectTargetChoiceFill["value"],
+  damageDisposition: BattleObjectDamageDisposition,
+): ObjectTargetChoiceFill {
+  return {
+    kind: "objectTargetChoice",
+    holeId: hole.holeId,
+    value: objectId,
+    spatialFacts: [
+      {
+        kind: "spellObjectTarget",
+        casterId,
+        objectId,
+        spellId: "starry_wisp",
+        rangeFeet: movementFeet(starryWispRangeFeet),
+        armorClass: starryWispObjectArmorClass,
+        damageDisposition,
       },
     ],
   };
@@ -1398,6 +1526,139 @@ function assertSorcerousBurstDamageProfile(
     hole.critical
   ) {
     throw new Error("Sorcerous Burst damage profile drifted.");
+  }
+}
+
+function assertStarryWispObjectTargetProfile(
+  hole: Extract<BattleHole, { readonly kind: "objectTargetChoice" }>,
+): void {
+  if (hole.requiresTableSpatialFact !== true) {
+    throw new Error("Starry Wisp object target profile drifted.");
+  }
+}
+
+function assertStarryWispAttackRollProfile(
+  hole: Extract<BattleHole, { readonly kind: "attackRoll" }>,
+): void {
+  if (!("spell" in hole)) {
+    throw new Error("Expected Starry Wisp spell Attack Roll hole.");
+  }
+  const invocation = hole.spell;
+  if (
+    invocation.procedure !== "spellAttackDamage" ||
+    invocation.spell.id !== "starry_wisp" ||
+    invocation.resource.tag !== "none" ||
+    invocation.targeting.kind !== "singleCreatureOrObject" ||
+    invocation.attackKind !== "ranged_spell_attack" ||
+    invocation.damage.kind !== "fixedSpellAttackDamage" ||
+    invocation.damage.expr.dice !== 1 ||
+    invocation.damage.expr.dieSize !== 8 ||
+    invocation.damage.damageType !== "radiant" ||
+    Number(invocation.rangeFeet) !== starryWispRangeFeet
+  ) {
+    throw new Error("Starry Wisp Attack Roll profile drifted.");
+  }
+  assertStarryWispPostDamageRiders(invocation.postDamageRiders);
+}
+
+function assertStarryWispDamageProfile(
+  hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
+): void {
+  if (!("spell" in hole) || !("critical" in hole)) {
+    throw new Error("Expected Starry Wisp damage roll hole.");
+  }
+  const invocation = hole.spell;
+  if (
+    invocation.procedure !== "spellAttackDamage" ||
+    invocation.spell.id !== "starry_wisp" ||
+    invocation.resource.tag !== "none" ||
+    invocation.damage.kind !== "fixedSpellAttackDamage" ||
+    invocation.damage.expr.dice !== 1 ||
+    invocation.damage.expr.dieSize !== 8 ||
+    invocation.damage.damageType !== "radiant" ||
+    hole.label !== "Starry Wisp damage (1d8-radiant)" ||
+    hole.critical
+  ) {
+    throw new Error("Starry Wisp damage profile drifted.");
+  }
+  assertStarryWispPostDamageRiders(invocation.postDamageRiders);
+}
+
+function assertStarryWispPostDamageRiders(
+  riders: readonly SpellPostDamageRider[],
+): void {
+  const lightRider = riders.find(
+    (
+      rider,
+    ): rider is Extract<
+      SpellPostDamageRider,
+      { readonly kind: "lightEmission" }
+    > => rider.kind === "lightEmission",
+  );
+  const invisibleRider = riders.find(
+    (
+      rider,
+    ): rider is Extract<
+      SpellPostDamageRider,
+      { readonly kind: "invisibleBenefitDenied" }
+    > => rider.kind === "invisibleBenefitDenied",
+  );
+  if (
+    riders.length !== 2 ||
+    lightRider === undefined ||
+    lightRider.emission.kind !== "dim" ||
+    Number(lightRider.emission.radiusFeet) !== starryWispDimLightRadiusFeet ||
+    lightRider.expiresAt !== "endOfCasterNextTurn" ||
+    invisibleRider === undefined ||
+    invisibleRider.expiresAt !== "endOfCasterNextTurn"
+  ) {
+    throw new Error("Starry Wisp post-damage rider profile drifted.");
+  }
+}
+
+function assertStarryWispObjectResolution(
+  result: BattleResolutionResult,
+): asserts result is Extract<
+  BattleResolutionResult,
+  { readonly tag: "resolved" }
+> {
+  if (result.tag !== "resolved") {
+    throw new Error(
+      `Expected Starry Wisp object spell action to resolve, got ${result.tag}.`,
+    );
+  }
+
+  const [objectDamage] = result.objectDamages ?? [];
+  if (
+    result.objectDamages?.length !== 1 ||
+    objectDamage === undefined ||
+    objectDamage.kind !== "hitPoints" ||
+    objectDamage.objectId !== starryWispObjectId ||
+    objectDamage.damageType !== "radiant" ||
+    Number(objectDamage.rolledDamage) !== starryWispObjectDamageRoll ||
+    Number(objectDamage.effectiveDamage) !== starryWispObjectDamageRoll ||
+    Number(objectDamage.priorHitPoints) !== Number(starryWispObjectHitPoints) ||
+    Number(objectDamage.nextHitPoints) !== 0 ||
+    !objectDamage.destroyed
+  ) {
+    throw new Error("Starry Wisp object damage outcome drifted.");
+  }
+
+  const [emitter] = result.state.lightEmitters;
+  if (
+    result.state.lightEmitters.length !== 1 ||
+    emitter === undefined ||
+    emitter.kind !== "objectInvisibleRevealLightEmitter" ||
+    emitter.sourceSpellId !== "starry_wisp" ||
+    emitter.sourceCombatantId !== casterId ||
+    emitter.objectId !== starryWispObjectId ||
+    emitter.emission.kind !== "dim" ||
+    Number(emitter.emission.radiusFeet) !== starryWispDimLightRadiusFeet ||
+    emitter.expiresAt.kind !== "endOfTurn" ||
+    emitter.expiresAt.combatantId !== casterId ||
+    !objectInvisibleBenefitDenied(result.state, starryWispObjectId)
+  ) {
+    throw new Error("Starry Wisp object Dim Light boundary drifted.");
   }
 }
 
