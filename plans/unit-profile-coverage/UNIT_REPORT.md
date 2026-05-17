@@ -17,13 +17,13 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Authored Surface Unit catalog admission | 144/429 | 33.6% |
 | Authored Surface executable catalog admission | 117/362 | 32.3% |
 | Installed Unit profile classification coverage | 145/145 | 100% |
-| Supported executable Unit coverage | 96/118 | 81.4% |
+| Supported executable Unit coverage | 97/118 | 82.2% |
 | QNT profile modeling coverage | 62/62 | 100% |
 | QNT proof coverage | 62/62 | 100% |
 | Runtime mapping coverage | 62/62 | 100% |
 | Runtime parity coverage | 62/62 | 100% |
-| Deterministic admission/projection coverage | 96/96 | 100% |
-| Selected identity MBT coverage | 96/96 | 100% |
+| Deterministic admission/projection coverage | 97/97 | 100% |
+| Selected identity MBT coverage | 97/97 | 100% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -61,6 +61,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `bard_cutting_words` | srd-5.2.1 | `unit-feature.reaction-roll-or-damage-reduction` |
 | `cleric_divine_order` | srd-5.2.1 | `character-creation.class-feature-option-projection` |
 | `druid_primal_order` | srd-5.2.1 | `character-creation.class-feature-option-projection` |
+| `monk_martial_arts` | srd-5.2.1 | `unit-feature.martial-arts-attack-projection` |
 | `monk_unarmored_defense` | srd-5.2.1 | `character-sheet.armor-class-base-formula` |
 | `monk_deflect_attacks` | srd-5.2.1 | `unit-feature.attack-damage-reduction-zero-damage-redirect` |
 | `rogue_cunning_action` | srd-5.2.1 | `unit-feature.alternate-action-cost` |
@@ -150,7 +151,6 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | --- | --- | --- | --- | --- |
 | `fighter_weapon_mastery` | srd-5.2.1 | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` | Level 1 Fighter character creation discovers and finalizes three selected Weapon Mastery weapon refs from the Surface class-feature record; Character Sheet Long Rest reselection reads the Surface feature's one-choice Long Rest change count and eligible Simple or Martial weapon facts, then replaces the selected CharacterBuild class-choice refs without parallel state; Selected mastery-property execution remains owned by selected Mastery Property Unit profiles | later-level Fighter Weapon Mastery selected-weapon count increases beyond the three level-1 selections (SRDINV78) |
 | `barbarian_weapon_mastery` | srd-5.2.1 | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` | Level 1 Barbarian character creation discovers and finalizes two selected melee Weapon Mastery weapon refs from the Surface class-feature record; Character Sheet Long Rest reselection reads the Surface feature's one-choice Long Rest change count and eligible Simple or Martial Melee weapon facts, then replaces the selected CharacterBuild class-choice refs without parallel state; Selected mastery-property execution remains owned by selected Mastery Property Unit profiles | later-level Barbarian Weapon Mastery selected-weapon count increases beyond the two level-1 selections (SRDINV78) |
-| `monk_martial_arts` | srd-5.2.1 | `unit-feature.martial-arts-attack-projection` | while unarmored and not wielding a Shield, and unarmed or wielding only Monk weapons, eligible Unarmed Strikes and Monk weapons may use Dexterity instead of Strength for attack and damage rolls; eligible Unarmed Strikes and eligible one-die Monk weapons may replace lower damage dice with the level-1 d6 Martial Arts die; eligible promoted Unarmed Strike Grapple and Shove save DCs may use Dexterity through the projected Unarmed Strike ability modifier; while the same Martial Arts eligibility gate holds, the Monk can make an Unarmed Strike as a Bonus Action without an Attack-action prerequisite | later-level Martial Arts die size increases beyond d6 (SRDINV78) |
 | `ranger_favored_enemy` | srd-5.2.1 | `spell.invocation-marked-damage-rider` | always-prepared Hunter's Mark access through retained prepared Spell Access; two-use Favored Enemy Long Rest free-cast resource at Ranger level 1; free-cast Hunter's Mark uses the existing marked damage rider, target gate, Concentration ownership, and Bonus Action cost; normal Spell Slot Hunter's Mark casting remains available when the free-cast resource is exhausted | later-level Favored Enemy free-cast count scaling beyond two uses (SRDINV78) |
 | `faerie_fire` | srd-5.2.1 | `spell.invocation-attack-roll-advantage-save` | 20-foot point-origin Cube affected-creature boundary with table-supplied area membership; Dexterity save-gated affected creatures; Concentration-owned outline effect that grants attack-roll Advantage against failed-save affected creatures when the attacker can see them and denies benefits from the Invisible condition; caller-supplied object ids for objects in the Cube create concentration-owned object outline projections; object-target spell attacks consume caller-supplied object sight facts to grant attack-roll Advantage against outlined objects; affected creatures and objects shed concentration-owned Dim Light emitter facts in a 10-foot radius attached to their outline effects; caller-supplied emitter projection facts derive Dim Light illumination from Faerie Fire object and creature emitters; derived Dim Light illumination projects Lightly Obscured sight consequences and Darkvision-adjusted sight consequences without duplicating emitter state | color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the runtime boundary (SRDINV89D) |
 | `feather_fall` | srd-5.2.1 | `spell.invocation-feather-fall-mitigation` | caller-supplied falling Reaction trigger for the caster or a visible creature within 60 feet; up-to-five falling creature target admission using caller-supplied falling and range facts; Reaction and level-1 Spell Slot spend; one-minute per-target Feather Fall mitigation effect; active 60-foot-per-round descent-rate cap projection; caller-supplied landing cleanup that ends the landed target's mitigation, emits no-fall-damage outcome, and suppresses Falling-Prone when Feather Fall prevents damage | fall-distance derivation, map elevation, and landing geometry simulation remain outside the runtime boundary (SRDINV55) |
@@ -786,6 +786,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `bard_cutting_words` | `unit-feature.reaction-roll-or-damage-reduction` | QMBT65 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `cleric_divine_order` | `character-creation.class-feature-option-projection` | AT-L1-06 | `packages/character-creation-runtime/src/index.test.ts` |
 | `druid_primal_order` | `character-creation.class-feature-option-projection` | AT-L1-06 | `packages/character-creation-runtime/src/index.test.ts` |
+| `monk_martial_arts` | `unit-feature.martial-arts-attack-projection` | SRDINV73A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `monk_unarmored_defense` | `character-sheet.armor-class-base-formula` | SRDINV91B | `packages/character-sheet-runtime/src/index.test.ts` |
 | `monk_deflect_attacks` | `unit-feature.attack-damage-reduction-zero-damage-redirect` | QMBT59 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `rogue_cunning_action` | `unit-feature.alternate-action-cost` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
@@ -877,7 +878,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | --- | --- | --- | --- | --- |
 | `fighter_weapon_mastery` | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` | AT-L1-04 | `packages/character-sheet-runtime/src/index.test.ts` | later-level Fighter Weapon Mastery selected-weapon count increases beyond the three level-1 selections (SRDINV78) |
 | `barbarian_weapon_mastery` | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` | AT-L1-04 | `packages/character-sheet-runtime/src/index.test.ts` | later-level Barbarian Weapon Mastery selected-weapon count increases beyond the two level-1 selections (SRDINV78) |
-| `monk_martial_arts` | `unit-feature.martial-arts-attack-projection` | SRDINV73A | `packages/battle-runtime/src/unit-profile-admission.test.ts` | later-level Martial Arts die size increases beyond d6 (SRDINV78) |
 | `ranger_favored_enemy` | `spell.invocation-marked-damage-rider` | SRDINV87C | `packages/battle-runtime/src/index.test.ts` | later-level Favored Enemy free-cast count scaling beyond two uses (SRDINV78) |
 | `faerie_fire` | `spell.invocation-attack-roll-advantage-save` | SRDINV58C | `packages/battle-runtime/src/unit-profile-admission.test.ts` | color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the runtime boundary (SRDINV89D) |
 | `feather_fall` | `spell.invocation-feather-fall-mitigation` | SRDINV56A | `packages/battle-runtime/src/feather-fall-reaction-spell.test.ts` | fall-distance derivation, map elevation, and landing geometry simulation remain outside the runtime boundary (SRDINV55) |
@@ -907,6 +907,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `bard_cutting_words` | `unit-feature.reaction-roll-or-damage-reduction` | reaction-interruption | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `cleric_divine_order` | `character-creation.class-feature-option-projection` | L1D2-CLERIC-DRUID-ORDER | `packages/character-creation-runtime/src/cleric-druid-order-selected-identity.mbt.test.ts` |
 | `druid_primal_order` | `character-creation.class-feature-option-projection` | L1D2-CLERIC-DRUID-ORDER | `packages/character-creation-runtime/src/cleric-druid-order-selected-identity.mbt.test.ts` |
+| `monk_martial_arts` | `unit-feature.martial-arts-attack-projection` | L1D2-MONK-MARTIAL-ARTS-SCALING | `packages/battle-runtime/src/monk-martial-arts-selected-identity.mbt.test.ts` |
 | `monk_unarmored_defense` | `character-sheet.armor-class-base-formula` | armor-class-base-formula | `packages/character-sheet-runtime/src/armor-class-base-selected-identity.mbt.test.ts` |
 | `monk_deflect_attacks` | `unit-feature.attack-damage-reduction-zero-damage-redirect` | reaction-interruption | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `rogue_cunning_action` | `unit-feature.alternate-action-cost` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
@@ -1017,7 +1018,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `fighter_weapon_mastery` | profile-subset-supported | supported subset: Level 1 Fighter character creation discovers and finalizes three selected Weapon Mastery weapon refs from the Surface class-feature record; Character Sheet Long Rest reselection reads the Surface feature's one-choice Long Rest change count and eligible Simple or Martial weapon facts, then replaces the selected CharacterBuild class-choice refs without parallel state; Selected mastery-property execution remains owned by selected Mastery Property Unit profiles; deferred: later-level Fighter Weapon Mastery selected-weapon count increases beyond the three level-1 selections (SRDINV78) |
 | `barbarian_weapon_mastery` | profile-subset-supported | supported subset: Level 1 Barbarian character creation discovers and finalizes two selected melee Weapon Mastery weapon refs from the Surface class-feature record; Character Sheet Long Rest reselection reads the Surface feature's one-choice Long Rest change count and eligible Simple or Martial Melee weapon facts, then replaces the selected CharacterBuild class-choice refs without parallel state; Selected mastery-property execution remains owned by selected Mastery Property Unit profiles; deferred: later-level Barbarian Weapon Mastery selected-weapon count increases beyond the two level-1 selections (SRDINV78) |
 | `druid_druidic` | unsupported-profile | Druidic known-language and always-prepared Speak with Animals Spell Access are character-owned CharacterBuild facts derived from authored Surface content; hidden-message discovery and deciphering are runtime-detached table adjudication, so no battle Unit profile is promoted. |
-| `monk_martial_arts` | profile-subset-supported | supported subset: while unarmored and not wielding a Shield, and unarmed or wielding only Monk weapons, eligible Unarmed Strikes and Monk weapons may use Dexterity instead of Strength for attack and damage rolls; eligible Unarmed Strikes and eligible one-die Monk weapons may replace lower damage dice with the level-1 d6 Martial Arts die; eligible promoted Unarmed Strike Grapple and Shove save DCs may use Dexterity through the projected Unarmed Strike ability modifier; while the same Martial Arts eligibility gate holds, the Monk can make an Unarmed Strike as a Bonus Action without an Attack-action prerequisite; deferred: later-level Martial Arts die size increases beyond d6 (SRDINV78) |
 | `ranger_favored_enemy` | profile-subset-supported | supported subset: always-prepared Hunter's Mark access through retained prepared Spell Access; two-use Favored Enemy Long Rest free-cast resource at Ranger level 1; free-cast Hunter's Mark uses the existing marked damage rider, target gate, Concentration ownership, and Bonus Action cost; normal Spell Slot Hunter's Mark casting remains available when the free-cast resource is exhausted; deferred: later-level Favored Enemy free-cast count scaling beyond two uses (SRDINV78) |
 | `rogue_thieves_cant` | unsupported-profile | Thieves' Cant and the additional language choice are character-owned CharacterBuild facts derived from authored Surface content; communication adjudication is runtime-detached table adjudication, so no battle Unit profile is promoted. |
 | `feat_ability_score_improvement` | unsupported-profile | Character-creation ability score mutation is outside promoted battle Unit profile scope. |
@@ -1058,7 +1058,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
 | srd-5.2.1 | unassigned | unsupported-profile | 41 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `druid_druidic`, `rogue_thieves_cant`, `feat_ability_score_improvement`, `orc_darkvision`, `fireball`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `minor_illusion`, `armor_chain_mail`, `equipment_shield`, `weapon_club`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff`, `alarm`, `comprehend_languages`, `identify`, `silent_image`, `speak_with_animals` |
-| srd-5.2.1 | unassigned | profile-subset-supported | 13 | `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `monk_martial_arts`, `ranger_favored_enemy`, `faerie_fire`, `feather_fall`, `find_familiar`, `fog_cloud`, `grease`, `jump`, `light`, `thunderwave`, `charm_person` |
+| srd-5.2.1 | unassigned | profile-subset-supported | 12 | `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `ranger_favored_enemy`, `faerie_fire`, `feather_fall`, `find_familiar`, `fog_cloud`, `grease`, `jump`, `light`, `thunderwave`, `charm_person` |
 
 ## Profile Claims By Task
 
@@ -1098,6 +1098,8 @@ This raw inventory lists authored Surface records that are absent from the insta
 | SRDINV72A | completed-runtime-parity | `unit-feature.bardic-inspiration-grant` |
 | L1D2-BARDIC-INSPIRATION-SCALING | qnt-proof | `unit-feature.bardic-inspiration-grant` |
 | L1D2-BARDIC-INSPIRATION-SCALING | completed-runtime-parity | `unit-feature.bardic-inspiration-grant` |
+| L1D2-MONK-MARTIAL-ARTS-SCALING | qnt-proof | `unit-feature.martial-arts-attack-projection` |
+| L1D2-MONK-MARTIAL-ARTS-SCALING | completed-runtime-parity | `unit-feature.martial-arts-attack-projection` |
 | SRDINV72B | qnt-proof | `unit-feature.bardic-inspiration-failed-d20-test` |
 | SRDINV72B | completed-runtime-parity | `unit-feature.bardic-inspiration-failed-d20-test` |
 | SRDINV23 | completed-runtime-parity | `character-sheet.armor-class-base-formula` |

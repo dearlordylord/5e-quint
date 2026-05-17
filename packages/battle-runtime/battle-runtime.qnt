@@ -118,9 +118,9 @@ module battleRuntime {
   // - Classes/Monk.md lines 56-74 and Rules-Glossary.md lines 1066-1076:
   //   Martial Arts applies while unarmored, unshielded, and unarmed or wielding
   //   only Monk weapons. This battle projection covers the Bonus Action
-  //   Unarmed Strike, level-1 d6 damage replacement, Dexterity attack/damage
-  //   choice, and Dexterity Grapple/Shove save DC projection for the promoted
-  //   Unarmed Strike Grapple and Shove action paths.
+  //   Unarmed Strike, Monk-level d6/d8/d10/d12 damage replacement, Dexterity
+  //   attack/damage choice, and Dexterity Grapple/Shove save DC projection for
+  //   the promoted Unarmed Strike Grapple and Shove action paths.
   // - Equipment.md lines 82-107 and UBIQUITOUS_LANGUAGE.md: Sap is a Weapon
   //   Mastery property usable only for an unlocked weapon kind; on a hit with
   //   that weapon, the target has Disadvantage on its next attack roll before

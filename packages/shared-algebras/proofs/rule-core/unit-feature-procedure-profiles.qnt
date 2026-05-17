@@ -370,6 +370,7 @@ module unitFeatureProcedureProfiles {
 
   type MartialArtsAttackProjectionFacts = {
     eligibility: MartialArtsEligibilityFacts,
+    monkLevel: int,
     strengthModifier: int,
     dexterityModifier: int,
     normalDamageDice: int,
@@ -624,19 +625,29 @@ module unitFeatureProcedureProfiles {
     else
       strengthModifier
 
+  pure def martialArtsDieSizeAtMonkLevel(monkLevel: int): int =
+    if (monkLevel >= 17) 12
+    else if (monkLevel >= 11) 10
+    else if (monkLevel >= 5) 8
+    else 6
+
   pure def martialArtsDamageDieSize(
     eligible: bool,
+    monkLevel: int,
     normalDamageDice: int,
     normalDamageDieSize: int
   ): int =
-    if (
-      eligible and
-      (normalDamageDice == 0 or normalDamageDice == 1) and
-      normalDamageDieSize < 6
-    )
-      6
-    else
-      normalDamageDieSize
+    {
+      val martialArtsDieSize = martialArtsDieSizeAtMonkLevel(monkLevel)
+      if (
+        eligible and
+        (normalDamageDice == 0 or normalDamageDice == 1) and
+        normalDamageDieSize < martialArtsDieSize
+      )
+        martialArtsDieSize
+      else
+        normalDamageDieSize
+    }
 
   pure def resolveMartialArtsAttackProjection(
     facts: MartialArtsAttackProjectionFacts
@@ -649,6 +660,7 @@ module unitFeatureProcedureProfiles {
     )
     val damageDieSize = martialArtsDamageDieSize(
       eligible,
+      facts.monkLevel,
       facts.normalDamageDice,
       facts.normalDamageDieSize
     )
@@ -2064,13 +2076,14 @@ module unitFeatureProcedureProfiles {
     }
   }
 
-  run test_martial_arts_projects_dexterity_d6_and_grapple_shove_dc = {
+  run test_martial_arts_projects_dexterity_die_scaling_and_grapple_shove_dc = {
     val unarmed = resolveMartialArtsAttackProjection({
       eligibility: {
         unarmored: true,
         wieldingShield: false,
         attackForm: MartialArtsUnarmedStrike,
       },
+      monkLevel: 1,
       strengthModifier: 1,
       dexterityModifier: 3,
       normalDamageDice: 0,
@@ -2083,6 +2096,7 @@ module unitFeatureProcedureProfiles {
         wieldingShield: false,
         attackForm: MartialArtsMonkWeapon,
       },
+      monkLevel: 17,
       strengthModifier: 1,
       dexterityModifier: 3,
       normalDamageDice: 1,
@@ -2096,7 +2110,7 @@ module unitFeatureProcedureProfiles {
       assert(unarmed.damageDieSize == 6),
       assert(unarmed.unarmedStrikeSaveDc == 13),
       assert(monkWeapon.damageDice == 1),
-      assert(monkWeapon.damageDieSize == 6),
+      assert(monkWeapon.damageDieSize == 12),
       assert(monkWeapon.unarmedStrikeSaveDc == 13),
     }
   }
@@ -2108,6 +2122,7 @@ module unitFeatureProcedureProfiles {
         wieldingShield: false,
         attackForm: MartialArtsUnarmedStrike,
       },
+      monkLevel: 17,
       strengthModifier: 2,
       dexterityModifier: 4,
       normalDamageDice: 0,
@@ -2120,6 +2135,7 @@ module unitFeatureProcedureProfiles {
         wieldingShield: true,
         attackForm: MartialArtsMonkWeapon,
       },
+      monkLevel: 17,
       strengthModifier: 2,
       dexterityModifier: 4,
       normalDamageDice: 1,
@@ -2132,6 +2148,7 @@ module unitFeatureProcedureProfiles {
         wieldingShield: false,
         attackForm: MartialArtsOtherWeapon,
       },
+      monkLevel: 17,
       strengthModifier: 2,
       dexterityModifier: 4,
       normalDamageDice: 1,

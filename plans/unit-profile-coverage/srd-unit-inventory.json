@@ -9814,14 +9814,8 @@
         "state": "installed",
         "unitId": "monk_martial_arts"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV78 later-level scaling",
-        "reason": "The remaining Martial Arts die-size changes occur only after level 1."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",

@@ -949,35 +949,6 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "The remaining Martial Arts die-size changes occur only after level 1.",
-      "sourceRecordPath": "packages/surface/content/monk_martial_arts.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Monk Martial Arts",
-          "id": "srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts",
-          "levelBand": "level-1",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 71,
-            "lineStart": 57,
-            "path": ".references/srd-5.2.1/Classes/Monk.md"
-          }
-        }
-      ],
-      "status": "closed-later-level-only",
-      "strictTargetClosed": true,
-      "unitId": "monk_martial_arts"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "later-level-only"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
       "reason": "The remaining Favored Enemy free-cast count changes occur only after level 1.",
       "sourceRecordPath": "packages/surface/content/ranger_favored_enemy.json",
       "sourceRows": [
@@ -1224,7 +1195,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 70,
+      "count": 71,
       "description": "Full support exists at the Unit profile boundary for strict level-1 accounting.",
       "status": "supported-profile",
       "unitIds": [
@@ -1268,6 +1239,7 @@
         "longstrider",
         "mage_armor",
         "magic_missile",
+        "monk_martial_arts",
         "monk_unarmored_defense",
         "paladin_lay_on_hands",
         "paladin_weapon_mastery",
@@ -1332,13 +1304,12 @@
       ]
     },
     {
-      "count": 4,
+      "count": 3,
       "description": "The level-1 behavior is complete and every remaining residual is later-level-only.",
       "status": "closed-later-level-only",
       "unitIds": [
         "barbarian_weapon_mastery",
         "fighter_weapon_mastery",
-        "monk_martial_arts",
         "ranger_favored_enemy"
       ]
     },
@@ -1364,8 +1335,8 @@
     },
     "strictRuntimeProfileSupport": {
       "denominator": 93,
-      "numerator": 70,
-      "percent": "75.3%"
+      "numerator": 71,
+      "percent": "76.3%"
     },
     "strictTargetClosure": {
       "denominator": 93,
@@ -3665,18 +3636,18 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 120,
     "groupsByClaimTag": {
-      "profile-subset-supported": 12,
-      "supported-profile": 70,
+      "profile-subset-supported": 11,
+      "supported-profile": 71,
       "unsupported-profile": 11
     },
     "groupsByStatus": {
       "closed-character-fact-and-runtime-detached-split": 2,
-      "closed-later-level-only": 4,
+      "closed-later-level-only": 3,
       "closed-runtime-detached-table-adjudication": 10,
       "open-profile-accounting": 7,
-      "supported-profile": 70
+      "supported-profile": 71
     },
-    "nonSupportedFrontier": 23,
+    "nonSupportedFrontier": 22,
     "strictDenominator": 93
   }
 }

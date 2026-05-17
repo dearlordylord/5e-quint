@@ -587,19 +587,16 @@ function martialArtsUnarmedStrike(
   );
   const proficiency = proficiencyBonus(characterLevel(build));
   const damageReplacement = projection.martialArts.damageReplacement;
-  const effect =
-    damageReplacement === null
-      ? attack.effect
-      : {
-          kind: "damage" as const,
-          damage: {
-            kind: "authoredReplacement" as const,
-            sourceUnitId: projection.unit.id,
-            dice: damageReplacement.dice,
-            dieSize: damageReplacement.dieSize,
-            damageType: "bludgeoning" as const,
-          },
-        };
+  const effect = {
+    kind: "damage" as const,
+    damage: {
+      kind: "authoredReplacement" as const,
+      sourceUnitId: projection.unit.id,
+      dice: damageReplacement.dice,
+      dieSize: damageReplacement.dieSize,
+      damageType: "bludgeoning" as const,
+    },
+  };
   return {
     ...attack,
     effect,
@@ -631,7 +628,6 @@ function weaponWithMartialArtsDamage(
 ): WeaponRecord {
   const damageReplacement = projection.martialArts.damageReplacement;
   if (
-    damageReplacement === null ||
     weapon.damage.kind !== "dice" ||
     weapon.damage.dice !== 1 ||
     weapon.damage.dieSize >= damageReplacement.dieSize

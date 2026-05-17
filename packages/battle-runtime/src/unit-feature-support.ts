@@ -24,6 +24,7 @@ import type {
   Ability,
   ActionRestriction,
   ClassName,
+  DiceAmount,
   DamageType,
   EffectAtom,
   StandardActionKind,
@@ -83,6 +84,18 @@ const BARDIC_INSPIRATION_DIE_TIERS = [
 type BardicInspirationDieSize =
   | typeof BARDIC_INSPIRATION_BASE_DIE_SIZE
   | (typeof BARDIC_INSPIRATION_DIE_TIERS)[number]["dieSize"];
+const MARTIAL_ARTS_BASE_DIE_SIZE = 6;
+const MARTIAL_ARTS_DIE_TIERS = [
+  { atLevel: 5, dieSize: 8 },
+  { atLevel: 11, dieSize: 10 },
+  { atLevel: 17, dieSize: 12 },
+] as const satisfies ReadonlyArray<{
+  readonly atLevel: number;
+  readonly dieSize: DamageDieSize;
+}>;
+type MartialArtsDieSize =
+  | typeof MARTIAL_ARTS_BASE_DIE_SIZE
+  | (typeof MARTIAL_ARTS_DIE_TIERS)[number]["dieSize"];
 export const ALTERNATE_ACTION_COST_ACTIONS = [
   "dash",
   "disengage",
@@ -146,12 +159,8 @@ export type BattleAttackActionAttackCountScalingSupportProfile = {
   readonly kind: typeof ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE;
   readonly additionalAttacks: 1;
 };
-type GrantDieTokenEffect = Extract<
-  EffectAtom,
-  { readonly kind: "grant_die_token" }
->;
 type ThresholdTierDieAmount = Extract<
-  GrantDieTokenEffect["die"],
+  DiceAmount,
   { readonly kind: "threshold_tiers" }
 >;
 export type BonusActionDashTemporaryHitPointsProfile = {
@@ -781,11 +790,8 @@ function parseAuthoredAttackDamageReductionZeroDamageRedirect(
   };
 }
 
-function martialArtsDieSize(classLevel: ClassLevel): DamageDieSize {
-  if (classLevel >= 17) return 12;
-  if (classLevel >= 11) return 10;
-  if (classLevel >= 5) return 8;
-  return 6;
+function martialArtsDieSize(classLevel: ClassLevel): MartialArtsDieSize {
+  return martialArtsSrdDieSizeAtClassLevel(classLevel);
 }
 
 export type ReactionReductionResourceSpend = {
@@ -839,7 +845,7 @@ export type MartialArtsAttackProjectionProfile = {
   readonly bonusActionAttack: {
     readonly kind: "unarmedStrike";
   };
-  readonly damageReplacement: MartialArtsDamageReplacementProfile | null;
+  readonly damageReplacement: MartialArtsDamageReplacementProfile;
   readonly abilitySubstitution: {
     readonly use: "dex";
     readonly replaces: "str";
@@ -849,7 +855,7 @@ export type MartialArtsAttackProjectionProfile = {
 export type MartialArtsDamageReplacementProfile = {
   readonly scope: "unarmedOrMonkWeapon";
   readonly dice: 1;
-  readonly dieSize: 6;
+  readonly dieSize: MartialArtsDieSize;
 };
 
 export type SupportedUnitFeatureProfile =
@@ -1903,7 +1909,10 @@ export function martialArtsAttackProjectionProfileForUnit(
     classLevel: monkLevel,
     martialArts: {
       ...martialArts,
-      damageReplacement: monkLevel < 5 ? martialArts.damageReplacement : null,
+      damageReplacement: {
+        ...martialArts.damageReplacement,
+        dieSize: martialArtsSrdDieSizeAtClassLevel(monkLevel),
+      },
     },
   };
 }
@@ -1962,8 +1971,7 @@ function martialArtsAttackProjectionMechanicsForUnit(
     damageReplacement?.scope !== "unarmed_or_monk_weapon" ||
     damageReplacement.die.kind !== "threshold_tiers" ||
     damageReplacement.die.axis !== "class" ||
-    damageReplacement.die.base.dice !== 1 ||
-    damageReplacement.die.base.dieSize !== 6 ||
+    !isSrdMartialArtsDieTable(damageReplacement.die) ||
     abilitySubstitution?.scope !== "unarmed_or_monk_weapon" ||
     abilitySubstitution.use !== "dex" ||
     abilitySubstitution.replaces !== "str" ||
@@ -1986,7 +1994,7 @@ function martialArtsAttackProjectionMechanicsForUnit(
     damageReplacement: {
       scope: "unarmedOrMonkWeapon",
       dice: 1,
-      dieSize: 6,
+      dieSize: MARTIAL_ARTS_BASE_DIE_SIZE,
     },
     abilitySubstitution: {
       use: "dex",
@@ -2366,10 +2374,7 @@ function parseBardicInspirationGrantUnitFeatureProfile(
     return null;
   }
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(effect.duration);
-  const dieSize = bardicInspirationDieSizeAtClassLevel(
-    effect.die,
-    classLevel,
-  );
+  const dieSize = bardicInspirationDieSizeAtClassLevel(effect.die, classLevel);
   if (dieSize === null || Either.isLeft(durationTicks)) {
     return null;
   }
@@ -2393,28 +2398,49 @@ function bardicInspirationDieSizeAtClassLevel(
   return bardicInspirationSrdDieSizeAtClassLevel(classLevel);
 }
 
-function isSrdBardicInspirationDieTable(
+function isSrdBardicInspirationDieTable(die: ThresholdTierDieAmount): boolean {
+  return thresholdTierDieTableMatches(die, {
+    baseDieSize: BARDIC_INSPIRATION_BASE_DIE_SIZE,
+    tiers: BARDIC_INSPIRATION_DIE_TIERS,
+  });
+}
+
+function isSrdMartialArtsDieTable(die: ThresholdTierDieAmount): boolean {
+  return thresholdTierDieTableMatches(die, {
+    baseDieSize: MARTIAL_ARTS_BASE_DIE_SIZE,
+    tiers: MARTIAL_ARTS_DIE_TIERS,
+  });
+}
+
+function thresholdTierDieTableMatches(
   die: ThresholdTierDieAmount,
+  expected: {
+    readonly baseDieSize: DamageDieSize;
+    readonly tiers: ReadonlyArray<{
+      readonly atLevel: number;
+      readonly dieSize: DamageDieSize;
+    }>;
+  },
 ): boolean {
   if (
     die.base.dice !== 1 ||
-    die.base.dieSize !== BARDIC_INSPIRATION_BASE_DIE_SIZE ||
+    die.base.dieSize !== expected.baseDieSize ||
     die.base.flat !== undefined ||
     die.base.spellcastingMod !== undefined ||
     die.base.abilityModifier !== undefined ||
-    die.tiers.length !== BARDIC_INSPIRATION_DIE_TIERS.length
+    die.tiers.length !== expected.tiers.length
   ) {
     return false;
   }
 
-  return BARDIC_INSPIRATION_DIE_TIERS.every((expected) =>
-    die.tiers.some((tier) => bardicInspirationDieTierMatches(tier, expected)),
+  return expected.tiers.every((expectedTier) =>
+    die.tiers.some((tier) => thresholdDieTierMatches(tier, expectedTier)),
   );
 }
 
-function bardicInspirationDieTierMatches(
+function thresholdDieTierMatches(
   tier: ThresholdTierDieAmount["tiers"][number],
-  expected: (typeof BARDIC_INSPIRATION_DIE_TIERS)[number],
+  expected: { readonly atLevel: number; readonly dieSize: DamageDieSize },
 ): boolean {
   return (
     tier.atLevel === expected.atLevel &&
@@ -2433,6 +2459,18 @@ function bardicInspirationSrdDieSizeAtClassLevel(
     )
       .sort((left, right) => left.atLevel - right.atLevel)
       .at(-1)?.dieSize ?? BARDIC_INSPIRATION_BASE_DIE_SIZE
+  );
+}
+
+function martialArtsSrdDieSizeAtClassLevel(
+  classLevel: ClassLevel,
+): MartialArtsDieSize {
+  return (
+    MARTIAL_ARTS_DIE_TIERS.filter(
+      (candidate) => classLevel >= candidate.atLevel,
+    )
+      .sort((left, right) => left.atLevel - right.atLevel)
+      .at(-1)?.dieSize ?? MARTIAL_ARTS_BASE_DIE_SIZE
   );
 }
 

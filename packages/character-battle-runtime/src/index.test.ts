@@ -1581,46 +1581,55 @@ describe("Character Build battle projection", () => {
     );
   });
 
-  test("keeps Martial Arts Dexterity projection above the d6 die slice", () => {
-    const init = expectRight(
-      battleCreatureInitFromCharacterBuild({
-        combatantId: combatantId("martial-arts-level-five"),
-        characterId: characterId("character:martial-arts-level-five"),
-        displayName: "Experienced Monk",
-        build: monkBuild({
-          level: 5,
-          weaponUnitId: "weapon_dagger",
-          str: 12,
-          dex: 16,
+  test.each([
+    { level: 5, dieSize: 8 },
+    { level: 11, dieSize: 10 },
+    { level: 17, dieSize: 12 },
+  ] as const)(
+    "projects Martial Arts d$dieSize and Dexterity at Monk level $level",
+    ({ level, dieSize }) => {
+      const init = expectRight(
+        battleCreatureInitFromCharacterBuild({
+          combatantId: combatantId(`martial-arts-level-${level}`),
+          characterId: characterId(`character:martial-arts-level-${level}`),
+          displayName: "Experienced Monk",
+          build: monkBuild({
+            level,
+            weaponUnitId: "weapon_dagger",
+            str: 12,
+            dex: 16,
+          }),
+          initiative: initiativeScore(10),
+          side: battleCombatantSide("party"),
+          unitLibrary,
         }),
-        initiative: initiativeScore(10),
-        side: battleCombatantSide("party"),
-        unitLibrary,
-      }),
-    );
+      );
 
-    expect(init.creatureInit.kind).toBe("character");
-    if (init.creatureInit.kind !== "character") return;
-    expect(init.creatureInit.attack).toMatchObject({
-      kind: "weapon",
-      ability: "dex",
-      abilityModifier: abilityModifier(3),
-      damageAbilityModifier: abilityModifier(3),
-      weapon: { id: "weapon_dagger", damage: { dice: 1, dieSize: 4 } },
-    });
-    expect(init.creatureInit.unarmedStrike).toMatchObject({
-      kind: "unarmedStrike",
-      attackAbility: "dex",
-      attackAbilityModifier: abilityModifier(3),
-      damageAbilityModifier: abilityModifier(3),
-      effect: {
-        damage: {
-          kind: "base",
-          flat: 1,
+      expect(init.creatureInit.kind).toBe("character");
+      if (init.creatureInit.kind !== "character") return;
+      expect(init.creatureInit.attack).toMatchObject({
+        kind: "weapon",
+        ability: "dex",
+        abilityModifier: abilityModifier(3),
+        damageAbilityModifier: abilityModifier(3),
+        weapon: { id: "weapon_dagger", damage: { dice: 1, dieSize } },
+      });
+      expect(init.creatureInit.unarmedStrike).toMatchObject({
+        kind: "unarmedStrike",
+        attackAbility: "dex",
+        attackAbilityModifier: abilityModifier(3),
+        damageAbilityModifier: abilityModifier(3),
+        effect: {
+          damage: {
+            kind: "authoredReplacement",
+            sourceUnitId: "monk_martial_arts",
+            dice: 1,
+            dieSize,
+          },
         },
-      },
-    });
-  });
+      });
+    },
+  );
 
   test("keeps Strength when it is the better Martial Arts attack and damage choice", () => {
     const init = expectRight(
@@ -1717,7 +1726,7 @@ describe("Character Build battle projection", () => {
     }
   });
 
-  test("keeps Martial Arts Dexterity in Grapple and Shove save DCs above the d6 die slice", () => {
+  test("keeps Martial Arts Dexterity in Grapple and Shove save DCs above the d6 tier", () => {
     const monkId = combatantId("martial-arts-grappler");
     const targetId = combatantId("martial-arts-grapple-target");
     const state = expectRight(
