@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L12G-OWNER-BARBARIAN-RECKLESS-ATTACK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Barbarian Reckless Attack Owner Evidence"
     },
     {
@@ -629,7 +629,7 @@ frontier and Loop L's language-access frontier.
 
 ### Task 1 - L12G-OWNER-BARBARIAN-RECKLESS-ATTACK - Barbarian Reckless Attack Owner Evidence
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `barbarian_reckless_attack`. Gate task: 1 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
