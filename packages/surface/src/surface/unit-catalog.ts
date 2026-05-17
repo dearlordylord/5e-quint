@@ -8,6 +8,7 @@ import backgroundSoldierInput from "../../content/background_soldier.json";
 import bardBardicInspirationInput from "../../content/bard_bardic_inspiration.json";
 import bardCuttingWordsInput from "../../content/bard_cutting_words.json";
 import barbarianRageInput from "../../content/barbarian_rage.json";
+import barbarianDangerSenseInput from "../../content/barbarian_danger_sense.json";
 import barbarianFastMovementInput from "../../content/barbarian_fast_movement.json";
 import barbarianRecklessAttackInput from "../../content/barbarian_reckless_attack.json";
 import barbarianUnarmoredDefenseInput from "../../content/barbarian_unarmored_defense.json";
@@ -305,6 +306,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     barbarianRageInput,
     barbarianUnarmoredDefenseInput,
     barbarianRecklessAttackInput,
+    barbarianDangerSenseInput,
     barbarianFastMovementInput,
     barbarianWeaponMasteryInput,
     bardBardicInspirationInput,

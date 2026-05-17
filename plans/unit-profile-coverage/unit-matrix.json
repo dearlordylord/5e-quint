@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 363,
-      "numerator": 128,
-      "percent": "35.3%"
+      "numerator": 129,
+      "percent": "35.5%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 435,
-      "numerator": 160,
-      "percent": "36.8%"
+      "numerator": 161,
+      "percent": "37%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,47 +59,47 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 161
+      "value": 162
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 105,
-      "numerator": 105,
+      "denominator": 106,
+      "numerator": 106,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 161,
-      "numerator": 161,
+      "denominator": 162,
+      "numerator": 162,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 64,
-      "numerator": 64,
+      "denominator": 65,
+      "numerator": 65,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 64,
-      "numerator": 64,
+      "denominator": 65,
+      "numerator": 65,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 64,
-      "numerator": 64,
+      "denominator": 65,
+      "numerator": 65,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 64,
-      "numerator": 64,
+      "denominator": 65,
+      "numerator": 65,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 105,
+      "denominator": 106,
       "numerator": 104,
-      "percent": "99%"
+      "percent": "98.1%"
     },
     "supportedProfileCoverage": {
-      "denominator": 129,
-      "numerator": 105,
-      "percent": "81.4%"
+      "denominator": 130,
+      "numerator": 106,
+      "percent": "81.5%"
     }
   },
   "metricSemantics": [
@@ -617,6 +617,38 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.passive-saving-throw-roll-mode",
+      "profileKind": "passive",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts"
+      ],
+      "taskRefs": [
+        "QCORE9",
+        "L12G-CLASS-BARBARIAN-DANGER-SENSE"
+      ],
+      "title": "Unit feature passively grants Saving Throw roll mode while a condition predicate is absent",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-feature-bridge.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-danger-sense.test.ts"
         }
       ]
     },
@@ -2415,6 +2447,7 @@
         "unit-feature.first-attack-roll-reckless-advantage",
         "unit-feature.passive-armor-class-bonus",
         "unit-feature.passive-ranged-attack-roll-bonus",
+        "unit-feature.passive-saving-throw-roll-mode",
         "unit-feature.passive-speed-bonus",
         "unit-feature.passive-speed-kind-grants",
         "unit-feature.reaction-roll-or-damage-reduction",
@@ -2654,6 +2687,14 @@
         "unit-feature.reaction-roll-or-damage-reduction"
       ],
       "taskId": "QMBT65"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Danger Sense admission and save-roll-mode projection tests cover Dexterity Saving Throw Advantage and Incapacitated suppression from the authored Unit profile.",
+      "profileIds": [
+        "unit-feature.passive-saving-throw-roll-mode"
+      ],
+      "taskId": "L12G-CLASS-BARBARIAN-DANGER-SENSE"
     },
     {
       "claimKind": "qnt-proof",
@@ -4985,6 +5026,68 @@
       ],
       "sourceRecordPath": "packages/surface/content/barbarian_reckless_attack.json",
       "unitId": "barbarian_reckless_attack"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "unit-feature.passive-saving-throw-roll-mode"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-danger-sense.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-CLASS-BARBARIAN-DANGER-SENSE"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.passive-saving-throw-roll-mode",
+          "profileKind": "passive",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts"
+          ],
+          "taskRefs": [
+            "QCORE9",
+            "L12G-CLASS-BARBARIAN-DANGER-SENSE"
+          ],
+          "title": "Unit feature passively grants Saving Throw roll mode while a condition predicate is absent",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-feature-bridge.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-danger-sense.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/barbarian_danger_sense.json",
+      "unitId": "barbarian_danger_sense"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -14074,34 +14177,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/barbarian_ability_score_improvement_l4.json",
       "unitId": "barbarian_ability_score_improvement_l4"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "later-level-only",
-          "owner": "future unit-feature.passive-saving-throw-roll-mode owner",
-          "reason": "The feature is acquired after level 1 and grants Advantage on Dexterity Saving Throws unless the creature has the Incapacitated condition. Current promoted Unit profiles do not consume class-feature passive Saving Throw roll-mode grants or make both the saveAbilityFilter and passive condition suppressor executable at admission."
-        },
-        "reason": "Danger Sense is a level-2 passive Dexterity Saving Throw Advantage feature; no promoted Unit profile is claimed until a passive Saving Throw roll-mode profile can execute the Dexterity ability filter and Incapacitated suppression gate together.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/barbarian_danger_sense.json",
-      "unitId": "barbarian_danger_sense"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

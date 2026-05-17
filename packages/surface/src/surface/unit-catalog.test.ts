@@ -69,6 +69,7 @@ const requiredFirstVerticalUnitIds = [
   "fighter_action_surge",
   "fighter_tactical_mind",
   "fighter_improved_critical",
+  "barbarian_danger_sense",
   "barbarian_fast_movement",
   ...task183ClassFeatureUnitIds,
   ...task184WeaponMasteryUnitIds,

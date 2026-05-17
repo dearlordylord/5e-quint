@@ -1,4 +1,5 @@
 // Spell hole construction, fill validation, and damage application extracted from spells-holes-fills.ts.
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.passive-saving-throw-roll-mode
 
 import { Match } from "effect";
 import {
@@ -826,6 +827,14 @@ export function savingThrowRollModeProjections(
             rollMode: "advantage" as const,
           }))
       : [];
+  const passiveRollModeProjections = passiveSavingThrowRollModeProjections(
+    state,
+    ability,
+  );
+  const baseProjections = [
+    ...dodgeProjections,
+    ...passiveRollModeProjections,
+  ];
   const saveRollModeRule = spellSaveRollMode?.invocation.saveRollModeRule;
   if (
     spellSaveRollMode !== undefined &&
@@ -833,7 +842,7 @@ export function savingThrowRollModeProjections(
   ) {
     const { actorId, invocation } = spellSaveRollMode;
     return uniqueSavingThrowRollModeProjections([
-      ...dodgeProjections,
+      ...baseProjections,
       ...[...state.combatants]
         .filter(
           ([targetId]) =>
@@ -857,7 +866,7 @@ export function savingThrowRollModeProjections(
   ) {
     const { actorId, invocation } = spellSaveRollMode;
     return uniqueSavingThrowRollModeProjections([
-      ...dodgeProjections,
+      ...baseProjections,
       ...[...state.combatants]
         .filter(
           ([, target]) =>
@@ -877,7 +886,44 @@ export function savingThrowRollModeProjections(
         })),
     ]);
   }
-  return uniqueSavingThrowRollModeProjections(dodgeProjections);
+  return uniqueSavingThrowRollModeProjections(baseProjections);
+}
+
+function passiveSavingThrowRollModeProjections(
+  state: BattleState,
+  ability: Ability,
+): readonly BattleSavingThrowRollModeProjection[] {
+  return [...state.combatants].flatMap(([targetId, target]) => {
+    const projection = passiveSavingThrowRollModeProjection(
+      targetId,
+      target,
+      ability,
+    );
+    return projection === null ? [] : [projection];
+  });
+}
+
+function passiveSavingThrowRollModeProjection(
+  targetId: CombatantId,
+  target: BattleCreatureState,
+  ability: Ability,
+): BattleSavingThrowRollModeProjection | null {
+  if (target.origin.kind !== "character" || isIncapacitated(target.conditions)) {
+    return null;
+  }
+  const profile = [
+    ...target.origin.passiveSavingThrowRollModeProfiles.values(),
+  ].find(
+    (candidate) =>
+      candidate.savingThrow.ability === ability &&
+      candidate.savingThrow.suppressedByCondition === "incapacitated",
+  );
+  return profile === undefined
+    ? null
+    : {
+        targetId,
+        rollMode: profile.savingThrow.mode,
+      };
 }
 
 function uniqueSavingThrowRollModeProjections(

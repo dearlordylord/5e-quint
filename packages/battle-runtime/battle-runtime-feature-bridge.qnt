@@ -1,5 +1,5 @@
 // -*- mode: Bluespec; -*-
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.innate-sorcery-activation
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.innate-sorcery-activation unit-feature.passive-saving-throw-roll-mode
 
 module battleRuntimeFeatureBridge {
   import actionTurnProcedures.* from "../shared-algebras/proofs/rule-core/action-turn-procedures"
@@ -128,6 +128,15 @@ module battleRuntimeFeatureBridge {
 
   pure def battleRuntimeRecklessAttackGrantsIncomingAttackAdvantage(active: bool): bool =
     recklessAttackGrantsIncomingAttackAdvantage(battleRuntimeRecklessAttackState(active, true))
+
+  pure def battleRuntimePassiveSavingThrowRollMode(
+    ability: SavingThrowAbilityFact,
+    incapacitated: bool
+  ): PassiveSavingThrowRollMode =
+    passiveSavingThrowRollMode({
+      savingThrowAbility: ability,
+      incapacitated: incapacitated,
+    })
 
   pure def battleRuntimeCuttingWordsRollTotal(originalTotal: int, bardicDieRoll: int): int =
     cuttingWordsRollTotalAfterReduction({
@@ -316,6 +325,14 @@ module battleRuntimeFeatureBridge {
       assert(not(battleRuntimeRecklessAttackActivates(false, true, true, true))),
       assert(battleRuntimeRecklessAttackGrantsIncomingAttackAdvantage(true)),
       assert(not(battleRuntimeRecklessAttackGrantsIncomingAttackAdvantage(false))),
+    }
+  }
+
+  run test_passive_saving_throw_roll_mode_runtime_projection_uses_feature_profile = {
+    all {
+      assert(battleRuntimePassiveSavingThrowRollMode(DexteritySavingThrowFact, false) == AdvantageSavingThrowMode),
+      assert(battleRuntimePassiveSavingThrowRollMode(DexteritySavingThrowFact, true) == NormalSavingThrowMode),
+      assert(battleRuntimePassiveSavingThrowRollMode(ConstitutionSavingThrowFact, false) == NormalSavingThrowMode),
     }
   }
 

@@ -159,6 +159,7 @@ const spellPressureLevelBands = new Set([
 ]);
 
 const battleRuntimeRelevantFeatureUnitIds = new Set([
+  "barbarian_danger_sense",
   "barbarian_weapon_mastery",
   "bard_bardic_inspiration",
   "fighter_fighting_style",
@@ -174,6 +175,7 @@ const battleRuntimeRelevantFeatureUnitIds = new Set([
 ]);
 
 const levelTwoBattleRuntimeOwnerEvidenceUnitIds = new Set([
+  "barbarian_danger_sense",
   "barbarian_reckless_attack",
   "fighter_action_surge",
   "fighter_tactical_mind",

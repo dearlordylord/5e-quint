@@ -231,40 +231,6 @@
       "unitId": "arcane_lock"
     },
     {
-      "catalogDisposition": {
-        "category": "unsupported-widening-pressure",
-        "planningLane": "QMBT18",
-        "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "later-level-only"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "The feature is acquired after level 1 and grants Advantage on Dexterity Saving Throws unless the creature has the Incapacitated condition. Current promoted Unit profiles do not consume class-feature passive Saving Throw roll-mode grants or make both the saveAbilityFilter and passive condition suppressor executable at admission.",
-      "sourceRecordPath": "packages/surface/content/barbarian_danger_sense.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Barbarian Danger Sense",
-          "id": "srd521:classes/barbarian:level-2:class-feature-grant:barbarian_danger_sense",
-          "levelBand": "level-2",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 93,
-            "lineStart": 90,
-            "path": ".references/srd-5.2.1/Classes/Barbarian.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "barbarian_danger_sense"
-    },
-    {
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
@@ -2589,13 +2555,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 82,
+      "count": 83,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
         "acid_splash",
         "animal_friendship",
         "bane",
+        "barbarian_danger_sense",
         "barbarian_rage",
         "barbarian_reckless_attack",
         "barbarian_unarmored_defense",
@@ -2734,11 +2701,10 @@
       ]
     },
     {
-      "count": 6,
+      "count": 5,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
-        "barbarian_danger_sense",
         "bard_jack_of_all_trades",
         "paladin_fighting_style",
         "paladin_paladins_smite",
@@ -2772,21 +2738,21 @@
       "numerator": 470,
       "percent": "84.5%",
       "rowsByStatus": {
-        "accepted": 286,
-        "accepted-no-battle-effect": 184,
+        "accepted": 287,
+        "accepted-no-battle-effect": 183,
         "battle-runtime-required": 74,
         "owner-evidence-required": 12
       }
     },
     "strictRuntimeProfileSupport": {
       "denominator": 135,
-      "numerator": 82,
-      "percent": "60.7%"
+      "numerator": 83,
+      "percent": "61.5%"
     },
     "strictTargetClosure": {
       "denominator": 135,
-      "numerator": 98,
-      "percent": "72.6%"
+      "numerator": 99,
+      "percent": "73.3%"
     }
   },
   "openFrontier": [
@@ -2829,11 +2795,10 @@
       ]
     },
     {
-      "count": 6,
+      "count": 5,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
-        "barbarian_danger_sense",
         "bard_jack_of_all_trades",
         "paladin_fighting_style",
         "paladin_paladins_smite",
@@ -6510,18 +6475,18 @@
     "groupsByClaimTag": {
       "missing": 31,
       "profile-subset-supported": 6,
-      "supported-profile": 82,
-      "unsupported-profile": 16
+      "supported-profile": 83,
+      "unsupported-profile": 15
     },
     "groupsByStatus": {
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 3,
       "closed-runtime-detached-table-adjudication": 11,
-      "open-profile-accounting": 6,
+      "open-profile-accounting": 5,
       "open-runtime-behavior": 31,
-      "supported-profile": 82
+      "supported-profile": 83
     },
-    "nonSupportedFrontier": 53,
+    "nonSupportedFrontier": 52,
     "strictDenominator": 135
   }
 }
