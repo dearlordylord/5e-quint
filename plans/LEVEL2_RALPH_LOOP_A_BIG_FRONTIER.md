@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "L12G-CLASS-BARD-JACK-OF-ALL-TRADES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Bard Jack Of All Trades Support"
     },
     {
