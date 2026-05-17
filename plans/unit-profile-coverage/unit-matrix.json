@@ -13313,6 +13313,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "later-level-only",
+          "owner": "future saving-throw roll-mode profile owner",
+          "reason": "The feature is acquired after level 1 and grants Advantage on Dexterity Saving Throws unless the creature has the Incapacitated condition. Current promoted Unit profiles do not model this passive Saving Throw roll-mode projection."
+        },
+        "reason": "Danger Sense is a level-2 passive Dexterity Saving Throw Advantage feature; no promoted Unit profile is claimed until a saving-throw roll-mode profile can consume the authored condition-gated passive grant.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -13331,6 +13341,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "later-level-only",
+          "owner": "future level-20 Character Sheet ability-score projection owner",
+          "reason": "The feature mutates durable Character Sheet Ability Scores at level 20, capping Strength and Constitution at 25. Battle runtime should consume derived creature statistics rather than duplicate this class-feature ability-score state."
+        },
+        "reason": "Primal Champion is a level-20 permanent Strength and Constitution Ability Score increase; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",

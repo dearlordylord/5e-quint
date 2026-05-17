@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "L1I-BARBARIAN-LATER-FEATURES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Barbarian Later Feature Catalog Pressure"
     },
     {
@@ -81,6 +81,12 @@
       "id": "L1I-WORDS-OF-CREATION-POWER-WORD-RIDER",
       "status": "blocked",
       "title": "Words Of Creation Power Word Rider Profile"
+    },
+    {
+      "number": 14,
+      "id": "L1I-BARBARIAN-DANGER-SENSE-ROLL-MODE",
+      "status": "ready-for-research",
+      "title": "Barbarian Danger Sense Saving Throw Roll-Mode Profile"
     }
   ]
 }
@@ -154,7 +160,7 @@ Every task runs:
 | 2 | L1I-ABILITY-SCORE-IMPROVEMENT - Ability Score Improvement Authored Feature Closure | done | 1 | ASI class-feature closure artifact and unsupported-profile claims |
 | 3 | L1I-EPIC-BOON-CONTAINERS - Epic Boon Class Feature Container Closure | done | 1 | closure artifact and unsupported-profile claims for Epic Boon container records |
 | 4 | L1I-BARD-KNOWLEDGE-FEATURES - Bard Knowledge Feature Catalog Pressure | done | 1 | closure artifact and unsupported-profile claims for Bard knowledge-feature records |
-| 5 | L1I-BARBARIAN-LATER-FEATURES - Barbarian Later Feature Catalog Pressure | ready-for-research | 1 | Barbarian feature disposition for non-D authored records |
+| 5 | L1I-BARBARIAN-LATER-FEATURES - Barbarian Later Feature Catalog Pressure | done | 1 | closure artifact and unsupported-profile claims for Barbarian later-feature records |
 | 6 | L1I-PALADIN-SMITE-STYLE-SURFACE - Paladin Smite And Fighting Style Surface Pressure | ready-for-research | 1 | Paladin feature disposition without stealing D container work |
 | 7 | L1I-RANGER-LATER-FEATURES - Ranger Later Feature Catalog Pressure | ready-for-research | 1 | Ranger feature disposition without stealing D Favored Enemy work |
 | 8 | L1I-MONK-BODY-AND-MIND - Monk Body And Mind Catalog Pressure | ready-for-research | 1 | Monk feature disposition without stealing D Martial Arts scaling |
@@ -163,6 +169,7 @@ Every task runs:
 | 11 | L1I-DRUID-NATURES-WARD - Druid Nature's Ward Catalog Pressure | ready-for-research | 1 | Druid later feature disposition without stealing D Primal Order work |
 | 12 | L1I-BARD-JACK-OF-ALL-TRADES-PROFILE - Bard Jack Of All Trades Ability Check Profile | ready-for-research | 4 | decide the smallest skill-proficiency-aware Ability Check half-Proficiency Bonus profile boundary |
 | 13 | L1I-WORDS-OF-CREATION-POWER-WORD-RIDER - Words Of Creation Power Word Rider Profile | blocked | supported `power_word_heal` and `power_word_kill` spell invocation profiles | second-target rider support after host Power Word spells are promoted |
+| 14 | L1I-BARBARIAN-DANGER-SENSE-ROLL-MODE - Barbarian Danger Sense Saving Throw Roll-Mode Profile | ready-for-research | 5 | decide the smallest passive Dexterity Saving Throw Advantage profile boundary |
 
 ### Task 1 - L1I-PRECHECK - Non-D Class Species Pressure Precheck
 
@@ -239,12 +246,21 @@ future executable follow-ups in Tasks 12 and 13.
 
 ### Task 5 - L1I-BARBARIAN-LATER-FEATURES - Barbarian Later Feature Catalog Pressure
 
-Status: `ready-for-research`
+Status: `done`
 
 Units: `barbarian_danger_sense`, `barbarian_primal_champion`.
 
 Keep this later-level and non-D. If a runtime profile is appropriate, record a
 new atomic follow-up rather than broadening this task.
+
+Result:
+`plans/unit-profile-coverage/L1I_CLASS_SPECIES_BARBARIAN_LATER_FEATURES_CLOSURE.md`.
+The two Barbarian later-feature records are closed as explicit
+`unsupported-profile` claims. `barbarian_danger_sense` remains visible as a
+future executable follow-up in Task 14 because it is passive Dexterity Saving
+Throw Advantage suppressed by Incapacitated. `barbarian_primal_champion` is a
+level-20 durable Character Sheet Ability Score projection, not a standalone
+promoted battle Unit profile.
 
 ### Task 6 - L1I-PALADIN-SMITE-STYLE-SURFACE - Paladin Smite And Fighting Style Surface Pressure
 
@@ -332,3 +348,16 @@ Blocked on supported spell invocation profiles for `power_word_heal` and
 Creation's second-target rider as spell-casting behavior attached to those
 invocations. Do not duplicate the level-20 always-prepared spell access grant
 as Bard feature runtime state.
+
+### Task 14 - L1I-BARBARIAN-DANGER-SENSE-ROLL-MODE - Barbarian Danger Sense Saving Throw Roll-Mode Profile
+
+Status: `ready-for-research`
+
+Unit: `barbarian_danger_sense`.
+
+Follow-up from Task 5. Decide the smallest supported-profile owner for Danger
+Sense's passive Dexterity Saving Throw Advantage, including the RAW gate that
+the Barbarian must not have the Incapacitated condition. Do not admit the
+existing generic `modify_roll_advantage` surface shape as a supported profile
+until the Saving Throw ability filter and condition suppression gate are
+executable at the owning boundary.
