@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "L1K-DETECTION-COMMUNICATION-CANDIDATES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Detection Communication Spell Candidate Intake"
     },
     {
@@ -140,7 +140,7 @@ Every task runs:
 | 4 | L1K-PROTECTION-RESTORATION-CANDIDATES - Protection Restoration Spell Candidate Intake | done | 1 | candidate split for protection/restoration spells outside D |
 | 5 | L1K-MOBILITY-TRANSFORMATION-CANDIDATES - Mobility Transformation Spell Candidate Intake | done | 1 | candidate split for mobility/transformation spells outside D |
 | 6 | L1K-ZONE-WALL-CANDIDATES - Zone Wall Emanation Spell Candidate Intake | done | 1 | candidate split for zones/walls/emanations outside D |
-| 7 | L1K-DETECTION-COMMUNICATION-CANDIDATES - Detection Communication Spell Candidate Intake | ready-for-research | 1 | runtime-detached versus runtime-witness split for detection/communication spells |
+| 7 | L1K-DETECTION-COMMUNICATION-CANDIDATES - Detection Communication Spell Candidate Intake | done | 1 | runtime-detached versus runtime-witness split for detection/communication spells |
 | 8 | L1K-COUNTER-DISPEL-CANDIDATES - Counter Dispel Spell Candidate Intake | ready-for-research | 1 | candidate split for counter/dispel/anti-magic spells |
 | 9 | L1K-WEAPON-ITEM-HOSTED-CANDIDATES - Weapon Item Hosted Spell Candidate Intake | ready-for-research | 1 | candidate split for weapon/item hosted spells |
 | 10 | L1K-COMPANION-EXCLUSION-CANDIDATES - Companion Summon Exclusion Candidate Intake | ready-for-research | 1 | explicit companion/summon exclusions or handoff targets |
@@ -285,13 +285,30 @@ admission, QNT behavior, battle reducer behavior, or MBT evidence.
 
 ### Task 7 - L1K-DETECTION-COMMUNICATION-CANDIDATES - Detection Communication Spell Candidate Intake
 
-Status: `ready-for-research`
+Status: `done`
 
 Initial candidates: `clairvoyance`, `arcane_eye`, `see_invisibility`,
 `tongues`, `true_seeing`, and `water_breathing`.
 
 Separate runtime-detached information/communication from runtime-consumed
 witness facts.
+
+Decision artifact:
+`plans/unit-profile-coverage/L1K_DETECTION_COMMUNICATION_SPELL_CANDIDATE_INTAKE.md`.
+
+Final split:
+
+- runtime-detached remote sense and information needs: `clairvoyance`,
+  `arcane_eye`;
+- runtime-detached language and communication need: `tongues`;
+- runtime-consumed observer-sight witness needs: `see_invisibility`,
+  `true_seeing`;
+- environmental breathing and Suffocation capability need: `water_breathing`.
+
+No candidate is an exact existing-profile fit. The decision artifact records
+the observer-sight, remote-sensor, language/communication, and environmental
+breathing ownership boundaries; this intake task does not add Unit claims,
+catalog admission, QNT behavior, battle reducer behavior, or MBT evidence.
 
 ### Task 8 - L1K-COUNTER-DISPEL-CANDIDATES - Counter Dispel Spell Candidate Intake
 
