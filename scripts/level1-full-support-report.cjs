@@ -1,3 +1,5 @@
+const fs = require("node:fs");
+const path = require("node:path");
 const { fail } = require("./unit-profile-coverage-io.cjs");
 const {
   battleReadinessClosureKind,
@@ -6,6 +8,7 @@ const { percent, stable } = require("./unit-profile-coverage-report.cjs");
 
 const strictLevelBands = ["level-1", "spell-level-0", "spell-level-1"];
 const companionWorktreeExcludedUnitIds = ["find_familiar"];
+const adoptedNoMatrixSrdPressureDecisionUnitIds = new Set(["disguise_self"]);
 const strictStatusDefinitions = [
   {
     status: "supported-profile",
@@ -340,11 +343,61 @@ function outsideRow(unitId, sourceRows, extra = {}) {
   });
 }
 
-function buildLevel1FullSupport(matrix, srdUnitInventory) {
+function noMatrixDecisionArtifactPath(unitId, root) {
+  if (!adoptedNoMatrixSrdPressureDecisionUnitIds.has(unitId)) {
+    return undefined;
+  }
+  const artifactPath = `plans/unit-profile-coverage/frontier-decisions/${unitId}.md`;
+  if (root !== undefined && !fs.existsSync(path.join(root, artifactPath))) {
+    fail(
+      `No-matrix SRD pressure decision for ${unitId} points to missing ${artifactPath}.`,
+    );
+  }
+  return artifactPath;
+}
+
+function noMatrixSrdPressureRow(unitId, sourceRows, root) {
+  const decisionArtifact = noMatrixDecisionArtifactPath(unitId, root);
+  return outsideRow(unitId, sourceRows, {
+    ...(decisionArtifact === undefined ? {} : { decisionArtifact }),
+    reason:
+      decisionArtifact === undefined
+        ? "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet."
+        : "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
+  });
+}
+
+function validateAdoptedNoMatrixSrdPressureDecisions(
+  candidateRowsByUnitId,
+  matrixUnitsById,
+  root,
+) {
+  for (const unitId of adoptedNoMatrixSrdPressureDecisionUnitIds) {
+    if (!candidateRowsByUnitId.has(unitId)) {
+      fail(
+        `No-matrix SRD pressure decision for ${unitId} is not backed by strict SRD pressure rows.`,
+      );
+    }
+    const matrixRows = matrixUnitsById.get(unitId) ?? [];
+    if (matrixRows.length > 0) {
+      fail(
+        `No-matrix SRD pressure decision for ${unitId} conflicts with ${matrixRows.length} Unit matrix row(s).`,
+      );
+    }
+    noMatrixDecisionArtifactPath(unitId, root);
+  }
+}
+
+function buildLevel1FullSupport(matrix, srdUnitInventory, options = {}) {
   const candidateRowsByUnitId = buildStrictCandidateGroups(srdUnitInventory);
   const candidateUnitIds = Array.from(candidateRowsByUnitId.keys()).sort();
   const excludedUnitIds = new Set(companionWorktreeExcludedUnitIds);
   const matrixUnitsById = buildMatrixUnitsById(matrix);
+  validateAdoptedNoMatrixSrdPressureDecisions(
+    candidateRowsByUnitId,
+    matrixUnitsById,
+    options.root,
+  );
   const outsideDenominator = {
     companionWorktree: [],
     noMatrixSrdPressure: [],
@@ -367,10 +420,7 @@ function buildLevel1FullSupport(matrix, srdUnitInventory) {
     const matrixUnit = strictCandidateMatrixUnit(unitId, matrixUnitsById);
     if (matrixUnit === undefined) {
       outsideDenominator.noMatrixSrdPressure.push(
-        outsideRow(unitId, sourceRows, {
-          reason:
-            "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        }),
+        noMatrixSrdPressureRow(unitId, sourceRows, options.root),
       );
       continue;
     }
@@ -474,6 +524,22 @@ function renderOutsideRows(rows) {
       });
 }
 
+function renderNoMatrixRows(rows) {
+  return rows.length === 0
+    ? ["| _none_ | 0 | _none_ | _none_ | _none_ |"]
+    : rows.map((row) => {
+        const concepts = row.sourceRows
+          .map((sourceRow) => sourceRow.concept)
+          .filter(Boolean)
+          .join("; ");
+        const decisionArtifact =
+          row.decisionArtifact === undefined
+            ? "_none_"
+            : `\`${row.decisionArtifact}\``;
+        return `| \`${row.unitId}\` | ${row.sourceRows.length} | ${md(row.reason)} | ${decisionArtifact} | ${md(concepts)} |`;
+      });
+}
+
 function renderLevel1FullSupport(report) {
   return `${[
     "# Level 1 Full Support",
@@ -548,9 +614,9 @@ function renderLevel1FullSupport(report) {
     "",
     "### No Matrix SRD Pressure",
     "",
-    "| Unit | Source rows | Reason | Concepts |",
-    "| --- | ---: | --- | --- |",
-    ...renderOutsideRows(report.outsideDenominator.noMatrixSrdPressure),
+    "| Unit | Source rows | Reason | Adopted decision artifact | Concepts |",
+    "| --- | ---: | --- | --- | --- |",
+    ...renderNoMatrixRows(report.outsideDenominator.noMatrixSrdPressure),
     "",
   ].join("\n")}`;
 }

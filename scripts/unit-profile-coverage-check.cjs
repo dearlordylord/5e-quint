@@ -99,7 +99,9 @@ function main() {
       selectedIdentityMbtEvidenceTag,
     },
   );
-  const level1FullSupport = buildLevel1FullSupport(matrix, srdUnitInventory);
+  const level1FullSupport = buildLevel1FullSupport(matrix, srdUnitInventory, {
+    root,
+  });
   writeOrCompare(
     { root, write },
     paths.matrix,
