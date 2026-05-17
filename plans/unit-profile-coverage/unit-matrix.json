@@ -93,8 +93,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 94,
-      "numerator": 86,
-      "percent": "91.5%"
+      "numerator": 87,
+      "percent": "92.6%"
     },
     "supportedProfileCoverage": {
       "denominator": 118,
@@ -4151,6 +4151,11 @@
           "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "AT-L1-03"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/fighter-fighting-style-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1D2-FIGHTER-FIGHTING-STYLE"
         }
       ],
       "executableMechanics": true,

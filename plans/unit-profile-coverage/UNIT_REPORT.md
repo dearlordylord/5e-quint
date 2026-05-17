@@ -23,7 +23,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Runtime mapping coverage | 62/62 | 100% |
 | Runtime parity coverage | 62/62 | 100% |
 | Deterministic admission/projection coverage | 94/94 | 100% |
-| Selected identity MBT coverage | 86/94 | 91.5% |
+| Selected identity MBT coverage | 87/94 | 92.6% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -893,6 +893,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Unit | Profiles | Task | Owner |
 | --- | --- | --- | --- |
+| `fighter_fighting_style` | `character-creation.class-feature-feat-choice`, `character-creation.class-feature-advancement-replacement` | L1D2-FIGHTER-FIGHTING-STYLE | `packages/character-creation-runtime/src/fighter-fighting-style-selected-identity.mbt.test.ts` |
 | `fighter_second_wind` | `unit-feature.self-bonus-action-healing` | QMBT7 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `fighter_action_surge` | `unit-feature.action-surge-resource` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `fighter_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | extra-attack-count-scaling | `packages/battle-runtime/src/battle-runtime.mbt.test.ts` |

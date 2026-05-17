@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "L1D2-FIGHTER-FIGHTING-STYLE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Fighter Fighting Style Selected Identity Replay"
     },
     {
@@ -407,7 +407,7 @@ task was appended; `find_familiar` stays excluded.
 | 5 | L1D2-SORCERER-INNATE-SORCERY - Sorcerer Innate Sorcery Selected Identity Replay | done | none | Supported activation/profile identity. |
 | 6 | L1D2-MYCELIUM-STEP - Mycelium Step Selected Identity Replay | done | none | Classic non-SRD mechanics gate identity; keep out of SRD provenance. |
 | 7 | L1D2-WIZARD-ARCANE-RECOVERY - Wizard Arcane Recovery Selected Identity Replay | done | none | Short Rest ordinary Spell Slot recovery, Long Rest reset, and Pact Slot non-application selected identity. |
-| 8 | L1D2-FIGHTER-FIGHTING-STYLE - Fighter Fighting Style Selected Identity Replay | ready-for-implementation-after-light-research | none | Unblocked by Task 13 refreshed matrix evidence. |
+| 8 | L1D2-FIGHTER-FIGHTING-STYLE - Fighter Fighting Style Selected Identity Replay | done | none | Unblocked by Task 13 refreshed matrix evidence. |
 | 9 | L1D2-CLERIC-DRUID-ORDER - Cleric And Druid Order Selected Identity Replay | ready-for-implementation-after-light-research | none | Unblocked by Task 13 refreshed matrix evidence. |
 | 10 | L1D2-ROGUE-EXPERTISE - Rogue Expertise Selected Identity Replay | ready-for-implementation-after-light-research | none | Unblocked by Task 13 refreshed matrix evidence. |
 | 11 | L1D2-WARLOCK-ELDRITCH-INVOCATIONS - Warlock Eldritch Invocations Selected Identity Replay | ready-for-implementation-after-light-research | none | Unblocked by Task 13 refreshed matrix evidence. |
@@ -523,7 +523,7 @@ RAW: `.references/srd-5.2.1/Classes/Wizard.md` Arcane Recovery.
 
 ### Task 8 - L1D2-FIGHTER-FIGHTING-STYLE - Fighter Fighting Style Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Unblocked by Task 13 refreshed matrix evidence: `fighter_fighting_style` is
 supported-profile and lacks selected-identity MBT. Add selected identity

@@ -178,6 +178,7 @@
 {"unitId":"shillelagh","evidence":{"tag":"selected-identity-mbt","taskId":"L1E-SHILLELAGH","ownerPath":"packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts"}}
 {"unitId":"find_familiar","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84I5","ownerPath":"packages/battle-runtime/src/find-familiar-lifecycle.test.ts"}}
 {"unitId":"fighter_fighting_style","evidence":{"tag":"deterministic-admission-projection","taskId":"AT-L1-03","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
+{"unitId":"fighter_fighting_style","evidence":{"tag":"selected-identity-mbt","taskId":"L1D2-FIGHTER-FIGHTING-STYLE","ownerPath":"packages/character-creation-runtime/src/fighter-fighting-style-selected-identity.mbt.test.ts"}}
 {"unitId":"fighter_weapon_mastery","evidence":{"tag":"deterministic-admission-projection","taskId":"AT-L1-04","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"barbarian_weapon_mastery","evidence":{"tag":"deterministic-admission-projection","taskId":"AT-L1-04","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"paladin_weapon_mastery","evidence":{"tag":"deterministic-admission-projection","taskId":"AT-L1-04","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
