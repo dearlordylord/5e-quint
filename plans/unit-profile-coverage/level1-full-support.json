@@ -544,59 +544,6 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "table-spatial-derivation"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Fall-distance derivation, map elevation, and landing geometry simulation remain table/spatial derivations.",
-      "sourceRecordPath": "packages/surface/content/feather_fall.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Bard spell list Feather Fall",
-          "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_feather_fall",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 173,
-            "lineStart": 173,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Feather Fall",
-          "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_feather_fall",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 253,
-            "lineStart": 253,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Feather Fall",
-          "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_feather_fall",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 172,
-            "lineStart": 172,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "feather_fall"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
         "later-level-only"
       ],
       "collectionId": "srd-5.2.1",
@@ -1283,7 +1230,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 68,
+      "count": 69,
       "description": "Full support exists at the Unit profile boundary for strict level-1 accounting.",
       "status": "supported-profile",
       "unitIds": [
@@ -1310,6 +1257,7 @@
         "entangle",
         "expeditious_retreat",
         "false_life",
+        "feather_fall",
         "fighter_fighting_style",
         "fighter_second_wind",
         "fire_bolt",
@@ -1375,12 +1323,11 @@
       ]
     },
     {
-      "count": 9,
+      "count": 8,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
         "faerie_fire",
-        "feather_fall",
         "fog_cloud",
         "grease",
         "hunters_mark",
@@ -1423,23 +1370,22 @@
     },
     "strictRuntimeProfileSupport": {
       "denominator": 93,
-      "numerator": 68,
-      "percent": "73.1%"
+      "numerator": 69,
+      "percent": "74.2%"
     },
     "strictTargetClosure": {
       "denominator": 93,
-      "numerator": 84,
-      "percent": "90.3%"
+      "numerator": 85,
+      "percent": "91.4%"
     }
   },
   "openFrontier": [
     {
-      "count": 9,
+      "count": 8,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
         "faerie_fire",
-        "feather_fall",
         "fog_cloud",
         "grease",
         "hunters_mark",
@@ -3726,18 +3672,18 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 120,
     "groupsByClaimTag": {
-      "profile-subset-supported": 14,
-      "supported-profile": 68,
+      "profile-subset-supported": 13,
+      "supported-profile": 69,
       "unsupported-profile": 11
     },
     "groupsByStatus": {
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 4,
       "closed-runtime-detached-table-adjudication": 10,
-      "open-profile-accounting": 9,
-      "supported-profile": 68
+      "open-profile-accounting": 8,
+      "supported-profile": 69
     },
-    "nonSupportedFrontier": 25,
+    "nonSupportedFrontier": 24,
     "strictDenominator": 93
   }
 }

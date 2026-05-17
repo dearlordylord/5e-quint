@@ -5365,14 +5365,8 @@
         "state": "installed",
         "unitId": "feather_fall"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV55 table/spatial owner",
-        "reason": "Fall-distance derivation, map elevation, and landing geometry simulation remain table/spatial derivations."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -15011,14 +15005,8 @@
         "state": "installed",
         "unitId": "feather_fall"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV55 table/spatial owner",
-        "reason": "Fall-distance derivation, map elevation, and landing geometry simulation remain table/spatial derivations."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -18491,14 +18479,8 @@
         "state": "installed",
         "unitId": "feather_fall"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV55 table/spatial owner",
-        "reason": "Fall-distance derivation, map elevation, and landing geometry simulation remain table/spatial derivations."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",

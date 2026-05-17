@@ -62,8 +62,8 @@
       "value": 145
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 94,
-      "numerator": 94,
+      "denominator": 95,
+      "numerator": 95,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 94,
-      "numerator": 85,
-      "percent": "90.4%"
+      "denominator": 95,
+      "numerator": 86,
+      "percent": "90.5%"
     },
     "supportedProfileCoverage": {
       "denominator": 118,
-      "numerator": 94,
-      "percent": "79.7%"
+      "numerator": 95,
+      "percent": "80.5%"
     }
   },
   "metricSemantics": [
@@ -8661,17 +8661,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "SRDINV55 table/spatial owner",
-              "reason": "Fall-distance derivation, map elevation, and landing geometry simulation remain table/spatial derivations."
-            },
-            "followUpTaskId": "SRDINV55",
-            "mechanic": "fall-distance derivation, map elevation, and landing geometry simulation remain outside the runtime boundary"
-          }
-        ],
         "profileIds": [
           "spell.invocation-feather-fall-mitigation"
         ],
@@ -8685,9 +8674,10 @@
           "Reaction and level-1 Spell Slot spend",
           "one-minute per-target Feather Fall mitigation effect",
           "active 60-foot-per-round descent-rate cap projection",
-          "caller-supplied landing cleanup that ends the landed target's mitigation, emits no-fall-damage outcome, and suppresses Falling-Prone when Feather Fall prevents damage"
+          "caller-supplied landing cleanup that ends the landed target's mitigation, emits no-fall-damage outcome, and suppresses Falling-Prone when Feather Fall prevents damage",
+          "fall-distance derivation, map elevation, and landing geometry remain runtime-detached table adjudication outside the Feather Fall profile; the runtime consumes only typed falling-trigger, falling-target, range, and landing witnesses"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
