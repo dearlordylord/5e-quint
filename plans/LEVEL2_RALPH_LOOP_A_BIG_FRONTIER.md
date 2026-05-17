@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "L12G-CLASS-BARBARIAN-DANGER-SENSE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Barbarian Danger Sense Support"
     },
     {
@@ -737,7 +737,7 @@ Acceptance:
 
 ### Task 5 - L12G-CLASS-BARBARIAN-DANGER-SENSE - Barbarian Danger Sense Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `barbarian_danger_sense`. Gate task: 5 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
