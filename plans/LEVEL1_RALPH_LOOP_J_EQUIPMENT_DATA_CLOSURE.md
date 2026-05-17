@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "L1J-THROWN-FINESSE-WEAPON-DATA",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Thrown Finesse Weapon Non Runtime Data Closure"
     },
     {
@@ -126,7 +126,7 @@ Every task runs:
 | 5 | L1J-MARTIAL-MELEE-WEAPON-DATA - Martial Melee Weapon Non Runtime Data Closure | done | 1 | explicit closure for martial melee authored records |
 | 6 | L1J-POLEARM-REACH-WEAPON-DATA - Polearm Reach Weapon Non Runtime Data Closure | done | 1 | explicit closure for polearm/reach authored records |
 | 7 | L1J-RANGED-WEAPON-DATA - Ranged Weapon Non Runtime Data Closure | done | 1 | explicit closure for ranged authored records |
-| 8 | L1J-THROWN-FINESSE-WEAPON-DATA - Thrown Finesse Weapon Non Runtime Data Closure | ready-for-research | 1 | explicit closure for thrown/finesse authored records |
+| 8 | L1J-THROWN-FINESSE-WEAPON-DATA - Thrown Finesse Weapon Non Runtime Data Closure | done | 1 | explicit closure for thrown/finesse authored records |
 | 9 | L1J-FIREARM-EXOTIC-WEAPON-DATA - Firearm Exotic Weapon Non Runtime Data Closure | ready-for-research | 1 | explicit closure for firearm/exotic authored records |
 | 10 | L1J-INSTALLED-EQUIPMENT-ROW-ALIGNMENT - Installed Equipment Row Alignment | ready-for-research | 1 | align existing installed equipment/weapon unsupported rows with the same closure language |
 
@@ -206,12 +206,15 @@ Decision artifact:
 
 ### Task 8 - L1J-THROWN-FINESSE-WEAPON-DATA - Thrown Finesse Weapon Non Runtime Data Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Units include `weapon_dart` and `weapon_javelin`.
 
 Installed thrown/finesse rows such as `weapon_dagger` and `weapon_spear` belong
 to Task 10.
+
+Decision artifact:
+`plans/unit-profile-coverage/L1J_THROWN_FINESSE_WEAPON_DATA_CLOSURE.md`.
 
 ### Task 9 - L1J-FIREARM-EXOTIC-WEAPON-DATA - Firearm Exotic Weapon Non Runtime Data Closure
 
