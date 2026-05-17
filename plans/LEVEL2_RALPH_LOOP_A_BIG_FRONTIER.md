@@ -624,3 +624,2030 @@ frontier and Loop L's language-access frontier.
 | 73 | 75 | `L12G-MISSING-SILENCE` | `silence` |
 | 74 | 76 | `L12G-MISSING-SUGGESTION` | `suggestion` |
 | 75 | 77 | `L12G-MISSING-ZONE-OF-TRUTH` | `zone_of_truth` |
+
+## Task Details
+
+### Task 1 - L12G-OWNER-BARBARIAN-RECKLESS-ATTACK - Barbarian Reckless Attack Owner Evidence
+
+Status: `ready-for-research`
+
+Unit: `barbarian_reckless_attack`. Gate task: 1 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `barbarian_reckless_attack`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `barbarian_reckless_attack`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `barbarian_reckless_attack` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 2 - L12G-OWNER-FIGHTER-ACTION-SURGE - Fighter Action Surge Owner Evidence
+
+Status: `ready-for-research`
+
+Unit: `fighter_action_surge`. Gate task: 2 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `fighter_action_surge`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `fighter_action_surge`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `fighter_action_surge` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 3 - L12G-OWNER-FIGHTER-TACTICAL-MIND - Fighter Tactical Mind Owner Evidence
+
+Status: `ready-for-research`
+
+Unit: `fighter_tactical_mind`. Gate task: 3 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `fighter_tactical_mind`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `fighter_tactical_mind`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `fighter_tactical_mind` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 4 - L12G-OWNER-ROGUE-CUNNING-ACTION - Rogue Cunning Action Owner Evidence
+
+Status: `ready-for-research`
+
+Unit: `rogue_cunning_action`. Gate task: 4 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `rogue_cunning_action`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `rogue_cunning_action`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `rogue_cunning_action` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 5 - L12G-CLASS-BARBARIAN-DANGER-SENSE - Barbarian Danger Sense Support
+
+Status: `ready-for-research`
+
+Unit: `barbarian_danger_sense`. Gate task: 5 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `barbarian_danger_sense`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `barbarian_danger_sense`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `barbarian_danger_sense` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 6 - L12G-CLASS-BARD-JACK-OF-ALL-TRADES - Bard Jack Of All Trades Support
+
+Status: `ready-for-research`
+
+Unit: `bard_jack_of_all_trades`. Gate task: 6 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `bard_jack_of_all_trades`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `bard_jack_of_all_trades`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `bard_jack_of_all_trades` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 7 - L12G-CLASS-PALADIN-FIGHTING-STYLE - Paladin Fighting Style Support
+
+Status: `ready-for-research`
+
+Unit: `paladin_fighting_style`. Gate task: 7 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `paladin_fighting_style`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `paladin_fighting_style`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `paladin_fighting_style` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 8 - L12G-CLASS-PALADINS-SMITE - Paladins Smite Spell Access And Free Cast
+
+Status: `ready-for-research`
+
+Unit: `paladin_paladins_smite`. Gate task: 8 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `paladin_paladins_smite`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `paladin_paladins_smite`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `paladin_paladins_smite` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 9 - L12G-CLASS-WIZARD-SCHOLAR - Wizard Scholar Constrained Expertise
+
+Status: `ready-for-research`
+
+Unit: `wizard_scholar`. Gate task: 9 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `wizard_scholar`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `wizard_scholar`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `wizard_scholar` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 10 - L12G-AUTHOR-BARD-EXPERTISE - Bard Expertise Authoring And Support
+
+Status: `ready-for-research`
+
+Unit: `bard_expertise`. Gate task: 10 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `bard_expertise`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `bard_expertise`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `bard_expertise` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 11 - L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY - Cleric Channel Divinity Authoring And Support
+
+Status: `ready-for-research`
+
+Unit: `cleric_channel_divinity`. Gate task: 11 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `cleric_channel_divinity`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `cleric_channel_divinity`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `cleric_channel_divinity` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 12 - L12G-AUTHOR-DRUID-WILD-SHAPE - Druid Wild Shape Authoring And Support
+
+Status: `ready-for-research`
+
+Unit: `druid_wild_shape`. Gate task: 12 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `druid_wild_shape`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `druid_wild_shape`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `druid_wild_shape` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 13 - L12G-AUTHOR-MONK-MONKS-FOCUS - Monk Monks Focus Authoring And Support
+
+Status: `ready-for-research`
+
+Unit: `monk_monks_focus`. Gate task: 14 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `monk_monks_focus`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `monk_monks_focus`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `monk_monks_focus` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 14 - L12G-AUTHOR-MONK-UNARMORED-MOVEMENT - Monk Unarmored Movement Authoring And Support
+
+Status: `ready-for-research`
+
+Unit: `monk_unarmored_movement`. Gate task: 15 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `monk_unarmored_movement`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `monk_unarmored_movement`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `monk_unarmored_movement` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 15 - L12G-AUTHOR-MONK-UNCANNY-METABOLISM - Monk Uncanny Metabolism Authoring And Support
+
+Status: `ready-for-research`
+
+Unit: `monk_uncanny_metabolism`. Gate task: 16 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `monk_uncanny_metabolism`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `monk_uncanny_metabolism`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `monk_uncanny_metabolism` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 16 - L12G-AUTHOR-RANGER-DEFT-EXPLORER - Ranger Deft Explorer Authoring And Support
+
+Status: `ready-for-research`
+
+Unit: `ranger_deft_explorer`. Gate task: 17 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `ranger_deft_explorer`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `ranger_deft_explorer`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `ranger_deft_explorer` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 17 - L12G-AUTHOR-RANGER-FIGHTING-STYLE - Ranger Fighting Style Authoring And Support
+
+Status: `ready-for-research`
+
+Unit: `ranger_fighting_style`. Gate task: 18 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `ranger_fighting_style`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `ranger_fighting_style`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `ranger_fighting_style` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 18 - L12G-AUTHOR-SORCERER-FONT-OF-MAGIC - Sorcerer Font Of Magic Authoring And Support
+
+Status: `ready-for-research`
+
+Unit: `sorcerer_font_of_magic`. Gate task: 19 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `sorcerer_font_of_magic`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `sorcerer_font_of_magic`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `sorcerer_font_of_magic` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 19 - L12G-AUTHOR-SORCERER-METAMAGIC - Sorcerer Metamagic Authoring And Support
+
+Status: `ready-for-research`
+
+Unit: `sorcerer_metamagic`. Gate task: 20 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `sorcerer_metamagic`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `sorcerer_metamagic`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `sorcerer_metamagic` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 20 - L12G-AUTHOR-WARLOCK-MAGICAL-CUNNING - Warlock Magical Cunning Authoring And Support
+
+Status: `ready-for-research`
+
+Unit: `warlock_magical_cunning`. Gate task: 21 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `warlock_magical_cunning`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `warlock_magical_cunning`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `warlock_magical_cunning` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 21 - L12G-SPELL-ACID-ARROW - Acid Arrow Runtime Support
+
+Status: `ready-for-research`
+
+Unit: `acid_arrow`. Gate task: 22 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `acid_arrow`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `acid_arrow`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `acid_arrow` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 22 - L12G-SPELL-AID - Aid Runtime Support
+
+Status: `ready-for-research`
+
+Unit: `aid`. Gate task: 23 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `aid`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `aid`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `aid` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 23 - L12G-SPELL-ALTER-SELF - Alter Self Runtime Support Or Closure
+
+Status: `ready-for-research`
+
+Unit: `alter_self`. Gate task: 24 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `alter_self`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `alter_self`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `alter_self` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 24 - L12G-SPELL-ARCANE-LOCK - Arcane Lock Runtime-Detached Closure
+
+Status: `ready-for-research`
+
+Unit: `arcane_lock`. Gate task: 25 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `arcane_lock`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `arcane_lock`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `arcane_lock` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 25 - L12G-SPELL-BARKSKIN - Barkskin Runtime Support
+
+Status: `ready-for-research`
+
+Unit: `barkskin`. Gate task: 26 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `barkskin`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `barkskin`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `barkskin` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 26 - L12G-SPELL-BLINDNESS-DEAFNESS - Blindness Deafness Runtime Support
+
+Status: `ready-for-research`
+
+Unit: `blindness_deafness`. Gate task: 27 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `blindness_deafness`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `blindness_deafness`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `blindness_deafness` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 27 - L12G-SPELL-BLUR - Blur Runtime Support
+
+Status: `ready-for-research`
+
+Unit: `blur`. Gate task: 28 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `blur`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `blur`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `blur` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 28 - L12G-SPELL-CONTINUAL-FLAME - Continual Flame Runtime-Detached Or Light Support
+
+Status: `ready-for-research`
+
+Unit: `continual_flame`. Gate task: 29 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `continual_flame`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `continual_flame`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `continual_flame` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 29 - L12G-SPELL-FLAME-BLADE - Flame Blade Runtime Support
+
+Status: `ready-for-research`
+
+Unit: `flame_blade`. Gate task: 31 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `flame_blade`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `flame_blade`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `flame_blade` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 30 - L12G-SPELL-GENTLE-REPOSE - Gentle Repose Runtime-Detached Closure
+
+Status: `ready-for-research`
+
+Unit: `gentle_repose`. Gate task: 32 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `gentle_repose`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `gentle_repose`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `gentle_repose` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 31 - L12G-SPELL-HEAT-METAL - Heat Metal Runtime Support
+
+Status: `ready-for-research`
+
+Unit: `heat_metal`. Gate task: 33 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `heat_metal`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `heat_metal`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `heat_metal` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 32 - L12G-SPELL-HOLD-PERSON - Hold Person Runtime Support
+
+Status: `ready-for-research`
+
+Unit: `hold_person`. Gate task: 34 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `hold_person`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `hold_person`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `hold_person` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 33 - L12G-SPELL-INVISIBILITY - Invisibility Runtime Support
+
+Status: `ready-for-research`
+
+Unit: `invisibility`. Gate task: 35 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `invisibility`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `invisibility`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `invisibility` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 34 - L12G-SPELL-LESSER-RESTORATION - Lesser Restoration Runtime Support
+
+Status: `ready-for-research`
+
+Unit: `lesser_restoration`. Gate task: 36 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `lesser_restoration`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `lesser_restoration`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `lesser_restoration` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 35 - L12G-SPELL-MAGIC-WEAPON - Magic Weapon Runtime Support Or Closure
+
+Status: `ready-for-research`
+
+Unit: `magic_weapon`. Gate task: 37 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `magic_weapon`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `magic_weapon`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `magic_weapon` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 36 - L12G-SPELL-MIND-SPIKE - Mind Spike Runtime Support And Knowledge Closure
+
+Status: `ready-for-research`
+
+Unit: `mind_spike`. Gate task: 38 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `mind_spike`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `mind_spike`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `mind_spike` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 37 - L12G-SPELL-MISTY-STEP - Misty Step Runtime Support
+
+Status: `ready-for-research`
+
+Unit: `misty_step`. Gate task: 39 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `misty_step`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `misty_step`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `misty_step` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 38 - L12G-SPELL-MOONBEAM - Moonbeam Runtime Support Or Closure
+
+Status: `ready-for-research`
+
+Unit: `moonbeam`. Gate task: 40 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `moonbeam`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `moonbeam`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `moonbeam` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 39 - L12G-SPELL-PASS-WITHOUT-TRACE - Pass Without Trace Runtime Support Or Closure
+
+Status: `ready-for-research`
+
+Unit: `pass_without_trace`. Gate task: 41 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `pass_without_trace`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `pass_without_trace`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `pass_without_trace` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 40 - L12G-SPELL-PRAYER-OF-HEALING - Prayer Of Healing Runtime Support Or Closure
+
+Status: `ready-for-research`
+
+Unit: `prayer_of_healing`. Gate task: 42 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `prayer_of_healing`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `prayer_of_healing`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `prayer_of_healing` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 41 - L12G-SPELL-PROTECTION-FROM-POISON - Protection From Poison Runtime Support
+
+Status: `ready-for-research`
+
+Unit: `protection_from_poison`. Gate task: 43 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `protection_from_poison`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `protection_from_poison`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `protection_from_poison` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 42 - L12G-SPELL-RAY-OF-ENFEEBLEMENT - Ray Of Enfeeblement Runtime Support
+
+Status: `ready-for-research`
+
+Unit: `ray_of_enfeeblement`. Gate task: 44 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `ray_of_enfeeblement`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `ray_of_enfeeblement`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `ray_of_enfeeblement` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 43 - L12G-SPELL-SCORCHING-RAY - Scorching Ray Runtime Support
+
+Status: `ready-for-research`
+
+Unit: `scorching_ray`. Gate task: 45 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `scorching_ray`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `scorching_ray`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `scorching_ray` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 44 - L12G-SPELL-SEE-INVISIBILITY - See Invisibility Runtime Support Or Closure
+
+Status: `ready-for-research`
+
+Unit: `see_invisibility`. Gate task: 46 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `see_invisibility`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `see_invisibility`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `see_invisibility` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 45 - L12G-SPELL-SHATTER - Shatter Runtime Support
+
+Status: `ready-for-research`
+
+Unit: `shatter`. Gate task: 47 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `shatter`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `shatter`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `shatter` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 46 - L12G-SPELL-SHINING-SMITE - Shining Smite Runtime Support
+
+Status: `ready-for-research`
+
+Unit: `shining_smite`. Gate task: 48 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `shining_smite`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `shining_smite`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `shining_smite` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 47 - L12G-SPELL-SPIDER-CLIMB - Spider Climb Runtime Support
+
+Status: `ready-for-research`
+
+Unit: `spider_climb`. Gate task: 49 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `spider_climb`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `spider_climb`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `spider_climb` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 48 - L12G-SPELL-SPIKE-GROWTH - Spike Growth Runtime Support Or Closure
+
+Status: `ready-for-research`
+
+Unit: `spike_growth`. Gate task: 50 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `spike_growth`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `spike_growth`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `spike_growth` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 49 - L12G-SPELL-SPIRITUAL-WEAPON - Spiritual Weapon Runtime Support
+
+Status: `ready-for-research`
+
+Unit: `spiritual_weapon`. Gate task: 51 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `spiritual_weapon`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `spiritual_weapon`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `spiritual_weapon` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 50 - L12G-SPELL-WARDING-BOND - Warding Bond Runtime Support
+
+Status: `ready-for-research`
+
+Unit: `warding_bond`. Gate task: 52 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `warding_bond`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `warding_bond`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `warding_bond` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 51 - L12G-SPELL-WEB - Web Runtime Support Or Closure
+
+Status: `ready-for-research`
+
+Unit: `web`. Gate task: 53 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `web`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `web`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `web` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 52 - L12G-MISSING-ANIMAL-MESSENGER - Animal Messenger Definition And Closure
+
+Status: `ready-for-research`
+
+Unit: `animal_messenger`. Gate task: 54 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `animal_messenger`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `animal_messenger`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `animal_messenger` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 53 - L12G-MISSING-ARCANISTS-MAGIC-AURA - Arcanists Magic Aura Definition And Closure
+
+Status: `ready-for-research`
+
+Unit: `arcanists_magic_aura`. Gate task: 55 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `arcanists_magic_aura`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `arcanists_magic_aura`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `arcanists_magic_aura` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 54 - L12G-MISSING-AUGURY - Augury Definition And Closure
+
+Status: `ready-for-research`
+
+Unit: `augury`. Gate task: 56 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `augury`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `augury`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `augury` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 55 - L12G-MISSING-CALM-EMOTIONS - Calm Emotions Definition And Support
+
+Status: `ready-for-research`
+
+Unit: `calm_emotions`. Gate task: 57 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `calm_emotions`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `calm_emotions`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `calm_emotions` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 56 - L12G-MISSING-DARKNESS - Darkness Definition And Support Or Closure
+
+Status: `ready-for-research`
+
+Unit: `darkness`. Gate task: 58 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `darkness`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `darkness`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `darkness` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 57 - L12G-MISSING-DARKVISION - Darkvision Definition And Support Or Closure
+
+Status: `ready-for-research`
+
+Unit: `darkvision`. Gate task: 59 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `darkvision`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `darkvision`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `darkvision` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 58 - L12G-MISSING-DETECT-THOUGHTS - Detect Thoughts Definition And Closure
+
+Status: `ready-for-research`
+
+Unit: `detect_thoughts`. Gate task: 60 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `detect_thoughts`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `detect_thoughts`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `detect_thoughts` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 59 - L12G-MISSING-DRAGONS-BREATH - Dragons Breath Definition And Runtime Support
+
+Status: `ready-for-research`
+
+Unit: `dragons_breath`. Gate task: 61 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `dragons_breath`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `dragons_breath`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `dragons_breath` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 60 - L12G-MISSING-ENHANCE-ABILITY - Enhance Ability Definition And Support
+
+Status: `ready-for-research`
+
+Unit: `enhance_ability`. Gate task: 62 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `enhance_ability`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `enhance_ability`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `enhance_ability` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 61 - L12G-MISSING-ENLARGE-REDUCE - Enlarge Reduce Definition And Support
+
+Status: `ready-for-research`
+
+Unit: `enlarge_reduce`. Gate task: 63 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `enlarge_reduce`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `enlarge_reduce`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `enlarge_reduce` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 62 - L12G-MISSING-ENTHRALL - Enthrall Definition And Closure
+
+Status: `ready-for-research`
+
+Unit: `enthrall`. Gate task: 64 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `enthrall`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `enthrall`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `enthrall` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 63 - L12G-MISSING-FIND-TRAPS - Find Traps Definition And Closure
+
+Status: `ready-for-research`
+
+Unit: `find_traps`. Gate task: 65 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `find_traps`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `find_traps`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `find_traps` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 64 - L12G-MISSING-FLAMING-SPHERE - Flaming Sphere Definition And Runtime Support
+
+Status: `ready-for-research`
+
+Unit: `flaming_sphere`. Gate task: 66 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `flaming_sphere`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `flaming_sphere`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `flaming_sphere` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 65 - L12G-MISSING-GUST-OF-WIND - Gust Of Wind Definition And Support Or Closure
+
+Status: `ready-for-research`
+
+Unit: `gust_of_wind`. Gate task: 67 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `gust_of_wind`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `gust_of_wind`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `gust_of_wind` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 66 - L12G-MISSING-KNOCK - Knock Definition And Closure
+
+Status: `ready-for-research`
+
+Unit: `knock`. Gate task: 68 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `knock`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `knock`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `knock` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 67 - L12G-MISSING-LEVITATE - Levitate Definition And Support Or Closure
+
+Status: `ready-for-research`
+
+Unit: `levitate`. Gate task: 69 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `levitate`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `levitate`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `levitate` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 68 - L12G-MISSING-LOCATE-ANIMALS-OR-PLANTS - Locate Animals Or Plants Definition And Closure
+
+Status: `ready-for-research`
+
+Unit: `locate_animals_or_plants`. Gate task: 70 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `locate_animals_or_plants`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `locate_animals_or_plants`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `locate_animals_or_plants` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 69 - L12G-MISSING-LOCATE-OBJECT - Locate Object Definition And Closure
+
+Status: `ready-for-research`
+
+Unit: `locate_object`. Gate task: 71 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `locate_object`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `locate_object`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `locate_object` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 70 - L12G-MISSING-MAGIC-MOUTH - Magic Mouth Definition And Closure
+
+Status: `ready-for-research`
+
+Unit: `magic_mouth`. Gate task: 72 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `magic_mouth`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `magic_mouth`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `magic_mouth` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 71 - L12G-MISSING-MIRROR-IMAGE - Mirror Image Definition And Runtime Support
+
+Status: `ready-for-research`
+
+Unit: `mirror_image`. Gate task: 73 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `mirror_image`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `mirror_image`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `mirror_image` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 72 - L12G-MISSING-ROPE-TRICK - Rope Trick Definition And Closure
+
+Status: `ready-for-research`
+
+Unit: `rope_trick`. Gate task: 74 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `rope_trick`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `rope_trick`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `rope_trick` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 73 - L12G-MISSING-SILENCE - Silence Definition And Support Or Closure
+
+Status: `ready-for-research`
+
+Unit: `silence`. Gate task: 75 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `silence`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `silence`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `silence` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 74 - L12G-MISSING-SUGGESTION - Suggestion Definition And Closure
+
+Status: `ready-for-research`
+
+Unit: `suggestion`. Gate task: 76 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `suggestion`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `suggestion`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `suggestion` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 75 - L12G-MISSING-ZONE-OF-TRUTH - Zone Of Truth Definition And Closure
+
+Status: `ready-for-research`
+
+Unit: `zone_of_truth`. Gate task: 77 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `zone_of_truth`.
+
+Outputs:
+
+- one concrete end state from the Task Output Contract for `zone_of_truth`;
+- updated Surface/runtime/profile/evidence files only when they are the correct owner;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the level 1-2 metric row for `zone_of_truth` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
