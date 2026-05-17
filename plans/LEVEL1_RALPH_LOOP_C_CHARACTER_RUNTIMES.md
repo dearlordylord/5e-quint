@@ -91,7 +91,7 @@
     {
       "number": 12,
       "id": "L1C-L1X-06",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Goodberry No-Matrix Decision"
     },
     {
@@ -284,7 +284,7 @@ For `AT-L1-08`:
 | 18 | L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT - Warlock Pact Magic Advancement | done | L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE | Advance Warlock cantrip, prepared-spell, and Pact Slot CharacterBuild facts on later Warlock levels before `warlock_eldritch_invocations` can claim full all-level prerequisite ownership. |
 | 10 | L1C-L1X-01 - Create Or Destroy Water No-Matrix Decision | done | none | Decision keeps runtime-detached table/environment adjudication; no owner selected and no Unit claim without admitted UnitRecord. |
 | 11 | L1C-L1X-05 - Floating Disk No-Matrix Decision | done | none | Decision keeps runtime-detached table/object/inventory adjudication; no owner selected and no Unit claim without admitted UnitRecord. |
-| 12 | L1C-L1X-06 - Goodberry No-Matrix Decision | ready-for-research | none | Decide Character Sheet consumable/inventory owner. |
+| 12 | L1C-L1X-06 - Goodberry No-Matrix Decision | done | none | Decision keeps catalog-only/no-runtime-profile; no consumable inventory owner selected and no Unit claim without admitted UnitRecord. |
 | 13 | L1C-L1X-08 - Mage Hand No-Matrix Decision | ready-for-research | none | Decide object-control owner. |
 | 14 | L1C-L1X-09 - Mending No-Matrix Decision | ready-for-research | none | Decide equipment/object repair owner. |
 | 15 | L1C-L1X-12 - Purify Food And Drink No-Matrix Decision | ready-for-research | none | Decide item/inventory purification owner. |
@@ -768,7 +768,7 @@ Plan Impact:
 
 ### Task 12 - L1C-L1X-06 - Goodberry No-Matrix Decision
 
-Status: `ready-for-research`
+Status: `done`
 
 Research `AT-L1X-06` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
