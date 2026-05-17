@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L1F-DANCING-LIGHTS",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Dancing Lights Selected Identity Replay"
     },
     {
@@ -156,12 +156,20 @@ no moved Units were found.
 
 ### Task 2 - L1F-DANCING-LIGHTS - Dancing Lights Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `dancing_lights`, proving the authored Unit
 binds through movable Dim Light support without runtime-owned map automation.
 
 RAW: `.references/srd-5.2.1/Spells/Descriptions-A-D.md` Dancing Lights.
+
+Result: `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts`
+and
+`packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt`
+record the selected-identity replay for Dancing Lights movable Dim Light,
+source-owned light identities, Bonus Action repositioning, table-supplied
+projection witnesses, sight-obscurement projection, and no runtime-owned map
+automation.
 
 ### Task 3 - L1F-FAERIE-FIRE - Faerie Fire Selected Identity Replay
 

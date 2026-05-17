@@ -105,6 +105,7 @@
 {"unitId":"ranger_favored_enemy","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV87C","ownerPath":"packages/battle-runtime/src/index.test.ts"}}
 {"unitId":"produce_flame","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV87A","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"dancing_lights","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV88A","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
+{"unitId":"dancing_lights","evidence":{"tag":"selected-identity-mbt","taskId":"level1-spatial-witness","ownerPath":"packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts"}}
 {"unitId":"fire_bolt","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84A","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"fire_bolt","evidence":{"tag":"selected-identity-mbt","taskId":"attack-spell-shape","ownerPath":"packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts"}}
 {"unitId":"sorcerous_burst","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84B","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
