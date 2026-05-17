@@ -10,6 +10,7 @@ import { SUPPORTED_ABILITY_SCORE_METHODS } from "@dnd/shared-algebras/ability-sc
 import {
   readBackgroundCreationFacts,
   readClassCreationFacts,
+  readSpeciesCreationFacts,
 } from "@dnd/surface/surface/character-creation-readers";
 import { allCantripsFromClassSpellList } from "@dnd/surface/surface/schema";
 import { SKILLS } from "@dnd/surface/surface/types";
@@ -25,6 +26,7 @@ import type {
   StartingEquipmentChoice,
   ClassSpellcastingCreation,
   ListPreparedSpellcastingCreation,
+  Size,
   UnitRecord,
   WizardSpellcastingCreation,
 } from "@dnd/surface/surface/types";
@@ -1587,6 +1589,27 @@ export function draftHole(
     });
   }
 
+  if (path === "draft.speciesSize") {
+    const speciesId = _draft?.selections.species;
+    if (speciesId === undefined) {
+      return undefined;
+    }
+    const unit = unitLibrary.getUnit(speciesId);
+    if (Option.isNone(unit)) {
+      return undefined;
+    }
+    const facts = readSpeciesCreationFacts(unit.value);
+    if (facts.tag !== "readable" || facts.value.size.kind !== "choice") {
+      return undefined;
+    }
+
+    return choiceHole({
+      source: draftSource(path),
+      cardinality: EXACTLY_ONE_CHOICE,
+      options: facts.value.size.options.map(speciesSizeOption),
+    });
+  }
+
   if (path === "draft.abilityScoreGeneration") {
     return {
       kind: "abilityScores",
@@ -1619,6 +1642,13 @@ export function draftHole(
       label: alignmentLabel(alignment),
     })),
   });
+}
+
+function speciesSizeOption(size: Extract<Size, "medium" | "small">) {
+  return {
+    optionId: creationChoiceOptionId(size),
+    label: size === "medium" ? "Medium" : "Small",
+  };
 }
 
 function progressionOptionsForClassUnit(

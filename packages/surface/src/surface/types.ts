@@ -782,11 +782,41 @@ export type FeatRecord = Schema.Schema.Type<
 export type SpeciesTraitMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.SpeciesTraitMechanicsSchema
 >;
+export type DragonbornSpeciesTraits = Schema.Schema.Type<
+  typeof SurfaceSchema.DragonbornSpeciesTraitsSchema
+>;
+export type DragonbornSpeciesRecord = Schema.Schema.Type<
+  typeof SurfaceSchema.DragonbornSpeciesRecordSchema
+>;
+export type DwarfSpeciesTraits = Schema.Schema.Type<
+  typeof SurfaceSchema.DwarfSpeciesTraitsSchema
+>;
+export type DwarfSpeciesRecord = Schema.Schema.Type<
+  typeof SurfaceSchema.DwarfSpeciesRecordSchema
+>;
+export type ElfSpeciesTraits = Schema.Schema.Type<
+  typeof SurfaceSchema.ElfSpeciesTraitsSchema
+>;
+export type ElfSpeciesRecord = Schema.Schema.Type<
+  typeof SurfaceSchema.ElfSpeciesRecordSchema
+>;
+export type GoliathSpeciesTraits = Schema.Schema.Type<
+  typeof SurfaceSchema.GoliathSpeciesTraitsSchema
+>;
+export type GoliathSpeciesRecord = Schema.Schema.Type<
+  typeof SurfaceSchema.GoliathSpeciesRecordSchema
+>;
 export type OrcSpeciesTraits = Schema.Schema.Type<
   typeof SurfaceSchema.OrcSpeciesTraitsSchema
 >;
 export type OrcSpeciesRecord = Schema.Schema.Type<
   typeof SurfaceSchema.OrcSpeciesRecordSchema
+>;
+export type TieflingSpeciesTraits = Schema.Schema.Type<
+  typeof SurfaceSchema.TieflingSpeciesTraitsSchema
+>;
+export type TieflingSpeciesRecord = Schema.Schema.Type<
+  typeof SurfaceSchema.TieflingSpeciesRecordSchema
 >;
 export type SpeciesRecord = Schema.Schema.Type<
   typeof SurfaceSchema.SpeciesRecordSchema

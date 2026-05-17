@@ -15,12 +15,18 @@ import classWarlockInput from "../../content/class_warlock.json";
 import classWizardInput from "../../content/class_wizard.json";
 import fighterTacticalMindInput from "../../content/fighter_tactical_mind.json";
 import rogueCunningActionInput from "../../content/rogue_cunning_action.json";
+import speciesDragonbornInput from "../../content/species_dragonborn.json";
+import speciesDwarfInput from "../../content/species_dwarf.json";
+import speciesElfInput from "../../content/species_elf.json";
+import speciesGoliathInput from "../../content/species_goliath.json";
 import speciesOrcInput from "../../content/species_orc.json";
+import speciesTieflingInput from "../../content/species_tiefling.json";
 import wizardRitualAdeptInput from "../../content/wizard_ritual_adept.json";
 import {
   readBackgroundCreationFacts,
   readClassCreationFacts,
   readOrcSpeciesCreationFacts,
+  readSpeciesCreationFacts,
 } from "./character-creation-readers.ts";
 import {
   decodeBackgroundRecordSync,
@@ -1218,6 +1224,85 @@ describe("character-creation Surface records", () => {
     });
   });
 
+  test("decodes non-Orc admission species records with retained trait refs", () => {
+    const cases = [
+      {
+        input: speciesDragonbornInput,
+        expected: {
+          recordId: "species_dragonborn",
+          species: "dragonborn",
+          creatureType: "humanoid",
+          size: { kind: "fixed", size: "medium" },
+          speed: { walkFeet: 30 },
+          traits: {
+            breathWeapon: "species_dragonborn_breath_weapon",
+            damageResistance: "species_dragonborn_damage_resistance",
+            darkvision: "species_dragonborn_darkvision",
+          },
+        },
+      },
+      {
+        input: speciesDwarfInput,
+        expected: {
+          recordId: "species_dwarf",
+          species: "dwarf",
+          creatureType: "humanoid",
+          size: { kind: "fixed", size: "medium" },
+          speed: { walkFeet: 30 },
+          traits: {
+            darkvision: "dwarf_darkvision",
+            dwarvenResilience: "dwarf_dwarven_resilience",
+          },
+        },
+      },
+      {
+        input: speciesElfInput,
+        expected: {
+          recordId: "species_elf",
+          species: "elf",
+          creatureType: "humanoid",
+          size: { kind: "fixed", size: "medium" },
+          speed: { walkFeet: 30 },
+          traits: { darkvision: "elf_darkvision" },
+        },
+      },
+      {
+        input: speciesGoliathInput,
+        expected: {
+          recordId: "species_goliath",
+          species: "goliath",
+          creatureType: "humanoid",
+          size: { kind: "fixed", size: "medium" },
+          speed: { walkFeet: 35 },
+          traits: { powerfulBuild: "species_goliath_powerful_build" },
+        },
+      },
+      {
+        input: speciesTieflingInput,
+        expected: {
+          recordId: "species_tiefling",
+          species: "tiefling",
+          creatureType: "humanoid",
+          size: { kind: "choice", options: ["medium", "small"] },
+          speed: { walkFeet: 30 },
+          traits: { darkvision: "species_tiefling_darkvision" },
+        },
+      },
+    ] as const;
+
+    for (const testCase of cases) {
+      const speciesRecord = decodeSpeciesRecordSync(testCase.input);
+      const unit = decodeUnitRecordSync(testCase.input);
+      const result = readSpeciesCreationFacts(unit);
+
+      expect(speciesRecord.kind).toBe("species");
+      expect(result, testCase.expected.recordId).toEqual({
+        tag: "readable",
+        value: testCase.expected,
+      });
+    }
+  });
+
   test("rejects malformed character creation records at the decode boundary", () => {
     expect(
       Either.isLeft(
@@ -1712,6 +1797,20 @@ describe("character-creation Surface records", () => {
           traits: {
             ...speciesOrcInput.traits,
             darkvision: "species_human_resourceful",
+          },
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test("rejects mixed-species non-Orc trait aggregates at the decode boundary", () => {
+    expect(
+      Either.isLeft(
+        decodeUnitRecordEither({
+          ...speciesDwarfInput,
+          traits: {
+            ...speciesDwarfInput.traits,
+            darkvision: "species_tiefling_darkvision",
           },
         }),
       ),

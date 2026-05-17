@@ -7,6 +7,7 @@ import {
   characterDraftId,
   creationChoiceOptionId,
   draftRevision,
+  isCharacterSpeciesSizeSelection,
   loadoutEquipmentUnitId,
   unitChoiceKey,
   unitChoiceSourceUnitId,
@@ -16,6 +17,7 @@ import {
   type CharacterDraftId,
   type CharacterDraftSelections,
   type CharacterEquipmentSelection,
+  type CharacterSpeciesSizeSelection,
   type CharacterSelectedChoiceOption,
   type CharacterStartingLanguages,
   type CharacterAlignment,
@@ -138,6 +140,15 @@ function parseDraftSelections(
   const species = optionalString(selections.right.species, `${path}.species`);
   if (Either.isLeft(species)) return failIssue(species.left);
 
+  const speciesSize =
+    selections.right.speciesSize === undefined
+      ? Either.right(undefined)
+      : parseCharacterSpeciesSize(
+          selections.right.speciesSize,
+          `${path}.speciesSize`,
+        );
+  if (Either.isLeft(speciesSize)) return failIssue(speciesSize.left);
+
   const languages =
     selections.right.languages === undefined
       ? Either.right(undefined)
@@ -174,10 +185,26 @@ function parseDraftSelections(
           backgroundAbilityScoreIncrease: backgroundAbilityScoreIncrease.right,
         }),
     ...(species.right === undefined ? {} : { species: species.right }),
+    ...(speciesSize.right === undefined
+      ? {}
+      : { speciesSize: speciesSize.right }),
     ...(languages.right === undefined ? {} : { languages: languages.right }),
     ...(alignment.right === undefined ? {} : { alignment: alignment.right }),
     ...(equipment.right === undefined ? {} : { equipment: equipment.right }),
   });
+}
+
+function parseCharacterSpeciesSize(
+  value: unknown,
+  path: string,
+): ParseResult<CharacterSpeciesSizeSelection> {
+  const text = optionalString(value, path);
+  if (Either.isLeft(text)) return failIssue(text.left);
+  if (isCharacterSpeciesSizeSelection(text.right)) {
+    return Either.right(text.right);
+  }
+
+  return invalid(path, "Character species size must be medium or small.");
 }
 
 function parseCharacterProgression(

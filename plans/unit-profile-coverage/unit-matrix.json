@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 362,
-      "numerator": 117,
-      "percent": "32.3%"
+      "numerator": 125,
+      "percent": "34.5%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 429,
-      "numerator": 144,
-      "percent": "33.6%"
+      "denominator": 434,
+      "numerator": 157,
+      "percent": "36.2%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 145
+      "value": 158
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 94,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 145,
-      "numerator": 145,
+      "denominator": 158,
+      "numerator": 158,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -97,9 +97,9 @@
       "percent": "90.4%"
     },
     "supportedProfileCoverage": {
-      "denominator": 118,
+      "denominator": 126,
       "numerator": 94,
-      "percent": "79.7%"
+      "percent": "74.6%"
     }
   },
   "metricSemantics": [
@@ -4074,6 +4074,78 @@
         "status": "installed"
       },
       "claim": {
+        "reason": "Species admission container record; character creation retains the selected species source fact and authored trait Unit refs, while executable battle pressure lives on species trait Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "species",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_dragonborn.json",
+      "unitId": "species_dragonborn"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Species admission container record; character creation retains the selected species source fact and authored trait Unit refs, while executable battle pressure lives on species trait Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "species",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_dwarf.json",
+      "unitId": "species_dwarf"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Species admission container record; character creation retains the selected species source fact and authored trait Unit refs, while executable battle pressure lives on species trait Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "species",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_elf.json",
+      "unitId": "species_elf"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Species admission container record; character creation retains the selected species source fact and authored trait Unit refs, while executable battle pressure lives on species trait Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "species",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_goliath.json",
+      "unitId": "species_goliath"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "reason": "Species container record; executable pressure lives on species trait Units.",
         "tag": "unsupported-profile"
       },
@@ -4084,6 +4156,24 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/species_orc.json",
       "unitId": "species_orc"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Species admission container record; character creation retains the selected species source fact and authored trait Unit refs, while executable battle pressure lives on species trait Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "species",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_tiefling.json",
+      "unitId": "species_tiefling"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -7200,6 +7290,190 @@
       ],
       "sourceRecordPath": "packages/surface/content/orc_relentless_endurance.json",
       "unitId": "orc_relentless_endurance"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "sight/illumination projection owner",
+          "reason": "Darkvision sense grants provide observer sense and range facts; promoted battle execution consumes derived sight and illumination projections plus table-supplied distance and visibility facts rather than executing species trait Units directly."
+        },
+        "reason": "Darkvision is an authored species sense fact with no standalone promoted Unit profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/darkvision_elf.json",
+      "unitId": "elf_darkvision"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future species attack-replacement feature profile owner",
+          "reason": "Breath Weapon needs an explicit species feature profile that composes Attack-action attack replacement, area membership, Dexterity save-for-half damage, Draconic Ancestry damage-type selection, character-level dice scaling, and Proficiency Bonus Long Rest resource tracking."
+        },
+        "reason": "Breath Weapon is a level-1 species attack replacement with area save-gated damage, Draconic Ancestry damage type, shape choice, character-level dice scaling, and a Proficiency Bonus Long Rest use pool; no broad species runtime profile is promoted in this task.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_dragonborn_breath_weapon.json",
+      "unitId": "species_dragonborn_breath_weapon"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future target-side resistance and Draconic Ancestry character fact owner",
+          "reason": "Dragonborn Damage Resistance requires one Draconic Ancestry source fact shared with Breath Weapon and a passive target-side damage adjustment profile; current promoted damage modifiers consume Stat Block or active-effect resistances rather than absent species trait Units."
+        },
+        "reason": "Dragonborn Damage Resistance is a passive target-side Resistance trait keyed to Draconic Ancestry; no promoted species trait resistance profile is claimed.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_dragonborn_damage_resistance.json",
+      "unitId": "species_dragonborn_damage_resistance"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "sight/illumination projection owner",
+          "reason": "Darkvision sense grants provide observer sense and range facts; promoted battle execution consumes derived sight and illumination projections plus table-supplied distance and visibility facts rather than executing species trait Units directly."
+        },
+        "reason": "Darkvision is an authored species sense fact with no standalone promoted Unit profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_dragonborn_darkvision.json",
+      "unitId": "species_dragonborn_darkvision"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "sight/illumination projection owner",
+          "reason": "Darkvision sense grants provide observer sense and range facts; promoted battle execution consumes derived sight and illumination projections plus table-supplied distance and visibility facts rather than executing species trait Units directly."
+        },
+        "reason": "Darkvision is an authored species sense fact with no standalone promoted Unit profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_dwarf_darkvision.json",
+      "unitId": "dwarf_darkvision"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future target-side resistance and poison saving-throw roll-mode owner",
+          "reason": "Dwarven Resilience should be modeled at a target-side damage adjustment and condition-scoped Saving Throw roll-mode boundary, preserving its single species trait identity without claiming a generic grant_resistance profile."
+        },
+        "reason": "Dwarven Resilience combines Poison Resistance with Advantage on saving throws to avoid or end the Poisoned condition; no promoted species trait resistance or save roll-mode profile is claimed.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_dwarf_dwarven_resilience.json",
+      "unitId": "dwarf_dwarven_resilience"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "character-sheet carrying-capacity projection and future grapple-escape ability-check roll-mode owner",
+          "reason": "Powerful Build needs a split owner: its one-size-larger carrying capacity is durable Character Sheet or inventory projection, while its Advantage on ability checks to end Grappled remains future condition-scoped Ability Check roll-mode support outside current promoted battle Unit profiles."
+        },
+        "reason": "Powerful Build splits into a durable carrying-capacity character fact and an Ability Check Advantage fact for ending the Grappled condition; no standalone promoted battle Unit profile is claimed.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_goliath_powerful_build.json",
+      "unitId": "species_goliath_powerful_build"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "sight/illumination projection owner",
+          "reason": "Darkvision sense grants provide observer sense and range facts; promoted battle execution consumes derived sight and illumination projections plus table-supplied distance and visibility facts rather than executing species trait Units directly."
+        },
+        "reason": "Darkvision is an authored species sense fact with no standalone promoted Unit profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_tiefling_darkvision.json",
+      "unitId": "species_tiefling_darkvision"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -13964,34 +14238,6 @@
       "authoredSurfaceDuplicateIdCount": 1,
       "catalogAdmission": {
         "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "sight/illumination projection owner",
-          "reason": "Darkvision sense grants provide observer sense and range facts; promoted battle execution consumes derived sight and illumination projections plus table-supplied distance and visibility facts rather than executing species trait Units directly."
-        },
-        "reason": "Darkvision is an authored species sense fact with no standalone promoted Unit profile.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "species_trait",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/darkvision_elf.json",
-      "unitId": "elf_darkvision"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
           "category": "srd-candidate",
           "planningLane": "QMBT14-QMBT16",
           "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
@@ -17029,202 +17275,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/speak_with_animals.json",
       "unitId": "speak_with_animals"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future species attack-replacement feature profile owner",
-          "reason": "Breath Weapon needs an explicit species feature profile that composes Attack-action attack replacement, area membership, Dexterity save-for-half damage, Draconic Ancestry damage-type selection, character-level dice scaling, and Proficiency Bonus Long Rest resource tracking."
-        },
-        "reason": "Breath Weapon is a level-1 species attack replacement with area save-gated damage, Draconic Ancestry damage type, shape choice, character-level dice scaling, and a Proficiency Bonus Long Rest use pool; no broad species runtime profile is promoted in this task.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "species_trait",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/species_dragonborn_breath_weapon.json",
-      "unitId": "species_dragonborn_breath_weapon"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future target-side resistance and Draconic Ancestry character fact owner",
-          "reason": "Dragonborn Damage Resistance requires one Draconic Ancestry source fact shared with Breath Weapon and a passive target-side damage adjustment profile; current promoted damage modifiers consume Stat Block or active-effect resistances rather than absent species trait Units."
-        },
-        "reason": "Dragonborn Damage Resistance is a passive target-side Resistance trait keyed to Draconic Ancestry; no promoted species trait resistance profile is claimed.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "species_trait",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/species_dragonborn_damage_resistance.json",
-      "unitId": "species_dragonborn_damage_resistance"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "sight/illumination projection owner",
-          "reason": "Darkvision sense grants provide observer sense and range facts; promoted battle execution consumes derived sight and illumination projections plus table-supplied distance and visibility facts rather than executing species trait Units directly."
-        },
-        "reason": "Darkvision is an authored species sense fact with no standalone promoted Unit profile.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "species_trait",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/species_dragonborn_darkvision.json",
-      "unitId": "species_dragonborn_darkvision"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "sight/illumination projection owner",
-          "reason": "Darkvision sense grants provide observer sense and range facts; promoted battle execution consumes derived sight and illumination projections plus table-supplied distance and visibility facts rather than executing species trait Units directly."
-        },
-        "reason": "Darkvision is an authored species sense fact with no standalone promoted Unit profile.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "species_trait",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/species_dwarf_darkvision.json",
-      "unitId": "dwarf_darkvision"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future target-side resistance and poison saving-throw roll-mode owner",
-          "reason": "Dwarven Resilience should be modeled at a target-side damage adjustment and condition-scoped Saving Throw roll-mode boundary, preserving its single species trait identity without claiming a generic grant_resistance profile."
-        },
-        "reason": "Dwarven Resilience combines Poison Resistance with Advantage on saving throws to avoid or end the Poisoned condition; no promoted species trait resistance or save roll-mode profile is claimed.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "species_trait",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/species_dwarf_dwarven_resilience.json",
-      "unitId": "dwarf_dwarven_resilience"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "character-sheet carrying-capacity projection and future grapple-escape ability-check roll-mode owner",
-          "reason": "Powerful Build needs a split owner: its one-size-larger carrying capacity is durable Character Sheet or inventory projection, while its Advantage on ability checks to end Grappled remains future condition-scoped Ability Check roll-mode support outside current promoted battle Unit profiles."
-        },
-        "reason": "Powerful Build splits into a durable carrying-capacity character fact and an Ability Check Advantage fact for ending the Grappled condition; no standalone promoted battle Unit profile is claimed.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "species_trait",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/species_goliath_powerful_build.json",
-      "unitId": "species_goliath_powerful_build"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "sight/illumination projection owner",
-          "reason": "Darkvision sense grants provide observer sense and range facts; promoted battle execution consumes derived sight and illumination projections plus table-supplied distance and visibility facts rather than executing species trait Units directly."
-        },
-        "reason": "Darkvision is an authored species sense fact with no standalone promoted Unit profile.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "species_trait",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/species_tiefling_darkvision.json",
-      "unitId": "species_tiefling_darkvision"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

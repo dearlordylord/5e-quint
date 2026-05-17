@@ -50,6 +50,7 @@ export function hasDraftSelection(
     (path === "draft.progression.initial" && selections.progression != null) ||
     (path === "draft.background" && selections.background != null) ||
     (path === "draft.species" && selections.species != null) ||
+    (path === "draft.speciesSize" && selections.speciesSize != null) ||
     (path === "draft.abilityScoreGeneration" &&
       selections.abilityScoreGeneration != null) ||
     (path === "draft.languages" && selections.languages != null) ||

@@ -1,0 +1,17 @@
+let tiefling =
+      { creatureType = "humanoid"
+      , description = "Tiefling species source facts for character creation admission."
+      , id = "species_tiefling"
+      , kind = "species"
+      , name = "Tiefling"
+      , provenance =
+        { kind = "srd-5.2.1"
+        , section = "Character-Creation.md:87-91; Character-Origins.md:261-285"
+        }
+      , size = { kind = "choice", options = [ "medium", "small" ] }
+      , species = "tiefling"
+      , speed.walkFeet = 30
+      , traits = { darkvision = "species_tiefling_darkvision" }
+      }
+
+in  tiefling

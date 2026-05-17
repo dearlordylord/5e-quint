@@ -38,13 +38,13 @@ import {
   PHASE1_LOADOUT_WEAPON_OPTION_ID,
   SRD_ROGUE_CLASS_UNIT_ID,
   PHASE1_SHIELD_UNIT_ID,
-  PHASE1_SPECIES_ORC_UNIT_ID,
   PHASE1_WEAPON_FLAIL_UNIT_ID,
   PHASE1_WEAPON_LONGSWORD_UNIT_ID,
   PRIMAL_ORDER_CHOICE_KEY,
   RANGER_MULTICLASS_SKILL_PROFICIENCY_CHOICE_KEY,
   ROGUE_MULTICLASS_SKILL_PROFICIENCY_CHOICE_KEY,
   SRD_LEVEL_ONE_CLASS_UNIT_IDS,
+  SRD_CHARACTER_ADMISSION_SPECIES_UNIT_IDS,
   progressionOptionId,
   SUPPORTED_BACKGROUND_OPTION_IDS,
   SUPPORTED_BACKGROUND_UNIT_IDS,
@@ -55,6 +55,7 @@ import {
   SUPPORTED_PURCHASE_UNIT_IDS,
   SUPPORTED_COIN_GRANT_PURCHASE_UNIT_IDS,
   SUPPORTED_SPECIES_OPTION_IDS,
+  SUPPORTED_SPECIES_SIZE_OPTION_IDS,
   SUPPORTED_WEAPON_MASTERY_OPTION_IDS,
   WIDTH_CLASS_WIZARD_UNIT_ID,
   abilityScoreIncreaseChoiceOptionIds,
@@ -141,7 +142,6 @@ export type CharacterCreationSupportProfile = {
   readonly loadoutChoices: readonly SupportedLoadoutChoice[];
   readonly manifest: {
     readonly backgroundUnitId: UnitRecord["id"];
-    readonly speciesUnitId: UnitRecord["id"];
     readonly backgroundAbilityScoreIncrease: BackgroundAbilityScoreIncreaseSelection;
     readonly languages: CharacterStartingLanguages;
     readonly alignment: CharacterAlignment;
@@ -153,6 +153,7 @@ const SUPPORTED_DRAFT_CHOICE_PATHS = [
   "draft.progression.initial",
   "draft.background",
   "draft.species",
+  "draft.speciesSize",
   "draft.languages",
   "draft.alignment",
 ] as const satisfies ReadonlyArray<CharacterDraftPath>;
@@ -242,6 +243,7 @@ const SUPPORTED_DRAFT_OPTION_IDS_BY_PATH = {
   "draft.progression.initial": SUPPORTED_PROGRESSIONS.map(progressionOptionId),
   "draft.background": SUPPORTED_BACKGROUND_OPTION_IDS,
   "draft.species": SUPPORTED_SPECIES_OPTION_IDS,
+  "draft.speciesSize": SUPPORTED_SPECIES_SIZE_OPTION_IDS,
   "draft.languages": SUPPORTED_LANGUAGE_OPTION_IDS,
   "draft.alignment": [PHASE1_ALIGNMENT_OPTION_ID],
 } as const satisfies Record<
@@ -382,7 +384,6 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
   ],
   manifest: {
     backgroundUnitId: PHASE1_BACKGROUND_SOLDIER_UNIT_ID,
-    speciesUnitId: PHASE1_SPECIES_ORC_UNIT_ID,
     backgroundAbilityScoreIncrease:
       PHASE1_BACKGROUND_ABILITY_SCORE_INCREASE_SELECTION,
     languages: ["Common", "Dwarvish", "Goblin"],
@@ -500,6 +501,10 @@ export function supportedClassUnitIds(): readonly UnitRecord["id"][] {
 
 export function supportedBackgroundUnitIds(): readonly UnitRecord["id"][] {
   return CHARACTER_CREATION_SUPPORT_PROFILE.backgroundUnitIds;
+}
+
+export function supportedSpeciesUnitIds(): readonly UnitRecord["id"][] {
+  return SRD_CHARACTER_ADMISSION_SPECIES_UNIT_IDS;
 }
 
 export function supportedPurchasableEquipmentUnitIds(): readonly UnitRecord["id"][] {
