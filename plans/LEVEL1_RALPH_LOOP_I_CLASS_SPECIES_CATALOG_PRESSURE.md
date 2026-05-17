@@ -67,7 +67,7 @@
     {
       "number": 11,
       "id": "L1I-DRUID-NATURES-WARD",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Druid Nature's Ward Catalog Pressure"
     },
     {
@@ -117,6 +117,18 @@
       "id": "L1I-SPECIES-CONDITION-ROLL-MODE-PROFILES",
       "status": "blocked",
       "title": "Species Condition Roll-Mode Profiles"
+    },
+    {
+      "number": 20,
+      "id": "L1I-DRUID-CIRCLE-LAND-SELECTION-SOURCE",
+      "status": "blocked",
+      "title": "Druid Circle Of The Land Long Rest Land Source Fact"
+    },
+    {
+      "number": 21,
+      "id": "L1I-DRUID-NATURES-WARD-PASSIVE-PROFILE",
+      "status": "blocked",
+      "title": "Druid Nature's Ward Passive Resistance And Condition Immunity Profile"
     }
   ]
 }
@@ -196,7 +208,7 @@ Every task runs:
 | 8 | L1I-MONK-BODY-AND-MIND - Monk Body And Mind Catalog Pressure | done | 1 | Monk feature disposition without stealing D Martial Arts scaling |
 | 9 | L1I-WARLOCK-WIZARD-KNOWLEDGE-FEATURES - Warlock Wizard Knowledge Feature Catalog Pressure | done | 1 | Warlock/Wizard knowledge-feature disposition without stealing D invocation work |
 | 10 | L1I-SPECIES-TRAIT-PRESSURE-SPLIT - Species Trait Catalog Pressure Split | done | 1 | species trait split artifact and unsupported-profile claims for eight species trait records |
-| 11 | L1I-DRUID-NATURES-WARD - Druid Nature's Ward Catalog Pressure | ready-for-research | 1 | Druid later feature disposition without stealing D Primal Order work |
+| 11 | L1I-DRUID-NATURES-WARD - Druid Nature's Ward Catalog Pressure | done | 1 | Druid later feature disposition without stealing D Primal Order work |
 | 12 | L1I-BARD-JACK-OF-ALL-TRADES-PROFILE - Bard Jack Of All Trades Ability Check Profile | ready-for-research | 4 | decide the smallest skill-proficiency-aware Ability Check half-Proficiency Bonus profile boundary |
 | 13 | L1I-WORDS-OF-CREATION-POWER-WORD-RIDER - Words Of Creation Power Word Rider Profile | blocked | supported `power_word_heal` and `power_word_kill` spell invocation profiles | second-target rider support after host Power Word spells are promoted |
 | 14 | L1I-BARBARIAN-DANGER-SENSE-ROLL-MODE - Barbarian Danger Sense Saving Throw Roll-Mode Profile | ready-for-research | 5 | decide the smallest passive Dexterity Saving Throw Advantage profile boundary |
@@ -205,6 +217,8 @@ Every task runs:
 | 17 | L1I-DRAGONBORN-BREATH-WEAPON-PROFILE - Dragonborn Breath Weapon Feature Profile | blocked | 16 | future species attack-replacement profile that reuses one Draconic Ancestry source fact for Breath Weapon and Damage Resistance |
 | 18 | L1I-SPECIES-PASSIVE-RESISTANCE-PROFILE - Species Passive Resistance Profile | blocked | 16 | future target-side passive Resistance profile for character-derived species traits without duplicating Stat Block or active-effect resistance state |
 | 19 | L1I-SPECIES-CONDITION-ROLL-MODE-PROFILES - Species Condition Roll-Mode Profiles | blocked | 14, 16 | future condition-scoped Ability Check and Saving Throw roll-mode support for Powerful Build and Dwarven Resilience |
+| 20 | L1I-DRUID-CIRCLE-LAND-SELECTION-SOURCE - Druid Circle Of The Land Long Rest Land Source Fact | blocked | owner decision to expand Druid Circle of the Land subclass/later-level support | one Long Rest land-choice source fact shared by Circle Spells, Nature's Ward, and Nature's Sanctuary |
+| 21 | L1I-DRUID-NATURES-WARD-PASSIVE-PROFILE - Druid Nature's Ward Passive Resistance And Condition Immunity Profile | blocked | 18, 20 | future Nature's Ward passive target-side profile that reads the selected land source fact without duplicating Resistance state |
 
 ### Task 1 - L1I-PRECHECK - Non-D Class Species Pressure Precheck
 
@@ -406,7 +420,7 @@ preserve the executable lanes without adding a broad species runtime here.
 
 ### Task 11 - L1I-DRUID-NATURES-WARD - Druid Nature's Ward Catalog Pressure
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `druid_natures_ward`.
 
@@ -415,6 +429,16 @@ a later-level character fact, no promoted Unit profile, or future supported
 profile. Do not touch `druid_primal_order`; D owns that selected identity work.
 If the land-choice resistance table needs runtime or Surface widening, record
 the smallest atomic follow-up rather than broadening this task.
+
+Result:
+`plans/unit-profile-coverage/L1I_CLASS_SPECIES_DRUID_NATURES_WARD_CLOSURE.md`.
+Nature's Ward is closed with an `unsupported-profile` claim. The feature is a
+level-10 Circle of the Land subclass feature that grants Poisoned condition
+immunity plus Resistance derived from the Circle Spells land choice. No
+standalone Unit profile is promoted until one Circle of the Land land-choice
+source fact and a passive target-side Resistance/condition-immunity projection
+exist. Follow-up Tasks 20-21 preserve that executable lane without touching
+D-owned `druid_primal_order`.
 
 ### Task 12 - L1I-BARD-JACK-OF-ALL-TRADES-PROFILE - Bard Jack Of All Trades Ability Check Profile
 
@@ -498,9 +522,11 @@ Blocked on Task 16 so character-derived species traits can reach target-side
 damage projection. Decide the smallest passive Resistance profile for
 `species_dragonborn_damage_resistance` and the Poison Resistance half of
 `dwarf_dwarven_resilience`. Do not duplicate Stat Block resistances, active
-spell effects, or active feature state. Dragonborn resistance must reuse the
-same Draconic Ancestry source fact as Task 17, and Dwarven Resilience's saving
-throw Advantage remains owned by Task 19.
+spell effects, or active feature state. Keep the target-side boundary reusable
+for later character-derived class-feature Resistance such as Nature's Ward
+without adding Druid state here. Dragonborn resistance must reuse the same
+Draconic Ancestry source fact as Task 17, and Dwarven Resilience's saving throw
+Advantage remains owned by Task 19.
 
 ### Task 19 - L1I-SPECIES-CONDITION-ROLL-MODE-PROFILES - Species Condition Roll-Mode Profiles
 
@@ -512,3 +538,27 @@ family for `dwarf_dwarven_resilience` saving throw Advantage to avoid or end
 Poisoned and `species_goliath_powerful_build` Ability Check Advantage to end
 Grappled. Reuse the generic roll-mode boundary from Danger Sense if it lands;
 do not create species-specific roll-mode adapters.
+
+### Task 20 - L1I-DRUID-CIRCLE-LAND-SELECTION-SOURCE - Druid Circle Of The Land Long Rest Land Source Fact
+
+Status: `blocked`
+
+Blocked on an explicit owner decision to expand Druid Circle of the Land
+subclass/later-level support beyond this level-1 creation slice. When
+unblocked, model the Long Rest arid, polar, temperate, or tropical land choice
+as one character-owned source fact shared by Circle Spells, Nature's Ward, and
+Nature's Sanctuary. Do not store separate derived spell-list, Resistance, or
+Sanctuary state per feature, and do not reuse D-owned `druid_primal_order`
+selected-identity work.
+
+### Task 21 - L1I-DRUID-NATURES-WARD-PASSIVE-PROFILE - Druid Nature's Ward Passive Resistance And Condition Immunity Profile
+
+Status: `blocked`
+
+Blocked on Task 20's Circle of the Land selected-land source fact and Task 18's
+target-side passive Resistance boundary. Once both are available, promote
+Nature's Ward as one passive class-feature profile that projects Poisoned
+condition immunity and the Nature's Ward table's derived Resistance together.
+Do not admit only the condition-immunity half, do not widen `DamageTypeRef`
+with a Druid-only adapter, and do not duplicate Stat Block, active-effect, or
+Character Sheet Resistance state.

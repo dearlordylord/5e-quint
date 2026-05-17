@@ -14199,6 +14199,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "later-level-only",
+          "owner": "future Circle of the Land selected-land and passive target-side resistance/condition-immunity owner",
+          "reason": "The feature is acquired after level 1 and its Resistance damage type is determined by the Druid's Circle Spells land choice. Promoted Unit profiles in this branch do not install the subclass feature, store the Long Rest selected-land source fact, or project a passive condition immunity plus derived Resistance from authored class-feature Units."
+        },
+        "reason": "Nature's Ward is a level-10 Circle of the Land subclass feature with Poisoned condition immunity plus land-choice-derived Resistance; no standalone promoted Unit profile is claimed until the selected-land source fact and passive target-side projection are modeled together.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
