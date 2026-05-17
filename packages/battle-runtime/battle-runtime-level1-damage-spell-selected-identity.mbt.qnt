@@ -94,11 +94,25 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
     ),
   }
 
+  action doResolveSacredFlameDexteritySavingThrowRadiantDamage = all {
+    qLastResult == "init",
+    recordProjection(
+      false,
+      false,
+      1,
+      5,
+      false,
+      12,
+      "sacredFlameDexteritySavingThrowRadiantDamage",
+    ),
+  }
+
   action step = any {
     doResolveBurningHandsMixedConeSavingThrows,
     doResolveIceKnifeHitAttackDamageAndBurstSavingThrows,
     doResolveIceKnifeMissBurstSavingThrows,
     doResolvePoisonSpraySpellAttackDamage,
     doResolveRayOfSicknessSpellAttackDamageAndPoisoned,
+    doResolveSacredFlameDexteritySavingThrowRadiantDamage,
   }
 }

@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "L1D-SACRED-FLAME",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Sacred Flame Selected Identity Replay"
     },
     {
@@ -198,7 +198,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-Q-R.md` Ray of Sickness.
 
 ### Task 6 - L1D-SACRED-FLAME - Sacred Flame Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `sacred_flame`, proving the authored Unit
 identity reaches the supported saving throw damage procedure.

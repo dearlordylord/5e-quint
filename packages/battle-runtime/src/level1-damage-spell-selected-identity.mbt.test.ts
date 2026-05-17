@@ -1,8 +1,9 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt level1-damage-spell-selected-identity burning_hands ice_knife poison_spray ray_of_sickness
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt level1-damage-spell-selected-identity burning_hands ice_knife poison_spray ray_of_sickness sacred_flame
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity burning_hands doResolveBurningHandsMixedConeSavingThrows
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity ice_knife doResolveIceKnifeHitAttackDamageAndBurstSavingThrows doResolveIceKnifeMissBurstSavingThrows
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity poison_spray doResolvePoisonSpraySpellAttackDamage
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity ray_of_sickness doResolveRayOfSicknessSpellAttackDamageAndPoisoned
+// UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity sacred_flame doResolveSacredFlameDexteritySavingThrowRadiantDamage
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -52,6 +53,7 @@ const level1DamageSpellSelectedIdentityDriverSchema = {
   doResolveIceKnifeMissBurstSavingThrows: {},
   doResolvePoisonSpraySpellAttackDamage: {},
   doResolveRayOfSicknessSpellAttackDamageAndPoisoned: {},
+  doResolveSacredFlameDexteritySavingThrowRadiantDamage: {},
   step: {},
 } as const;
 type Level1DamageSpellSelectedIdentityDriverAction = Exclude<
@@ -64,6 +66,7 @@ const level1DamageSpellUnitIds = [
   "ice_knife",
   "poison_spray",
   "ray_of_sickness",
+  "sacred_flame",
 ] as const;
 type Level1DamageSpellUnitId = (typeof level1DamageSpellUnitIds)[number];
 const level1DamageSpellSelectedIdentityResults = [
@@ -73,6 +76,7 @@ const level1DamageSpellSelectedIdentityResults = [
   "iceKnifeMissBurstSavingThrows",
   "poisonSpraySpellAttackDamage",
   "rayOfSicknessSpellAttackDamageAndPoisoned",
+  "sacredFlameDexteritySavingThrowRadiantDamage",
 ] as const;
 type Level1DamageSpellSelectedIdentityResult =
   (typeof level1DamageSpellSelectedIdentityResults)[number];
@@ -123,7 +127,7 @@ type IceKnifeAttackOutcome =
 type Level1DamageSpellInvocationProfile =
   | {
       readonly tag: "cantrip";
-      readonly procedure: "spellAttackDamage";
+      readonly procedure: "saveGatedDamage" | "spellAttackDamage";
     }
   | {
       readonly tag: "spellSlot";
@@ -153,6 +157,10 @@ const level1DamageSpellInvocationProfiles = {
     tag: "spellSlot",
     slotLevel: 1,
     procedure: "spellAttackDamage",
+  },
+  sacred_flame: {
+    tag: "cantrip",
+    procedure: "saveGatedDamage",
   },
 } as const satisfies Record<
   Level1DamageSpellUnitId,
@@ -264,6 +272,25 @@ const selectedUnitIdentityReplays = [
           primaryTargetPoisoned: true,
           secondaryTargetHp: 12,
           lastResult: "rayOfSicknessSpellAttackDamageAndPoisoned",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "level1-damage-spell-selected-identity",
+    unitId: "sacred_flame",
+    actions: ["doResolveSacredFlameDexteritySavingThrowRadiantDamage"],
+    sequences: [
+      {
+        name: "cantrip-dexterity-saving-throw-radiant-damage",
+        actions: ["doResolveSacredFlameDexteritySavingThrowRadiantDamage"],
+        expected: expectedProjection({
+          actionAvailable: false,
+          spellSlotSpentThisTurn: false,
+          level1SlotsRemaining: 1,
+          primaryTargetHp: 5,
+          secondaryTargetHp: 12,
+          lastResult: "sacredFlameDexteritySavingThrowRadiantDamage",
         }),
       },
     ],
@@ -384,6 +411,13 @@ function createLevel1DamageSpellSelectedIdentityDriver() {
         recordResolvedResult(
           resolveRayOfSicknessSpellAttackDamageAndPoisoned(state),
           "rayOfSicknessSpellAttackDamageAndPoisoned",
+        );
+      },
+      doResolveSacredFlameDexteritySavingThrowRadiantDamage: () => {
+        state = level1DamageSpellBattle(srdSpellRecord("sacred_flame"));
+        recordResolvedResult(
+          resolveSacredFlameDexteritySavingThrowRadiantDamage(state),
+          "sacredFlameDexteritySavingThrowRadiantDamage",
         );
       },
       step: () => {},
@@ -528,6 +562,42 @@ function resolveRayOfSicknessSpellAttackDamageAndPoisoned(
     state,
     subject: act.subject,
     fills: [targetChoice, attackRoll, damageRollFill(damage, [3, 4])],
+  });
+}
+
+function resolveSacredFlameDexteritySavingThrowRadiantDamage(
+  state: BattleState,
+): BattleResolutionResult {
+  const act = actionSpellAct(state, "sacred_flame");
+  const target = requireHole(act.initialHoles, "targetChoice");
+  assertSinglePrimaryTargetChoiceProfile(target, "Sacred Flame");
+  const targetChoice = spellTargetFill(target, "sacred_flame", primaryTargetId);
+  const savingThrow = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetChoice],
+    }),
+    "savingThrowOutcome",
+  );
+  assertSacredFlameSavingThrowProfile(savingThrow);
+  const savingThrowFill = targetSavingThrowOutcomeFill(savingThrow, {
+    targetId: primaryTargetId,
+    succeeded: false,
+  });
+  const damage = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetChoice, savingThrowFill],
+    }),
+    "rolledDice",
+  );
+  assertSacredFlameDamageProfile(damage);
+  return resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [targetChoice, savingThrowFill, damageRollFill(damage, [7])],
   });
 }
 
@@ -818,6 +888,22 @@ function areaSavingThrowOutcomeFill(
   };
 }
 
+function targetSavingThrowOutcomeFill(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+  outcome: {
+    readonly targetId: CombatantId;
+    readonly succeeded: boolean;
+  },
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    value: {
+      outcomes: [outcome],
+    },
+  };
+}
+
 function damageRollFill(
   hole: Pick<BattleHole, "kind" | "holeId">,
   results: readonly [number, ...number[]],
@@ -1087,6 +1173,53 @@ function assertRayOfSicknessDamageProfile(
     postDamageRider.expiresAt !== "endOfCasterNextTurn"
   ) {
     throw new Error("Ray of Sickness post-damage rider profile drifted.");
+  }
+}
+
+function assertSacredFlameSavingThrowProfile(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+): void {
+  if (!("spell" in hole)) {
+    throw new Error("Expected Sacred Flame spell Saving Throw outcome hole.");
+  }
+  const invocation = hole.spell;
+  if (
+    invocation.procedure !== "saveGatedDamage" ||
+    invocation.spell.id !== "sacred_flame" ||
+    invocation.resource.tag !== "none" ||
+    hole.ability !== "dex" ||
+    hole.dc.kind !== "caster_spell_save_dc" ||
+    invocation.targeting.kind !== "singleCombatant" ||
+    invocation.damage.expr.dice !== 1 ||
+    invocation.damage.expr.dieSize !== 8 ||
+    invocation.damage.damageType !== "radiant" ||
+    invocation.successDamage !== "none" ||
+    invocation.failedSavePostDamageRiders.length !== 0 ||
+    Number(invocation.rangeFeet) !== 60
+  ) {
+    throw new Error("Sacred Flame Saving Throw profile drifted.");
+  }
+}
+
+function assertSacredFlameDamageProfile(
+  hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
+): void {
+  if (!("spell" in hole) || !("critical" in hole)) {
+    throw new Error("Expected Sacred Flame spell damage roll hole.");
+  }
+  const invocation = hole.spell;
+  if (
+    invocation.procedure !== "saveGatedDamage" ||
+    invocation.spell.id !== "sacred_flame" ||
+    invocation.resource.tag !== "none" ||
+    invocation.damage.expr.dice !== 1 ||
+    invocation.damage.expr.dieSize !== 8 ||
+    invocation.damage.damageType !== "radiant" ||
+    invocation.successDamage !== "none" ||
+    invocation.failedSavePostDamageRiders.length !== 0 ||
+    hole.critical
+  ) {
+    throw new Error("Sacred Flame damage profile drifted.");
   }
 }
 
