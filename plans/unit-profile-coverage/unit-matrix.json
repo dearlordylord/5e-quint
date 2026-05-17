@@ -93,8 +93,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 93,
-      "numerator": 47,
-      "percent": "50.5%"
+      "numerator": 56,
+      "percent": "60.2%"
     },
     "supportedProfileCoverage": {
       "denominator": 117,
@@ -6682,6 +6682,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV29A"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "level1-damage-spell-selected-identity"
         }
       ],
       "executableMechanics": true,
@@ -6906,6 +6911,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV29F3"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "level1-damage-spell-selected-identity"
         }
       ],
       "executableMechanics": true,
@@ -8603,6 +8613,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV29E"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "level1-damage-spell-selected-identity"
         }
       ],
       "executableMechanics": true,
@@ -8982,6 +8997,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV28B"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "level1-damage-spell-selected-identity"
         }
       ],
       "executableMechanics": true,
@@ -9378,6 +9398,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV28D"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "level1-damage-spell-selected-identity"
         }
       ],
       "executableMechanics": true,
@@ -9542,6 +9567,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV28B"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "level1-damage-spell-selected-identity"
         }
       ],
       "executableMechanics": true,
@@ -9884,6 +9914,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV84B"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "level1-damage-spell-selected-identity"
         }
       ],
       "executableMechanics": true,
@@ -10021,6 +10056,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV59B"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "level1-damage-spell-selected-identity"
         }
       ],
       "executableMechanics": true,
@@ -10099,6 +10139,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV28D"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "level1-damage-spell-selected-identity"
         }
       ],
       "executableMechanics": true,

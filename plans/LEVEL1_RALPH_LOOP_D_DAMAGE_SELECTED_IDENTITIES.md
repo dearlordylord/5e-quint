@@ -7,61 +7,61 @@
     {
       "number": 1,
       "id": "L1D-DAMAGE-PRECHECK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Post-C Strict Damage Identity Reconciliation"
     },
     {
       "number": 2,
       "id": "L1D-BURNING-HANDS",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Burning Hands Selected Identity Replay"
     },
     {
       "number": 3,
       "id": "L1D-ICE-KNIFE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Ice Knife Selected Identity Replay"
     },
     {
       "number": 4,
       "id": "L1D-POISON-SPRAY",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Poison Spray Selected Identity Replay"
     },
     {
       "number": 5,
       "id": "L1D-RAY-OF-SICKNESS",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Ray Of Sickness Selected Identity Replay"
     },
     {
       "number": 6,
       "id": "L1D-SACRED-FLAME",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Sacred Flame Selected Identity Replay"
     },
     {
       "number": 7,
       "id": "L1D-SORCEROUS-BURST",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Sorcerous Burst Selected Identity Replay"
     },
     {
       "number": 8,
       "id": "L1D-STARRY-WISP",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Starry Wisp Selected Identity Replay"
     },
     {
       "number": 9,
       "id": "L1D-VICIOUS-MOCKERY",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Vicious Mockery Selected Identity Replay"
     },
     {
       "number": 10,
       "id": "L1D-CHROMATIC-ORB",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Chromatic Orb Selected Identity Replay"
     }
   ]
@@ -143,7 +143,7 @@ Preferred owner file if a new file is cleaner:
 
 ### Task 1 - L1D-DAMAGE-PRECHECK - Post-C Strict Damage Identity Reconciliation
 
-Status: `ready-for-research`
+Status: `done`
 
 After Loop C is merged and the strict report is refreshed, read
 `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`,
@@ -159,7 +159,7 @@ no MBT.
 
 ### Task 2 - L1D-BURNING-HANDS - Burning Hands Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `burning_hands`. The replay should bind the
 authored Unit id through production spell discovery/resolution and assert the
@@ -171,7 +171,7 @@ targets and saving throws in `Spells/Gaining-and-Casting.md` and
 
 ### Task 3 - L1D-ICE-KNIFE - Ice Knife Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `ice_knife`, including the attack hit or miss
 boundary and the burst saving throw projection that the supported profile owns.
@@ -180,7 +180,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-E-L.md` Ice Knife.
 
 ### Task 4 - L1D-POISON-SPRAY - Poison Spray Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `poison_spray`, binding the authored cantrip
 Unit through the supported damage save or attack profile.
@@ -189,16 +189,16 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-M-P.md` Poison Spray.
 
 ### Task 5 - L1D-RAY-OF-SICKNESS - Ray Of Sickness Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `ray_of_sickness`, including poison damage
-and the save-gated Poisoned condition branch currently supported by runtime.
+and the on-hit Poisoned condition rider already supported by runtime.
 
 RAW: `.references/srd-5.2.1/Spells/Descriptions-Q-R.md` Ray of Sickness.
 
 ### Task 6 - L1D-SACRED-FLAME - Sacred Flame Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `sacred_flame`, proving the authored Unit
 identity reaches the supported saving throw damage procedure.
@@ -207,7 +207,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-S-Z.md` Sacred Flame.
 
 ### Task 7 - L1D-SORCEROUS-BURST - Sorcerous Burst Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `sorcerous_burst`, including the supported
 attack/damage identity and any existing burst-specific projection in runtime.
@@ -216,7 +216,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-S-Z.md` Sorcerous Burst.
 
 ### Task 8 - L1D-STARRY-WISP - Starry Wisp Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `starry_wisp`, binding the authored cantrip
 Unit and asserting the supported attack/damage and object-light interaction
@@ -226,7 +226,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-S-Z.md` Starry Wisp.
 
 ### Task 9 - L1D-VICIOUS-MOCKERY - Vicious Mockery Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `vicious_mockery`, including damage plus the
 supported next-attack-roll disadvantage projection if that is the existing
@@ -236,7 +236,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-S-Z.md` Vicious Mockery.
 
 ### Task 10 - L1D-CHROMATIC-ORB - Chromatic Orb Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `chromatic_orb`, binding the authored spell
 Unit through the existing chained attack/damage support. Do not broaden the
