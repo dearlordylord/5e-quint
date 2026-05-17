@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L1I-ABILITY-SCORE-IMPROVEMENT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Ability Score Improvement Authored Feature Closure"
     },
     {
@@ -139,7 +139,7 @@ Every task runs:
 | Order | Task | Status | Blocks On | Output |
 | ---: | --- | --- | --- | --- |
 | 1 | L1I-PRECHECK - Non-D Class Species Pressure Precheck | done | none | refreshed list of class/species authored pressure that excludes D-owned Units |
-| 2 | L1I-ABILITY-SCORE-IMPROVEMENT - Ability Score Improvement Authored Feature Closure | ready-for-research | 1 | closure or profile plan for authored ASI feature records |
+| 2 | L1I-ABILITY-SCORE-IMPROVEMENT - Ability Score Improvement Authored Feature Closure | done | 1 | ASI class-feature closure artifact and unsupported-profile claims |
 | 3 | L1I-EPIC-BOON-CONTAINERS - Epic Boon Class Feature Container Closure | ready-for-research | 1 | closure or profile plan for Epic Boon container records |
 | 4 | L1I-BARD-KNOWLEDGE-FEATURES - Bard Knowledge Feature Catalog Pressure | ready-for-research | 1 | Bard feature disposition for non-D authored records |
 | 5 | L1I-BARBARIAN-LATER-FEATURES - Barbarian Later Feature Catalog Pressure | ready-for-research | 1 | Barbarian feature disposition for non-D authored records |
@@ -169,7 +169,7 @@ Result: `plans/unit-profile-coverage/L1I_CLASS_SPECIES_CATALOG_PRESSURE_PRECHECK
 
 ### Task 2 - L1I-ABILITY-SCORE-IMPROVEMENT - Ability Score Improvement Authored Feature Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Units: `barbarian_ability_score_improvement_l4`,
 `bard_ability_score_improvement_l4`, `cleric_ability_score_improvement_l4`,
@@ -181,6 +181,12 @@ Units: `barbarian_ability_score_improvement_l4`,
 Decide whether these are character-creation facts, no promoted Unit profile,
 or need a later supported character-advancement profile. Do not edit level-1 D
 advancement/container tasks.
+
+Result:
+`plans/unit-profile-coverage/L1I_CLASS_SPECIES_ABILITY_SCORE_IMPROVEMENT_CLOSURE.md`.
+The nine class-feature records are closed as selection-grant containers with no
+standalone promoted battle Unit profile; selected feat Units and character
+creation/advancement ability-score projection own downstream behavior.
 
 ### Task 3 - L1I-EPIC-BOON-CONTAINERS - Epic Boon Class Feature Container Closure
 
