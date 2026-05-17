@@ -12016,6 +12016,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV51"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "level1-spatial-witness"
         }
       ],
       "executableMechanics": true,

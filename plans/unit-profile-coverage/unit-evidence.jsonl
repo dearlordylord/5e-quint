@@ -161,6 +161,7 @@
 {"unitId":"hellish_rebuke","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV69B","ownerPath":"packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"}}
 {"unitId":"hellish_rebuke","evidence":{"tag":"selected-identity-mbt","taskId":"reaction-interruption","ownerPath":"packages/battle-runtime/src/reaction-spell-selected-identity.mbt.test.ts"}}
 {"unitId":"thunderwave","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV51","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
+{"unitId":"thunderwave","evidence":{"tag":"selected-identity-mbt","taskId":"level1-spatial-witness","ownerPath":"packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts"}}
 {"unitId":"dissonant_whispers","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV52","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"dissonant_whispers","evidence":{"tag":"selected-identity-mbt","taskId":"movement-forced-movement","ownerPath":"packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts"}}
 {"unitId":"sanctuary","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84G","ownerPath":"packages/battle-runtime/src/sanctuary-targeting-interdiction.test.ts"}}

@@ -11,6 +11,8 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
   val qJumpMovementCostFeet = 10
   val qLightOneHourDurationTicks = 600
   val qProduceFlameTenMinuteDurationTicks = 100
+  val qThunderwaveExpectedAffectedTargetOutcomeCount = 3
+  val qThunderwaveExpectedDispositionCount = 1
 
   var qLightEmitterCount: int
   var qDimLightEmitterCount: int
@@ -81,6 +83,18 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
   var qProduceFlameHurlTargetDamaged: bool
   var qProduceFlameHurlCleanupClearedEmitter: bool
   var qProduceFlameDurationCleanupClearedEmitter: bool
+  var qThunderwaveAffectedTargetOutcomeCount: int
+  var qThunderwaveFailedPushedTargetDamaged: bool
+  var qThunderwaveFailedBlockedTargetDamaged: bool
+  var qThunderwaveSucceededTargetHalfDamaged: bool
+  var qThunderwavePushedCreatureDispositionCount: int
+  var qThunderwaveBlockedCreatureDispositionCount: int
+  var qThunderwavePushedObjectDispositionCount: int
+  var qThunderwaveBlockedObjectDispositionCount: int
+  var qThunderwaveAudibleBoomMatched: bool
+  var qThunderwaveMissingAreaFactsRejected: bool
+  var qThunderwaveMismatchedBoomRejected: bool
+  var qThunderwaveSlotExpended: bool
   var qProjectedIllumination: str
   var qOrdinarySightObscurement: str
   var qDarkvisionSightObscurement: str
@@ -161,6 +175,18 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     produceFlameHurlTargetDamaged: bool,
     produceFlameHurlCleanupClearedEmitter: bool,
     produceFlameDurationCleanupClearedEmitter: bool,
+    thunderwaveAffectedTargetOutcomeCount: int,
+    thunderwaveFailedPushedTargetDamaged: bool,
+    thunderwaveFailedBlockedTargetDamaged: bool,
+    thunderwaveSucceededTargetHalfDamaged: bool,
+    thunderwavePushedCreatureDispositionCount: int,
+    thunderwaveBlockedCreatureDispositionCount: int,
+    thunderwavePushedObjectDispositionCount: int,
+    thunderwaveBlockedObjectDispositionCount: int,
+    thunderwaveAudibleBoomMatched: bool,
+    thunderwaveMissingAreaFactsRejected: bool,
+    thunderwaveMismatchedBoomRejected: bool,
+    thunderwaveSlotExpended: bool,
     projectedIllumination: str,
     ordinarySightObscurement: str,
     darkvisionSightObscurement: str,
@@ -240,6 +266,18 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     qProduceFlameHurlTargetDamaged' = produceFlameHurlTargetDamaged,
     qProduceFlameHurlCleanupClearedEmitter' = produceFlameHurlCleanupClearedEmitter,
     qProduceFlameDurationCleanupClearedEmitter' = produceFlameDurationCleanupClearedEmitter,
+    qThunderwaveAffectedTargetOutcomeCount' = thunderwaveAffectedTargetOutcomeCount,
+    qThunderwaveFailedPushedTargetDamaged' = thunderwaveFailedPushedTargetDamaged,
+    qThunderwaveFailedBlockedTargetDamaged' = thunderwaveFailedBlockedTargetDamaged,
+    qThunderwaveSucceededTargetHalfDamaged' = thunderwaveSucceededTargetHalfDamaged,
+    qThunderwavePushedCreatureDispositionCount' = thunderwavePushedCreatureDispositionCount,
+    qThunderwaveBlockedCreatureDispositionCount' = thunderwaveBlockedCreatureDispositionCount,
+    qThunderwavePushedObjectDispositionCount' = thunderwavePushedObjectDispositionCount,
+    qThunderwaveBlockedObjectDispositionCount' = thunderwaveBlockedObjectDispositionCount,
+    qThunderwaveAudibleBoomMatched' = thunderwaveAudibleBoomMatched,
+    qThunderwaveMissingAreaFactsRejected' = thunderwaveMissingAreaFactsRejected,
+    qThunderwaveMismatchedBoomRejected' = thunderwaveMismatchedBoomRejected,
+    qThunderwaveSlotExpended' = thunderwaveSlotExpended,
     qProjectedIllumination' = projectedIllumination,
     qOrdinarySightObscurement' = ordinarySightObscurement,
     qDarkvisionSightObscurement' = darkvisionSightObscurement,
@@ -262,6 +300,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       0, 0, false, false, false, false, false, false, false, false, false,
       false, 0, false, false, false, false, false, false,
       false, 0, "darkness", false, false, false, false,
+      0, false, false, false, 0, 0, 0, 0, false, false, false, false,
       "darkness", "heavilyObscured", "lightlyObscured", "darkness",
       0, false, true, true,
       "init",
@@ -279,6 +318,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       0, 0, false, false, false, false, false, false, false, false, false,
       false, 0, false, false, false, false, false, false,
       false, 0, "darkness", false, false, false, false,
+      0, false, false, false, 0, 0, 0, 0, false, false, false, false,
       "dimLight", "lightlyObscured", "unobscured", "darkness",
       0, true, false, false,
       "dancingLightsMovableDimLight",
@@ -297,6 +337,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       0, 0, false, false, false, false, false, false, false, false, false,
       false, 0, false, false, false, false, false, false,
       false, 0, "darkness", false, false, false, false,
+      0, false, false, false, 0, 0, 0, 0, false, false, false, false,
       "dimLight", "lightlyObscured", "unobscured", "darkness",
       0, true, true, true,
       "faerieFireOutlineAdvantageInvisibleDimLight",
@@ -315,6 +356,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       0, 0, false, false, false, false, false, false, false, false, false,
       false, 0, false, false, false, false, false, false,
       false, 0, "darkness", false, false, false, false,
+      0, false, false, false, 0, 0, 0, 0, false, false, false, false,
       "darkness", "heavilyObscured", "lightlyObscured", "darkness",
       0, false, true, true,
       "featherFallReactionMitigationLanding",
@@ -334,6 +376,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       0, 0, false, false, false, false, false, false, false, false, false,
       false, 0, false, false, false, false, false, false,
       false, 0, "darkness", false, false, false, false,
+      0, false, false, false, 0, 0, 0, 0, false, false, false, false,
       "darkness", "heavilyObscured", "lightlyObscured", "darkness",
       0, false, false, true,
       "fogCloudAreaIdentityObscurementStrongWindCleanup",
@@ -352,6 +395,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       0, 0, false, false, false, false, false, false, false, false, true,
       false, 0, false, false, false, false, false, false,
       false, 0, "darkness", false, false, false, false,
+      0, false, false, false, 0, 0, 0, 0, false, false, false, false,
       "darkness", "heavilyObscured", "lightlyObscured", "darkness",
       0, false, false, true,
       "greaseCastGroundHazardSavingThrows",
@@ -372,6 +416,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       true, true, true, true, true, true, true, true, true,
       false, 0, false, false, false, false, false, false,
       false, 0, "darkness", false, false, false, false,
+      0, false, false, false, 0, 0, 0, 0, false, false, false, false,
       "darkness", "heavilyObscured", "lightlyObscured", "darkness",
       0, false, true, true,
       "greaseMovementAndTurnTriggers",
@@ -390,6 +435,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       0, 0, false, false, false, false, false, false, false, false, false,
       true, qJumpMovementCostFeet, true, true, true, true, true, true,
       false, 0, "darkness", false, false, false, false,
+      0, false, false, false, 0, 0, 0, 0, false, false, false, false,
       "darkness", "heavilyObscured", "lightlyObscured", "darkness",
       0, false, true, true,
       "jumpMovementReplacementLandingWitness",
@@ -408,6 +454,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       0, 0, false, false, false, false, false, false, false, false, false,
       false, 0, false, false, false, false, false, false,
       false, 0, "darkness", false, false, false, false,
+      0, false, false, false, 0, 0, 0, 0, false, false, false, false,
       "dimLight", "lightlyObscured", "unobscured", "darkness",
       0, false, false, true,
       "lightObjectEmitterProjectionReplacementCleanup",
@@ -427,9 +474,32 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       false, 0, false, false, false, false, false, false,
       true, qProduceFlameTenMinuteDurationTicks, "brightLight",
       true, true, true, true,
+      0, false, false, false, 0, 0, 0, 0, false, false, false, false,
       "dimLight", "lightlyObscured", "unobscured", "darkness",
       0, false, true, false,
       "produceFlameHeldLightProjectionHurlCleanup",
+    ),
+  }
+
+  action doThunderwaveSavePushObjectsBoom = all {
+    qLastResult == "init",
+    recordProjection(
+      0, 0, 0,
+      false, 0, 0, "darkness", "darkness", false, false,
+      0, 0, "normal", "normal", "normal", false, false,
+      false, false, false, false, 0, 0, false, false, false, false,
+      false, 0, 0, 0, false, false, false, false, false,
+      false, 0, 0, 0, false, false, false,
+      0, 0, false, false, false, false, false, false, false, false, false,
+      false, 0, false, false, false, false, false, false,
+      false, 0, "darkness", false, false, false, false,
+      qThunderwaveExpectedAffectedTargetOutcomeCount, true, true, true,
+      qThunderwaveExpectedDispositionCount, qThunderwaveExpectedDispositionCount,
+      qThunderwaveExpectedDispositionCount, qThunderwaveExpectedDispositionCount,
+      true, true, true, true,
+      "darkness", "heavilyObscured", "lightlyObscured", "darkness",
+      0, false, false, true,
+      "thunderwaveSavePushObjectsBoom",
     ),
   }
 
@@ -443,5 +513,6 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     doJumpMovementReplacementLandingWitness,
     doLightObjectEmitterProjectionReplacementCleanup,
     doProduceFlameHeldLightProjectionHurlCleanup,
+    doThunderwaveSavePushObjectsBoom,
   }
 }
