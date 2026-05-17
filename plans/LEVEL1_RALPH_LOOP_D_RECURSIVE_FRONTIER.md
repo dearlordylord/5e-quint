@@ -145,7 +145,7 @@
     {
       "number": 24,
       "id": "L1D2-THAUMATURGY-BOOMING-VOICE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Thaumaturgy Booming Voice Ability Check Support"
     },
     {
