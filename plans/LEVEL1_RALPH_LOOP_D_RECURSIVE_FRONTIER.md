@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L1D2-FRONTIER-PRECHECK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Active Lane And Metric Reconciliation"
     },
     {
@@ -144,13 +144,18 @@ The replenishment task is part of the work, not an optional planning note.
 
 When a `L1D2-REPLENISH-*` task runs, Ralph must:
 
-1. Refresh `plans/unit-profile-coverage/UNIT_REPORT.md`,
+1. First resolve any coverage-checker hard failure that prevents report refresh.
+   Task 1 found `fireball` installed in the Unit catalog while the current
+   `master` matrix still records it as not installed and has no profile
+   disposition claim; classify or route that Unit before relying on refreshed
+   frontier metrics.
+2. Refresh `plans/unit-profile-coverage/UNIT_REPORT.md`,
    `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`, and
    `plans/unit-profile-coverage/unit-matrix.json` by running
    `pnpm unit-profile-coverage:check --write`.
-2. Read active C/E/F/H plan files and `.ralph/runs/*/events.tsv` logs if those
+3. Read active C/E/F/H plan files and `.ralph/runs/*/events.tsv` logs if those
    worktrees still exist, but do not edit their task worktrees.
-3. Recompute the frontier in this order:
+4. Recompute the frontier in this order:
    - strict level-1 open-profile-accounting items not owned by active C;
    - supported-profile Units missing selected-identity MBT evidence and not
      owned by active E/F/H;
@@ -158,13 +163,13 @@ When a `L1D2-REPLENISH-*` task runs, Ralph must:
      has reopened them;
    - next supported-profile expansion or admission tasks only after the strict
      level-1 frontier is closed or blocked on active lane merges.
-4. Append at least twelve concrete atomic tasks, or every remaining meaningful
+5. Append at least twelve concrete atomic tasks, or every remaining meaningful
    task if fewer than twelve exist. Each task must have clear inputs, outputs,
    primary files, RAW anchors, and verification.
-5. Append a successor replenishment task as the final runnable task, with the
+6. Append a successor replenishment task as the final runnable task, with the
    next numeric suffix, for example `L1D2-REPLENISH-002`.
-6. Keep the Ralph task index, DAG table, and task detail sections synchronized.
-7. Only mark the current replenishment task `done` after the new tasks and the
+7. Keep the Ralph task index, DAG table, and task detail sections synchronized.
+8. Only mark the current replenishment task `done` after the new tasks and the
    successor replenishment task are committed. If the frontier appears empty,
    add a concrete audit task that proves that state from generated artifacts and
    then add the successor replenishment task anyway.
@@ -216,11 +221,59 @@ Planning/replenishment tasks run:
 - `git diff --check`;
 - reviewer loop convergence, minimum two rounds.
 
+## Task 1 Precheck Result
+
+Checked against `master` at `07d8df40` and D task base
+`1e8f939c`. No C/E/F/H integration head is merged into current `master`; live
+worktrees still exist for Loop C, Loop E, Loop F, and Loop H, so their ownership
+remains active and unmerged.
+
+The current-master delta from this task base is limited to
+`plans/FIREBALL_COUNTERSPELL_PROMOTION_PLAN.md` and
+`plans/COUNTERSPELL_DOMAIN_DESIGN.md`. Those plan updates document a separate
+Fireball/Counterspell promotion and domain-design lane. They do not change the
+Unit matrix, the C/E/F/H active-lane plans, or this D lane's selected-identity
+frontier. In the current `master` matrix, both `fireball` and `counterspell`
+are still `not-in-unit-catalog` with no profile disposition claim.
+
+Current supported-profile selected-identity gaps from the current `master`
+matrix:
+
+- D-owned initial batch: `barbarian_unarmored_defense`,
+  `monk_unarmored_defense`, `wizard_ritual_adept`,
+  `sorcerer_innate_sorcery`, `mycelium_step`.
+- Active Loop E: `divine_favor`, `divine_smite`, `ensnaring_strike`,
+  `false_life`, `heroism`, `hex`, `hunters_mark`, `longstrider`,
+  `searing_smite`, `shillelagh`, `true_strike`.
+- Active Loop F: `dancing_lights`, `faerie_fire`, `feather_fall`,
+  `fog_cloud`, `grease`, `jump`, `light`, `produce_flame`, `thunderwave`.
+- Active Loop H: `animal_friendship`, `protection_from_evil_and_good`,
+  `eldritch_blast`, `mage_armor`, `sanctuary`, `mass_cure_wounds`,
+  `mass_healing_word`, `fighter_tactical_mind`,
+  `feat_boon_of_combat_prowess`, `orc_adrenaline_rush`,
+  `paladin_extra_attack`, `ranger_extra_attack`.
+
+The C-dependent Units remain `unsupported-profile` on `master`:
+`wizard_arcane_recovery`, `fighter_fighting_style`, `cleric_divine_order`,
+`druid_primal_order`, `rogue_expertise`, `warlock_eldritch_invocations`,
+`barbarian_weapon_mastery`, `fighter_weapon_mastery`,
+`paladin_weapon_mastery`, `ranger_weapon_mastery`, and
+`rogue_weapon_mastery`. Keep Tasks 7-12 blocked until Loop C support is merged
+to `master` and refreshed reports prove the support boundary.
+
+Task 1 verification also found that `pnpm unit-profile-coverage:check` now
+fails before report generation with `Installed Unit fireball has no profile
+disposition claim.` The current `master` matrix still treats `fireball` as
+`not-in-unit-catalog`, while `packages/surface/src/surface/unit-catalog.ts`
+imports it. Do not treat the current coverage metrics as freshly verified
+until that classification gap is fixed or routed to the appropriate admission
+lane.
+
 ## DAG / Queue Order
 
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
-| 1 | L1D2-FRONTIER-PRECHECK - Active Lane And Metric Reconciliation | ready-for-research | none | No behavior changes; may unblock blocked tasks only with evidence that active prerequisites landed on master. |
+| 1 | L1D2-FRONTIER-PRECHECK - Active Lane And Metric Reconciliation | done | none | No C/E/F/H integration head is merged into `master`; D frontier remains Tasks 2-6 plus C-blocked Tasks 7-12. |
 | 2 | L1D2-BARBARIAN-UNARMORED-DEFENSE - Barbarian Unarmored Defense Selected Identity Replay | ready-for-implementation-after-light-research | none | Character Sheet AC formula selected identity. |
 | 3 | L1D2-MONK-UNARMORED-DEFENSE - Monk Unarmored Defense Selected Identity Replay | ready-for-implementation-after-light-research | none | Distinct Monk AC formula selected identity. |
 | 4 | L1D2-WIZARD-RITUAL-ADEPT - Wizard Ritual Adept Selected Identity Replay | ready-for-implementation-after-light-research | none | Spellbook ritual invocation selected identity. |
@@ -238,7 +291,7 @@ Planning/replenishment tasks run:
 
 ### Task 1 - L1D2-FRONTIER-PRECHECK - Active Lane And Metric Reconciliation
 
-Status: `ready-for-research`
+Status: `done`
 
 Reconcile this plan against current master and active C/E/F/H lanes.
 
