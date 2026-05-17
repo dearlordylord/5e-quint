@@ -62,8 +62,8 @@
       "value": 145
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 94,
-      "numerator": 94,
+      "denominator": 95,
+      "numerator": 95,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 94,
-      "numerator": 94,
+      "denominator": 95,
+      "numerator": 95,
       "percent": "100%"
     },
     "supportedProfileCoverage": {
       "denominator": 118,
-      "numerator": 94,
-      "percent": "79.7%"
+      "numerator": 95,
+      "percent": "80.5%"
     }
   },
   "metricSemantics": [
@@ -5451,15 +5451,6 @@
             },
             "followUpTaskId": "SRDINV78",
             "mechanic": "later-level Favored Enemy free-cast count scaling beyond two uses"
-          },
-          {
-            "battleReadinessClosure": {
-              "kind": "social-knowledge-effect",
-              "owner": "SRDINV66 ability-check roll-mode owner",
-              "reason": "Hunter's Mark finding Advantage is an ability-check roll-mode projection, not additional battle reducer behavior for Favored Enemy."
-            },
-            "followUpTaskId": "SRDINV66",
-            "mechanic": "Hunter's Mark Perception/Survival finding Advantage remains deferred to ability-check roll-mode work"
           }
         ],
         "profileIds": [
@@ -9527,17 +9518,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "social-knowledge-effect",
-              "owner": "SRDINV66 ability-check roll-mode owner",
-              "reason": "Wisdom (Perception or Survival) Advantage to find the marked target is ability-check roll-mode state outside the promoted damage-rider runtime."
-            },
-            "followUpTaskId": "SRDINV66",
-            "mechanic": "classified gap: caller-supplied Wisdom (Perception or Survival) Advantage roll-mode projection to find the marked target; no dedicated SRDINV63 implementation task"
-          }
-        ],
         "profileIds": [
           "spell.invocation-marked-damage-rider"
         ],
@@ -9548,11 +9528,12 @@
           "Bonus Action cast with Spell Slot spend",
           "Concentration-owned mark identity on one combatant target",
           "extra Force damage when the caster hits the marked target with an Attack Roll",
+          "caller-supplied Wisdom (Perception or Survival) Advantage roll-mode projection to find the marked target",
           "Bonus Action transfer only after the marked target drops to 0 Hit Points",
           "slot-scaled Concentration maximum of 1 hour at slots 1-2, 8 hours at slots 3-4, and 24 hours at slots 5+",
           "Concentration cleanup and maximum-duration expiration remove the marked-target damage rider"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [

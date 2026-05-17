@@ -11608,8 +11608,8 @@
       "battleReadinessClosure": {
         "source": "deferred-mechanics",
         "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV78 later-level scaling; SRDINV66 ability-check roll-mode owner",
-        "reason": "The remaining Favored Enemy free-cast count changes occur only after level 1.; Hunter's Mark finding Advantage is an ability-check roll-mode projection, not additional battle reducer behavior for Favored Enemy."
+        "owner": "SRDINV78 later-level scaling",
+        "reason": "The remaining Favored Enemy free-cast count changes occur only after level 1."
       },
       "ownerEvidence": [
         {
@@ -12559,14 +12559,8 @@
         "state": "installed",
         "unitId": "hunters_mark"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV66 ability-check roll-mode owner",
-        "reason": "Wisdom (Perception or Survival) Advantage to find the marked target is ability-check roll-mode state outside the promoted damage-rider runtime."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",

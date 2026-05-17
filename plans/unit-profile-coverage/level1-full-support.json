@@ -729,35 +729,6 @@
       "unitId": "grease"
     },
     {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "social-knowledge-effect"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Wisdom (Perception or Survival) Advantage to find the marked target is ability-check roll-mode state outside the promoted damage-rider runtime.",
-      "sourceRecordPath": "packages/surface/content/hunters_mark.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Ranger spell list Hunter's Mark",
-          "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_hunters_mark",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 173,
-            "lineStart": 173,
-            "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "hunters_mark"
-    },
-    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -1031,13 +1002,12 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "later-level-only",
-        "social-knowledge-effect"
+        "later-level-only"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "The remaining Favored Enemy free-cast count changes occur only after level 1.; Hunter's Mark finding Advantage is an ability-check roll-mode projection, not additional battle reducer behavior for Favored Enemy.",
+      "reason": "The remaining Favored Enemy free-cast count changes occur only after level 1.",
       "sourceRecordPath": "packages/surface/content/ranger_favored_enemy.json",
       "sourceRows": [
         {
@@ -1053,8 +1023,8 @@
           }
         }
       ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
+      "status": "closed-later-level-only",
+      "strictTargetClosed": true,
       "unitId": "ranger_favored_enemy"
     },
     {
@@ -1283,7 +1253,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 68,
+      "count": 69,
       "description": "Full support exists at the Unit profile boundary for strict level-1 accounting.",
       "status": "supported-profile",
       "unitIds": [
@@ -1320,6 +1290,7 @@
         "heroism",
         "hex",
         "hideous_laughter",
+        "hunters_mark",
         "ice_knife",
         "inflict_wounds",
         "longstrider",
@@ -1375,7 +1346,7 @@
       ]
     },
     {
-      "count": 9,
+      "count": 7,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
@@ -1383,22 +1354,21 @@
         "feather_fall",
         "fog_cloud",
         "grease",
-        "hunters_mark",
         "jump",
         "light",
-        "ranger_favored_enemy",
         "thunderwave"
       ]
     },
     {
-      "count": 4,
+      "count": 5,
       "description": "The level-1 behavior is complete and every remaining residual is later-level-only.",
       "status": "closed-later-level-only",
       "unitIds": [
         "barbarian_weapon_mastery",
         "bard_bardic_inspiration",
         "fighter_weapon_mastery",
-        "monk_martial_arts"
+        "monk_martial_arts",
+        "ranger_favored_enemy"
       ]
     },
     {
@@ -1423,18 +1393,18 @@
     },
     "strictRuntimeProfileSupport": {
       "denominator": 93,
-      "numerator": 68,
-      "percent": "73.1%"
+      "numerator": 69,
+      "percent": "74.2%"
     },
     "strictTargetClosure": {
       "denominator": 93,
-      "numerator": 84,
-      "percent": "90.3%"
+      "numerator": 86,
+      "percent": "92.5%"
     }
   },
   "openFrontier": [
     {
-      "count": 9,
+      "count": 7,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
@@ -1442,10 +1412,8 @@
         "feather_fall",
         "fog_cloud",
         "grease",
-        "hunters_mark",
         "jump",
         "light",
-        "ranger_favored_enemy",
         "thunderwave"
       ]
     }
@@ -3726,18 +3694,18 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 120,
     "groupsByClaimTag": {
-      "profile-subset-supported": 14,
-      "supported-profile": 68,
+      "profile-subset-supported": 13,
+      "supported-profile": 69,
       "unsupported-profile": 11
     },
     "groupsByStatus": {
       "closed-character-fact-and-runtime-detached-split": 2,
-      "closed-later-level-only": 4,
+      "closed-later-level-only": 5,
       "closed-runtime-detached-table-adjudication": 10,
-      "open-profile-accounting": 9,
-      "supported-profile": 68
+      "open-profile-accounting": 7,
+      "supported-profile": 69
     },
-    "nonSupportedFrontier": 25,
+    "nonSupportedFrontier": 24,
     "strictDenominator": 93
   }
 }
