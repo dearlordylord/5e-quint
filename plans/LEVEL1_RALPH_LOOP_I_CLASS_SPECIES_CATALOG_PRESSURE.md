@@ -85,7 +85,7 @@
     {
       "number": 14,
       "id": "L1I-BARBARIAN-DANGER-SENSE-ROLL-MODE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Barbarian Danger Sense Saving Throw Roll-Mode Profile"
     },
     {
@@ -211,12 +211,12 @@ Every task runs:
 | 11 | L1I-DRUID-NATURES-WARD - Druid Nature's Ward Catalog Pressure | done | 1 | Druid later feature disposition without stealing D Primal Order work |
 | 12 | L1I-BARD-JACK-OF-ALL-TRADES-PROFILE - Bard Jack Of All Trades Ability Check Profile | done | 4 | decision artifact and unsupported-profile claim for Jack of All Trades |
 | 13 | L1I-WORDS-OF-CREATION-POWER-WORD-RIDER - Words Of Creation Power Word Rider Profile | blocked | supported `power_word_heal` and `power_word_kill` spell invocation profiles | second-target rider support after host Power Word spells are promoted |
-| 14 | L1I-BARBARIAN-DANGER-SENSE-ROLL-MODE - Barbarian Danger Sense Saving Throw Roll-Mode Profile | ready-for-research | 5 | decide the smallest passive Dexterity Saving Throw Advantage profile boundary |
+| 14 | L1I-BARBARIAN-DANGER-SENSE-ROLL-MODE - Barbarian Danger Sense Saving Throw Roll-Mode Profile | done | 5 | decision artifact and unsupported-profile claim for the future passive Saving Throw roll-mode owner |
 | 15 | L1I-PALADIN-SMITE-FREE-CAST-PROFILE - Paladin's Smite Free-Cast Spell Access Profile | blocked | owner decision to expand Paladin battle support past level 1 | future Spell Access and class-feature free-cast support that reuses `divine_smite` |
 | 16 | L1I-SPECIES-CHARACTER-ADMISSION-SLICE - Non-Orc Species Character Admission Slice | ready-for-research | 10 | smallest character-creation admission slice for Elf, Dragonborn, Dwarf, Goliath, and Tiefling species before runtime relies on their trait refs |
 | 17 | L1I-DRAGONBORN-BREATH-WEAPON-PROFILE - Dragonborn Breath Weapon Feature Profile | blocked | 16 | future species attack-replacement profile that reuses one Draconic Ancestry source fact for Breath Weapon and Damage Resistance |
 | 18 | L1I-SPECIES-PASSIVE-RESISTANCE-PROFILE - Species Passive Resistance Profile | blocked | 16 | future target-side passive Resistance profile for character-derived species traits without duplicating Stat Block or active-effect resistance state |
-| 19 | L1I-SPECIES-CONDITION-ROLL-MODE-PROFILES - Species Condition Roll-Mode Profiles | blocked | 14, 16 | future condition-scoped Ability Check and Saving Throw roll-mode support for Powerful Build and Dwarven Resilience |
+| 19 | L1I-SPECIES-CONDITION-ROLL-MODE-PROFILES - Species Condition Roll-Mode Profiles | blocked | 16 | future condition-scoped Ability Check and Saving Throw roll-mode support for Powerful Build and Dwarven Resilience |
 | 20 | L1I-DRUID-CIRCLE-LAND-SELECTION-SOURCE - Druid Circle Of The Land Long Rest Land Source Fact | blocked | owner decision to expand Druid Circle of the Land subclass/later-level support | one Long Rest land-choice source fact shared by Circle Spells, Nature's Ward, and Nature's Sanctuary |
 | 21 | L1I-DRUID-NATURES-WARD-PASSIVE-PROFILE - Druid Nature's Ward Passive Resistance And Condition Immunity Profile | blocked | 18, 20 | future Nature's Ward passive target-side profile that reads the selected land source fact without duplicating Resistance state |
 
@@ -305,11 +305,11 @@ new atomic follow-up rather than broadening this task.
 Result:
 `plans/unit-profile-coverage/L1I_CLASS_SPECIES_BARBARIAN_LATER_FEATURES_CLOSURE.md`.
 The two Barbarian later-feature records are closed as explicit
-`unsupported-profile` claims. `barbarian_danger_sense` remains visible as a
-future executable follow-up in Task 14 because it is passive Dexterity Saving
-Throw Advantage suppressed by Incapacitated. `barbarian_primal_champion` is a
-level-20 durable Character Sheet Ability Score projection, not a standalone
-promoted battle Unit profile.
+`unsupported-profile` claims. Task 14 closes `barbarian_danger_sense` as a
+future `unit-feature.passive-saving-throw-roll-mode` owner decision because it
+is passive Dexterity Saving Throw Advantage suppressed by Incapacitated.
+`barbarian_primal_champion` is a level-20 durable Character Sheet Ability Score
+projection, not a standalone promoted battle Unit profile.
 
 ### Task 6 - L1I-PALADIN-SMITE-STYLE-SURFACE - Paladin Smite And Fighting Style Surface Pressure
 
@@ -477,7 +477,7 @@ as Bard feature runtime state.
 
 ### Task 14 - L1I-BARBARIAN-DANGER-SENSE-ROLL-MODE - Barbarian Danger Sense Saving Throw Roll-Mode Profile
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `barbarian_danger_sense`.
 
@@ -487,6 +487,17 @@ the Barbarian must not have the Incapacitated condition. Do not admit the
 existing generic `modify_roll_advantage` surface shape as a supported profile
 until the Saving Throw ability filter and condition suppression gate are
 executable at the owning boundary.
+
+Result:
+`plans/unit-profile-coverage/L1I_CLASS_SPECIES_BARBARIAN_DANGER_SENSE_PROFILE.md`.
+Danger Sense remains `unsupported-profile` until one battle Saving Throw
+projection boundary can consume retained class-feature identity, the Dexterity
+Saving Throw ability filter, Incapacitated suppression through the shared
+condition algebra, and existing non-stacking Advantage/Disadvantage
+composition. The smallest future owner is
+`unit-feature.passive-saving-throw-roll-mode`; generic
+`modify_roll_advantage` remains too broad to admit as a supported Unit profile
+on its own.
 
 ### Task 15 - L1I-PALADIN-SMITE-FREE-CAST-PROFILE - Paladin's Smite Free-Cast Spell Access Profile
 
@@ -542,12 +553,13 @@ Advantage remains owned by Task 19.
 
 Status: `blocked`
 
-Blocked on Tasks 14 and 16 so the roll-mode owner and non-Orc species admission
-surface are available first. Decide the condition-scoped roll-mode profile
-family for `dwarf_dwarven_resilience` saving throw Advantage to avoid or end
-Poisoned and `species_goliath_powerful_build` Ability Check Advantage to end
-Grappled. Reuse the generic roll-mode boundary from Danger Sense if it lands;
-do not create species-specific roll-mode adapters.
+Blocked on Task 16 so non-Orc species admission surface is available first.
+Task 14 fixes the Saving Throw owner as
+`unit-feature.passive-saving-throw-roll-mode`; reuse that boundary for
+`dwarf_dwarven_resilience` saving throw Advantage to avoid or end Poisoned.
+Decide the sibling Ability Check roll-mode owner for
+`species_goliath_powerful_build` Advantage to end Grappled without creating
+species-specific roll-mode adapters.
 
 ### Task 20 - L1I-DRUID-CIRCLE-LAND-SELECTION-SOURCE - Druid Circle Of The Land Long Rest Land Source Fact
 

@@ -13316,10 +13316,10 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "later-level-only",
-          "owner": "future saving-throw roll-mode profile owner",
-          "reason": "The feature is acquired after level 1 and grants Advantage on Dexterity Saving Throws unless the creature has the Incapacitated condition. Current promoted Unit profiles do not model this passive Saving Throw roll-mode projection."
+          "owner": "future unit-feature.passive-saving-throw-roll-mode owner",
+          "reason": "The feature is acquired after level 1 and grants Advantage on Dexterity Saving Throws unless the creature has the Incapacitated condition. Current promoted Unit profiles do not consume class-feature passive Saving Throw roll-mode grants or make both the saveAbilityFilter and passive condition suppressor executable at admission."
         },
-        "reason": "Danger Sense is a level-2 passive Dexterity Saving Throw Advantage feature; no promoted Unit profile is claimed until a saving-throw roll-mode profile can consume the authored condition-gated passive grant.",
+        "reason": "Danger Sense is a level-2 passive Dexterity Saving Throw Advantage feature; no promoted Unit profile is claimed until a passive Saving Throw roll-mode profile can execute the Dexterity ability filter and Incapacitated suppression gate together.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
