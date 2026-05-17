@@ -1,7 +1,8 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points spell.invocation-beam-sequence spell.invocation-sleep-repeat-save-lifecycle spell.scalar-buff
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt extra-attack-count-scaling fighter_extra_attack
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt extra-attack-count-scaling fighter_extra_attack paladin_extra_attack
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-ORC-ADRENALINE-RUSH orc_adrenaline_rush
 // UNIT-IDENTITY-MBT-REPLAY: extra-attack-count-scaling fighter_extra_attack doResolveFirstExtraAttackMiss doResolveSecondExtraAttackMiss
+// UNIT-IDENTITY-MBT-REPLAY: extra-attack-count-scaling paladin_extra_attack doResolveFirstExtraAttackMiss doResolveSecondExtraAttackMiss
 // UNIT-IDENTITY-MBT-REPLAY: L1H-ORC-ADRENALINE-RUSH orc_adrenaline_rush doAdrenalineRushDash doRejectSecondDash
 import * as path from "node:path";
 
@@ -391,6 +392,11 @@ type AdrenalineRushDriverAction = Exclude<
   keyof typeof adrenalineRushDriverSchema,
   "init" | "step"
 >;
+const extraAttackSelectedUnitIds = [
+  "fighter_extra_attack",
+  "paladin_extra_attack",
+] as const;
+type ExtraAttackSelectedUnitId = (typeof extraAttackSelectedUnitIds)[number];
 type SelectedUnitIdentityReplaySequence<ActionName extends string, Projection> =
   {
     readonly name: string;
@@ -400,7 +406,7 @@ type SelectedUnitIdentityReplaySequence<ActionName extends string, Projection> =
 type ExtraAttackSelectedUnitIdentityReplay = {
   readonly driver: "extraAttack";
   readonly taskId: "extra-attack-count-scaling";
-  readonly unitId: "fighter_extra_attack";
+  readonly unitId: ExtraAttackSelectedUnitId;
   readonly actions: readonly ExtraAttackDriverAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence<
     ExtraAttackDriverAction,
@@ -473,13 +479,49 @@ async function runSelectedUnitIdentityReplay(
   replay: SelectedUnitIdentityReplay,
 ): Promise<void> {
   if (replay.driver === "extraAttack") {
-    await runSelectedIdentityReplay(replay, createExtraAttackDriver());
+    await runSelectedIdentityReplay(
+      replay,
+      createExtraAttackDriver(replay.unitId),
+    );
     return;
   }
   await runSelectedIdentityReplay(replay, createAdrenalineRushDriver());
 }
 
 const selectedUnitRuntimeBoundaryIds = new Set<string>();
+
+const extraAttackSelectedIdentitySequences = [
+  {
+    name: "attack-action-opens-extra-attack-slot",
+    actions: ["doResolveFirstExtraAttackMiss"],
+    expected: {
+      skeletonHp: 13,
+      actionAvailable: false,
+      extraAttackSlotsAvailable: 1,
+      movementSpentFeet: 0,
+      lastResult: "resolved",
+      lastInvalidReason: "",
+    },
+  },
+  {
+    name: "extra-attack-slot-spent-without-action-cost",
+    actions: [
+      "doResolveFirstExtraAttackMiss",
+      "doResolveSecondExtraAttackMiss",
+    ],
+    expected: {
+      skeletonHp: 13,
+      actionAvailable: false,
+      extraAttackSlotsAvailable: 0,
+      movementSpentFeet: 0,
+      lastResult: "resolved",
+      lastInvalidReason: "",
+    },
+  },
+] as const satisfies readonly SelectedUnitIdentityReplaySequence<
+  ExtraAttackDriverAction,
+  ExtraAttackMbtProjection
+>[];
 
 const selectedUnitIdentityReplays = [
   {
@@ -490,35 +532,17 @@ const selectedUnitIdentityReplays = [
       "doResolveFirstExtraAttackMiss",
       "doResolveSecondExtraAttackMiss",
     ],
-    sequences: [
-      {
-        name: "attack-action-opens-extra-attack-slot",
-        actions: ["doResolveFirstExtraAttackMiss"],
-        expected: {
-          skeletonHp: 13,
-          actionAvailable: false,
-          extraAttackSlotsAvailable: 1,
-          movementSpentFeet: 0,
-          lastResult: "resolved",
-          lastInvalidReason: "",
-        },
-      },
-      {
-        name: "extra-attack-slot-spent-without-action-cost",
-        actions: [
-          "doResolveFirstExtraAttackMiss",
-          "doResolveSecondExtraAttackMiss",
-        ],
-        expected: {
-          skeletonHp: 13,
-          actionAvailable: false,
-          extraAttackSlotsAvailable: 0,
-          movementSpentFeet: 0,
-          lastResult: "resolved",
-          lastInvalidReason: "",
-        },
-      },
+    sequences: [...extraAttackSelectedIdentitySequences],
+  },
+  {
+    taskId: "extra-attack-count-scaling",
+    unitId: "paladin_extra_attack",
+    driver: "extraAttack",
+    actions: [
+      "doResolveFirstExtraAttackMiss",
+      "doResolveSecondExtraAttackMiss",
     ],
+    sequences: [...extraAttackSelectedIdentitySequences],
   },
   {
     taskId: "L1H-ORC-ADRENALINE-RUSH",
@@ -709,15 +733,17 @@ function createBattleRuntimeDriver() {
   });
 }
 
-function createExtraAttackDriver() {
+function createExtraAttackDriver(
+  unitId: ExtraAttackSelectedUnitId = "fighter_extra_attack",
+) {
   return defineDriver(extraAttackDriverSchema, () => {
-    let state = extraAttackBattle();
+    let state = extraAttackBattle(unitId);
     let subject: BattleSubject = fighterAttackSubject();
     let lastResult: ExtraAttackMbtProjection["lastResult"] = "init";
     let lastInvalidReason: ExtraAttackMbtProjection["lastInvalidReason"] = "";
 
     function reset(): void {
-      state = extraAttackBattle();
+      state = extraAttackBattle(unitId);
       subject = fighterAttackSubject();
       lastResult = "init";
       lastInvalidReason = "";
@@ -739,7 +765,7 @@ function createExtraAttackDriver() {
     }
 
     function resolveAttackMiss(): void {
-      recordExtraAttackBoundaryFromState(state);
+      recordExtraAttackBoundaryFromState(state, unitId);
       subject = fighterAttackSubject();
       const target = requireHole(
         discoverAttackHoles(state, subject),
@@ -760,7 +786,7 @@ function createExtraAttackDriver() {
           ],
         }),
       );
-      recordExtraAttackBoundaryFromState(state);
+      recordExtraAttackBoundaryFromState(state, unitId);
     }
 
     return {
@@ -1838,15 +1864,18 @@ function projectExtraAttackMbtState(input: {
   };
 }
 
-function recordExtraAttackBoundaryFromState(state: BattleState): void {
+function recordExtraAttackBoundaryFromState(
+  state: BattleState,
+  unitId: ExtraAttackSelectedUnitId,
+): void {
   if (
     state.currentTurnResources.actionResources.some(
       (resource) =>
         resource.source === "classFeatureExtraAttack" &&
-        resource.sourceUnitId === "fighter_extra_attack",
+        resource.sourceUnitId === unitId,
     )
   ) {
-    recordSelectedUnitRuntimeBoundaryId("fighter_extra_attack");
+    recordSelectedUnitRuntimeBoundaryId(unitId);
   }
 }
 
@@ -2230,11 +2259,13 @@ function fighterVsSkeletonBattle(): BattleState {
   });
 }
 
-function extraAttackBattle(): BattleState {
+function extraAttackBattle(
+  unitId: ExtraAttackSelectedUnitId = "fighter_extra_attack",
+): BattleState {
   return startBattleRight({
     battleId: battleId("battle-runtime-mbt-extra-attack"),
     combatants: [
-      extraAttackCreatureInit({ initiative: 20 }),
+      extraAttackCreatureInit({ initiative: 20, unitId }),
       skeletonCreatureInit({ initiative: 10 }),
     ],
   });
@@ -2431,18 +2462,22 @@ function rogueCreatureInit(input: {
 
 function extraAttackCreatureInit(input: {
   readonly initiative: number;
+  readonly unitId: ExtraAttackSelectedUnitId;
 }): BattleCreatureInit {
-  const unit = unitLibrary.requireUnit("fighter_extra_attack");
+  const unit = unitLibrary.requireUnit(input.unitId);
+  if (unit.kind !== "class_feature") {
+    throw new Error("Expected Extra Attack class-feature Unit.");
+  }
   return {
     combatantId: fighterId,
-    displayName: "Fighter",
+    displayName: `${unit.className} Extra Attacker`,
     initiative: initiativeScore(input.initiative),
     side: partySide,
     creatureInit: {
       kind: "character",
-      characterId: characterId("extra-attack-fighter-character"),
+      characterId: characterId(`extra-attack-${unit.className}-character`),
       characterUnitRefs: [extraAttackUnitRef(unit)],
-      classLevels: [{ className: "fighter", level: 5 }],
+      classLevels: [{ className: unit.className, level: 5 }],
       armorClass: {
         ...defaultArmorClassState(),
         rightHandUse: "mainWeapon",

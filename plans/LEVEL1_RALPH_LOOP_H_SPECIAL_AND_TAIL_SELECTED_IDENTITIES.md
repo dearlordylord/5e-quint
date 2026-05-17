@@ -73,7 +73,7 @@
     {
       "number": 12,
       "id": "L1H-PALADIN-EXTRA-ATTACK",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Paladin Extra Attack Selected Identity Replay"
     },
     {
@@ -273,7 +273,7 @@ RAW: `.references/srd-5.2.1/Character-Origins.md` Orc Adrenaline Rush.
 
 ### Task 12 - L1H-PALADIN-EXTRA-ATTACK - Paladin Extra Attack Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `paladin_extra_attack`, reusing the existing
 extra-attack count scaling profile without conflating it with Fighter's Unit id.
