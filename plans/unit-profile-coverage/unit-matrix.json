@@ -93,8 +93,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 93,
-      "numerator": 47,
-      "percent": "50.5%"
+      "numerator": 48,
+      "percent": "51.6%"
     },
     "supportedProfileCoverage": {
       "denominator": 117,
@@ -6507,6 +6507,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV30C"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/creature-type-protection-and-charm-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1H-ANIMAL-FRIENDSHIP"
         }
       ],
       "executableMechanics": true,

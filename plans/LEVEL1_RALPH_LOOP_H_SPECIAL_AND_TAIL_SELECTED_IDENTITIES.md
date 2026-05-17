@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L1H-ANIMAL-FRIENDSHIP",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Animal Friendship Selected Identity Replay"
     },
     {
@@ -177,7 +177,7 @@ gap visible as an executable follow-up.
 
 ### Task 2 - L1H-ANIMAL-FRIENDSHIP - Animal Friendship Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `animal_friendship`, proving creature type
 target admission and Charmed lifecycle within the existing supported runtime
