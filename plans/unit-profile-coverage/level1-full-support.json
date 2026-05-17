@@ -759,71 +759,6 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "Runtime-owned jump arc, pathfinding, collision, and final-position derivation remain table/spatial derivations.; Runtime-owned Difficult Terrain landing Acrobatics check derivation remains a table/spatial derivation.",
-      "sourceRecordPath": "packages/surface/content/jump.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Druid spell list Jump",
-          "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_jump",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 216,
-            "lineStart": 216,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Ranger spell list Jump",
-          "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_jump",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 174,
-            "lineStart": 174,
-            "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Jump",
-          "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_jump",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 257,
-            "lineStart": 257,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Jump",
-          "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_jump",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 181,
-            "lineStart": 181,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "jump"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "table-spatial-derivation"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
       "reason": "Colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the object-emitter runtime boundary.",
       "sourceRecordPath": "packages/surface/content/light.json",
       "sourceRows": [
@@ -1230,7 +1165,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 69,
+      "count": 70,
       "description": "Full support exists at the Unit profile boundary for strict level-1 accounting.",
       "status": "supported-profile",
       "unitIds": [
@@ -1270,6 +1205,7 @@
         "hideous_laughter",
         "ice_knife",
         "inflict_wounds",
+        "jump",
         "longstrider",
         "mage_armor",
         "magic_missile",
@@ -1323,7 +1259,7 @@
       ]
     },
     {
-      "count": 8,
+      "count": 7,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
@@ -1331,7 +1267,6 @@
         "fog_cloud",
         "grease",
         "hunters_mark",
-        "jump",
         "light",
         "ranger_favored_enemy",
         "thunderwave"
@@ -1370,18 +1305,18 @@
     },
     "strictRuntimeProfileSupport": {
       "denominator": 93,
-      "numerator": 69,
-      "percent": "74.2%"
+      "numerator": 70,
+      "percent": "75.3%"
     },
     "strictTargetClosure": {
       "denominator": 93,
-      "numerator": 85,
-      "percent": "91.4%"
+      "numerator": 86,
+      "percent": "92.5%"
     }
   },
   "openFrontier": [
     {
-      "count": 8,
+      "count": 7,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
@@ -1389,7 +1324,6 @@
         "fog_cloud",
         "grease",
         "hunters_mark",
-        "jump",
         "light",
         "ranger_favored_enemy",
         "thunderwave"
@@ -3672,18 +3606,18 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 120,
     "groupsByClaimTag": {
-      "profile-subset-supported": 13,
-      "supported-profile": 69,
+      "profile-subset-supported": 12,
+      "supported-profile": 70,
       "unsupported-profile": 11
     },
     "groupsByStatus": {
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 4,
       "closed-runtime-detached-table-adjudication": 10,
-      "open-profile-accounting": 8,
-      "supported-profile": 69
+      "open-profile-accounting": 7,
+      "supported-profile": 70
     },
-    "nonSupportedFrontier": 24,
+    "nonSupportedFrontier": 23,
     "strictDenominator": 93
   }
 }

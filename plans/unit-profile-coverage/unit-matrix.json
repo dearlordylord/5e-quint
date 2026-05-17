@@ -62,8 +62,8 @@
       "value": 145
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 95,
-      "numerator": 95,
+      "denominator": 96,
+      "numerator": 96,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 95,
-      "numerator": 86,
-      "percent": "90.5%"
+      "denominator": 96,
+      "numerator": 87,
+      "percent": "90.6%"
     },
     "supportedProfileCoverage": {
       "denominator": 118,
-      "numerator": 95,
-      "percent": "80.5%"
+      "numerator": 96,
+      "percent": "81.4%"
     }
   },
   "metricSemantics": [
@@ -9739,26 +9739,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "SRDINV55 table/spatial owner",
-              "reason": "Runtime-owned jump arc, pathfinding, collision, and final-position derivation remain table/spatial derivations."
-            },
-            "followUpTaskId": "SRDINV55",
-            "mechanic": "runtime-owned jump arc, pathfinding, collision, and final-position derivation"
-          },
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "SRDINV55 table/spatial owner",
-              "reason": "Runtime-owned Difficult Terrain landing Acrobatics check derivation remains a table/spatial derivation."
-            },
-            "followUpTaskId": "SRDINV55",
-            "mechanic": "runtime-owned Difficult Terrain landing Acrobatics check derivation"
-          }
-        ],
         "profileIds": [
           "spell.invocation-jump-movement-replacement"
         ],
@@ -9773,10 +9753,11 @@
           "one-minute spell-owned duration",
           "once on each target turn use marker",
           "10-foot Movement spend for up to 30 feet of jump movement",
-          "caller-supplied legal landing facts",
-          "Prone outcome for caller-supplied failed Difficult Terrain landing Acrobatics facts"
+          "caller-supplied legal landing witness facts",
+          "Prone outcome for caller-supplied failed Difficult Terrain landing Acrobatics facts",
+          "jump arc, pathfinding, collision, final-position derivation, legal-destination derivation, and Difficult Terrain landing Dexterity (Acrobatics) check derivation remain runtime-detached table adjudication outside the Jump profile; the runtime consumes only typed jump distance, legal landing, and Acrobatics-result witnesses"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [

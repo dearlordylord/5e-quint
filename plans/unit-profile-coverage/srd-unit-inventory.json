@@ -8907,14 +8907,8 @@
         "state": "installed",
         "unitId": "jump"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV55 table/spatial owner",
-        "reason": "Runtime-owned jump arc, pathfinding, collision, and final-position derivation remain table/spatial derivations.; Runtime-owned Difficult Terrain landing Acrobatics check derivation remains a table/spatial derivation."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -12602,14 +12596,8 @@
         "state": "installed",
         "unitId": "jump"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV55 table/spatial owner",
-        "reason": "Runtime-owned jump arc, pathfinding, collision, and final-position derivation remain table/spatial derivations.; Runtime-owned Difficult Terrain landing Acrobatics check derivation remains a table/spatial derivation."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -15189,14 +15177,8 @@
         "state": "installed",
         "unitId": "jump"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV55 table/spatial owner",
-        "reason": "Runtime-owned jump arc, pathfinding, collision, and final-position derivation remain table/spatial derivations.; Runtime-owned Difficult Terrain landing Acrobatics check derivation remains a table/spatial derivation."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -18851,14 +18833,8 @@
         "state": "installed",
         "unitId": "jump"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV55 table/spatial owner",
-        "reason": "Runtime-owned jump arc, pathfinding, collision, and final-position derivation remain table/spatial derivations.; Runtime-owned Difficult Terrain landing Acrobatics check derivation remains a table/spatial derivation."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
