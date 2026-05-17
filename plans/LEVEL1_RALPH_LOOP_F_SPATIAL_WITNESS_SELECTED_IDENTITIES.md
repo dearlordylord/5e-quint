@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "L1F-FEATHER-FALL",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Feather Fall Selected Identity Replay"
     },
     {
@@ -191,7 +191,7 @@ table-supplied projection witnesses without runtime-owned map automation.
 
 ### Task 4 - L1F-FEATHER-FALL - Feather Fall Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `feather_fall`, covering the caller-supplied
 falling Reaction trigger, mitigation effect, and landing cleanup. Do not add
