@@ -11,6 +11,16 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
   var qFaerieFireObjectAttackRollMode: str
   var qFaerieFireTargetInvisible: bool
   var qFaerieFireObjectInvisibleBenefitDenied: bool
+  var qFeatherFallTriggerOffered: bool
+  var qFeatherFallUnwitnessedTriggerRejected: bool
+  var qFeatherFallReactionSpent: bool
+  var qFeatherFallSlotExpended: bool
+  var qFeatherFallMitigatedTargetCountBeforeLanding: int
+  var qFeatherFallLandedTargetDescentRateCapFeetPerRound: int
+  var qFeatherFallLandingFallDamagePrevented: bool
+  var qFeatherFallLandingFallingPronePrevented: bool
+  var qFeatherFallLandedTargetMitigationCleared: bool
+  var qFeatherFallOtherTargetStillMitigated: bool
   var qProjectedIllumination: str
   var qOrdinarySightObscurement: str
   var qDarkvisionSightObscurement: str
@@ -32,6 +42,16 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     faerieFireObjectAttackRollMode: str,
     faerieFireTargetInvisible: bool,
     faerieFireObjectInvisibleBenefitDenied: bool,
+    featherFallTriggerOffered: bool,
+    featherFallUnwitnessedTriggerRejected: bool,
+    featherFallReactionSpent: bool,
+    featherFallSlotExpended: bool,
+    featherFallMitigatedTargetCountBeforeLanding: int,
+    featherFallLandedTargetDescentRateCapFeetPerRound: int,
+    featherFallLandingFallDamagePrevented: bool,
+    featherFallLandingFallingPronePrevented: bool,
+    featherFallLandedTargetMitigationCleared: bool,
+    featherFallOtherTargetStillMitigated: bool,
     projectedIllumination: str,
     ordinarySightObscurement: str,
     darkvisionSightObscurement: str,
@@ -52,6 +72,16 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     qFaerieFireObjectAttackRollMode' = faerieFireObjectAttackRollMode,
     qFaerieFireTargetInvisible' = faerieFireTargetInvisible,
     qFaerieFireObjectInvisibleBenefitDenied' = faerieFireObjectInvisibleBenefitDenied,
+    qFeatherFallTriggerOffered' = featherFallTriggerOffered,
+    qFeatherFallUnwitnessedTriggerRejected' = featherFallUnwitnessedTriggerRejected,
+    qFeatherFallReactionSpent' = featherFallReactionSpent,
+    qFeatherFallSlotExpended' = featherFallSlotExpended,
+    qFeatherFallMitigatedTargetCountBeforeLanding' = featherFallMitigatedTargetCountBeforeLanding,
+    qFeatherFallLandedTargetDescentRateCapFeetPerRound' = featherFallLandedTargetDescentRateCapFeetPerRound,
+    qFeatherFallLandingFallDamagePrevented' = featherFallLandingFallDamagePrevented,
+    qFeatherFallLandingFallingPronePrevented' = featherFallLandingFallingPronePrevented,
+    qFeatherFallLandedTargetMitigationCleared' = featherFallLandedTargetMitigationCleared,
+    qFeatherFallOtherTargetStillMitigated' = featherFallOtherTargetStillMitigated,
     qProjectedIllumination' = projectedIllumination,
     qOrdinarySightObscurement' = ordinarySightObscurement,
     qDarkvisionSightObscurement' = darkvisionSightObscurement,
@@ -67,6 +97,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     recordProjection(
       0, 0, 0,
       0, 0, "normal", "normal", "normal", false, false,
+      false, false, false, false, 0, 0, false, false, false, false,
       "darkness", "heavilyObscured", "lightlyObscured", "darkness",
       0, false, true, true,
       "init",
@@ -77,6 +108,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     recordProjection(
       2, 2, 2,
       0, 0, "normal", "normal", "normal", false, false,
+      false, false, false, false, 0, 0, false, false, false, false,
       "dimLight", "lightlyObscured", "unobscured", "darkness",
       0, true, false, false,
       "dancingLightsMovableDimLight",
@@ -88,14 +120,28 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     recordProjection(
       2, 2, 0,
       1, 1, "advantage", "advantage", "advantage", true, true,
+      false, false, false, false, 0, 0, false, false, false, false,
       "dimLight", "lightlyObscured", "unobscured", "darkness",
       0, true, true, true,
       "faerieFireOutlineAdvantageInvisibleDimLight",
     ),
   }
 
+  action doFeatherFallReactionMitigationLanding = all {
+    qLastResult == "init",
+    recordProjection(
+      0, 0, 0,
+      0, 0, "normal", "normal", "normal", false, false,
+      true, true, true, true, 2, 60, true, true, true, true,
+      "darkness", "heavilyObscured", "lightlyObscured", "darkness",
+      0, false, true, true,
+      "featherFallReactionMitigationLanding",
+    ),
+  }
+
   action step = any {
     doDancingLightsMovableDimLight,
     doFaerieFireOutlineAdvantageInvisibleDimLight,
+    doFeatherFallReactionMitigationLanding,
   }
 }

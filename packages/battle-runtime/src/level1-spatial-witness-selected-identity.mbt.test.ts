@@ -1,6 +1,7 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt level1-spatial-witness dancing_lights faerie_fire
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt level1-spatial-witness dancing_lights faerie_fire feather_fall
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness dancing_lights doDancingLightsMovableDimLight
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness faerie_fire doFaerieFireOutlineAdvantageInvisibleDimLight
+// UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness feather_fall doFeatherFallReactionMitigationLanding
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -37,6 +38,7 @@ import {
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
+  activeFeatherFallDescentRateCapFeetPerRound,
   battleCombatantSide,
   battleId,
   battleIlluminationFromLightEmitters,
@@ -47,8 +49,12 @@ import {
   characterId,
   combatantId,
   discoverBattleActs,
+  FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
   initiativeScore,
   objectInvisibleBenefitDenied,
+  openCreatureFallsReactionWindow,
+  resolveBattleReaction,
+  resolveFeatherFallLanding,
   resolveBattleSubject,
   snapshotBattle,
   startBattle,
@@ -64,6 +70,7 @@ import {
   type BattleSightObscurement,
   type BattleState,
   type BattleSubject,
+  type BattleTargetSpatialFact,
   type CombatantId,
 } from "./index.ts";
 
@@ -71,6 +78,7 @@ const level1SpatialWitnessSelectedIdentityDriverSchema = {
   init: {},
   doDancingLightsMovableDimLight: {},
   doFaerieFireOutlineAdvantageInvisibleDimLight: {},
+  doFeatherFallReactionMitigationLanding: {},
   step: {},
 } as const;
 type Level1SpatialWitnessSelectedIdentityDriverAction = Exclude<
@@ -89,6 +97,16 @@ type Level1SpatialWitnessSelectedIdentityProjection = {
   readonly faerieFireObjectAttackRollMode: ProjectedAttackRollMode;
   readonly faerieFireTargetInvisible: boolean;
   readonly faerieFireObjectInvisibleBenefitDenied: boolean;
+  readonly featherFallTriggerOffered: boolean;
+  readonly featherFallUnwitnessedTriggerRejected: boolean;
+  readonly featherFallReactionSpent: boolean;
+  readonly featherFallSlotExpended: boolean;
+  readonly featherFallMitigatedTargetCountBeforeLanding: number;
+  readonly featherFallLandedTargetDescentRateCapFeetPerRound: number;
+  readonly featherFallLandingFallDamagePrevented: boolean;
+  readonly featherFallLandingFallingPronePrevented: boolean;
+  readonly featherFallLandedTargetMitigationCleared: boolean;
+  readonly featherFallOtherTargetStillMitigated: boolean;
   readonly projectedIllumination: BattleIllumination;
   readonly ordinarySightObscurement: BattleSightObscurement;
   readonly darkvisionSightObscurement: BattleSightObscurement;
@@ -100,15 +118,18 @@ type Level1SpatialWitnessSelectedIdentityProjection = {
   readonly lastResult:
     | "init"
     | "dancingLightsMovableDimLight"
-    | "faerieFireOutlineAdvantageInvisibleDimLight";
+    | "faerieFireOutlineAdvantageInvisibleDimLight"
+    | "featherFallReactionMitigationLanding";
 };
 type ProjectedAttackRollMode = AttackRollMode;
 const dancingLightsUnitId = "dancing_lights";
 const faerieFireUnitId = "faerie_fire";
+const featherFallUnitId = "feather_fall";
 const starryWispUnitId = "starry_wisp";
 const level1SpatialWitnessSelectedUnitIds = [
   dancingLightsUnitId,
   faerieFireUnitId,
+  featherFallUnitId,
 ] as const;
 type Level1SpatialWitnessSelectedUnitId =
   (typeof level1SpatialWitnessSelectedUnitIds)[number];
@@ -150,9 +171,27 @@ type DancingLightAttachment = Extract<
 type DancingLightEmitter = SpellLightEmitter & {
   readonly attachment: DancingLightAttachment;
 };
+type FeatherFallProjection = {
+  readonly triggerOffered: boolean;
+  readonly unwitnessedTriggerRejected: boolean;
+  readonly reactionSpent: boolean;
+  readonly slotExpended: boolean;
+  readonly mitigatedTargetCountBeforeLanding: number;
+  readonly landedTargetDescentRateCapFeetPerRound: number;
+  readonly landingFallDamagePrevented: boolean;
+  readonly landingFallingPronePrevented: boolean;
+  readonly landedTargetMitigationCleared: boolean;
+  readonly otherTargetStillMitigated: boolean;
+};
 
 const casterId = combatantId("level1-spatial-witness-caster");
 const observerId = combatantId("level1-spatial-witness-observer");
+const featherFallFallingAllyId = combatantId(
+  "level1-spatial-witness-feather-fall-ally-a",
+);
+const featherFallOtherFallingAllyId = combatantId(
+  "level1-spatial-witness-feather-fall-ally-b",
+);
 const partySide = battleCombatantSide("party");
 const oppositionSide = battleCombatantSide("opposition");
 const dancingLightsDimLightRadiusFeet = movementFeet(10);
@@ -227,6 +266,33 @@ const selectedUnitIdentityReplays = [
       },
     ],
   },
+  {
+    taskId: "level1-spatial-witness",
+    unitId: "feather_fall",
+    actions: ["doFeatherFallReactionMitigationLanding"],
+    sequences: [
+      {
+        name: "falling-reaction-mitigation-descent-cap-and-landing-cleanup",
+        actions: ["doFeatherFallReactionMitigationLanding"],
+        expected: expectedProjection({
+          featherFallTriggerOffered: true,
+          featherFallUnwitnessedTriggerRejected: true,
+          featherFallReactionSpent: true,
+          featherFallSlotExpended: true,
+          featherFallMitigatedTargetCountBeforeLanding: 2,
+          featherFallLandedTargetDescentRateCapFeetPerRound:
+            FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
+          featherFallLandingFallDamagePrevented: true,
+          featherFallLandingFallingPronePrevented: true,
+          featherFallLandedTargetMitigationCleared: true,
+          featherFallOtherTargetStillMitigated: true,
+          magicActionAvailable: true,
+          bonusActionAvailable: true,
+          lastResult: "featherFallReactionMitigationLanding",
+        }),
+      },
+    ],
+  },
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
 describe("Level 1 spatial witness selected identity MBT", () => {
@@ -289,6 +355,7 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
     let faerieFireInvisibleCreatureAttackRollMode: ProjectedAttackRollMode =
       "normal";
     let faerieFireObjectAttackRollMode: ProjectedAttackRollMode = "normal";
+    let featherFallProjection = emptyFeatherFallProjection();
     let lastResult: Level1SpatialWitnessSelectedIdentityProjection["lastResult"] =
       "init";
 
@@ -298,6 +365,7 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
       faerieFireCreatureAttackRollMode = "normal";
       faerieFireInvisibleCreatureAttackRollMode = "normal";
       faerieFireObjectAttackRollMode = "normal";
+      featherFallProjection = emptyFeatherFallProjection();
       lastResult = "init";
     }
 
@@ -387,6 +455,89 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
         state = invisibleOutlined;
         lastResult = "faerieFireOutlineAdvantageInvisibleDimLight";
       },
+      doFeatherFallReactionMitigationLanding: () => {
+        state = featherFallBattle();
+        retainedLightIdentityCount = 0;
+        const unwitnessedTrigger = openFeatherFallWindow(state, []);
+        const unwitnessedTriggerRejected =
+          unwitnessedTrigger.tag === "resolved" &&
+          unwitnessedTrigger.snapshot.pendingReaction === null;
+        const awaitingReaction = openFeatherFallWindow(state, [
+          featherFallTriggerFact(),
+        ]);
+        const triggerOffered =
+          awaitingReaction.tag === "needsHoles" &&
+          awaitingReaction.snapshot.pendingReaction?.trigger ===
+            "creatureFalls";
+        if (awaitingReaction.tag !== "needsHoles") {
+          throw new Error(
+            "Expected Feather Fall falling-trigger Reaction window.",
+          );
+        }
+
+        const choice = featherFallReactionChoice(awaitingReaction);
+        const resolved = resolveBattleReaction({
+          state: awaitingReaction.state,
+          fill: reactionDecisionFill(
+            requireHole(awaitingReaction.holes, "reactionDecision"),
+            {
+              kind: "resolve",
+              reactorId: casterId,
+              choice: {
+                kind: "castTriggeredReactionSpell",
+                invocation: choice.invocation,
+                fills: [
+                  featherFallTargetListFill(
+                    requireHole(choice.initialHoles, "spellTargetList"),
+                    [featherFallFallingAllyId, featherFallOtherFallingAllyId],
+                  ),
+                ],
+              },
+            },
+          ),
+        });
+        if (resolved.tag !== "resolved") {
+          throw new Error(
+            `Expected Feather Fall Reaction to resolve, got ${resolved.tag}.`,
+          );
+        }
+
+        const landing = resolveFeatherFallLanding({
+          state: resolved.state,
+          targetId: featherFallFallingAllyId,
+        });
+        if (landing.tag !== "mitigated") {
+          throw new Error("Expected Feather Fall landing mitigation.");
+        }
+        featherFallProjection = {
+          triggerOffered,
+          unwitnessedTriggerRejected,
+          reactionSpent: !featherFallCaster(resolved.state).reactionAvailable,
+          slotExpended: featherFallCasterSlotExpended(resolved.state),
+          mitigatedTargetCountBeforeLanding: featherFallMitigationTargetCount(
+            resolved.state,
+          ),
+          landedTargetDescentRateCapFeetPerRound:
+            activeFeatherFallDescentRateCapFeetPerRound(
+              featherFallCombatant(resolved.state, featherFallFallingAllyId),
+            ) ?? 0,
+          landingFallDamagePrevented: landing.fallDamagePrevented,
+          landingFallingPronePrevented: landing.fallingPronePrevented,
+          landedTargetMitigationCleared:
+            activeFeatherFallDescentRateCapFeetPerRound(
+              featherFallCombatant(landing.state, featherFallFallingAllyId),
+            ) === null,
+          otherTargetStillMitigated:
+            activeFeatherFallDescentRateCapFeetPerRound(
+              featherFallCombatant(
+                landing.state,
+                featherFallOtherFallingAllyId,
+              ),
+            ) === FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
+        };
+        state = landing.state;
+        lastResult = "featherFallReactionMitigationLanding";
+      },
       step: () => {},
       getState: () =>
         projectLevel1SpatialWitnessSelectedIdentityState(
@@ -395,6 +546,7 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
           faerieFireCreatureAttackRollMode,
           faerieFireInvisibleCreatureAttackRollMode,
           faerieFireObjectAttackRollMode,
+          featherFallProjection,
           lastResult,
         ),
     };
@@ -415,6 +567,16 @@ function expectedProjection(
     faerieFireObjectAttackRollMode: "normal",
     faerieFireTargetInvisible: false,
     faerieFireObjectInvisibleBenefitDenied: false,
+    featherFallTriggerOffered: false,
+    featherFallUnwitnessedTriggerRejected: false,
+    featherFallReactionSpent: false,
+    featherFallSlotExpended: false,
+    featherFallMitigatedTargetCountBeforeLanding: 0,
+    featherFallLandedTargetDescentRateCapFeetPerRound: 0,
+    featherFallLandingFallDamagePrevented: false,
+    featherFallLandingFallingPronePrevented: false,
+    featherFallLandedTargetMitigationCleared: false,
+    featherFallOtherTargetStillMitigated: false,
     projectedIllumination: "darkness",
     ordinarySightObscurement: "heavilyObscured",
     darkvisionSightObscurement: "lightlyObscured",
@@ -425,6 +587,21 @@ function expectedProjection(
     bonusActionAvailable: true,
     lastResult: "init",
     ...overrides,
+  };
+}
+
+function emptyFeatherFallProjection(): FeatherFallProjection {
+  return {
+    triggerOffered: false,
+    unwitnessedTriggerRejected: false,
+    reactionSpent: false,
+    slotExpended: false,
+    mitigatedTargetCountBeforeLanding: 0,
+    landedTargetDescentRateCapFeetPerRound: 0,
+    landingFallDamagePrevented: false,
+    landingFallingPronePrevented: false,
+    landedTargetMitigationCleared: false,
+    otherTargetStillMitigated: false,
   };
 }
 
@@ -494,6 +671,49 @@ function faerieFireBattle(): BattleState {
         displayName: "Faerie Fire target",
         initiative: 10,
         side: oppositionSide,
+      }),
+    ],
+  });
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
+function featherFallBattle(): BattleState {
+  const featherFall = spellRecord(featherFallUnitId);
+  const result = startBattle({
+    battleId: battleId("level1-spatial-witness-selected-identity"),
+    combatants: [
+      spatialWitnessCreature({
+        combatantId: casterId,
+        displayName: "Feather Fall caster",
+        initiative: 20,
+        side: partySide,
+        spellcasting: {
+          sourceClassName: "wizard",
+          spellcastingAbilityModifier: abilityModifier(3),
+          proficiencyBonus: proficiencyBonus(2),
+          canCastSpells: true,
+          cantrips: [],
+          preparedSpells: [featherFall],
+          featurePreparedSpells: [],
+          invocationSpellAccesses: [],
+          spellbookRitualSpellAccesses: [],
+          spellSlots: [{ spellLevel: 1, count: 1 }],
+        },
+      }),
+      spatialWitnessCreature({
+        combatantId: featherFallFallingAllyId,
+        displayName: "Feather Fall falling ally A",
+        initiative: 15,
+        side: partySide,
+      }),
+      spatialWitnessCreature({
+        combatantId: featherFallOtherFallingAllyId,
+        displayName: "Feather Fall falling ally B",
+        initiative: 10,
+        side: partySide,
       }),
     ],
   });
@@ -685,6 +905,71 @@ function faerieFireSavingThrowOutcomeFill(
   };
 }
 
+function openFeatherFallWindow(
+  state: BattleState,
+  reactionSpellTargetFacts: readonly BattleTargetSpatialFact[],
+): BattleResolutionResult {
+  return openCreatureFallsReactionWindow({
+    state,
+    fallingCreatureId: featherFallFallingAllyId,
+    reactionSpellTargetFacts,
+  });
+}
+
+function featherFallTriggerFact(): Extract<
+  BattleTargetSpatialFact,
+  { readonly kind: "featherFallTriggerSelfOrVisibleCreatureWithinRange" }
+> {
+  return {
+    kind: "featherFallTriggerSelfOrVisibleCreatureWithinRange",
+    reactorId: casterId,
+    fallingCreatureId: featherFallFallingAllyId,
+    spellId: featherFallUnitId,
+    rangeFeet: movementFeet(60),
+  };
+}
+
+function featherFallReactionChoice(
+  result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
+) {
+  const choice = result.snapshot.pendingReaction?.choices.find(
+    (candidate) =>
+      candidate.kind === "castTriggeredReactionSpell" &&
+      candidate.invocation.tag === "spellSlot" &&
+      candidate.invocation.spellId === featherFallUnitId &&
+      candidate.invocation.procedure === "featherFallMitigation",
+  );
+  if (choice === undefined || choice.kind !== "castTriggeredReactionSpell") {
+    throw new Error("Expected Feather Fall Reaction choice.");
+  }
+  return choice;
+}
+
+function featherFallTargetListFill(
+  hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
+  targetIds: readonly CombatantId[],
+): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
+  return {
+    kind: "spellTargetList",
+    holeId: hole.holeId,
+    value: { targetIds },
+    spatialFacts: targetIds.map((targetId) => ({
+      kind: "featherFallTargetFallingWithinRange",
+      casterId,
+      targetId,
+      spellId: featherFallUnitId,
+      rangeFeet: movementFeet(60),
+    })),
+  };
+}
+
+function reactionDecisionFill(
+  hole: Extract<BattleHole, { readonly kind: "reactionDecision" }>,
+  value: Extract<BattleFill, { readonly kind: "reactionDecision" }>["value"],
+): Extract<BattleFill, { readonly kind: "reactionDecision" }> {
+  return { kind: "reactionDecision", holeId: hole.holeId, value };
+}
+
 function requireHole<K extends BattleHole["kind"]>(
   holes: readonly BattleHole[],
   kind: K,
@@ -864,6 +1149,7 @@ function projectLevel1SpatialWitnessSelectedIdentityState(
   faerieFireCreatureAttackRollMode: ProjectedAttackRollMode,
   faerieFireInvisibleCreatureAttackRollMode: ProjectedAttackRollMode,
   faerieFireObjectAttackRollMode: ProjectedAttackRollMode,
+  featherFallProjection: FeatherFallProjection,
   lastResult: Level1SpatialWitnessSelectedIdentityProjection["lastResult"],
 ): Level1SpatialWitnessSelectedIdentityProjection {
   const snapshot = snapshotBattle(state);
@@ -889,9 +1175,26 @@ function projectLevel1SpatialWitnessSelectedIdentityState(
     faerieFireCreatureAttackRollMode,
     faerieFireInvisibleCreatureAttackRollMode,
     faerieFireObjectAttackRollMode,
-    faerieFireTargetInvisible: faerieFireTargetInvisible(state),
+    faerieFireTargetInvisible: faerieFireTargetInvisible(state, lastResult),
     faerieFireObjectInvisibleBenefitDenied:
-      faerieFireObjectInvisibleBenefitDenied(state),
+      faerieFireObjectInvisibleBenefitDenied(state, lastResult),
+    featherFallTriggerOffered: featherFallProjection.triggerOffered,
+    featherFallUnwitnessedTriggerRejected:
+      featherFallProjection.unwitnessedTriggerRejected,
+    featherFallReactionSpent: featherFallProjection.reactionSpent,
+    featherFallSlotExpended: featherFallProjection.slotExpended,
+    featherFallMitigatedTargetCountBeforeLanding:
+      featherFallProjection.mitigatedTargetCountBeforeLanding,
+    featherFallLandedTargetDescentRateCapFeetPerRound:
+      featherFallProjection.landedTargetDescentRateCapFeetPerRound,
+    featherFallLandingFallDamagePrevented:
+      featherFallProjection.landingFallDamagePrevented,
+    featherFallLandingFallingPronePrevented:
+      featherFallProjection.landingFallingPronePrevented,
+    featherFallLandedTargetMitigationCleared:
+      featherFallProjection.landedTargetMitigationCleared,
+    featherFallOtherTargetStillMitigated:
+      featherFallProjection.otherTargetStillMitigated,
     projectedIllumination,
     ordinarySightObscurement: battleSightObscurement(projectedIllumination),
     darkvisionSightObscurement: battleSightObscurement(projectedIllumination, {
@@ -934,6 +1237,9 @@ function casterConcentratingOnSelectedUnit(
   lastResult: Level1SpatialWitnessSelectedIdentityProjection["lastResult"],
 ): boolean {
   if (lastResult === "init") {
+    return false;
+  }
+  if (lastResult === "featherFallReactionMitigationLanding") {
     return false;
   }
   const sourceSpellId =
@@ -1088,7 +1394,13 @@ function faerieFireOutlinedObjectCount(state: BattleState): number {
   ).length;
 }
 
-function faerieFireTargetInvisible(state: BattleState): boolean {
+function faerieFireTargetInvisible(
+  state: BattleState,
+  lastResult: Level1SpatialWitnessSelectedIdentityProjection["lastResult"],
+): boolean {
+  if (lastResult !== "faerieFireOutlineAdvantageInvisibleDimLight") {
+    return false;
+  }
   const target = state.combatants.get(observerId);
   if (target === undefined) {
     throw new Error("Expected Faerie Fire observer combatant.");
@@ -1096,8 +1408,47 @@ function faerieFireTargetInvisible(state: BattleState): boolean {
   return hasCondition(target.conditions, "invisible");
 }
 
-function faerieFireObjectInvisibleBenefitDenied(state: BattleState): boolean {
+function faerieFireObjectInvisibleBenefitDenied(
+  state: BattleState,
+  lastResult: Level1SpatialWitnessSelectedIdentityProjection["lastResult"],
+): boolean {
+  if (lastResult !== "faerieFireOutlineAdvantageInvisibleDimLight") {
+    return false;
+  }
   return objectInvisibleBenefitDenied(state, faerieFireObjectId);
+}
+
+function featherFallCombatant(state: BattleState, id: CombatantId) {
+  const combatant = state.combatants.get(id);
+  if (combatant === undefined) {
+    throw new Error(`Expected Feather Fall combatant ${id}.`);
+  }
+  return combatant;
+}
+
+function featherFallCaster(state: BattleState) {
+  return featherFallCombatant(state, casterId);
+}
+
+function featherFallCasterSlotExpended(state: BattleState): boolean {
+  const caster = featherFallCaster(state);
+  if (caster.origin.kind !== "character") {
+    throw new Error("Expected Feather Fall caster to be a character.");
+  }
+  return (
+    caster.origin.spellcasting?.spellSlots.some(
+      (slot) => slot.spellLevel === 1 && slot.expended === 1,
+    ) ?? false
+  );
+}
+
+function featherFallMitigationTargetCount(state: BattleState): number {
+  return [featherFallFallingAllyId, featherFallOtherFallingAllyId].filter(
+    (targetId) =>
+      activeFeatherFallDescentRateCapFeetPerRound(
+        featherFallCombatant(state, targetId),
+      ) === FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
+  ).length;
 }
 
 function retainedIdentityCount(
@@ -1153,6 +1504,40 @@ function normalizeLevel1SpatialWitnessSelectedIdentityQuintState(
     faerieFireObjectInvisibleBenefitDenied: booleanField(
       state,
       "qFaerieFireObjectInvisibleBenefitDenied",
+    ),
+    featherFallTriggerOffered: booleanField(
+      state,
+      "qFeatherFallTriggerOffered",
+    ),
+    featherFallUnwitnessedTriggerRejected: booleanField(
+      state,
+      "qFeatherFallUnwitnessedTriggerRejected",
+    ),
+    featherFallReactionSpent: booleanField(state, "qFeatherFallReactionSpent"),
+    featherFallSlotExpended: booleanField(state, "qFeatherFallSlotExpended"),
+    featherFallMitigatedTargetCountBeforeLanding: numberFromQuintInt(
+      state["qFeatherFallMitigatedTargetCountBeforeLanding"],
+      "qFeatherFallMitigatedTargetCountBeforeLanding",
+    ),
+    featherFallLandedTargetDescentRateCapFeetPerRound: numberFromQuintInt(
+      state["qFeatherFallLandedTargetDescentRateCapFeetPerRound"],
+      "qFeatherFallLandedTargetDescentRateCapFeetPerRound",
+    ),
+    featherFallLandingFallDamagePrevented: booleanField(
+      state,
+      "qFeatherFallLandingFallDamagePrevented",
+    ),
+    featherFallLandingFallingPronePrevented: booleanField(
+      state,
+      "qFeatherFallLandingFallingPronePrevented",
+    ),
+    featherFallLandedTargetMitigationCleared: booleanField(
+      state,
+      "qFeatherFallLandedTargetMitigationCleared",
+    ),
+    featherFallOtherTargetStillMitigated: booleanField(
+      state,
+      "qFeatherFallOtherTargetStillMitigated",
     ),
     projectedIllumination: mbtIllumination(state["qProjectedIllumination"]),
     ordinarySightObscurement: mbtSightObscurement(
@@ -1234,7 +1619,8 @@ function mbtLastResult(
   if (
     raw === "init" ||
     raw === "dancingLightsMovableDimLight" ||
-    raw === "faerieFireOutlineAdvantageInvisibleDimLight"
+    raw === "faerieFireOutlineAdvantageInvisibleDimLight" ||
+    raw === "featherFallReactionMitigationLanding"
   ) {
     return raw;
   }

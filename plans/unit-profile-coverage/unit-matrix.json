@@ -93,8 +93,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 93,
-      "numerator": 49,
-      "percent": "52.7%"
+      "numerator": 50,
+      "percent": "53.8%"
     },
     "supportedProfileCoverage": {
       "denominator": 117,
@@ -7820,6 +7820,11 @@
           "ownerPath": "packages/battle-runtime/src/feather-fall-reaction-spell.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV56A"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "level1-spatial-witness"
         }
       ],
       "executableMechanics": true,
