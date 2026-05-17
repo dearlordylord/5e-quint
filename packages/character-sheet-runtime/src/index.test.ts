@@ -176,6 +176,270 @@ describe("Character Sheet runtime", () => {
     expect(Either.isLeft(sheet)).toBe(true);
   });
 
+  test("preserves stored Druid class-feature language facts separately from origin languages", () => {
+    const sheet = parseCharacterSheet(
+      storedAvailableSheetInput({
+        characterId: "character:druidic-language",
+        build: druidLanguageBuild(),
+      }),
+      unitLibrary,
+    );
+
+    const parsed = requireRight(sheet);
+    expect(parsed.build.originLanguages).toEqual([
+      "Common",
+      "Dwarvish",
+      "Goblin",
+    ]);
+    expect(parsed.build.classFeatureLanguages).toEqual([
+      {
+        kind: "classFeatureLanguageGrant",
+        sourceUnitId: "druid_druidic",
+        language: "Druidic",
+      },
+    ]);
+  });
+
+  test("preserves stored Rogue fixed and chosen class-feature language facts", () => {
+    const sheet = parseCharacterSheet(
+      storedAvailableSheetInput({
+        characterId: "character:rogue-thieves-cant-language",
+        build: rogueLanguageBuild("Elvish"),
+      }),
+      unitLibrary,
+    );
+
+    const parsed = requireRight(sheet);
+    expect(parsed.build.originLanguages).toEqual([
+      "Common",
+      "Dwarvish",
+      "Goblin",
+    ]);
+    expect(parsed.build.classFeatureLanguages).toEqual([
+      {
+        kind: "classFeatureLanguageGrant",
+        sourceUnitId: "rogue_thieves_cant",
+        language: "Thieves' Cant",
+      },
+      {
+        kind: "classFeatureLanguageChoice",
+        sourceUnitId: "rogue_thieves_cant",
+        language: "Elvish",
+      },
+    ]);
+  });
+
+  test("creates fresh sheets without merging class-feature languages into origin languages", () => {
+    const sheet = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:rogue-language-sheet"),
+        build: rogueLanguageBuild("Elvish"),
+        maximumHp: Hp(12),
+        currentHp: Hp(12),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+
+    expect(sheet.build.originLanguages).toEqual([
+      "Common",
+      "Dwarvish",
+      "Goblin",
+    ]);
+    expect(sheet.build.originLanguages).not.toContain("Thieves' Cant");
+    expect(sheet.build.originLanguages).not.toContain("Elvish");
+    expect(sheet.build.classFeatureLanguages).toEqual([
+      {
+        kind: "classFeatureLanguageGrant",
+        sourceUnitId: "rogue_thieves_cant",
+        language: "Thieves' Cant",
+      },
+      {
+        kind: "classFeatureLanguageChoice",
+        sourceUnitId: "rogue_thieves_cant",
+        language: "Elvish",
+      },
+    ]);
+  });
+
+  test("rejects stored Druid builds that omit required Druidic language facts", () => {
+    const sheet = parseCharacterSheet(
+      storedAvailableSheetInput({
+        characterId: "character:missing-druidic-language",
+        build: {
+          ...druidLanguageBuild(),
+          classFeatureLanguages: [],
+        },
+      }),
+      unitLibrary,
+    );
+
+    expect(sheet).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "characterSheetIssue",
+        message:
+          "Character Build class-feature language projection is incomplete for source Unit druid_druidic.",
+      },
+    });
+  });
+
+  test("rejects stored Rogue builds that omit the extra Thieves' Cant language choice", () => {
+    const sheet = parseCharacterSheet(
+      storedAvailableSheetInput({
+        characterId: "character:missing-rogue-language-choice",
+        build: {
+          ...rogueLanguageBuild("Elvish"),
+          classFeatureLanguages: [
+            {
+              kind: "classFeatureLanguageGrant",
+              sourceUnitId: "rogue_thieves_cant",
+              language: "Thieves' Cant",
+            },
+          ],
+        },
+      }),
+      unitLibrary,
+    );
+
+    expect(sheet).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "characterSheetIssue",
+        message:
+          "Character Build class-feature language choices for source Unit rogue_thieves_cant must match the source choice count.",
+      },
+    });
+  });
+
+  test("rejects stored class-feature language facts from unowned source Units", () => {
+    const sheet = parseCharacterSheet(
+      storedAvailableSheetInput({
+        characterId: "character:unowned-druidic-language",
+        build: {
+          ...armorClassBuild({ startingClass: "class_fighter" }),
+          classFeatureLanguages: [
+            {
+              kind: "classFeatureLanguageGrant",
+              sourceUnitId: "druid_druidic",
+              language: "Druidic",
+            },
+          ],
+        },
+      }),
+      unitLibrary,
+    );
+
+    expect(sheet).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "characterSheetIssue",
+        message:
+          "Character Build class-feature language source Unit druid_druidic is not owned by the build.",
+      },
+    });
+  });
+
+  test("rejects stored class-feature language facts spoofed through selected features", () => {
+    const sheet = parseCharacterSheet(
+      storedAvailableSheetInput({
+        characterId: "character:spoofed-druidic-language",
+        build: {
+          ...armorClassBuild({ startingClass: "class_fighter" }),
+          features: [
+            {
+              kind: "selectedClassChoice",
+              selectedFromUnitId: "fighter_weapon_mastery",
+              unitId: "druid_druidic",
+            },
+          ],
+          classFeatureLanguages: [
+            {
+              kind: "classFeatureLanguageGrant",
+              sourceUnitId: "druid_druidic",
+              language: "Druidic",
+            },
+          ],
+        },
+      }),
+      unitLibrary,
+    );
+
+    expect(sheet).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "characterSheetIssue",
+        message:
+          "Character Build class-feature language source Unit druid_druidic is not owned by the build.",
+      },
+    });
+  });
+
+  test("rejects stored class-feature language choices that duplicate fixed class languages", () => {
+    const sheet = parseCharacterSheet(
+      storedAvailableSheetInput({
+        characterId: "character:duplicate-thieves-cant-choice",
+        build: {
+          ...armorClassBuild({ startingClass: "class_rogue" }),
+          classFeatureLanguages: [
+            {
+              kind: "classFeatureLanguageChoice",
+              sourceUnitId: "rogue_thieves_cant",
+              language: "Thieves' Cant",
+            },
+          ],
+        },
+      }),
+      unitLibrary,
+    );
+
+    expect(sheet).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "characterSheetIssue",
+        message: "Duplicate Character Build language Thieves' Cant.",
+      },
+    });
+  });
+
+  test("rejects stored class-feature language choices above the source count", () => {
+    const sheet = parseCharacterSheet(
+      storedAvailableSheetInput({
+        characterId: "character:too-many-rogue-language-choices",
+        build: {
+          ...rogueLanguageBuild("Elvish"),
+          classFeatureLanguages: [
+            {
+              kind: "classFeatureLanguageGrant",
+              sourceUnitId: "rogue_thieves_cant",
+              language: "Thieves' Cant",
+            },
+            {
+              kind: "classFeatureLanguageChoice",
+              sourceUnitId: "rogue_thieves_cant",
+              language: "Elvish",
+            },
+            {
+              kind: "classFeatureLanguageChoice",
+              sourceUnitId: "rogue_thieves_cant",
+              language: "Sylvan",
+            },
+          ],
+        },
+      }),
+      unitLibrary,
+    );
+
+    expect(sheet).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "characterSheetIssue",
+        message:
+          "Character Build class-feature language choices for source Unit rogue_thieves_cant must match the source choice count.",
+      },
+    });
+  });
+
   test("round-trips stored Eldritch Invocation repeatable choices through sheet parsing", () => {
     const sheet = parseCharacterSheet(
       {
@@ -1591,6 +1855,39 @@ function selectedClassChoiceUnitIds(
       ? [feature.unitId]
       : [],
   );
+}
+
+function druidLanguageBuild(): CharacterBuild {
+  return {
+    ...armorClassBuild({ startingClass: "class_druid" }),
+    classFeatureLanguages: [
+      {
+        kind: "classFeatureLanguageGrant",
+        sourceUnitId: "druid_druidic",
+        language: "Druidic",
+      },
+    ],
+  };
+}
+
+function rogueLanguageBuild(
+  extraLanguage: "Elvish" | "Sylvan",
+): CharacterBuild {
+  return {
+    ...armorClassBuild({ startingClass: "class_rogue" }),
+    classFeatureLanguages: [
+      {
+        kind: "classFeatureLanguageGrant",
+        sourceUnitId: "rogue_thieves_cant",
+        language: "Thieves' Cant",
+      },
+      {
+        kind: "classFeatureLanguageChoice",
+        sourceUnitId: "rogue_thieves_cant",
+        language: extraLanguage,
+      },
+    ],
+  };
 }
 
 function armorClassBuild(input: {

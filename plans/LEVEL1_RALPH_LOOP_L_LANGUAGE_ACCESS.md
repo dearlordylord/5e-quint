@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "L1L-CHARACTER-SHEET-LANGUAGE-PERSISTENCE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Character Sheet Language Persistence"
     },
     {
@@ -150,7 +150,7 @@ finalization or stored-build parsing consumes authored grants.
 | 1 | L1L-LANGUAGE-ACCESS-PRECHECK - Druidic And Thieves Cant Language Access Precheck | done | none | `plans/unit-profile-coverage/L1L_LANGUAGE_ACCESS_PRECHECK.md` records the exact implementation shape and gap list for class-granted languages, extra language choice, Druidic Spell Access, and runtime-detached residuals |
 | 2 | L1L-CHARACTER-BUILD-LANGUAGE-FACTS - CharacterBuild Class Granted Language Facts | done | 1 | class-granted language facts represented separately from origin languages and derived from authored feature grants |
 | 3 | L1L-ROGUE-EXTRA-LANGUAGE-CHOICE - Rogue Thieves Cant Extra Language Choice | done | 1-2 | one additional language choice from Character Creation language tables, without duplicating fixed or origin languages |
-| 4 | L1L-CHARACTER-SHEET-LANGUAGE-PERSISTENCE - Character Sheet Language Persistence | ready-for-research | 2-3 | stored CharacterBuild parser/sheet creation preserves origin and class-granted language facts distinctly |
+| 4 | L1L-CHARACTER-SHEET-LANGUAGE-PERSISTENCE - Character Sheet Language Persistence | done | 2-3 | stored CharacterBuild parser/sheet creation preserves origin and class-granted language facts distinctly |
 | 5 | L1L-DRUIDIC-SPELL-ACCESS-EVIDENCE - Druidic Speak With Animals Spell Access Evidence | ready-for-research | 2,4 | Druidic always-prepared Speak with Animals Spell Access has focused character-sheet evidence or a precise missing-owner fix |
 | 6 | L1L-COVERAGE-ACCOUNTING-REFRESH - Language Access Coverage Accounting Refresh | ready-for-research | 2-5 | `druid_druidic` and `rogue_thieves_cant` coverage wording matches implemented character-owned facts plus detached residuals |
 
@@ -282,7 +282,7 @@ Acceptance:
 
 ### Task 4 - L1L-CHARACTER-SHEET-LANGUAGE-PERSISTENCE - Character Sheet Language Persistence
 
-Status: `ready-for-research`
+Status: `done`
 
 Teach the Character Sheet stored-build parser and sheet creation path to retain
 the new CharacterBuild language facts distinctly from `originLanguages`.
@@ -310,6 +310,12 @@ Acceptance:
 - no table-adjudication fields are introduced;
 - existing CharacterBuild fixtures are updated only where required by the new
   non-optional/empty-state semantics.
+
+Result:
+
+- Character Sheet stored-build parsing and fresh sheet creation preserve
+  `classFeatureLanguages` separately from `originLanguages`, with focused
+  Druid and Rogue coverage for valid facts and contradictory source facts.
 
 ### Task 5 - L1L-DRUIDIC-SPELL-ACCESS-EVIDENCE - Druidic Speak With Animals Spell Access Evidence
 
