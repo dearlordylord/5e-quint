@@ -137,6 +137,7 @@
 {"unitId":"hunters_mark","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV31B","ownerPath":"packages/battle-runtime/src/unit-profile-admission-candidate-narrowing-spells.test.ts"}}
 {"unitId":"hunters_mark","evidence":{"tag":"selected-identity-mbt","taskId":"L1E-HUNTERS-MARK","ownerPath":"packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts"}}
 {"unitId":"ranger_favored_enemy","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV87C","ownerPath":"packages/battle-runtime/src/battle-runtime-test-support.ts"}}
+{"unitId":"paladin_paladins_smite","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-CLASS-PALADINS-SMITE","ownerPath":"packages/battle-runtime/src/battle-runtime-favored-enemy.test.ts"}}
 {"unitId":"produce_flame","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV87A","ownerPath":"packages/battle-runtime/src/unit-profile-admission-produce-flame.test.ts"}}
 {"unitId":"produce_flame","evidence":{"tag":"selected-identity-mbt","taskId":"level1-spatial-witness","ownerPath":"packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts"}}
 {"unitId":"dancing_lights","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV88A","ownerPath":"packages/battle-runtime/src/unit-profile-admission-dancing-lights.test.ts"}}

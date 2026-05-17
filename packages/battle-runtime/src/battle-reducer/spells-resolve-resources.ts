@@ -12,6 +12,10 @@ import type {
   BattleState,
   SupportedSpellInvocation,
 } from "../battle-reducer.ts";
+import {
+  resourceHasUsesRemaining,
+  spendCharacterResourceUse,
+} from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
 import { breakBattleConcentration } from "./damage-apply.ts";
 import { snapshotBattle } from "./dispatcher.ts";
@@ -20,6 +24,10 @@ import { battleStateAfterSanctuaryEarlyEndForActor } from "./sanctuary-targeting
 import { expendSpellSlot } from "./spell-effects.ts";
 import { markSpellSlotExpendedThisTurn } from "./spells-profiles.ts";
 import { clearPendingAttackRollMissToHitReplacementSelection } from "./statblock-attacks.ts";
+
+export type SpellCastResourceSpendResult =
+  | { readonly tag: "resolved"; readonly state: BattleState }
+  | Extract<BattleResolutionResult, { readonly tag: "invalid" }>;
 
 export function spendSpellCastResources(input: {
   readonly state: BattleState;
@@ -118,6 +126,51 @@ export function spendSpellCastResources(input: {
     tag: "resolved",
     state: nextState,
     snapshot: snapshotBattle(nextState),
+  };
+}
+
+export function spendClassFeatureFreeCastResource(
+  state: BattleState,
+  actorId: CombatantId,
+  resourceUnitId: string,
+  errorState: BattleState,
+): SpellCastResourceSpendResult {
+  const actor = state.combatants.get(actorId);
+  if (actor?.origin.kind !== "character") {
+    return invalidResult(
+      errorState,
+      "staleSubject",
+      "Class feature free spell cast is no longer available for the current actor.",
+    );
+  }
+  const resource = actor.origin.resources.find(
+    (candidate) =>
+      candidate.unit.id === resourceUnitId &&
+      resourceHasUsesRemaining(candidate),
+  );
+  if (resource === undefined) {
+    return invalidResult(
+      errorState,
+      "staleSubject",
+      "Class feature free spell cast is no longer available for the current actor.",
+    );
+  }
+  return {
+    tag: "resolved",
+    state: {
+      ...state,
+      combatants: new Map(state.combatants).set(actorId, {
+        ...actor,
+        origin: {
+          ...actor.origin,
+          resources: actor.origin.resources.map((candidate) =>
+            candidate.unit.id === resourceUnitId
+              ? spendCharacterResourceUse(candidate)
+              : candidate,
+          ),
+        },
+      }),
+    },
   };
 }
 

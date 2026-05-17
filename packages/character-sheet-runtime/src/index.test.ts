@@ -1343,13 +1343,13 @@ describe("Character Sheet runtime", () => {
     expect(result.target.conditions).toEqual([]);
     expect(characterSheetResources(result.source, unitLibrary)).toMatchObject({
       _tag: "Right",
-      right: [
-        {
+      right: expect.arrayContaining([
+        expect.objectContaining({
           unitId: "paladin_lay_on_hands",
           count: 10,
           expended: 7,
-        },
-      ],
+        }),
+      ]),
     });
   });
 
@@ -1459,6 +1459,53 @@ describe("Character Sheet runtime", () => {
           expended: 0,
         },
       ],
+    });
+  });
+
+  test("Long Rest restores the Paladin's Smite Divine Smite free-cast pool", () => {
+    const spent = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:paladin-smite-rest"),
+        build: armorClassBuild({
+          startingClass: "class_paladin",
+          advancements: ["class_paladin"],
+        }),
+        maximumHp: Hp(20),
+        currentHp: Hp(20),
+        tempHp: Hp(0),
+        unitLibrary,
+        resourceExpenditures: [
+          {
+            tag: "paladinsSmiteDivineSmiteFreeCast",
+            expended: resourceCount(1),
+          },
+        ],
+      }),
+    );
+
+    expect(characterSheetResources(spent, unitLibrary)).toMatchObject({
+      _tag: "Right",
+      right: expect.arrayContaining([
+        expect.objectContaining({
+          unitId: "paladin_paladins_smite",
+          count: 1,
+          expended: 1,
+        }),
+      ]),
+    });
+
+    const rested = requireRight(completeLongRest({ sheet: spent }));
+
+    expect(rested.resourceExpenditures).toEqual([]);
+    expect(characterSheetResources(rested, unitLibrary)).toMatchObject({
+      _tag: "Right",
+      right: expect.arrayContaining([
+        expect.objectContaining({
+          unitId: "paladin_paladins_smite",
+          count: 1,
+          expended: 0,
+        }),
+      ]),
     });
   });
 

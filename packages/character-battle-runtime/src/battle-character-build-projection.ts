@@ -16,7 +16,7 @@ import {
   type CharacterBattleLoadoutRef,
   martialArtsAttackProjectionProfileForUnit,
   passiveArmorClassBonusProfileForUnit,
-  unitIsFavoredEnemyHuntersMarkFreeCastResource,
+  unitIsSupportedClassFeatureSpellFreeCastResource,
 } from "@dnd/battle-runtime";
 import {
   characterBuildArmorTraining,
@@ -1071,7 +1071,7 @@ function featurePreparedSpellAccess(input: {
     if (
       unit.value.kind !== "class_feature" ||
       unit.value.mechanics.family !== "passive" ||
-      !unitIsFavoredEnemyHuntersMarkFreeCastResource(unit.value)
+      !unitIsSupportedClassFeatureSpellFreeCastResource(unit.value)
     ) {
       continue;
     }

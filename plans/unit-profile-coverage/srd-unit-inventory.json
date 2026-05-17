@@ -176,8 +176,8 @@
       "numerator": 470,
       "percent": "84.5%",
       "rowsByStatus": {
-        "accepted": 289,
-        "accepted-no-battle-effect": 181,
+        "accepted": 290,
+        "accepted-no-battle-effect": 180,
         "owner-evidence-required": 12,
         "battle-runtime-required": 74
       }
@@ -188,16 +188,16 @@
       "non-runtime": 12
     },
     "levelTwoRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 7,
+      "catalog-installed-owner-evidence-present": 8,
       "non-runtime": 12,
       "missing-authored-record": 12,
-      "catalog-only/dead-for-now": 2
+      "catalog-only/dead-for-now": 1
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 294,
+      "catalog-installed-owner-evidence-present": 295,
       "non-runtime": 24,
       "missing-authored-record": 86,
-      "catalog-only/dead-for-now": 152
+      "catalog-only/dead-for-now": 151
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 143,
@@ -13493,20 +13493,25 @@
         "sourceRecordPath": "packages/surface/content/paladin_paladins_smite.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "paladin_paladins_smite"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "battleReadinessClosure": {
-        "source": "unit-claim",
-        "kind": "later-level-only",
-        "owner": "future Paladin's Smite Spell Access and class-feature free-cast resource owner",
-        "reason": "The feature is acquired after level 1, makes Divine Smite always prepared, and grants one Long Rest no-slot Divine Smite cast. The Divine Smite spell Unit already owns after-hit damage invocation behavior; a future Paladin feature owner should retain this source Unit for Spell Access and free-cast resource projection without duplicating the spell procedure."
-      },
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit paladin_paladins_smite is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-CLASS-PALADINS-SMITE at packages/battle-runtime/src/battle-runtime-favored-enemy.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/paladin:level-2:class-table-summary:paladin_level_2_feature_table_row",

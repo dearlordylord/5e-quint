@@ -17,6 +17,13 @@ export function supportedSpellInvocationRef(
   invocation: SupportedSpellInvocation,
 ): SpellInvocationRef {
   if (invocation.procedure === "afterHitDamage") {
+    if (invocation.resource.tag === "classFeatureFreeCast") {
+      return classFeatureFreeCastSpellInvocationRef(
+        invocation.spell.id,
+        invocation.resource.resourceUnitId,
+        "afterHitDamage",
+      );
+    }
     return {
       tag: "spellSlot",
       spellId: spellId(invocation.spell.id),

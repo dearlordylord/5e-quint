@@ -2099,7 +2099,9 @@ export type WeaponDamageRiderSpellInvocation = {
 };
 export type AfterHitDamageSpellInvocation = {
   readonly access: PreparedSpellAccess;
-  readonly resource: SpellSlotInvocationResource;
+  readonly resource:
+    | SpellSlotInvocationResource
+    | ClassFeatureFreeCastInvocationResource;
   readonly procedure: "afterHitDamage";
   readonly spell: SpellRecord;
   readonly actionCost: "bonusAction";

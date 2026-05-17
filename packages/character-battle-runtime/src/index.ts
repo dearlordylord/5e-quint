@@ -1,6 +1,6 @@
 import {
   combatantKnockedOutUnconscious,
-  characterResourceIsFavoredEnemyFreeCast,
+  classFeatureSpellFreeCastProfileForResource,
   KNOCKED_OUT_UNCONSCIOUS,
   type BattleCreatureState,
   type CharacterZeroHpLifecycleInit,
@@ -26,6 +26,7 @@ import {
   EMPTY_CONDITION_STATE,
   hasCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
+import { isSupportedClassFeatureSpellFreeCastResourceTag } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either } from "effect";
 
@@ -178,45 +179,42 @@ function characterResourceExpendituresFromBattle(input: {
   CharacterSheetBattleHandoffIssue
 > {
   const nextExpenditures = input.sheet.resourceExpenditures.filter(
-    (expenditure) => expenditure.tag !== "favoredEnemyHuntersMarkFreeCasts",
+    (expenditure) =>
+      !isSupportedClassFeatureSpellFreeCastResourceTag(expenditure.tag),
   );
   if (input.combatant.origin.kind !== "character") {
     return Either.right(nextExpenditures);
   }
-  const favoredEnemyResource = input.combatant.origin.resources?.find(
-    characterResourceIsFavoredEnemyFreeCast,
-  );
-  if (favoredEnemyResource === undefined) {
-    return Either.right(nextExpenditures);
+  const nextFreeCastExpenditures: CharacterSheetResourceExpenditure[] = [];
+  for (const resource of input.combatant.origin.resources ?? []) {
+    const profile = classFeatureSpellFreeCastProfileForResource(resource);
+    if (profile === null) {
+      continue;
+    }
+    if (resource.resource.cap.kind !== "fixed") {
+      return characterSheetBattleHandoffIssue(
+        "Class feature spell free casts must use a fixed battle resource cap during battle handoff.",
+      );
+    }
+    if (resource.usesRemaining === undefined) {
+      return characterSheetBattleHandoffIssue(
+        "Class feature spell free casts must carry remaining uses during battle handoff.",
+      );
+    }
+    const expended = resource.resource.cap.uses - resource.usesRemaining;
+    if (expended < 0) {
+      return characterSheetBattleHandoffIssue(
+        "Class feature spell free-cast remaining uses exceed the battle resource cap during battle handoff.",
+      );
+    }
+    if (expended > 0) {
+      nextFreeCastExpenditures.push({
+        tag: profile.resourceTag,
+        expended: resourceCount(expended),
+      });
+    }
   }
-  if (favoredEnemyResource.resource.cap.kind !== "fixed") {
-    return characterSheetBattleHandoffIssue(
-      "Favored Enemy Hunter's Mark free casts must use a fixed battle resource cap during battle handoff.",
-    );
-  }
-  if (favoredEnemyResource.usesRemaining === undefined) {
-    return characterSheetBattleHandoffIssue(
-      "Favored Enemy Hunter's Mark free casts must carry remaining uses during battle handoff.",
-    );
-  }
-  const expended =
-    favoredEnemyResource.resource.cap.uses - favoredEnemyResource.usesRemaining;
-  if (expended < 0) {
-    return characterSheetBattleHandoffIssue(
-      "Favored Enemy Hunter's Mark free-cast remaining uses exceed the battle resource cap during battle handoff.",
-    );
-  }
-  return Either.right(
-    expended > 0
-      ? [
-          ...nextExpenditures,
-          {
-            tag: "favoredEnemyHuntersMarkFreeCasts",
-            expended: resourceCount(expended),
-          },
-        ]
-      : nextExpenditures,
-  );
+  return Either.right([...nextExpenditures, ...nextFreeCastExpenditures]);
 }
 
 function characterSheetInitialConditions(

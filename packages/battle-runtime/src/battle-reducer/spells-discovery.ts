@@ -775,7 +775,9 @@ export function spellInvocationCastSummary(
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
   if (invocation.procedure === "afterHitDamage") {
-    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot after a qualifying hit.`;
+    return invocation.resource.tag === "classFeatureFreeCast"
+      ? `Cast ${invocation.spell.name} using a class feature free cast after a qualifying hit.`
+      : `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot after a qualifying hit.`;
   }
   if (invocation.procedure === "afterHitSaveGatedCondition") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot after a qualifying hit.`;

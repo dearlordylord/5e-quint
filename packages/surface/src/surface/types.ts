@@ -882,8 +882,6 @@ export type StatBlockRecord = Schema.Schema.Type<
   typeof SurfaceSchema.StatBlockRecordSchema
 >;
 
-export const FAVORED_ENEMY_HUNTERS_MARK_SPELL_ID = "hunters_mark";
-
 export type SpellFreeCastGrant = Extract<
   EffectAtom,
   { readonly kind: "grant_spell_free_casts" }
@@ -892,6 +890,108 @@ export type PreparedSpellAccessGrant = Extract<
   EffectAtom,
   { readonly kind: "grant_spell_access"; readonly mode: "prepared" }
 >;
+type ClassFeatureUnitRecord = Extract<
+  UnitRecord,
+  { readonly kind: "class_feature" }
+>;
+type PassiveClassFeatureUnitRecord = ClassFeatureUnitRecord & {
+  readonly mechanics: Extract<
+    ClassFeatureUnitRecord["mechanics"],
+    { readonly family: "passive" }
+  >;
+};
+
+export const FAVORED_ENEMY_HUNTERS_MARK_SPELL_ID =
+  "hunters_mark" satisfies SpellRecord["id"];
+export const PALADINS_SMITE_DIVINE_SMITE_SPELL_ID =
+  "divine_smite" satisfies SpellRecord["id"];
+
+export const SUPPORTED_CLASS_FEATURE_SPELL_FREE_CAST_RESOURCE_TAGS = [
+  "favoredEnemyHuntersMarkFreeCasts",
+  "paladinsSmiteDivineSmiteFreeCast",
+] as const;
+export type SupportedClassFeatureSpellFreeCastResourceTag =
+  (typeof SUPPORTED_CLASS_FEATURE_SPELL_FREE_CAST_RESOURCE_TAGS)[number];
+
+const SUPPORTED_CLASS_FEATURE_SPELL_FREE_CAST_PROFILES = [
+  {
+    resourceTag: "favoredEnemyHuntersMarkFreeCasts",
+    unitId: "ranger_favored_enemy",
+    unitName: "Favored Enemy",
+    className: "ranger",
+    acquiredAtLevel: 1,
+    provenanceSection: "Classes/Ranger#Favored Enemy",
+    spellId: FAVORED_ENEMY_HUNTERS_MARK_SPELL_ID,
+    count: 2,
+    resetCadence: "long_rest",
+  },
+  {
+    resourceTag: "paladinsSmiteDivineSmiteFreeCast",
+    unitId: "paladin_paladins_smite",
+    unitName: "Paladin's Smite",
+    className: "paladin",
+    acquiredAtLevel: 2,
+    provenanceSection: "Classes/Paladin#Paladin's Smite",
+    spellId: PALADINS_SMITE_DIVINE_SMITE_SPELL_ID,
+    count: 1,
+    resetCadence: "long_rest",
+  },
+] as const satisfies ReadonlyArray<{
+  readonly resourceTag: SupportedClassFeatureSpellFreeCastResourceTag;
+  readonly unitId: UnitRecord["id"];
+  readonly unitName: UnitRecord["name"];
+  readonly className: ClassName;
+  readonly acquiredAtLevel: number;
+  readonly provenanceSection: string;
+  readonly spellId: SpellRecord["id"];
+  readonly count: number;
+  readonly resetCadence: SpellFreeCastGrant["resetCadence"];
+}>;
+export type SupportedClassFeatureSpellFreeCastProfile =
+  (typeof SUPPORTED_CLASS_FEATURE_SPELL_FREE_CAST_PROFILES)[number];
+
+export function isSupportedClassFeatureSpellFreeCastResourceTag(
+  value: unknown,
+): value is SupportedClassFeatureSpellFreeCastResourceTag {
+  return (
+    typeof value === "string" &&
+    SUPPORTED_CLASS_FEATURE_SPELL_FREE_CAST_RESOURCE_TAGS.some(
+      (tag) => tag === value,
+    )
+  );
+}
+
+export function supportedClassFeatureSpellFreeCastGrantsForUnit(
+  unit: UnitRecord,
+): {
+  readonly profile: SupportedClassFeatureSpellFreeCastProfile;
+  readonly preparedSpellGrant: PreparedSpellAccessGrant;
+  readonly freeCastGrant: SpellFreeCastGrant;
+} | null {
+  if (!isPassiveClassFeatureUnitRecord(unit)) {
+    return null;
+  }
+  const profile = supportedClassFeatureSpellFreeCastProfileForUnit(unit);
+  if (profile === null) {
+    return null;
+  }
+  const preparedSpellGrant = unit.mechanics.grants.find(
+    (grant): grant is PreparedSpellAccessGrant =>
+      grant.kind === "grant_spell_access" &&
+      grant.mode === "prepared" &&
+      grant.spellId === profile.spellId,
+  );
+  const freeCastGrant = unit.mechanics.grants.find(
+    (grant): grant is SpellFreeCastGrant =>
+      grant.kind === "grant_spell_free_casts" &&
+      grant.spellId === profile.spellId &&
+      grant.count === profile.count &&
+      grant.resetCadence === profile.resetCadence,
+  );
+  return preparedSpellGrant === undefined || freeCastGrant === undefined
+    ? null
+    : { profile, preparedSpellGrant, freeCastGrant };
+}
 
 export function favoredEnemyHuntersMarkFreeCastGrantsForUnit(
   unit: UnitRecord,
@@ -899,29 +999,35 @@ export function favoredEnemyHuntersMarkFreeCastGrantsForUnit(
   readonly preparedSpellGrant: PreparedSpellAccessGrant;
   readonly freeCastGrant: SpellFreeCastGrant;
 } | null {
-  if (
-    unit.kind !== "class_feature" ||
-    unit.name !== "Favored Enemy" ||
-    unit.className !== "ranger" ||
-    unit.acquiredAtLevel !== 1 ||
-    unit.provenance.kind !== "srd-5.2.1" ||
-    unit.provenance.section !== "Classes/Ranger#Favored Enemy" ||
-    unit.mechanics.family !== "passive"
-  ) {
+  const grants = supportedClassFeatureSpellFreeCastGrantsForUnit(unit);
+  return grants?.profile.resourceTag === "favoredEnemyHuntersMarkFreeCasts"
+    ? {
+        preparedSpellGrant: grants.preparedSpellGrant,
+        freeCastGrant: grants.freeCastGrant,
+      }
+    : null;
+}
+
+function supportedClassFeatureSpellFreeCastProfileForUnit(
+  unit: PassiveClassFeatureUnitRecord,
+): SupportedClassFeatureSpellFreeCastProfile | null {
+  if (unit.provenance.kind !== "srd-5.2.1") {
     return null;
   }
-  const preparedSpellGrant = unit.mechanics.grants.find(
-    (grant): grant is PreparedSpellAccessGrant =>
-      grant.kind === "grant_spell_access" &&
-      grant.mode === "prepared" &&
-      grant.spellId === FAVORED_ENEMY_HUNTERS_MARK_SPELL_ID,
+  return (
+    SUPPORTED_CLASS_FEATURE_SPELL_FREE_CAST_PROFILES.find(
+      (profile) =>
+        unit.id === profile.unitId &&
+        unit.name === profile.unitName &&
+        unit.className === profile.className &&
+        unit.acquiredAtLevel === profile.acquiredAtLevel &&
+        unit.provenance.section === profile.provenanceSection,
+    ) ?? null
   );
-  const freeCastGrant = unit.mechanics.grants.find(
-    (grant): grant is SpellFreeCastGrant =>
-      grant.kind === "grant_spell_free_casts" &&
-      grant.spellId === FAVORED_ENEMY_HUNTERS_MARK_SPELL_ID,
-  );
-  return preparedSpellGrant === undefined || freeCastGrant === undefined
-    ? null
-    : { preparedSpellGrant, freeCastGrant };
+}
+
+function isPassiveClassFeatureUnitRecord(
+  unit: UnitRecord,
+): unit is PassiveClassFeatureUnitRecord {
+  return unit.kind === "class_feature" && unit.mechanics.family === "passive";
 }

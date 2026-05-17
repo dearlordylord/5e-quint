@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "L12G-CLASS-PALADINS-SMITE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Paladins Smite Spell Access And Free Cast"
     },
     {
@@ -818,7 +818,7 @@ Acceptance:
 
 ### Task 8 - L12G-CLASS-PALADINS-SMITE - Paladins Smite Spell Access And Free Cast
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `paladin_paladins_smite`. Gate task: 8 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 

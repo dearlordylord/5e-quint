@@ -167,6 +167,7 @@ const battleRuntimeRelevantFeatureUnitIds = new Set([
   "fighter_weapon_mastery",
   "monk_martial_arts",
   "paladin_fighting_style",
+  "paladin_paladins_smite",
   "paladin_weapon_mastery",
   "ranger_favored_enemy",
   "ranger_weapon_mastery",
@@ -180,6 +181,7 @@ const levelTwoBattleRuntimeOwnerEvidenceUnitIds = new Set([
   "barbarian_reckless_attack",
   "fighter_action_surge",
   "fighter_tactical_mind",
+  "paladin_paladins_smite",
   "rogue_cunning_action",
 ]);
 

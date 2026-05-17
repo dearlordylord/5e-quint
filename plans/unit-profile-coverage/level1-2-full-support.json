@@ -1638,40 +1638,6 @@
     },
     {
       "catalogDisposition": {
-        "category": "unsupported-widening-pressure",
-        "planningLane": "QMBT18",
-        "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "later-level-only"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "The feature is acquired after level 1, makes Divine Smite always prepared, and grants one Long Rest no-slot Divine Smite cast. The Divine Smite spell Unit already owns after-hit damage invocation behavior; a future Paladin feature owner should retain this source Unit for Spell Access and free-cast resource projection without duplicating the spell procedure.",
-      "sourceRecordPath": "packages/surface/content/paladin_paladins_smite.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Paladin Paladin's Smite",
-          "id": "srd521:classes/paladin:level-2:class-feature-grant:paladin_paladins_smite",
-          "levelBand": "level-2",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 99,
-            "lineStart": 96,
-            "path": ".references/srd-5.2.1/Classes/Paladin.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "paladin_paladins_smite"
-    },
-    {
-      "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
@@ -2516,7 +2482,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 84,
+      "count": 85,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2574,6 +2540,7 @@
         "monk_martial_arts",
         "monk_unarmored_defense",
         "paladin_lay_on_hands",
+        "paladin_paladins_smite",
         "paladin_weapon_mastery",
         "poison_spray",
         "produce_flame",
@@ -2674,22 +2641,21 @@
       ]
     },
     {
-      "count": 3,
-      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
-      "status": "open-profile-accounting",
-      "unitIds": [
-        "paladin_paladins_smite",
-        "shatter",
-        "wizard_scholar"
-      ]
-    },
-    {
       "count": 2,
       "description": "Character facts are owned while only runtime-detached adjudication remains.",
       "status": "closed-character-fact-and-runtime-detached-split",
       "unitIds": [
         "druid_druidic",
         "rogue_thieves_cant"
+      ]
+    },
+    {
+      "count": 2,
+      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
+      "status": "open-profile-accounting",
+      "unitIds": [
+        "shatter",
+        "wizard_scholar"
       ]
     }
   ],
@@ -2699,21 +2665,21 @@
       "numerator": 470,
       "percent": "84.5%",
       "rowsByStatus": {
-        "accepted": 289,
-        "accepted-no-battle-effect": 181,
+        "accepted": 290,
+        "accepted-no-battle-effect": 180,
         "battle-runtime-required": 74,
         "owner-evidence-required": 12
       }
     },
     "strictRuntimeProfileSupport": {
       "denominator": 135,
-      "numerator": 84,
-      "percent": "62.2%"
+      "numerator": 85,
+      "percent": "63%"
     },
     "strictTargetClosure": {
       "denominator": 135,
-      "numerator": 101,
-      "percent": "74.8%"
+      "numerator": 102,
+      "percent": "75.6%"
     }
   },
   "openFrontier": [
@@ -2756,11 +2722,10 @@
       ]
     },
     {
-      "count": 3,
+      "count": 2,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
-        "paladin_paladins_smite",
         "shatter",
         "wizard_scholar"
       ]
@@ -6434,18 +6399,18 @@
     "groupsByClaimTag": {
       "missing": 31,
       "profile-subset-supported": 7,
-      "supported-profile": 84,
-      "unsupported-profile": 13
+      "supported-profile": 85,
+      "unsupported-profile": 12
     },
     "groupsByStatus": {
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 4,
       "closed-runtime-detached-table-adjudication": 11,
-      "open-profile-accounting": 3,
+      "open-profile-accounting": 2,
       "open-runtime-behavior": 31,
-      "supported-profile": 84
+      "supported-profile": 85
     },
-    "nonSupportedFrontier": 51,
+    "nonSupportedFrontier": 50,
     "strictDenominator": 135
   }
 }

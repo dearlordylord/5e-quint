@@ -75,6 +75,7 @@ const requiredFirstVerticalUnitIds = [
   ...task183ClassFeatureUnitIds,
   ...task184WeaponMasteryUnitIds,
   "paladin_fighting_style",
+  "paladin_paladins_smite",
   "subclass_fighter_champion",
   "subclass_wizard_evoker",
   "rogue_evasion",

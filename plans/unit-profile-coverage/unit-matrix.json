@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 363,
-      "numerator": 131,
-      "percent": "36.1%"
+      "numerator": 132,
+      "percent": "36.4%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 435,
-      "numerator": 163,
-      "percent": "37.5%"
+      "numerator": 164,
+      "percent": "37.7%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 164
+      "value": 165
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 107,
-      "numerator": 107,
+      "denominator": 108,
+      "numerator": 108,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 164,
-      "numerator": 164,
+      "denominator": 165,
+      "numerator": 165,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 107,
+      "denominator": 108,
       "numerator": 104,
-      "percent": "97.2%"
+      "percent": "96.3%"
     },
     "supportedProfileCoverage": {
-      "denominator": 132,
-      "numerator": 107,
-      "percent": "81.1%"
+      "denominator": 133,
+      "numerator": 108,
+      "percent": "81.2%"
     }
   },
   "metricSemantics": [
@@ -6949,6 +6949,66 @@
       ],
       "sourceRecordPath": "packages/surface/content/paladin_fighting_style.json",
       "unitId": "paladin_fighting_style"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "spell.invocation-after-hit-damage"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "always-prepared Divine Smite access through retained prepared Spell Access",
+          "one-use Paladin's Smite Long Rest free-cast resource at Paladin level 2",
+          "free-cast Divine Smite uses the existing after-hit damage spell procedure without expending a Spell Slot",
+          "ordinary Spell Slot Divine Smite casting remains available when the free-cast resource is exhausted"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-favored-enemy.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-CLASS-PALADINS-SMITE"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "spell.invocation-after-hit-damage",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV31C"
+          ],
+          "title": "Spell invocation spends a Bonus Action and Spell Slot after an eligible melee hit to add damage to that attack",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/paladin_paladins_smite.json",
+      "unitId": "paladin_paladins_smite"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -17426,34 +17486,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/paladin_epic_boon.json",
       "unitId": "paladin_epic_boon"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "later-level-only",
-          "owner": "future Paladin's Smite Spell Access and class-feature free-cast resource owner",
-          "reason": "The feature is acquired after level 1, makes Divine Smite always prepared, and grants one Long Rest no-slot Divine Smite cast. The Divine Smite spell Unit already owns after-hit damage invocation behavior; a future Paladin feature owner should retain this source Unit for Spell Access and free-cast resource projection without duplicating the spell procedure."
-        },
-        "reason": "Paladin's Smite is a level-2 Divine Smite Spell Access and once-per-Long-Rest free-cast grant; no standalone promoted battle Unit profile is claimed for the authored class-feature record until class-feature free-cast support is widened beyond Favored Enemy.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/paladin_paladins_smite.json",
-      "unitId": "paladin_paladins_smite"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

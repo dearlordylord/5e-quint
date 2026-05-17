@@ -102,6 +102,7 @@ import elfDarkvisionInput from "../../content/darkvision_elf.json";
 import paladinExtraAttackInput from "../../content/paladin_extra_attack.json";
 import paladinFightingStyleInput from "../../content/paladin_fighting_style.json";
 import paladinLayOnHandsInput from "../../content/paladin_lay_on_hands.json";
+import paladinPaladinsSmiteInput from "../../content/paladin_paladins_smite.json";
 import paladinWeaponMasteryInput from "../../content/paladin_weapon_mastery.json";
 import poisonSprayInput from "../../content/poison_spray.json";
 import protectionFromEvilAndGoodInput from "../../content/protection_from_evil_and_good.json";
@@ -338,6 +339,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     featSavageAttackerInput,
     paladinLayOnHandsInput,
     paladinFightingStyleInput,
+    paladinPaladinsSmiteInput,
     paladinExtraAttackInput,
     paladinWeaponMasteryInput,
     rangerExtraAttackInput,
