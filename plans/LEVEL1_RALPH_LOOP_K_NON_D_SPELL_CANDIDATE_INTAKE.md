@@ -78,6 +78,12 @@ D-owned spell exclusions: `charm_person`, `disguise_self`, `druidcraft`,
 `thaumaturgy`, `unseen_servant`, `hunters_mark`, and all D character/container
 selected identity Units.
 
+Execution-frontier exclusions: Execution Frontier A owns `faerie_fire`,
+`fog_cloud`, `grease`, and `thunderwave`; Execution Frontier B owns
+`feather_fall`, `jump`, and `light`. If these Units appear while mining spell
+candidates, cite the A/B lane and do not classify, implement, or close them in
+K.
+
 Companion/familiar behavior is excluded. If a spell candidate requires a
 companion/summon lifecycle, record the exclusion or route it to the separate
 companion worktree; do not implement it here. Self-origin Emanation spells are
@@ -111,7 +117,8 @@ Primary write scope:
 - no battle reducer behavior unless the task narrows to a small already-modeled
   profile and proves it from local SRD text.
 
-Avoid D plan files, D-owned spell Units, and companion/familiar runtime files.
+Avoid D plan files, D-owned spell Units, A/B execution-frontier Units, and
+companion/familiar runtime files.
 
 ## Verification
 
