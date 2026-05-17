@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "L1D2-SORCERER-INNATE-SORCERY",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Sorcerer Innate Sorcery Selected Identity Replay"
     },
     {
@@ -277,7 +277,7 @@ lane.
 | 2 | L1D2-BARBARIAN-UNARMORED-DEFENSE - Barbarian Unarmored Defense Selected Identity Replay | done | none | Character Sheet AC formula selected identity. |
 | 3 | L1D2-MONK-UNARMORED-DEFENSE - Monk Unarmored Defense Selected Identity Replay | done | none | Distinct Monk AC formula selected identity. |
 | 4 | L1D2-WIZARD-RITUAL-ADEPT - Wizard Ritual Adept Selected Identity Replay | done | none | Spellbook ritual invocation selected identity. |
-| 5 | L1D2-SORCERER-INNATE-SORCERY - Sorcerer Innate Sorcery Selected Identity Replay | ready-for-implementation-after-light-research | none | Supported activation/profile identity. |
+| 5 | L1D2-SORCERER-INNATE-SORCERY - Sorcerer Innate Sorcery Selected Identity Replay | done | none | Supported activation/profile identity. |
 | 6 | L1D2-MYCELIUM-STEP - Mycelium Step Selected Identity Replay | ready-for-implementation-after-light-research | none | Classic non-SRD mechanics gate identity; keep out of SRD provenance. |
 | 7 | L1D2-WIZARD-ARCANE-RECOVERY - Wizard Arcane Recovery Selected Identity Replay | blocked | Loop C merge evidence | Unblock only after `wizard_arcane_recovery` is supported-profile on master. |
 | 8 | L1D2-FIGHTER-FIGHTING-STYLE - Fighter Fighting Style Selected Identity Replay | blocked | Loop C merge evidence | Unblock only after Fighting Style replacement/lifecycle support lands on master. |
@@ -351,7 +351,7 @@ RAW: `.references/srd-5.2.1/Classes/Wizard.md` Ritual Adept.
 
 ### Task 5 - L1D2-SORCERER-INNATE-SORCERY - Sorcerer Innate Sorcery Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `sorcerer_innate_sorcery`, binding the
 authored class feature through the supported activation and spellcasting benefit
