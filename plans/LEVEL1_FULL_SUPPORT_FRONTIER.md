@@ -2349,7 +2349,7 @@ Current larger-batch split:
 | Batch | Count | Purpose |
 | --- | ---: | --- |
 | Strict support closure atoms | 15 | Close the current 34-row strict support frontier and add the executable metric. |
-| No-matrix spell expansion research atoms | 14 | Decide whether missing SRD spell pressures should become runtime-supported Units, runtime-detached closures, Character Sheet tasks, future-owner tasks, companion/helper tasks, or stay catalog-only. |
+| No-matrix spell expansion research atoms | 14 | Decide whether missing SRD spell pressures should become runtime-supported Units, runtime-detached closures, Character Sheet tasks, future package-owner follow-up tasks, companion/helper tasks, or stay catalog-only. |
 | Non-executable class/profile expansion atoms | 6 | Decide whether accepted character-creation/source rows should become first-class support profiles or remain owner-evidence-only. |
 | Total planned atomic work items | 35 | Closure plus the next expansion frontier. |
 
