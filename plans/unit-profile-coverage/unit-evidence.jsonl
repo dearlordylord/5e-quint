@@ -195,6 +195,7 @@
 {"unitId":"paladin_lay_on_hands","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV91B","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"paladin_lay_on_hands","evidence":{"tag":"selected-identity-mbt","taskId":"healing-stabilization","ownerPath":"packages/character-sheet-runtime/src/healing-resource-selected-identity.mbt.test.ts"}}
 {"unitId":"wizard_arcane_recovery","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV91B","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
+{"unitId":"wizard_arcane_recovery","evidence":{"tag":"selected-identity-mbt","taskId":"short-rest-spell-slot-recovery","ownerPath":"packages/character-sheet-runtime/src/arcane-recovery-selected-identity.mbt.test.ts"}}
 {"unitId":"wizard_ritual_adept","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV91B","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"wizard_ritual_adept","evidence":{"tag":"selected-identity-mbt","taskId":"spellbook-ritual-invocation","ownerPath":"packages/character-sheet-runtime/src/spellbook-ritual-selected-identity.mbt.test.ts"}}
 {"unitId":"sorcerer_innate_sorcery","evidence":{"tag":"selected-identity-mbt","taskId":"L1D2-SORCERER-INNATE-SORCERY","ownerPath":"packages/battle-runtime/src/feature-selected-identity.mbt.test.ts"}}

@@ -406,7 +406,7 @@ task was appended; `find_familiar` stays excluded.
 | 4 | L1D2-WIZARD-RITUAL-ADEPT - Wizard Ritual Adept Selected Identity Replay | done | none | Spellbook ritual invocation selected identity. |
 | 5 | L1D2-SORCERER-INNATE-SORCERY - Sorcerer Innate Sorcery Selected Identity Replay | done | none | Supported activation/profile identity. |
 | 6 | L1D2-MYCELIUM-STEP - Mycelium Step Selected Identity Replay | done | none | Classic non-SRD mechanics gate identity; keep out of SRD provenance. |
-| 7 | L1D2-WIZARD-ARCANE-RECOVERY - Wizard Arcane Recovery Selected Identity Replay | ready-for-implementation-after-light-research | none | Unblocked by Task 13 refreshed matrix evidence. |
+| 7 | L1D2-WIZARD-ARCANE-RECOVERY - Wizard Arcane Recovery Selected Identity Replay | done | none | Short Rest ordinary Spell Slot recovery, Long Rest reset, and Pact Slot non-application selected identity. |
 | 8 | L1D2-FIGHTER-FIGHTING-STYLE - Fighter Fighting Style Selected Identity Replay | ready-for-implementation-after-light-research | none | Unblocked by Task 13 refreshed matrix evidence. |
 | 9 | L1D2-CLERIC-DRUID-ORDER - Cleric And Druid Order Selected Identity Replay | ready-for-implementation-after-light-research | none | Unblocked by Task 13 refreshed matrix evidence. |
 | 10 | L1D2-ROGUE-EXPERTISE - Rogue Expertise Selected Identity Replay | ready-for-implementation-after-light-research | none | Unblocked by Task 13 refreshed matrix evidence. |
@@ -511,7 +511,7 @@ Source: `plans/unit-profile-coverage/fixtures/classic-non-srd/mycelium_step.json
 
 ### Task 7 - L1D2-WIZARD-ARCANE-RECOVERY - Wizard Arcane Recovery Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Unblocked by Task 13 refreshed matrix evidence:
 `wizard_arcane_recovery` is supported-profile and lacks selected-identity MBT.

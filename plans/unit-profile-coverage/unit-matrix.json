@@ -93,8 +93,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 94,
-      "numerator": 85,
-      "percent": "90.4%"
+      "numerator": 86,
+      "percent": "91.5%"
     },
     "supportedProfileCoverage": {
       "denominator": 118,
@@ -6100,6 +6100,11 @@
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV91B"
+        },
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/arcane-recovery-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "short-rest-spell-slot-recovery"
         }
       ],
       "executableMechanics": true,
