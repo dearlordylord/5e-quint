@@ -117,7 +117,7 @@ Every Ralph prompt for this loop must include:
 | `AT-L1-10` Falling/jump witness promotion | `feather_fall`, `jump` | falling, landing, legal destination, jump witness-boundary claim promotion |
 | `AT-L1-11` Area hazard/obscurement witness promotion | `fog_cloud`, `grease` | area, wind, movement-cost witness-boundary claim promotion |
 | `AT-L1-12` Thunderwave witness promotion | `thunderwave` | push, object disposition, audible-boom witness-boundary claim promotion |
-| `AT-L1X-02`, `AT-L1X-03`, `AT-L1X-04`, `AT-L1X-07`, `AT-L1X-10`, `AT-L1X-11` utility no-matrix decisions | utility/illusion/communication spell pressures | runtime-detached, catalog-only, or future-owner decision artifacts |
+| `AT-L1X-02`, `AT-L1X-03`, `AT-L1X-04`, `AT-L1X-07`, `AT-L1X-10`, `AT-L1X-11` utility no-matrix decisions | utility/illusion/communication spell pressures | runtime-detached, catalog-only, or future package/subsystem owner decision artifacts |
 | `AT-L1X-13` Thaumaturgy mixed owner decision | `thaumaturgy` pressure | Booming Voice owner decision plus utility closure recommendation |
 
 ## Scope
@@ -371,7 +371,7 @@ Verification:
 
 Plan Impact:
 
-- Add future-owner tasks only if environment persistence is genuinely needed.
+- Add future package-owner follow-up tasks only if environment persistence is genuinely needed.
 
 ### Task 9 - L1B-L1X-04 - Elementalism No-Matrix Decision
 
@@ -462,7 +462,7 @@ Verification:
 
 Plan Impact:
 
-- Add future-owner tasks only for concrete non-duplicative owner gaps.
+- Add future package-owner follow-up tasks only for concrete non-duplicative owner gaps.
 
 ### Task 13 - L1B-L1X-13 - Thaumaturgy Mixed Owner Decision
 

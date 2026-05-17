@@ -503,12 +503,12 @@
       "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
-        "outside-runtime-presentation-exploration"
+        "character-fact-and-runtime-detached-split"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "Druidic hidden-message spotting, Investigation adjudication, and deciphering are runtime-detached table adjudication outside promoted battle runtime; Druidic language and always-prepared Speak with Animals Spell Access remain character-owned source facts.",
+      "reason": "Druidic hidden-message spotting, Investigation adjudication, and deciphering are runtime-detached table adjudication outside promoted battle runtime; Druidic language and always-prepared Speak with Animals Spell Access remain character-owned CharacterBuild facts derived from authored Surface content.",
       "sourceRecordPath": "packages/surface/content/druid_druidic.json",
       "sourceRows": [
         {
@@ -524,7 +524,7 @@
           }
         }
       ],
-      "status": "closed-runtime-detached-table-adjudication",
+      "status": "closed-character-fact-and-runtime-detached-split",
       "strictTargetClosed": true,
       "unitId": "druid_druidic"
     },
@@ -875,12 +875,12 @@
       "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
-        "outside-runtime-presentation-exploration"
+        "character-fact-and-runtime-detached-split"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "Thieves' Cant communication adjudication is runtime-detached table adjudication outside promoted battle runtime; Thieves' Cant and the additional Character Creation language choice remain character-owned source facts.",
+      "reason": "Thieves' Cant communication adjudication is runtime-detached table adjudication outside promoted battle runtime; Thieves' Cant and the additional Character Creation language choice remain character-owned CharacterBuild facts derived from authored Surface content.",
       "sourceRecordPath": "packages/surface/content/rogue_thieves_cant.json",
       "sourceRows": [
         {
@@ -896,7 +896,7 @@
           }
         }
       ],
-      "status": "closed-runtime-detached-table-adjudication",
+      "status": "closed-character-fact-and-runtime-detached-split",
       "strictTargetClosed": true,
       "unitId": "rogue_thieves_cant"
     },
@@ -1193,25 +1193,6 @@
       ]
     },
     {
-      "count": 12,
-      "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
-      "status": "closed-runtime-detached-table-adjudication",
-      "unitIds": [
-        "alarm",
-        "charm_person",
-        "comprehend_languages",
-        "detect_evil_and_good",
-        "detect_magic",
-        "detect_poison_and_disease",
-        "druid_druidic",
-        "identify",
-        "minor_illusion",
-        "rogue_thieves_cant",
-        "silent_image",
-        "speak_with_animals"
-      ]
-    },
-    {
       "count": 11,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
@@ -1230,6 +1211,23 @@
       ]
     },
     {
+      "count": 10,
+      "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
+      "status": "closed-runtime-detached-table-adjudication",
+      "unitIds": [
+        "alarm",
+        "charm_person",
+        "comprehend_languages",
+        "detect_evil_and_good",
+        "detect_magic",
+        "detect_poison_and_disease",
+        "identify",
+        "minor_illusion",
+        "silent_image",
+        "speak_with_animals"
+      ]
+    },
+    {
       "count": 3,
       "description": "The level-1 behavior is complete and every remaining residual is later-level-only.",
       "status": "closed-later-level-only",
@@ -1237,6 +1235,15 @@
         "bard_bardic_inspiration",
         "monk_martial_arts",
         "ranger_favored_enemy"
+      ]
+    },
+    {
+      "count": 2,
+      "description": "Character facts are owned while only runtime-detached adjudication remains.",
+      "status": "closed-character-fact-and-runtime-detached-split",
+      "unitIds": [
+        "druid_druidic",
+        "rogue_thieves_cant"
       ]
     }
   ],
@@ -3562,8 +3569,9 @@
       "unsupported-profile": 22
     },
     "groupsByStatus": {
+      "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 3,
-      "closed-runtime-detached-table-adjudication": 12,
+      "closed-runtime-detached-table-adjudication": 10,
       "open-profile-accounting": 11,
       "supported-profile": 67
     },

@@ -44,6 +44,8 @@ const battleReadinessClosureKind = Object.freeze({
   outsideRuntimePresentationExploration:
     "outside-runtime-presentation-exploration",
   outsideBattleRuntime: "outside-battle-runtime",
+  characterFactRuntimeDetachedSplit:
+    "character-fact-and-runtime-detached-split",
 });
 const battleReadinessClosureKinds = new Set(
   Object.values(battleReadinessClosureKind),
