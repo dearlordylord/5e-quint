@@ -93,8 +93,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 93,
-      "numerator": 55,
-      "percent": "59.1%"
+      "numerator": 56,
+      "percent": "60.2%"
     },
     "supportedProfileCoverage": {
       "denominator": 117,
@@ -9752,6 +9752,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV31E"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1E-SEARING-SMITE"
         }
       ],
       "executableMechanics": true,

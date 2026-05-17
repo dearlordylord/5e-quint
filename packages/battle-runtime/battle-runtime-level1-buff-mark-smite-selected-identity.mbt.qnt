@@ -56,6 +56,19 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
   var qHexActiveMarkTransferKind: str
   var qHexActiveMarkRetargetTiming: str
   var qHexTransferVisibleOnDropTurn: bool
+  var qSearingSmiteImmediateDamageSourceSpellId: str
+  var qSearingSmiteImmediateDamageDamageType: str
+  var qSearingSmiteImmediateDamageDice: int
+  var qSearingSmiteImmediateDamageDieSize: int
+  var qSearingSmiteActiveBeforeSuccessfulSave: bool
+  var qSearingSmiteTurnStartDamageSourceSpellId: str
+  var qSearingSmiteTurnStartDamageDamageType: str
+  var qSearingSmiteTurnStartDamageDice: int
+  var qSearingSmiteTurnStartDamageDieSize: int
+  var qSearingSmiteTurnStartSaveSourceSpellId: str
+  var qSearingSmiteTurnStartSaveAbility: str
+  var qSearingSmiteTurnStartSaveSuccessEnds: str
+  var qSearingSmiteActiveAfterSuccessfulSave: bool
   var qLastResult: str
 
   action recordProjection(
@@ -332,13 +345,53 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     lastResult,
   )
 
-  action init = recordWithoutMarkedDamageProjection(
-    0, 12, 0, false, false, 2, "none", "none", 0, 0,
-    "none", 0, 0, 0,
-    "none", "none", "none", 0,
-    false, false, false, "none", "none", "none", "none", 0, 0, "none", "none",
-    "init",
-  )
+  action recordSearingSmiteLifecycleProjection(
+    immediateDamageSourceSpellId: str,
+    immediateDamageDamageType: str,
+    immediateDamageDice: int,
+    immediateDamageDieSize: int,
+    activeBeforeSuccessfulSave: bool,
+    turnStartDamageSourceSpellId: str,
+    turnStartDamageDamageType: str,
+    turnStartDamageDice: int,
+    turnStartDamageDieSize: int,
+    turnStartSaveSourceSpellId: str,
+    turnStartSaveAbility: str,
+    turnStartSaveSuccessEnds: str,
+    activeAfterSuccessfulSave: bool,
+  ): bool = all {
+    qSearingSmiteImmediateDamageSourceSpellId' = immediateDamageSourceSpellId,
+    qSearingSmiteImmediateDamageDamageType' = immediateDamageDamageType,
+    qSearingSmiteImmediateDamageDice' = immediateDamageDice,
+    qSearingSmiteImmediateDamageDieSize' = immediateDamageDieSize,
+    qSearingSmiteActiveBeforeSuccessfulSave' = activeBeforeSuccessfulSave,
+    qSearingSmiteTurnStartDamageSourceSpellId' = turnStartDamageSourceSpellId,
+    qSearingSmiteTurnStartDamageDamageType' = turnStartDamageDamageType,
+    qSearingSmiteTurnStartDamageDice' = turnStartDamageDice,
+    qSearingSmiteTurnStartDamageDieSize' = turnStartDamageDieSize,
+    qSearingSmiteTurnStartSaveSourceSpellId' = turnStartSaveSourceSpellId,
+    qSearingSmiteTurnStartSaveAbility' = turnStartSaveAbility,
+    qSearingSmiteTurnStartSaveSuccessEnds' = turnStartSaveSuccessEnds,
+    qSearingSmiteActiveAfterSuccessfulSave' = activeAfterSuccessfulSave,
+  }
+
+  action clearSearingSmiteLifecycleProjection =
+    recordSearingSmiteLifecycleProjection(
+      "none", "none", 0, 0, false,
+      "none", "none", 0, 0,
+      "none", "none", "none", false,
+    )
+
+  action init = all {
+    recordWithoutMarkedDamageProjection(
+      0, 12, 0, false, false, 2, "none", "none", 0, 0,
+      "none", 0, 0, 0,
+      "none", "none", "none", 0,
+      false, false, false, "none", "none", "none", "none", 0, 0, "none", "none",
+      "init",
+    ),
+    clearSearingSmiteLifecycleProjection,
+  }
 
   action doDivineFavorWeaponDamageRider = all {
     qLastResult == "init",
@@ -349,6 +402,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
       false, false, false, "none", "none", "none", "none", 0, 0, "none", "none",
       "divineFavor",
     ),
+    clearSearingSmiteLifecycleProjection,
   }
 
   action doDivineSmiteAfterHitDamage = all {
@@ -360,6 +414,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
       false, false, false, "none", "none", "none", "none", 0, 0, "none", "none",
       "divineSmite",
     ),
+    clearSearingSmiteLifecycleProjection,
   }
 
   action doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape = all {
@@ -374,6 +429,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
       "str", "athletics",
       "ensnaringStrike",
     ),
+    clearSearingSmiteLifecycleProjection,
   }
 
   action doFalseLifeTemporaryHitPoints = all {
@@ -385,6 +441,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
       false, false, false, "none", "none", "none", "none", 0, 0, "none", "none",
       "falseLife",
     ),
+    clearSearingSmiteLifecycleProjection,
   }
 
   action doHeroismFrightenedImmunityTurnStartTemporaryHitPoints = all {
@@ -396,6 +453,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
       false, false, true, "none", "none", "none", "none", 0, 0, "none", "none",
       "heroism",
     ),
+    clearSearingSmiteLifecycleProjection,
   }
 
   action doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer = all {
@@ -413,6 +471,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
       "none", "none", "none", false,
       "huntersMark",
     ),
+    clearSearingSmiteLifecycleProjection,
   }
 
   action doHexMarkedDamageRiderAndLaterTurnTransfer = all {
@@ -430,6 +489,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
       "availableAfterTurn", "awaitingTargetDrop", "laterTurn", false,
       "hex",
     ),
+    clearSearingSmiteLifecycleProjection,
   }
 
   action doLongstriderSpeedIncrease = all {
@@ -444,6 +504,23 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
       1,
       "longstrider",
     ),
+    clearSearingSmiteLifecycleProjection,
+  }
+
+  action doSearingSmiteAfterHitTimedDamageAndSaveCleanup = all {
+    qLastResult == "init",
+    recordWithoutMarkedDamageProjection(
+      0, 1, 0, false, false, 1, "none", "none", 0, 0,
+      "none", 0, 0, 0,
+      "none", "none", "none", 0,
+      false, false, false, "none", "none", "none", "none", 0, 0, "none", "none",
+      "searingSmite",
+    ),
+    recordSearingSmiteLifecycleProjection(
+      "searing_smite", "fire", 1, 6, true,
+      "searing_smite", "fire", 1, 6,
+      "searing_smite", "con", "spell", false,
+    ),
   }
 
   action step = any {
@@ -455,5 +532,6 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer,
     doHexMarkedDamageRiderAndLaterTurnTransfer,
     doLongstriderSpeedIncrease,
+    doSearingSmiteAfterHitTimedDamageAndSaveCleanup,
   }
 }
