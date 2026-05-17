@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L1D-DAMAGE-PRECHECK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Post-C Strict Damage Identity Reconciliation"
     },
     {
@@ -143,7 +143,7 @@ Preferred owner file if a new file is cleaner:
 
 ### Task 1 - L1D-DAMAGE-PRECHECK - Post-C Strict Damage Identity Reconciliation
 
-Status: `ready-for-research`
+Status: `done`
 
 After Loop C is merged and the strict report is refreshed, read
 `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`,
