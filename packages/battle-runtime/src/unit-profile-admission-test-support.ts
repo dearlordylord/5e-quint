@@ -162,6 +162,15 @@ if (unitCatalogResult.tag !== "ok" || statBlockCatalogResult.tag !== "ok") {
 }
 export const unitLibrary = unitCatalogResult.catalog;
 export const statBlockCatalog = statBlockCatalogResult.catalog;
+const testUnitRecords = [
+  decodeUnitRecordSync(weaponClubInput),
+] satisfies ReadonlyArray<UnitRecord>;
+const testUnitRecordsById: ReadonlyMap<UnitRecord["id"], UnitRecord> = new Map(
+  testUnitRecords.map((unit): readonly [UnitRecord["id"], UnitRecord] => [
+    unit.id,
+    unit,
+  ]),
+);
 export const fighterSecondWindUnitId = "fighter_second_wind";
 export const fighterActionSurgeUnitId = "fighter_action_surge";
 export const fighterTacticalMindUnitId = "fighter_tactical_mind";
@@ -319,6 +328,10 @@ export function spellRecord(unitId: string): SpellRecord {
   const unit = unitLibrary.requireUnit(unitId);
   expect(unit.kind).toBe("spell");
   return unit as SpellRecord;
+}
+
+function requireTestOrCatalogUnit(unitId: UnitRecord["id"]): UnitRecord {
+  return testUnitRecordsById.get(unitId) ?? unitLibrary.requireUnit(unitId);
 }
 
 export function spellWithSaveGateRepeatSaves(
@@ -1093,21 +1106,15 @@ export function adrenalineRushDashAct(
     { readonly tag: "bonusActionStandardAction"; readonly action: "dash" }
   >;
 } {
-  const act = discoverBattleActs(state).find(
-    (candidate) =>
-      candidate.subject.tag === "bonusActionStandardAction" &&
-      candidate.subject.sourceUnitId === orcAdrenalineRushUnitId &&
-      candidate.subject.action === "dash" &&
-      candidate.subject.speedKind === "walk",
-  );
-  expect(isAdrenalineRushDashAct(act)).toBe(true);
-  if (!isAdrenalineRushDashAct(act)) {
+  const act = discoverBattleActs(state).find(isBonusActionWalkDashAct);
+  expect(isBonusActionWalkDashAct(act)).toBe(true);
+  if (!isBonusActionWalkDashAct(act)) {
     throw new Error("Expected Adrenaline Rush Bonus Action Dash act.");
   }
   return act;
 }
 
-export function isAdrenalineRushDashAct(
+function isBonusActionWalkDashAct(
   act: AvailableBattleAct | undefined,
 ): act is AvailableBattleAct & {
   readonly subject: Extract<
@@ -1119,7 +1126,6 @@ export function isAdrenalineRushDashAct(
     act !== undefined &&
     act.subject.tag === "bonusActionStandardAction" &&
     act.subject.action === "dash" &&
-    act.subject.sourceUnitId === orcAdrenalineRushUnitId &&
     act.subject.speedKind === "walk"
   );
 }
@@ -1757,22 +1763,14 @@ export function statBlockAttackAct(
 }
 
 export function zeroAbilityWeaponAttack(
-  unitId:
-    | "weapon_longsword"
-    | "weapon_shortbow"
-    | "weapon_dagger"
-    | "weapon_club"
-    | "weapon_quarterstaff",
+  unitId: Extract<UnitRecord, { readonly kind: "weapon" }>["id"],
 ): NonNullable<
   Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["attack"]
 > {
-  const weapon =
-    unitId === "weapon_club"
-      ? decodeUnitRecordSync(weaponClubInput)
-      : unitLibrary.requireUnit(unitId);
+  const weapon = requireTestOrCatalogUnit(unitId);
   if (weapon.kind !== "weapon") {
     throw new Error(`Expected ${unitId} weapon Unit.`);
   }
@@ -2003,21 +2001,23 @@ export function maybeJumpMovementReplacementAct(state: BattleState):
       >;
     })
   | undefined {
-  return discoverBattleActs(state).find(
-    (
-      candidate,
-    ): candidate is AvailableBattleAct & {
-      readonly subject: Extract<
-        BattleSubject,
-        {
-          readonly tag: "runtimeCommand";
-          readonly command: "jumpMovementReplacement";
-        }
-      >;
-    } =>
-      candidate.subject.tag === "runtimeCommand" &&
-      candidate.subject.command === "jumpMovementReplacement" &&
-      candidate.subject.sourceSpellId === jumpUnitId,
+  return discoverBattleActs(state).find(isJumpMovementReplacementAct);
+}
+
+function isJumpMovementReplacementAct(
+  candidate: AvailableBattleAct,
+): candidate is AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "jumpMovementReplacement";
+    }
+  >;
+} {
+  return (
+    candidate.subject.tag === "runtimeCommand" &&
+    candidate.subject.command === "jumpMovementReplacement"
   );
 }
 

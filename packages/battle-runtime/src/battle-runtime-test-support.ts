@@ -11,6 +11,7 @@ import { fileURLToPath } from "node:url";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV87C ranger_favored_enemy
 import { Schema } from "effect";
 import * as Either from "effect/Either";
+import * as Option from "effect/Option";
 import { expect } from "vitest";
 
 import {
@@ -81,9 +82,13 @@ import {
   type BattleUnitRef,
   type ActiveOngoingFeatureOccurrence,
   type OngoingFeatureSourceKey,
+  type SpellInvocationRef,
 } from "./index.ts";
 import { characterBattleResourceIsUnlimited } from "./character-battle-resources.ts";
-import { supportedSpellInvocationMatchesRef } from "./battle-reducer/spells-invocation-ref.ts";
+import {
+  supportedSpellInvocationMatchesRef,
+  supportedSpellInvocationRef,
+} from "./battle-reducer/spells-invocation-ref.ts";
 import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
 import { spellFillSet } from "./battle-reducer/spells-resolve-fill-set.ts";
@@ -314,7 +319,7 @@ const findFamiliarSpellRecord = decodeUnitRecordSync(findFamiliarInput);
 if (findFamiliarSpellRecord.kind !== "spell") {
   throw new Error("Find Familiar test input must decode to a spell record.");
 }
-testSpellRecords.set("find_familiar", findFamiliarSpellRecord);
+testSpellRecords.set(findFamiliarSpellRecord.id, findFamiliarSpellRecord);
 
 export function requireResolved(
   result: ReturnType<typeof resolveBattleSubject>,
@@ -1152,7 +1157,7 @@ export function battleAfterFailedSleepInitialSave(input: {
   readonly helperInitiative?: number;
   readonly targetConditions?: Parameters<typeof characterSeed>[0]["conditions"];
 }): BattleState {
-  const state = startBattleRight({
+  const battleState = startBattleRight({
     battleId: battleId(input.battle),
     combatants: [
       characterSeed({
@@ -1184,7 +1189,7 @@ export function battleAfterFailedSleepInitialSave(input: {
   });
   const savingThrows = requireHole(
     resolveBattleSubject({
-      state,
+      state: battleState,
       subject: magicSubject("sleep"),
       fills: [],
     }),
@@ -1192,7 +1197,7 @@ export function battleAfterFailedSleepInitialSave(input: {
   );
   const slept = requireResolved(
     resolveBattleSubject({
-      state,
+      state: battleState,
       subject: magicSubject("sleep"),
       fills: [
         savingThrowOutcomeFill(savingThrows, [
@@ -1609,10 +1614,8 @@ export function movementFill(
   };
 }
 
-export function castGreaseGroundHazardForMovementTest(
-  areaId: string,
-): BattleState {
-  const state = startBattleRight({
+export function castGroundHazardForMovementTest(areaId: string): BattleState {
+  const battleState = startBattleRight({
     battleId: battleId(`battle-grease-movement-${areaId}`),
     combatants: [
       characterSeed({
@@ -1628,19 +1631,14 @@ export function castGreaseGroundHazardForMovementTest(
       statBlockCreatureInit({ initiative: 10 }),
     ],
   });
-  const subject: BattleSubject = {
-    tag: "actionSpell",
-    actorId: wizardId,
-    invocation: spellSlotInvocationRef("grease", 1, "greaseGroundHazard"),
-    mode: { tag: "cast" },
-  };
+  const subject = magicSubject("grease");
   const save = requireHole(
-    resolveBattleSubject({ state, subject, fills: [] }),
+    resolveBattleSubject({ state: battleState, subject, fills: [] }),
     "savingThrowOutcome",
   );
   return requireResolved(
     resolveBattleSubject({
-      state,
+      state: battleState,
       subject,
       fills: [greaseGroundAreaSavingThrowFill(save, areaId)],
     }),
@@ -3776,45 +3774,10 @@ export function slotSaveDamageSpell(): SpellRecord {
   };
 }
 
-export function spellRecord(
-  spellId:
-    | "magic_missile"
-    | "mage_armor"
-    | "ray_of_frost"
-    | "acid_splash"
-    | "chill_touch"
-    | "eldritch_blast"
-    | "poison_spray"
-    | "sacred_flame"
-    | "inflict_wounds"
-    | "shocking_grasp"
-    | "guiding_bolt"
-    | "ray_of_sickness"
-    | "fire_bolt"
-    | "starry_wisp"
-    | "vicious_mockery"
-    | "burning_hands"
-    | "color_spray"
-    | "ice_knife"
-    | "grease"
-    | "fog_cloud"
-    | "entangle"
-    | "sleep"
-    | "hunters_mark"
-    | "hex"
-    | "find_familiar"
-    | "detect_magic"
-    | "detect_poison_and_disease"
-    | "spare_the_dying"
-    | "healing_word",
-) {
+export function spellRecord(spellId: SpellRecord["id"]) {
   const unit =
-    spellId === "entangle" ||
-    spellId === "sleep" ||
-    spellId === "detect_magic" ||
-    spellId === "detect_poison_and_disease"
-      ? unitLibrary.requireUnit(spellId)
-      : testSpellRecords.get(spellId);
+    testSpellRecords.get(spellId) ??
+    Option.getOrUndefined(unitLibrary.getUnit(spellId));
   if (unit === undefined) {
     throw new Error(`Expected ${spellId} spell Unit.`);
   }
@@ -3825,89 +3788,74 @@ export function spellRecord(
 }
 
 export function magicSubject(
-  spellId:
-    | "magic_missile"
-    | "mage_armor"
-    | "ray_of_frost"
-    | "acid_splash"
-    | "chill_touch"
-    | "eldritch_blast"
-    | "poison_spray"
-    | "sacred_flame"
-    | "inflict_wounds"
-    | "shocking_grasp"
-    | "guiding_bolt"
-    | "ray_of_sickness"
-    | "fire_bolt"
-    | "starry_wisp"
-    | "vicious_mockery"
-    | "burning_hands"
-    | "color_spray"
-    | "ice_knife"
-    | "fog_cloud"
-    | "entangle"
-    | "sleep"
-    | "spare_the_dying"
-    | "dex_half_cantrip",
+  spellId: SpellRecord["id"] | "dex_half_cantrip",
 ): BattleSubject {
+  const spell =
+    spellId === "dex_half_cantrip"
+      ? dexHalfDamageCantrip()
+      : spellRecord(spellId);
   return {
     tag: "actionSpell",
     actorId: wizardId,
-    invocation:
-      spellId === "magic_missile"
-        ? spellSlotInvocationRef(spellId, 1, "repeatedDamageAllocation")
-        : spellId === "mage_armor"
-          ? spellSlotInvocationRef(spellId, 1, "persistentArmorEffect")
-          : spellId === "inflict_wounds" || spellId === "burning_hands"
-            ? spellSlotInvocationRef(spellId, 1, "saveGatedDamage")
-            : spellId === "color_spray" || spellId === "entangle"
-              ? spellSlotInvocationRef(spellId, 1, "saveGatedCondition")
-              : spellId === "sleep"
-                ? spellSlotInvocationRef(spellId, 1, "sleepTargetAdmission")
-                : spellId === "spare_the_dying"
-                  ? cantripSpellInvocationRef(spellId, "makeStable")
-                  : spellId === "ice_knife"
-                    ? spellSlotInvocationRef(
-                        spellId,
-                        1,
-                        "attackBurstSaveDamage",
-                      )
-                    : spellId === "fog_cloud"
-                      ? spellSlotInvocationRef(
-                          spellId,
-                          1,
-                          "fogCloudObscurement",
-                        )
-                      : spellId === "vicious_mockery"
-                        ? cantripSpellInvocationRef(spellId, "saveGatedDamage")
-                        : spellId === "guiding_bolt" ||
-                            spellId === "ray_of_sickness"
-                          ? spellSlotInvocationRef(
-                              spellId,
-                              1,
-                              "spellAttackDamage",
-                            )
-                          : spellId === "eldritch_blast"
-                            ? cantripSpellInvocationRef(
-                                spellId,
-                                "spellAttackBeamSequence",
-                              )
-                            : spellId === "ray_of_frost" ||
-                                spellId === "poison_spray" ||
-                                spellId === "chill_touch" ||
-                                spellId === "shocking_grasp" ||
-                                spellId === "fire_bolt" ||
-                                spellId === "starry_wisp"
-                              ? cantripSpellInvocationRef(
-                                  spellId,
-                                  "spellAttackDamage",
-                                )
-                              : cantripSpellInvocationRef(
-                                  spellId,
-                                  "saveGatedDamage",
-                                ),
+    invocation: testMagicSubjectInvocation(spell),
     mode: { tag: "cast" },
   };
+}
+
+function testMagicSubjectInvocation(spell: SpellRecord): SpellInvocationRef {
+  const invocationState = startBattleRight({
+    battleId: battleId(`battle-test-spell-invocation-${spell.id}`),
+    combatants: [
+      characterSeed({
+        combatantId: wizardId,
+        displayName: "Wizard",
+        initiative: 20,
+        attack: null,
+        spellcasting: wizardSpellcasting({
+          cantrips: spell.mechanics.level === 0 ? [spell] : [],
+          preparedSpells: spell.mechanics.level === 0 ? [] : [spell],
+          spellSlots: [
+            { spellLevel: testSpellSlotLevelForSpell(spell), count: 1 },
+          ],
+        }),
+      }),
+      statBlockCreatureInit({ initiative: 10 }),
+    ],
+  });
+  const actor = invocationState.combatants.get(wizardId);
+  if (actor?.origin.kind !== "character") {
+    throw new Error("Expected test spell invocation actor.");
+  }
+  const invocations = supportedSpellActs(actor, invocationState).filter(
+    (invocation) =>
+      invocation.spell.id === spell.id &&
+      invocation.procedure !== "shieldReaction",
+  );
+  if (invocations.length !== 1) {
+    throw new Error(
+      `Expected one supported test spell invocation for ${spell.id}, got ${invocations.length}.`,
+    );
+  }
+  const invocation = invocations[0];
+  if (invocation === undefined) {
+    throw new Error(
+      `Expected supported test spell invocation for ${spell.id}.`,
+    );
+  }
+  return supportedSpellInvocationRef(invocation);
+}
+
+function testSpellSlotLevelForSpell(spell: SpellRecord): 1 | 2 | 3 | 4 | 5 {
+  const level = spell.mechanics.level;
+  if (level === 1 || level === 2 || level === 3 || level === 4 || level === 5) {
+    return level;
+  }
+  if (level === 0) {
+    return 1;
+  }
+  throw new Error(
+    `Unsupported test spell slot level for ${spell.id}: ${level}.`,
+  );
 }
 
 export function expendedLevelOneSlots(

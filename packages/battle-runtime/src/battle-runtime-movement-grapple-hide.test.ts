@@ -17,7 +17,7 @@ import {
   attackRollFill,
   reactionDecisionFill,
   movementFill,
-  castGreaseGroundHazardForMovementTest,
+  castGroundHazardForMovementTest,
   grappleOutcomeFill,
   shoveOutcomeFill,
   damageRollFillWithGroups,
@@ -157,7 +157,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
 
   test("Grease Difficult Terrain facts add extra Movement cost without storing geometry", () => {
     const areaId = "test-grease-area";
-    const greased = castGreaseGroundHazardForMovementTest(areaId);
+    const greased = castGroundHazardForMovementTest(areaId);
     const subject: BattleSubject = {
       tag: "runtimeCommand",
       actorId: wizardId,
@@ -224,7 +224,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
 
   test("Grease Difficult Terrain movement facts expire with the Grease ground hazard", () => {
     const areaId = "test-expiring-grease-area";
-    const greased = castGreaseGroundHazardForMovementTest(areaId);
+    const greased = castGroundHazardForMovementTest(areaId);
     let expired = greased;
     for (let i = 0; i < 20; i += 1) {
       expired = requireResolved(
