@@ -13,6 +13,7 @@ const adoptedNoMatrixSrdPressureDecisionUnitIds = new Set([
   "druidcraft",
   "elementalism",
   "illusory_script",
+  "message",
 ]);
 const strictStatusDefinitions = [
   {

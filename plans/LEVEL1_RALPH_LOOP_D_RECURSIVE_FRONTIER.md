@@ -133,7 +133,7 @@
     {
       "number": 22,
       "id": "L1D2-MESSAGE-DECISION-INTEGRATION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Message Frontier Decision Integration"
     },
     {
@@ -436,7 +436,7 @@ task was appended; `find_familiar` stays excluded.
 | 19 | L1D2-DRUIDCRAFT-DECISION-INTEGRATION - Druidcraft Frontier Decision Integration | done | Task 14 or explicit deferral | Consume the existing decision artifact; do not reclassify the row. |
 | 20 | L1D2-ELEMENTALISM-DECISION-INTEGRATION - Elementalism Frontier Decision Integration | done | Task 14 or explicit deferral | Consume the existing decision artifact; do not reclassify the row. |
 | 21 | L1D2-ILLUSORY-SCRIPT-DECISION-INTEGRATION - Illusory Script Frontier Decision Integration | done | Task 14 or explicit deferral | Consume the existing decision artifact; do not reclassify the row. |
-| 22 | L1D2-MESSAGE-DECISION-INTEGRATION - Message Frontier Decision Integration | ready-for-research | Task 14 or explicit deferral | Consume the existing decision artifact; do not reclassify the row. |
+| 22 | L1D2-MESSAGE-DECISION-INTEGRATION - Message Frontier Decision Integration | done | Task 14 or explicit deferral | Consume the existing decision artifact; do not reclassify the row. |
 | 23 | L1D2-PRESTIDIGITATION-DECISION-INTEGRATION - Prestidigitation Frontier Decision Integration | ready-for-research | Task 14 or explicit deferral | Consume the existing decision artifact; do not reclassify the row. |
 | 24 | L1D2-THAUMATURGY-BOOMING-VOICE - Thaumaturgy Booming Voice Ability Check Support | ready-for-research | Task 14 or explicit deferral | Concrete follow-up from the Thaumaturgy decision artifact. |
 | 25 | L1D2-UNSEEN-SERVANT-NO-MATRIX - Unseen Servant No-Matrix Decision | ready-for-research | Task 14 or explicit deferral | Remaining no-matrix strict SRD pressure row without an existing frontier decision artifact. |
@@ -982,7 +982,7 @@ Verification:
 
 ### Task 22 - L1D2-MESSAGE-DECISION-INTEGRATION - Message Frontier Decision Integration
 
-Status: `ready-for-research`
+Status: `done`
 
 Integrate the existing Message frontier decision into generated coverage
 surfaces so future replenishment runs preserve the already-closed no-matrix
