@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "L12G-OWNER-ROGUE-CUNNING-ACTION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Rogue Cunning Action Owner Evidence"
     },
     {
@@ -710,7 +710,7 @@ Acceptance:
 
 ### Task 4 - L12G-OWNER-ROGUE-CUNNING-ACTION - Rogue Cunning Action Owner Evidence
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `rogue_cunning_action`. Gate task: 4 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 

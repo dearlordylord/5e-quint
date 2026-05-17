@@ -171,12 +171,12 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 469,
-      "percent": "84.4%",
+      "numerator": 470,
+      "percent": "84.5%",
       "rowsByStatus": {
-        "accepted": 285,
+        "accepted": 286,
         "accepted-no-battle-effect": 184,
-        "owner-evidence-required": 13,
+        "owner-evidence-required": 12,
         "battle-runtime-required": 74
       }
     },
@@ -187,17 +187,15 @@
     },
     "levelTwoRowsByDisposition": {
       "catalog-only/dead-for-now": 5,
-      "catalog-installed-owner-evidence-present": 3,
+      "catalog-installed-owner-evidence-present": 4,
       "non-runtime": 12,
-      "missing-authored-record": 12,
-      "catalog-installed-needs-owner-evidence": 1
+      "missing-authored-record": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 290,
+      "catalog-installed-owner-evidence-present": 291,
       "non-runtime": 24,
       "catalog-only/dead-for-now": 155,
-      "missing-authored-record": 86,
-      "catalog-installed-needs-owner-evidence": 1
+      "missing-authored-record": 86
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 143,
@@ -16866,16 +16864,21 @@
         "unitId": "rogue_cunning_action"
       },
       "unitProfileDisposition": "supported-profile",
-      "finalDisposition": "catalog-installed-needs-owner-evidence",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit rogue_cunning_action is installed in srdUnitCollection",
-          "status": "catalog-only evidence; operational owner evidence still required"
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT8 at packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/rogue:level-2:class-table-summary:rogue_level_2_feature_table_row",
