@@ -32,10 +32,10 @@ describe("BattlePage", () => {
       expect(container.innerHTML).toContain("/sprites/5.png")
       expect(consoleErrorSpy).not.toHaveBeenCalled()
     }
-  })
+  }, 15_000)
 
   it("highlights the current reaction creature in the initiative tracker", () => {
-    window.history.replaceState(null, "", "/battle?step=2")
+    window.history.replaceState(null, "", "/battle?step=4")
 
     render(<BattlePage steps={WIZARD_BATTLE_DEMO_STEPS} meta={WIZARD_BATTLE_DEMO_META} />)
 

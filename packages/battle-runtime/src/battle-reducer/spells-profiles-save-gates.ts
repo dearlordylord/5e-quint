@@ -165,6 +165,14 @@ const FIREBALL_AREA_RADIUS_FEET = 20;
 const FIREBALL_BASE_DAMAGE_DICE = 8;
 const FIREBALL_DAMAGE_DIE_SIZE = 6;
 const FIREBALL_SLOT_DAMAGE_DICE_INCREMENT = 1;
+const SHATTER_SPELL_NAME = "Shatter";
+const SHATTER_PROVENANCE_SECTION = "Spells/Descriptions-S-Z#Shatter";
+const SHATTER_BASE_SPELL_LEVEL = 2;
+const SHATTER_RANGE_FEET = 60;
+const SHATTER_AREA_RADIUS_FEET = 10;
+const SHATTER_BASE_DAMAGE_DICE = 3;
+const SHATTER_DAMAGE_DIE_SIZE = 8;
+const SHATTER_SLOT_DAMAGE_DICE_INCREMENT = 1;
 
 export function hasSaveGateRepeatSaves(
   phase: ActivationPhase | undefined,
@@ -1038,6 +1046,10 @@ export function supportedSaveGateDamageProfile(
           spell.mechanics.phases[1],
         )
       : null;
+  const saveRollModeRule =
+    phase?.kind === "save_gate"
+      ? saveGatedDamageSaveRollModeRule(spell, phase)
+      : null;
   const targeting =
     phase?.kind === "save_gate"
       ? saveGatedDamageTargeting(spell, phase.attachment)
@@ -1063,9 +1075,8 @@ export function supportedSaveGateDamageProfile(
       : spell.mechanics.level < 1) ||
     spell.mechanics.castingTime.kind !== "action" ||
     rangeFeet === null ||
-    (postSaveAreaEffect === null
-      ? spell.mechanics.phases.length !== 1
-      : spell.mechanics.phases.length !== 2) ||
+    spell.mechanics.phases.length !==
+      saveGatedDamagePhaseCount(postSaveAreaEffect) ||
     phase?.kind !== "save_gate" ||
     targeting === null ||
     (phase.onSuccess.kind !== "none" &&
@@ -1100,6 +1111,7 @@ export function supportedSaveGateDamageProfile(
       : "none") as "half" | "none",
     rangeFeet,
     failedSavePostDamageRiders: failedSaveEffects.postDamageRiders,
+    saveRollModeRule,
     ...(postSaveAreaEffect === null ? {} : { postSaveAreaEffect }),
   };
 
@@ -1171,7 +1183,8 @@ function saveGatedDamageTargeting(
 ): SpellTargeting | null {
   return (
     saveGateTargeting(attachment) ??
-    fireballPointOriginSphereTargeting(spell, attachment)
+    fireballPointOriginSphereTargeting(spell, attachment) ??
+    shatterPointOriginSphereTargeting(spell, attachment)
   );
 }
 
@@ -1190,6 +1203,32 @@ function fireballPointOriginSphereTargeting(
     value.origin.kind === "point_within_range" &&
     value.shape.kind === "sphere" &&
     value.shape.radiusFeet === FIREBALL_AREA_RADIUS_FEET
+  ) {
+    return {
+      kind: "pointOriginSphere",
+      radiusFeet: movementFeet(value.shape.radiusFeet),
+    };
+  }
+  return null;
+}
+
+function shatterPointOriginSphereTargeting(
+  spell: SpellRecord,
+  attachment: Attachment,
+): Extract<SpellTargeting, { readonly kind: "pointOriginSphere" }> | null {
+  const value = attachment.kind === "hole" ? attachment.value : attachment;
+  if (
+    spell.name === SHATTER_SPELL_NAME &&
+    spell.provenance.kind === "srd-5.2.1" &&
+    spell.provenance.section === SHATTER_PROVENANCE_SECTION &&
+    spell.mechanics.level === SHATTER_BASE_SPELL_LEVEL &&
+    spell.mechanics.castingTime.kind === "action" &&
+    spell.mechanics.range.kind === "point" &&
+    spell.mechanics.range.feet === SHATTER_RANGE_FEET &&
+    value.kind === "area" &&
+    value.origin.kind === "point_within_range" &&
+    value.shape.kind === "sphere" &&
+    value.shape.radiusFeet === SHATTER_AREA_RADIUS_FEET
   ) {
     return {
       kind: "pointOriginSphere",
@@ -1597,8 +1636,37 @@ function saveGatedDamagePostSaveAreaEffect(
 ): SpellPostSaveAreaEffect | null {
   return (
     fireballPostSaveAreaEffect(spell, phase, directPhase) ??
+    shatterPostSaveAreaEffect(spell, phase, directPhase) ??
     thunderwavePostSaveAreaEffect(spell, phase, directPhase)
   );
+}
+
+function saveGatedDamagePhaseCount(
+  postSaveAreaEffect: SpellPostSaveAreaEffect | null,
+): number {
+  if (postSaveAreaEffect === null) {
+    return 1;
+  }
+  if (
+    postSaveAreaEffect.kind === "fireballObjectIgnition" ||
+    postSaveAreaEffect.kind === "thunderwave"
+  ) {
+    return 2;
+  }
+  if (postSaveAreaEffect.kind === "shatterObjectDamage") {
+    return 1;
+  }
+  const exhaustive: never = postSaveAreaEffect;
+  return exhaustive;
+}
+
+function saveGatedDamageSaveRollModeRule(
+  spell: SpellRecord,
+  phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
+): SpellSavingThrowRollModeRule | null {
+  return isShatterSaveGateDamageShape(spell, phase)
+    ? { kind: "creatureType", creatureType: "construct", mode: "disadvantage" }
+    : null;
 }
 
 function fireballPostSaveAreaEffect(
@@ -1649,6 +1717,54 @@ function fireballPostSaveAreaEffect(
     return null;
   }
   return { kind: "fireballObjectIgnition" };
+}
+
+function shatterPostSaveAreaEffect(
+  spell: SpellRecord,
+  phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
+  directPhase: SpellActivationPhase | undefined,
+): SpellPostSaveAreaEffect | null {
+  return directPhase === undefined && isShatterSaveGateDamageShape(spell, phase)
+    ? { kind: "shatterObjectDamage" }
+    : null;
+}
+
+function isShatterSaveGateDamageShape(
+  spell: SpellRecord,
+  phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
+): boolean {
+  const damage = phase.onFail;
+  return (
+    spell.name === SHATTER_SPELL_NAME &&
+    spell.provenance.kind === "srd-5.2.1" &&
+    spell.provenance.section === SHATTER_PROVENANCE_SECTION &&
+    spell.mechanics.level === SHATTER_BASE_SPELL_LEVEL &&
+    spell.mechanics.castingTime.kind === "action" &&
+    spell.mechanics.range.kind === "point" &&
+    spell.mechanics.range.feet === SHATTER_RANGE_FEET &&
+    spell.mechanics.duration.kind === "instantaneous" &&
+    phase.ability === "con" &&
+    phase.dc.kind === "caster_spell_save_dc" &&
+    phase.onSuccess.kind === "half_damage" &&
+    phase.attachment.kind === "hole" &&
+    phase.attachment.value.kind === "area" &&
+    phase.attachment.value.origin.kind === "point_within_range" &&
+    phase.attachment.value.shape.kind === "sphere" &&
+    phase.attachment.value.shape.radiusFeet === SHATTER_AREA_RADIUS_FEET &&
+    damage.kind === "damage" &&
+    damage.damageType === "thunder" &&
+    damage.amount.kind === "linear_per_level" &&
+    damage.amount.axis === "slot" &&
+    damage.amount.startingAtLevel === SHATTER_BASE_SPELL_LEVEL &&
+    damage.amount.base.dice === SHATTER_BASE_DAMAGE_DICE &&
+    damage.amount.base.dieSize === SHATTER_DAMAGE_DIE_SIZE &&
+    damage.amount.perLevel.dice === SHATTER_SLOT_DAMAGE_DICE_INCREMENT &&
+    damage.amount.perLevel.dieSize === undefined &&
+    damage.amount.base.flat === undefined &&
+    damage.amount.base.spellcastingMod === undefined &&
+    damage.amount.base.abilityModifier === undefined &&
+    damage.amount.perLevel.flat === undefined
+  );
 }
 
 function thunderwavePostSaveAreaEffect(

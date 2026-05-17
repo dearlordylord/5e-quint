@@ -4,7 +4,7 @@
 
 import { ATTACK_ROLL_MODES } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type { ArmorClass as BattleArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
-import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
+import { CREATURE_TYPES, STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
 import {
   CONDITIONS as ALL_CONDITIONS,
   AbilityModifier,
@@ -293,6 +293,9 @@ const SpellPostSaveAreaEffectSchema = Schema.Union(
     kind: Schema.Literal("fireballObjectIgnition"),
   }),
   Schema.Struct({
+    kind: Schema.Literal("shatterObjectDamage"),
+  }),
+  Schema.Struct({
     kind: Schema.Literal("thunderwave"),
     creaturePush: Schema.Struct({
       distanceFeet: MovementFeet,
@@ -304,6 +307,18 @@ const SpellPostSaveAreaEffectSchema = Schema.Union(
       objectLocation: Schema.Literal("entirely_within_area"),
     }),
     audibleBoom: BattleThunderwaveAudibleBoomSchema,
+  }),
+);
+
+const SpellSavingThrowRollModeRuleSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("hostileTarget"),
+    mode: Schema.Literal("advantage"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("creatureType"),
+    creatureType: Schema.Literal(...CREATURE_TYPES),
+    mode: Schema.Literal("disadvantage"),
   }),
 );
 
@@ -364,6 +379,21 @@ const BattleSpellAreaChoiceBaseSchema = {
   affectedTargetIds: Schema.Array(CombatantId),
 } as const;
 
+const BattleObjectDamageDispositionSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("hitPoints"),
+    hitPoints: HpSchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("hitPointsWithDamageThreshold"),
+    hitPoints: HpSchema,
+    damageThreshold: DamageAmount,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("tableResolved"),
+  }),
+);
+
 const BattleSpellAreaChoiceSchema = Schema.Union(
   Schema.Struct({
     ...BattleSpellAreaChoiceBaseSchema,
@@ -407,6 +437,18 @@ const BattleSpellAreaChoiceSchema = Schema.Union(
             kind: Schema.Literal("wornOrCarried"),
           }),
         ),
+      }),
+    ),
+    areaId: Schema.optionalWith(Schema.Never, { exact: true }),
+    sleepNonSleeperFacts: Schema.optionalWith(Schema.Never, { exact: true }),
+  }),
+  Schema.Struct({
+    ...BattleSpellAreaChoiceBaseSchema,
+    kind: Schema.Literal("shatterArea"),
+    nonmagicalUnattendedObjectDamageFacts: Schema.Array(
+      Schema.Struct({
+        objectId: BattleObjectId,
+        disposition: BattleObjectDamageDispositionSchema,
       }),
     ),
     areaId: Schema.optionalWith(Schema.Never, { exact: true }),
@@ -570,21 +612,6 @@ const SpellAttackDamagePayloadSchema = Schema.Union(
       Schema.int(),
       Schema.greaterThanOrEqualTo(0),
     ),
-  }),
-);
-
-const BattleObjectDamageDispositionSchema = Schema.Union(
-  Schema.Struct({
-    kind: Schema.Literal("hitPoints"),
-    hitPoints: HpSchema,
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("hitPointsWithDamageThreshold"),
-    hitPoints: HpSchema,
-    damageThreshold: DamageAmount,
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("tableResolved"),
   }),
 );
 
@@ -1144,6 +1171,7 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       failedSavePostDamageRiders: Schema.Array(
         SpellFailedSavePostDamageRiderSchema,
       ),
+      saveRollModeRule: Schema.NullOr(SpellSavingThrowRollModeRuleSchema),
       postSaveAreaEffect: Schema.optionalWith(SpellPostSaveAreaEffectSchema, {
         exact: true,
       }),
@@ -1211,6 +1239,7 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       failedSavePostDamageRiders: Schema.Array(
         SpellFailedSavePostDamageRiderSchema,
       ),
+      saveRollModeRule: Schema.NullOr(SpellSavingThrowRollModeRuleSchema),
       postSaveAreaEffect: Schema.optionalWith(SpellPostSaveAreaEffectSchema, {
         exact: true,
       }),
@@ -1275,12 +1304,7 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
         ),
         turnStartDamage: Schema.NullOr(BattleRuntimeObjectSchema),
       }),
-      saveRollModeRule: Schema.NullOr(
-        Schema.Struct({
-          kind: Schema.Literal("hostileTarget"),
-          mode: Schema.Literal("advantage"),
-        }),
-      ),
+      saveRollModeRule: Schema.NullOr(SpellSavingThrowRollModeRuleSchema),
       rangeFeet: MovementFeet,
     }),
     Schema.Struct({
@@ -2161,6 +2185,34 @@ type BattleSpellAreaChoiceEncoded = {
   | {
       readonly kind: "greaseGroundArea";
       readonly areaId: string;
+      readonly sleepNonSleeperFacts?: never;
+    }
+  | {
+      readonly kind: "fireballArea";
+      readonly objectIgnitionFacts: readonly {
+        readonly objectId: string;
+        readonly disposition:
+          | { readonly kind: "flammableUnattended" }
+          | { readonly kind: "notFlammable" }
+          | { readonly kind: "wornOrCarried" };
+      }[];
+      readonly areaId?: never;
+      readonly sleepNonSleeperFacts?: never;
+    }
+  | {
+      readonly kind: "shatterArea";
+      readonly nonmagicalUnattendedObjectDamageFacts: readonly {
+        readonly objectId: string;
+        readonly disposition:
+          | { readonly kind: "hitPoints"; readonly hitPoints: number }
+          | {
+              readonly kind: "hitPointsWithDamageThreshold";
+              readonly hitPoints: number;
+              readonly damageThreshold: number;
+            }
+          | { readonly kind: "tableResolved" };
+      }[];
+      readonly areaId?: never;
       readonly sleepNonSleeperFacts?: never;
     }
   | {

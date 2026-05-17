@@ -2,6 +2,7 @@ import {
   type AvailableBattleAct,
   type BattleFill,
   type BattleHole,
+  type BattleObjectDamageDisposition,
   type BattleObjectId,
   type BattleReactionProcedureChoice,
   type BattleResolutionResult,
@@ -114,6 +115,12 @@ export function reactionDecisionFill(
   return { kind: "reactionDecision", holeId: hole.holeId, value }
 }
 
+export function declineReactionDecision(
+  reactorId: CombatantId
+): Extract<BattleFill, { readonly kind: "reactionDecision" }>["value"] {
+  return { kind: "decline", reactorId }
+}
+
 export function fireballSavingThrowOutcomeFill(
   hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
   input: {
@@ -145,6 +152,35 @@ export function fireballSavingThrowOutcomeFill(
   }
 }
 
+export function shatterSavingThrowOutcomeFill(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+  input: {
+    readonly originAnchorId: CombatantId
+    readonly outcomes: ReadonlyArray<{
+      readonly targetId: CombatantId
+      readonly succeeded: boolean
+    }>
+    readonly nonmagicalUnattendedObjectDamageFacts: ReadonlyArray<{
+      readonly objectId: BattleObjectId
+      readonly disposition: BattleObjectDamageDisposition
+    }>
+  }
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    value: {
+      area: {
+        kind: "shatterArea",
+        originAnchorId: input.originAnchorId,
+        affectedTargetIds: input.outcomes.map((outcome) => outcome.targetId),
+        nonmagicalUnattendedObjectDamageFacts: input.nonmagicalUnattendedObjectDamageFacts
+      },
+      outcomes: input.outcomes
+    }
+  }
+}
+
 export function damageRollFillWithGroups(
   hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
   groups: ReadonlyNonEmptyArray<ReadonlyNonEmptyArray<number>>
@@ -163,6 +199,17 @@ function rolledDiceGroup(
   const [firstResult, ...restResults] = group
   return {
     results: [DieRollResult(firstResult), ...restResults.map(DieRollResult)]
+  }
+}
+
+export function deathSavingThrowFill(
+  hole: Extract<BattleHole, { readonly kind: "deathSavingThrow" }>,
+  roll: number
+): Extract<BattleFill, { readonly kind: "deathSavingThrow" }> {
+  return {
+    kind: "deathSavingThrow",
+    holeId: hole.holeId,
+    value: DieRollResult(roll)
   }
 }
 

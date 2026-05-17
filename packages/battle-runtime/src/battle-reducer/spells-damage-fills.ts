@@ -43,6 +43,7 @@ import {
 import { hasDodgeBenefit } from "./attack-roll.ts";
 import { spellTargetHasNonSpatialPrerequisites } from "./spells-targeting.ts";
 import { combatantsAreEnemies } from "./creature-state-leaves.ts";
+import { battleCreatureType } from "./domain-helpers.ts";
 import {
   ATTACK_ROLL_HOLE_ID,
   ATTACK_ROLL_HOLE_INSTANCE,
@@ -95,7 +96,7 @@ type SpellObjectDamageInvocation =
     >
   | Extract<
       SupportedDamageSpellInvocation,
-      { readonly procedure: "spellAttackDamage" }
+      { readonly procedure: "saveGatedDamage" | "spellAttackDamage" }
     >;
 
 export function spellAttackRollHole(
@@ -697,7 +698,8 @@ export function spellSavingThrowOutcomeHole(
         : invocation.procedure === "rollModifier"
           ? (invocation.saveGate?.ability ?? "cha")
           : invocation.ability,
-      invocation.procedure === "saveGatedCondition"
+      invocation.procedure === "saveGatedCondition" ||
+        invocation.procedure === "saveGatedDamage"
         ? { actorId, invocation }
         : undefined,
     ),
@@ -753,8 +755,8 @@ export function spellSavingThrowTargeting(
   return invocation.procedure === "counterspell"
     ? { kind: "singleCombatant" }
     : invocation.procedure === "attackBurstSaveDamage"
-    ? invocation.burst.targeting
-    : invocation.targeting;
+      ? invocation.burst.targeting
+      : invocation.targeting;
 }
 
 export function spellAreaTargetingLabel(
@@ -788,7 +790,7 @@ export function savingThrowRollModeProjections(
     readonly actorId: CombatantId;
     readonly invocation: Extract<
       SupportedSpellInvocation,
-      { readonly procedure: "saveGatedCondition" }
+      { readonly procedure: "saveGatedCondition" | "saveGatedDamage" }
     >;
   },
 ): readonly BattleSavingThrowRollModeProjection[] {
@@ -819,6 +821,32 @@ export function savingThrowRollModeProjections(
               targetId,
               invocation,
             ),
+        )
+        .map(([targetId]) => ({
+          targetId,
+          rollMode: saveRollModeRule.mode,
+        })),
+    ]);
+  }
+  if (
+    spellSaveRollMode !== undefined &&
+    saveRollModeRule?.kind === "creatureType"
+  ) {
+    const { actorId, invocation } = spellSaveRollMode;
+    return uniqueSavingThrowRollModeProjections([
+      ...dodgeProjections,
+      ...[...state.combatants]
+        .filter(
+          ([, target]) =>
+            battleCreatureType(target) === saveRollModeRule.creatureType,
+        )
+        .filter(([targetId]) =>
+          spellTargetHasNonSpatialPrerequisites(
+            state,
+            actorId,
+            targetId,
+            invocation,
+          ),
         )
         .map(([targetId]) => ({
           targetId,

@@ -17,6 +17,7 @@ import {
   type BattleHoleId,
   type BattleAfterDamageEvent,
   type BattleFill,
+  type BattleObjectDamageOutcome,
   type BattleObjectIgnitionOutcome,
   type BattleResolutionResult,
   type BattleSpellAreaChoice,
@@ -61,6 +62,7 @@ import {
   commandOptionChoiceHole,
   spellDamageAmountForTarget,
   spellDamageHole,
+  spellObjectDamageOutcome,
   spellSavingThrowOutcomeHole,
   spellSavingThrowTargeting,
   spellTargetHole,
@@ -633,16 +635,18 @@ export function resolveSaveGateDamageSpellAct(input: {
       savingThrowValidation,
     );
   }
+  const savingThrowArea =
+    "area" in savingThrowOutcomes ? savingThrowOutcomes.area : undefined;
   const failedTargets = savingThrowOutcomes.outcomes.flatMap((outcome) =>
     outcome.succeeded ? [] : [outcome.targetId],
   );
   const objectIgnitions = postSaveAreaObjectIgnitions({
     actorId: input.actorId,
-    area: "area" in savingThrowOutcomes ? savingThrowOutcomes.area : undefined,
+    area: savingThrowArea,
     invocation: input.invocation,
   });
   const postSaveAreaEffectValidation = validatePostSaveAreaEffect({
-    area: "area" in savingThrowOutcomes ? savingThrowOutcomes.area : undefined,
+    area: savingThrowArea,
     failedTargetIds: failedTargets,
     invocation: input.invocation,
   });
@@ -675,6 +679,10 @@ export function resolveSaveGateDamageSpellAct(input: {
       ? []
       : [outcome.targetId],
   );
+  const objectDamageFacts = postSaveAreaObjectDamageFacts({
+    area: savingThrowArea,
+    invocation: input.invocation,
+  });
   if (failedTargets.length > 0) {
     const saveFailedReactionWindow = maybeOpenReactionWindow(
       input.input.state,
@@ -695,7 +703,7 @@ export function resolveSaveGateDamageSpellAct(input: {
       return saveFailedReactionWindow;
     }
   }
-  if (damageTargets.length === 0) {
+  if (damageTargets.length === 0 && objectDamageFacts.length === 0) {
     if (
       input.fillSet.damageRoll !== undefined ||
       input.fillSet.damageDispositions.length > 0
@@ -739,6 +747,11 @@ export function resolveSaveGateDamageSpellAct(input: {
   if (damageValidation !== null) {
     return invalidResult(input.input.state, "invalidFill", damageValidation);
   }
+  const objectDamages = postSaveAreaObjectDamages({
+    facts: objectDamageFacts,
+    invocation: input.invocation,
+    damageRoll,
+  });
 
   const concentrationSaves = damageTargets.flatMap((targetId) => {
     const target = input.input.state.combatants.get(targetId);
@@ -928,6 +941,7 @@ export function resolveSaveGateDamageSpellAct(input: {
     invocation: input.invocation,
     movementFill: input.fillSet.movement,
     afterDamageEvents,
+    objectDamages,
     objectIgnitions,
     suppressedReactionTrigger: input.input.suppressedReactionTrigger,
   });
@@ -939,6 +953,7 @@ export function resolveSaveGateDamageSpellAct(input: {
     state: nextState,
     subject: input.input.subject,
     events: afterDamageEvents,
+    objectDamages,
     objectIgnitions,
     suppressedReactionTrigger: input.input.suppressedReactionTrigger,
   });
@@ -972,6 +987,7 @@ function resolveFailedSaveForcedReactionMovement(input: {
       >
     | undefined;
   readonly afterDamageEvents: readonly BattleAfterDamageEvent[];
+  readonly objectDamages: readonly BattleObjectDamageOutcome[];
   readonly objectIgnitions: readonly BattleObjectIgnitionOutcome[];
   readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
 }): BattleResolutionResult | null {
@@ -1030,6 +1046,7 @@ function resolveFailedSaveForcedReactionMovement(input: {
       state: spendReaction(input.state, targetId),
       subject: input.subject,
       events: input.afterDamageEvents,
+      objectDamages: input.objectDamages,
       objectIgnitions: input.objectIgnitions,
       suppressedReactionTrigger: input.suppressedReactionTrigger,
     });
@@ -1067,6 +1084,7 @@ function resolveFailedSaveForcedReactionMovement(input: {
           subject: input.subject,
           movement: parsedMovement.movement,
           events: input.afterDamageEvents,
+          objectDamages: input.objectDamages,
           objectIgnitions: input.objectIgnitions,
         },
       },
@@ -1083,6 +1101,7 @@ function resolveFailedSaveForcedReactionMovement(input: {
     ),
     subject: input.subject,
     events: input.afterDamageEvents,
+    objectDamages: input.objectDamages,
     objectIgnitions: input.objectIgnitions,
     suppressedReactionTrigger: input.suppressedReactionTrigger,
   });
@@ -1677,6 +1696,14 @@ export function validateSavingThrowOutcomes(
   ) {
     return "Fireball object ignition facts are only valid for Fireball.";
   }
+  if (
+    "kind" in value.area &&
+    value.area.kind === "shatterArea" &&
+    (!("postSaveAreaEffect" in hole.spell) ||
+      hole.spell.postSaveAreaEffect?.kind !== "shatterObjectDamage")
+  ) {
+    return "Shatter object damage facts are only valid for Shatter.";
+  }
   for (const targetId of affectedTargets) {
     if (!state.combatants.has(targetId)) {
       return "Save-gate spell area affected target must be a combatant in this battle.";
@@ -1726,19 +1753,28 @@ function validatePostSaveAreaEffect(input: {
 }): string | null {
   if (input.invocation.postSaveAreaEffect === undefined) {
     if (input.area !== undefined && "kind" in input.area) {
-      return input.area.kind === "fireballArea"
-        ? "Fireball object ignition facts are only valid for Fireball."
-        : "Thunderwave push facts are only valid for Thunderwave.";
+      if (input.area.kind === "fireballArea") {
+        return "Fireball object ignition facts are only valid for Fireball.";
+      }
+      if (input.area.kind === "shatterArea") {
+        return "Shatter object damage facts are only valid for Shatter.";
+      }
+      return "Thunderwave push facts are only valid for Thunderwave.";
     }
     return null;
   }
-  if (input.invocation.postSaveAreaEffect.kind === "fireballObjectIgnition") {
+  const effect = input.invocation.postSaveAreaEffect;
+  if (effect.kind === "fireballObjectIgnition") {
     return validateFireballAreaEffect(input);
   }
-  if (input.invocation.postSaveAreaEffect.kind === "thunderwave") {
+  if (effect.kind === "thunderwave") {
     return validateThunderwaveAreaEffect(input);
   }
-  return null;
+  if (effect.kind === "shatterObjectDamage") {
+    return validateShatterAreaEffect(input);
+  }
+  const exhaustive: never = effect;
+  return exhaustive;
 }
 
 function validateFireballAreaEffect(input: {
@@ -1789,6 +1825,72 @@ function postSaveAreaObjectIgnitions(input: {
           },
         ]
       : [],
+  );
+}
+
+function validateShatterAreaEffect(input: {
+  readonly area: BattleSpellAreaChoice | undefined;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "saveGatedDamage" }
+  >;
+}): string | null {
+  if (input.invocation.postSaveAreaEffect?.kind !== "shatterObjectDamage") {
+    return "Shatter object damage validation requires a Shatter effect.";
+  }
+  if (input.area === undefined || input.area.kind !== "shatterArea") {
+    return "Shatter requires caller-supplied nonmagical unattended object damage area facts.";
+  }
+  const objectIds = new Set<string>();
+  for (const fact of input.area.nonmagicalUnattendedObjectDamageFacts) {
+    if (objectIds.has(fact.objectId)) {
+      return "Shatter object damage facts must not duplicate objects.";
+    }
+    objectIds.add(fact.objectId);
+  }
+  return null;
+}
+
+function postSaveAreaObjectDamageFacts(input: {
+  readonly area: BattleSpellAreaChoice | undefined;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "saveGatedDamage" }
+  >;
+}): Extract<
+  BattleSpellAreaChoice,
+  { readonly kind: "shatterArea" }
+>["nonmagicalUnattendedObjectDamageFacts"] {
+  if (
+    input.invocation.postSaveAreaEffect?.kind !== "shatterObjectDamage" ||
+    input.area?.kind !== "shatterArea"
+  ) {
+    return [];
+  }
+  return input.area.nonmagicalUnattendedObjectDamageFacts;
+}
+
+function postSaveAreaObjectDamages(input: {
+  readonly facts: ReadonlyArray<
+    Extract<
+      BattleSpellAreaChoice,
+      { readonly kind: "shatterArea" }
+    >["nonmagicalUnattendedObjectDamageFacts"][number]
+  >;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "saveGatedDamage" }
+  >;
+  readonly damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>;
+}): readonly BattleObjectDamageOutcome[] {
+  return input.facts.map((fact) =>
+    spellObjectDamageOutcome({
+      objectId: fact.objectId,
+      invocation: input.invocation,
+      damageRoll: input.damageRoll,
+      critical: false,
+      disposition: fact.disposition,
+    }),
   );
 }
 

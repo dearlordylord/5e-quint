@@ -174,14 +174,19 @@ The design has to settle these domain questions before implementation:
 
 ### Phase 4B: Full Demo Parity
 
-The current promoted React demo is a compact opening exchange, not the full old
-script. It shows 12 authored playback beats:
+Implemented in the worktree: the promoted React demo now runs the full duel as
+151 visible playback beats, using active Surface content plus
+`@dnd/battle-runtime` resolution. It includes:
 
-- battle joined;
-- Laser Wizard starts Fireball;
-- four Counterspell opportunity/cast pairs for the E -> B -> F -> C chain;
-- Fireball resumes;
-- one saving-throw/damage resolution.
+- six Wizard-like combatants in the old A, D, B, E, C, F initiative order;
+- Fireball, Shatter, Counterspell, turn advancement, and death saving throws;
+- Shatter's SRD 5.2.1 clauses for Construct save Disadvantage and
+  nonmagical unattended object damage as explicit runtime projections/facts;
+- two recursive E -> B -> F -> C Counterspell chains;
+- one explicit declined Counterspell window against the first Shatter;
+- visible runtime boundary beats for turn starts, spell-cast reaction facts,
+  area selection, saving throw outcomes, damage rolls, damage application, and
+  death saves.
 
 The old quarantined `packages/v0/src/demo/fireball-battle.ts`
 `FIREBALL_BATTLE` script has 149 machine events:
@@ -198,14 +203,13 @@ The old quarantined `packages/v0/src/demo/fireball-battle.ts`
 That 149-event count is a complete scripted duel: the opening Fireball,
 Counterspell chain, a return Fireball, later Shatters and Fireballs, reaction
 passes, after-damage passes, knockouts, death saves, deaths, and stabilization.
-It is not equivalent to the promoted demo's current first Fireball slice.
 
-If the promoted demo also exposes runtime holes as visible playback beats
-instead of collapsing filled holes into one narrated result, the full promoted
-demo should have more than 149 visible steps. The old v0 script counted one
-machine event per explicit driver event; it did not separately surface every
-current runtime hole such as spell-cast reaction fact fill, reaction decision,
-saving throw outcome, or grouped damage roll fill.
+The promoted 151-step version is intentionally not a one-event-for-one-event v0
+port. The new runtime does not model v0's generic save-failed pass and
+after-damage decline pseudo-events when no SRD reaction choice exists. Instead,
+it surfaces the active runtime holes and projections that do exist: spell-cast
+reaction facts, reaction decisions, area selection, saving throw outcomes,
+grouped damage rolls, turn advancement, and death saving throws.
 
 ## Verification
 

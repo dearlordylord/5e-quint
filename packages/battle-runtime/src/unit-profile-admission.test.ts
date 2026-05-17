@@ -44,6 +44,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV53 jump
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV51 thunderwave
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV54 fireball
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV55 shatter
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV52 dissonant_whispers
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT21 mycelium_step
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT18 defense
@@ -280,6 +281,7 @@ const commandUnitId = "command";
 const commandLegendaryActorId = combatantId("unit-profile-command-legendary");
 const fireBoltUnitId = "fire_bolt";
 const fireballUnitId = "fireball";
+const shatterUnitId = "shatter";
 const falseLifeUnitId = "false_life";
 const faerieFireUnitId = "faerie_fire";
 const guidingBoltUnitId = "guiding_bolt";
@@ -16975,6 +16977,198 @@ describe("SRDINV54 deterministic Fireball Spell Unit admission", () => {
   });
 });
 
+describe("SRDINV55 deterministic Shatter Spell Unit admission", () => {
+  test("shatter is admitted as point-origin Sphere save damage", () => {
+    const spell = spellRecord(shatterUnitId);
+    const act = spellAct({
+      state: spellBattle({
+        preparedSpells: [spell],
+        spellSlots: [{ spellLevel: 3, count: 1 }],
+      }),
+      spellId: shatterUnitId,
+      slotLevel: 3,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(shatterUnitId, 3, "saveGatedDamage"),
+      mode: { tag: "cast" },
+    });
+    const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+    expect(savingThrow).toEqual(
+      expect.objectContaining({
+        label: "Shatter point-origin Sphere Saving Throw outcomes",
+        ability: "con",
+        dc: { kind: "caster_spell_save_dc" },
+      }),
+    );
+    expect(spellHoleInvocation([savingThrow])).toEqual(
+      expect.objectContaining({
+        procedure: "saveGatedDamage",
+        spell,
+        resource: { tag: "spellSlot", slotLevel: 3 },
+        ability: "con",
+        targeting: { kind: "pointOriginSphere", radiusFeet: 10 },
+        damage: {
+          expr: { dice: 4, dieSize: 8 },
+          damageType: "thunder",
+        },
+        successDamage: "half",
+        rangeFeet: 60,
+        failedSavePostDamageRiders: [],
+        saveRollModeRule: {
+          kind: "creatureType",
+          creatureType: "construct",
+          mode: "disadvantage",
+        },
+        postSaveAreaEffect: { kind: "shatterObjectDamage" },
+      }),
+    );
+  });
+
+  test("shatter marks Constructs with Disadvantage on the save", () => {
+    const spell = spellRecord(shatterUnitId);
+    const constructId = combatantId("unit-profile-shatter-construct");
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      statBlockTargets: [
+        {
+          combatantId: constructId,
+          statBlock: statBlockWithCreatureType("construct"),
+          initiative: 9,
+        },
+      ],
+    });
+    const act = spellAct({ state, spellId: shatterUnitId, slotLevel: 2 });
+    const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+
+    expect(savingThrow.targetRollModes).toEqual([
+      { targetId: constructId, rollMode: "disadvantage" },
+    ]);
+  });
+
+  test("shatter applies area save damage with explicit object damage facts", () => {
+    const spell = spellRecord(shatterUnitId);
+    const secondTargetId = combatantId("unit-profile-shatter-target-2");
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      extraTargetIds: [secondTargetId],
+      targetHp: 30,
+      targetMaxHp: 30,
+    });
+    const act = spellAct({ state, spellId: shatterUnitId, slotLevel: 2 });
+    const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+    const saveFill = shatterSavingThrowOutcomeFill(
+      savingThrow,
+      [
+        { targetId: spellTargetId, succeeded: false },
+        { targetId: secondTargetId, succeeded: true },
+      ],
+      [],
+    );
+    const damageRoll = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [saveFill],
+      }),
+      "rolledDice",
+    );
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [saveFill, damageRollFillWithGroups(damageRoll, [[5, 5, 4]])],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Shatter to resolve.");
+    }
+    expect(Number(requireCombatant(resolved.state, spellTargetId).hp)).toBe(16);
+    expect(Number(requireCombatant(resolved.state, secondTargetId).hp)).toBe(5);
+  });
+
+  test("shatter damages supplied nonmagical unattended object facts", () => {
+    const spell = spellRecord(shatterUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = spellAct({ state, spellId: shatterUnitId, slotLevel: 2 });
+    const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+    const saveFill = shatterSavingThrowOutcomeFill(
+      savingThrow,
+      [],
+      [
+        {
+          objectId: battleObjectId("unit-profile-shatter-vase"),
+          disposition: { kind: "hitPoints", hitPoints: Hp(20) },
+        },
+      ],
+    );
+    const damageRoll = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [saveFill],
+      }),
+      "rolledDice",
+    );
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [saveFill, damageRollFillWithGroups(damageRoll, [[5, 5, 4]])],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      objectDamages: [
+        {
+          kind: "hitPoints",
+          objectId: battleObjectId("unit-profile-shatter-vase"),
+          damageType: "thunder",
+          rolledDamage: 14,
+          effectiveDamage: 14,
+          priorHitPoints: 20,
+          nextHitPoints: 6,
+          destroyed: false,
+        },
+      ],
+    });
+  });
+
+  test("shatter requires explicit object damage area facts", () => {
+    const spell = spellRecord(shatterUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = spellAct({ state, spellId: shatterUnitId, slotLevel: 2 });
+    const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          savingThrowOutcomeFill(savingThrow, [
+            { targetId: spellTargetId, succeeded: false },
+          ]),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Shatter requires caller-supplied nonmagical unattended object damage area facts.",
+    });
+  });
+});
+
 describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () => {
   test("dissonant whispers is admitted as single-target Wisdom save damage with forced Reaction movement", () => {
     const spell = spellRecord(dissonantWhispersUnitId);
@@ -19574,6 +19768,32 @@ function fireballSavingThrowOutcomeFill(
         originAnchorId: spellCasterId,
         affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
         objectIgnitionFacts,
+      },
+      outcomes,
+    },
+  };
+}
+
+function shatterSavingThrowOutcomeFill(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+  outcomes: readonly {
+    readonly targetId: CombatantId;
+    readonly succeeded: boolean;
+  }[],
+  nonmagicalUnattendedObjectDamageFacts: readonly {
+    readonly objectId: ReturnType<typeof battleObjectId>;
+    readonly disposition: BattleObjectDamageDisposition;
+  }[],
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    value: {
+      area: {
+        kind: "shatterArea",
+        originAnchorId: spellCasterId,
+        affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
+        nonmagicalUnattendedObjectDamageFacts,
       },
       outcomes,
     },

@@ -1003,6 +1003,7 @@ export type BattleInterruptedProcedure =
       readonly kind: "afterDamageSequence";
       readonly subject: BattleSubject;
       readonly events: readonly BattleAfterDamageEvent[];
+      readonly objectDamages: readonly BattleObjectDamageOutcome[];
       readonly objectIgnitions: readonly BattleObjectIgnitionOutcome[];
     }
   | {
@@ -1022,6 +1023,7 @@ export type BattleInterruptedProcedure =
       readonly subject: BattleSubject;
       readonly movement: BattleResolvedMovement;
       readonly events: readonly BattleAfterDamageEvent[];
+      readonly objectDamages: readonly BattleObjectDamageOutcome[];
       readonly objectIgnitions: readonly BattleObjectIgnitionOutcome[];
     }
   | {
@@ -1852,6 +1854,9 @@ export type SpellPostSaveAreaEffect =
       readonly kind: "fireballObjectIgnition";
     }
   | {
+      readonly kind: "shatterObjectDamage";
+    }
+  | {
       readonly kind: "thunderwave";
       readonly creaturePush: {
         readonly distanceFeet: MovementFeet;
@@ -1880,10 +1885,16 @@ export type SpellConditionRepeatSave = {
   readonly ability: Ability;
   readonly dc: DcSource;
 };
-export type SpellSavingThrowRollModeRule = {
-  readonly kind: "hostileTarget";
-  readonly mode: "advantage";
-};
+export type SpellSavingThrowRollModeRule =
+  | {
+      readonly kind: "hostileTarget";
+      readonly mode: "advantage";
+    }
+  | {
+      readonly kind: "creatureType";
+      readonly creatureType: CreatureType;
+      readonly mode: "disadvantage";
+    };
 export type SpellFailedSaveAttackRollEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "faerieFireOutline" }
@@ -2421,6 +2432,7 @@ export type SupportedSpellInvocation =
       readonly successDamage: "none" | "half";
       readonly rangeFeet: MovementFeet;
       readonly failedSavePostDamageRiders: readonly SpellFailedSavePostDamageRider[];
+      readonly saveRollModeRule: SpellSavingThrowRollModeRule | null;
       readonly postSaveAreaEffect?: SpellPostSaveAreaEffect;
     })
   | (PreparedDamageSpellSource & {
@@ -3219,6 +3231,10 @@ export type BattleFireballObjectIgnitionFact = {
   readonly objectId: BattleObjectId;
   readonly disposition: BattleObjectIgnitionDisposition;
 };
+export type BattleShatterNonmagicalUnattendedObjectDamageFact = {
+  readonly objectId: BattleObjectId;
+  readonly disposition: BattleObjectDamageDisposition;
+};
 export type BattleDroppedObjectOutcome = {
   readonly kind: "heldObjectDropped";
   readonly actorId: CombatantId;
@@ -3634,6 +3650,10 @@ type BattleSpellAreaChoiceKind =
   | {
       readonly kind: "fireballArea";
       readonly objectIgnitionFacts: readonly BattleFireballObjectIgnitionFact[];
+    }
+  | {
+      readonly kind: "shatterArea";
+      readonly nonmagicalUnattendedObjectDamageFacts: readonly BattleShatterNonmagicalUnattendedObjectDamageFact[];
     }
   | {
       readonly kind: "thunderwaveArea";

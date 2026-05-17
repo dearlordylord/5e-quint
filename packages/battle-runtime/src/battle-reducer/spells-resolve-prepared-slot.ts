@@ -537,6 +537,7 @@ export function resolvePreparedSlotSpellAct(input: {
       state: nextState,
       subject: input.input.subject,
       events: afterDamageEvents,
+      objectDamages: [],
       objectIgnitions: [],
       suppressedReactionTrigger: input.input.suppressedReactionTrigger,
     });

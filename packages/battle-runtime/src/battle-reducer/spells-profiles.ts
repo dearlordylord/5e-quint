@@ -25,13 +25,13 @@ import {
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either, Match } from "effect";
 import {
-	  type BattleCreatureState,
-	  type BattleState,
-	  type BattleTurnResources,
-	  type BattleTurnSpellSlotUse,
-	  type PersistentArmorSpellInvocation,
-	  type SupportedSpellInvocation,
-	} from "../battle-reducer.ts";
+  type BattleCreatureState,
+  type BattleState,
+  type BattleTurnResources,
+  type BattleTurnSpellSlotUse,
+  type PersistentArmorSpellInvocation,
+  type SupportedSpellInvocation,
+} from "../battle-reducer.ts";
 import type {
   CharacterBattleInvocationSpellAccessState,
   CharacterBattleSpellcastingState,
@@ -306,21 +306,21 @@ export function supportedSpellActs(
         spellcasting.spellcastingAbilityModifier,
       ),
     ),
-	    ...preparedSpells.flatMap((spell) =>
-	      supportedPreparedShieldReactionSpellProfile(
-	        spell,
-	        spellcasting.spellSlots,
-	      ),
-	    ),
-	    ...preparedSpells.flatMap((spell) =>
-	      supportedPreparedCounterspellReactionSpellProfile(
-	        spell,
-	        spellcasting.spellSlots,
-	      ),
-	    ),
-	    ...preparedSpells.flatMap((spell) =>
-	      supportedPreparedHellishRebukeReactionSpellProfile(
-	        spell,
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedShieldReactionSpellProfile(
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedCounterspellReactionSpellProfile(
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedHellishRebukeReactionSpellProfile(
+        spell,
         spellcasting.spellSlots,
       ),
     ),
@@ -973,6 +973,7 @@ export function supportedPreparedHellishRebukeReactionSpellProfile(
             successDamage: "half" as const,
             rangeFeet: movementFeet(rangeFeet),
             failedSavePostDamageRiders: [],
+            saveRollModeRule: null,
           },
         ];
   });

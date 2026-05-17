@@ -187,6 +187,7 @@ import type {
   BattleFeatherFallLandingResult,
   BattleInterruptFrame,
   BattleInterruptedProcedure,
+  BattleObjectDamageOutcome,
   BattleObjectIgnitionOutcome,
   BattleOpportunityAttackThreat,
   BattlePendingAttackDamageReduction,
@@ -2333,6 +2334,7 @@ function resolveHellishRebukeReactionSpellCommand(
         }),
       },
     ],
+    objectDamages: [],
     objectIgnitions: [],
     suppressedReactionTrigger: undefined,
   });
@@ -3157,6 +3159,7 @@ export function resumeInterruptedProcedure(
       state,
       subject: continuation.subject,
       events: continuation.events,
+      objectDamages: continuation.objectDamages,
       objectIgnitions: continuation.objectIgnitions,
       suppressedReactionTrigger:
         suppressedReactionTrigger === "afterDamage"
@@ -3190,6 +3193,7 @@ export function resumeInterruptedProcedure(
       state: applyBattleMovement(state, continuation.movement),
       subject: continuation.subject,
       events: continuation.events,
+      objectDamages: continuation.objectDamages,
       objectIgnitions: continuation.objectIgnitions,
       suppressedReactionTrigger:
         suppressedReactionTrigger === "afterDamage"
@@ -3275,6 +3279,7 @@ export function resumeInterruptedProcedure(
           }),
         },
       ],
+      objectDamages: [],
       objectIgnitions: [],
       suppressedReactionTrigger,
     });
@@ -3292,6 +3297,7 @@ export function openAfterDamageSequenceReactionWindow(input: {
   readonly state: BattleState;
   readonly subject: BattleSubject;
   readonly events: readonly BattleAfterDamageEvent[];
+  readonly objectDamages: readonly BattleObjectDamageOutcome[];
   readonly objectIgnitions: readonly BattleObjectIgnitionOutcome[];
   readonly suppressedReactionTrigger: BattleReactionTrigger | undefined;
 }): BattleResolutionResult {
@@ -3301,6 +3307,9 @@ export function openAfterDamageSequenceReactionWindow(input: {
       tag: "resolved",
       state: input.state,
       snapshot: snapshotBattle(input.state),
+      ...(input.objectDamages.length === 0
+        ? {}
+        : { objectDamages: input.objectDamages }),
       ...(input.objectIgnitions.length === 0
         ? {}
         : { objectIgnitions: input.objectIgnitions }),
@@ -3318,6 +3327,7 @@ export function openAfterDamageSequenceReactionWindow(input: {
         kind: "afterDamageSequence",
         subject: input.subject,
         events: remainingEvents,
+        objectDamages: input.objectDamages,
         objectIgnitions: input.objectIgnitions,
       },
     },

@@ -204,6 +204,7 @@ export function resolveSpellAttackBeamSequenceAct(input: {
     state: spent.state,
     subject: input.input.subject,
     events: afterDamageEvents,
+    objectDamages,
     objectIgnitions: [],
     suppressedReactionTrigger: input.input.suppressedReactionTrigger,
   });
@@ -214,7 +215,9 @@ export function resolveSpellAttackBeamSequenceAct(input: {
     tag: "resolved",
     state: afterDamageReactionWindow.state,
     snapshot: snapshotBattle(afterDamageReactionWindow.state),
-    ...(objectDamages.length === 0 ? {} : { objectDamages }),
+    ...(afterDamageReactionWindow.objectDamages === undefined
+      ? {}
+      : { objectDamages: afterDamageReactionWindow.objectDamages }),
   };
 }
 

@@ -10,14 +10,10 @@
 --    for each spell slot level above 2."
 --
 -- ZERO-WIDENING VALIDATION REFERENCE. Sphere + save + thunder damage
--- + half_damage. The "Construct has Disadvantage on the save" clause
--- is a creature-type-conditional save modifier (similar to the A5
--- deferral for Protection-from-Evil-style attacker-type immunity) —
--- modeled as DM agenda for now; save-scoped creature-type filters
--- not yet widened.
---
--- The "object in area also takes damage" clause is implicit from the
--- area attachment.
+-- + half_damage. The battle runtime projects the
+-- "Construct has Disadvantage on the save" clause as a
+-- creature-type-conditional save modifier and requires caller-supplied
+-- Shatter area facts for nonmagical unattended objects in the area.
 
 let shatter =
       { kind = "spell"

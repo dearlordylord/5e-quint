@@ -94,6 +94,7 @@ const requiredFirstVerticalUnitIds = [
   "mass_cure_wounds",
   "healing_word",
   "shield",
+  "shatter",
   "sleep",
   "thunderwave",
   "eldritch_blast",
@@ -187,6 +188,51 @@ describe("SRD Unit catalog boundary", () => {
               },
             },
           ],
+        },
+      ]);
+    }
+  });
+
+  test("keeps Shatter's SRD save-damage clause in the catalog projection", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const shatter = result.catalog.requireUnit("shatter");
+
+      expect(shatter.kind).toBe("spell");
+      if (
+        shatter.kind !== "spell" ||
+        shatter.mechanics.family !== "activation"
+      ) {
+        throw new Error("Expected Shatter to be an activation spell.");
+      }
+      expect(shatter.description).toContain(
+        "Each creature in a 10-foot-radius Sphere centered there makes a Constitution saving throw",
+      );
+      expect(shatter.mechanics.phases).toMatchObject([
+        {
+          kind: "save_gate",
+          attachment: {
+            value: {
+              kind: "area",
+              origin: { kind: "point_within_range" },
+              shape: { kind: "sphere", radiusFeet: 10 },
+            },
+          },
+          ability: "con",
+          onFail: {
+            kind: "damage",
+            damageType: "thunder",
+            amount: {
+              kind: "linear_per_level",
+              axis: "slot",
+              base: { dice: 3, dieSize: 8 },
+              perLevel: { dice: 1 },
+              startingAtLevel: 2,
+            },
+          },
+          onSuccess: { kind: "half_damage" },
         },
       ]);
     }
