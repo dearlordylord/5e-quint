@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L1D-ICE-KNIFE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Ice Knife Selected Identity Replay"
     },
     {
@@ -171,7 +171,7 @@ targets and saving throws in `Spells/Gaining-and-Casting.md` and
 
 ### Task 3 - L1D-ICE-KNIFE - Ice Knife Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `ice_knife`, including the attack hit or miss
 boundary and the burst saving throw projection that the supported profile owns.

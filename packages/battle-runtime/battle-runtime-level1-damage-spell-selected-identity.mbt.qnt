@@ -31,7 +31,26 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
     recordProjection(false, true, 0, 6, 9, "burningHandsMixedConeSavingThrows"),
   }
 
+  action doResolveIceKnifeHitAttackDamageAndBurstSavingThrows = all {
+    qLastResult == "init",
+    recordProjection(
+      false,
+      true,
+      0,
+      4,
+      12,
+      "iceKnifeHitAttackDamageAndBurstSavingThrows",
+    ),
+  }
+
+  action doResolveIceKnifeMissBurstSavingThrows = all {
+    qLastResult == "init",
+    recordProjection(false, true, 0, 8, 12, "iceKnifeMissBurstSavingThrows"),
+  }
+
   action step = any {
     doResolveBurningHandsMixedConeSavingThrows,
+    doResolveIceKnifeHitAttackDamageAndBurstSavingThrows,
+    doResolveIceKnifeMissBurstSavingThrows,
   }
 }

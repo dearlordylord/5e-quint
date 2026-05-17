@@ -80,6 +80,7 @@
 {"unitId":"entangle","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV29C","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"entangle","evidence":{"tag":"selected-identity-mbt","taskId":"condition-saving-throw-lifecycle","ownerPath":"packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts"}}
 {"unitId":"ice_knife","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV29E","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
+{"unitId":"ice_knife","evidence":{"tag":"selected-identity-mbt","taskId":"level1-damage-spell-selected-identity","ownerPath":"packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts"}}
 {"unitId":"bane","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV30B","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"bane","evidence":{"tag":"selected-identity-mbt","taskId":"roll-modifier-buff","ownerPath":"packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts"}}
 {"unitId":"bless","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV30B","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}

@@ -1,5 +1,6 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt level1-damage-spell-selected-identity burning_hands
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt level1-damage-spell-selected-identity burning_hands ice_knife
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity burning_hands doResolveBurningHandsMixedConeSavingThrows
+// UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity ice_knife doResolveIceKnifeHitAttackDamageAndBurstSavingThrows doResolveIceKnifeMissBurstSavingThrows
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -45,6 +46,8 @@ import {
 const level1DamageSpellSelectedIdentityDriverSchema = {
   init: {},
   doResolveBurningHandsMixedConeSavingThrows: {},
+  doResolveIceKnifeHitAttackDamageAndBurstSavingThrows: {},
+  doResolveIceKnifeMissBurstSavingThrows: {},
   step: {},
 } as const;
 type Level1DamageSpellSelectedIdentityDriverAction = Exclude<
@@ -52,8 +55,16 @@ type Level1DamageSpellSelectedIdentityDriverAction = Exclude<
   "init" | "step"
 >;
 
-const level1DamageSpellUnitIds = ["burning_hands"] as const;
+const level1DamageSpellUnitIds = ["burning_hands", "ice_knife"] as const;
 type Level1DamageSpellUnitId = (typeof level1DamageSpellUnitIds)[number];
+const level1DamageSpellSelectedIdentityResults = [
+  "init",
+  "burningHandsMixedConeSavingThrows",
+  "iceKnifeHitAttackDamageAndBurstSavingThrows",
+  "iceKnifeMissBurstSavingThrows",
+] as const;
+type Level1DamageSpellSelectedIdentityResult =
+  (typeof level1DamageSpellSelectedIdentityResults)[number];
 
 type Level1DamageSpellSelectedIdentityProjection = {
   readonly actionAvailable: boolean;
@@ -61,7 +72,7 @@ type Level1DamageSpellSelectedIdentityProjection = {
   readonly level1SlotsRemaining: number;
   readonly primaryTargetHp: number;
   readonly secondaryTargetHp: number;
-  readonly lastResult: "init" | "burningHandsMixedConeSavingThrows";
+  readonly lastResult: Level1DamageSpellSelectedIdentityResult;
 };
 type SelectedUnitIdentityReplaySequence = {
   readonly name: string;
@@ -85,6 +96,18 @@ type CharacterCreatureInit = Extract<
 type CharacterSpellcastingInit = NonNullable<
   CharacterCreatureInit["spellcasting"]
 >;
+type IceKnifeAttackOutcome =
+  | {
+      readonly kind: "hit";
+      readonly attackRollTotal: number;
+      readonly naturalD20: number;
+      readonly attackDamageRoll: readonly [number, ...number[]];
+    }
+  | {
+      readonly kind: "miss";
+      readonly attackRollTotal: number;
+      readonly naturalD20: number;
+    };
 
 const casterId = combatantId("level1-damage-spell-caster");
 const primaryTargetId = combatantId("level1-damage-spell-primary-target");
@@ -118,6 +141,40 @@ const selectedUnitIdentityReplays = [
           primaryTargetHp: 6,
           secondaryTargetHp: 9,
           lastResult: "burningHandsMixedConeSavingThrows",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "level1-damage-spell-selected-identity",
+    unitId: "ice_knife",
+    actions: [
+      "doResolveIceKnifeHitAttackDamageAndBurstSavingThrows",
+      "doResolveIceKnifeMissBurstSavingThrows",
+    ],
+    sequences: [
+      {
+        name: "hit-piercing-damage-then-primary-origin-burst-save",
+        actions: ["doResolveIceKnifeHitAttackDamageAndBurstSavingThrows"],
+        expected: expectedProjection({
+          actionAvailable: false,
+          spellSlotSpentThisTurn: true,
+          level1SlotsRemaining: 0,
+          primaryTargetHp: 4,
+          secondaryTargetHp: 12,
+          lastResult: "iceKnifeHitAttackDamageAndBurstSavingThrows",
+        }),
+      },
+      {
+        name: "miss-still-projects-primary-origin-burst-save",
+        actions: ["doResolveIceKnifeMissBurstSavingThrows"],
+        expected: expectedProjection({
+          actionAvailable: false,
+          spellSlotSpentThisTurn: true,
+          level1SlotsRemaining: 0,
+          primaryTargetHp: 8,
+          secondaryTargetHp: 12,
+          lastResult: "iceKnifeMissBurstSavingThrows",
         }),
       },
     ],
@@ -212,6 +269,20 @@ function createLevel1DamageSpellSelectedIdentityDriver() {
           "burningHandsMixedConeSavingThrows",
         );
       },
+      doResolveIceKnifeHitAttackDamageAndBurstSavingThrows: () => {
+        state = level1DamageSpellBattle(srdSpellRecord("ice_knife"));
+        recordResolvedResult(
+          resolveIceKnifeHitAttackDamageAndBurstSavingThrows(state),
+          "iceKnifeHitAttackDamageAndBurstSavingThrows",
+        );
+      },
+      doResolveIceKnifeMissBurstSavingThrows: () => {
+        state = level1DamageSpellBattle(srdSpellRecord("ice_knife"));
+        recordResolvedResult(
+          resolveIceKnifeMissBurstSavingThrows(state),
+          "iceKnifeMissBurstSavingThrows",
+        );
+      },
       step: () => {},
       getState: () =>
         projectLevel1DamageSpellSelectedIdentityState(state, lastResult),
@@ -239,7 +310,7 @@ function resolveBurningHandsMixedConeSavingThrows(
   const act = actionSpellAct(state, "burning_hands");
   const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
   assertBurningHandsSavingThrowProfile(savingThrow);
-  const savingThrowFill = savingThrowOutcomeFill(savingThrow, [
+  const savingThrowFill = areaSavingThrowOutcomeFill(savingThrow, [
     { targetId: primaryTargetId, succeeded: false },
     { targetId: secondaryTargetId, succeeded: true },
   ]);
@@ -257,6 +328,117 @@ function resolveBurningHandsMixedConeSavingThrows(
     subject: act.subject,
     fills: [savingThrowFill, damageRollFill(damage, [2, 2, 2])],
   });
+}
+
+function resolveIceKnifeHitAttackDamageAndBurstSavingThrows(
+  state: BattleState,
+): BattleResolutionResult {
+  return resolveIceKnifeAttackAndBurstSavingThrows(state, {
+    kind: "hit",
+    attackRollTotal: 15,
+    naturalD20: 10,
+    attackDamageRoll: [4],
+  });
+}
+
+function resolveIceKnifeMissBurstSavingThrows(
+  state: BattleState,
+): BattleResolutionResult {
+  return resolveIceKnifeAttackAndBurstSavingThrows(state, {
+    kind: "miss",
+    attackRollTotal: 1,
+    naturalD20: 1,
+  });
+}
+
+function resolveIceKnifeAttackAndBurstSavingThrows(
+  state: BattleState,
+  attackOutcome: IceKnifeAttackOutcome,
+): BattleResolutionResult {
+  const act = actionSpellAct(state, "ice_knife");
+  const target = requireHole(act.initialHoles, "targetChoice");
+  assertIceKnifeTargetProfile(target);
+  const targetChoice = iceKnifeTargetFill(target, primaryTargetId);
+  const attack = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetChoice],
+    }),
+    "attackRoll",
+  );
+  assertIceKnifeAttackRollProfile(attack);
+  const attackRoll = attackRollFill(attack, {
+    total: attackOutcome.attackRollTotal,
+    naturalD20: attackOutcome.naturalD20,
+  });
+
+  const attackFills =
+    attackOutcome.kind === "hit"
+      ? [
+          targetChoice,
+          attackRoll,
+          iceKnifeAttackDamageRollFill(
+            state,
+            act.subject,
+            [targetChoice, attackRoll],
+            attackOutcome.attackDamageRoll,
+          ),
+        ]
+      : [targetChoice, attackRoll];
+  const savingThrow = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: attackFills,
+    }),
+    "savingThrowOutcome",
+  );
+  assertIceKnifeBurstSavingThrowProfile(savingThrow);
+  const savingThrowFill = areaSavingThrowOutcomeFill(
+    savingThrow,
+    [
+      { targetId: primaryTargetId, succeeded: false },
+      { targetId: secondaryTargetId, succeeded: true },
+    ],
+    primaryTargetId,
+  );
+  const burstDamage = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [...attackFills, savingThrowFill],
+    }),
+    "rolledDice",
+  );
+  assertIceKnifeBurstDamageProfile(burstDamage);
+  return resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [
+      ...attackFills,
+      savingThrowFill,
+      damageRollFill(burstDamage, [2, 2]),
+    ],
+  });
+}
+
+function iceKnifeAttackDamageRollFill(
+  state: BattleState,
+  subject: BattleSubject,
+  attackFills: readonly BattleFill[],
+  results: readonly [number, ...number[]],
+): BattleRolledDiceFill {
+  const attackDamage = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: attackFills,
+    }),
+    "rolledDice",
+  );
+  assertIceKnifeAttackDamageProfile(attackDamage);
+  return damageRollFill(attackDamage, results);
 }
 
 function srdSpellRecord(unitId: Level1DamageSpellUnitId): SpellRecord {
@@ -373,19 +555,56 @@ function actionSpellAct(
   return act;
 }
 
-function savingThrowOutcomeFill(
+function iceKnifeTargetFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  targetId: CombatantId,
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  return {
+    kind: "targetChoice",
+    holeId: hole.holeId,
+    value: targetId,
+    spatialFacts: [
+      {
+        kind: "spellTarget",
+        casterId,
+        targetId,
+        spellId: "ice_knife",
+      },
+    ],
+  };
+}
+
+function attackRollFill(
+  hole: Extract<BattleHole, { readonly kind: "attackRoll" }>,
+  value: {
+    readonly total: number;
+    readonly naturalD20: number;
+  },
+): Extract<BattleFill, { readonly kind: "attackRoll" }> {
+  return {
+    kind: "attackRoll",
+    holeId: hole.holeId,
+    value: {
+      total: value.total,
+      naturalD20: DieRollResult(value.naturalD20),
+    },
+  };
+}
+
+function areaSavingThrowOutcomeFill(
   hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
   }[],
+  originAnchorId: CombatantId = casterId,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   return {
     kind: "savingThrowOutcome",
     holeId: hole.holeId,
     value: {
       area: {
-        originAnchorId: casterId,
+        originAnchorId,
         affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
       },
       outcomes,
@@ -395,15 +614,12 @@ function savingThrowOutcomeFill(
 
 function damageRollFill(
   hole: Pick<BattleHole, "kind" | "holeId">,
-  results: readonly number[],
+  results: readonly [number, ...number[]],
 ): BattleRolledDiceFill {
   if (hole.kind !== "rolledDice") {
     throw new Error("Expected rolledDice hole.");
   }
   const [firstRoll, ...restRolls] = results;
-  if (firstRoll === undefined) {
-    throw new Error("Expected at least one die result.");
-  }
   return {
     kind: "rolledDice",
     holeId: hole.holeId,
@@ -480,6 +696,97 @@ function assertBurningHandsDamageProfile(
     hole.critical
   ) {
     throw new Error("Burning Hands damage profile drifted.");
+  }
+}
+
+function assertIceKnifeTargetProfile(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+): void {
+  if (
+    !hole.choices.includes(primaryTargetId) ||
+    hole.requiresTableSpatialFact !== true
+  ) {
+    throw new Error("Ice Knife target profile drifted.");
+  }
+}
+
+function assertIceKnifeAttackRollProfile(
+  hole: Extract<BattleHole, { readonly kind: "attackRoll" }>,
+): void {
+  if (!("spell" in hole)) {
+    throw new Error("Expected Ice Knife spell Attack Roll hole.");
+  }
+  const invocation = hole.spell;
+  if (
+    invocation.procedure !== "attackBurstSaveDamage" ||
+    invocation.spell.id !== "ice_knife" ||
+    invocation.targeting.kind !== "singleCombatant" ||
+    invocation.attackKind !== "ranged_spell_attack" ||
+    Number(invocation.rangeFeet) !== 60
+  ) {
+    throw new Error("Ice Knife Attack Roll profile drifted.");
+  }
+}
+
+function assertIceKnifeAttackDamageProfile(
+  hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
+): void {
+  if (!("spell" in hole) || !("critical" in hole)) {
+    throw new Error("Expected Ice Knife attack damage roll hole.");
+  }
+  const invocation = hole.spell;
+  if (
+    invocation.procedure !== "attackBurstSaveDamage" ||
+    invocation.spell.id !== "ice_knife" ||
+    invocation.damage.expr.dice !== 1 ||
+    invocation.damage.expr.dieSize !== 10 ||
+    invocation.damage.damageType !== "piercing" ||
+    hole.critical
+  ) {
+    throw new Error("Ice Knife attack damage profile drifted.");
+  }
+}
+
+function assertIceKnifeBurstSavingThrowProfile(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+): void {
+  if (!("spell" in hole)) {
+    throw new Error("Expected Ice Knife burst Saving Throw outcome hole.");
+  }
+  const invocation = hole.spell;
+  if (
+    invocation.procedure !== "attackBurstSaveDamage" ||
+    invocation.spell.id !== "ice_knife" ||
+    hole.ability !== "dex" ||
+    hole.dc.kind !== "caster_spell_save_dc" ||
+    invocation.burst.targeting.kind !== "primaryTargetOriginEmanation" ||
+    Number(invocation.burst.targeting.radiusFeet) !== 5 ||
+    invocation.burst.damage.expr.dice !== 2 ||
+    invocation.burst.damage.expr.dieSize !== 6 ||
+    invocation.burst.damage.damageType !== "cold" ||
+    invocation.burst.successDamage !== "none"
+  ) {
+    throw new Error("Ice Knife burst Saving Throw profile drifted.");
+  }
+}
+
+function assertIceKnifeBurstDamageProfile(
+  hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
+): void {
+  if (!("spell" in hole) || !("critical" in hole)) {
+    throw new Error("Expected Ice Knife burst damage roll hole.");
+  }
+  const invocation = hole.spell;
+  if (
+    invocation.procedure !== "attackBurstSaveDamage" ||
+    invocation.spell.id !== "ice_knife" ||
+    invocation.burst.damage.expr.dice !== 2 ||
+    invocation.burst.damage.expr.dieSize !== 6 ||
+    invocation.burst.damage.damageType !== "cold" ||
+    invocation.burst.successDamage !== "none" ||
+    hole.critical
+  ) {
+    throw new Error("Ice Knife burst damage profile drifted.");
   }
 }
 
@@ -572,10 +879,19 @@ function booleanField(
 function mbtLastResult(
   raw: unknown,
 ): Level1DamageSpellSelectedIdentityProjection["lastResult"] {
-  if (raw === "init" || raw === "burningHandsMixedConeSavingThrows") {
+  if (isLevel1DamageSpellSelectedIdentityResult(raw)) {
     return raw;
   }
   throw new Error(`Unexpected MBT result ${String(raw)}.`);
+}
+
+function isLevel1DamageSpellSelectedIdentityResult(
+  raw: unknown,
+): raw is Level1DamageSpellSelectedIdentityResult {
+  return (
+    typeof raw === "string" &&
+    level1DamageSpellSelectedIdentityResults.some((result) => result === raw)
+  );
 }
 
 const level1DamageSpellSelectedIdentityStateCheck = stateCheck(
