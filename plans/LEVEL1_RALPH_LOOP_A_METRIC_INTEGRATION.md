@@ -19,49 +19,49 @@
     {
       "number": 3,
       "id": "L1A-FRONTIER-DECISION-INDEX",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Frontier Decision Artifact Index"
     },
     {
       "number": 4,
       "id": "L1A-L1Y-01",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Class Container Profile Decision"
     },
     {
       "number": 5,
       "id": "L1A-L1Y-02",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Core Trait Profile Decision"
     },
     {
       "number": 6,
       "id": "L1A-L1Y-03",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Starting Equipment Profile Decision"
     },
     {
       "number": 7,
       "id": "L1A-L1Y-04",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Multiclass Entry Trait Profile Decision"
     },
     {
       "number": 8,
       "id": "L1A-L1Y-05",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Spell Access Profile Decision"
     },
     {
       "number": 9,
       "id": "L1A-L1Y-06",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Class Table Summary Closure Decision"
     },
     {
       "number": 10,
       "id": "L1A-FINAL-STRICT-INTEGRATION",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Final Strict Support Integration Refresh"
     }
   ]
@@ -160,14 +160,14 @@ Then implement `AT-L1-14`:
 | ---: | --- | --- | --- | --- |
 | 1 | L1A-AT13 - Strict Level-1 Metric Infrastructure | done | none | Must land before Loops B/C count against strict reports. |
 | 2 | L1A-AT14A - Later-Level Strict Closure Classifier For Bard And Monk | done | L1A-AT13 | Close only Bard/Monk later-level residuals; Ranger waits for Loop B `AT-L1-01`. |
-| 3 | L1A-FRONTIER-DECISION-INDEX - Frontier Decision Artifact Index | ready-for-research | L1A-AT13 | Create reusable decision artifact shape for `frontier-decisions/`. |
-| 4 | L1A-L1Y-01 - Class Container Profile Decision | ready-for-research | L1A-FRONTIER-DECISION-INDEX | Decide profile vs owner-evidence-only closure for 12 class containers. |
-| 5 | L1A-L1Y-02 - Core Trait Profile Decision | ready-for-research | L1A-FRONTIER-DECISION-INDEX | Decision spike for 76 core trait rows; produce follow-ups only if justified. |
-| 6 | L1A-L1Y-03 - Starting Equipment Profile Decision | ready-for-research | L1A-FRONTIER-DECISION-INDEX | Decide starting equipment profile vs existing source projection closure. |
-| 7 | L1A-L1Y-04 - Multiclass Entry Trait Profile Decision | ready-for-research | L1A-FRONTIER-DECISION-INDEX | Decide multiclass entry profile vs shared-algebra/creation owner evidence. |
-| 8 | L1A-L1Y-05 - Spell Access Profile Decision | ready-for-research | L1A-FRONTIER-DECISION-INDEX | Decide explicit spell-access profile vs derived CharacterBuild evidence. |
-| 9 | L1A-L1Y-06 - Class Table Summary Closure Decision | ready-for-research | L1A-FRONTIER-DECISION-INDEX | Confirm source/navigation summary closure and strict-report wording. |
-| 10 | L1A-FINAL-STRICT-INTEGRATION - Final Strict Support Integration Refresh | ready-for-implementation-after-light-research | B/C branches merged or explicitly skipped | Regenerate all coverage/strict artifacts after loop branches land. |
+| 3 | L1A-FRONTIER-DECISION-INDEX - Frontier Decision Artifact Index | done | L1A-AT13 | Create reusable decision artifact shape for `frontier-decisions/`. |
+| 4 | L1A-L1Y-01 - Class Container Profile Decision | done | L1A-FRONTIER-DECISION-INDEX | Decide profile vs owner-evidence-only closure for 12 class containers. |
+| 5 | L1A-L1Y-02 - Core Trait Profile Decision | done | L1A-FRONTIER-DECISION-INDEX | Decision spike for 76 core trait rows; produce follow-ups only if justified. |
+| 6 | L1A-L1Y-03 - Starting Equipment Profile Decision | done | L1A-FRONTIER-DECISION-INDEX | Decide starting equipment profile vs existing source projection closure. |
+| 7 | L1A-L1Y-04 - Multiclass Entry Trait Profile Decision | done | L1A-FRONTIER-DECISION-INDEX | Decide multiclass entry profile vs shared-algebra/creation owner evidence. |
+| 8 | L1A-L1Y-05 - Spell Access Profile Decision | done | L1A-FRONTIER-DECISION-INDEX | Decide explicit spell-access profile vs derived CharacterBuild evidence. |
+| 9 | L1A-L1Y-06 - Class Table Summary Closure Decision | done | L1A-FRONTIER-DECISION-INDEX | Confirm source/navigation summary closure and strict-report wording. |
+| 10 | L1A-FINAL-STRICT-INTEGRATION - Final Strict Support Integration Refresh | done | B/C branches merged or explicitly skipped | Coverage/strict artifacts were already current; remaining strict frontier is mapped to Loop B/C executable tasks. |
 
 ## Task Details
 
@@ -247,7 +247,7 @@ Plan Impact:
 
 ### Task 3 - L1A-FRONTIER-DECISION-INDEX - Frontier Decision Artifact Index
 
-Status: `ready-for-research`
+Status: `done`
 
 Create the shared artifact conventions used by `AT-L1X-*` and `AT-L1Y-*`
 research tasks from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
@@ -274,7 +274,7 @@ Plan Impact:
 
 ### Task 4 - L1A-L1Y-01 - Class Container Profile Decision
 
-Status: `ready-for-research`
+Status: `done`
 
 Research `AT-L1Y-01` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
@@ -301,7 +301,7 @@ Plan Impact:
 
 ### Task 5 - L1A-L1Y-02 - Core Trait Profile Decision
 
-Status: `ready-for-research`
+Status: `done`
 
 Research `AT-L1Y-02` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
@@ -326,7 +326,7 @@ Plan Impact:
 
 ### Task 6 - L1A-L1Y-03 - Starting Equipment Profile Decision
 
-Status: `ready-for-research`
+Status: `done`
 
 Research `AT-L1Y-03` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
@@ -350,7 +350,7 @@ Plan Impact:
 
 ### Task 7 - L1A-L1Y-04 - Multiclass Entry Trait Profile Decision
 
-Status: `ready-for-research`
+Status: `done`
 
 Research `AT-L1Y-04` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
@@ -372,7 +372,7 @@ Plan Impact:
 
 ### Task 8 - L1A-L1Y-05 - Spell Access Profile Decision
 
-Status: `ready-for-research`
+Status: `done`
 
 Research `AT-L1Y-05` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
@@ -396,7 +396,7 @@ Plan Impact:
 
 ### Task 9 - L1A-L1Y-06 - Class Table Summary Closure Decision
 
-Status: `ready-for-research`
+Status: `done`
 
 Research `AT-L1Y-06` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
@@ -420,7 +420,7 @@ Plan Impact:
 
 ### Task 10 - L1A-FINAL-STRICT-INTEGRATION - Final Strict Support Integration Refresh
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Refresh strict level-1 support artifacts after Loop B and Loop C branches land,
 or after the owner explicitly tells this loop to integrate a subset.
@@ -445,5 +445,22 @@ Verification:
 
 Plan Impact:
 
-- If strict support is still below 100%, list the remaining rows and map them
-  back to the owning loop or a new follow-up task.
+- Completed refresh found generated artifacts already current. Product readiness
+  remains `367/367`; strict runtime/profile support remains `59/93`; strict
+  target closure remains `68/93`.
+- Remaining open strict rows map to existing executable follow-up tasks:
+  - Loop B `L1B-AT01`: `hunters_mark`, `ranger_favored_enemy`.
+  - Loop B `L1B-AT02`: `alarm`, `comprehend_languages`, `identify`,
+    `silent_image`, `speak_with_animals`.
+  - Loop B `L1B-AT09`: `faerie_fire`, `light`.
+  - Loop B `L1B-AT10`: `feather_fall`, `jump`.
+  - Loop B `L1B-AT11`: `fog_cloud`, `grease`.
+  - Loop B `L1B-AT12`: `thunderwave`.
+  - Loop C `L1C-AT03`: `fighter_fighting_style`.
+  - Loop C `L1C-AT04`: `barbarian_weapon_mastery`,
+    `fighter_weapon_mastery`, `paladin_weapon_mastery`,
+    `ranger_weapon_mastery`, `rogue_weapon_mastery`.
+  - Loop C `L1C-AT05`: `warlock_eldritch_invocations`.
+  - Loop C `L1C-AT06`: `cleric_divine_order`, `druid_primal_order`.
+  - Loop C `L1C-AT07`: `rogue_expertise`.
+  - Loop C `L1C-AT08`: `wizard_arcane_recovery`.

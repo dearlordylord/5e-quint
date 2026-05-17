@@ -235,13 +235,14 @@ whose casting time is immediately after a hit.
 
 `spell.invocation-marked-damage-rider` is the Hunter's Mark combat procedure
 shape: a Bonus Action Concentration spell marks one combatant target, later
-Attack Roll hits against that mark add spell damage, and a Bonus Action transfer
-is available only after the marked target drops to 0 Hit Points. SRDINV62
-added slot-scaled maximum duration to this profile. The remaining finding
-Advantage clause stays outside this profile after SRDINV63 classified it as a
-caller-supplied ability-check modifier boundary rather than duplicate Hunter's
-Mark tracking state; SRDINV66 owns deciding whether to append later generic
-ability-check roll-mode work.
+Attack Roll hits against that mark add spell damage, caller-supplied Wisdom
+(Perception or Survival) Ability Check holes to find the marked target get
+Advantage from the existing mark identity, and a Bonus Action transfer is
+available only after the marked target drops to 0 Hit Points. SRDINV62 added
+slot-scaled maximum duration to this profile. SRDINV87C added the finding
+Advantage roll-mode projection without adding duplicate Hunter's Mark tracking
+state: the runtime consumes the existing mark plus caller-supplied actor,
+ability, skill, and target facts.
 
 `spell.invocation-after-hit-damage` is the Divine Smite procedure shape: the
 spell is not an ordinary turn spell act; it is offered only from an eligible

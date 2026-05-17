@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84C spare_the_dying
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84D hex
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84E fog_cloud
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV87C ranger_favored_enemy
 import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";

@@ -878,6 +878,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `bard_bardic_inspiration` | `unit-feature.bardic-inspiration-grant`, `unit-feature.bardic-inspiration-failed-d20-test` | SRDINV72A | `packages/battle-runtime/src/unit-profile-admission.test.ts` | later-level Bardic Inspiration die size increases beyond d6 (SRDINV78) |
 | `bard_bardic_inspiration` | `unit-feature.bardic-inspiration-grant`, `unit-feature.bardic-inspiration-failed-d20-test` | SRDINV72B | `packages/battle-runtime/src/index.test.ts` | later-level Bardic Inspiration die size increases beyond d6 (SRDINV78) |
 | `monk_martial_arts` | `unit-feature.martial-arts-attack-projection` | SRDINV73A | `packages/battle-runtime/src/unit-profile-admission.test.ts` | later-level Martial Arts die size increases beyond d6 (SRDINV78) |
+| `ranger_favored_enemy` | `spell.invocation-marked-damage-rider` | SRDINV87C | `packages/battle-runtime/src/index.test.ts` | later-level Favored Enemy free-cast count scaling beyond two uses (SRDINV78); Hunter's Mark Perception/Survival finding Advantage remains deferred to ability-check roll-mode work (SRDINV66) |
 | `warlock_eldritch_invocations` | `character-creation.eldritch-invocation-choice`, `character-creation.class-feature-advancement-replacement` | L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE | `packages/character-creation-runtime/src/index.test.ts` | Warlock Pact Magic cantrip, prepared-spell, and Pact Slot facts are only finalized at level 1; advancing those spellcasting facts on later Warlock levels remains outside this task, so invocation known-cantrip prerequisites consume current CharacterBuild spellcasting facts without owning Pact Magic advancement. (L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT) |
 | `faerie_fire` | `spell.invocation-attack-roll-advantage-save` | SRDINV58C | `packages/battle-runtime/src/unit-profile-admission.test.ts` | color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the runtime boundary (SRDINV89D) |
 | `feather_fall` | `spell.invocation-feather-fall-mitigation` | SRDINV56A | `packages/battle-runtime/src/feather-fall-reaction-spell.test.ts` | fall-distance derivation, map elevation, and landing geometry simulation remain outside the runtime boundary (SRDINV55) |
@@ -995,12 +996,17 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `weapon_shortbow` | unsupported-profile | Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix. |
 | `weapon_shortsword` | unsupported-profile | Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix. |
 | `weapon_quarterstaff` | unsupported-profile | Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix. |
+| `alarm` | unsupported-profile | Alarm setup, warded-area monitoring, creature-size/travel adjudication, audible or mental notification, and sleep-wake handling are runtime-detached table/exploration state outside promoted battle Unit profiles. |
+| `comprehend_languages` | unsupported-profile | Language comprehension, text interpretation, and secret-message limitations are runtime-detached table/communication adjudication outside promoted battle Unit profiles. |
+| `identify` | unsupported-profile | Magic-item identification, attunement/property discovery, and spell-affecting-object or spell-affecting-creature identification are runtime-detached table adjudication outside promoted battle Unit profiles. |
+| `silent_image` | unsupported-profile | Illusory image placement, investigation, physical-interaction reveal, and presentation are runtime-detached illusion/exploration adjudication outside promoted battle Unit profiles. |
+| `speak_with_animals` | unsupported-profile | Beast communication, information exchange, and table-mediated social outcomes are runtime-detached exploration/social adjudication outside promoted battle Unit profiles. |
 
 ## Unsupported Pressure Summary
 
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
-| srd-5.2.1 | unassigned | unsupported-profile | 35 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `druid_druidic`, `rogue_thieves_cant`, `feat_ability_score_improvement`, `orc_darkvision`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `minor_illusion`, `armor_chain_mail`, `equipment_shield`, `weapon_club`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff` |
+| srd-5.2.1 | unassigned | unsupported-profile | 40 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `druid_druidic`, `rogue_thieves_cant`, `feat_ability_score_improvement`, `orc_darkvision`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `minor_illusion`, `armor_chain_mail`, `equipment_shield`, `weapon_club`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff`, `alarm`, `comprehend_languages`, `identify`, `silent_image`, `speak_with_animals` |
 | srd-5.2.1 | unassigned | profile-subset-supported | 14 | `bard_bardic_inspiration`, `monk_martial_arts`, `ranger_favored_enemy`, `warlock_eldritch_invocations`, `faerie_fire`, `feather_fall`, `find_familiar`, `fog_cloud`, `grease`, `hunters_mark`, `jump`, `light`, `thunderwave`, `charm_person` |
 
 ## Profile Claims By Task
@@ -1156,6 +1162,8 @@ This raw inventory lists authored Surface records that are absent from the insta
 | SRDINV75B | completed-runtime-parity | `unit-feature.innate-sorcery-activation` |
 | SRDINV77 | qnt-proof | `spell.invocation-marked-damage-rider` |
 | SRDINV77 | completed-runtime-parity | `spell.invocation-marked-damage-rider` |
+| SRDINV87C | qnt-proof | `spell.invocation-marked-damage-rider` |
+| SRDINV87C | completed-runtime-parity | `spell.invocation-marked-damage-rider` |
 | SRDINV84A | qnt-proof | `spell.invocation-damage-save-or-attack` |
 | SRDINV84A | completed-runtime-parity | `spell.invocation-damage-save-or-attack` |
 | SRDINV84B | completed-runtime-parity | `spell.invocation-damage-save-or-attack` |

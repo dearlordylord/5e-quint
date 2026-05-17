@@ -7,11 +7,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "Alarm is an exploration/table procedure; promoted battle runtime does not own hidden monitoring, map patrol, or notification adjudication.",
       "sourceRecordPath": "packages/surface/content/alarm.json",
       "sourceRows": [
         {
@@ -39,8 +42,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
       "unitId": "alarm"
     },
     {
@@ -156,11 +159,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "Language comprehension and secret-message adjudication are table-owned communication facts outside promoted battle runtime.",
       "sourceRecordPath": "packages/surface/content/comprehend_languages.json",
       "sourceRows": [
         {
@@ -212,8 +218,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
       "unitId": "comprehend_languages"
     },
     {
@@ -700,11 +706,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "Identification facts are supplied by the table or item/knowledge owner; promoted battle runtime does not model discovery of hidden item or spell facts.",
       "sourceRecordPath": "packages/surface/content/identify.json",
       "sourceRows": [
         {
@@ -732,8 +741,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
       "unitId": "identify"
     },
     {
@@ -1026,11 +1035,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "Silent Image creates table-adjudicated illusion and presentation state; promoted battle runtime does not own image rendering or discovery adjudication.",
       "sourceRecordPath": "packages/surface/content/silent_image.json",
       "sourceRows": [
         {
@@ -1070,8 +1082,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
       "unitId": "silent_image"
     },
     {
@@ -1081,11 +1093,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes.",
       "sourceRecordPath": "packages/surface/content/speak_with_animals.json",
       "sourceRows": [
         {
@@ -1137,8 +1152,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
       "unitId": "speak_with_animals"
     },
     {
@@ -1315,6 +1330,25 @@
       ]
     },
     {
+      "count": 12,
+      "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
+      "status": "closed-runtime-detached-table-adjudication",
+      "unitIds": [
+        "alarm",
+        "charm_person",
+        "comprehend_languages",
+        "detect_evil_and_good",
+        "detect_magic",
+        "detect_poison_and_disease",
+        "druid_druidic",
+        "identify",
+        "minor_illusion",
+        "rogue_thieves_cant",
+        "silent_image",
+        "speak_with_animals"
+      ]
+    },
+    {
       "count": 9,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
@@ -1328,32 +1362,6 @@
         "light",
         "ranger_favored_enemy",
         "thunderwave"
-      ]
-    },
-    {
-      "count": 7,
-      "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
-      "status": "closed-runtime-detached-table-adjudication",
-      "unitIds": [
-        "charm_person",
-        "detect_evil_and_good",
-        "detect_magic",
-        "detect_poison_and_disease",
-        "druid_druidic",
-        "minor_illusion",
-        "rogue_thieves_cant"
-      ]
-    },
-    {
-      "count": 5,
-      "description": "No Unit profile claim records runtime support or an accepted strict closure.",
-      "status": "open-runtime-behavior",
-      "unitIds": [
-        "alarm",
-        "comprehend_languages",
-        "identify",
-        "silent_image",
-        "speak_with_animals"
       ]
     },
     {
@@ -1384,8 +1392,8 @@
     },
     "strictTargetClosure": {
       "denominator": 93,
-      "numerator": 79,
-      "percent": "84.9%"
+      "numerator": 84,
+      "percent": "90.3%"
     }
   },
   "openFrontier": [
@@ -1403,18 +1411,6 @@
         "light",
         "ranger_favored_enemy",
         "thunderwave"
-      ]
-    },
-    {
-      "count": 5,
-      "description": "No Unit profile claim records runtime support or an accepted strict closure.",
-      "status": "open-runtime-behavior",
-      "unitIds": [
-        "alarm",
-        "comprehend_languages",
-        "identify",
-        "silent_image",
-        "speak_with_animals"
       ]
     }
   ],
@@ -3694,16 +3690,14 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 120,
     "groupsByClaimTag": {
-      "missing": 5,
       "profile-subset-supported": 13,
       "supported-profile": 69,
-      "unsupported-profile": 6
+      "unsupported-profile": 11
     },
     "groupsByStatus": {
       "closed-later-level-only": 3,
-      "closed-runtime-detached-table-adjudication": 7,
+      "closed-runtime-detached-table-adjudication": 12,
       "open-profile-accounting": 9,
-      "open-runtime-behavior": 5,
       "supported-profile": 69
     },
     "nonSupportedFrontier": 24,

@@ -5103,7 +5103,7 @@
       "detail": "Comprehend Languages (Divination; R)",
       "candidateUnitId": "comprehend_languages",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -5114,9 +5114,16 @@
         "state": "not-installed",
         "unitId": "comprehend_languages"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached language/communication owner",
+        "reason": "Language comprehension and secret-message adjudication are table-owned communication facts outside promoted battle runtime."
+      },
       "ownerEvidence": [],
-      "nextAction": "Language comprehension, signed-language understanding, page-reading time, and secret-message exclusion are exploration/communication effects outside promoted runtime owners.",
+      "nextAction": "Language comprehension and secret-message adjudication are table-owned communication facts outside promoted battle runtime.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -5525,7 +5532,7 @@
       "detail": "Identify (Divination; R, M)",
       "candidateUnitId": "identify",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -5536,9 +5543,16 @@
         "state": "not-installed",
         "unitId": "identify"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached identification/table owner",
+        "reason": "Identification facts are supplied by the table or item/knowledge owner; promoted battle runtime does not model discovery of hidden item or spell facts."
+      },
       "ownerEvidence": [],
-      "nextAction": "Magic item property discovery, Attunement and charge knowledge, ongoing-spell identification, and object/creature investigation are exploration/item-inspection effects outside promoted runtime owners.",
+      "nextAction": "Identification facts are supplied by the table or item/knowledge owner; promoted battle runtime does not model discovery of hidden item or spell facts.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -5628,7 +5642,7 @@
       "detail": "Silent Image (Illusion; C)",
       "candidateUnitId": "silent_image",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -5639,9 +5653,16 @@
         "state": "not-installed",
         "unitId": "silent_image"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "illusion/exploration owner",
+        "reason": "Silent Image creates table-adjudicated illusion and presentation state; promoted battle runtime does not own image rendering or discovery adjudication."
+      },
       "ownerEvidence": [],
-      "nextAction": "Moveable visual illusion state, Magic action repositioning, physical-interaction reveal, and Study action adjudication are illusion/exploration state outside promoted runtime owners.",
+      "nextAction": "Silent Image creates table-adjudicated illusion and presentation state; promoted battle runtime does not own image rendering or discovery adjudication.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -5702,7 +5723,7 @@
       "detail": "Speak with Animals (Divination; R)",
       "candidateUnitId": "speak_with_animals",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -5713,9 +5734,16 @@
         "state": "not-installed",
         "unitId": "speak_with_animals"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached communication/social owner",
+        "reason": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes."
+      },
       "ownerEvidence": [],
-      "nextAction": "Beast communication, Influence action options, and local-information discovery are exploration/social effects outside promoted runtime owners.",
+      "nextAction": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -7353,7 +7381,7 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV18 level-1 Druid class-feature support profile; Druidic is retained through the finalized CharacterBuild feature Unit refs for supported Druid progressions; executable feature behavior remains owned by downstream feature/runtime projections.",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV18 level-1 Druid class-feature support profile; Druidic is retained through finalized CharacterBuild feature Unit refs for supported Druid progressions; the Surface feature record carries the Druidic language and always-prepared Speak with Animals Spell Access source facts for downstream CharacterBuild-derived projections, while hidden-message adjudication remains runtime-detached.",
           "status": "owner evidence present"
         }
       ],
@@ -9038,7 +9066,7 @@
       "detail": "Speak with Animals (Divination; R)",
       "candidateUnitId": "speak_with_animals",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -9049,9 +9077,16 @@
         "state": "not-installed",
         "unitId": "speak_with_animals"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached communication/social owner",
+        "reason": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes."
+      },
       "ownerEvidence": [],
-      "nextAction": "Beast communication, Influence action options, and local-information discovery are exploration/social effects outside promoted runtime owners.",
+      "nextAction": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -11583,8 +11618,8 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime",
-          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV18 level-1 Ranger class-feature support profile; Favored Enemy is retained through the finalized CharacterBuild feature Unit refs for supported Ranger progressions; executable feature behavior remains owned by downstream feature/runtime projections.",
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV87C at packages/battle-runtime/src/index.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -12127,7 +12162,7 @@
       "detail": "Alarm (Abjuration; R)",
       "candidateUnitId": "alarm",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -12138,9 +12173,16 @@
         "state": "not-installed",
         "unitId": "alarm"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached table/exploration owner",
+        "reason": "Alarm is an exploration/table procedure; promoted battle runtime does not own hidden monitoring, map patrol, or notification adjudication."
+      },
       "ownerEvidence": [],
-      "nextAction": "Intrusion wards, designated exceptions, audible or mental alerts, and sleep wake-up effects are exploration/security state outside the current promoted runtime owners.",
+      "nextAction": "Alarm is an exploration/table procedure; promoted battle runtime does not own hidden monitoring, map patrol, or notification adjudication.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -12647,7 +12689,7 @@
       "detail": "Speak with Animals (Divination; R)",
       "candidateUnitId": "speak_with_animals",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -12658,9 +12700,16 @@
         "state": "not-installed",
         "unitId": "speak_with_animals"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached communication/social owner",
+        "reason": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes."
+      },
       "ownerEvidence": [],
-      "nextAction": "Beast communication, Influence action options, and local-information discovery are exploration/social effects outside promoted runtime owners.",
+      "nextAction": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -12834,7 +12883,7 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV18 level-1 Rogue class-feature support profile; Thieves' Cant is retained through the finalized CharacterBuild feature Unit refs for supported Rogue progressions; executable feature behavior remains owned by downstream feature/runtime projections.",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV18 level-1 Rogue class-feature support profile; Thieves' Cant is retained through finalized CharacterBuild feature Unit refs for supported Rogue progressions; the Surface feature record carries the Thieves' Cant and additional language-choice source facts for downstream CharacterBuild-derived projections, while communication adjudication remains runtime-detached.",
           "status": "owner evidence present"
         }
       ],
@@ -14749,7 +14798,7 @@
       "detail": "Comprehend Languages (Divination; R)",
       "candidateUnitId": "comprehend_languages",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -14760,9 +14809,16 @@
         "state": "not-installed",
         "unitId": "comprehend_languages"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached language/communication owner",
+        "reason": "Language comprehension and secret-message adjudication are table-owned communication facts outside promoted battle runtime."
+      },
       "ownerEvidence": [],
-      "nextAction": "Language comprehension, signed-language understanding, page-reading time, and secret-message exclusion are exploration/communication effects outside promoted runtime owners.",
+      "nextAction": "Language comprehension and secret-message adjudication are table-owned communication facts outside promoted battle runtime.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -15355,7 +15411,7 @@
       "detail": "Silent Image (Illusion; C)",
       "candidateUnitId": "silent_image",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -15366,9 +15422,16 @@
         "state": "not-installed",
         "unitId": "silent_image"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "illusion/exploration owner",
+        "reason": "Silent Image creates table-adjudicated illusion and presentation state; promoted battle runtime does not own image rendering or discovery adjudication."
+      },
       "ownerEvidence": [],
-      "nextAction": "Moveable visual illusion state, Magic action repositioning, physical-interaction reveal, and Study action adjudication are illusion/exploration state outside promoted runtime owners.",
+      "nextAction": "Silent Image creates table-adjudicated illusion and presentation state; promoted battle runtime does not own image rendering or discovery adjudication.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -16413,7 +16476,7 @@
       "detail": "Comprehend Languages (Divination; R)",
       "candidateUnitId": "comprehend_languages",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -16424,9 +16487,16 @@
         "state": "not-installed",
         "unitId": "comprehend_languages"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached language/communication owner",
+        "reason": "Language comprehension and secret-message adjudication are table-owned communication facts outside promoted battle runtime."
+      },
       "ownerEvidence": [],
-      "nextAction": "Language comprehension, signed-language understanding, page-reading time, and secret-message exclusion are exploration/communication effects outside promoted runtime owners.",
+      "nextAction": "Language comprehension and secret-message adjudication are table-owned communication facts outside promoted battle runtime.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -16737,7 +16807,7 @@
       "detail": "Speak with Animals (Divination; R)",
       "candidateUnitId": "speak_with_animals",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -16748,9 +16818,16 @@
         "state": "not-installed",
         "unitId": "speak_with_animals"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached communication/social owner",
+        "reason": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes."
+      },
       "ownerEvidence": [],
-      "nextAction": "Beast communication, Influence action options, and local-information discovery are exploration/social effects outside promoted runtime owners.",
+      "nextAction": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -17985,7 +18062,7 @@
       "detail": "Alarm (Abjuration; R)",
       "candidateUnitId": "alarm",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -17996,9 +18073,16 @@
         "state": "not-installed",
         "unitId": "alarm"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached table/exploration owner",
+        "reason": "Alarm is an exploration/table procedure; promoted battle runtime does not own hidden monitoring, map patrol, or notification adjudication."
+      },
       "ownerEvidence": [],
-      "nextAction": "Intrusion wards, designated exceptions, audible or mental alerts, and sleep wake-up effects are exploration/security state outside the current promoted runtime owners.",
+      "nextAction": "Alarm is an exploration/table procedure; promoted battle runtime does not own hidden monitoring, map patrol, or notification adjudication.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -18194,7 +18278,7 @@
       "detail": "Comprehend Languages (Divination; R)",
       "candidateUnitId": "comprehend_languages",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -18205,9 +18289,16 @@
         "state": "not-installed",
         "unitId": "comprehend_languages"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached language/communication owner",
+        "reason": "Language comprehension and secret-message adjudication are table-owned communication facts outside promoted battle runtime."
+      },
       "ownerEvidence": [],
-      "nextAction": "Language comprehension, signed-language understanding, page-reading time, and secret-message exclusion are exploration/communication effects outside promoted runtime owners.",
+      "nextAction": "Language comprehension and secret-message adjudication are table-owned communication facts outside promoted battle runtime.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -18700,7 +18791,7 @@
       "detail": "Identify (Divination; R, M)",
       "candidateUnitId": "identify",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -18711,9 +18802,16 @@
         "state": "not-installed",
         "unitId": "identify"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached identification/table owner",
+        "reason": "Identification facts are supplied by the table or item/knowledge owner; promoted battle runtime does not model discovery of hidden item or spell facts."
+      },
       "ownerEvidence": [],
-      "nextAction": "Magic item property discovery, Attunement and charge knowledge, ongoing-spell identification, and object/creature investigation are exploration/item-inspection effects outside promoted runtime owners.",
+      "nextAction": "Identification facts are supplied by the table or item/knowledge owner; promoted battle runtime does not model discovery of hidden item or spell facts.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -19067,7 +19165,7 @@
       "detail": "Silent Image (Illusion; C)",
       "candidateUnitId": "silent_image",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -19078,9 +19176,16 @@
         "state": "not-installed",
         "unitId": "silent_image"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "illusion/exploration owner",
+        "reason": "Silent Image creates table-adjudicated illusion and presentation state; promoted battle runtime does not own image rendering or discovery adjudication."
+      },
       "ownerEvidence": [],
-      "nextAction": "Moveable visual illusion state, Magic action repositioning, physical-interaction reveal, and Study action adjudication are illusion/exploration state outside promoted runtime owners.",
+      "nextAction": "Silent Image creates table-adjudicated illusion and presentation state; promoted battle runtime does not own image rendering or discovery adjudication.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
