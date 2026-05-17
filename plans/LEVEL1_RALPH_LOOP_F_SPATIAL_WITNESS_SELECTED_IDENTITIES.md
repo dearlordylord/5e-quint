@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L1F-SPATIAL-PRECHECK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Post-C Spatial Witness Identity Reconciliation"
     },
     {
@@ -143,11 +143,16 @@ Every task runs:
 
 ### Task 1 - L1F-SPATIAL-PRECHECK - Post-C Spatial Witness Identity Reconciliation
 
-Status: `ready-for-research`
+Status: `done`
 
 After Loop C lands, reconcile this loop's Unit list against the refreshed strict
 report and selected identity frontier. Confirm which spatial/table-witness Units
 still lack selected identity MBT and record any moved Units. No behavior changes.
+
+Result: `plans/unit-profile-coverage/L1F_SPATIAL_WITNESS_PRECHECK.md` records
+that all planned Loop F Units remain installed `supported-profile` Units with
+deterministic admission/projection coverage and missing selected-identity MBT;
+no moved Units were found.
 
 ### Task 2 - L1F-DANCING-LIGHTS - Dancing Lights Selected Identity Replay
 
