@@ -21,8 +21,8 @@ variants in package-local QNT model modules, starting with
 when they need the moved names. Domain behavior helpers can live in narrower
 QNT modules, such as `battle-runtime-find-familiar.qnt`,
 `battle-runtime-light.qnt`, and `battle-runtime-creature-type-protection.qnt`,
-when the split follows SRD language and avoids duplicate state names or
-compatibility-wrapper churn.
+and `battle-runtime-armor-class.qnt`, when the split follows SRD language and
+avoids duplicate state names or compatibility-wrapper churn.
 
 The promoted MBT strategy is selective. MBT proves reducer facts after Surface
 decode/projection; it must not enumerate all Surface-authored content multiplied
