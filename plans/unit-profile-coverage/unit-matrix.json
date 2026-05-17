@@ -93,8 +93,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 94,
-      "numerator": 90,
-      "percent": "95.7%"
+      "numerator": 91,
+      "percent": "96.8%"
     },
     "supportedProfileCoverage": {
       "denominator": 118,
@@ -5979,6 +5979,11 @@
           "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/warlock-eldritch-invocations-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1D2-WARLOCK-ELDRITCH-INVOCATIONS"
         }
       ],
       "executableMechanics": true,

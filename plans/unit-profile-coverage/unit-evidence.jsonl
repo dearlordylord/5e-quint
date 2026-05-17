@@ -185,6 +185,7 @@
 {"unitId":"ranger_weapon_mastery","evidence":{"tag":"deterministic-admission-projection","taskId":"AT-L1-04","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"rogue_weapon_mastery","evidence":{"tag":"deterministic-admission-projection","taskId":"AT-L1-04","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"warlock_eldritch_invocations","evidence":{"tag":"deterministic-admission-projection","taskId":"L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
+{"unitId":"warlock_eldritch_invocations","evidence":{"tag":"selected-identity-mbt","taskId":"L1D2-WARLOCK-ELDRITCH-INVOCATIONS","ownerPath":"packages/character-creation-runtime/src/warlock-eldritch-invocations-selected-identity.mbt.test.ts"}}
 {"unitId":"cleric_divine_order","evidence":{"tag":"deterministic-admission-projection","taskId":"AT-L1-06","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"cleric_divine_order","evidence":{"tag":"selected-identity-mbt","taskId":"L1D2-CLERIC-DRUID-ORDER","ownerPath":"packages/character-creation-runtime/src/cleric-druid-order-selected-identity.mbt.test.ts"}}
 {"unitId":"druid_primal_order","evidence":{"tag":"deterministic-admission-projection","taskId":"AT-L1-06","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
