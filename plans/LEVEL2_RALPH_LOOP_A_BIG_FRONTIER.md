@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L12G-OWNER-FIGHTER-TACTICAL-MIND",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Fighter Tactical Mind Owner Evidence"
     },
     {
@@ -683,7 +683,7 @@ Acceptance:
 
 ### Task 3 - L12G-OWNER-FIGHTER-TACTICAL-MIND - Fighter Tactical Mind Owner Evidence
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `fighter_tactical_mind`. Gate task: 3 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 

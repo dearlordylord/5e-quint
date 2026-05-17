@@ -176,6 +176,7 @@ const battleRuntimeRelevantFeatureUnitIds = new Set([
 const levelTwoBattleRuntimeOwnerEvidenceUnitIds = new Set([
   "barbarian_reckless_attack",
   "fighter_action_surge",
+  "fighter_tactical_mind",
 ]);
 
 const classContainerSurfaceBlockers = new Map();

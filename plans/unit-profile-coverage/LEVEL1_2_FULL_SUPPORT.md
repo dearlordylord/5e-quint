@@ -10,7 +10,7 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | --- | ---: |
 | Strict runtime/profile support | 82/135 (60.7%) |
 | Strict target closure | 98/135 (72.6%) |
-| Product readiness | 468/556 (84.2%) |
+| Product readiness | 469/556 (84.4%) |
 
 ## Scope
 

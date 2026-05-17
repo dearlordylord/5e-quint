@@ -171,12 +171,12 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 468,
-      "percent": "84.2%",
+      "numerator": 469,
+      "percent": "84.4%",
       "rowsByStatus": {
-        "accepted": 284,
+        "accepted": 285,
         "accepted-no-battle-effect": 184,
-        "owner-evidence-required": 14,
+        "owner-evidence-required": 13,
         "battle-runtime-required": 74
       }
     },
@@ -187,17 +187,17 @@
     },
     "levelTwoRowsByDisposition": {
       "catalog-only/dead-for-now": 5,
-      "catalog-installed-owner-evidence-present": 2,
+      "catalog-installed-owner-evidence-present": 3,
       "non-runtime": 12,
       "missing-authored-record": 12,
-      "catalog-installed-needs-owner-evidence": 2
+      "catalog-installed-needs-owner-evidence": 1
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 289,
+      "catalog-installed-owner-evidence-present": 290,
       "non-runtime": 24,
       "catalog-only/dead-for-now": 155,
       "missing-authored-record": 86,
-      "catalog-installed-needs-owner-evidence": 2
+      "catalog-installed-needs-owner-evidence": 1
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 143,
@@ -12020,16 +12020,21 @@
         "unitId": "fighter_tactical_mind"
       },
       "unitProfileDisposition": "supported-profile",
-      "finalDisposition": "catalog-installed-needs-owner-evidence",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit fighter_tactical_mind is installed in srdUnitCollection",
-          "status": "catalog-only evidence; operational owner evidence still required"
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT62 at packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/fighter:level-2:class-table-summary:fighter_level_2_feature_table_row",
