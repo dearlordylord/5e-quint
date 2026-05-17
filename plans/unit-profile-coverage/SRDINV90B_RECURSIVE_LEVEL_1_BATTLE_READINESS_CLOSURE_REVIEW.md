@@ -116,7 +116,7 @@ metric.
 - Active-plan consistency was updated across the Ralph index, DAG table, and
   Task 335 details.
 
-## /simplify Convergence
+## reviewer loop Convergence
 
 - Round 1: rejected closing based on active-plan exhaustion or supported-profile
   coverage. Closure is justified only by the generated product metric reaching

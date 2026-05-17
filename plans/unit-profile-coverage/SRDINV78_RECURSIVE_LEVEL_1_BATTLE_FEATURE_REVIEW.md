@@ -157,7 +157,7 @@ closure:
   Spell Definitions.
 - `SRDINV83`: recursive review after this batch lands.
 
-## /simplify Convergence
+## reviewer loop Convergence
 
 - Round 1: rejected final closure because the generated default readiness
   metric is still 284/367 and Starry Wisp has a checker-visible

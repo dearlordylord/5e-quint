@@ -169,7 +169,7 @@ Out of scope:
   `pact_of_the_tome` invocation option alone, from one selected spell alone, or
   from generic prepared-spell support alone.
 
-## /simplify Convergence
+## reviewer loop Convergence
 
 - Round 1: rejected copying selected Book of Shadows spell ids into ordinary
   Warlock prepared spells. The book-on-person condition would then rely on a

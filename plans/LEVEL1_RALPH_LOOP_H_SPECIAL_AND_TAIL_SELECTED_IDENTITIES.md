@@ -158,7 +158,7 @@ Every task runs:
 - `pnpm unit-profile-coverage:check --write`;
 - `pnpm unit-profile-coverage:check`;
 - `git diff --check`;
-- `/simplify` convergence, minimum two rounds.
+- reviewer loop convergence, minimum two rounds.
 
 ## Task Details
 

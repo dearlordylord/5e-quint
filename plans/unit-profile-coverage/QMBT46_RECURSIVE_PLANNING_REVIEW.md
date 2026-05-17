@@ -83,9 +83,9 @@ append the next bounded batch rather than letting planning drift.
 
 - Active-plan consistency was checked across the Ralph task index, DAG rows,
   and task details for QMBT46-QMBT49.
-- `/simplify` round 1: kept the appended batch tied to the already selected
+- reviewer loop round 1: kept the appended batch tied to the already selected
   Relentless Endurance implementation before another feature selection task.
-- `/simplify` round 2: no important changes found; the batch still has one
+- reviewer loop round 2: no important changes found; the batch still has one
   implementation task, one post-implementation feature selection task, and one
   recursive review.
 - `pnpm unit-profile-coverage:check` remains the matrix gate if generated

@@ -354,7 +354,7 @@ MCP is not an importer and not a second spell schema owner.
   monsters remain owners of spellcasting prose, usage, and actor-local casting
   stats only; they are explicitly forbidden from owning canonical spell
   metadata, provenance, or battle payloads.
-- `/simplify` convergence:
+- reviewer loop convergence:
   - Round 1: replaced category-level guidance with a concrete canonical
     identity/provenance contract and removed ambiguous ownership wording.
   - Round 2: re-checked every battle-boundary claim against exact SRD sections

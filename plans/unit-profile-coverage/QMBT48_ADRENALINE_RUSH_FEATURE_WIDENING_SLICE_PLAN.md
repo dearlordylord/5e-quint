@@ -184,7 +184,7 @@ Additional candidate RAW checked:
 - `pnpm unit-profile-coverage:check`.
 - Relevant package typecheck/tests.
 - `pnpm quality` for the production behavior change.
-- `/simplify` convergence, minimum two rounds.
+- reviewer loop convergence, minimum two rounds.
 
 ## Task 143 Verification
 
@@ -195,10 +195,10 @@ Additional candidate RAW checked:
   detail for QMBT48 so each marks the task done and links this decision
   artifact. QMBT49-QMBT52 are unblocked; QMBT52 should append the implementation
   task for this slice if the matrix lane remains active.
-- `/simplify` round 1: kept the selected slice tied to installed SRD Unit
+- reviewer loop round 1: kept the selected slice tied to installed SRD Unit
   pressure and rejected generic Temporary Hit Point, generic Dash, spell, and
   magic-item widening.
-- `/simplify` round 2: no important changes found; the plan still selects one
+- reviewer loop round 2: no important changes found; the plan still selects one
   feature profile and keeps AC base formulas, healing pools, resistance, attack
   replacement, Weapon Mastery properties, spell admission, and magic-item intake
   out of the slice.

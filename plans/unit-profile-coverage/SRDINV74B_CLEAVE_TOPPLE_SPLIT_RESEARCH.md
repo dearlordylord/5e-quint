@@ -150,7 +150,7 @@ Out of scope:
 - SRDINV78 depends on SRDINV74C and SRDINV74D instead of treating SRDINV74B
   alone as the mastery closure point.
 
-## /simplify Convergence
+## reviewer loop Convergence
 
 - Round 1: rejected a combined Cleave/Topple implementation slice. It would
   couple save-gated condition application to an extra-attack flow with

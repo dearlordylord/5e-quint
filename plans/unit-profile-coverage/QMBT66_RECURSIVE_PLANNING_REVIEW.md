@@ -101,10 +101,10 @@ the refreshed evidence rather than pre-committing that choice here.
   model a new rule directly.
 - PRD status notes were refreshed to reflect QMBT66 and the appended
   projection-cleanup batch.
-- `/simplify` round 1: kept the next batch on projection cleanup rather than
+- reviewer loop round 1: kept the next batch on projection cleanup rather than
   mixing it with AC formulas, healing pools, resistance traits, Breath Weapon,
   Weapon Mastery, spells, magic items, or content cleanup.
-- `/simplify` round 2: split the projection cleanup by existing supported
+- reviewer loop round 2: split the projection cleanup by existing supported
   profile family: Bardic Inspiration reaction reductions first, Monk Deflect
   Attacks redirect facts second, then a recursive review. This preserves a
   repeatable pattern without forcing one task to touch every SRD mechanic TODO

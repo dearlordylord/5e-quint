@@ -86,7 +86,7 @@ Spell Unit Surface blockers and authored executable spell runtime follow-ups
 remain counted in the generated inventory, but SRDINV21 does not pull them
 ahead of the remaining level-1 rows.
 
-## /simplify Convergence
+## reviewer loop Convergence
 
 - Round 1: selected the next batch from the refreshed level-1 rows rather than
   the larger spell-pressure backlog. This keeps SRDINV22-SRDINV26 tied to the

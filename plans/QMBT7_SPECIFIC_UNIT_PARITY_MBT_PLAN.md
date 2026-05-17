@@ -213,7 +213,7 @@ mechanics-only identities that stay in later QMBT13-QMBT18 planning lanes.
 - [x] Focused MBT only after behavior/evidence wiring is complete and only with
       the required timed MBT protocol.
 - [x] No broad battle MBT for matrix-only edits.
-- [x] `/simplify` convergence after implementation phases, minimum two rounds
+- [x] reviewer loop convergence after implementation phases, minimum two rounds
       for nontrivial changes.
 
 ### Simplification Notes

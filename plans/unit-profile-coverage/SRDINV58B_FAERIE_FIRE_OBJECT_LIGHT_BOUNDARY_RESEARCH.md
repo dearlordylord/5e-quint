@@ -127,7 +127,7 @@ Out of scope:
 - SRDINV70A should retain Faerie Fire and Starry Wisp as inputs to the shared
   light and illumination boundary decision.
 
-## /simplify Convergence
+## reviewer loop Convergence
 
 - Round 1: rejected a Faerie-specific Dim Light active effect. It would create
   duplicate illumination state beside the future shared light model and would

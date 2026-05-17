@@ -171,7 +171,7 @@ authority or gate for promoted battle behavior.
 - **Never** add logic to the runtime commit layer that diverges from the relevant Quint model without updating the spec first.
 - **Never** "fix" runtime behavior that the relevant authoritative Quint model handles differently — update the spec or accept it as spec-level intentional.
 - **Never** remove or rename context fields that an MBT bridge maps without checking the relevant parity test first.
-- If a simplify/refactor changes behavior, the relevant MBT tests MUST still pass. If they don't, the refactor is wrong.
+- If a refactor changes behavior, the relevant MBT tests MUST still pass. If they don't, the refactor is wrong.
 
 ## TypeScript conventions
 
@@ -238,12 +238,12 @@ authority or gate for promoted battle behavior.
 
 Every plan's **Verification** section must include:
 
-1. **`/simplify` convergence** — minimum 2 rounds (see below). Do not mark the plan as complete until simplify converges. **Start `/simplify` immediately after implementation — do not wait for user confirmation.**
-2. **RAW agent check** — before implementing any rule, read the relevant SRD passage in `.references/srd-5.2.1/` and check `UBIQUITOUS_LANGUAGE.md`. Include a verification step that confirms all modeled rules trace to specific SRD text.
+1. **Reviewer-loop convergence** — run RAW, ubiquitous-language, architecture/domain, and code-review passes after implementation. Fix every reasonable finding, explicitly reject only findings with a concrete reason, and repeat the reviewer loop until no reasonable findings remain. Do not wait for user confirmation between rounds.
+2. **RAW/ubiquitous-language check** — before implementing any rule, read the relevant SRD passage in `.references/srd-5.2.1/` and check `UBIQUITOUS_LANGUAGE.md`. Include a verification step that confirms all modeled rules trace to specific SRD text.
 
-## /simplify convergence
+## Reviewer-loop convergence
 
-After significant changes, run `/simplify` repeatedly until it converges — i.e., each round finds fewer issues until no important fixes remain. **Do not ask between rounds** — just proceed automatically. Typical progression: round 1 catches dead code and obvious duplication; round 2 catches subtler issues (bugs, tautological invariants, missed dedup); round 3 should find nothing significant. If round N still finds real issues, keep going. **Minimum 2 rounds** — convergence cannot be measured from a single round unless the changeset is trivially small (< ~20 lines). A single round may fix the obvious issues but cannot confirm that no subtler issues remain.
+After significant changes, run the normal reviewer loop repeatedly until it converges. The loop must include RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review checks. Each round should produce fewer reasonable findings; if a round still finds real issues, fix them and run another round. Convergence means no reasonable findings remain, with any rejected notes documented alongside the reason they were rejected. A single round is enough only for trivially small changesets (< ~20 lines); otherwise use at least two rounds to catch both obvious and subtler issues.
 
 ## Invariant scenario tests
 

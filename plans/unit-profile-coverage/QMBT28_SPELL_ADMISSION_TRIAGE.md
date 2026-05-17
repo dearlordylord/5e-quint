@@ -138,18 +138,18 @@ Local RAW anchors read for this decision:
 - `pnpm unit-profile-coverage:check`.
 - Relevant package typecheck/tests.
 - `pnpm quality` for the production behavior change.
-- `/simplify` convergence, minimum two rounds.
+- reviewer loop convergence, minimum two rounds.
 
 ## Task 123 Verification
 
 - RAW checked locally against the SRD spell and glossary anchors listed above.
 - `UBIQUITOUS_LANGUAGE.md` checked for the spell ownership and action/resource
   terms listed above.
-- `/simplify` round 1: kept the selected batch to direct `heal_hp` creature
+- reviewer loop round 1: kept the selected batch to direct `heal_hp` creature
   restoration and moved condition removal, max-HP modification, object targets,
   area point targeting, sensing, repeat-save conditions, and forced movement to
   non-selected boundary rows.
-- `/simplify` round 2: no important changes found; the decision still selects
+- reviewer loop round 2: no important changes found; the decision still selects
   one coherent spell-effect family, avoids Fire Bolt re-admission, and does not
   require MBT for this research-only task.
 - MBT not run: Task 123 is research-only and makes no promoted battle-runtime

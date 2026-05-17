@@ -74,9 +74,9 @@ into one slice.
 - Active-plan consistency was checked across the Ralph task index, DAG rows,
   and task details for QMBT39-QMBT42.
 - `pnpm unit-profile-coverage:check` passed.
-- `/simplify` round 1: kept the appended batch tied to the already selected
+- reviewer loop round 1: kept the appended batch tied to the already selected
   Fast Movement implementation before any further feature selection.
-- `/simplify` round 2: no important changes found; the batch still has one
+- reviewer loop round 2: no important changes found; the batch still has one
   implementation task, one post-implementation feature selection task, and one
   recursive review.
 - MBT not run: QMBT39 is planning-only and makes no promoted battle-runtime
