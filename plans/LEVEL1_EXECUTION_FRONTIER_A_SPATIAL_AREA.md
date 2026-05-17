@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L1XA-PRECHECK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Spatial Area Frontier Precheck"
     },
     {
@@ -102,7 +102,7 @@ Every task runs:
 
 | Order | Task | Status | Blocks On | Output |
 | ---: | --- | --- | --- | --- |
-| 1 | L1XA-PRECHECK - Spatial Area Frontier Precheck | ready-for-research | none | decision artifact listing current claims/evidence and confirming A/B/D/K ownership split |
+| 1 | L1XA-PRECHECK - Spatial Area Frontier Precheck | done | none | decision artifact listing current claims/evidence and confirming A/B/D/K ownership split |
 | 2 | L1XA-FAERIE-FIRE-CLOSURE - Faerie Fire Runtime Boundary Closure | ready-for-research | 1 | `faerie_fire` removed from strict open-profile-accounting or blocked with exact missing runtime mechanic |
 | 3 | L1XA-FOG-CLOUD-CLOSURE - Fog Cloud Runtime Boundary Closure | ready-for-research | 1 | `fog_cloud` removed from strict open-profile-accounting or blocked with exact missing runtime mechanic |
 | 4 | L1XA-GREASE-CLOSURE - Grease Runtime Boundary Closure | ready-for-research | 1 | `grease` removed from strict open-profile-accounting or blocked with exact missing runtime mechanic |
@@ -111,7 +111,7 @@ Every task runs:
 
 ### Task 1 - L1XA-PRECHECK - Spatial Area Frontier Precheck
 
-Status: `ready-for-research`
+Status: `done`
 
 Inputs:
 
