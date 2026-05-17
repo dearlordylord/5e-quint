@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "L1J-RANGED-WEAPON-DATA",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Ranged Weapon Non Runtime Data Closure"
     },
     {
@@ -125,7 +125,7 @@ Every task runs:
 | 4 | L1J-SIMPLE-MELEE-WEAPON-DATA - Simple Melee Weapon Non Runtime Data Closure | done | 1 | explicit closure for simple melee authored records |
 | 5 | L1J-MARTIAL-MELEE-WEAPON-DATA - Martial Melee Weapon Non Runtime Data Closure | done | 1 | explicit closure for martial melee authored records |
 | 6 | L1J-POLEARM-REACH-WEAPON-DATA - Polearm Reach Weapon Non Runtime Data Closure | done | 1 | explicit closure for polearm/reach authored records |
-| 7 | L1J-RANGED-WEAPON-DATA - Ranged Weapon Non Runtime Data Closure | ready-for-research | 1 | explicit closure for ranged authored records |
+| 7 | L1J-RANGED-WEAPON-DATA - Ranged Weapon Non Runtime Data Closure | done | 1 | explicit closure for ranged authored records |
 | 8 | L1J-THROWN-FINESSE-WEAPON-DATA - Thrown Finesse Weapon Non Runtime Data Closure | ready-for-research | 1 | explicit closure for thrown/finesse authored records |
 | 9 | L1J-FIREARM-EXOTIC-WEAPON-DATA - Firearm Exotic Weapon Non Runtime Data Closure | ready-for-research | 1 | explicit closure for firearm/exotic authored records |
 | 10 | L1J-INSTALLED-EQUIPMENT-ROW-ALIGNMENT - Installed Equipment Row Alignment | ready-for-research | 1 | align existing installed equipment/weapon unsupported rows with the same closure language |
@@ -193,13 +193,16 @@ Do not implement reach or mastery behavior in this loop.
 
 ### Task 7 - L1J-RANGED-WEAPON-DATA - Ranged Weapon Non Runtime Data Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Units include `weapon_blowgun`, `weapon_hand_crossbow`,
 `weapon_heavy_crossbow`, `weapon_light_crossbow`, `weapon_longbow`,
 and `weapon_sling`.
 
 Installed `weapon_shortbow` belongs to Task 10.
+
+Decision artifact:
+`plans/unit-profile-coverage/L1J_RANGED_WEAPON_DATA_CLOSURE.md`.
 
 ### Task 8 - L1J-THROWN-FINESSE-WEAPON-DATA - Thrown Finesse Weapon Non Runtime Data Closure
 
