@@ -6,9 +6,10 @@ This is a Unit/catalog backlog denominator, not RAW span coverage and not an MBT
 
 ## Metrics
 
-- Total generated rows: 367
+- Total generated rows: 556
 - Level-1 rows: 156
-- Spell-list pressure rows for cantrips and level-1 spells: 211
+- Level-2 rows: 33
+- Spell-list pressure rows for cantrips and level 1-2 spells: 367
 - Missing level-1 class containers: 0
 
 ### Default Progress Metric: Level-1 Battle Readiness
@@ -22,9 +23,29 @@ This is the default `%` for level-1 readiness questions. A row counts only when 
 - accepted: 278
 - accepted-no-battle-effect: 89
 
+### Expanded Progress Metric: Level 1-2 Battle Readiness
+
+This is the default `%` for level-1 plus level-2 readiness questions. It uses the same acceptance rules as the level-1 metric, but includes level-2 class-feature rows and level-2 spell-list pressure.
+
+- Accepted: 466/556 (83.8%)
+
+#### Level 1-2 Battle Readiness by Status
+
+- accepted: 281
+- accepted-no-battle-effect: 185
+- battle-runtime-required: 74
+- owner-evidence-required: 16
+
 ### Level-1 Rows by Disposition
 
 - catalog-installed-owner-evidence-present: 144
+- non-runtime: 12
+
+### Level-2 Rows by Disposition
+
+- catalog-installed-needs-owner-evidence: 4
+- catalog-only/dead-for-now: 5
+- missing-authored-record: 12
 - non-runtime: 12
 
 ### Level-1 Rows by Category
@@ -43,8 +64,9 @@ This is the default `%` for level-1 readiness questions. A row counts only when 
 
 ### Spell Unit Pressure by Disposition
 
-- catalog-installed-owner-evidence-present: 139
-- catalog-only/dead-for-now: 72
+- catalog-installed-owner-evidence-present: 142
+- catalog-only/dead-for-now: 151
+- missing-authored-record: 74
 
 ## Recommended Ralph Batches
 
@@ -149,7 +171,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Barbarian Weapon Mastery|mastery pressure||current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted|profile-subset-remaining-mechanics-closed: SRDINV78 later-level Weapon Mastery count scaling|Unit catalog/admission: catalog evidence; character-sheet-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Barbarian.md:84|
 |Barbarian multiclass entry traits|character-creation or progression mechanic|class-container-owned-source-fact|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Barbarian.md:22|
 |Bard class container|class container||current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Bard.md:3|
-|Bard Bardic Inspiration|class feature||current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted|profile-subset-remaining-mechanics-closed: SRDINV78 later-level scaling|Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Bard.md:57|
+|Bard Bardic Inspiration|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Bard.md:57|
 |Bard level 1 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Bard.md:36|
 |Bard Armor Training|character-creation or progression mechanic|class-container-owned-source-fact|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Bard.md:13|
 |Bard Hit Point Die|character-creation or progression mechanic|class-container-owned-source-fact|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Bard.md:8|
@@ -201,7 +223,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Fighter Weapon Mastery|mastery pressure||current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted|profile-subset-remaining-mechanics-closed: SRDINV78 later-level Weapon Mastery count scaling|Unit catalog/admission: catalog evidence; character-sheet-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Fighter.md:70|
 |Fighter multiclass entry traits|character-creation or progression mechanic|class-container-owned-source-fact|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Fighter.md:22|
 |Monk class container|class container||current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Monk.md:3|
-|Monk Martial Arts|class feature||current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted|profile-subset-remaining-mechanics-closed: SRDINV78 later-level scaling|Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Monk.md:57|
+|Monk Martial Arts|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Monk.md:57|
 |Monk Unarmored Defense|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-sheet-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Monk.md:72|
 |Monk level 1 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Monk.md:32|
 |Monk Armor Training|character-creation or progression mechanic|class-container-owned-source-fact|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Monk.md:13|
@@ -227,7 +249,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Paladin multiclass entry traits|character-creation or progression mechanic|class-container-owned-source-fact|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Paladin.md:22|
 |Paladin Spellcasting|spell access/list pressure||current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Paladin.md:66|
 |Ranger class container|class container||current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Ranger.md:3|
-|Ranger Favored Enemy|class feature||current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted|profile-subset-remaining-mechanics-closed: SRDINV78 later-level scaling; SRDINV66 ability-check roll-mode owner|Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Ranger.md:76|
+|Ranger Favored Enemy|class feature||current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted|profile-subset-remaining-mechanics-closed: SRDINV78 later-level scaling|Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Ranger.md:76|
 |Ranger level 1 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Ranger.md:35|
 |Ranger Armor Training|character-creation or progression mechanic|class-container-owned-source-fact|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Ranger.md:12|
 |Ranger Hit Point Die|character-creation or progression mechanic|class-container-owned-source-fact|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Ranger.md:8|
@@ -291,4 +313,42 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Wizard Starting Equipment|equipment/weapon/armor pressure|class-container-owned-source-fact|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Wizard.md:13|
 |Wizard multiclass entry traits|character-creation or progression mechanic|class-container-owned-source-fact|current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Wizard.md:22|
 |Wizard Spellcasting|spell access/list pressure||current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Wizard.md:56|
+
+## Level-2 Backlog Rows
+
+| Row | Category | Creation ownership | Surface | Authored | Catalog | Unit profile | Disposition | Battle readiness | Readiness closure | Owner evidence | Next action | Source |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+|Barbarian Danger Sense|class feature||current-surface-can-express-source-facts|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|later-level-only: future unit-feature.passive-saving-throw-roll-mode owner||Decide whether to admit/support, or keep catalog-only closure counted.|.references/srd-5.2.1/Classes/Barbarian.md:90|
+|Barbarian Reckless Attack|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-needs-owner-evidence|owner-evidence-required||Unit catalog/admission: catalog-only evidence; operational owner evidence still required|Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only.|.references/srd-5.2.1/Classes/Barbarian.md:94|
+|Barbarian level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Barbarian.md:36|
+|Bard Expertise|class feature||current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|owner-evidence-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Bard.md:93|
+|Bard Jack of All Trades|class feature||current-surface-can-express-source-facts|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|later-level-only: future character-sheet.ability-check-proficiency-bonus profile||Decide whether to admit/support, or keep catalog-only closure counted.|.references/srd-5.2.1/Classes/Bard.md:99|
+|Bard level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Bard.md:37|
+|Cleric Channel Divinity|class feature||current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|owner-evidence-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Cleric.md:88|
+|Cleric level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Cleric.md:36|
+|Druid Wild Companion|class feature||current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|owner-evidence-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Druid.md:124|
+|Druid Wild Shape|class feature||current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|owner-evidence-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Druid.md:95|
+|Druid level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Druid.md:33|
+|Fighter Action Surge|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-needs-owner-evidence|owner-evidence-required||Unit catalog/admission: catalog-only evidence; operational owner evidence still required|Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only.|.references/srd-5.2.1/Classes/Fighter.md:76|
+|Fighter Tactical Mind|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-needs-owner-evidence|owner-evidence-required||Unit catalog/admission: catalog-only evidence; operational owner evidence still required|Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only.|.references/srd-5.2.1/Classes/Fighter.md:82|
+|Fighter level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Fighter.md:32|
+|Monk Monk's Focus|class feature||current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|owner-evidence-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Monk.md:76|
+|Monk Unarmored Movement|class feature||current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|owner-evidence-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Monk.md:92|
+|Monk Uncanny Metabolism|class feature||current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|owner-evidence-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Monk.md:96|
+|Monk level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Monk.md:33|
+|Paladin Fighting Style|class feature||current-surface-can-express-source-facts|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|selection-grant-container: selected Fighting Style feat Unit profiles and future Blessed Warrior Spell Access character owner||Decide whether to admit/support, or keep catalog-only closure counted.|.references/srd-5.2.1/Classes/Paladin.md:90|
+|Paladin Paladin's Smite|class feature||current-surface-can-express-source-facts|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|later-level-only: future Paladin's Smite Spell Access and class-feature free-cast resource owner||Decide whether to admit/support, or keep catalog-only closure counted.|.references/srd-5.2.1/Classes/Paladin.md:96|
+|Paladin level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Paladin.md:36|
+|Ranger Deft Explorer|class feature||current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|owner-evidence-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Ranger.md:88|
+|Ranger Fighting Style|class feature||current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|owner-evidence-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Ranger.md:96|
+|Ranger level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Ranger.md:36|
+|Rogue Cunning Action|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-needs-owner-evidence|owner-evidence-required||Unit catalog/admission: catalog-only evidence; operational owner evidence still required|Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only.|.references/srd-5.2.1/Classes/Rogue.md:81|
+|Rogue level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Rogue.md:37|
+|Sorcerer Font of Magic|class feature||current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|owner-evidence-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Sorcerer.md:87|
+|Sorcerer Metamagic|class feature||current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|owner-evidence-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Sorcerer.md:111|
+|Sorcerer level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Sorcerer.md:36|
+|Warlock Magical Cunning|class feature||current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|owner-evidence-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Warlock.md:92|
+|Warlock level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Warlock.md:36|
+|Wizard Scholar|class feature||current-surface-can-express-source-facts|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|later-level-only: future constrained Character Creation skill Expertise choice owner||Decide whether to admit/support, or keep catalog-only closure counted.|.references/srd-5.2.1/Classes/Wizard.md:104|
+|Wizard level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Wizard.md:36|
 

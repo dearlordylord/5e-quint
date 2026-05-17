@@ -558,6 +558,24 @@ function renderProfileSubsetDeferredMechanics(claim) {
     .join("; ");
 }
 
+const installedNonRuntimeAuthoredDataKinds = new Set([
+  "armor",
+  "shield",
+  "weapon",
+]);
+
+function installedNonRuntimeAuthoredDataDisposition(unit) {
+  if (unit.collectionId !== "srd-5.2.1") return undefined;
+  if (unit.catalogAdmission?.status !== "installed") return undefined;
+  if (unit.claim?.tag !== "unsupported-profile") return undefined;
+  if (unit.executableMechanics !== false) return undefined;
+  if (!installedNonRuntimeAuthoredDataKinds.has(unit.kind)) return undefined;
+  return {
+    disposition: catalogAdmissionDispositionCategory.nonRuntimeAuthoredData,
+    futureProfileOwner: "no promoted runtime lane",
+  };
+}
+
 function renderClaimPressureDetail(claim) {
   if (claim?.tag === "profile-subset-supported") {
     return `supported subset: ${claim.supportedMechanics.join("; ")}; deferred: ${renderProfileSubsetDeferredMechanics(claim)}`;
@@ -622,15 +640,21 @@ function renderReport(
   const unsupportedPressure = Array.from(
     unsupported
       .reduce((groups, unit) => {
-        const key = [
-          unit.collectionId,
-          unit.claim?.futureProfileOwner ?? "unassigned",
-          unit.claim?.tag ?? "missing",
-        ].join("\u0000");
+        const nonRuntimeDisposition =
+          installedNonRuntimeAuthoredDataDisposition(unit);
+        const futureProfileOwner =
+          nonRuntimeDisposition?.futureProfileOwner ??
+          unit.claim?.futureProfileOwner ??
+          "unassigned";
+        const disposition =
+          nonRuntimeDisposition?.disposition ?? unit.claim?.tag ?? "missing";
+        const key = [unit.collectionId, futureProfileOwner, disposition].join(
+          "\u0000",
+        );
         const current = groups.get(key) ?? {
           collectionId: unit.collectionId,
-          futureProfileOwner: unit.claim?.futureProfileOwner ?? "unassigned",
-          disposition: unit.claim?.tag ?? "missing",
+          futureProfileOwner,
+          disposition,
           units: [],
         };
         current.units.push(unit.unitId);

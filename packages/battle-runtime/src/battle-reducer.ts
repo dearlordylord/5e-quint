@@ -2178,7 +2178,10 @@ export type ObjectLightSpellInvocation = {
   readonly procedure: "objectLight";
   readonly spell: SpellRecord;
   readonly actionCost: "magicAction";
-  readonly targeting: { readonly kind: "singleObject" };
+  readonly targeting: {
+    readonly kind: "singleObject";
+    readonly maxSize: Size;
+  };
   readonly light: Extract<
     BattleLightEmission,
     { readonly kind: "brightAndDim" }

@@ -142,6 +142,21 @@ const levelOneBattleReadinessLevelBands = new Set([
   "spell-level-0",
   "spell-level-1",
 ]);
+const levelOneTwoBattleReadinessLevelBands = new Set([
+  "level-1",
+  "level-2",
+  "spell-level-0",
+  "spell-level-1",
+  "spell-level-2",
+]);
+const levelOneSpellPressureLevelBands = new Set([
+  "spell-level-0",
+  "spell-level-1",
+]);
+const spellPressureLevelBands = new Set([
+  ...levelOneSpellPressureLevelBands,
+  "spell-level-2",
+]);
 
 const battleRuntimeRelevantFeatureUnitIds = new Set([
   "barbarian_weapon_mastery",
@@ -319,8 +334,7 @@ function isBattleReadinessClosure(value) {
 function isAuthoredSpellUnitCatalogOnlyClosure(row) {
   return (
     row.rowKind === "spell-unit-pressure" &&
-    (row.levelBand === "spell-level-0" ||
-      row.levelBand === "spell-level-1") &&
+    spellPressureLevelBands.has(row.levelBand) &&
     row.authoredContent?.state === "authored-record-present" &&
     row.catalogAdmission?.state === "not-installed" &&
     row.unitProfileDisposition === "unsupported-profile" &&
@@ -369,22 +383,23 @@ function tableRows(lines, headingPattern) {
   return rows;
 }
 
-function firstLevelRow(lines, className) {
+function classFeatureTableRow(lines, className, level) {
   const rows = tableRows(
     lines,
     new RegExp(`^### ${className} Features$|^## ${className} Features$`),
   );
   const header = rows[0]?.cells ?? [];
-  const row = rows.find((entry) => entry.cells[0] === "1");
+  const row = rows.find((entry) => entry.cells[0] === String(level));
   return row ? { header, row } : undefined;
 }
 
-function levelOneFeatureHeadings(lines) {
+function levelFeatureHeadings(lines, level) {
+  const prefix = new RegExp(`^### Level ${level}: `);
   return lines
     .map((line, index) => ({ line, lineNumber: index + 1 }))
-    .filter((entry) => /^### Level 1: /.test(entry.line))
+    .filter((entry) => prefix.test(entry.line))
     .map((entry) => ({
-      name: entry.line.replace(/^### Level 1: /, "").trim(),
+      name: entry.line.replace(prefix, "").trim(),
       lineNumber: entry.lineNumber,
     }));
 }
@@ -717,7 +732,7 @@ function installedSpellUnitOwnerClassification(
 ) {
   if (
     row.rowKind !== "spell-unit-pressure" ||
-    (row.levelBand !== "spell-level-0" && row.levelBand !== "spell-level-1") ||
+    !spellPressureLevelBands.has(row.levelBand) ||
     !row.candidateUnitId
   ) {
     return undefined;
@@ -905,7 +920,6 @@ function classRows(root, className) {
   const rows = [];
   const coreLine = headingLine(lines, /^## Core .* Traits$/);
   const becomingLine = headingLine(lines, /^## Becoming a /);
-  const featureTable = firstLevelRow(lines, className);
 
   rows.push(
     makeRow({
@@ -960,54 +974,60 @@ function classRows(root, className) {
     );
   }
 
-  if (featureTable) {
-    rows.push(
-      makeRow({
-        sourcePath,
-        className,
-        levelBand: "level-1",
-        rowKind: "class-table-summary",
-        concept: `${className} level 1 feature table row`,
-        detail: featureTable.row.cells.join(" | "),
-        lineStart: featureTable.row.line,
-        candidateUnitId: `class_${classSlug}`,
-      }),
-    );
-  }
+  for (const level of [1, 2]) {
+    const featureTable = classFeatureTableRow(lines, className, level);
+    if (featureTable) {
+      rows.push(
+        makeRow({
+          sourcePath,
+          className,
+          levelBand: `level-${level}`,
+          rowKind: "class-table-summary",
+          concept: `${className} level ${level} feature table row`,
+          detail: featureTable.row.cells.join(" | "),
+          lineStart: featureTable.row.line,
+          candidateUnitId: `class_${classSlug}`,
+        }),
+      );
+    }
 
-  for (const feature of levelOneFeatureHeadings(lines)) {
-    const featureKind = classifyFeature(feature.name);
-    const candidateUnitId =
-      feature.name === "Spellcasting"
-        ? `class_${classSlug}`
-        : feature.name === "Pact Magic"
+    for (const feature of levelFeatureHeadings(lines, level)) {
+      const featureKind = classifyFeature(feature.name);
+      const candidateUnitId =
+        feature.name === "Spellcasting"
           ? `class_${classSlug}`
-          : `${classSlug}_${slug(feature.name)}`;
-    rows.push(
-      makeRow({
-        sourcePath,
-        className,
-        levelBand: "level-1",
-        rowKind:
-          featureKind === "class-feature" ? "class-feature-grant" : featureKind,
-        concept: `${className} ${feature.name}`,
-        detail: "Level 1 class feature.",
-        lineStart: feature.lineNumber,
-        lineEnd: sectionRange(lines, feature.lineNumber).endLine,
-        candidateUnitId,
-      }),
-    );
+          : feature.name === "Pact Magic"
+            ? `class_${classSlug}`
+            : `${classSlug}_${slug(feature.name)}`;
+      rows.push(
+        makeRow({
+          sourcePath,
+          className,
+          levelBand: `level-${level}`,
+          rowKind:
+            featureKind === "class-feature"
+              ? "class-feature-grant"
+              : featureKind,
+          concept: `${className} ${feature.name}`,
+          detail: `Level ${level} class feature.`,
+          lineStart: feature.lineNumber,
+          lineEnd: sectionRange(lines, feature.lineNumber).endLine,
+          candidateUnitId,
+        }),
+      );
+    }
   }
 
   for (const spell of [
     ...spellListEntries(lines, className, 0),
     ...spellListEntries(lines, className, 1),
+    ...spellListEntries(lines, className, 2),
   ]) {
     rows.push(
       makeRow({
         sourcePath,
         className,
-        levelBand: spell.spellLevel === 0 ? "spell-level-0" : "spell-level-1",
+        levelBand: `spell-level-${spell.spellLevel}`,
         rowKind: "spell-unit-pressure",
         concept: `${className} spell list ${spell.name}`,
         detail: `${spell.name} (${spell.school}; ${spell.special})`,
@@ -1635,7 +1655,10 @@ function withState(rows, authored, installedIds, ownerEvidenceSources) {
     };
     return {
       ...rowWithState,
-      battleReadinessStatus: battleReadinessStatus(rowWithState),
+      battleReadinessStatus: battleReadinessStatus(
+        rowWithState,
+        levelOneTwoBattleReadinessLevelBands,
+      ),
     };
   });
 }
@@ -1700,8 +1723,8 @@ function hasAcceptedOwnerEvidence(row, ownerPrefix) {
   );
 }
 
-function isLevelOneBattleReadinessRow(row) {
-  return levelOneBattleReadinessLevelBands.has(row.levelBand);
+function isBattleReadinessRowForLevelBands(row, levelBands) {
+  return levelBands.has(row.levelBand);
 }
 
 function battleReadinessClosureFromUnitClaim(claim) {
@@ -1764,8 +1787,11 @@ function isAcceptedNoBattleEffectSpellRow(row) {
   );
 }
 
-function battleReadinessStatus(row) {
-  if (!isLevelOneBattleReadinessRow(row)) return undefined;
+function battleReadinessStatus(
+  row,
+  levelBands = levelOneBattleReadinessLevelBands,
+) {
+  if (!isBattleReadinessRowForLevelBands(row, levelBands)) return undefined;
   if (row.finalDisposition === "non-runtime") {
     return "accepted-no-battle-effect";
   }
@@ -1825,10 +1851,15 @@ function battleReadinessStatus(row) {
   return "owner-evidence-required";
 }
 
-function countBattleReadiness(rows) {
-  const scopedRows = rows.filter(isLevelOneBattleReadinessRow);
+function countBattleReadiness(
+  rows,
+  levelBands = levelOneBattleReadinessLevelBands,
+) {
+  const scopedRows = rows.filter((row) =>
+    isBattleReadinessRowForLevelBands(row, levelBands),
+  );
   const rowsByStatus = scopedRows.reduce((counts, row) => {
-    const status = battleReadinessStatus(row);
+    const status = battleReadinessStatus(row, levelBands);
     counts[status] = (counts[status] ?? 0) + 1;
     return counts;
   }, {});
@@ -2008,8 +2039,7 @@ function hasRequiredOwnerEvidence(row, owner) {
 function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
   const levelOne = rows.filter((row) => row.levelBand === "level-1");
   const spellPressure = rows.filter(
-    (row) =>
-      row.levelBand === "spell-level-0" || row.levelBand === "spell-level-1",
+    (row) => levelOneSpellPressureLevelBands.has(row.levelBand),
   );
   const missingClassContainers = levelOne.filter(
     (row) =>
@@ -2064,13 +2094,12 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
   const executableFollowUpSpellUnitPressureRows = spellPressure.filter(
     (row) => row.finalDisposition === "catalog-authored-executable-follow-up",
   );
-  const catalogOnlyRows = rows.filter(
+  const catalogOnlyRows = levelOne.filter(
     (row) =>
       row.finalDisposition === "catalog-only/dead-for-now" &&
-      row.levelBand !== "spell-level-0" &&
-      row.levelBand !== "spell-level-1",
+      !levelOneSpellPressureLevelBands.has(row.levelBand),
   );
-  const surfaceWideningRows = rows.filter(
+  const surfaceWideningRows = levelOne.filter(
     (row) => row.finalDisposition === "needs-surface-widening",
   );
   const srdinv8Rows = srdinv8SurfaceWideningRows(levelOne);
@@ -3205,15 +3234,15 @@ function buildSrdUnitInventory({
     ownerEvidenceSources,
   ).sort((a, b) => a.id.localeCompare(b.id));
   const levelOneRows = rows.filter((row) => row.levelBand === "level-1");
+  const levelTwoRows = rows.filter((row) => row.levelBand === "level-2");
   const spellPressureRows = rows.filter(
-    (row) =>
-      row.levelBand === "spell-level-0" || row.levelBand === "spell-level-1",
+    (row) => spellPressureLevelBands.has(row.levelBand),
   );
   return {
     generatedBy: "scripts/unit-profile-coverage-check.cjs",
     sourceCorpus: ".references/srd-5.2.1/Classes",
     scope:
-      "SRD 5.2.1 class-derived Unit/catalog backlog rows, prioritized around level 1 plus level-1 spell-list pressure.",
+      "SRD 5.2.1 class-derived Unit/catalog backlog rows, prioritized around level 1, level 2, and cantrip/level-1/level-2 spell-list pressure.",
     evidenceArtifacts: {
       characterCreationOwnerEvidence: summarizeCharacterCreationOwnerEvidence(
         root,
@@ -3231,12 +3260,21 @@ function buildSrdUnitInventory({
     metrics: {
       totalRows: rows.length,
       levelOneRows: levelOneRows.length,
+      levelTwoRows: levelTwoRows.length,
       spellPressureRows: spellPressureRows.length,
-      levelOneBattleReadiness: countBattleReadiness(rows),
+      levelOneBattleReadiness: countBattleReadiness(
+        rows,
+        levelOneBattleReadinessLevelBands,
+      ),
+      levelOneTwoBattleReadiness: countBattleReadiness(
+        rows,
+        levelOneTwoBattleReadinessLevelBands,
+      ),
       levelOneClassContainers: levelOneRows.filter(
         (row) => row.rowKind === "class-container",
       ).length,
       levelOneRowsByDisposition: countBy(levelOneRows, "finalDisposition"),
+      levelTwoRowsByDisposition: countBy(levelTwoRows, "finalDisposition"),
       allRowsByDisposition: countBy(rows, "finalDisposition"),
       spellPressureRowsByDisposition: countBy(
         spellPressureRows,
@@ -3471,6 +3509,8 @@ function validateSrdUnitInventory(report) {
     if (
       row.rowKind === "spell-unit-pressure" &&
       row.authoredContent.state === "missing-authored-record" &&
+      (row.levelBand === "spell-level-0" ||
+        row.levelBand === "spell-level-1") &&
       !spellUnitMissingClassifications.has(row.candidateUnitId)
     ) {
       issues.push(
@@ -3489,6 +3529,7 @@ function validateSrdUnitInventory(report) {
     }
     if (
       row.finalDisposition === "catalog-only/dead-for-now" &&
+      row.levelBand === "level-1" &&
       row.rowKind !== "spell-unit-pressure" &&
       row.catalogAdmission.state !== "installed" &&
       !catalogOnlyClosures.has(row.id)
@@ -3509,6 +3550,7 @@ function validateSrdUnitInventory(report) {
 
 function renderSrdUnitInventory(report) {
   const levelOne = report.rows.filter((row) => row.levelBand === "level-1");
+  const levelTwo = report.rows.filter((row) => row.levelBand === "level-2");
   const missingClassContainers = levelOne
     .filter(
       (row) =>
@@ -3531,7 +3573,8 @@ function renderSrdUnitInventory(report) {
     "",
     `- Total generated rows: ${report.metrics.totalRows}`,
     `- Level-1 rows: ${report.metrics.levelOneRows}`,
-    `- Spell-list pressure rows for cantrips and level-1 spells: ${report.metrics.spellPressureRows}`,
+    `- Level-2 rows: ${report.metrics.levelTwoRows}`,
+    `- Spell-list pressure rows for cantrips and level 1-2 spells: ${report.metrics.spellPressureRows}`,
     `- Missing level-1 class containers: ${report.metrics.missingClassContainers}${missingClassContainerDetail}`,
     "",
     "### Default Progress Metric: Level-1 Battle Readiness",
@@ -3546,9 +3589,27 @@ function renderSrdUnitInventory(report) {
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, count]) => `- ${key}: ${count}`),
     "",
+    "### Expanded Progress Metric: Level 1-2 Battle Readiness",
+    "",
+    "This is the default `%` for level-1 plus level-2 readiness questions. It uses the same acceptance rules as the level-1 metric, but includes level-2 class-feature rows and level-2 spell-list pressure.",
+    "",
+    `- Accepted: ${report.metrics.levelOneTwoBattleReadiness.numerator}/${report.metrics.levelOneTwoBattleReadiness.denominator} (${report.metrics.levelOneTwoBattleReadiness.percent})`,
+    "",
+    "#### Level 1-2 Battle Readiness by Status",
+    "",
+    ...Object.entries(report.metrics.levelOneTwoBattleReadiness.rowsByStatus)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, count]) => `- ${key}: ${count}`),
+    "",
     "### Level-1 Rows by Disposition",
     "",
     ...Object.entries(report.metrics.levelOneRowsByDisposition)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, count]) => `- ${key}: ${count}`),
+    "",
+    "### Level-2 Rows by Disposition",
+    "",
+    ...Object.entries(report.metrics.levelTwoRowsByDisposition)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, count]) => `- ${key}: ${count}`),
     "",
@@ -3596,6 +3657,36 @@ function renderSrdUnitInventory(report) {
     "| Row | Category | Creation ownership | Surface | Authored | Catalog | Unit profile | Disposition | Battle readiness | Readiness closure | Owner evidence | Next action | Source |",
     "|---|---|---|---|---|---|---|---|---|---|---|---|---|",
     ...levelOne.map((row) =>
+      [
+        row.concept,
+        row.category,
+        row.characterCreationOwnership?.state ?? "",
+        row.surface.state,
+        row.authoredContent.state,
+        row.catalogAdmission.state,
+        row.unitProfileDisposition ?? "",
+        row.finalDisposition,
+        row.battleReadinessStatus ?? "",
+        row.battleReadinessClosure === undefined
+          ? ""
+          : `${row.battleReadinessClosure.kind}: ${row.battleReadinessClosure.owner}`,
+        row.ownerEvidence
+          .map((evidence) => `${evidence.owner}: ${evidence.status}`)
+          .join("; "),
+        row.nextAction,
+        `${row.source.path}:${row.source.lineStart}`,
+      ]
+        .map((cell) => String(cell).replace(/\|/g, "\\|"))
+        .join("|")
+        .replace(/^/, "|")
+        .replace(/$/, "|"),
+    ),
+    "",
+    "## Level-2 Backlog Rows",
+    "",
+    "| Row | Category | Creation ownership | Surface | Authored | Catalog | Unit profile | Disposition | Battle readiness | Readiness closure | Owner evidence | Next action | Source |",
+    "|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+    ...levelTwo.map((row) =>
       [
         row.concept,
         row.category,

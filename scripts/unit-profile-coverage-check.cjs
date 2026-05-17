@@ -21,7 +21,9 @@ const {
 } = require("./unit-profile-coverage-report.cjs");
 const {
   buildLevel1FullSupport,
+  buildLevel12FullSupport,
   renderLevel1FullSupport,
+  renderLevel12FullSupport,
 } = require("./level1-full-support-report.cjs");
 const {
   buildSrdUnitInventory,
@@ -100,6 +102,7 @@ function main() {
     },
   );
   const level1FullSupport = buildLevel1FullSupport(matrix, srdUnitInventory);
+  const level12FullSupport = buildLevel12FullSupport(matrix, srdUnitInventory);
   writeOrCompare(
     { root, write },
     paths.matrix,
@@ -133,6 +136,16 @@ function main() {
     { root, write },
     paths.level1FullSupportReport,
     renderLevel1FullSupport(level1FullSupport),
+  );
+  writeOrCompare(
+    { root, write },
+    paths.level12FullSupport,
+    `${JSON.stringify(level12FullSupport, null, 2)}\n`,
+  );
+  writeOrCompare(
+    { root, write },
+    paths.level12FullSupportReport,
+    renderLevel12FullSupport(level12FullSupport),
   );
   console.log(
     `Unit profile coverage OK: ${inventory.length} Units, ${profiles.length} profiles.`,

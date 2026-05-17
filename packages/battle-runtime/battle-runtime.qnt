@@ -110,17 +110,18 @@ module battleRuntime {
   //   Classes/Bard.md lines 332-334, and Playing-the-Game.md lines 326-332:
   //   Deflect Attacks, Uncanny Dodge, and Cutting Words are Reactions that
   //   modify an attack roll or attack damage at the relevant interrupt point.
-  // - Classes/Bard.md lines 57-65 and Rules-Glossary.md lines 138-140:
+  // - Classes/Bard.md lines 57-67 and Rules-Glossary.md lines 138-140:
   //   Bardic Inspiration is a Bonus Action grant to another creature within
   //   60 feet who can see or hear the Bard. The target can hold only one die,
   //   the die lasts for the next hour, and the Bard's use pool is Charisma
-  //   modifier with a minimum of one.
+  //   modifier with a minimum of one. The Bardic Inspiration die scales by
+  //   Bard level.
   // - Classes/Monk.md lines 56-74 and Rules-Glossary.md lines 1066-1076:
   //   Martial Arts applies while unarmored, unshielded, and unarmed or wielding
   //   only Monk weapons. This battle projection covers the Bonus Action
-  //   Unarmed Strike, level-1 d6 damage replacement, Dexterity attack/damage
-  //   choice, and Dexterity Grapple/Shove save DC projection for the promoted
-  //   Unarmed Strike Grapple and Shove action paths.
+  //   Unarmed Strike, Monk-level d6/d8/d10/d12 damage replacement, Dexterity
+  //   attack/damage choice, and Dexterity Grapple/Shove save DC projection for
+  //   the promoted Unarmed Strike Grapple and Shove action paths.
   // - Equipment.md lines 82-107 and UBIQUITOUS_LANGUAGE.md: Sap is a Weapon
   //   Mastery property usable only for an unlocked weapon kind; on a hit with
   //   that weapon, the target has Disadvantage on its next attack roll before
@@ -2915,6 +2916,12 @@ module battleRuntime {
   pure def bardicInspirationUses(charismaModifier: int): int =
     if (charismaModifier > 1) charismaModifier else 1
 
+  pure def bardicInspirationDieSizeAtClassLevel(bardLevel: int): int =
+    if (bardLevel >= 15) 12
+    else if (bardLevel >= 10) 10
+    else if (bardLevel >= 5) 8
+    else 6
+
   pure def hasBardicInspirationDie(effects: Set[ActiveEffect]): bool =
     effects.exists(effect => match effect {
       | BardicInspirationDie(_) => true
@@ -2940,10 +2947,11 @@ module battleRuntime {
   pure def bardicInspirationTargetEffectsAfterGrant(
     effects: Set[ActiveEffect],
     source: Actor,
+    bardLevel: int,
   ): Set[ActiveEffect] =
     effects.union(Set(BardicInspirationDie({
       source: source,
-      dieSize: 6,
+      dieSize: bardicInspirationDieSizeAtClassLevel(bardLevel),
       durationTicks: 600,
     })))
 
@@ -8988,8 +8996,16 @@ module battleRuntime {
 
   run test_bardic_inspiration_grant_admission = {
     val emptyEffects = Set()
-    val granted = bardicInspirationTargetEffectsAfterGrant(emptyEffects, Fighter)
+    val granted = bardicInspirationTargetEffectsAfterGrant(emptyEffects, Fighter, 1)
+    val grantedD12 = bardicInspirationTargetEffectsAfterGrant(emptyEffects, Fighter, 15)
     all {
+      assert(bardicInspirationDieSizeAtClassLevel(1) == 6),
+      assert(bardicInspirationDieSizeAtClassLevel(4) == 6),
+      assert(bardicInspirationDieSizeAtClassLevel(5) == 8),
+      assert(bardicInspirationDieSizeAtClassLevel(9) == 8),
+      assert(bardicInspirationDieSizeAtClassLevel(10) == 10),
+      assert(bardicInspirationDieSizeAtClassLevel(14) == 10),
+      assert(bardicInspirationDieSizeAtClassLevel(15) == 12),
       assert(bardicInspirationUses(3) == 3),
       assert(bardicInspirationUses(0) == 1),
       assert(bardicInspirationGrantAdmitted(true, true, false, false, true, 1, false)),
@@ -9001,13 +9017,15 @@ module battleRuntime {
       assert(not(bardicInspirationGrantAdmitted(true, true, false, false, true, 0, false))),
       assert(not(bardicInspirationGrantAdmitted(true, true, false, false, true, 1, true))),
       assert(hasBardicInspirationDie(granted)),
+      assert(granted.contains(BardicInspirationDie({ source: Fighter, dieSize: 6, durationTicks: 600 }))),
+      assert(grantedD12.contains(BardicInspirationDie({ source: Fighter, dieSize: 12, durationTicks: 600 }))),
       assert(bardicInspirationUsesAfterGrant(2, true) == 1),
       assert(bardicInspirationUsesAfterGrant(2, false) == 2),
     }
   }
 
   run test_bardic_inspiration_failed_d20_test_adds_die_and_expends_effect = {
-    val granted = bardicInspirationTargetEffectsAfterGrant(Set(BlessD20RollBonus), Fighter)
+    val granted = bardicInspirationTargetEffectsAfterGrant(Set(BlessD20RollBonus), Fighter, 1)
     val convertedAbilityCheckTotal = bardicInspirationD20TestTotal(13, 3)
     val stillFailedSavingThrowTotal = bardicInspirationD20TestTotal(10, 4)
     val convertedAttackRollTotal = bardicInspirationD20TestTotal(14, 2)

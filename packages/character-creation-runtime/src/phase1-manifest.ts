@@ -1,6 +1,7 @@
 import {
   creationChoiceOptionId,
   type BackgroundAbilityScoreIncreaseSelection,
+  CHARACTER_SPECIES_SIZE_SELECTIONS,
   type CharacterDraftPath,
   type ChoiceCardinality,
   type ChoiceCount,
@@ -29,6 +30,7 @@ export const INITIAL_CHARACTER_DRAFT_PATHS = [
   "draft.background",
   "draft.species",
   "draft.abilityScoreGeneration",
+  "draft.speciesSize",
   "draft.languages",
   "draft.alignment",
 ] as const satisfies ReadonlyArray<CharacterDraftPath>;
@@ -39,7 +41,8 @@ export const INITIAL_CHARACTER_DRAFT_PATHS = [
 // Mail + Shield + one-handed Longsword, and the Goblin Warrior battle setup.
 // Hole discovery may expose broader legal SRD options, but finalization is
 // intentionally gated to the support profile that now widens selected class
-// facts while keeping Orc/Soldier origin facts manifest-owned.
+// facts and SRD species admission while keeping Soldier origin facts
+// manifest-owned.
 export const PHASE1_CLASS_FIGHTER_UNIT_ID = "class_fighter";
 export const WIDTH_CLASS_WIZARD_UNIT_ID = "class_wizard";
 export const SRD_ROGUE_CLASS_UNIT_ID = "class_rogue";
@@ -59,6 +62,14 @@ export const SRD_LEVEL_ONE_CLASS_UNIT_IDS = [
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 export const PHASE1_BACKGROUND_SOLDIER_UNIT_ID = "background_soldier";
 export const PHASE1_SPECIES_ORC_UNIT_ID = "species_orc";
+export const SRD_CHARACTER_ADMISSION_SPECIES_UNIT_IDS = [
+  "species_dragonborn",
+  "species_dwarf",
+  "species_elf",
+  "species_goliath",
+  PHASE1_SPECIES_ORC_UNIT_ID,
+  "species_tiefling",
+] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 export const PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID = "armor_chain_mail";
 export const PHASE1_WEAPON_LONGSWORD_UNIT_ID = "weapon_longsword";
 export const PHASE1_WEAPON_DAGGER_UNIT_ID = "weapon_dagger";
@@ -111,7 +122,10 @@ export const SUPPORTED_BACKGROUND_OPTION_IDS = [
   creationChoiceOptionId(PHASE1_BACKGROUND_SOLDIER_UNIT_ID),
 ] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
 export const SUPPORTED_SPECIES_OPTION_IDS = [
-  creationChoiceOptionId(PHASE1_SPECIES_ORC_UNIT_ID),
+  ...SRD_CHARACTER_ADMISSION_SPECIES_UNIT_IDS.map(creationChoiceOptionId),
+] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
+export const SUPPORTED_SPECIES_SIZE_OPTION_IDS = [
+  ...CHARACTER_SPECIES_SIZE_SELECTIONS.map(creationChoiceOptionId),
 ] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
 export const SUPPORTED_PURCHASE_OPTION_IDS = SUPPORTED_PURCHASE_UNIT_IDS.map(
   creationChoiceOptionId,

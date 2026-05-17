@@ -57,7 +57,12 @@ const requiredFirstVerticalUnitIds = [
   "class_warlock",
   "class_wizard",
   "background_soldier",
+  "species_dragonborn",
+  "species_dwarf",
+  "species_elf",
+  "species_goliath",
   "species_orc",
+  "species_tiefling",
   "fighter_fighting_style",
   "fighter_second_wind",
   "fighter_weapon_mastery",
@@ -82,6 +87,14 @@ const requiredFirstVerticalUnitIds = [
   "orc_adrenaline_rush",
   "orc_darkvision",
   "orc_relentless_endurance",
+  "elf_darkvision",
+  "species_dragonborn_breath_weapon",
+  "species_dragonborn_damage_resistance",
+  "species_dragonborn_darkvision",
+  "dwarf_darkvision",
+  "dwarf_dwarven_resilience",
+  "species_goliath_powerful_build",
+  "species_tiefling_darkvision",
   "fire_bolt",
   "fireball",
   "light",
@@ -2047,6 +2060,55 @@ describe("SRD Unit catalog boundary", () => {
         },
       });
     }
+  });
+
+  test("validates installed species trait refs against the species aggregate", () => {
+    const missingTraitCollection = {
+      ...srdUnitCollection,
+      units: srdUnitCollection.units.filter(
+        (unit) => unit.id !== "species_tiefling_darkvision",
+      ),
+    } satisfies SrdUnitCollection;
+    const missingTrait = buildUnitCatalog({
+      collections: [missingTraitCollection],
+    });
+
+    expect(missingTrait).toMatchObject({
+      tag: "invalid",
+      issues: [
+        {
+          code: "unknownUnitReference",
+          referringUnitId: "species_tiefling",
+          referencedUnitId: "species_tiefling_darkvision",
+        },
+      ],
+    });
+
+    const mismatchedTraitCollection = {
+      ...srdUnitCollection,
+      units: srdUnitCollection.units.map((unit) =>
+        unit.id === "species_tiefling_darkvision"
+          ? ({ ...unit, species: "dwarf" } as Srd521Unit)
+          : unit,
+      ),
+    } satisfies SrdUnitCollection;
+    const mismatchedTrait = buildUnitCatalog({
+      collections: [mismatchedTraitCollection],
+    });
+
+    expect(mismatchedTrait).toMatchObject({
+      tag: "invalid",
+      issues: [
+        {
+          code: "invalidSpeciesTraitReference",
+          speciesUnitId: "species_tiefling",
+          traitUnitId: "species_tiefling_darkvision",
+          expectedSpecies: "tiefling",
+          actualKind: "species_trait",
+          actualSpecies: "dwarf",
+        },
+      ],
+    });
   });
 
   test("rejects duplicate Unit ids across SRD collections", () => {

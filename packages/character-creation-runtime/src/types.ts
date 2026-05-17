@@ -35,6 +35,7 @@ import type {
   ArmorTrainingCategory,
   ClassSpellcastingCreation,
   Skill,
+  Size,
   UnitRecord,
   WeaponProficiency,
   WeaponProficiencyCategory,
@@ -77,6 +78,7 @@ export const CHARACTER_DRAFT_PATHS = [
   "draft.abilityScoreGeneration",
   "draft.backgroundAbilityScoreIncrease",
   "draft.species",
+  "draft.speciesSize",
   "draft.languages",
   "draft.alignment",
   "draft.choices",
@@ -89,6 +91,7 @@ export const CHARACTER_DRAFT_CHOICE_PATHS = [
   "draft.progression.initial",
   "draft.background",
   "draft.species",
+  "draft.speciesSize",
   "draft.languages",
   "draft.alignment",
 ] as const satisfies ReadonlyArray<
@@ -749,12 +752,25 @@ export type CharacterEquipmentSelection = {
   readonly selectedUnitIds: readonly UnitRecord["id"][];
 };
 
+export const CHARACTER_SPECIES_SIZE_SELECTIONS = [
+  "medium",
+  "small",
+] as const satisfies ReadonlyArray<Size>;
+export type CharacterSpeciesSizeSelection =
+  (typeof CHARACTER_SPECIES_SIZE_SELECTIONS)[number];
+export function isCharacterSpeciesSizeSelection(
+  value: string | undefined,
+): value is CharacterSpeciesSizeSelection {
+  return CHARACTER_SPECIES_SIZE_SELECTIONS.some((size) => size === value);
+}
+
 export type CharacterDraftSelections = {
   readonly progression?: CharacterProgression;
   readonly background?: UnitRecord["id"];
   readonly abilityScoreGeneration?: AbilityScoreGenerationSelection;
   readonly backgroundAbilityScoreIncrease?: BackgroundAbilityScoreIncreaseSelection;
   readonly species?: UnitRecord["id"];
+  readonly speciesSize?: CharacterSpeciesSizeSelection;
   readonly languages?: CharacterStartingLanguages;
   readonly alignment?: CharacterAlignment;
   readonly choices: readonly CharacterChoiceSelection[];
@@ -935,6 +951,9 @@ export type FinalizedCharacterSelections = {
   readonly abilityScoreGeneration: AbilityScoreGenerationSelection;
   readonly backgroundAbilityScoreIncrease: BackgroundAbilityScoreIncreaseSelection;
   readonly species: UnitRecord["id"];
+  // Present only when the selected species has a size choice in Surface.
+  // Absence means the species has a fixed authored size.
+  readonly speciesSize?: CharacterSpeciesSizeSelection;
   readonly languages: CharacterStartingLanguages;
   readonly alignment: CharacterAlignment;
   readonly choices: readonly CharacterChoiceSelection[];
@@ -1140,6 +1159,9 @@ export type CharacterBuild = {
   readonly progression: CharacterProgression;
   readonly background: UnitRecord["id"];
   readonly species: UnitRecord["id"];
+  // Present only when the selected species has a size choice in Surface.
+  // Absence means the species has a fixed authored size.
+  readonly speciesSize?: CharacterSpeciesSizeSelection;
   readonly originLanguages: CharacterStartingLanguages;
   readonly alignment: CharacterAlignment;
   readonly abilityScores: CharacterBuildAbilityScores;

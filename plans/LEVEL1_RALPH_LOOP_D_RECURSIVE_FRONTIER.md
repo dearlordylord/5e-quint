@@ -43,37 +43,37 @@
     {
       "number": 7,
       "id": "L1D2-WIZARD-ARCANE-RECOVERY",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Wizard Arcane Recovery Selected Identity Replay"
     },
     {
       "number": 8,
       "id": "L1D2-FIGHTER-FIGHTING-STYLE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Fighter Fighting Style Selected Identity Replay"
     },
     {
       "number": 9,
       "id": "L1D2-CLERIC-DRUID-ORDER",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Cleric And Druid Order Selected Identity Replay"
     },
     {
       "number": 10,
       "id": "L1D2-ROGUE-EXPERTISE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Rogue Expertise Selected Identity Replay"
     },
     {
       "number": 11,
       "id": "L1D2-WARLOCK-ELDRITCH-INVOCATIONS",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Warlock Eldritch Invocations Selected Identity Replay"
     },
     {
       "number": 12,
       "id": "L1D2-WEAPON-MASTERY-CONTAINERS",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Weapon Mastery Container Selected Identity Replays"
     },
     {
@@ -85,25 +85,25 @@
     {
       "number": 14,
       "id": "L1D2-HUNTERS-MARK-FAVORED-ENEMY-ACCOUNTING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Hunter's Mark And Ranger Favored Enemy Profile Accounting Closure"
     },
     {
       "number": 15,
       "id": "L1D2-BARDIC-INSPIRATION-SCALING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Bardic Inspiration Die Scaling Support"
     },
     {
       "number": 16,
       "id": "L1D2-MONK-MARTIAL-ARTS-SCALING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Monk Martial Arts Die Scaling Support"
     },
     {
       "number": 17,
       "id": "L1D2-CHARM-PERSON-CLOSURE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Charm Person Social Boundary Closure"
     },
     {
@@ -178,13 +178,13 @@ to its separate worktree. Full support means:
 - active companion/familiar features are not pulled into this lane.
 
 This is the replacement D lane after the completed damage selected-identity
-batch. It deliberately does not steal active I/J/K work or the new execution
-frontiers A/B. It started with currently safe selected-identity tasks that were
-supported on `master`, kept character/container tasks visible while blocked, and
-uses recursive replenishment tasks to append the next concrete frontier. The
-replenishment task must add the next concrete batch before marking itself done,
-so this lane does not naturally terminate just because one fixed batch was
-exhausted.
+batch. It deliberately does not steal active non-D work, including the language
+access lane for `druid_druidic` and `rogue_thieves_cant`. It started with
+currently safe selected-identity tasks that were supported on `master`, kept
+character/container tasks visible while blocked, and uses recursive
+replenishment tasks to append the next concrete frontier. The replenishment
+task must add the next concrete batch before marking itself done, so this lane
+does not naturally terminate just because one fixed batch was exhausted.
 
 Do not edit `plans/ACTIVE_PLAN.md`.
 
@@ -232,18 +232,21 @@ When a `L1D2-REPLENISH-*` task runs, Ralph must:
    `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`, and
    `plans/unit-profile-coverage/unit-matrix.json` by running
    `pnpm unit-profile-coverage:check --write`.
-3. Read active I/J/K and execution-frontier A/B plan files plus
-   `.ralph/runs/*/events.tsv` logs if those worktrees exist, but do not edit
-   their task worktrees.
+3. Read active non-D plan files plus `.ralph/runs/*/events.tsv` logs if those
+   worktrees exist, but do not edit their task worktrees. Closed top-level
+   Ralph plan files may have been removed from `master`; use generated
+   coverage artifacts and git history for historical context instead.
 4. Recompute the frontier in this order:
-   - strict level-1 open-profile-accounting items not owned by execution
-     frontiers A/B or active I/J/K;
+   - strict level-1 open-profile-accounting items not owned by active non-D
+     lanes;
    - supported-profile Units missing selected-identity MBT evidence and not
-     owned by active execution frontiers A/B or active I/J/K;
+     owned by active non-D lanes;
    - runtime-detached or table-owned closure gaps if the generated strict view
      has reopened them;
    - next supported-profile expansion or admission tasks only after the strict
      level-1 frontier is closed or blocked on active lane merges.
+   `druid_druidic`, `rogue_thieves_cant`, class-granted language facts, and the
+   Rogue extra language choice are owned by Loop L, not by this D lane.
 5. Append at least twelve concrete atomic tasks, or every remaining meaningful
    task if fewer than twelve exist. Each task must have clear inputs, outputs,
    primary files, RAW anchors, and verification.
@@ -273,12 +276,14 @@ Primary write scope for the initial batch:
 - generated reports under `plans/unit-profile-coverage/`;
 - this plan file when a replenishment task appends new work.
 
-Avoid active I/J/K files and execution-frontier A/B files unless a
-replenishment task proves those lanes are merged and no longer active. In
-particular, D must not touch `faerie_fire`, `feather_fall`, `fog_cloud`,
-`grease`, `jump`, `light`, or `thunderwave`; those strict open rows are owned by
-Execution Frontiers A/B. D owns `hunters_mark` and `ranger_favored_enemy` among
-the remaining strict open rows.
+Avoid active non-D lane files unless a replenishment task proves those lanes are
+merged and no longer active. In particular, D must not touch `druid_druidic`,
+`rogue_thieves_cant`, class-granted language facts, the Rogue extra language
+choice, `faerie_fire`, `feather_fall`, `fog_cloud`, `grease`, `jump`, `light`,
+or `thunderwave`. Loop L owns Druidic/Thieves' Cant language access. The
+historical execution frontiers owned the listed spatial/movement/light rows.
+D owns `hunters_mark` and `ranger_favored_enemy` among the remaining strict
+open rows.
 
 ## MBT And Verification Protocol
 
@@ -416,17 +421,17 @@ task was appended; `find_familiar` stays excluded.
 | 4 | L1D2-WIZARD-RITUAL-ADEPT - Wizard Ritual Adept Selected Identity Replay | done | none | Spellbook ritual invocation selected identity. |
 | 5 | L1D2-SORCERER-INNATE-SORCERY - Sorcerer Innate Sorcery Selected Identity Replay | done | none | Supported activation/profile identity. |
 | 6 | L1D2-MYCELIUM-STEP - Mycelium Step Selected Identity Replay | done | none | Classic non-SRD mechanics gate identity; keep out of SRD provenance. |
-| 7 | L1D2-WIZARD-ARCANE-RECOVERY - Wizard Arcane Recovery Selected Identity Replay | ready-for-implementation-after-light-research | none | Unblocked by Task 13 refreshed matrix evidence. |
-| 8 | L1D2-FIGHTER-FIGHTING-STYLE - Fighter Fighting Style Selected Identity Replay | ready-for-implementation-after-light-research | none | Unblocked by Task 13 refreshed matrix evidence. |
-| 9 | L1D2-CLERIC-DRUID-ORDER - Cleric And Druid Order Selected Identity Replay | ready-for-implementation-after-light-research | none | Unblocked by Task 13 refreshed matrix evidence. |
-| 10 | L1D2-ROGUE-EXPERTISE - Rogue Expertise Selected Identity Replay | ready-for-implementation-after-light-research | none | Unblocked by Task 13 refreshed matrix evidence. |
-| 11 | L1D2-WARLOCK-ELDRITCH-INVOCATIONS - Warlock Eldritch Invocations Selected Identity Replay | ready-for-implementation-after-light-research | none | Unblocked by Task 13 refreshed matrix evidence. |
-| 12 | L1D2-WEAPON-MASTERY-CONTAINERS - Weapon Mastery Container Selected Identity Replays | ready-for-implementation-after-light-research | none | Unblocked for supported-profile container Units by Task 13 refreshed matrix evidence. |
+| 7 | L1D2-WIZARD-ARCANE-RECOVERY - Wizard Arcane Recovery Selected Identity Replay | done | none | Short Rest ordinary Spell Slot recovery, Long Rest reset, and Pact Slot non-application selected identity. |
+| 8 | L1D2-FIGHTER-FIGHTING-STYLE - Fighter Fighting Style Selected Identity Replay | done | none | Unblocked by Task 13 refreshed matrix evidence. |
+| 9 | L1D2-CLERIC-DRUID-ORDER - Cleric And Druid Order Selected Identity Replay | done | none | Unblocked by Task 13 refreshed matrix evidence. |
+| 10 | L1D2-ROGUE-EXPERTISE - Rogue Expertise Selected Identity Replay | done | none | Unblocked by Task 13 refreshed matrix evidence. |
+| 11 | L1D2-WARLOCK-ELDRITCH-INVOCATIONS - Warlock Eldritch Invocations Selected Identity Replay | done | none | Unblocked by Task 13 refreshed matrix evidence. |
+| 12 | L1D2-WEAPON-MASTERY-CONTAINERS - Weapon Mastery Container Selected Identity Replays | done | none | Selected identity evidence landed for supported-profile container Units. |
 | 13 | L1D2-REPLENISH-001 - Recursive Frontier Replenishment 001 | done | none | Appended Tasks 14-25 plus `L1D2-REPLENISH-002`; refreshed coverage artifacts were unchanged. |
-| 14 | L1D2-HUNTERS-MARK-FAVORED-ENEMY-ACCOUNTING - Hunter's Mark And Ranger Favored Enemy Profile Accounting Closure | ready-for-research | none | Close the two D-owned strict open-profile-accounting items not owned by execution frontiers A/B. |
-| 15 | L1D2-BARDIC-INSPIRATION-SCALING - Bardic Inspiration Die Scaling Support | ready-for-research | Task 14 or explicit deferral | Adjacent profile-expansion task after the strict frontier is D-closed or active-lane-blocked. |
-| 16 | L1D2-MONK-MARTIAL-ARTS-SCALING - Monk Martial Arts Die Scaling Support | ready-for-research | Task 14 or explicit deferral | Adjacent profile-expansion task after the strict frontier is D-closed or active-lane-blocked. |
-| 17 | L1D2-CHARM-PERSON-CLOSURE - Charm Person Social Boundary Closure | ready-for-research | Task 14 or explicit deferral | Clarify supported battle subset versus runtime-detached social knowledge closure. |
+| 14 | L1D2-HUNTERS-MARK-FAVORED-ENEMY-ACCOUNTING - Hunter's Mark And Ranger Favored Enemy Profile Accounting Closure | done | none | Close the two D-owned strict open-profile-accounting items not owned by execution frontiers A/B. |
+| 15 | L1D2-BARDIC-INSPIRATION-SCALING - Bardic Inspiration Die Scaling Support | done | Task 14 or explicit deferral | Bardic Inspiration all-level die scaling is promoted to supported-profile with selected identity evidence. |
+| 16 | L1D2-MONK-MARTIAL-ARTS-SCALING - Monk Martial Arts Die Scaling Support | done | Task 14 or explicit deferral | Adjacent profile-expansion task after the strict frontier is D-closed or active-lane-blocked. |
+| 17 | L1D2-CHARM-PERSON-CLOSURE - Charm Person Social Boundary Closure | done | Task 14 or explicit deferral | Clarified supported battle subset versus runtime-detached social knowledge closure. |
 | 18 | L1D2-DISGUISE-SELF-DECISION-INTEGRATION - Disguise Self Frontier Decision Integration | ready-for-research | Task 14 or explicit deferral | Consume the existing decision artifact; do not reclassify the row. |
 | 19 | L1D2-DRUIDCRAFT-DECISION-INTEGRATION - Druidcraft Frontier Decision Integration | ready-for-research | Task 14 or explicit deferral | Consume the existing decision artifact; do not reclassify the row. |
 | 20 | L1D2-ELEMENTALISM-DECISION-INTEGRATION - Elementalism Frontier Decision Integration | ready-for-research | Task 14 or explicit deferral | Consume the existing decision artifact; do not reclassify the row. |
@@ -521,7 +526,7 @@ Source: `plans/unit-profile-coverage/fixtures/classic-non-srd/mycelium_step.json
 
 ### Task 7 - L1D2-WIZARD-ARCANE-RECOVERY - Wizard Arcane Recovery Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Unblocked by Task 13 refreshed matrix evidence:
 `wizard_arcane_recovery` is supported-profile and lacks selected-identity MBT.
@@ -533,7 +538,7 @@ RAW: `.references/srd-5.2.1/Classes/Wizard.md` Arcane Recovery.
 
 ### Task 8 - L1D2-FIGHTER-FIGHTING-STYLE - Fighter Fighting Style Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Unblocked by Task 13 refreshed matrix evidence: `fighter_fighting_style` is
 supported-profile and lacks selected-identity MBT. Add selected identity
@@ -545,7 +550,7 @@ RAW: `.references/srd-5.2.1/Classes/Fighter.md` Fighting Style and
 
 ### Task 9 - L1D2-CLERIC-DRUID-ORDER - Cleric And Druid Order Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Unblocked by Task 13 refreshed matrix evidence: `cleric_divine_order` and
 `druid_primal_order` are supported-profile Units and lack selected-identity
@@ -557,7 +562,7 @@ RAW: `.references/srd-5.2.1/Classes/Cleric.md` Divine Order and
 
 ### Task 10 - L1D2-ROGUE-EXPERTISE - Rogue Expertise Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Unblocked by Task 13 refreshed matrix evidence: `rogue_expertise` is
 supported-profile and lacks selected-identity MBT. Add selected identity
@@ -568,7 +573,7 @@ RAW: `.references/srd-5.2.1/Classes/Rogue.md` Expertise.
 
 ### Task 11 - L1D2-WARLOCK-ELDRITCH-INVOCATIONS - Warlock Eldritch Invocations Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Unblocked by Task 13 refreshed matrix evidence:
 `warlock_eldritch_invocations` is supported-profile and lacks selected-identity
@@ -580,7 +585,7 @@ RAW: `.references/srd-5.2.1/Classes/Warlock.md` Eldritch Invocations.
 
 ### Task 12 - L1D2-WEAPON-MASTERY-CONTAINERS - Weapon Mastery Container Selected Identity Replays
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Unblocked by Task 13 refreshed matrix evidence for the supported-profile
 container Units `paladin_weapon_mastery`, `ranger_weapon_mastery`, and
@@ -631,7 +636,7 @@ Acceptance:
 
 ### Task 14 - L1D2-HUNTERS-MARK-FAVORED-ENEMY-ACCOUNTING - Hunter's Mark And Ranger Favored Enemy Profile Accounting Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Close the refreshed strict open-profile-accounting rows for `hunters_mark` and
 `ranger_favored_enemy`. Loop E has already completed selected-identity evidence
@@ -681,7 +686,7 @@ Verification:
 
 ### Task 15 - L1D2-BARDIC-INSPIRATION-SCALING - Bardic Inspiration Die Scaling Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Promote `bard_bardic_inspiration` beyond its current level-1-only subset by
 owning the SRD Bardic Inspiration die-size scaling boundary, or record why that
@@ -721,7 +726,7 @@ Verification:
 
 ### Task 16 - L1D2-MONK-MARTIAL-ARTS-SCALING - Monk Martial Arts Die Scaling Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Promote `monk_martial_arts` beyond its current level-1-only subset by owning
 the SRD Martial Arts die-size scaling boundary, or record why that all-level
@@ -761,7 +766,7 @@ Verification:
 
 ### Task 17 - L1D2-CHARM-PERSON-CLOSURE - Charm Person Social Boundary Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Clarify `charm_person` as a supported battle subset plus runtime-detached social
 knowledge closure, without turning friendly disposition, social interaction, or

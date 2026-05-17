@@ -44,9 +44,12 @@ import {
   resolveFindFamiliarSelectedForm,
 } from "./find-familiar-forms.ts";
 
-const FIND_FAMILIAR_SOURCE_UNIT_ID =
-  "find_familiar" as const satisfies SpellRecord["id"];
-const FIND_FAMILIAR_SPELL_ID = spellId(FIND_FAMILIAR_SOURCE_UNIT_ID);
+// Required SRD source-record id: Spells/Descriptions-E-L.md:313 says the
+// familiar leaves carried objects behind when it disappears; the dropped-object
+// outcome carries the spell source for trace consumers.
+const FIND_FAMILIAR_DROPPED_OBJECT_SOURCE_SPELL_ID = spellId(
+  "find_familiar" satisfies SpellRecord["id"],
+);
 
 export type FindFamiliarPlacement =
   | {
@@ -456,48 +459,44 @@ function findFamiliarAdmissionEligibilityForOwner(input: {
     };
   }
 
-  const findFamiliarSpell = effectiveCharacterBattlePreparedSpells(
-    spellcasting,
-  ).find((spell) => spell.id === FIND_FAMILIAR_SPELL_ID);
-  if (findFamiliarSpell !== undefined) {
-    const eligibility = findFamiliarFormEligibilityForSpell(findFamiliarSpell);
-    if (eligibility === null) {
-      return {
-        tag: "issue",
-        message:
-          "Find Familiar admission requires familiar form catalog references.",
-      };
-    }
+  const preparedEligibility = findFamiliarEligibilityFromSpells(
+    effectiveCharacterBattlePreparedSpells(spellcasting),
+  );
+  if (preparedEligibility !== null) {
     return {
       tag: "resolved",
       kind: "findFamiliar",
-      eligibility,
+      eligibility: preparedEligibility,
     };
   }
 
-  const ritualAccess = spellcasting.spellbookRitualSpellAccesses.find(
-    (access) => access.spell.id === FIND_FAMILIAR_SOURCE_UNIT_ID,
+  const ritualEligibility = findFamiliarEligibilityFromSpells(
+    spellcasting.spellbookRitualSpellAccesses.map((access) => access.spell),
   );
-  if (ritualAccess === undefined) {
+  if (ritualEligibility === null) {
     return {
       tag: "issue",
       message:
         "Find Familiar admission source actor does not have Find Familiar prepared, available through spellbook Ritual access, or selected through Pact of the Chain.",
     };
   }
-  const eligibility = findFamiliarFormEligibilityForSpell(ritualAccess.spell);
-  if (eligibility === null) {
-    return {
-      tag: "issue",
-      message:
-        "Find Familiar admission requires familiar form catalog references.",
-    };
-  }
   return {
     tag: "resolved",
     kind: "findFamiliar",
-    eligibility,
+    eligibility: ritualEligibility,
   };
+}
+
+function findFamiliarEligibilityFromSpells(
+  spells: readonly SpellRecord[],
+): FindFamiliarFormEligibility | null {
+  for (const spell of spells) {
+    const eligibility = findFamiliarFormEligibilityForSpell(spell);
+    if (eligibility !== null) {
+      return eligibility;
+    }
+  }
+  return null;
 }
 
 function withInitialInitiativeOrder(
@@ -1003,7 +1002,7 @@ function droppedObjectsForFamiliarDisappearance(input: {
     actorId: input.familiarId,
     objectId,
     sourceCombatantId: input.casterId,
-    sourceSpellId: FIND_FAMILIAR_SPELL_ID,
+    sourceSpellId: FIND_FAMILIAR_DROPPED_OBJECT_SOURCE_SPELL_ID,
   }));
 }
 

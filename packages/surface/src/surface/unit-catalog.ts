@@ -96,6 +96,7 @@ import monkUnarmoredDefenseInput from "../../content/monk_unarmored_defense.json
 import orcAdrenalineRushInput from "../../content/orc_adrenaline_rush.json";
 import orcDarkvisionInput from "../../content/species_orc_darkvision.json";
 import orcRelentlessEnduranceInput from "../../content/orc_relentless_endurance.json";
+import elfDarkvisionInput from "../../content/darkvision_elf.json";
 import paladinExtraAttackInput from "../../content/paladin_extra_attack.json";
 import paladinLayOnHandsInput from "../../content/paladin_lay_on_hands.json";
 import paladinWeaponMasteryInput from "../../content/paladin_weapon_mastery.json";
@@ -107,7 +108,19 @@ import rangerFavoredEnemyInput from "../../content/ranger_favored_enemy.json";
 import rangerRovingInput from "../../content/ranger_roving.json";
 import rangerWeaponMasteryInput from "../../content/ranger_weapon_mastery.json";
 import resistanceInput from "../../content/resistance.json";
+import speciesDragonbornInput from "../../content/species_dragonborn.json";
+import speciesDragonbornBreathWeaponInput from "../../content/species_dragonborn_breath_weapon.json";
+import speciesDragonbornDamageResistanceInput from "../../content/species_dragonborn_damage_resistance.json";
+import speciesDragonbornDarkvisionInput from "../../content/species_dragonborn_darkvision.json";
+import speciesDwarfInput from "../../content/species_dwarf.json";
+import speciesDwarfDarkvisionInput from "../../content/species_dwarf_darkvision.json";
+import speciesDwarfDwarvenResilienceInput from "../../content/species_dwarf_dwarven_resilience.json";
+import speciesElfInput from "../../content/species_elf.json";
+import speciesGoliathInput from "../../content/species_goliath.json";
+import speciesGoliathPowerfulBuildInput from "../../content/species_goliath_powerful_build.json";
 import speciesOrcInput from "../../content/species_orc.json";
+import speciesTieflingInput from "../../content/species_tiefling.json";
+import speciesTieflingDarkvisionInput from "../../content/species_tiefling_darkvision.json";
 import subclassFighterChampionInput from "../../content/subclass_fighter_champion.json";
 import subclassWizardEvokerInput from "../../content/subclass_wizard_evoker.json";
 import rayOfFrostInput from "../../content/ray_of_frost.json";
@@ -206,6 +219,14 @@ export type UnitCatalogBuildIssue =
       readonly expectedClassName: string;
       readonly actualKind: UnitRecord["kind"];
       readonly actualClassName?: string;
+    }
+  | {
+      readonly code: "invalidSpeciesTraitReference";
+      readonly speciesUnitId: UnitId;
+      readonly traitUnitId: UnitId;
+      readonly expectedSpecies: string;
+      readonly actualKind: UnitRecord["kind"];
+      readonly actualSpecies?: string;
     };
 
 export type UnitCatalogBuildResult =
@@ -265,7 +286,12 @@ export const srdUnitCollection = defineSrdUnitCollection({
     classWarlockInput,
     classWizardInput,
     backgroundSoldierInput,
+    speciesDragonbornInput,
+    speciesDwarfInput,
+    speciesElfInput,
+    speciesGoliathInput,
     speciesOrcInput,
+    speciesTieflingInput,
     subclassFighterChampionInput,
     subclassWizardEvokerInput,
     fighterFightingStyleInput,
@@ -317,6 +343,14 @@ export const srdUnitCollection = defineSrdUnitCollection({
     orcAdrenalineRushInput,
     orcDarkvisionInput,
     orcRelentlessEnduranceInput,
+    elfDarkvisionInput,
+    speciesDragonbornBreathWeaponInput,
+    speciesDragonbornDamageResistanceInput,
+    speciesDragonbornDarkvisionInput,
+    speciesDwarfDarkvisionInput,
+    speciesDwarfDwarvenResilienceInput,
+    speciesGoliathPowerfulBuildInput,
+    speciesTieflingDarkvisionInput,
     acidSplashInput,
     animalFriendshipInput,
     baneInput,
@@ -427,6 +461,7 @@ export function buildUnitCatalog(input: {
       issues.push(...findUnknownStartingEquipmentRefs(unit, records));
       issues.push(...findUnknownWizardSpellRefs(unit, records));
       issues.push(...findInvalidSubclassChoiceRefs(unit, records));
+      issues.push(...findInvalidSpeciesTraitRefs(unit, records));
     }
   }
   // Class feature grant refs are intentionally not catalog-validated yet:
@@ -448,6 +483,45 @@ export function buildUnitCatalog(input: {
       requireUnit: (id) => records.get(id)!,
     },
   };
+}
+
+function findInvalidSpeciesTraitRefs(
+  unit: UnitRecord,
+  records: ReadonlyMap<UnitId, UnitRecord>,
+): readonly UnitCatalogBuildIssue[] {
+  if (unit.kind !== "species") {
+    return [];
+  }
+
+  const issues: UnitCatalogBuildIssue[] = [];
+  for (const traitUnitId of Object.values(unit.traits)) {
+    const referenced = records.get(traitUnitId);
+    if (referenced == null) {
+      issues.push({
+        code: "unknownUnitReference",
+        referringUnitId: unit.id,
+        referencedUnitId: traitUnitId,
+      });
+      continue;
+    }
+    if (
+      referenced.kind === "species_trait" &&
+      referenced.species === unit.species
+    ) {
+      continue;
+    }
+
+    issues.push({
+      code: "invalidSpeciesTraitReference",
+      speciesUnitId: unit.id,
+      traitUnitId,
+      expectedSpecies: unit.species,
+      actualKind: referenced.kind,
+      ...("species" in referenced ? { actualSpecies: referenced.species } : {}),
+    });
+  }
+
+  return issues;
 }
 
 function findUnknownStartingEquipmentRefs(

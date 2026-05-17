@@ -38,7 +38,7 @@ import {
   movementFeet,
   type Condition,
 } from "@dnd/shared/types";
-import type { UnitRecord } from "@dnd/surface/surface/types";
+import type { SpeciesRecord, UnitRecord } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either, Option } from "effect";
 import {
@@ -157,6 +157,10 @@ export function battleCreatureInitFromCharacterBuild(
       `Expected species Unit: ${input.build.species}`,
     );
   }
+  const characterSize = characterBattleSpeciesSize(input.build, species.right);
+  if (Either.isLeft(characterSize)) {
+    return battleCreatureInitIssue(characterSize.left.message);
+  }
 
   const armorClass = characterArmorClassState({
     build: input.build,
@@ -265,7 +269,7 @@ export function battleCreatureInitFromCharacterBuild(
         ...proficiencies.right.weaponPropertyFilters,
       ],
       armorClass: armorClass.right,
-      size: species.right.size.size,
+      size: characterSize.right,
       speed: { walkFeet: movementFeet(species.right.speed.walkFeet) },
       currentHp,
       maxHp,
@@ -296,6 +300,22 @@ export function battleCreatureInitFromCharacterBuild(
         : { spellcasting: spellcasting.right }),
     },
   });
+}
+
+function characterBattleSpeciesSize(
+  build: Pick<CharacterBuild, "species" | "speciesSize">,
+  species: SpeciesRecord,
+): Either.Either<CharacterBattleCreatureInit["size"], BattleCreatureInitIssue> {
+  if (species.size.kind === "fixed") {
+    return Either.right(species.size.size);
+  }
+  if (build.speciesSize === undefined) {
+    return battleCreatureInitIssue(
+      `Character battle initialization requires selected species size for ${build.species}.`,
+    );
+  }
+
+  return Either.right(build.speciesSize);
 }
 
 function characterBattleClassLevels(
