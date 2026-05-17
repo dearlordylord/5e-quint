@@ -97,7 +97,7 @@
     {
       "number": 16,
       "id": "L1I-SPECIES-CHARACTER-ADMISSION-SLICE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Non-Orc Species Character Admission Slice"
     },
     {
@@ -213,7 +213,7 @@ Every task runs:
 | 13 | L1I-WORDS-OF-CREATION-POWER-WORD-RIDER - Words Of Creation Power Word Rider Profile | blocked | supported `power_word_heal` and `power_word_kill` spell invocation profiles | second-target rider support after host Power Word spells are promoted |
 | 14 | L1I-BARBARIAN-DANGER-SENSE-ROLL-MODE - Barbarian Danger Sense Saving Throw Roll-Mode Profile | done | 5 | decision artifact and unsupported-profile claim for the future passive Saving Throw roll-mode owner |
 | 15 | L1I-PALADIN-SMITE-FREE-CAST-PROFILE - Paladin's Smite Free-Cast Spell Access Profile | blocked | owner decision to expand Paladin battle support past level 1 | future Spell Access and class-feature free-cast support that reuses `divine_smite` |
-| 16 | L1I-SPECIES-CHARACTER-ADMISSION-SLICE - Non-Orc Species Character Admission Slice | ready-for-research | 10 | smallest character-creation admission slice for Elf, Dragonborn, Dwarf, Goliath, and Tiefling species before runtime relies on their trait refs |
+| 16 | L1I-SPECIES-CHARACTER-ADMISSION-SLICE - Non-Orc Species Character Admission Slice | done | 10 | smallest character-creation admission slice for Elf, Dragonborn, Dwarf, Goliath, and Tiefling species before runtime relies on their trait refs |
 | 17 | L1I-DRAGONBORN-BREATH-WEAPON-PROFILE - Dragonborn Breath Weapon Feature Profile | blocked | 16 | future species attack-replacement profile that reuses one Draconic Ancestry source fact for Breath Weapon and Damage Resistance |
 | 18 | L1I-SPECIES-PASSIVE-RESISTANCE-PROFILE - Species Passive Resistance Profile | blocked | 16 | future target-side passive Resistance profile for character-derived species traits without duplicating Stat Block or active-effect resistance state |
 | 19 | L1I-SPECIES-CONDITION-ROLL-MODE-PROFILES - Species Condition Roll-Mode Profiles | blocked | 16 | future condition-scoped Ability Check and Saving Throw roll-mode support for Powerful Build and Dwarven Resilience |
@@ -515,7 +515,7 @@ Weapon Mastery work.
 
 ### Task 16 - L1I-SPECIES-CHARACTER-ADMISSION-SLICE - Non-Orc Species Character Admission Slice
 
-Status: `ready-for-research`
+Status: `done`
 
 Follow-up from Task 10. Decide and implement the smallest character-creation
 admission slice that can retain Elf, Dragonborn, Dwarf, Goliath, and Tiefling
