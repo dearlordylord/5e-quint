@@ -260,6 +260,24 @@ To commit reconciled results directly to `master`, pass:
 scripts/ralph-run.sh plans/some-plan.md --commit-to-master
 ```
 
+For unattended background runs, detach the runner process with `setsid` inside
+`nohup`:
+
+```bash
+nohup setsid bash scripts/ralph-run.sh plans/some-plan.md \
+  --base ralph/some-loop \
+  --commit-to-base \
+  --run-id some-loop-run \
+  --test-command 'pnpm unit-profile-coverage:check' \
+  > .ralph/manual-logs/runner.log 2>&1 < /dev/null &
+```
+
+Plain `nohup bash scripts/ralph-run.sh ... &` can leave behind only an
+initialized run directory and early `run start` event if the parent shell exits
+before the Ralph chooser and model subprocesses are fully detached. The
+`setsid` wrapper gives the runner its own session and was the reliable launch
+shape for long-running worktree lanes.
+
 The script refuses to start unless the main worktree is clean and `HEAD` matches `master` (or the `--base` ref) at run start. Each implementer and reviewer prompt also includes the repo-specific branch-base check:
 
 ```bash
