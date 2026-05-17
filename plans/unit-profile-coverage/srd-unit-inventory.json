@@ -164,8 +164,8 @@
       "numerator": 367,
       "percent": "100%",
       "rowsByStatus": {
-        "accepted": 277,
-        "accepted-no-battle-effect": 90
+        "accepted": 279,
+        "accepted-no-battle-effect": 88
       }
     },
     "levelOneClassContainers": 12,
@@ -3796,13 +3796,13 @@
         "state": "installed",
         "unitId": "barbarian_weapon_mastery"
       },
-      "unitProfileDisposition": "supported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "unit-claim",
-        "kind": "selection-grant-container",
-        "owner": "selected Mastery Property Unit",
-        "reason": "The class feature owns Weapon Mastery selection and Long Rest reselection; selected Mastery Property Units own executable battle pressure."
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "SRDINV78 later-level Weapon Mastery count scaling",
+        "reason": "The remaining Barbarian Weapon Mastery selected-weapon count increases occur only after level 1."
       },
       "ownerEvidence": [
         {
@@ -3817,7 +3817,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/barbarian:level-1:multiclass-entry:barbarian_multiclass_entry_traits",
@@ -7369,9 +7369,9 @@
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
-        "kind": "outside-runtime-presentation-exploration",
-        "owner": "exploration/language owner",
-        "reason": "Language, hidden-message, and non-battle prepared-spell source facts are outside promoted battle runtime."
+        "kind": "character-fact-and-runtime-detached-split",
+        "owner": "character-creation-runtime and runtime-detached hidden-message/language adjudication owner",
+        "reason": "Druidic hidden-message spotting, Investigation adjudication, and deciphering are runtime-detached table adjudication outside promoted battle runtime; Druidic language and always-prepared Speak with Animals Spell Access remain character-owned CharacterBuild facts derived from authored Surface content."
       },
       "ownerEvidence": [
         {
@@ -9679,13 +9679,13 @@
         "state": "installed",
         "unitId": "fighter_weapon_mastery"
       },
-      "unitProfileDisposition": "supported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "unit-claim",
-        "kind": "selection-grant-container",
-        "owner": "selected Mastery Property Unit",
-        "reason": "The class feature owns Weapon Mastery selection and Long Rest reselection; selected Mastery Property Units own executable battle pressure."
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "SRDINV78 later-level Weapon Mastery count scaling",
+        "reason": "The remaining Fighter Weapon Mastery selected-weapon count increases occur only after level 1."
       },
       "ownerEvidence": [
         {
@@ -9700,7 +9700,7 @@
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/fighter:level-1:multiclass-entry:fighter_multiclass_entry_traits",
@@ -12871,9 +12871,9 @@
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
-        "kind": "outside-runtime-presentation-exploration",
-        "owner": "exploration/language owner",
-        "reason": "Thieves' Cant is a language/communication source fact outside promoted battle runtime."
+        "kind": "character-fact-and-runtime-detached-split",
+        "owner": "character-creation-runtime and runtime-detached language/communication adjudication owner",
+        "reason": "Thieves' Cant communication adjudication is runtime-detached table adjudication outside promoted battle runtime; Thieves' Cant and the additional Character Creation language choice remain character-owned CharacterBuild facts derived from authored Surface content."
       },
       "ownerEvidence": [
         {

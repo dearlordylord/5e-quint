@@ -62,8 +62,8 @@
       "value": 144
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 95,
-      "numerator": 95,
+      "denominator": 93,
+      "numerator": 93,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 95,
+      "denominator": 93,
       "numerator": 47,
-      "percent": "49.5%"
+      "percent": "50.5%"
     },
     "supportedProfileCoverage": {
       "denominator": 117,
-      "numerator": 95,
-      "percent": "81.2%"
+      "numerator": 93,
+      "percent": "79.5%"
     }
   },
   "metricSemantics": [
@@ -4236,11 +4236,17 @@
         "status": "installed"
       },
       "claim": {
-        "battleReadinessClosure": {
-          "kind": "selection-grant-container",
-          "owner": "selected Mastery Property Unit",
-          "reason": "The class feature owns Weapon Mastery selection and Long Rest reselection; selected Mastery Property Units own executable battle pressure."
-        },
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "later-level-only",
+              "owner": "SRDINV78 later-level Weapon Mastery count scaling",
+              "reason": "The remaining Fighter Weapon Mastery selected-weapon count increases occur only after level 1."
+            },
+            "followUpTaskId": "SRDINV78",
+            "mechanic": "later-level Fighter Weapon Mastery selected-weapon count increases beyond the three level-1 selections"
+          }
+        ],
         "profileIds": [
           "character-creation.weapon-mastery-choice",
           "character-sheet.weapon-mastery-reselection"
@@ -4250,7 +4256,7 @@
           "Character Sheet Long Rest reselection reads the Surface feature's one-choice Long Rest change count and eligible Simple or Martial weapon facts, then replaces the selected CharacterBuild class-choice refs without parallel state",
           "Selected mastery-property execution remains owned by selected Mastery Property Unit profiles"
         ],
-        "tag": "supported-profile"
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -4781,11 +4787,17 @@
         "status": "installed"
       },
       "claim": {
-        "battleReadinessClosure": {
-          "kind": "selection-grant-container",
-          "owner": "selected Mastery Property Unit",
-          "reason": "The class feature owns Weapon Mastery selection and Long Rest reselection; selected Mastery Property Units own executable battle pressure."
-        },
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "later-level-only",
+              "owner": "SRDINV78 later-level Weapon Mastery count scaling",
+              "reason": "The remaining Barbarian Weapon Mastery selected-weapon count increases occur only after level 1."
+            },
+            "followUpTaskId": "SRDINV78",
+            "mechanic": "later-level Barbarian Weapon Mastery selected-weapon count increases beyond the two level-1 selections"
+          }
+        ],
         "profileIds": [
           "character-creation.weapon-mastery-choice",
           "character-sheet.weapon-mastery-reselection"
@@ -4795,7 +4807,7 @@
           "Character Sheet Long Rest reselection reads the Surface feature's one-choice Long Rest change count and eligible Simple or Martial Melee weapon facts, then replaces the selected CharacterBuild class-choice refs without parallel state",
           "Selected mastery-property execution remains owned by selected Mastery Property Unit profiles"
         ],
-        "tag": "supported-profile"
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -5093,11 +5105,11 @@
       },
       "claim": {
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "exploration/language owner",
-          "reason": "Language, hidden-message, and non-battle prepared-spell source facts are outside promoted battle runtime."
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "character-creation-runtime and runtime-detached hidden-message/language adjudication owner",
+          "reason": "Druidic hidden-message spotting, Investigation adjudication, and deciphering are runtime-detached table adjudication outside promoted battle runtime; Druidic language and always-prepared Speak with Animals Spell Access remain character-owned CharacterBuild facts derived from authored Surface content."
         },
-        "reason": "Language, hidden-message, and prepared-spell source facts are authored; exploration/language execution is not promoted as a battle Unit profile.",
+        "reason": "Druidic known-language and always-prepared Speak with Animals Spell Access are character-owned CharacterBuild facts derived from authored Surface content; hidden-message discovery and deciphering are runtime-detached table adjudication, so no battle Unit profile is promoted.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
@@ -5776,11 +5788,11 @@
       },
       "claim": {
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "exploration/language owner",
-          "reason": "Thieves' Cant is a language/communication source fact outside promoted battle runtime."
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "character-creation-runtime and runtime-detached language/communication adjudication owner",
+          "reason": "Thieves' Cant communication adjudication is runtime-detached table adjudication outside promoted battle runtime; Thieves' Cant and the additional Character Creation language choice remain character-owned CharacterBuild facts derived from authored Surface content."
         },
-        "reason": "Language source facts are authored; exploration/language execution is not promoted as a battle Unit profile.",
+        "reason": "Thieves' Cant and the additional language choice are character-owned CharacterBuild facts derived from authored Surface content; communication adjudication is runtime-detached table adjudication, so no battle Unit profile is promoted.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",

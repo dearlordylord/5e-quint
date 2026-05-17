@@ -55,6 +55,35 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
+      "reason": "The remaining Barbarian Weapon Mastery selected-weapon count increases occur only after level 1.",
+      "sourceRecordPath": "packages/surface/content/barbarian_weapon_mastery.json",
+      "sourceRows": [
+        {
+          "category": "mastery pressure",
+          "concept": "Barbarian Weapon Mastery",
+          "id": "srd521:classes/barbarian:level-1:mastery-pressure:barbarian_weapon_mastery",
+          "levelBand": "level-1",
+          "rowKind": "mastery-pressure",
+          "source": {
+            "lineEnd": 89,
+            "lineStart": 84,
+            "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+          }
+        }
+      ],
+      "status": "closed-later-level-only",
+      "strictTargetClosed": true,
+      "unitId": "barbarian_weapon_mastery"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "later-level-only"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
       "reason": "The remaining Bardic Inspiration die-size changes occur only after level 1.",
       "sourceRecordPath": "packages/surface/content/bard_bardic_inspiration.json",
       "sourceRows": [
@@ -445,12 +474,12 @@
       "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
-        "outside-runtime-presentation-exploration"
+        "character-fact-and-runtime-detached-split"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "Language, hidden-message, and non-battle prepared-spell source facts are outside promoted battle runtime.",
+      "reason": "Druidic hidden-message spotting, Investigation adjudication, and deciphering are runtime-detached table adjudication outside promoted battle runtime; Druidic language and always-prepared Speak with Animals Spell Access remain character-owned CharacterBuild facts derived from authored Surface content.",
       "sourceRecordPath": "packages/surface/content/druid_druidic.json",
       "sourceRows": [
         {
@@ -466,7 +495,7 @@
           }
         }
       ],
-      "status": "closed-runtime-detached-table-adjudication",
+      "status": "closed-character-fact-and-runtime-detached-split",
       "strictTargetClosed": true,
       "unitId": "druid_druidic"
     },
@@ -563,6 +592,35 @@
       "status": "open-profile-accounting",
       "strictTargetClosed": false,
       "unitId": "feather_fall"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "later-level-only"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "The remaining Fighter Weapon Mastery selected-weapon count increases occur only after level 1.",
+      "sourceRecordPath": "packages/surface/content/fighter_weapon_mastery.json",
+      "sourceRows": [
+        {
+          "category": "mastery pressure",
+          "concept": "Fighter Weapon Mastery",
+          "id": "srd521:classes/fighter:level-1:mastery-pressure:fighter_weapon_mastery",
+          "levelBand": "level-1",
+          "rowKind": "mastery-pressure",
+          "source": {
+            "lineEnd": 75,
+            "lineStart": 70,
+            "path": ".references/srd-5.2.1/Classes/Fighter.md"
+          }
+        }
+      ],
+      "status": "closed-later-level-only",
+      "strictTargetClosed": true,
+      "unitId": "fighter_weapon_mastery"
     },
     {
       "catalogStatus": "installed",
@@ -1003,12 +1061,12 @@
       "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
-        "outside-runtime-presentation-exploration"
+        "character-fact-and-runtime-detached-split"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "Thieves' Cant is a language/communication source fact outside promoted battle runtime.",
+      "reason": "Thieves' Cant communication adjudication is runtime-detached table adjudication outside promoted battle runtime; Thieves' Cant and the additional Character Creation language choice remain character-owned CharacterBuild facts derived from authored Surface content.",
       "sourceRecordPath": "packages/surface/content/rogue_thieves_cant.json",
       "sourceRows": [
         {
@@ -1024,7 +1082,7 @@
           }
         }
       ],
-      "status": "closed-runtime-detached-table-adjudication",
+      "status": "closed-character-fact-and-runtime-detached-split",
       "strictTargetClosed": true,
       "unitId": "rogue_thieves_cant"
     },
@@ -1254,7 +1312,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 69,
+      "count": 67,
       "description": "Full support exists at the Unit profile boundary for strict level-1 accounting.",
       "status": "supported-profile",
       "unitIds": [
@@ -1263,7 +1321,6 @@
         "bane",
         "barbarian_rage",
         "barbarian_unarmored_defense",
-        "barbarian_weapon_mastery",
         "bless",
         "burning_hands",
         "chill_touch",
@@ -1284,7 +1341,6 @@
         "false_life",
         "fighter_fighting_style",
         "fighter_second_wind",
-        "fighter_weapon_mastery",
         "fire_bolt",
         "guidance",
         "guiding_bolt",
@@ -1330,7 +1386,7 @@
       ]
     },
     {
-      "count": 12,
+      "count": 10,
       "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
@@ -1340,10 +1396,8 @@
         "detect_evil_and_good",
         "detect_magic",
         "detect_poison_and_disease",
-        "druid_druidic",
         "identify",
         "minor_illusion",
-        "rogue_thieves_cant",
         "silent_image",
         "speak_with_animals"
       ]
@@ -1365,13 +1419,24 @@
       ]
     },
     {
-      "count": 3,
+      "count": 5,
       "description": "The level-1 behavior is complete and every remaining residual is later-level-only.",
       "status": "closed-later-level-only",
       "unitIds": [
+        "barbarian_weapon_mastery",
         "bard_bardic_inspiration",
+        "fighter_weapon_mastery",
         "monk_martial_arts",
         "warlock_eldritch_invocations"
+      ]
+    },
+    {
+      "count": 2,
+      "description": "Character facts are owned while only runtime-detached adjudication remains.",
+      "status": "closed-character-fact-and-runtime-detached-split",
+      "unitIds": [
+        "druid_druidic",
+        "rogue_thieves_cant"
       ]
     }
   ],
@@ -1381,14 +1446,14 @@
       "numerator": 367,
       "percent": "100%",
       "rowsByStatus": {
-        "accepted": 277,
-        "accepted-no-battle-effect": 90
+        "accepted": 279,
+        "accepted-no-battle-effect": 88
       }
     },
     "strictRuntimeProfileSupport": {
       "denominator": 93,
-      "numerator": 69,
-      "percent": "74.2%"
+      "numerator": 67,
+      "percent": "72%"
     },
     "strictTargetClosure": {
       "denominator": 93,
@@ -3690,17 +3755,18 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 120,
     "groupsByClaimTag": {
-      "profile-subset-supported": 13,
-      "supported-profile": 69,
+      "profile-subset-supported": 15,
+      "supported-profile": 67,
       "unsupported-profile": 11
     },
     "groupsByStatus": {
-      "closed-later-level-only": 3,
-      "closed-runtime-detached-table-adjudication": 12,
+      "closed-character-fact-and-runtime-detached-split": 2,
+      "closed-later-level-only": 5,
+      "closed-runtime-detached-table-adjudication": 10,
       "open-profile-accounting": 9,
-      "supported-profile": 69
+      "supported-profile": 67
     },
-    "nonSupportedFrontier": 24,
+    "nonSupportedFrontier": 26,
     "strictDenominator": 93
   }
 }

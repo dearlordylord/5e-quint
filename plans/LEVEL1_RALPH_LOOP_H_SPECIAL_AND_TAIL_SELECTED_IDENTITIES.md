@@ -100,9 +100,9 @@ Do not edit `plans/ACTIVE_PLAN.md`.
   promoted battle authority.
 - Use local RAW in `.references/srd-5.2.1/` and `UBIQUITOUS_LANGUAGE.md`.
 - Do not add companion behavior. `find_familiar` stays out of scope.
-- Do not turn table-owned facts such as creature type, target legality, or
-  spatial reachability into duplicated runtime state unless the existing
-  supported profile already owns that projection.
+- Do not duplicate authored creature-type facts, runtime target-legality
+  filtering, or table-supplied spatial reachability witnesses unless the
+  existing supported profile already owns that projection.
 
 ## Worktree Safety Prefix
 

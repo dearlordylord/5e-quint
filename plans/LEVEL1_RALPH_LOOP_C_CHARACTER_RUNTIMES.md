@@ -832,7 +832,7 @@ Verification:
 
 Plan Impact:
 
-- Add future-owner task recommendations only for concrete object/equipment
+- Add future package-owner follow-up task recommendations only for concrete object/equipment
   support.
 
 ### Task 15 - L1C-L1X-12 - Purify Food And Drink No-Matrix Decision
