@@ -37,16 +37,11 @@ Counterspell must interrupt before target/save/damage outcomes are committed.
 - Spell casting resource timing:
   `.references/srd-5.2.1/Spells/Gaining-and-Casting.md`, especially spell slots,
   higher-level slots, casting time, and the SRD 5.2.1 "One Spell with a Spell
-  Slot per Turn" rule. This is not the older 2014 bonus-action-only spell
-  restriction.
-- Archived 2014 comparison:
-  `.references/rules/10-spellcasting.md#Bonus-Action` contains the old
-  bonus-action rule: "You can't cast another spell during the same turn, except
-  for a cantrip with a casting time of 1 action." That older rule permitted the
-  Sage Advice example where a creature casts Fireball on its own turn, is
-  Counterspelled, and then casts Counterspell as a Reaction on the same turn.
-  The current repo authority is SRD 5.2.1 unless the project owner records a
-  deliberate assumption to keep that 2014 behavior for Counterspell.
+  Slot per Turn" rule.
+- Edition boundary:
+  the project models SRD 5.2.1 only. Archived rules corpora are reference
+  material for migration/history and are not supported behavior for promoted
+  Surface, battle-runtime, Quint, or demo work.
 - Saving throw damage:
   `.references/srd-5.2.1/Playing-the-Game.md#Saving-Throws-and-Damage`,
   including one damage roll for all targets of the same simultaneous
@@ -127,11 +122,11 @@ domain questions before implementation:
   `autoSuccessIfCasterSlotGte` wording may be wrong domain language because RAW
   says the spell "is automatically countered" when Counterspell is cast with a
   spell slot equal to or higher than the triggering spell's level.
-- Which rules-edition behavior governs same-turn reaction Counterspell? SRD
-  5.2.1 has "One Spell with a Spell Slot per Turn"; the 2014 Sage Advice
-  Fireball -> Counterspell -> Counterspell example depends on the older
-  bonus-action-only restriction. If we keep the 2014 behavior for this repo, add
-  an explicit owner-approved assumption before implementation.
+- How does SRD 5.2.1 "One Spell with a Spell Slot per Turn" constrain
+  same-turn reaction Counterspell? A creature that has already expended a spell
+  slot on its turn cannot expend another spell slot on Counterspell during that
+  same turn. Slotless spell casts remain governed by their own access/resource
+  facts.
 - How do multiple Counterspells form a reaction chain? The old v0 lane modeled a
   `PISpellCast` window, pushed the interrupted spell onto a spell stack when
   Counterspell was cast, and returned to the prior Counterspell window after
@@ -206,7 +201,7 @@ domain questions before implementation:
   add focused tests for failed-save negation, successful-save no negation,
   higher-slot automatic ending, triggering spell slot refund, Counterspell's own
   slot spend/refund, recursive Counterspell chains, reaction economy, and the
-  chosen SRD 5.2.1-vs-2014 same-turn casting rule.
+  strict SRD 5.2.1 same-turn spell-slot restriction.
 - MBT:
   run the promoted battle-runtime MBT only after completed behavior changes, one
   run at a time, using the repo's timing and seed protocol.
