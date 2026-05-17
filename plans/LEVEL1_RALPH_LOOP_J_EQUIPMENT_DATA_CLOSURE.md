@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L1J-HEAVY-ARMOR-DATA",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Heavy Armor Non Runtime Data Closure"
     },
     {
@@ -121,7 +121,7 @@ Every task runs:
 | ---: | --- | --- | --- | --- |
 | 1 | L1J-PRECHECK - Non-D Equipment Data Precheck | done | none | decision artifact with exact non-runtime armor/weapon/Shield ownership, excluding D-owned mastery work |
 | 2 | L1J-LIGHT-MEDIUM-ARMOR-DATA - Light Medium Armor Non Runtime Data Closure | done | 1 | explicit closure for light/medium armor authored records |
-| 3 | L1J-HEAVY-ARMOR-DATA - Heavy Armor Non Runtime Data Closure | ready-for-research | 1 | explicit closure for heavy armor authored records |
+| 3 | L1J-HEAVY-ARMOR-DATA - Heavy Armor Non Runtime Data Closure | done | 1 | explicit closure for heavy armor authored records |
 | 4 | L1J-SIMPLE-MELEE-WEAPON-DATA - Simple Melee Weapon Non Runtime Data Closure | ready-for-research | 1 | explicit closure for simple melee authored records |
 | 5 | L1J-MARTIAL-MELEE-WEAPON-DATA - Martial Melee Weapon Non Runtime Data Closure | ready-for-research | 1 | explicit closure for martial melee authored records |
 | 6 | L1J-POLEARM-REACH-WEAPON-DATA - Polearm Reach Weapon Non Runtime Data Closure | ready-for-research | 1 | explicit closure for polearm/reach authored records |
@@ -159,7 +159,7 @@ Decision artifact:
 
 ### Task 3 - L1J-HEAVY-ARMOR-DATA - Heavy Armor Non Runtime Data Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Units include `armor_plate`, `armor_ring_mail`, and `armor_splint_armor`.
 
