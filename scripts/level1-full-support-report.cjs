@@ -5,13 +5,36 @@ const {
 const { percent, stable } = require("./unit-profile-coverage-report.cjs");
 
 const strictLevelBands = ["level-1", "spell-level-0", "spell-level-1"];
+const strictLevel12Bands = [
+  "level-1",
+  "level-2",
+  "spell-level-0",
+  "spell-level-1",
+  "spell-level-2",
+];
 const companionWorktreeExcludedUnitIds = ["find_familiar"];
+const level1Scope = {
+  title: "Level 1",
+  outputTitle: "Level 1 Full Support",
+  description:
+    "This strict view tracks executable SRD level-1, cantrip, and level-1 spell pressure separately from the broader product readiness closure metric.",
+  levelBands: strictLevelBands,
+  productReadinessMetric: "levelOneBattleReadiness",
+};
+const level12Scope = {
+  title: "Level 1-2",
+  outputTitle: "Level 1-2 Full Support",
+  description:
+    "This strict view tracks executable SRD level-1 plus level-2 class pressure, cantrips, and level-1 plus level-2 spell pressure separately from the broader product readiness closure metric.",
+  levelBands: strictLevel12Bands,
+  productReadinessMetric: "levelOneTwoBattleReadiness",
+};
 const strictStatusDefinitions = [
   {
     status: "supported-profile",
     strictTargetClosed: true,
     description:
-      "Full support exists at the Unit profile boundary for strict level-1 accounting.",
+      "Full support exists at the Unit profile boundary for this strict accounting scope.",
   },
   {
     status: "closed-runtime-detached-table-adjudication",
@@ -29,7 +52,7 @@ const strictStatusDefinitions = [
     status: "closed-later-level-only",
     strictTargetClosed: true,
     description:
-      "The level-1 behavior is complete and every remaining residual is later-level-only.",
+      "The in-scope behavior is complete and every remaining residual is outside this strict accounting scope.",
   },
   {
     status: "open-profile-accounting",
@@ -86,9 +109,9 @@ function inventoryRowsByCandidateId(rows) {
   }, new Map());
 }
 
-function buildStrictCandidateGroups(srdUnitInventory) {
+function buildStrictCandidateGroups(srdUnitInventory, levelBands) {
   const scopedRows = srdUnitInventory.rows.filter((row) =>
-    strictLevelBands.includes(row.levelBand),
+    levelBands.includes(row.levelBand),
   );
   return inventoryRowsByCandidateId(scopedRows);
 }
@@ -106,7 +129,7 @@ function strictCandidateMatrixUnit(unitId, matrixUnitsById) {
   const units = matrixUnitsById.get(unitId) ?? [];
   if (units.length > 1) {
     fail(
-      `Strict level-1 support candidate ${unitId} has ${units.length} Unit matrix rows.`,
+      `Strict support candidate ${unitId} has ${units.length} Unit matrix rows.`,
     );
   }
   return units[0];
@@ -214,10 +237,10 @@ function hasCharacterFactRuntimeDetachedSplit(claim) {
   );
 }
 
-function strictStatusDescription(status) {
+function strictStatusDescription(status, scope) {
   const description = strictStatusDescriptions.get(status);
   if (description === undefined) {
-    fail(`Strict level-1 support status ${status} has no description.`);
+    fail(`Strict ${scope.title} support status ${status} has no description.`);
   }
   return description;
 }
@@ -296,13 +319,13 @@ function rowForStrictUnit(unit, sourceRows) {
   });
 }
 
-function groupRowsByStatus(rows) {
+function groupRowsByStatus(rows, scope) {
   return Array.from(
     rows
       .reduce((groups, row) => {
         const current = groups.get(row.status) ?? {
           status: row.status,
-          description: strictStatusDescription(row.status),
+          description: strictStatusDescription(row.status, scope),
           unitIds: [],
         };
         current.unitIds.push(row.unitId);
@@ -340,8 +363,11 @@ function outsideRow(unitId, sourceRows, extra = {}) {
   });
 }
 
-function buildLevel1FullSupport(matrix, srdUnitInventory) {
-  const candidateRowsByUnitId = buildStrictCandidateGroups(srdUnitInventory);
+function buildStrictFullSupport(matrix, srdUnitInventory, scope) {
+  const candidateRowsByUnitId = buildStrictCandidateGroups(
+    srdUnitInventory,
+    scope.levelBands,
+  );
   const candidateUnitIds = Array.from(candidateRowsByUnitId.keys()).sort();
   const excludedUnitIds = new Set(companionWorktreeExcludedUnitIds);
   const matrixUnitsById = buildMatrixUnitsById(matrix);
@@ -369,7 +395,7 @@ function buildLevel1FullSupport(matrix, srdUnitInventory) {
       outsideDenominator.noMatrixSrdPressure.push(
         outsideRow(unitId, sourceRows, {
           reason:
-            "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+            "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
         }),
       );
       continue;
@@ -399,10 +425,15 @@ function buildLevel1FullSupport(matrix, srdUnitInventory) {
   const frontierRows = strictRows.filter(
     (row) => row.status !== "supported-profile",
   );
-  const groups = groupRowsByStatus(strictRows);
+  const groups = groupRowsByStatus(strictRows, scope);
   const openFrontier = groups.filter(
     (group) => !strictTargetClosureStatuses.has(group.status),
   );
+
+  const productReadiness = srdUnitInventory.metrics[scope.productReadinessMetric];
+  if (productReadiness === undefined) {
+    fail(`SRD Unit inventory lacks ${scope.productReadinessMetric}.`);
+  }
 
   return stable({
     generatedBy: "scripts/unit-profile-coverage-check.cjs",
@@ -412,7 +443,8 @@ function buildLevel1FullSupport(matrix, srdUnitInventory) {
         "plans/unit-profile-coverage/srd-unit-inventory.json",
     },
     scope: {
-      levelBands: strictLevelBands,
+      title: scope.title,
+      levelBands: scope.levelBands,
       excludedUnitIds: companionWorktreeExcludedUnitIds,
       denominatorRule:
         "unique candidateUnitId rows joined to executable Unit matrix rows",
@@ -426,7 +458,7 @@ function buildLevel1FullSupport(matrix, srdUnitInventory) {
         strictTargetClosure.length,
         strictRows.length,
       ),
-      productReadiness: srdUnitInventory.metrics.levelOneBattleReadiness,
+      productReadiness,
     },
     summary: {
       candidateUnitIdsBeforeExclusions: candidateUnitIds.length,
@@ -445,6 +477,14 @@ function buildLevel1FullSupport(matrix, srdUnitInventory) {
     openFrontier,
     outsideDenominator,
   });
+}
+
+function buildLevel1FullSupport(matrix, srdUnitInventory) {
+  return buildStrictFullSupport(matrix, srdUnitInventory, level1Scope);
+}
+
+function buildLevel12FullSupport(matrix, srdUnitInventory) {
+  return buildStrictFullSupport(matrix, srdUnitInventory, level12Scope);
 }
 
 function md(value) {
@@ -474,13 +514,13 @@ function renderOutsideRows(rows) {
       });
 }
 
-function renderLevel1FullSupport(report) {
+function renderStrictFullSupport(report, scope) {
   return `${[
-    "# Level 1 Full Support",
+    `# ${scope.outputTitle}`,
     "",
     "Generated by `scripts/unit-profile-coverage-check.cjs` from `plans/unit-profile-coverage/unit-matrix.json` and `plans/unit-profile-coverage/srd-unit-inventory.json`.",
     "",
-    "This strict view tracks executable SRD level-1, cantrip, and level-1 spell pressure separately from the broader product readiness closure metric.",
+    scope.description,
     "",
     "## Metrics",
     "",
@@ -555,7 +595,17 @@ function renderLevel1FullSupport(report) {
   ].join("\n")}`;
 }
 
+function renderLevel1FullSupport(report) {
+  return renderStrictFullSupport(report, level1Scope);
+}
+
+function renderLevel12FullSupport(report) {
+  return renderStrictFullSupport(report, level12Scope);
+}
+
 module.exports = {
   buildLevel1FullSupport,
+  buildLevel12FullSupport,
   renderLevel1FullSupport,
+  renderLevel12FullSupport,
 };

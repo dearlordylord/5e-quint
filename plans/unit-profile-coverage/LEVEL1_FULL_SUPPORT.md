@@ -87,17 +87,17 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 
 | Unit | Source rows | Reason | Concepts |
 | --- | ---: | --- | --- |
-| `create_or_destroy_water` | 2 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | Cleric spell list Create or Destroy Water; Druid spell list Create or Destroy Water |
-| `disguise_self` | 3 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | Bard spell list Disguise Self; Sorcerer spell list Disguise Self; Wizard spell list Disguise Self |
-| `druidcraft` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | Druid spell list Druidcraft |
-| `elementalism` | 3 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | Druid spell list Elementalism; Sorcerer spell list Elementalism; Wizard spell list Elementalism |
-| `floating_disk` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | Wizard spell list Floating Disk |
-| `goodberry` | 2 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | Druid spell list Goodberry; Ranger spell list Goodberry |
-| `illusory_script` | 3 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | Bard spell list Illusory Script; Warlock spell list Illusory Script; Wizard spell list Illusory Script |
-| `mage_hand` | 4 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | Bard spell list Mage Hand; Sorcerer spell list Mage Hand; Warlock spell list Mage Hand; Wizard spell list Mage Hand |
-| `mending` | 5 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | Bard spell list Mending; Cleric spell list Mending; Druid spell list Mending; Sorcerer spell list Mending; Wizard spell list Mending |
-| `message` | 4 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | Bard spell list Message; Druid spell list Message; Sorcerer spell list Message; Wizard spell list Message |
-| `prestidigitation` | 4 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | Bard spell list Prestidigitation; Sorcerer spell list Prestidigitation; Warlock spell list Prestidigitation; Wizard spell list Prestidigitation |
-| `purify_food_and_drink` | 3 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | Cleric spell list Purify Food and Drink; Druid spell list Purify Food and Drink; Paladin spell list Purify Food and Drink |
-| `thaumaturgy` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | Cleric spell list Thaumaturgy |
-| `unseen_servant` | 3 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | Bard spell list Unseen Servant; Warlock spell list Unseen Servant; Wizard spell list Unseen Servant |
+| `create_or_destroy_water` | 2 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Cleric spell list Create or Destroy Water; Druid spell list Create or Destroy Water |
+| `disguise_self` | 3 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Bard spell list Disguise Self; Sorcerer spell list Disguise Self; Wizard spell list Disguise Self |
+| `druidcraft` | 1 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Druid spell list Druidcraft |
+| `elementalism` | 3 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Druid spell list Elementalism; Sorcerer spell list Elementalism; Wizard spell list Elementalism |
+| `floating_disk` | 1 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Wizard spell list Floating Disk |
+| `goodberry` | 2 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Druid spell list Goodberry; Ranger spell list Goodberry |
+| `illusory_script` | 3 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Bard spell list Illusory Script; Warlock spell list Illusory Script; Wizard spell list Illusory Script |
+| `mage_hand` | 4 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Bard spell list Mage Hand; Sorcerer spell list Mage Hand; Warlock spell list Mage Hand; Wizard spell list Mage Hand |
+| `mending` | 5 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Bard spell list Mending; Cleric spell list Mending; Druid spell list Mending; Sorcerer spell list Mending; Wizard spell list Mending |
+| `message` | 4 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Bard spell list Message; Druid spell list Message; Sorcerer spell list Message; Wizard spell list Message |
+| `prestidigitation` | 4 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Bard spell list Prestidigitation; Sorcerer spell list Prestidigitation; Warlock spell list Prestidigitation; Wizard spell list Prestidigitation |
+| `purify_food_and_drink` | 3 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Cleric spell list Purify Food and Drink; Druid spell list Purify Food and Drink; Paladin spell list Purify Food and Drink |
+| `thaumaturgy` | 1 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Cleric spell list Thaumaturgy |
+| `unseen_servant` | 3 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Bard spell list Unseen Servant; Warlock spell list Unseen Servant; Wizard spell list Unseen Servant |

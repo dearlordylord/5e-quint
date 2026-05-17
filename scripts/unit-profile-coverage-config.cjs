@@ -176,6 +176,11 @@ function coveragePaths(root) {
       coverageDir,
       "LEVEL1_FULL_SUPPORT.md",
     ),
+    level12FullSupport: path.join(coverageDir, "level1-2-full-support.json"),
+    level12FullSupportReport: path.join(
+      coverageDir,
+      "LEVEL1_2_FULL_SUPPORT.md",
+    ),
   };
 }
 

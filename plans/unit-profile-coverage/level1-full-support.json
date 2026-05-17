@@ -801,7 +801,7 @@
   "groups": [
     {
       "count": 78,
-      "description": "Full support exists at the Unit profile boundary for strict level-1 accounting.",
+      "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
         "acid_splash",
@@ -903,7 +903,7 @@
     },
     {
       "count": 3,
-      "description": "The level-1 behavior is complete and every remaining residual is later-level-only.",
+      "description": "The in-scope behavior is complete and every remaining residual is outside this strict accounting scope.",
       "status": "closed-later-level-only",
       "unitIds": [
         "barbarian_weapon_mastery",
@@ -966,7 +966,7 @@
     ],
     "noMatrixSrdPressure": [
       {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -996,7 +996,7 @@
         "unitId": "create_or_destroy_water"
       },
       {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1038,7 +1038,7 @@
         "unitId": "disguise_self"
       },
       {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1056,7 +1056,7 @@
         "unitId": "druidcraft"
       },
       {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1098,7 +1098,7 @@
         "unitId": "elementalism"
       },
       {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1116,7 +1116,7 @@
         "unitId": "floating_disk"
       },
       {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1146,7 +1146,7 @@
         "unitId": "goodberry"
       },
       {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1188,7 +1188,7 @@
         "unitId": "illusory_script"
       },
       {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1242,7 +1242,7 @@
         "unitId": "mage_hand"
       },
       {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1308,7 +1308,7 @@
         "unitId": "mending"
       },
       {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1362,7 +1362,7 @@
         "unitId": "message"
       },
       {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1416,7 +1416,7 @@
         "unitId": "prestidigitation"
       },
       {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1458,7 +1458,7 @@
         "unitId": "purify_food_and_drink"
       },
       {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1476,7 +1476,7 @@
         "unitId": "thaumaturgy"
       },
       {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
+        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3210,7 +3210,8 @@
       "level-1",
       "spell-level-0",
       "spell-level-1"
-    ]
+    ],
+    "title": "Level 1"
   },
   "sourceArtifacts": {
     "srdUnitInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
