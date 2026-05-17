@@ -14,6 +14,7 @@ const adoptedNoMatrixSrdPressureDecisionUnitIds = new Set([
   "elementalism",
   "illusory_script",
   "message",
+  "prestidigitation",
 ]);
 const strictStatusDefinitions = [
   {

@@ -139,7 +139,7 @@
     {
       "number": 23,
       "id": "L1D2-PRESTIDIGITATION-DECISION-INTEGRATION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Prestidigitation Frontier Decision Integration"
     },
     {
@@ -437,7 +437,7 @@ task was appended; `find_familiar` stays excluded.
 | 20 | L1D2-ELEMENTALISM-DECISION-INTEGRATION - Elementalism Frontier Decision Integration | done | Task 14 or explicit deferral | Consume the existing decision artifact; do not reclassify the row. |
 | 21 | L1D2-ILLUSORY-SCRIPT-DECISION-INTEGRATION - Illusory Script Frontier Decision Integration | done | Task 14 or explicit deferral | Consume the existing decision artifact; do not reclassify the row. |
 | 22 | L1D2-MESSAGE-DECISION-INTEGRATION - Message Frontier Decision Integration | done | Task 14 or explicit deferral | Consume the existing decision artifact; do not reclassify the row. |
-| 23 | L1D2-PRESTIDIGITATION-DECISION-INTEGRATION - Prestidigitation Frontier Decision Integration | ready-for-research | Task 14 or explicit deferral | Consume the existing decision artifact; do not reclassify the row. |
+| 23 | L1D2-PRESTIDIGITATION-DECISION-INTEGRATION - Prestidigitation Frontier Decision Integration | done | Task 14 or explicit deferral | Consume the existing decision artifact; do not reclassify the row. |
 | 24 | L1D2-THAUMATURGY-BOOMING-VOICE - Thaumaturgy Booming Voice Ability Check Support | ready-for-research | Task 14 or explicit deferral | Concrete follow-up from the Thaumaturgy decision artifact. |
 | 25 | L1D2-UNSEEN-SERVANT-NO-MATRIX - Unseen Servant No-Matrix Decision | ready-for-research | Task 14 or explicit deferral | Remaining no-matrix strict SRD pressure row without an existing frontier decision artifact. |
 | 26 | L1D2-REPLENISH-002 - Recursive Frontier Replenishment 002 | ready-for-research | Tasks 14-25 done or intentionally deferred | Refresh the frontier again and append the next concrete batch. |
@@ -1026,7 +1026,7 @@ Verification:
 
 ### Task 23 - L1D2-PRESTIDIGITATION-DECISION-INTEGRATION - Prestidigitation Frontier Decision Integration
 
-Status: `ready-for-research`
+Status: `done`
 
 Integrate the existing Prestidigitation frontier decision into generated
 coverage surfaces so future replenishment runs preserve the already-closed
