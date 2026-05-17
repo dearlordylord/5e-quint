@@ -19,8 +19,9 @@ such as `Actor`, `Combatant`, `BattleState`, `ActiveEffect`, `Hole`, and replay
 variants in package-local QNT model modules, starting with
 `battle-runtime-model.qnt`, and let focused specs direct-import those modules
 when they need the moved names. Domain behavior helpers can live in narrower
-QNT modules, such as `battle-runtime-find-familiar.qnt`, when the split follows
-SRD language and avoids duplicate state names or compatibility-wrapper churn.
+QNT modules, such as `battle-runtime-find-familiar.qnt` and
+`battle-runtime-light.qnt`, when the split follows SRD language and avoids
+duplicate state names or compatibility-wrapper churn.
 
 The promoted MBT strategy is selective. MBT proves reducer facts after Surface
 decode/projection; it must not enumerate all Surface-authored content multiplied
