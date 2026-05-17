@@ -1,9 +1,11 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-DIVINE-FAVOR divine_favor
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-DIVINE-SMITE divine_smite
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-ENSNARING-STRIKE ensnaring_strike
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-FALSE-LIFE false_life
 // UNIT-IDENTITY-MBT-REPLAY: L1E-DIVINE-FAVOR divine_favor doDivineFavorWeaponDamageRider
 // UNIT-IDENTITY-MBT-REPLAY: L1E-DIVINE-SMITE divine_smite doDivineSmiteAfterHitDamage
 // UNIT-IDENTITY-MBT-REPLAY: L1E-ENSNARING-STRIKE ensnaring_strike doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape
+// UNIT-IDENTITY-MBT-REPLAY: L1E-FALSE-LIFE false_life doFalseLifeTemporaryHitPoints
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -43,9 +45,10 @@ import {
   type BattleDamageRollHole,
   type BattleFill,
   type BattleHole,
-  type BattleResolutionResult,
   type BattleReactionProcedureChoice,
+  type BattleResolutionResult,
   type BattleRolledDiceFill,
+  type BattleSpellHealingRollHole,
   type BattleState,
   type BattleSubject,
   type CombatantId,
@@ -57,6 +60,7 @@ const level1BuffMarkSmiteSelectedIdentityDriverSchema = {
   doDivineFavorWeaponDamageRider: {},
   doDivineSmiteAfterHitDamage: {},
   doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape: {},
+  doFalseLifeTemporaryHitPoints: {},
   step: {},
 } as const;
 type Level1BuffMarkSmiteSelectedIdentityDriverAction = Exclude<
@@ -67,10 +71,12 @@ type Level1BuffMarkSmiteSelectedIdentityDriverAction = Exclude<
 const divineFavorUnitId = "divine_favor";
 const divineSmiteUnitId = "divine_smite";
 const ensnaringStrikeUnitId = "ensnaring_strike";
+const falseLifeUnitId = "false_life";
 const level1BuffMarkSmiteSpellIds = [
   divineFavorUnitId,
   divineSmiteUnitId,
   ensnaringStrikeUnitId,
+  falseLifeUnitId,
 ] as const;
 type Level1BuffMarkSmiteSpellId = (typeof level1BuffMarkSmiteSpellIds)[number];
 const damageRiderSourceSpellIds = [
@@ -81,6 +87,12 @@ type DamageRiderSourceSpellId =
   | (typeof damageRiderSourceSpellIds)[number]
   | "none";
 type EnsnaringStrikeSourceSpellId = typeof ensnaringStrikeUnitId | "none";
+type BonusActionCastSpellId = typeof divineFavorUnitId;
+type AttackHitBonusActionSpellId =
+  | typeof divineSmiteUnitId
+  | typeof ensnaringStrikeUnitId;
+type ActionCastSpellId = typeof falseLifeUnitId;
+type TemporaryHitPointsSourceSpellId = typeof falseLifeUnitId | "none";
 type CharacterCreatureInit = Extract<
   BattleCreatureInit["creatureInit"],
   { readonly kind: "character" }
@@ -91,12 +103,17 @@ type CharacterClassName =
 type Level1BuffMarkSmiteSelectedIdentityProjection = {
   readonly divineFavorActiveRiderCount: number;
   readonly targetHp: number;
+  readonly casterTempHp: number;
   readonly spellSlotSpentThisTurn: boolean;
   readonly level1SlotsRemaining: number;
   readonly damageRiderSourceSpellId: DamageRiderSourceSpellId;
   readonly damageRiderDamageType: "radiant" | "none";
   readonly damageRiderDice: number;
   readonly damageRiderDieSize: number;
+  readonly temporaryHitPointsSourceSpellId: TemporaryHitPointsSourceSpellId;
+  readonly temporaryHitPointsDice: number;
+  readonly temporaryHitPointsDieSize: number;
+  readonly temporaryHitPointsFlat: number;
   readonly ensnaringStrikeRestrainedBeforeEscape: boolean;
   readonly targetRestrained: boolean;
   readonly casterConcentrating: boolean;
@@ -112,7 +129,8 @@ type Level1BuffMarkSmiteSelectedIdentityProjection = {
     | "init"
     | "divineFavor"
     | "divineSmite"
-    | "ensnaringStrike";
+    | "ensnaringStrike"
+    | "falseLife";
 };
 type EnsnaringStrikeLifecycleProjection = Pick<
   Level1BuffMarkSmiteSelectedIdentityProjection,
@@ -126,6 +144,13 @@ type EnsnaringStrikeLifecycleProjection = Pick<
   | "escapeCheckAbility"
   | "escapeCheckSkill"
 >;
+type FalseLifeTemporaryHitPointsProjection = Pick<
+  Level1BuffMarkSmiteSelectedIdentityProjection,
+  | "temporaryHitPointsSourceSpellId"
+  | "temporaryHitPointsDice"
+  | "temporaryHitPointsDieSize"
+  | "temporaryHitPointsFlat"
+>;
 type SelectedUnitIdentityReplaySequence = {
   readonly name: string;
   readonly actions: readonly Level1BuffMarkSmiteSelectedIdentityDriverAction[];
@@ -135,7 +160,8 @@ type SelectedUnitIdentityReplay = {
   readonly taskId:
     | "L1E-DIVINE-FAVOR"
     | "L1E-DIVINE-SMITE"
-    | "L1E-ENSNARING-STRIKE";
+    | "L1E-ENSNARING-STRIKE"
+    | "L1E-FALSE-LIFE";
   readonly unitId: Level1BuffMarkSmiteSpellId;
   readonly actions: readonly Level1BuffMarkSmiteSelectedIdentityDriverAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
@@ -146,6 +172,23 @@ type BonusActionSpellAct = AvailableBattleAct & {
     BattleSubject,
     { readonly tag: "bonusActionSpell" }
   >;
+};
+type ActionSpellAct = AvailableBattleAct & {
+  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+};
+type ScalarBuffTemporaryHitPointsRollHole = BattleSpellHealingRollHole & {
+  readonly spell: Extract<
+    BattleSpellHealingRollHole["spell"],
+    { readonly procedure: "scalarBuff" }
+  > & {
+    readonly effect: Extract<
+      Extract<
+        BattleSpellHealingRollHole["spell"],
+        { readonly procedure: "scalarBuff" }
+      >["effect"],
+      { readonly kind: "temporaryHitPoints" }
+    >;
+  };
 };
 
 const casterId = combatantId("level1-buff-mark-smite-caster");
@@ -235,6 +278,27 @@ const selectedUnitIdentityReplays = [
       },
     ],
   },
+  {
+    taskId: "L1E-FALSE-LIFE",
+    unitId: "false_life",
+    actions: ["doFalseLifeTemporaryHitPoints"],
+    sequences: [
+      {
+        name: "self-action-temporary-hit-points",
+        actions: ["doFalseLifeTemporaryHitPoints"],
+        expected: expectedProjection({
+          casterTempHp: 11,
+          spellSlotSpentThisTurn: true,
+          level1SlotsRemaining: 1,
+          temporaryHitPointsSourceSpellId: "false_life",
+          temporaryHitPointsDice: 2,
+          temporaryHitPointsDieSize: 4,
+          temporaryHitPointsFlat: 4,
+          lastResult: "falseLife",
+        }),
+      },
+    ],
+  },
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
 describe("Level 1 buff mark smite selected identity MBT", () => {
@@ -296,6 +360,8 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
       | NonNullable<BattleDamageRollHole["spellWeaponDamageRiders"]>[number]
       | undefined;
     let ensnaringStrikeLifecycle = defaultEnsnaringStrikeLifecycleProjection();
+    let falseLifeTemporaryHitPoints =
+      defaultFalseLifeTemporaryHitPointsProjection();
     let lastResult: Level1BuffMarkSmiteSelectedIdentityProjection["lastResult"] =
       "init";
 
@@ -303,6 +369,8 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
       state = level1BuffMarkSmiteBattle();
       damageRider = undefined;
       ensnaringStrikeLifecycle = defaultEnsnaringStrikeLifecycleProjection();
+      falseLifeTemporaryHitPoints =
+        defaultFalseLifeTemporaryHitPointsProjection();
       lastResult = "init";
     }
 
@@ -330,6 +398,8 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
         });
         damageRider = undefined;
         ensnaringStrikeLifecycle = defaultEnsnaringStrikeLifecycleProjection();
+        falseLifeTemporaryHitPoints =
+          defaultFalseLifeTemporaryHitPointsProjection();
 
         const cast = resolveBattleSubject({
           state,
@@ -351,6 +421,8 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
         });
         damageRider = undefined;
         ensnaringStrikeLifecycle = defaultEnsnaringStrikeLifecycleProjection();
+        falseLifeTemporaryHitPoints =
+          defaultFalseLifeTemporaryHitPointsProjection();
 
         const hit = resolveLongswordHitWithAttackRoll({ state });
         const attackHitWindow = requireAttackHitWindow(hit.afterAttackRoll);
@@ -396,6 +468,8 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
         });
         damageRider = undefined;
         ensnaringStrikeLifecycle = defaultEnsnaringStrikeLifecycleProjection();
+        falseLifeTemporaryHitPoints =
+          defaultFalseLifeTemporaryHitPointsProjection();
 
         const hit = resolveLongswordHitWithAttackRoll({ state });
         const attackHitWindow = requireAttackHitWindow(hit.afterAttackRoll);
@@ -498,12 +572,37 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
             escapeCheck.skill === "athletics" ? "athletics" : "none",
         };
       },
+      doFalseLifeTemporaryHitPoints: () => {
+        state = level1BuffMarkSmiteBattle({
+          preparedSpells: [spellRecord(falseLifeUnitId)],
+          sourceClassName: "wizard",
+        });
+        damageRider = undefined;
+        ensnaringStrikeLifecycle = defaultEnsnaringStrikeLifecycleProjection();
+
+        const act = actionSpellAct(state, falseLifeUnitId);
+        const temporaryHitPointsRoll =
+          requireScalarBuffTemporaryHitPointsRollHole(
+            requireHole(act.initialHoles, "rolledDice"),
+          );
+        falseLifeTemporaryHitPoints =
+          falseLifeTemporaryHitPointsProjection(temporaryHitPointsRoll);
+        recordResolvedResult(
+          resolveBattleSubject({
+            state,
+            subject: act.subject,
+            fills: [damageRollFillWithGroups(temporaryHitPointsRoll, [[4, 3]])],
+          }),
+          "falseLife",
+        );
+      },
       step: () => {},
       getState: () =>
         projectLevel1BuffMarkSmiteSelectedIdentityState(
           state,
           damageRider,
           ensnaringStrikeLifecycle,
+          falseLifeTemporaryHitPoints,
           lastResult,
         ),
     };
@@ -516,12 +615,17 @@ function expectedProjection(
   return {
     divineFavorActiveRiderCount: 0,
     targetHp: 12,
+    casterTempHp: 0,
     spellSlotSpentThisTurn: false,
     level1SlotsRemaining: 2,
     damageRiderSourceSpellId: "none",
     damageRiderDamageType: "none",
     damageRiderDice: 0,
     damageRiderDieSize: 0,
+    temporaryHitPointsSourceSpellId: "none",
+    temporaryHitPointsDice: 0,
+    temporaryHitPointsDieSize: 0,
+    temporaryHitPointsFlat: 0,
     ensnaringStrikeRestrainedBeforeEscape: false,
     targetRestrained: false,
     casterConcentrating: false,
@@ -549,6 +653,15 @@ function defaultEnsnaringStrikeLifecycleProjection(): EnsnaringStrikeLifecyclePr
     turnStartDamageDieSize: 0,
     escapeCheckAbility: "none",
     escapeCheckSkill: "none",
+  };
+}
+
+function defaultFalseLifeTemporaryHitPointsProjection(): FalseLifeTemporaryHitPointsProjection {
+  return {
+    temporaryHitPointsSourceSpellId: "none",
+    temporaryHitPointsDice: 0,
+    temporaryHitPointsDieSize: 0,
+    temporaryHitPointsFlat: 0,
   };
 }
 
@@ -672,7 +785,7 @@ function spellRecord(spellId: Level1BuffMarkSmiteSpellId): SpellRecord {
 
 function bonusActionSpellAct(
   state: BattleState,
-  spellId: Level1BuffMarkSmiteSpellId,
+  spellId: BonusActionCastSpellId,
 ): BonusActionSpellAct {
   const act = discoverBattleActs(state).find(
     (candidate): candidate is BonusActionSpellAct =>
@@ -681,6 +794,21 @@ function bonusActionSpellAct(
   );
   if (act === undefined) {
     throw new Error(`Expected ${spellId} Bonus Action Spell act.`);
+  }
+  return act;
+}
+
+function actionSpellAct(
+  state: BattleState,
+  spellId: ActionCastSpellId,
+): ActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.spellId === spellId,
+  );
+  if (act === undefined) {
+    throw new Error(`Expected ${spellId} Action Spell act.`);
   }
   return act;
 }
@@ -881,7 +1009,7 @@ function abilityCheckFill(
 
 function spellWeaponDamageRider(
   hole: BattleDamageRollHole,
-  spellId: Exclude<Level1BuffMarkSmiteSpellId, typeof ensnaringStrikeUnitId>,
+  spellId: Exclude<DamageRiderSourceSpellId, "none">,
 ): NonNullable<BattleDamageRollHole["spellWeaponDamageRiders"]>[number] {
   const rider = hole.spellWeaponDamageRiders?.find(
     (candidate) => candidate.sourceSpellId === spellId,
@@ -890,6 +1018,25 @@ function spellWeaponDamageRider(
     throw new Error(`Expected ${spellId} spell weapon damage rider.`);
   }
   return rider;
+}
+
+function requireScalarBuffTemporaryHitPointsRollHole(
+  hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
+): ScalarBuffTemporaryHitPointsRollHole {
+  if (!isScalarBuffTemporaryHitPointsRollHole(hole)) {
+    throw new Error("Expected scalar buff Temporary Hit Points roll hole.");
+  }
+  return hole;
+}
+
+function isScalarBuffTemporaryHitPointsRollHole(
+  hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
+): hole is ScalarBuffTemporaryHitPointsRollHole {
+  return (
+    "spell" in hole &&
+    hole.spell.procedure === "scalarBuff" &&
+    hole.spell.effect.kind === "temporaryHitPoints"
+  );
 }
 
 function requireResultHole<K extends BattleHole["kind"]>(
@@ -956,7 +1103,7 @@ function requireAttackHitWindow(
 
 function attackHitBonusActionSpellChoice(
   result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
-  spellId: Level1BuffMarkSmiteSpellId,
+  spellId: AttackHitBonusActionSpellId,
 ): Extract<
   BattleReactionProcedureChoice,
   { readonly kind: "castAttackHitBonusActionSpell" }
@@ -1049,6 +1196,7 @@ function projectLevel1BuffMarkSmiteSelectedIdentityState(
     | NonNullable<BattleDamageRollHole["spellWeaponDamageRiders"]>[number]
     | undefined,
   ensnaringStrikeLifecycle: EnsnaringStrikeLifecycleProjection,
+  falseLifeTemporaryHitPoints: FalseLifeTemporaryHitPointsProjection,
   lastResult: Level1BuffMarkSmiteSelectedIdentityProjection["lastResult"],
 ): Level1BuffMarkSmiteSelectedIdentityProjection {
   const snapshot = snapshotBattle(state);
@@ -1066,6 +1214,7 @@ function projectLevel1BuffMarkSmiteSelectedIdentityState(
   }
   return {
     targetHp: target.hp,
+    casterTempHp: caster.tempHp,
     spellSlotSpentThisTurn:
       state.currentTurnResources.spellSlotExpendedThisTurn,
     level1SlotsRemaining: level1SlotsRemaining(state),
@@ -1075,11 +1224,35 @@ function projectLevel1BuffMarkSmiteSelectedIdentityState(
       damageRider?.damage.damageType === "radiant" ? "radiant" : "none",
     damageRiderDice: damageRider?.damage.expr.dice ?? 0,
     damageRiderDieSize: damageRider?.damage.expr.dieSize ?? 0,
+    ...falseLifeTemporaryHitPoints,
     targetRestrained: snapshotHasCondition(target.conditions, "restrained"),
     casterConcentrating: caster.concentrating,
     ...ensnaringStrikeLifecycle,
     lastResult,
   };
+}
+
+function falseLifeTemporaryHitPointsProjection(
+  hole: ScalarBuffTemporaryHitPointsRollHole,
+): FalseLifeTemporaryHitPointsProjection {
+  const expr = hole.spell.effect.amount.expr;
+  return {
+    temporaryHitPointsSourceSpellId: temporaryHitPointsSourceSpellId(hole),
+    temporaryHitPointsDice: expr.dice,
+    temporaryHitPointsDieSize: expr.dieSize,
+    temporaryHitPointsFlat: expr.flat ?? 0,
+  };
+}
+
+function temporaryHitPointsSourceSpellId(
+  hole: ScalarBuffTemporaryHitPointsRollHole,
+): TemporaryHitPointsSourceSpellId {
+  if (hole.spell.spell.id === falseLifeUnitId) {
+    return falseLifeUnitId;
+  }
+  throw new Error(
+    `Unexpected Temporary Hit Points spell id ${hole.spell.spell.id}.`,
+  );
 }
 
 function damageRiderSourceSpellId(
@@ -1144,6 +1317,7 @@ function normalizeLevel1BuffMarkSmiteSelectedIdentityQuintState(
       "qDivineFavorActiveRiderCount",
     ),
     targetHp: numberFromQuintInt(state["qTargetHp"], "qTargetHp"),
+    casterTempHp: numberFromQuintInt(state["qCasterTempHp"], "qCasterTempHp"),
     spellSlotSpentThisTurn: booleanField(state, "qSpellSlotSpentThisTurn"),
     level1SlotsRemaining: numberFromQuintInt(
       state["qLevel1SlotsRemaining"],
@@ -1162,6 +1336,21 @@ function normalizeLevel1BuffMarkSmiteSelectedIdentityQuintState(
     damageRiderDieSize: numberFromQuintInt(
       state["qDamageRiderDieSize"],
       "qDamageRiderDieSize",
+    ),
+    temporaryHitPointsSourceSpellId: temporaryHitPointsSourceSpellIdFromQuint(
+      state["qTemporaryHitPointsSourceSpellId"],
+    ),
+    temporaryHitPointsDice: numberFromQuintInt(
+      state["qTemporaryHitPointsDice"],
+      "qTemporaryHitPointsDice",
+    ),
+    temporaryHitPointsDieSize: numberFromQuintInt(
+      state["qTemporaryHitPointsDieSize"],
+      "qTemporaryHitPointsDieSize",
+    ),
+    temporaryHitPointsFlat: numberFromQuintInt(
+      state["qTemporaryHitPointsFlat"],
+      "qTemporaryHitPointsFlat",
     ),
     ensnaringStrikeRestrainedBeforeEscape: booleanField(
       state,
@@ -1242,6 +1431,17 @@ function damageRiderDamageType(
   throw new Error(`Unexpected damage rider damage type ${String(raw)}.`);
 }
 
+function temporaryHitPointsSourceSpellIdFromQuint(
+  raw: unknown,
+): TemporaryHitPointsSourceSpellId {
+  if (raw === "none" || raw === falseLifeUnitId) {
+    return raw;
+  }
+  throw new Error(
+    `Unexpected Temporary Hit Points source spell id ${String(raw)}.`,
+  );
+}
+
 function ensnaringStrikeSourceSpellIdFromQuint(
   raw: unknown,
 ): EnsnaringStrikeSourceSpellId {
@@ -1285,7 +1485,8 @@ function mbtLastResult(
     raw === "init" ||
     raw === "divineFavor" ||
     raw === "divineSmite" ||
-    raw === "ensnaringStrike"
+    raw === "ensnaringStrike" ||
+    raw === "falseLife"
   ) {
     return raw;
   }

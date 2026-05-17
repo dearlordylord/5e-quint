@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "L1E-FALSE-LIFE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "False Life Selected Identity Replay"
     },
     {
@@ -180,7 +180,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-E-L.md` Ensnaring Strike.
 
 ### Task 5 - L1E-FALSE-LIFE - False Life Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `false_life`, asserting the supported scalar
 temporary hit point buff.
