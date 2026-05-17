@@ -178,12 +178,13 @@ to its separate worktree. Full support means:
 - active companion/familiar features are not pulled into this lane.
 
 This is the replacement D lane after the completed damage selected-identity
-batch. It deliberately does not steal active C/E/F/H work. It started with
-currently safe selected-identity tasks that were supported on `master`, kept
-C-dependent character/container tasks visible while blocked, and uses recursive
-replenishment tasks to append the next concrete frontier. The replenishment task
-must add the next concrete batch before marking itself done, so this lane does
-not naturally terminate just because one fixed batch was exhausted.
+batch. It deliberately does not steal active I/J/K work or the new execution
+frontiers A/B. It started with currently safe selected-identity tasks that were
+supported on `master`, kept character/container tasks visible while blocked, and
+uses recursive replenishment tasks to append the next concrete frontier. The
+replenishment task must add the next concrete batch before marking itself done,
+so this lane does not naturally terminate just because one fixed batch was
+exhausted.
 
 Do not edit `plans/ACTIVE_PLAN.md`.
 
@@ -231,12 +232,14 @@ When a `L1D2-REPLENISH-*` task runs, Ralph must:
    `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`, and
    `plans/unit-profile-coverage/unit-matrix.json` by running
    `pnpm unit-profile-coverage:check --write`.
-3. Read active C/E/F/H plan files and `.ralph/runs/*/events.tsv` logs if those
-   worktrees still exist, but do not edit their task worktrees.
+3. Read active I/J/K and execution-frontier A/B plan files plus
+   `.ralph/runs/*/events.tsv` logs if those worktrees exist, but do not edit
+   their task worktrees.
 4. Recompute the frontier in this order:
-   - strict level-1 open-profile-accounting items not owned by active C;
+   - strict level-1 open-profile-accounting items not owned by execution
+     frontiers A/B or active I/J/K;
    - supported-profile Units missing selected-identity MBT evidence and not
-     owned by active E/F/H;
+     owned by active execution frontiers A/B or active I/J/K;
    - runtime-detached or table-owned closure gaps if the generated strict view
      has reopened them;
    - next supported-profile expansion or admission tasks only after the strict
@@ -270,10 +273,12 @@ Primary write scope for the initial batch:
 - generated reports under `plans/unit-profile-coverage/`;
 - this plan file when a replenishment task appends new work.
 
-Avoid active Loop E buff/mark/smite spell files, Loop F spatial witness files,
-Loop H special/tail files, and active Loop C character-runtime implementation
-work unless the replenishment task verifies those lanes are merged and no longer
-active.
+Avoid active I/J/K files and execution-frontier A/B files unless a
+replenishment task proves those lanes are merged and no longer active. In
+particular, D must not touch `faerie_fire`, `feather_fall`, `fog_cloud`,
+`grease`, `jump`, `light`, or `thunderwave`; those strict open rows are owned by
+Execution Frontiers A/B. D owns `hunters_mark` and `ranger_favored_enemy` among
+the remaining strict open rows.
 
 ## MBT And Verification Protocol
 
@@ -302,9 +307,9 @@ Planning/replenishment tasks run:
 ## Task 1 Precheck Result
 
 Checked against `master` at `07d8df40` and D task base
-`1e8f939c`. No C/E/F/H integration head is merged into current `master`; live
-worktrees still exist for Loop C, Loop E, Loop F, and Loop H, so their ownership
-remains active and unmerged.
+`1e8f939c`. This is a historical precheck from before C/E/F/H were retired.
+Current ownership is defined by the active D/I/J/K plans plus Execution
+Frontiers A/B.
 
 The current-master delta from this task base is limited to
 `plans/FIREBALL_COUNTERSPELL_PROMOTION_PLAN.md` and
@@ -320,16 +325,20 @@ matrix:
 - D-owned initial batch: `barbarian_unarmored_defense`,
   `monk_unarmored_defense`, `wizard_ritual_adept`,
   `sorcerer_innate_sorcery`, `mycelium_step`.
-- Active Loop E: `divine_favor`, `divine_smite`, `ensnaring_strike`,
+- Historical Loop E: `divine_favor`, `divine_smite`, `ensnaring_strike`,
   `false_life`, `heroism`, `hex`, `hunters_mark`, `longstrider`,
   `searing_smite`, `shillelagh`, `true_strike`.
-- Active Loop F: `dancing_lights`, `faerie_fire`, `feather_fall`,
+- Historical Loop F: `dancing_lights`, `faerie_fire`, `feather_fall`,
   `fog_cloud`, `grease`, `jump`, `light`, `produce_flame`, `thunderwave`.
-- Active Loop H: `animal_friendship`, `protection_from_evil_and_good`,
+- Historical Loop H: `animal_friendship`, `protection_from_evil_and_good`,
   `eldritch_blast`, `mage_armor`, `sanctuary`, `mass_cure_wounds`,
   `mass_healing_word`, `fighter_tactical_mind`,
   `feat_boon_of_combat_prowess`, `orc_adrenaline_rush`,
   `paladin_extra_attack`, `ranger_extra_attack`.
+
+The historical Loop F strict open rows are now split out of D:
+Execution Frontier A owns `faerie_fire`, `fog_cloud`, `grease`, and
+`thunderwave`; Execution Frontier B owns `feather_fall`, `jump`, and `light`.
 
 The C-dependent Units remain `unsupported-profile` on `master`:
 `wizard_arcane_recovery`, `fighter_fighting_style`, `cleric_divine_order`,
@@ -376,8 +385,9 @@ Active non-D ownership remains excluded:
 - Loop E still owns `shillelagh` and `true_strike`; its `hunters_mark`
   selected-identity task is already done, so Task 14 owns only the remaining
   open-profile-accounting closure.
-- Loop F still owns `faerie_fire`, `feather_fall`, `fog_cloud`, `grease`,
-  `jump`, `light`, and `thunderwave`.
+- Execution Frontier A now owns `faerie_fire`, `fog_cloud`, `grease`, and
+  `thunderwave`.
+- Execution Frontier B now owns `feather_fall`, `jump`, and `light`.
 - Loop H still owns `fighter_tactical_mind`,
   `feat_boon_of_combat_prowess`, `orc_adrenaline_rush`,
   `paladin_extra_attack`, and `ranger_extra_attack`.
@@ -386,7 +396,7 @@ Active non-D ownership remains excluded:
   `purify_food_and_drink`.
 
 The appended Task 14 closes the two refreshed strict open-profile-accounting
-items not still owned by an active E/F lane: `hunters_mark` and
+items not owned by execution frontiers A/B: `hunters_mark` and
 `ranger_favored_enemy`. Tasks 15-17 are adjacent profile-expansion or closure
 work from the refreshed matrix. Tasks 18-23 integrate existing frontier-decision
 artifacts into the generated coverage/reporting lane without re-deciding
@@ -413,7 +423,7 @@ task was appended; `find_familiar` stays excluded.
 | 11 | L1D2-WARLOCK-ELDRITCH-INVOCATIONS - Warlock Eldritch Invocations Selected Identity Replay | ready-for-implementation-after-light-research | none | Unblocked by Task 13 refreshed matrix evidence. |
 | 12 | L1D2-WEAPON-MASTERY-CONTAINERS - Weapon Mastery Container Selected Identity Replays | ready-for-implementation-after-light-research | none | Unblocked for supported-profile container Units by Task 13 refreshed matrix evidence. |
 | 13 | L1D2-REPLENISH-001 - Recursive Frontier Replenishment 001 | done | none | Appended Tasks 14-25 plus `L1D2-REPLENISH-002`; refreshed coverage artifacts were unchanged. |
-| 14 | L1D2-HUNTERS-MARK-FAVORED-ENEMY-ACCOUNTING - Hunter's Mark And Ranger Favored Enemy Profile Accounting Closure | ready-for-research | none | Close the two D-owned strict open-profile-accounting items not still owned by active E/F. |
+| 14 | L1D2-HUNTERS-MARK-FAVORED-ENEMY-ACCOUNTING - Hunter's Mark And Ranger Favored Enemy Profile Accounting Closure | ready-for-research | none | Close the two D-owned strict open-profile-accounting items not owned by execution frontiers A/B. |
 | 15 | L1D2-BARDIC-INSPIRATION-SCALING - Bardic Inspiration Die Scaling Support | ready-for-research | Task 14 or explicit deferral | Adjacent profile-expansion task after the strict frontier is D-closed or active-lane-blocked. |
 | 16 | L1D2-MONK-MARTIAL-ARTS-SCALING - Monk Martial Arts Die Scaling Support | ready-for-research | Task 14 or explicit deferral | Adjacent profile-expansion task after the strict frontier is D-closed or active-lane-blocked. |
 | 17 | L1D2-CHARM-PERSON-CLOSURE - Charm Person Social Boundary Closure | ready-for-research | Task 14 or explicit deferral | Clarify supported battle subset versus runtime-detached social knowledge closure. |
@@ -604,7 +614,7 @@ Result:
 - Tasks 7-12 were unblocked by refreshed supported-profile matrix evidence.
 - Tasks 14-25 and successor Task 26 were appended in the task index, DAG table,
   and task details.
-- No active C/E/F/H ownership was duplicated, and no companion/familiar task was
+- No active sibling-lane ownership was duplicated, and no companion/familiar task was
   added.
 
 Acceptance:
@@ -614,7 +624,7 @@ Acceptance:
   meaningful task if fewer than twelve exist;
 - this plan has a final successor replenishment task such as
   `L1D2-REPLENISH-002`;
-- the new tasks do not duplicate active C/E/F/H ownership;
+- the new tasks do not duplicate active sibling-lane ownership;
 - no companion/familiar task is added;
 - the current task is marked `done` only after the new tasks and successor
   replenishment task are present in the task index, DAG table, and task details.
@@ -1158,7 +1168,7 @@ Acceptance:
   meaningful task if fewer than twelve exist;
 - this plan has a final successor replenishment task such as
   `L1D2-REPLENISH-003`;
-- the new tasks do not duplicate active C/E/F/H ownership;
+- the new tasks do not duplicate active sibling-lane ownership;
 - no companion/familiar task is added;
 - the current task is marked `done` only after the new tasks and successor
   replenishment task are present in the task index, DAG table, and task details.
