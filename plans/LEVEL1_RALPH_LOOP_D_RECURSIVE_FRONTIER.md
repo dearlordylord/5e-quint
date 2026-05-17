@@ -85,7 +85,7 @@
     {
       "number": 14,
       "id": "L1D2-HUNTERS-MARK-FAVORED-ENEMY-ACCOUNTING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Hunter's Mark And Ranger Favored Enemy Profile Accounting Closure"
     },
     {
@@ -423,7 +423,7 @@ task was appended; `find_familiar` stays excluded.
 | 11 | L1D2-WARLOCK-ELDRITCH-INVOCATIONS - Warlock Eldritch Invocations Selected Identity Replay | done | none | Unblocked by Task 13 refreshed matrix evidence. |
 | 12 | L1D2-WEAPON-MASTERY-CONTAINERS - Weapon Mastery Container Selected Identity Replays | done | none | Selected identity evidence landed for supported-profile container Units. |
 | 13 | L1D2-REPLENISH-001 - Recursive Frontier Replenishment 001 | done | none | Appended Tasks 14-25 plus `L1D2-REPLENISH-002`; refreshed coverage artifacts were unchanged. |
-| 14 | L1D2-HUNTERS-MARK-FAVORED-ENEMY-ACCOUNTING - Hunter's Mark And Ranger Favored Enemy Profile Accounting Closure | ready-for-research | none | Close the two D-owned strict open-profile-accounting items not owned by execution frontiers A/B. |
+| 14 | L1D2-HUNTERS-MARK-FAVORED-ENEMY-ACCOUNTING - Hunter's Mark And Ranger Favored Enemy Profile Accounting Closure | done | none | Close the two D-owned strict open-profile-accounting items not owned by execution frontiers A/B. |
 | 15 | L1D2-BARDIC-INSPIRATION-SCALING - Bardic Inspiration Die Scaling Support | ready-for-research | Task 14 or explicit deferral | Adjacent profile-expansion task after the strict frontier is D-closed or active-lane-blocked. |
 | 16 | L1D2-MONK-MARTIAL-ARTS-SCALING - Monk Martial Arts Die Scaling Support | ready-for-research | Task 14 or explicit deferral | Adjacent profile-expansion task after the strict frontier is D-closed or active-lane-blocked. |
 | 17 | L1D2-CHARM-PERSON-CLOSURE - Charm Person Social Boundary Closure | ready-for-research | Task 14 or explicit deferral | Clarify supported battle subset versus runtime-detached social knowledge closure. |
@@ -631,7 +631,7 @@ Acceptance:
 
 ### Task 14 - L1D2-HUNTERS-MARK-FAVORED-ENEMY-ACCOUNTING - Hunter's Mark And Ranger Favored Enemy Profile Accounting Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Close the refreshed strict open-profile-accounting rows for `hunters_mark` and
 `ranger_favored_enemy`. Loop E has already completed selected-identity evidence
