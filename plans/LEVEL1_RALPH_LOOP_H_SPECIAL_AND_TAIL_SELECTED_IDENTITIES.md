@@ -85,7 +85,7 @@
     {
       "number": 14,
       "id": "L1H-MYCELIUM-STEP",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Mycelium Step Selected Identity Replay"
     }
   ]
@@ -291,7 +291,7 @@ RAW: `.references/srd-5.2.1/Classes/Ranger.md` Extra Attack.
 
 ### Task 14 - L1H-MYCELIUM-STEP - Mycelium Step Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `mycelium_step` if it remains in the
 supported selected identity denominator after the SRD tail tasks. Keep this as

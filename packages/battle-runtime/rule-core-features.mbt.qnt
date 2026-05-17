@@ -376,6 +376,18 @@ module ruleCoreFeaturesMbt {
     }
   }
 
+  action doMyceliumStepDash = {
+    val turn = resolveDash(initialTurnProcedureState, 30, BonusActionCost)
+    all {
+      qHoles == Set(),
+      recordProjection(
+        true, turn.bonusActionAvailable, true, 1, NoActionSurgeActionGrant,
+        12, 12, turn.dashMovementBonusFeet, turn.disengaged, turn.hidden,
+        false, false, false, false, 0, false, featureMbtBaselineArmorClass, Set(), false, "resolved", "none"
+      ),
+    }
+  }
+
   action doRageActivateAndDamage = {
     val rage = startRage({
       turn: initialTurnProcedureState.with("bonusActionAvailable", true),
@@ -497,11 +509,9 @@ module ruleCoreFeaturesMbt {
     all {
       qHoles == Set(),
       recordProjection(
-        false, qBonusActionAvailable, qReactionAvailable,
-        result.pool.usesRemaining, NoActionSurgeActionGrant, qActorHp,
-        result.vitals.hitPoints, qDashBonusFeet, qDisengaged, qHidden,
-        qRageActive, qRecklessActive, qIncomingAttackAdvantage,
-        qSneakAttackUsedThisTurn, result.vitals.hitPoints, false,
+        false, true, true, result.pool.usesRemaining, NoActionSurgeActionGrant, 12,
+        result.vitals.hitPoints, 0, false, false, false, false, false,
+        false, result.vitals.hitPoints, false,
         featureMbtBaselineArmorClass, Set(), false, "resolved", "none"
       ),
     }
@@ -663,6 +673,7 @@ module ruleCoreFeaturesMbt {
     doCunningDash,
     doCunningDisengage,
     doCunningHide,
+    doMyceliumStepDash,
     doRageActivateAndDamage,
     doRecklessAttack,
     doSneakAttack,

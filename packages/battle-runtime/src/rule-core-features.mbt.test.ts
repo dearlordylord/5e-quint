@@ -7,6 +7,7 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt reaction-interruption bard_cutting_words monk_deflect_attacks
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-FIGHTER-TACTICAL-MIND fighter_tactical_mind
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-BOON-COMBAT-PROWESS feat_boon_of_combat_prowess
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-MYCELIUM-STEP mycelium_step
 // UNIT-IDENTITY-MBT-REPLAY: QMBT7 fighter_second_wind doDiscoverSecondWind doResolveSecondWindLow doResolveSecondWindHigh
 // UNIT-IDENTITY-MBT-REPLAY: QMBT9 fighter_action_surge doActionSurgeActivate doActionSurgeRejectTwice
 // UNIT-IDENTITY-MBT-REPLAY: QMBT9 fighter_improved_critical doImprovedCritical
@@ -24,6 +25,7 @@
 // UNIT-IDENTITY-MBT-REPLAY: reaction-interruption monk_deflect_attacks doDeflectAttacksDamageReduction
 // UNIT-IDENTITY-MBT-REPLAY: L1H-FIGHTER-TACTICAL-MIND fighter_tactical_mind doTacticalMindConvertedSuccess doTacticalMindStillFailed
 // UNIT-IDENTITY-MBT-REPLAY: L1H-BOON-COMBAT-PROWESS feat_boon_of_combat_prowess doCombatProwessMissToHit
+// UNIT-IDENTITY-MBT-REPLAY: L1H-MYCELIUM-STEP mycelium_step doMyceliumStepDash
 import * as path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
@@ -31,6 +33,7 @@ import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
 
+import myceliumStepInput from "../../../plans/unit-profile-coverage/fixtures/classic-non-srd/mycelium_step.json";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
@@ -82,6 +85,10 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { parseSupportedUnitFeatureProfile } from "./unit-feature-support.ts";
+import {
+  mechanicsOnlyMyceliumStepUnit,
+  myceliumStepUnitId,
+} from "./classic-non-srd-mechanics-test-fixtures.ts";
 
 const ruleCoreFeatureMbtHoles = [
   "DamageRoll",
@@ -178,6 +185,7 @@ const driverSchema = {
   doCunningDash: {},
   doCunningDisengage: {},
   doCunningHide: {},
+  doMyceliumStepDash: {},
   doRageActivateAndDamage: {},
   doRecklessAttack: {},
   doSneakAttack: {},
@@ -211,7 +219,8 @@ type SelectedUnitIdentityReplay = {
     | "passive-and-zero-hp-features"
     | "reaction-interruption"
     | "L1H-FIGHTER-TACTICAL-MIND"
-    | "L1H-BOON-COMBAT-PROWESS";
+    | "L1H-BOON-COMBAT-PROWESS"
+    | "L1H-MYCELIUM-STEP";
   readonly unitId: string;
   readonly actions: readonly RuleCoreFeatureDriverAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
@@ -496,6 +505,22 @@ const selectedUnitIdentityReplays = [
           featureUsesRemaining: 0,
           targetHp: 8,
           lastDamageAmount: 4,
+          lastResult: "resolved",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "L1H-MYCELIUM-STEP",
+    unitId: "mycelium_step",
+    actions: ["doMyceliumStepDash"],
+    sequences: [
+      {
+        name: "dash-as-bonus-action",
+        actions: ["doMyceliumStepDash"],
+        expected: expectedProjection({
+          bonusActionAvailable: false,
+          dashBonusFeet: 30,
           lastResult: "resolved",
         }),
       },
@@ -864,7 +889,10 @@ function createRuleCoreFeatureDriver() {
       doCunningHide: () => {
         state = cunningActionBattle();
         resetProjection();
-        const subject = bonusActionStandardActionSubject("hide");
+        const subject = bonusActionStandardActionSubject(
+          "rogue_cunning_action",
+          "hide",
+        );
         const act = findAct(state, subject);
         recordResult(
           resolveBattleSubject({
@@ -876,6 +904,20 @@ function createRuleCoreFeatureDriver() {
                 16,
               ),
             ],
+          }),
+        );
+      },
+      doMyceliumStepDash: () => {
+        state = myceliumStepBattle();
+        resetProjection();
+        recordResult(
+          resolveBattleSubject({
+            state,
+            subject: bonusActionStandardActionSubject(
+              myceliumStepUnitId,
+              "dash",
+            ),
+            fills: [],
           }),
         );
       },
@@ -1231,7 +1273,10 @@ function createRuleCoreFeatureDriver() {
       recordResult(
         resolveBattleSubject({
           state,
-          subject: bonusActionStandardActionSubject(action),
+          subject: bonusActionStandardActionSubject(
+            "rogue_cunning_action",
+            action,
+          ),
           fills: [],
         }),
       );
@@ -1570,6 +1615,27 @@ function cunningActionBattle(): BattleState {
         { kind: "coverOutOfEnemyLineOfSight" as const, cover: "total" },
       ],
     ]),
+  });
+}
+
+function myceliumStepBattle(): BattleState {
+  const unit = mechanicsOnlyMyceliumStepUnit(myceliumStepInput);
+  const unitRef = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: recordSelectedUnitRuntimeBoundaryId(unit.id) },
+    unit,
+  });
+  if (Either.isLeft(unitRef)) {
+    throw new Error(unitRef.left.message);
+  }
+  return startBattleRight({
+    battleId: battleId("rule-core-mycelium-step"),
+    combatants: [
+      featureActor({
+        initiative: 20,
+        characterUnitRefs: [unitRef.right],
+      }),
+      featureTarget(10),
+    ],
   });
 }
 
@@ -1977,13 +2043,14 @@ function unitFeatureSubject(
 }
 
 function bonusActionStandardActionSubject(
+  sourceUnitId: string,
   action: "dash" | "disengage" | "hide",
 ): Extract<BattleSubject, { readonly tag: "bonusActionStandardAction" }> {
   if (action === "dash") {
     return {
       tag: "bonusActionStandardAction",
       actorId,
-      sourceUnitId: recordSelectedUnitRuntimeBoundaryId("rogue_cunning_action"),
+      sourceUnitId: recordSelectedUnitRuntimeBoundaryId(sourceUnitId),
       action,
       speedKind: "walk",
     };
@@ -1991,7 +2058,7 @@ function bonusActionStandardActionSubject(
   return {
     tag: "bonusActionStandardAction",
     actorId,
-    sourceUnitId: recordSelectedUnitRuntimeBoundaryId("rogue_cunning_action"),
+    sourceUnitId: recordSelectedUnitRuntimeBoundaryId(sourceUnitId),
     action,
   };
 }

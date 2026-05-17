@@ -208,8 +208,11 @@ import {
   bonusActionDashTemporaryHitPointsProfileForUnit,
   battlePassiveSpeedKindGrantsSupportForUnit,
   parseSupportedUnitFeatureProfile,
-  type ClassicNonSrdMechanicsUnit,
 } from "./unit-feature-support.ts";
+import {
+  mechanicsOnlyMyceliumStepUnit,
+  myceliumStepUnitId,
+} from "./classic-non-srd-mechanics-test-fixtures.ts";
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -264,7 +267,6 @@ const defenseUnitId = "defense";
 const divineFavorUnitId = "divine_favor";
 const divineSmiteUnitId = "divine_smite";
 const divineFavorDurationTicks = elapsedTimeTicks(10);
-const myceliumStepUnitId = "mycelium_step";
 const archeryUnitId = "feat_archery";
 const boonOfCombatProwessUnitId = "feat_boon_of_combat_prowess";
 const savageAttackerUnitId = "feat_savage_attacker";
@@ -2432,7 +2434,7 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
 
 describe("QMBT21 Classic non-SRD deterministic feature profile slice", () => {
   test("mycelium_step is admitted and projected through production alternate action cost support", () => {
-    const unit = mechanicsOnlyClassicUnit(myceliumStepInput);
+    const unit = mechanicsOnlyMyceliumStepUnit(myceliumStepInput);
 
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
@@ -19494,35 +19496,6 @@ function rolledDiceGroup(
   }
   return {
     results: [DieRollResult(firstResult), ...restResults.map(DieRollResult)],
-  };
-}
-
-function mechanicsOnlyClassicUnit(
-  input: typeof myceliumStepInput,
-): ClassicNonSrdMechanicsUnit {
-  if (
-    input.id !== myceliumStepUnitId ||
-    input.syntheticLabel !== "Mycelium Step" ||
-    input.provenance.kind !== "classic-2024-mechanics-source-lane" ||
-    input.mechanics.family !== "alternate_action_cost" ||
-    input.mechanics.from.kind !== "standard_action" ||
-    input.mechanics.from.actions.length !== 1 ||
-    input.mechanics.from.actions[0] !== "dash" ||
-    input.mechanics.to.kind !== "bonus_action"
-  ) {
-    throw new Error("Classic mycelium_step fixture shape drifted.");
-  }
-
-  return {
-    id: myceliumStepUnitId,
-    syntheticLabel: "Mycelium Step",
-    provenance: { kind: "classic-2024-mechanics-source-lane" },
-    kind: "class_feature",
-    mechanics: {
-      family: "alternate_action_cost",
-      from: { kind: "standard_action", actions: ["dash"] },
-      to: { kind: "bonus_action" },
-    },
   };
 }
 
