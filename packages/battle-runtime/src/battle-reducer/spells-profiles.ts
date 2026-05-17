@@ -119,6 +119,30 @@ export {
   supportedSpellAttackKind,
   supportedSpellPostDamageRiders,
 } from "./spells-profiles-save-gates.ts";
+
+const LIGHT_OBJECT_MAX_SIZE = "large" as const;
+
+type ActivationPhase = Extract<
+  SpellRecord["mechanics"],
+  { readonly family: "activation" }
+>["phases"][number];
+type ObjectLightDirectPhase = Extract<
+  ActivationPhase,
+  { readonly kind: "direct" }
+> & {
+  readonly attachment: {
+    readonly kind: "hole";
+    readonly value: {
+      readonly kind: "object";
+      readonly count: 1;
+      readonly filter: {
+        readonly heldOrWorn: "forbidden";
+        readonly maxSize: typeof LIGHT_OBJECT_MAX_SIZE;
+      };
+    };
+  };
+};
+
 export function supportedSpellActs(
   actor: BattleCreatureState,
   state?: BattleState,
@@ -524,15 +548,8 @@ export function supportedCantripObjectLightSpellProfile(
   if (!isLightObjectSpell(spell)) {
     return [];
   }
-  const lightPhase = spell.mechanics.phases.find(
-    (phase) =>
-      phase.kind === "direct" &&
-      phase.attachment.kind === "hole" &&
-      phase.attachment.value.kind === "object" &&
-      phase.attachment.value.count === 1 &&
-      phase.attachment.value.filter?.heldOrWorn === "forbidden" &&
-      phase.effects?.some((effect) => effect.kind === "emit_light"),
-  );
+  const lightPhase = spell.mechanics.phases.find(isObjectLightDirectPhase);
+  const maxObjectSize = lightPhase?.attachment.value.filter?.maxSize;
   const lightEffects =
     lightPhase === undefined || !("effects" in lightPhase)
       ? undefined
@@ -543,6 +560,7 @@ export function supportedCantripObjectLightSpellProfile(
   if (
     lightEffect === undefined ||
     lightEffect.kind !== "emit_light" ||
+    maxObjectSize === undefined ||
     lightEffect.brightRadiusFeet !== 20 ||
     lightEffect.dimAdditionalFeet !== 20
   ) {
@@ -562,7 +580,7 @@ export function supportedCantripObjectLightSpellProfile(
           procedure: "objectLight",
           spell,
           actionCost: "magicAction",
-          targeting: { kind: "singleObject" },
+          targeting: { kind: "singleObject", maxSize: maxObjectSize },
           light: {
             kind: "brightAndDim",
             brightRadiusFeet: movementFeet(lightEffect.brightRadiusFeet),
@@ -571,6 +589,20 @@ export function supportedCantripObjectLightSpellProfile(
           expiresAt: { kind: "duration", durationTicks: durationTicks.right },
         },
       ];
+}
+
+function isObjectLightDirectPhase(
+  phase: ActivationPhase,
+): phase is ObjectLightDirectPhase {
+  return (
+    phase.kind === "direct" &&
+    phase.attachment.kind === "hole" &&
+    phase.attachment.value.kind === "object" &&
+    phase.attachment.value.count === 1 &&
+    phase.attachment.value.filter?.heldOrWorn === "forbidden" &&
+    phase.attachment.value.filter?.maxSize === LIGHT_OBJECT_MAX_SIZE &&
+    phase.effects?.some((effect) => effect.kind === "emit_light") === true
+  );
 }
 
 export function supportedCantripMakeStableSpellProfile(
@@ -801,17 +833,23 @@ export function isLightObjectSpell(spell: SpellRecord): spell is SpellRecord & {
     { family: "activation" }
   >;
 } {
+  const earlyEnd =
+    spell.mechanics.duration.kind === "timed"
+      ? (spell.mechanics.duration.earlyEnd ?? [])
+      : [];
   return (
     spell.name === "Light" &&
     spell.provenance.kind === "srd-5.2.1" &&
-    spell.provenance.section === "Spells/Descriptions-L-P#Light" &&
+    spell.provenance.section === "Spells/Descriptions-E-L#Light" &&
     spell.mechanics.family === "activation" &&
     spell.mechanics.level === 0 &&
     spell.mechanics.castingTime.kind === "action" &&
     spell.mechanics.range.kind === "touch" &&
     spell.mechanics.duration.kind === "timed" &&
     spell.mechanics.duration.value.unit === "hour" &&
-    spell.mechanics.duration.value.amount === 1
+    spell.mechanics.duration.value.amount === 1 &&
+    earlyEnd.length === 1 &&
+    earlyEnd[0]?.kind === "caster_recasts_spell"
   );
 }
 

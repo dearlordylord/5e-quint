@@ -7,31 +7,31 @@
     {
       "number": 1,
       "id": "L1XB-PRECHECK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Movement Light Frontier Precheck"
     },
     {
       "number": 2,
       "id": "L1XB-FEATHER-FALL-CLOSURE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Feather Fall Runtime Boundary Closure"
     },
     {
       "number": 3,
       "id": "L1XB-JUMP-CLOSURE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Jump Runtime Boundary Closure"
     },
     {
       "number": 4,
       "id": "L1XB-LIGHT-CLOSURE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Light Runtime Boundary Closure"
     },
     {
       "number": 5,
       "id": "L1XB-STRICT-CLOSURE-AUDIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Movement Light Strict Closure Audit"
     }
   ]
@@ -97,15 +97,15 @@ Every task runs:
 
 | Order | Task | Status | Blocks On | Output |
 | ---: | --- | --- | --- | --- |
-| 1 | L1XB-PRECHECK - Movement Light Frontier Precheck | ready-for-research | none | decision artifact listing current claims/evidence and confirming A/B/D/K ownership split |
-| 2 | L1XB-FEATHER-FALL-CLOSURE - Feather Fall Runtime Boundary Closure | ready-for-research | 1 | `feather_fall` removed from strict open-profile-accounting or blocked with exact missing runtime mechanic |
-| 3 | L1XB-JUMP-CLOSURE - Jump Runtime Boundary Closure | ready-for-research | 1 | `jump` removed from strict open-profile-accounting or blocked with exact missing runtime mechanic |
-| 4 | L1XB-LIGHT-CLOSURE - Light Runtime Boundary Closure | ready-for-research | 1 | `light` removed from strict open-profile-accounting or blocked with exact missing runtime mechanic |
-| 5 | L1XB-STRICT-CLOSURE-AUDIT - Movement Light Strict Closure Audit | ready-for-research | 2-4 | generated strict report proves the three B-owned rows are no longer open |
+| 1 | L1XB-PRECHECK - Movement Light Frontier Precheck | done | none | decision artifact listing current claims/evidence and confirming A/B/D/K ownership split |
+| 2 | L1XB-FEATHER-FALL-CLOSURE - Feather Fall Runtime Boundary Closure | done | 1 | `feather_fall` removed from strict open-profile-accounting or blocked with exact missing runtime mechanic |
+| 3 | L1XB-JUMP-CLOSURE - Jump Runtime Boundary Closure | done | 1 | `jump` removed from strict open-profile-accounting or blocked with exact missing runtime mechanic |
+| 4 | L1XB-LIGHT-CLOSURE - Light Runtime Boundary Closure | done | 1 | `light` removed from strict open-profile-accounting or blocked with exact missing runtime mechanic |
+| 5 | L1XB-STRICT-CLOSURE-AUDIT - Movement Light Strict Closure Audit | done | 2-4 | generated strict report proves the three B-owned rows are no longer open |
 
 ### Task 1 - L1XB-PRECHECK - Movement Light Frontier Precheck
 
-Status: `ready-for-research`
+Status: `done`
 
 Inputs:
 
@@ -129,7 +129,7 @@ Verification: `pnpm unit-profile-coverage:check`, `git diff --check`.
 
 ### Task 2 - L1XB-FEATHER-FALL-CLOSURE - Feather Fall Runtime Boundary Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Inputs:
 
@@ -152,7 +152,7 @@ Outputs:
 
 ### Task 3 - L1XB-JUMP-CLOSURE - Jump Runtime Boundary Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Inputs:
 
@@ -175,7 +175,7 @@ Outputs:
 
 ### Task 4 - L1XB-LIGHT-CLOSURE - Light Runtime Boundary Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Inputs:
 
@@ -198,7 +198,7 @@ Outputs:
 
 ### Task 5 - L1XB-STRICT-CLOSURE-AUDIT - Movement Light Strict Closure Audit
 
-Status: `ready-for-research`
+Status: `done`
 
 Inputs:
 
@@ -212,4 +212,3 @@ Outputs:
   open-profile-accounting rows;
 - if any row remains open, append a small follow-up task proposal with exact
   missing inputs/outputs instead of broadening this lane.
-

@@ -503,59 +503,6 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "table-spatial-derivation"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Fall-distance derivation, map elevation, and landing geometry simulation remain table/spatial derivations.",
-      "sourceRecordPath": "packages/surface/content/feather_fall.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Bard spell list Feather Fall",
-          "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_feather_fall",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 173,
-            "lineStart": 173,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Feather Fall",
-          "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_feather_fall",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 253,
-            "lineStart": 253,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Feather Fall",
-          "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_feather_fall",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 172,
-            "lineStart": 172,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "feather_fall"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
         "later-level-only"
       ],
       "collectionId": "srd-5.2.1",
@@ -655,136 +602,6 @@
       "status": "closed-runtime-detached-table-adjudication",
       "strictTargetClosed": true,
       "unitId": "identify"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "table-spatial-derivation"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Runtime-owned jump arc, pathfinding, collision, and final-position derivation remain table/spatial derivations.; Runtime-owned Difficult Terrain landing Acrobatics check derivation remains a table/spatial derivation.",
-      "sourceRecordPath": "packages/surface/content/jump.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Druid spell list Jump",
-          "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_jump",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 216,
-            "lineStart": 216,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Ranger spell list Jump",
-          "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_jump",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 174,
-            "lineStart": 174,
-            "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Jump",
-          "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_jump",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 257,
-            "lineStart": 257,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Jump",
-          "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_jump",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 181,
-            "lineStart": 181,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "jump"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "table-spatial-derivation"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the object-emitter runtime boundary.",
-      "sourceRecordPath": "packages/surface/content/light.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Bard spell list Light",
-          "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_light",
-          "levelBand": "spell-level-0",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 148,
-            "lineStart": 148,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Cleric spell list Light",
-          "id": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_light",
-          "levelBand": "spell-level-0",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 151,
-            "lineStart": 151,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Light",
-          "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_light",
-          "levelBand": "spell-level-0",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 228,
-            "lineStart": 228,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Light",
-          "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_light",
-          "levelBand": "spell-level-0",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 147,
-            "lineStart": 147,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "light"
     },
     {
       "catalogStatus": "installed",
@@ -1071,7 +888,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 72,
+      "count": 75,
       "description": "Full support exists at the Unit profile boundary for strict level-1 accounting.",
       "status": "supported-profile",
       "unitIds": [
@@ -1099,6 +916,7 @@
         "expeditious_retreat",
         "faerie_fire",
         "false_life",
+        "feather_fall",
         "fighter_fighting_style",
         "fighter_second_wind",
         "fire_bolt",
@@ -1113,6 +931,8 @@
         "hideous_laughter",
         "ice_knife",
         "inflict_wounds",
+        "jump",
+        "light",
         "longstrider",
         "mage_armor",
         "magic_missile",
@@ -1167,18 +987,6 @@
       ]
     },
     {
-      "count": 5,
-      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
-      "status": "open-profile-accounting",
-      "unitIds": [
-        "feather_fall",
-        "hunters_mark",
-        "jump",
-        "light",
-        "ranger_favored_enemy"
-      ]
-    },
-    {
       "count": 4,
       "description": "The level-1 behavior is complete and every remaining residual is later-level-only.",
       "status": "closed-later-level-only",
@@ -1197,6 +1005,15 @@
         "druid_druidic",
         "rogue_thieves_cant"
       ]
+    },
+    {
+      "count": 2,
+      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
+      "status": "open-profile-accounting",
+      "unitIds": [
+        "hunters_mark",
+        "ranger_favored_enemy"
+      ]
     }
   ],
   "metrics": {
@@ -1211,25 +1028,22 @@
     },
     "strictRuntimeProfileSupport": {
       "denominator": 93,
-      "numerator": 72,
-      "percent": "77.4%"
+      "numerator": 75,
+      "percent": "80.6%"
     },
     "strictTargetClosure": {
       "denominator": 93,
-      "numerator": 88,
-      "percent": "94.6%"
+      "numerator": 91,
+      "percent": "97.8%"
     }
   },
   "openFrontier": [
     {
-      "count": 5,
+      "count": 2,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
-        "feather_fall",
         "hunters_mark",
-        "jump",
-        "light",
         "ranger_favored_enemy"
       ]
     }
@@ -3510,18 +3324,18 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 120,
     "groupsByClaimTag": {
-      "profile-subset-supported": 10,
-      "supported-profile": 72,
+      "profile-subset-supported": 7,
+      "supported-profile": 75,
       "unsupported-profile": 11
     },
     "groupsByStatus": {
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 4,
       "closed-runtime-detached-table-adjudication": 10,
-      "open-profile-accounting": 5,
-      "supported-profile": 72
+      "open-profile-accounting": 2,
+      "supported-profile": 75
     },
-    "nonSupportedFrontier": 21,
+    "nonSupportedFrontier": 18,
     "strictDenominator": 93
   }
 }

@@ -12,6 +12,11 @@
       "v": true
     },
     "duration": {
+      "earlyEnd": [
+        {
+          "kind": "caster_recasts_spell"
+        }
+      ],
       "kind": "timed",
       "value": {
         "amount": 1,
@@ -29,7 +34,8 @@
           "value": {
             "count": 1,
             "filter": {
-              "heldOrWorn": "forbidden"
+              "heldOrWorn": "forbidden",
+              "maxSize": "large"
             },
             "kind": "object"
           }
@@ -52,6 +58,6 @@
   "name": "Light",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Spells/Descriptions-L-P#Light"
+    "section": "Spells/Descriptions-E-L#Light"
   }
 }
