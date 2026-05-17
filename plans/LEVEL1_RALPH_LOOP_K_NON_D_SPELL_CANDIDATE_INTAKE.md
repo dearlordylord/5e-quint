@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "L1K-MOBILITY-TRANSFORMATION-CANDIDATES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Mobility Transformation Spell Candidate Intake"
     },
     {
@@ -138,7 +138,7 @@ Every task runs:
 | 2 | L1K-DAMAGE-SPELL-CANDIDATES - Damage Spell Candidate Intake | done | 1 | candidate split for damage spells outside D |
 | 3 | L1K-CONDITION-CONTROL-CANDIDATES - Condition Control Spell Candidate Intake | done | 1 | candidate split for condition/control spells outside D |
 | 4 | L1K-PROTECTION-RESTORATION-CANDIDATES - Protection Restoration Spell Candidate Intake | done | 1 | candidate split for protection/restoration spells outside D |
-| 5 | L1K-MOBILITY-TRANSFORMATION-CANDIDATES - Mobility Transformation Spell Candidate Intake | ready-for-research | 1 | candidate split for mobility/transformation spells outside D |
+| 5 | L1K-MOBILITY-TRANSFORMATION-CANDIDATES - Mobility Transformation Spell Candidate Intake | done | 1 | candidate split for mobility/transformation spells outside D |
 | 6 | L1K-ZONE-WALL-CANDIDATES - Zone Wall Emanation Spell Candidate Intake | ready-for-research | 1 | candidate split for zones/walls/emanations outside D |
 | 7 | L1K-DETECTION-COMMUNICATION-CANDIDATES - Detection Communication Spell Candidate Intake | ready-for-research | 1 | runtime-detached versus runtime-witness split for detection/communication spells |
 | 8 | L1K-COUNTER-DISPEL-CANDIDATES - Counter Dispel Spell Candidate Intake | ready-for-research | 1 | candidate split for counter/dispel/anti-magic spells |
@@ -227,12 +227,30 @@ behavior, or MBT evidence.
 
 ### Task 5 - L1K-MOBILITY-TRANSFORMATION-CANDIDATES - Mobility Transformation Spell Candidate Intake
 
-Status: `ready-for-research`
+Status: `done`
 
 Initial candidates: `misty_step`, `fly`, `spider_climb`,
 `freedom_of_movement`, `alter_self`, and `polymorph`.
 
 Keep table geometry and companion/stat-block replacement boundaries explicit.
+
+Decision artifact:
+`plans/unit-profile-coverage/L1K_MOBILITY_TRANSFORMATION_SPELL_CANDIDATE_INTAKE.md`.
+
+Final split:
+
+- table-witness teleport need: `misty_step`;
+- special-Speed and movement-mode needs: `fly`, `spider_climb`;
+- movement-immunity and restraint-escape composite need:
+  `freedom_of_movement`;
+- option-switching self-transformation need: `alter_self`;
+- save-gated Beast stat-block replacement need: `polymorph`.
+
+No candidate is an exact existing-profile fit. The decision artifact records
+table geometry, special-Speed, movement protection, option-switching
+self-transformation, and stat-block replacement boundaries; this intake task
+does not add Unit claims, catalog admission, QNT behavior, battle reducer
+behavior, or MBT evidence.
 
 ### Task 6 - L1K-ZONE-WALL-CANDIDATES - Zone Wall Emanation Spell Candidate Intake
 
