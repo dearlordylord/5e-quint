@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "L1H-MAGE-ARMOR",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Mage Armor Selected Identity Replay"
     },
     {
@@ -206,7 +206,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-E-L.md` Eldritch Blast.
 
 ### Task 5 - L1H-MAGE-ARMOR - Mage Armor Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `mage_armor`, proving the supported Armor
 Class base/projection behavior and duration cleanup without duplicating armor

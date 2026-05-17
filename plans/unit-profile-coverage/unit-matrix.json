@@ -93,8 +93,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 93,
-      "numerator": 50,
-      "percent": "53.8%"
+      "numerator": 51,
+      "percent": "54.8%"
     },
     "supportedProfileCoverage": {
       "denominator": 117,
@@ -10283,6 +10283,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "QMBT14"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/mage-armor-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1H-MAGE-ARMOR"
         }
       ],
       "executableMechanics": true,

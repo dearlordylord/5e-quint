@@ -1104,7 +1104,7 @@ function supportedPersistentArmorSpellProfile(
         sourceCombatantId: actorId,
         base: operation.effect.formula.base,
         ability: "dex",
-        durationTicks: durationTicks.right,
+        expiresAt: { kind: "duration", durationTicks: durationTicks.right },
         earlyEnds: [{ kind: "targetDonsArmor" }],
       },
     },
