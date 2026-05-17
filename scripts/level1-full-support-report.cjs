@@ -11,6 +11,7 @@ const companionWorktreeExcludedUnitIds = ["find_familiar"];
 const adoptedNoMatrixSrdPressureDecisionUnitIds = new Set([
   "disguise_self",
   "druidcraft",
+  "elementalism",
 ]);
 const strictStatusDefinitions = [
   {
