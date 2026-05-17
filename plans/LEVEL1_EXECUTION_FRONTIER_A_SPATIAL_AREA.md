@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L1XA-FAERIE-FIRE-CLOSURE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Faerie Fire Runtime Boundary Closure"
     },
     {
@@ -103,7 +103,7 @@ Every task runs:
 | Order | Task | Status | Blocks On | Output |
 | ---: | --- | --- | --- | --- |
 | 1 | L1XA-PRECHECK - Spatial Area Frontier Precheck | done | none | decision artifact listing current claims/evidence and confirming A/B/D/K ownership split |
-| 2 | L1XA-FAERIE-FIRE-CLOSURE - Faerie Fire Runtime Boundary Closure | ready-for-research | 1 | `faerie_fire` removed from strict open-profile-accounting or blocked with exact missing runtime mechanic |
+| 2 | L1XA-FAERIE-FIRE-CLOSURE - Faerie Fire Runtime Boundary Closure | done | 1 | `faerie_fire` removed from strict open-profile-accounting or blocked with exact missing runtime mechanic |
 | 3 | L1XA-FOG-CLOUD-CLOSURE - Fog Cloud Runtime Boundary Closure | ready-for-research | 1 | `fog_cloud` removed from strict open-profile-accounting or blocked with exact missing runtime mechanic |
 | 4 | L1XA-GREASE-CLOSURE - Grease Runtime Boundary Closure | ready-for-research | 1 | `grease` removed from strict open-profile-accounting or blocked with exact missing runtime mechanic |
 | 5 | L1XA-THUNDERWAVE-CLOSURE - Thunderwave Runtime Boundary Closure | ready-for-research | 1 | `thunderwave` removed from strict open-profile-accounting or blocked with exact missing runtime mechanic |
@@ -134,7 +134,7 @@ Verification: `pnpm unit-profile-coverage:check`, `git diff --check`.
 
 ### Task 2 - L1XA-FAERIE-FIRE-CLOSURE - Faerie Fire Runtime Boundary Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Inputs:
 
@@ -236,4 +236,3 @@ Outputs:
   strict open-profile-accounting rows;
 - if any row remains open, append a small follow-up task proposal with exact
   missing inputs/outputs instead of broadening this lane.
-

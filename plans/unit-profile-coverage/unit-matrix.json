@@ -62,8 +62,8 @@
       "value": 145
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 94,
-      "numerator": 94,
+      "denominator": 95,
+      "numerator": 95,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 94,
-      "numerator": 85,
-      "percent": "90.4%"
+      "denominator": 95,
+      "numerator": 86,
+      "percent": "90.5%"
     },
     "supportedProfileCoverage": {
       "denominator": 118,
-      "numerator": 94,
-      "percent": "79.7%"
+      "numerator": 95,
+      "percent": "80.5%"
     }
   },
   "metricSemantics": [
@@ -2855,7 +2855,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime admission and reducer tests for Faerie Fire point-origin Cube targeting, Dexterity save outcomes, concentration cleanup, and one concentration-owned outline effect that grants sight-gated attack-roll Advantage and denies Invisible benefits for failed-save creatures. Dim Light remains deferred.",
+      "note": "Focused battle-runtime admission and reducer tests for Faerie Fire point-origin Cube targeting, Dexterity save outcomes, concentration cleanup, and one concentration-owned outline effect that grants sight-gated attack-roll Advantage and denies Invisible benefits for failed-save creatures.",
       "profileIds": [
         "spell.invocation-attack-roll-advantage-save"
       ],
@@ -8576,17 +8576,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "table/spatial and presentation owners",
-              "reason": "Color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the runtime boundary."
-            },
-            "followUpTaskId": "SRDINV89D",
-            "mechanic": "color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the runtime boundary"
-          }
-        ],
         "profileIds": [
           "spell.invocation-attack-roll-advantage-save"
         ],
@@ -8603,7 +8592,7 @@
           "caller-supplied emitter projection facts derive Dim Light illumination from Faerie Fire object and creature emitters",
           "derived Dim Light illumination projects Lightly Obscured sight consequences and Darkvision-adjusted sight consequences without duplicating emitter state"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [

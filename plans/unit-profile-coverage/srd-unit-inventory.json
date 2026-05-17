@@ -5316,14 +5316,8 @@
         "state": "installed",
         "unitId": "faerie_fire"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "table/spatial and presentation owners",
-        "reason": "Color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the runtime boundary."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -8700,14 +8694,8 @@
         "state": "installed",
         "unitId": "faerie_fire"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "table/spatial and presentation owners",
-        "reason": "Color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the runtime boundary."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",

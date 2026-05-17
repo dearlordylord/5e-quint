@@ -508,47 +508,6 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "Color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the runtime boundary.",
-      "sourceRecordPath": "packages/surface/content/faerie_fire.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Bard spell list Faerie Fire",
-          "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_faerie_fire",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 172,
-            "lineStart": 172,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Druid spell list Faerie Fire",
-          "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_faerie_fire",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 211,
-            "lineStart": 211,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "faerie_fire"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "table-spatial-derivation"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
       "reason": "Fall-distance derivation, map elevation, and landing geometry simulation remain table/spatial derivations.",
       "sourceRecordPath": "packages/surface/content/feather_fall.json",
       "sourceRows": [
@@ -1283,7 +1242,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 68,
+      "count": 69,
       "description": "Full support exists at the Unit profile boundary for strict level-1 accounting.",
       "status": "supported-profile",
       "unitIds": [
@@ -1309,6 +1268,7 @@
         "ensnaring_strike",
         "entangle",
         "expeditious_retreat",
+        "faerie_fire",
         "false_life",
         "fighter_fighting_style",
         "fighter_second_wind",
@@ -1375,11 +1335,10 @@
       ]
     },
     {
-      "count": 9,
+      "count": 8,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
-        "faerie_fire",
         "feather_fall",
         "fog_cloud",
         "grease",
@@ -1423,22 +1382,21 @@
     },
     "strictRuntimeProfileSupport": {
       "denominator": 93,
-      "numerator": 68,
-      "percent": "73.1%"
+      "numerator": 69,
+      "percent": "74.2%"
     },
     "strictTargetClosure": {
       "denominator": 93,
-      "numerator": 84,
-      "percent": "90.3%"
+      "numerator": 85,
+      "percent": "91.4%"
     }
   },
   "openFrontier": [
     {
-      "count": 9,
+      "count": 8,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
-        "faerie_fire",
         "feather_fall",
         "fog_cloud",
         "grease",
@@ -3726,18 +3684,18 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 120,
     "groupsByClaimTag": {
-      "profile-subset-supported": 14,
-      "supported-profile": 68,
+      "profile-subset-supported": 13,
+      "supported-profile": 69,
       "unsupported-profile": 11
     },
     "groupsByStatus": {
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 4,
       "closed-runtime-detached-table-adjudication": 10,
-      "open-profile-accounting": 9,
-      "supported-profile": 68
+      "open-profile-accounting": 8,
+      "supported-profile": 69
     },
-    "nonSupportedFrontier": 25,
+    "nonSupportedFrontier": 24,
     "strictDenominator": 93
   }
 }
