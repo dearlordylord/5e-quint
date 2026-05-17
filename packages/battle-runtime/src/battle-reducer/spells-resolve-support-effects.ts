@@ -37,6 +37,7 @@ import {
   spellRequiresConcentration,
   spendSpellCastResources,
 } from "./spells-resolve-resources.ts";
+import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
 
 import {
   conditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection,
@@ -91,17 +92,21 @@ export function resolvePreparedHealingSpellAct(input: {
 
   const spellCastReactionWindow = maybeOpenReactionWindow(
     input.input.state,
-    {
-      trigger: "spellCast",
+    spellCastReactionFrame({
       casterId: input.actorId,
-      spellId: input.invocation.spell.id,
+      invocation: input.invocation,
       targetIds: targetSelection.targetIds,
+      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+      castingResource:
+        input.input.subject.tag === "bonusActionSpell"
+          ? { kind: "bonusAction" }
+          : { kind: "magicAction" },
       continuation: {
         kind: "replay",
         subject: input.input.subject,
         fills: input.input.fills,
       },
-    },
+    }),
     input.input.suppressedReactionTrigger,
   );
   if (spellCastReactionWindow !== null) {
@@ -200,17 +205,18 @@ export function resolveMakeStableSpellAct(input: {
 
   const spellCastReactionWindow = maybeOpenReactionWindow(
     input.input.state,
-    {
-      trigger: "spellCast",
+    spellCastReactionFrame({
       casterId: input.actorId,
-      spellId: input.invocation.spell.id,
+      invocation: input.invocation,
       targetIds: [input.fillSet.targetId],
+      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+      castingResource: { kind: "magicAction" },
       continuation: {
         kind: "replay",
         subject: input.input.subject,
         fills: input.input.fills,
       },
-    },
+    }),
     input.input.suppressedReactionTrigger,
   );
   if (spellCastReactionWindow !== null) {
@@ -292,17 +298,21 @@ export function resolveScalarBuffSpellAct(input: {
 
   const spellCastReactionWindow = maybeOpenReactionWindow(
     input.input.state,
-    {
-      trigger: "spellCast",
+    spellCastReactionFrame({
       casterId: input.actorId,
-      spellId: input.invocation.spell.id,
+      invocation: input.invocation,
       targetIds: targetSelection.targetIds,
+      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+      castingResource:
+        input.input.subject.tag === "bonusActionSpell"
+          ? { kind: "bonusAction" }
+          : { kind: "magicAction" },
       continuation: {
         kind: "replay",
         subject: input.input.subject,
         fills: input.input.fills,
       },
-    },
+    }),
     input.input.suppressedReactionTrigger,
   );
   if (spellCastReactionWindow !== null) {
@@ -410,17 +420,18 @@ export function resolveRollModifierSpellAct(input: {
 
   const spellCastReactionWindow = maybeOpenReactionWindow(
     input.input.state,
-    {
-      trigger: "spellCast",
+    spellCastReactionFrame({
       casterId: input.actorId,
-      spellId: input.invocation.spell.id,
+      invocation: input.invocation,
       targetIds: targetSelection.targetIds,
+      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+      castingResource: { kind: "magicAction" },
       continuation: {
         kind: "replay",
         subject: input.input.subject,
         fills: input.input.fills,
       },
-    },
+    }),
     input.input.suppressedReactionTrigger,
   );
   if (spellCastReactionWindow !== null) {
@@ -509,17 +520,18 @@ export function resolveCreatureTypeProtectionSpellAct(input: {
 
   const spellCastReactionWindow = maybeOpenReactionWindow(
     input.input.state,
-    {
-      trigger: "spellCast",
+    spellCastReactionFrame({
       casterId: input.actorId,
-      spellId: input.invocation.spell.id,
+      invocation: input.invocation,
       targetIds: targetSelection.targetIds,
+      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+      castingResource: { kind: "magicAction" },
       continuation: {
         kind: "replay",
         subject: input.input.subject,
         fills: input.input.fills,
       },
-    },
+    }),
     input.input.suppressedReactionTrigger,
   );
   if (spellCastReactionWindow !== null) {
@@ -622,17 +634,18 @@ export function resolveDamageReductionSpellAct(input: {
 
   const spellCastReactionWindow = maybeOpenReactionWindow(
     input.input.state,
-    {
-      trigger: "spellCast",
+    spellCastReactionFrame({
       casterId: input.actorId,
-      spellId: input.invocation.spell.id,
+      invocation: input.invocation,
       targetIds: [input.fillSet.targetId],
+      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+      castingResource: { kind: "magicAction" },
       continuation: {
         kind: "replay",
         subject: input.input.subject,
         fills: input.input.fills,
       },
-    },
+    }),
     input.input.suppressedReactionTrigger,
   );
   if (spellCastReactionWindow !== null) {
@@ -711,17 +724,18 @@ export function resolveJumpMovementReplacementSpellAct(input: {
 
   const spellCastReactionWindow = maybeOpenReactionWindow(
     input.input.state,
-    {
-      trigger: "spellCast",
+    spellCastReactionFrame({
       casterId: input.actorId,
-      spellId: input.invocation.spell.id,
+      invocation: input.invocation,
       targetIds: input.fillSet.targetList.targetIds,
+      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+      castingResource: { kind: "bonusAction" },
       continuation: {
         kind: "replay",
         subject: input.input.subject,
         fills: input.input.fills,
       },
-    },
+    }),
     input.input.suppressedReactionTrigger,
   );
   if (spellCastReactionWindow !== null) {
@@ -783,17 +797,18 @@ export function resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct(i
 
   const spellCastReactionWindow = maybeOpenReactionWindow(
     input.input.state,
-    {
-      trigger: "spellCast",
+    spellCastReactionFrame({
       casterId: input.actorId,
-      spellId: input.invocation.spell.id,
+      invocation: input.invocation,
       targetIds: targetSelection.targetIds,
+      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+      castingResource: { kind: "magicAction" },
       continuation: {
         kind: "replay",
         subject: input.input.subject,
         fills: input.input.fills,
       },
-    },
+    }),
     input.input.suppressedReactionTrigger,
   );
   if (spellCastReactionWindow !== null) {

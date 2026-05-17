@@ -18,6 +18,7 @@ import {
   isTargetListSpellInvocation,
   reactionTriggerLabel,
   type BattleActiveEffect,
+  type BattleHole,
   type AvailableBattleAct,
   type BattleCreatureState,
   type BattleState,
@@ -45,11 +46,20 @@ import {
   spellTargetAllocationHole,
   spellTargetHole,
   spellTargetListHole,
+  supportedSpellInvocationMatchesRef,
   supportedSpellInvocationRef,
 } from "./spells-holes-fills.ts";
 import { spellDancingLightsPlacementHole } from "./spells-targeting.ts";
 import { dancingLightsFromEffect } from "./spells-active-effects.ts";
 import { attackTargetHole } from "./hole-helpers.ts";
+import {
+  spellCastReactionFactsHole,
+} from "./spell-cast-reaction-frame.ts";
+import {
+  counterspellCapableReactors,
+  spellCastCanTriggerCounterspell,
+  type CounterspellCapableReactor,
+} from "./counterspell-reaction-discovery.ts";
 
 export function discoverSupportedSpellInvocations(
   state: BattleState,
@@ -60,7 +70,9 @@ export function discoverSupportedSpellInvocations(
     return [];
   }
   const spellcastingPrevented = activeOngoingFeaturesPreventSpellcasting(actor);
-  return supportedSpellActs(actor, state).flatMap(
+  const invocations = supportedSpellActs(actor, state);
+  const counterspellReactors = counterspellCapableReactors(state);
+  const acts = invocations.flatMap(
     (invocation): readonly AvailableBattleAct[] => {
       if (invocation.procedure === "shieldReaction") {
         return [];
@@ -78,7 +90,11 @@ export function discoverSupportedSpellInvocations(
         return [];
       }
       if (
-        !spellActTurnResourceAvailable(state.currentTurnResources, invocation)
+        !spellActTurnResourceAvailable(
+          state.currentTurnResources,
+          actorId,
+          invocation,
+        )
       ) {
         return [];
       }
@@ -630,6 +646,55 @@ export function discoverSupportedSpellInvocations(
       return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
     },
   );
+  return acts.map((act) =>
+    spellCastReactionFactsAct(actorId, invocations, counterspellReactors, act),
+  );
+}
+
+function spellCastReactionFactsAct(
+  actorId: CombatantId,
+  invocations: readonly SupportedSpellInvocation[],
+  counterspellReactors: readonly CounterspellCapableReactor[],
+  act: AvailableBattleAct,
+): AvailableBattleAct {
+  const subject = act.subject;
+  if (
+    (subject.tag !== "actionSpell" &&
+      subject.tag !== "bonusActionSpell" &&
+      subject.tag !== "bonusActionDashSpell") ||
+    (subject.mode.tag !== "cast" && subject.mode.tag !== "ready")
+  ) {
+    return act;
+  }
+  const invocation = invocations.find((candidate) =>
+    supportedSpellInvocationMatchesRef(candidate, subject.invocation),
+  );
+  return invocation === undefined
+    ? act
+    : {
+        ...act,
+        initialHoles: spellCastInitialHoles(
+          actorId,
+          invocation,
+          counterspellReactors,
+          act.initialHoles,
+        ),
+      };
+}
+
+function spellCastInitialHoles(
+  actorId: CombatantId,
+  invocation: SupportedSpellInvocation,
+  counterspellReactors: readonly CounterspellCapableReactor[],
+  holes: readonly BattleHole[],
+): readonly BattleHole[] {
+  return spellCastCanTriggerCounterspell({
+    casterId: actorId,
+    invocation,
+    reactors: counterspellReactors,
+  })
+    ? [...holes, spellCastReactionFactsHole({ casterId: actorId, invocation })]
+    : holes;
 }
 
 export function spellInvocationCastSummary(
@@ -725,6 +790,9 @@ export function spellInvocationCastSummary(
       : `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
   if (invocation.procedure === "shieldReaction") {
+    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+  }
+  if (invocation.procedure === "counterspell") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
   if (invocation.procedure === "spellAttackDamage") {

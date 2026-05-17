@@ -22,6 +22,7 @@ import {
   type BattleFill,
   type BattleResolutionResult,
   type BattleState,
+  type BattleSpellCastReactionFact,
   type BattleTargetSpatialFact,
   type SupportedSpellInvocation,
   snapshotBattle,
@@ -55,6 +56,7 @@ import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import { sanctuaryTargetingInterdictionCheck } from "./sanctuary-targeting-interdiction.ts";
+import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
 import {
   chainedSpellAttackRollHole,
   chainedSpellAttackRollHoleId,
@@ -75,6 +77,10 @@ import {
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
+import {
+  parseSpellCastReactionFactsFill,
+  type SpellCastReactionFact,
+} from "./spells-resolve-fill-set.ts";
 export type ChainedSpellStepFills = {
   readonly target:
     | Extract<BattleFill, { readonly kind: "targetChoice" }>
@@ -106,6 +112,7 @@ export type ChainedSpellFillSet =
         BattleFill,
         { readonly kind: "attackDamageDisposition" }
       >[];
+      readonly reactionSpellTargetFacts: readonly BattleSpellCastReactionFact[];
     }
   | { readonly tag: "invalid"; readonly message: string };
 
@@ -303,17 +310,18 @@ export function resolveChainedSpellAttackDamageAct(input: {
     if (stepIndex === 0 && input.opensSpellCastReactionWindow !== false) {
       const spellCastReactionWindow = maybeOpenReactionWindow(
         replayState,
-        {
-          trigger: "spellCast",
+        spellCastReactionFrame({
           casterId: input.actorId,
-          spellId: input.invocation.spell.id,
+          invocation: input.invocation,
           targetIds: [target.combatantId],
+          reactionSpellTargetFacts: fillSet.reactionSpellTargetFacts,
+          castingResource: { kind: "magicAction" },
           continuation: {
             kind: "replay",
             subject: input.input.subject,
             fills: input.input.fills,
           },
-        },
+        }),
         input.input.suppressedReactionTrigger,
       );
       if (spellCastReactionWindow !== null) {
@@ -692,8 +700,28 @@ export function chainedSpellFillSet(
     BattleFill,
     { readonly kind: "attackDamageDisposition" }
   >[] = [];
+  let reactionSpellTargetFacts: readonly SpellCastReactionFact[] = [];
+  let reactionSpellTargetFactsFilled = false;
 
   for (const fill of fills) {
+    const spellCastReactionFacts = parseSpellCastReactionFactsFill(fill);
+    if (spellCastReactionFacts.tag !== "notSpellCastReactionFactsFill") {
+      if (reactionSpellTargetFactsFilled) {
+        return {
+          tag: "invalid",
+          message: "Spell-cast Reaction trigger facts were filled twice.",
+        };
+      }
+      if (spellCastReactionFacts.tag === "invalid") {
+        return {
+          tag: "invalid",
+          message: spellCastReactionFacts.message,
+        };
+      }
+      reactionSpellTargetFacts = spellCastReactionFacts.facts;
+      reactionSpellTargetFactsFilled = true;
+      continue;
+    }
     if (fill.kind === "damageTypeChoice") {
       if (fill.holeId !== spellDamageTypeChoiceHole(invocation).holeId) {
         return {
@@ -816,6 +844,7 @@ export function chainedSpellFillSet(
     concentrationSavingThrows,
     hideousLaughterDamageRepeatSaves,
     damageDispositions,
+    reactionSpellTargetFacts,
   };
 }
 

@@ -132,7 +132,7 @@ describe("Chromatic Orb chained spell attack", () => {
     ).not.toContainEqual(
       expect.objectContaining({ kind: "action", source: "turn" }),
     );
-    expect(result.state.currentTurnResources.spellSlotExpendedThisTurn).toBe(
+    expect(result.state.currentTurnResources.spellSlotUsesThisTurn.some((use) => use.kind === "committed")).toBe(
       true,
     );
     const caster = result.state.combatants.get(spellCasterId);
@@ -178,7 +178,7 @@ describe("Chromatic Orb chained spell attack", () => {
 
     expect(resolved.state.combatants.get(firstTargetId)?.hp).toBe(3);
     expect(resolved.state.combatants.get(secondTargetId)?.hp).toBe(9);
-    expect(resolved.state.currentTurnResources.spellSlotExpendedThisTurn).toBe(
+    expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn.some((use) => use.kind === "committed")).toBe(
       true,
     );
   });

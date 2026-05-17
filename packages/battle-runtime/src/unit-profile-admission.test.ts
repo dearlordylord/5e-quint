@@ -36,7 +36,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84F hideous_laughter
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV39 eldritch_blast
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV40 grease
-// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT22 shield
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT22 shield counterspell
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT25 healing_word
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT32 cure_wounds mass_healing_word
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT34 mass_cure_wounds
@@ -249,6 +249,7 @@ const blessUnitId = "bless";
 const burningHandsUnitId = "burning_hands";
 const chromaticOrbUnitId = "chromatic_orb";
 const colorSprayUnitId = "color_spray";
+const counterspellUnitId = "counterspell";
 const entangleUnitId = "entangle";
 const eldritchBlastUnitId = "eldritch_blast";
 const ensnaringStrikeUnitId = "ensnaring_strike";
@@ -7258,6 +7259,41 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
       }),
     ).toBeUndefined();
   });
+
+  test("counterspell is admitted through catalog Spell Access and projected as a triggered Reaction spell", () => {
+    const spell = spellRecord(counterspellUnitId);
+
+    expect(spell.mechanics.family).toBe("triggered_reaction");
+    if (spell.mechanics.family !== "triggered_reaction") {
+      throw new Error("Expected Counterspell to be a triggered Reaction spell.");
+    }
+    const mechanics = spell.mechanics;
+    expect(mechanics.castingTime).toMatchObject({
+      kind: "reaction",
+      trigger: { kind: "creature_casts_spell", components: ["V", "S", "M"] },
+    });
+    expect(mechanics.level).toBe(3);
+    expect(mechanics.components).toEqual({ v: false, s: true, m: false });
+    expect(mechanics.interruptsTrigger).toBe(true);
+    expect(mechanics.phases).toEqual([
+      expect.objectContaining({
+        kind: "save_gate",
+        ability: "con",
+        onFail: { kind: "negate_triggering_spell" },
+        onSuccess: { kind: "none" },
+        autoSuccessIfCasterSlotGte: "triggering_spell_level",
+      }),
+    ]);
+    expect(
+      maybeSpellAct({
+        state: spellBattle({
+          preparedSpells: [spell],
+          spellSlots: [{ spellLevel: 3, count: 1 }],
+        }),
+        spellId: counterspellUnitId,
+      }),
+    ).toBeUndefined();
+  });
 });
 
 describe("SRDINV39 deterministic Eldritch Blast Spell Unit admission", () => {
@@ -9163,7 +9199,7 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
     expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
       false,
     );
-    expect(resolved.state.currentTurnResources.spellSlotExpendedThisTurn).toBe(
+    expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn.some((use) => use.kind === "committed")).toBe(
       false,
     );
   });
@@ -9531,7 +9567,7 @@ describe("SRDINV32A deterministic held-light Spell Unit admission", () => {
     expect(canSpendAction(resolved.state.currentTurnResources, "magic")).toBe(
       false,
     );
-    expect(resolved.state.currentTurnResources.spellSlotExpendedThisTurn).toBe(
+    expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn.some((use) => use.kind === "committed")).toBe(
       false,
     );
   });
@@ -10137,7 +10173,7 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
     expect(canSpendAction(resolved.state.currentTurnResources, "magic")).toBe(
       false,
     );
-    expect(resolved.state.currentTurnResources.spellSlotExpendedThisTurn).toBe(
+    expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn.some((use) => use.kind === "committed")).toBe(
       false,
     );
     expect(resolved.state.combatants.get(spellCasterId)?.activeEffects).toEqual(
@@ -10444,7 +10480,12 @@ describe("SRDINV31A deterministic weapon damage rider Spell Unit admission", () 
     expect(cast).toMatchObject({
       tag: "resolved",
       snapshot: {
-        turn: { bonusActionAvailable: false, spellSlotExpendedThisTurn: true },
+        turn: {
+          bonusActionAvailable: false,
+          spellSlotUsesThisTurn: [
+            { kind: "committed", combatantId: spellCasterId },
+          ],
+        },
       },
     });
     if (cast.tag !== "resolved") {
@@ -11600,7 +11641,12 @@ describe("SRDINV31 deterministic after-hit Spell Unit admission", () => {
       tag: "needsHoles",
       snapshot: {
         pendingReaction: null,
-        turn: { bonusActionAvailable: false, spellSlotExpendedThisTurn: true },
+        turn: {
+          bonusActionAvailable: false,
+          spellSlotUsesThisTurn: [
+            { kind: "committed", combatantId: spellCasterId },
+          ],
+        },
       },
     });
     if (afterSmite.tag !== "needsHoles") {
@@ -11765,7 +11811,12 @@ describe("SRDINV31 deterministic after-hit Spell Unit admission", () => {
         ...awaitingAttackHit.state,
         currentTurnResources: {
           ...awaitingAttackHit.state.currentTurnResources,
-          spellSlotExpendedThisTurn: true,
+          spellSlotUsesThisTurn: [
+            {
+              kind: "committed",
+              combatantId: spellCasterId,
+            },
+          ],
         },
       },
       fill: reactionDecisionFill(
@@ -11834,7 +11885,12 @@ describe("SRDINV31 deterministic after-hit Spell Unit admission", () => {
             }),
           ],
         },
-        turn: { bonusActionAvailable: false, spellSlotExpendedThisTurn: true },
+        turn: {
+          bonusActionAvailable: false,
+          spellSlotUsesThisTurn: [
+            { kind: "committed", combatantId: spellCasterId },
+          ],
+        },
       },
     });
     if (afterSmite.tag !== "needsHoles") {
@@ -15859,7 +15915,9 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
       snapshot: {
         turn: {
           bonusActionAvailable: false,
-          spellSlotExpendedThisTurn: true,
+          spellSlotUsesThisTurn: [
+            { kind: "committed", combatantId: spellCasterId },
+          ],
           dashMovementBonusFeet: 30,
         },
         combatants: expect.arrayContaining([
@@ -16049,7 +16107,9 @@ describe("SRDINV53 deterministic Jump movement replacement admission", () => {
       snapshot: {
         turn: {
           bonusActionAvailable: false,
-          spellSlotExpendedThisTurn: true,
+          spellSlotUsesThisTurn: [
+            { kind: "committed", combatantId: spellCasterId },
+          ],
         },
       },
     });

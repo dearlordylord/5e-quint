@@ -222,11 +222,10 @@ frame's `targetIds`. That works for target-triggered reactions such as Shield's
 Magic Missile case, but it is the wrong domain boundary for Counterspell.
 Counterspell reactors are observers of the caster.
 
-The current TypeScript turn-resource check only examines
-`currentTurnResources.spellSlotExpendedThisTurn` for the current actor, and the
-promoted Quint spec currently has a single `spellSlotExpendedThisTurn` boolean.
-Strict Counterspell needs the current turn's slot-use fact to cover off-turn
-reactors too. This should be modeled in Quint first.
+The runtime and promoted Quint spec should use a current-turn slot-use ledger
+keyed by creature, with pending and committed states. Strict Counterspell needs
+that fact to cover off-turn reactors as well as the current turn actor; a
+single turn-wide boolean cannot express the domain rule.
 
 The existing Surface Counterspell content is already useful for provenance,
 trigger Components, range, save ability, and failure outcome, but the

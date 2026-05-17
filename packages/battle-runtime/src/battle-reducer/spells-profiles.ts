@@ -25,12 +25,13 @@ import {
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either, Match } from "effect";
 import {
-  type BattleCreatureState,
-  type BattleState,
-  type BattleTurnResources,
-  type PersistentArmorSpellInvocation,
-  type SupportedSpellInvocation,
-} from "../battle-reducer.ts";
+	  type BattleCreatureState,
+	  type BattleState,
+	  type BattleTurnResources,
+	  type BattleTurnSpellSlotUse,
+	  type PersistentArmorSpellInvocation,
+	  type SupportedSpellInvocation,
+	} from "../battle-reducer.ts";
 import type {
   CharacterBattleInvocationSpellAccessState,
   CharacterBattleSpellcastingState,
@@ -305,15 +306,21 @@ export function supportedSpellActs(
         spellcasting.spellcastingAbilityModifier,
       ),
     ),
-    ...preparedSpells.flatMap((spell) =>
-      supportedPreparedShieldReactionSpellProfile(
-        spell,
-        spellcasting.spellSlots,
-      ),
-    ),
-    ...preparedSpells.flatMap((spell) =>
-      supportedPreparedHellishRebukeReactionSpellProfile(
-        spell,
+	    ...preparedSpells.flatMap((spell) =>
+	      supportedPreparedShieldReactionSpellProfile(
+	        spell,
+	        spellcasting.spellSlots,
+	      ),
+	    ),
+	    ...preparedSpells.flatMap((spell) =>
+	      supportedPreparedCounterspellReactionSpellProfile(
+	        spell,
+	        spellcasting.spellSlots,
+	      ),
+	    ),
+	    ...preparedSpells.flatMap((spell) =>
+	      supportedPreparedHellishRebukeReactionSpellProfile(
+	        spell,
         spellcasting.spellSlots,
       ),
     ),
@@ -971,6 +978,68 @@ export function supportedPreparedHellishRebukeReactionSpellProfile(
   });
 }
 
+export function supportedPreparedCounterspellReactionSpellProfile(
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  if (
+    spell.name !== "Counterspell" ||
+    spell.provenance.kind !== "srd-5.2.1" ||
+    spell.provenance.section !== "Spells/Descriptions-A-D#Counterspell" ||
+    spell.mechanics.family !== "triggered_reaction" ||
+    spell.mechanics.level !== 3 ||
+    spell.mechanics.castingTime.kind !== "reaction" ||
+    spell.mechanics.castingTime.trigger.kind !== "creature_casts_spell" ||
+    !sameStringSet(spell.mechanics.castingTime.trigger.components ?? [], [
+      "V",
+      "S",
+      "M",
+    ]) ||
+    spell.mechanics.range.kind !== "point" ||
+    spell.mechanics.range.feet !== 60 ||
+    !spell.mechanics.components.s ||
+    spell.mechanics.components.v ||
+    spell.mechanics.components.m ||
+    spell.mechanics.duration.kind !== "instantaneous" ||
+    !spell.mechanics.interruptsTrigger ||
+    spell.mechanics.phases.length !== 1
+  ) {
+    return [];
+  }
+  const phase = spell.mechanics.phases[0];
+  if (
+    phase?.kind !== "save_gate" ||
+    hasSaveGateRepeatSaves(phase) ||
+    phase.ability !== "con" ||
+    phase.dc.kind !== "caster_spell_save_dc" ||
+    phase.attachment.kind !== "hole" ||
+    phase.attachment.value.kind !== "target" ||
+    phase.attachment.value.selection.mode !== "one" ||
+    phase.onFail.kind !== "negate_triggering_spell" ||
+    phase.onSuccess.kind !== "none" ||
+    phase.autoSuccessIfCasterSlotGte !== "triggering_spell_level"
+  ) {
+    return [];
+  }
+
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] =>
+    Number(slot.spellLevel) < spell.mechanics.level
+      ? []
+      : [
+          {
+            access: { tag: "prepared" },
+            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+            procedure: "counterspell",
+            spell,
+            ability: "con" as const,
+            dc: phase.dc,
+            targeting: { kind: "singleCombatant" as const },
+            rangeFeet: movementFeet(60),
+          },
+        ],
+  );
+}
+
 export function reactionTriggerIncludesHitByAttackRoll(
   castingTime: Extract<
     SpellRecord["mechanics"]["castingTime"],
@@ -1139,11 +1208,12 @@ export function spellHasAvailableSpend(
 
 export function spellActTurnResourceAvailable(
   resources: BattleTurnResources,
+  actorId: CombatantId,
   invocation: SupportedSpellInvocation,
 ): boolean {
   if (
     invocation.resource.tag === "spellSlot" &&
-    resources.spellSlotExpendedThisTurn
+    combatantHasSpellSlotUseThisTurn(resources, actorId)
   ) {
     return false;
   }
@@ -1158,8 +1228,71 @@ export function spellActTurnResourceAvailable(
 
 export function markSpellSlotExpendedThisTurn(
   resources: BattleTurnResources,
+  combatantId: CombatantId,
 ): Either.Either<BattleTurnResources, "spell slot already expended this turn"> {
-  return resources.spellSlotExpendedThisTurn
+  if (combatantHasCommittedSpellSlotUseThisTurn(resources, combatantId)) {
+    return Either.left("spell slot already expended this turn" as const);
+  }
+  const pending = resources.spellSlotUsesThisTurn.some(
+    (use) => use.kind === "pending" && use.combatantId === combatantId,
+  );
+  const nextUse: BattleTurnSpellSlotUse = {
+    kind: "committed",
+    combatantId,
+  };
+  return Either.right({
+    ...resources,
+    spellSlotUsesThisTurn: pending
+      ? resources.spellSlotUsesThisTurn.map((use) =>
+          use.kind === "pending" && use.combatantId === combatantId
+            ? nextUse
+            : use,
+        )
+      : [...resources.spellSlotUsesThisTurn, nextUse],
+  });
+}
+
+export function claimPendingSpellSlotUseThisTurn(
+  resources: BattleTurnResources,
+  combatantId: CombatantId,
+): Either.Either<BattleTurnResources, "spell slot already expended this turn"> {
+  return combatantHasSpellSlotUseThisTurn(resources, combatantId)
     ? Either.left("spell slot already expended this turn" as const)
-    : Either.right({ ...resources, spellSlotExpendedThisTurn: true });
+    : Either.right({
+        ...resources,
+        spellSlotUsesThisTurn: [
+          ...resources.spellSlotUsesThisTurn,
+          { kind: "pending", combatantId },
+        ],
+      });
+}
+
+export function releasePendingSpellSlotUseThisTurn(
+  resources: BattleTurnResources,
+  combatantId: CombatantId,
+): BattleTurnResources {
+  return {
+    ...resources,
+    spellSlotUsesThisTurn: resources.spellSlotUsesThisTurn.filter(
+      (use) => !(use.kind === "pending" && use.combatantId === combatantId),
+    ),
+  };
+}
+
+export function combatantHasSpellSlotUseThisTurn(
+  resources: BattleTurnResources,
+  combatantId: CombatantId,
+): boolean {
+  return resources.spellSlotUsesThisTurn.some(
+    (use) => use.combatantId === combatantId,
+  );
+}
+
+export function combatantHasCommittedSpellSlotUseThisTurn(
+  resources: BattleTurnResources,
+  combatantId: CombatantId,
+): boolean {
+  return resources.spellSlotUsesThisTurn.some(
+    (use) => use.kind === "committed" && use.combatantId === combatantId,
+  );
 }

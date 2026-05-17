@@ -52,7 +52,7 @@ import {
   activeMarkedDamageRiders,
 } from "./damage-helpers.ts";
 import { hideousLaughterDamageRepeatSaveFillCheck } from "./hideous-laughter-repeat-save.ts";
-import { needsHolesResult } from "./hole-helpers.ts";
+import { needsHolesResult, revealHidden } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { expendSpellSlot } from "./spell-effects.ts";
 import {
@@ -77,6 +77,7 @@ import {
   validateSpellDamageFill,
 } from "./spells-holes-fills.ts";
 import { markSpellSlotExpendedThisTurn } from "./spells-profiles.ts";
+import { spellRequiresVerbal } from "./spells-discovery.ts";
 import {
   clearPendingAttackRollMissToHitReplacementSelection,
   recordAttackRollMissToHitReplacementUsed,
@@ -87,13 +88,18 @@ import {
   startSpellEffectConcentration,
 } from "./spells-resolve-resources.ts";
 import { resolveChainedSpellAttackDamageAct } from "./spells-resolve-chained.ts";
+import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
 
 type SpellCastResourceSpendResult =
   | { readonly tag: "resolved"; readonly state: BattleState }
   | Extract<BattleResolutionResult, { readonly tag: "invalid" }>;
 import { resolvePreparedSlotSpellRelease } from "./spells-resolve-prepared-slot.ts";
 import { resolveSaveGateDamageSpellRelease } from "./spells-resolve-save-gates.ts";
-import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
+import {
+  spellFillSet,
+  spellFillSetContainsOnlySpellCastReactionFacts,
+  type SpellFillSet,
+} from "./spells-resolve-fill-set.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import { spellDancingLightsPlacementHole } from "./spells-targeting.ts";
 
@@ -129,17 +135,18 @@ export function resolveHeldLightSpellAct(input: {
 
   const spellCastReactionWindow = maybeOpenReactionWindow(
     input.input.state,
-    {
-      trigger: "spellCast",
+    spellCastReactionFrame({
       casterId: input.actorId,
-      spellId: input.invocation.spell.id,
+      invocation: input.invocation,
       targetIds: [input.actorId],
+      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+      castingResource: { kind: "bonusAction" },
       continuation: {
         kind: "replay",
         subject: input.input.subject,
         fills: input.input.fills,
       },
-    },
+    }),
     input.input.suppressedReactionTrigger,
   );
   if (spellCastReactionWindow !== null) {
@@ -212,17 +219,18 @@ export function resolveDancingLightsCastSpellAct(input: {
   }
   const spellCastReactionWindow = maybeOpenReactionWindow(
     input.input.state,
-    {
-      trigger: "spellCast",
+    spellCastReactionFrame({
       casterId: input.actorId,
-      spellId: input.invocation.spell.id,
+      invocation: input.invocation,
       targetIds: [],
+      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+      castingResource: { kind: "magicAction" },
       continuation: {
         kind: "replay",
         subject: input.input.subject,
         fills: input.input.fills,
       },
-    },
+    }),
     input.input.suppressedReactionTrigger,
   );
   if (spellCastReactionWindow !== null) {
@@ -552,17 +560,18 @@ export function resolveWeaponAttackOverrideSpellAct(input: {
 
   const spellCastReactionWindow = maybeOpenReactionWindow(
     input.input.state,
-    {
-      trigger: "spellCast",
+    spellCastReactionFrame({
       casterId: input.actorId,
-      spellId: input.invocation.spell.id,
+      invocation: input.invocation,
       targetIds: [input.actorId],
+      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+      castingResource: { kind: "bonusAction" },
       continuation: {
         kind: "replay",
         subject: input.input.subject,
         fills: input.input.fills,
       },
-    },
+    }),
     input.input.suppressedReactionTrigger,
   );
   if (spellCastReactionWindow !== null) {
@@ -645,17 +654,18 @@ export function resolveObjectLightSpellAct(input: {
 
   const spellCastReactionWindow = maybeOpenReactionWindow(
     input.input.state,
-    {
-      trigger: "spellCast",
+    spellCastReactionFrame({
       casterId: input.actorId,
-      spellId: input.invocation.spell.id,
+      invocation: input.invocation,
       targetIds: [],
+      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+      castingResource: { kind: "magicAction" },
       continuation: {
         kind: "replay",
         subject: input.input.subject,
         fills: input.input.fills,
       },
-    },
+    }),
     input.input.suppressedReactionTrigger,
   );
   if (spellCastReactionWindow !== null) {
@@ -713,17 +723,18 @@ export function resolveWeaponDamageRiderSpellAct(input: {
 
   const spellCastReactionWindow = maybeOpenReactionWindow(
     input.input.state,
-    {
-      trigger: "spellCast",
+    spellCastReactionFrame({
       casterId: input.actorId,
-      spellId: input.invocation.spell.id,
+      invocation: input.invocation,
       targetIds: [input.actorId],
+      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+      castingResource: { kind: "bonusAction" },
       continuation: {
         kind: "replay",
         subject: input.input.subject,
         fills: input.input.fills,
       },
-    },
+    }),
     input.input.suppressedReactionTrigger,
   );
   if (spellCastReactionWindow !== null) {
@@ -852,17 +863,18 @@ export function resolveMarkedDamageRiderSpellAct(input: {
   if (input.invocation.action === "cast") {
     const spellCastReactionWindow = maybeOpenReactionWindow(
       input.input.state,
-      {
-        trigger: "spellCast",
+      spellCastReactionFrame({
         casterId: input.actorId,
-        spellId: input.invocation.spell.id,
+        invocation: input.invocation,
         targetIds: [input.fillSet.targetId],
+        reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+        castingResource: { kind: "bonusAction" },
         continuation: {
           kind: "replay",
           subject: input.input.subject,
           fills: input.input.fills,
         },
-      },
+      }),
       input.input.suppressedReactionTrigger,
     );
     if (spellCastReactionWindow !== null) {
@@ -968,6 +980,7 @@ function spendMarkedDamageRiderSpellSlot(
 ): SpellCastResourceSpendResult {
   const slotTurnResources = markSpellSlotExpendedThisTurn(
     state.currentTurnResources,
+    actorId,
   );
   if (Either.isLeft(slotTurnResources)) {
     return invalidResult(
@@ -1054,11 +1067,15 @@ export function resolveReadySpellAct(
   input: ActionSpellBattleResolutionInput,
   invocation: ReadiedSpellInvocation,
 ): BattleResolutionResult {
-  if (input.fills.length > 0) {
+  const fillSet = spellFillSet(input.fills, invocation);
+  if (fillSet.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", fillSet.message);
+  }
+  if (!spellFillSetContainsOnlySpellCastReactionFacts(fillSet, {})) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Ready Spell does not accept release-time fills.",
+      "Ready Spell accepts only spell-cast Reaction trigger facts.",
     );
   }
   if (input.state.readiedSpells.has(input.subject.actorId)) {
@@ -1076,8 +1093,31 @@ export function resolveReadySpellAct(
     );
   }
 
+  const castingState = spellRequiresVerbal(invocation.spell)
+    ? revealHidden(input.state, input.subject.actorId)
+    : input.state;
+  const spellCastReactionWindow = maybeOpenReactionWindow(
+    castingState,
+    spellCastReactionFrame({
+      casterId: input.subject.actorId,
+      invocation,
+      targetIds: [],
+      reactionSpellTargetFacts: fillSet.reactionSpellTargetFacts,
+      castingResource: { kind: "magicAction" },
+      continuation: {
+        kind: "replay",
+        subject: input.subject,
+        fills: input.fills,
+      },
+    }),
+    input.suppressedReactionTrigger,
+  );
+  if (spellCastReactionWindow !== null) {
+    return spellCastReactionWindow;
+  }
+
   const afterPriorConcentration = breakBattleConcentration(
-    input.state,
+    castingState,
     input.subject.actorId,
   );
   const refreshedActor = afterPriorConcentration.combatants.get(
@@ -1133,7 +1173,7 @@ export function resolveReadySpellAct(
       : withConcentration;
   const nextTurnResources =
     invocation.resource.tag === "spellSlot"
-      ? markSpellSlotExpendedThisTurn(spent.right)
+      ? markSpellSlotExpendedThisTurn(spent.right, input.subject.actorId)
       : Either.right(spent.right);
   if (Either.isLeft(nextTurnResources)) {
     return invalidResult(

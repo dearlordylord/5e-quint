@@ -383,7 +383,7 @@ describe("manual MCP battle surface coverage", () => {
 
     expect(afterTarget.result).toMatchObject({
       tag: "resolved",
-      snapshot: { turn: { spellSlotExpendedThisTurn: false } },
+      snapshot: { turn: { spellSlotUsesThisTurn: [] } },
     });
     expect(afterTarget.result.snapshot.combatants).toEqual(
       expect.arrayContaining([
@@ -814,7 +814,7 @@ describe("manual MCP battle surface coverage", () => {
 
     expect(afterTarget.result).toMatchObject({
       tag: "resolved",
-      snapshot: { turn: { spellSlotExpendedThisTurn: false } },
+      snapshot: { turn: { spellSlotUsesThisTurn: [] } },
     });
     const ranger = root.sessionStore.battleState?.combatants.get(fighterId);
     expect(ranger?.concentration).toEqual({
@@ -1065,6 +1065,11 @@ function spellcasting(
     readonly cantrips?: readonly string[];
     readonly preparedSpells?: readonly string[];
     readonly featurePreparedSpells?: readonly { readonly sourceUnitId: string; readonly spellId: string }[];
+    readonly spellbookRitualSpellAccesses?: readonly {
+      readonly tag: "spellbookRitual";
+      readonly spellId: string;
+      readonly featureUnitId: string;
+    }[];
     readonly bookOfShadowsSpellAccesses?: readonly {
       readonly tag: "bookOfShadows";
       readonly bookPresence: { readonly tag: "onPerson" | "notOnPerson" };
@@ -1086,6 +1091,11 @@ function spellcasting(
     featurePreparedSpells: (input.featurePreparedSpells ?? []).map((entry) => ({
       sourceUnitId: entry.sourceUnitId,
       spell: root.unitLibrary.requireUnit(entry.spellId),
+    })),
+    spellbookRitualSpellAccesses: (input.spellbookRitualSpellAccesses ?? []).map((entry) => ({
+      tag: entry.tag,
+      spell: root.unitLibrary.requireUnit(entry.spellId),
+      featureUnitId: entry.featureUnitId,
     })),
     bookOfShadowsSpellAccesses: (input.bookOfShadowsSpellAccesses ?? []).map((entry) => ({
       tag: entry.tag,

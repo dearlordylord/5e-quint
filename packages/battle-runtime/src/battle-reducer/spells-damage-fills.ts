@@ -652,6 +652,7 @@ export function spellSavingThrowOutcomeHole(
         | "saveGatedDamage"
         | "saveGatedCondition"
         | "saveGatedAttackRollAdvantage"
+        | "counterspell"
         | "sleepTargetAdmission"
         | "hideousLaughter"
         | "command"
@@ -714,6 +715,7 @@ export function spellSavingThrowAbility(
         | "saveGatedDamage"
         | "saveGatedCondition"
         | "saveGatedAttackRollAdvantage"
+        | "counterspell"
         | "sleepTargetAdmission"
         | "hideousLaughter"
         | "command"
@@ -740,6 +742,7 @@ export function spellSavingThrowTargeting(
         | "saveGatedDamage"
         | "saveGatedCondition"
         | "saveGatedAttackRollAdvantage"
+        | "counterspell"
         | "sleepTargetAdmission"
         | "hideousLaughter"
         | "command"
@@ -747,7 +750,9 @@ export function spellSavingThrowTargeting(
     }
   >,
 ): SpellTargeting {
-  return invocation.procedure === "attackBurstSaveDamage"
+  return invocation.procedure === "counterspell"
+    ? { kind: "singleCombatant" }
+    : invocation.procedure === "attackBurstSaveDamage"
     ? invocation.burst.targeting
     : invocation.targeting;
 }

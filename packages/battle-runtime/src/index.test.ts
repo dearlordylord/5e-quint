@@ -380,7 +380,7 @@ describe("battle runtime", () => {
       turn: {
         actionResources: [{ kind: "action", source: "turn" }],
         bonusActionAvailable: true,
-        spellSlotExpendedThisTurn: false,
+        spellSlotUsesThisTurn: [],
         attackRollMadeThisTurn: false,
         attackDamageRidersUsedThisTurn: [],
         weaponDamageDiceRollChoicesUsedThisTurn: [],
@@ -8007,7 +8007,7 @@ describe("battle runtime", () => {
         actionResources: [{ kind: "action", source: "turn" }],
         currentHasBonusAction: true,
         commandHalt: null,
-        spellSlotExpendedThisTurn: false,
+        spellSlotUsesThisTurn: [],
         attackRollMadeThisTurn: false,
         attackDamageRidersUsedThisTurn: [],
         weaponDamageDiceRollChoicesUsedThisTurn: [],
@@ -8224,7 +8224,7 @@ describe("battle runtime", () => {
         actionResources: [],
         currentHasBonusAction: false,
         commandHalt: null,
-        spellSlotExpendedThisTurn: false,
+        spellSlotUsesThisTurn: [],
         attackRollMadeThisTurn: false,
         attackDamageRidersUsedThisTurn: [],
         weaponDamageDiceRollChoicesUsedThisTurn: [],
@@ -8252,7 +8252,7 @@ describe("battle runtime", () => {
         actionResources: [],
         currentHasBonusAction: false,
         commandHalt: null,
-        spellSlotExpendedThisTurn: false,
+        spellSlotUsesThisTurn: [],
         attackRollMadeThisTurn: false,
         attackDamageRidersUsedThisTurn: [],
         weaponDamageDiceRollChoicesUsedThisTurn: [],
@@ -9753,7 +9753,7 @@ describe("battle runtime", () => {
         actionResources: [],
         currentHasBonusAction: true,
         commandHalt: null,
-        spellSlotExpendedThisTurn: false,
+        spellSlotUsesThisTurn: [],
         attackRollMadeThisTurn: false,
         attackDamageRidersUsedThisTurn: [],
         weaponDamageDiceRollChoicesUsedThisTurn: [],
@@ -9870,7 +9870,7 @@ describe("battle runtime", () => {
         actionResources: [],
         currentHasBonusAction: true,
         commandHalt: null,
-        spellSlotExpendedThisTurn: false,
+        spellSlotUsesThisTurn: [],
         attackRollMadeThisTurn: false,
         attackDamageRidersUsedThisTurn: [],
         weaponDamageDiceRollChoicesUsedThisTurn: [],
@@ -9912,7 +9912,7 @@ describe("battle runtime", () => {
         actionResources: [],
         currentHasBonusAction: true,
         commandHalt: null,
-        spellSlotExpendedThisTurn: false,
+        spellSlotUsesThisTurn: [],
         attackRollMadeThisTurn: false,
         attackDamageRidersUsedThisTurn: [],
         weaponDamageDiceRollChoicesUsedThisTurn: [],
@@ -10033,7 +10033,7 @@ describe("battle runtime", () => {
         actionResources: [{ kind: "action", source: "turn" }],
         currentHasBonusAction: false,
         commandHalt: null,
-        spellSlotExpendedThisTurn: false,
+        spellSlotUsesThisTurn: [],
         attackRollMadeThisTurn: false,
         attackDamageRidersUsedThisTurn: [],
         weaponDamageDiceRollChoicesUsedThisTurn: [],
@@ -14808,7 +14808,9 @@ describe("battle runtime", () => {
     expect(afterSlotSpell.currentTurnResources).toMatchObject({
       currentHasBonusAction: true,
       commandHalt: null,
-      spellSlotExpendedThisTurn: true,
+      spellSlotUsesThisTurn: [
+        { kind: "committed", combatantId: wizardId },
+      ],
     });
     expect(
       discoverBattleActs(afterSlotSpell).map((act) => act.subject),
@@ -16974,7 +16976,7 @@ describe("battle runtime", () => {
     ).toMatchObject({ armorClass: 15 });
     expect(result.snapshot.turn).toMatchObject({
       actionResources: [],
-      spellSlotExpendedThisTurn: false,
+      spellSlotUsesThisTurn: [],
     });
     expect(warlock?.origin.kind).toBe("character");
     if (warlock?.origin.kind !== "character") {
@@ -24054,7 +24056,7 @@ describe("battle runtime", () => {
         (resource) => resource.source === "turn",
       ),
     ).toBe(false);
-    expect(resolved.state.currentTurnResources.spellSlotExpendedThisTurn).toBe(
+    expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn.some((use) => use.kind === "committed")).toBe(
       true,
     );
   });
@@ -25632,7 +25634,7 @@ describe("battle runtime", () => {
     expect(ranger.origin.spellcasting?.spellSlots).toEqual([
       { spellLevel: 1, count: 1, expended: 0 },
     ]);
-    expect(marked.state.currentTurnResources.spellSlotExpendedThisTurn).toBe(
+    expect(marked.state.currentTurnResources.spellSlotUsesThisTurn.some((use) => use.kind === "committed")).toBe(
       false,
     );
     expect(ranger.concentration).toEqual({
@@ -25892,7 +25894,7 @@ describe("battle runtime", () => {
     expect(ranger.origin.spellcasting?.spellSlots).toEqual([
       { spellLevel: 1, count: 1, expended: 1 },
     ]);
-    expect(marked.state.currentTurnResources.spellSlotExpendedThisTurn).toBe(
+    expect(marked.state.currentTurnResources.spellSlotUsesThisTurn.some((use) => use.kind === "committed")).toBe(
       true,
     );
   });

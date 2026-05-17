@@ -1085,7 +1085,7 @@ function projectMovementForcedMovementSelectedIdentityState(
     casterBonusActionAvailable: snapshot.turn.bonusActionAvailable,
     casterConcentrating: casterState.concentration !== null,
     spellSlotSpentThisTurn:
-      state.currentTurnResources.spellSlotExpendedThisTurn,
+      state.currentTurnResources.spellSlotUsesThisTurn.some((use) => use.kind === "committed"),
     level1SlotsRemaining: level1SlotsRemaining(state, casterId),
     spellDashBonusActionEffectCount: spellDashBonusActionEffectCount(state),
     targetHp: target.hp,

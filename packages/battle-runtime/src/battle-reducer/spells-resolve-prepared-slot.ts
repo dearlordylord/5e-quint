@@ -31,6 +31,7 @@ import {
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
+import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
 import {
   battleStateAfterSanctuaryEarlyEndForActor,
   sanctuaryTargetingInterdictionCheck,
@@ -247,19 +248,20 @@ export function resolvePreparedSlotSpellAct(input: {
   if (input.opensSpellCastReactionWindow !== false) {
     const spellCastReactionWindow = maybeOpenReactionWindow(
       input.input.state,
-      {
-        trigger: "spellCast",
+      spellCastReactionFrame({
         casterId: input.actorId,
-        spellId: input.invocation.spell.id,
+        invocation: input.invocation,
         targetIds: targetAllocation.allocations.map(
           (allocation) => allocation.targetId,
         ),
+        reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+        castingResource: { kind: "magicAction" },
         continuation: {
           kind: "replay",
           subject: input.input.subject,
           fills: input.input.fills,
         },
-      },
+      }),
       input.input.suppressedReactionTrigger,
     );
     if (spellCastReactionWindow !== null) {
@@ -482,7 +484,10 @@ export function resolvePreparedSlotSpellAct(input: {
       "Magic action is no longer available for the current actor.",
     );
   }
-  const slotTurnResources = markSpellSlotExpendedThisTurn(spent.right);
+  const slotTurnResources = markSpellSlotExpendedThisTurn(
+    spent.right,
+    input.actorId,
+  );
   if (Either.isLeft(slotTurnResources)) {
     return invalidResult(
       input.input.state,

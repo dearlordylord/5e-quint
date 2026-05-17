@@ -33,6 +33,7 @@ import chromaticOrbInput from "../../content/chromatic_orb.json";
 import clericDivineOrderInput from "../../content/cleric_divine_order.json";
 import colorSprayInput from "../../content/color_spray.json";
 import commandInput from "../../content/command.json";
+import counterspellInput from "../../content/counterspell.json";
 import cureWoundsInput from "../../content/cure_wounds.json";
 import dancingLightsInput from "../../content/dancing_lights.json";
 import divineFavorInput from "../../content/divine_favor.json";
@@ -324,6 +325,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     chromaticOrbInput,
     colorSprayInput,
     commandInput,
+    counterspellInput,
     cureWoundsInput,
     dancingLightsInput,
     dissonantWhispersInput,

@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.creature-type-protection-and-charm spell.find-familiar-lifecycle spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-dancing-lights-movable-dim-light spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.creature-type-protection-and-charm spell.find-familiar-lifecycle spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-dancing-lights-movable-dim-light spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-condition-immunity-turn-start-temporary-hit-points
@@ -9,6 +9,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-marked-damage-rider
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-attack-roll-advantage-save
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-condition-save
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.reaction-counterspell
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-beam-sequence
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-damage-reduction
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-sleep-repeat-save-lifecycle
@@ -168,6 +169,13 @@ module battleRuntime {
   //   spec models the after-damage Reaction discovery window and continuation
   //   facts plus the Dexterity save, Fire damage, half damage on success, and
   //   slotted resource spend.
+  // - Spells/Descriptions-A-D.md lines 1185-1197, Playing-the-Game.md lines
+  //   326-332, and Rules-Glossary.md lines 814-816: Counterspell is a
+  //   slotted Reaction spell against a visible creature casting a spell with
+  //   components within 60 feet. The target makes a Constitution save unless
+  //   the Counterspell slot level is sufficient; an ended spell has no effect,
+  //   wastes its casting action/Bonus Action/Reaction, and does not expend its
+  //   slot.
   // - Spells/Descriptions-M-P.md lines 5-15 and
   //   Spells/Gaining-and-Casting.md lines 142-149: Mage Armor is a timed
   //   ongoing spell effect whose target's base AC becomes 13 + Dexterity
@@ -330,7 +338,7 @@ module battleRuntime {
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
   type Ability = StrAbility | DexAbility | ConAbility | IntAbility | WisAbility | ChaAbility
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | FireBolt | EldritchBlast | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | Hex | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | DancingLightsSpell | Light | TrueStrike | Grease | FogCloud | Command | DissonantWhispers | FeatherFall | HellishRebuke | SorcerousBurst | SpareTheDying | HideousLaughter
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | FireBolt | EldritchBlast | SacredFlame | InflictWounds | BurningHands | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | Counterspell | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | Hex | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | DancingLightsSpell | Light | TrueStrike | Grease | FogCloud | Command | DissonantWhispers | FeatherFall | HellishRebuke | SorcerousBurst | SpareTheDying | HideousLaughter
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | StarryWispSpellAttack | FireBoltSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack | SorcerousBurstSpellAttack({ damageTypeChoice: BattleRuntimeSorcerousBurstDamageTypeChoice, spellcastingAbilityModifier: int, characterLevel: int })
   type FixedSpellAttackDamageInvocation = RayOfFrostFixedSpellAttack | PoisonSprayFixedSpellAttack | ChillTouchFixedSpellAttack | StarryWispFixedSpellAttack | FireBoltFixedSpellAttack | ShockingGraspFixedSpellAttack | GuidingBoltFixedSpellAttack | RayOfSicknessFixedSpellAttack | ProduceFlameHurlFixedSpellAttack
   type SpellAttackBeamSequenceInvocation =
@@ -626,6 +634,47 @@ module battleRuntime {
     spellSlotAvailable: bool,
   }
 
+  type CounterspellCastingResource =
+    | CounterspellMagicAction
+    | CounterspellBonusAction
+    | CounterspellReaction
+
+  type BattleTurnSpellSlotUse =
+    | BattlePendingSpellSlotUse(Actor)
+    | BattleCommittedSpellSlotUse(Actor)
+
+  // This package-local Quint battle model has exactly two actors. Since a
+  // creature spends its Reaction to cast Counterspell before that spell can be
+  // countered, the only recursive Counterspell spell-cast opportunity
+  // representable in this two-actor model is the other actor countering that
+  // Counterspell. The TypeScript runtime keeps the general interrupt stack for
+  // wider battle projections; this bounded summary is the two-actor parity
+  // projection, not an SRD limit.
+  type PendingCounterspellSpellCastReaction =
+    | CounterspellSpellCastNotCountered
+    | CounterspellSpellCastCounteredByReaction({
+        reactor: Actor,
+        counterspellSlotLevel: int,
+        counterspellCasterConSaveSucceeded: bool,
+      })
+
+  type PendingCounterspellReaction = {
+    triggeringCaster: Actor,
+    triggeringCastingResource: CounterspellCastingResource,
+    triggeringSpellLevel: int,
+    triggeringSpellUsesSlot: bool,
+    counterspellSlotLevel: int,
+    triggeringCasterConSaveSucceeded: bool,
+    counterspellSpellCastReaction: PendingCounterspellSpellCastReaction,
+  }
+
+  type PendingReactionProcedure =
+    | ShieldReactionProcedure
+    | CounterspellReactionProcedure(PendingCounterspellReaction)
+    | OpportunityAttackReactionProcedure
+    | ReadiedSpellReleaseReactionProcedure
+    | DamageInterruptionReactionProcedure
+
   type LastTurnActor = NoTurnEnded | LastTurnFighter | LastTurnGoblin
   type FighterCriticalRange = DefaultCriticalRange | ImprovedCriticalRange19
 
@@ -663,6 +712,7 @@ module battleRuntime {
 
   type PendingReactionFrame = {
     trigger: ReactionTrigger,
+    procedure: PendingReactionProcedure,
     eligibleReactors: Set[Actor],
     offeredReactors: Set[Actor],
     continuation: ReactionContinuation,
@@ -703,22 +753,13 @@ module battleRuntime {
       | ResumeDissonantWhispersMovementThenAfterDamage(_) => BattleRuntimeMovementContinuation
     }
 
-  pure def reactionProcedureForFrame(
-    state: BattleState,
-    frame: PendingReactionFrame,
-    reactor: Actor
-  ): BattleRuntimeReactionProcedure =
-    match frame.trigger {
-      | OpportunityAttack => BattleRuntimeOpportunityAttackProcedure
-      | AttackHit =>
-        if (state.fighterReadiedSpellHeld and reactor == Fighter)
-          BattleRuntimeReadiedSpellReleaseProcedure
-        else
-          BattleRuntimeShieldReactionProcedure
-      | SpellCast => BattleRuntimeShieldReactionProcedure
-      | AttackDamage => BattleRuntimeDamageInterruptionProcedure
-      | SaveFailed => BattleRuntimeDamageInterruptionProcedure
-      | AfterDamage => BattleRuntimeDamageInterruptionProcedure
+  pure def battleRuntimeReactionProcedure(procedure: PendingReactionProcedure): BattleRuntimeReactionProcedure =
+    match procedure {
+      | ShieldReactionProcedure => BattleRuntimeShieldReactionProcedure
+      | CounterspellReactionProcedure(_) => BattleRuntimeCounterspellReactionProcedure
+      | OpportunityAttackReactionProcedure => BattleRuntimeOpportunityAttackProcedure
+      | ReadiedSpellReleaseReactionProcedure => BattleRuntimeReadiedSpellReleaseProcedure
+      | DamageInterruptionReactionProcedure => BattleRuntimeDamageInterruptionProcedure
     }
 
   type ZeroHpLifecycle = DiesAtZeroHp | UsesDeathSavingThrows
@@ -1062,7 +1103,7 @@ module battleRuntime {
     lightEmitters: Set[LightEmitter],
     actionAvailable: bool,
     bonusActionAvailable: bool,
-    spellSlotExpendedThisTurn: bool,
+    spellSlotUsesThisTurn: Set[BattleTurnSpellSlotUse],
     attackRollMadeThisTurn: bool,
     dashMovementBonus: int,
     disengaged: bool,
@@ -1182,7 +1223,7 @@ module battleRuntime {
     lightEmitters: Set(),
     actionAvailable: true,
     bonusActionAvailable: true,
-    spellSlotExpendedThisTurn: false,
+    spellSlotUsesThisTurn: Set(),
     attackRollMadeThisTurn: false,
     dashMovementBonus: 0,
     disengaged: false,
@@ -1906,7 +1947,7 @@ module battleRuntime {
       initiative: advancedInitiative,
       actionAvailable: nextActorStep.actionAvailable,
       bonusActionAvailable: nextActorStep.bonusActionAvailable,
-      spellSlotExpendedThisTurn: false,
+      spellSlotUsesThisTurn: Set(),
       attackRollMadeThisTurn: false,
       dashMovementBonus: nextActorStep.dashMovementBonus,
       disengaged: nextActorStep.disengaged,
@@ -1967,8 +2008,87 @@ module battleRuntime {
     else
       state
 
+  pure def battleTurnSpellSlotUseActor(slotUse: BattleTurnSpellSlotUse): Actor =
+    match slotUse {
+      | BattlePendingSpellSlotUse(actor) => actor
+      | BattleCommittedSpellSlotUse(actor) => actor
+    }
+
+  pure def battleActorHasSpellSlotUse(state: BattleState, actor: Actor): bool =
+    state.spellSlotUsesThisTurn.exists(slotUse => battleTurnSpellSlotUseActor(slotUse) == actor)
+
+  pure def battleActorHasCommittedSpellSlotUse(state: BattleState, actor: Actor): bool =
+    state.spellSlotUsesThisTurn.contains(BattleCommittedSpellSlotUse(actor))
+
+  pure def canActorExpendSpellSlotThisTurn(state: BattleState, actor: Actor): bool =
+    not(battleActorHasSpellSlotUse(state, actor))
+
+  pure def claimPendingActorSpellSlotUse(state: BattleState, actor: Actor): BattleState =
+    if (battleActorHasSpellSlotUse(state, actor))
+      state
+    else
+      { ...state, spellSlotUsesThisTurn: state.spellSlotUsesThisTurn.union(Set(BattlePendingSpellSlotUse(actor))) }
+
+  pure def releasePendingActorSpellSlotUse(state: BattleState, actor: Actor): BattleState =
+    { ...state, spellSlotUsesThisTurn: state.spellSlotUsesThisTurn.filter(slotUse => slotUse != BattlePendingSpellSlotUse(actor)) }
+
+  pure def commitActorSpellSlotUse(state: BattleState, actor: Actor): BattleState =
+    if (battleActorHasCommittedSpellSlotUse(state, actor))
+      state
+    else {
+      val released = releasePendingActorSpellSlotUse(state, actor)
+      {
+        ...released,
+        spellSlotUsesThisTurn: released.spellSlotUsesThisTurn.union(Set(BattleCommittedSpellSlotUse(actor))),
+      }
+    }
+
+  pure def counterspellFrameClaimsTriggeringSlot(frame: PendingReactionFrame): bool =
+    match frame.procedure {
+      | CounterspellReactionProcedure(counterspell) =>
+          frame.trigger == SpellCast and counterspell.triggeringSpellUsesSlot
+      | _ => false
+    }
+
+  pure def reactionWindowCanOpen(state: BattleState, frame: PendingReactionFrame): bool =
+    reactionProcedureMatchesTrigger(frame.trigger, frame.procedure) and
+      match frame.procedure {
+        | CounterspellReactionProcedure(counterspell) =>
+            not(counterspellFrameClaimsTriggeringSlot(frame)) or
+              canActorExpendSpellSlotThisTurn(state, counterspell.triggeringCaster)
+        | _ => true
+      }
+
+  pure def stateAfterOpeningReactionWindow(state: BattleState, frame: PendingReactionFrame): BattleState =
+    match frame.procedure {
+      | CounterspellReactionProcedure(counterspell) =>
+          if (counterspellFrameClaimsTriggeringSlot(frame))
+            claimPendingActorSpellSlotUse(state, counterspell.triggeringCaster)
+          else
+            state
+      | _ => state
+    }
+
+  pure def reactionProcedureMatchesTrigger(
+    trigger: ReactionTrigger,
+    procedure: PendingReactionProcedure
+  ): bool =
+    match procedure {
+      | ShieldReactionProcedure => trigger == AttackHit or trigger == SpellCast
+      | CounterspellReactionProcedure(_) => trigger == SpellCast
+      | OpportunityAttackReactionProcedure => trigger == OpportunityAttack
+      | ReadiedSpellReleaseReactionProcedure => trigger == AttackHit
+      | DamageInterruptionReactionProcedure =>
+          trigger == AttackDamage or trigger == SaveFailed or trigger == AfterDamage
+    }
+
   pure def openReactionWindow(state: BattleState, frame: PendingReactionFrame): BattleState =
-    { ...state, interruptStack: state.interruptStack.append(PendingReaction(frame)) }
+    if (reactionWindowCanOpen(state, frame)) {
+      val openingState = stateAfterOpeningReactionWindow(state, frame)
+      { ...openingState, interruptStack: openingState.interruptStack.append(PendingReaction(frame)) }
+    }
+    else
+      state
 
   pure def reactionFrameComplete(frame: PendingReactionFrame): bool =
     frame.eligibleReactors == frame.offeredReactors
@@ -2007,11 +2127,12 @@ module battleRuntime {
       {
         hellishRebukeAvailable: hellishRebukeAvailable,
         reactionAvailable: reactorCanReact(state, damaged),
-        spellSlotAvailable: canExpendSpellSlotThisTurn(state),
+        spellSlotAvailable: canActorExpendSpellSlotThisTurn(state, damaged),
       },
     ))
       openReactionWindow(state, {
         trigger: AfterDamage,
+        procedure: DamageInterruptionReactionProcedure,
         eligibleReactors: Set(damaged),
         offeredReactors: Set(),
         continuation: ResumeHellishRebukeAfterDamage({
@@ -2032,6 +2153,7 @@ module battleRuntime {
   pure def openDissonantWhispersAfterDamageSequence(state: BattleState): BattleState =
     openReactionWindow(state, {
       trigger: AfterDamage,
+      procedure: DamageInterruptionReactionProcedure,
       eligibleReactors: Set(Fighter),
       offeredReactors: Set(),
       continuation: ResumeAfterDamage,
@@ -2050,10 +2172,136 @@ module battleRuntime {
     }
 
   pure def castShieldReactionSpell(state: BattleState, reactor: Actor): BattleState =
-    if (canExpendSpellSlotThisTurn(state))
-      { ...applyShieldReactionSpell(state, reactor), spellSlotExpendedThisTurn: true }
+    if (canActorExpendSpellSlotThisTurn(state, reactor))
+      commitActorSpellSlotUse(applyShieldReactionSpell(state, reactor), reactor)
     else
       state
+
+  pure def pendingCounterspellEndsTriggeringSpell(counterspell: PendingCounterspellReaction): bool =
+    counterspell.counterspellSlotLevel >= counterspell.triggeringSpellLevel or
+      not(counterspell.triggeringCasterConSaveSucceeded)
+
+  pure def counterspellSpellCastReactionEndsCounterspell(
+    firstCounterspellSlotLevel: int,
+    reaction: PendingCounterspellSpellCastReaction,
+  ): bool =
+    match reaction {
+      | CounterspellSpellCastNotCountered => false
+      | CounterspellSpellCastCounteredByReaction(counterspell) =>
+          counterspell.counterspellSlotLevel >= firstCounterspellSlotLevel or
+            not(counterspell.counterspellCasterConSaveSucceeded)
+    }
+
+  pure def pendingCounterspellTakesEffect(counterspell: PendingCounterspellReaction): bool =
+    not(counterspellSpellCastReactionEndsCounterspell(
+      counterspell.counterspellSlotLevel,
+      counterspell.counterspellSpellCastReaction,
+    ))
+
+  pure def counterspellNestedReactionCanCast(
+    state: BattleState,
+    reactor: Actor,
+    counterspell: PendingCounterspellReaction,
+  ): bool = {
+    val afterCounterspellPending = claimPendingActorSpellSlotUse(state, reactor)
+    match counterspell.counterspellSpellCastReaction {
+      | CounterspellSpellCastNotCountered => false
+      | CounterspellSpellCastCounteredByReaction(nested) =>
+          reactorCanReact(afterCounterspellPending, nested.reactor) and
+            canActorExpendSpellSlotThisTurn(afterCounterspellPending, nested.reactor)
+    }
+  }
+
+  pure def pendingCounterspellTakesEffectInState(
+    state: BattleState,
+    reactor: Actor,
+    counterspell: PendingCounterspellReaction,
+  ): bool =
+    not(counterspellNestedReactionCanCast(state, reactor, counterspell) and
+      counterspellSpellCastReactionEndsCounterspell(
+        counterspell.counterspellSlotLevel,
+        counterspell.counterspellSpellCastReaction,
+      ))
+
+  pure def wasteCounteredSpellCastingResource(
+    state: BattleState,
+    caster: Actor,
+    resource: CounterspellCastingResource,
+  ): BattleState =
+    match resource {
+      | CounterspellMagicAction => { ...state, actionAvailable: false }
+      | CounterspellBonusAction => { ...state, bonusActionAvailable: false }
+      | CounterspellReaction => spendReaction(state, caster)
+    }
+
+  pure def castCounterspellReactionSpell(
+    state: BattleState,
+    reactor: Actor,
+    frame: PendingReactionFrame,
+  ): BattleState =
+    match frame.procedure {
+      | CounterspellReactionProcedure(counterspell) => {
+          val afterCounterspellPending = claimPendingActorSpellSlotUse(state, reactor)
+	          val nestedCounterspellCanCast = counterspellNestedReactionCanCast(state, reactor, counterspell)
+          val afterNestedCounterspell =
+            match counterspell.counterspellSpellCastReaction {
+              | CounterspellSpellCastNotCountered => afterCounterspellPending
+              | CounterspellSpellCastCounteredByReaction(nested) =>
+                  if (nestedCounterspellCanCast)
+                    spendReaction(
+                      commitActorSpellSlotUse(afterCounterspellPending, nested.reactor),
+                      nested.reactor,
+                    )
+                  else
+                    afterCounterspellPending
+            }
+          if (
+            nestedCounterspellCanCast and
+              counterspellSpellCastReactionEndsCounterspell(
+              counterspell.counterspellSlotLevel,
+              counterspell.counterspellSpellCastReaction,
+            )
+          )
+            releasePendingActorSpellSlotUse(afterNestedCounterspell, reactor)
+          else {
+            val afterCounterspellSlot = commitActorSpellSlotUse(afterNestedCounterspell, reactor)
+            if (pendingCounterspellEndsTriggeringSpell(counterspell)) {
+              val afterReleasedTriggeringSlot =
+                if (counterspell.triggeringSpellUsesSlot)
+                  releasePendingActorSpellSlotUse(afterCounterspellSlot, counterspell.triggeringCaster)
+                else
+                  afterCounterspellSlot
+              wasteCounteredSpellCastingResource(
+                afterReleasedTriggeringSlot,
+              counterspell.triggeringCaster,
+              counterspell.triggeringCastingResource,
+            )
+            } else {
+              afterCounterspellSlot
+            }
+          }
+        }
+      | _ => state
+    }
+
+  pure def reactionProcedureRequiresSpellSlot(procedure: PendingReactionProcedure): bool =
+    match procedure {
+      | ShieldReactionProcedure => true
+      | CounterspellReactionProcedure(_) => true
+      | _ => false
+    }
+
+  pure def reactionProcedureEndsSpellCastInState(
+    state: BattleState,
+    reactor: Actor,
+    procedure: PendingReactionProcedure,
+  ): bool =
+    match procedure {
+      | CounterspellReactionProcedure(counterspell) =>
+          pendingCounterspellTakesEffectInState(state, reactor, counterspell) and
+            pendingCounterspellEndsTriggeringSpell(counterspell)
+      | _ => false
+    }
 
   pure def hellishRebukeDamageDice(slotLevel: int): int =
     if (slotLevel < 1) 0 else 2 + (slotLevel - 1)
@@ -2069,7 +2317,7 @@ module battleRuntime {
       continuation.damaged == continuation.damager or
       continuation.slotLevel < 1 or
       not(reactorCanReact(state, continuation.damaged)) or
-      not(canExpendSpellSlotThisTurn(state))
+      not(canActorExpendSpellSlotThisTurn(state, continuation.damaged))
     )
       state
     else {
@@ -2098,11 +2346,8 @@ module battleRuntime {
             ),
           }
       }
-      { ...damagedTarget, spellSlotExpendedThisTurn: true }
+      commitActorSpellSlotUse(damagedTarget, continuation.damaged)
     }
-
-  pure def reactionResolvesShieldSpell(state: BattleState, frame: PendingReactionFrame, reactor: Actor): bool =
-    frame.trigger == SpellCast or (frame.trigger == AttackHit and not(state.fighterReadiedSpellHeld and reactor == Fighter))
 
   pure def declineReaction(state: BattleState, reactor: Actor): BattleState = {
     if (state.interruptStack.length() == 0)
@@ -2117,7 +2362,7 @@ module battleRuntime {
               frame.offeredReactors.contains(reactor),
               reactionFrameComplete(updatedFrame),
             )
-            match decision {
+            match (decision) {
               | BattleRuntimeDeclinedReaction(result) => {
                   val rest = state.interruptStack.slice(0, state.interruptStack.length() - 1)
                   if (result.frameComplete)
@@ -2150,38 +2395,72 @@ module battleRuntime {
       }
     }
 
+  pure def stateAfterResumingSpellCastReaction(
+    state: BattleState,
+    frame: PendingReactionFrame,
+  ): BattleState =
+    match frame.procedure {
+      | CounterspellReactionProcedure(counterspell) =>
+          if (
+            frame.trigger == SpellCast and
+              counterspell.triggeringSpellUsesSlot and
+              (not(pendingCounterspellTakesEffect(counterspell)) or
+                not(pendingCounterspellEndsTriggeringSpell(counterspell)))
+          )
+            commitActorSpellSlotUse(state, counterspell.triggeringCaster)
+          else
+            state
+      | _ => state
+    }
+
   pure def resolveReaction(state: BattleState, reactor: Actor): BattleState =
     if (state.interruptStack.length() == 0)
       state
     else {
-      val top = state.interruptStack[state.interruptStack.length() - 1]
-      match top {
+      match (state.interruptStack[state.interruptStack.length() - 1]) {
         | PendingReaction(frame) => {
-            val procedure = reactionProcedureForFrame(state, frame, reactor)
             val decision = battleRuntimeTakeReactionDecision(
               battleRuntimeReactionTrigger(frame.trigger),
-              procedure,
+              battleRuntimeReactionProcedure(frame.procedure),
               frame.eligibleReactors.contains(reactor),
               frame.offeredReactors.contains(reactor),
               reactorCanReact(state, reactor),
-              not(reactionResolvesShieldSpell(state, frame, reactor)) or canExpendSpellSlotThisTurn(state),
+              not(reactionProcedureRequiresSpellSlot(frame.procedure)) or
+                canActorExpendSpellSlotThisTurn(state, reactor),
               reactionFrameCompleteAfterOffering(frame, reactor),
             )
-            match decision {
+            match (decision) {
               | BattleRuntimeTookReaction(_) => {
                   val afterReactionSpend = spendReaction(state, reactor)
                   val afterReactionProcedure =
                     match frame.trigger {
                       | OpportunityAttack => resolveGoblinOpportunityAttack(afterReactionSpend, 20, 18, 4, true)
-                      | AttackHit => if (procedure == BattleRuntimeReadiedSpellReleaseProcedure) releaseReadiedSpell(afterReactionSpend) else castShieldReactionSpell(afterReactionSpend, reactor)
-                      | SpellCast => castShieldReactionSpell(afterReactionSpend, reactor)
+                      | AttackHit => if (frame.procedure == ReadiedSpellReleaseReactionProcedure) releaseReadiedSpell(afterReactionSpend) else castShieldReactionSpell(afterReactionSpend, reactor)
+	                      | SpellCast =>
+	                          match frame.procedure {
+	                            | ShieldReactionProcedure => castShieldReactionSpell(afterReactionSpend, reactor)
+	                            | CounterspellReactionProcedure(_) => castCounterspellReactionSpell(afterReactionSpend, reactor, frame)
+	                            | _ => afterReactionSpend
+	                          }
                       | _ => releaseReadiedSpell(afterReactionSpend)
-                    }
-                  val afterDecision = declineReaction(afterReactionProcedure, reactor)
-                  if (afterDecision.interruptStack.length() < state.interruptStack.length())
-                    resumeReactionContinuation(afterDecision, frame.continuation)
-                  else
-                    afterDecision
+	                    }
+	                  val spellCastEnded =
+	                    reactionProcedureEndsSpellCastInState(afterReactionSpend, reactor, frame.procedure)
+	                  val closedStack = afterReactionProcedure.interruptStack.slice(0, afterReactionProcedure.interruptStack.length() - 1)
+	                  val afterDecision =
+	                    if (spellCastEnded)
+	                      { ...afterReactionProcedure, interruptStack: closedStack }
+	                    else
+	                      declineReaction(afterReactionProcedure, reactor)
+		                  if (
+		                    afterDecision.interruptStack.length() < state.interruptStack.length()
+		                      and not(spellCastEnded)
+		                  ) {
+	                    val resumed = resumeReactionContinuation(afterDecision, frame.continuation)
+	                    stateAfterResumingSpellCastReaction(resumed, frame)
+	                  }
+	                  else
+	                    afterDecision
                 }
               | _ => state
             }
@@ -2531,6 +2810,7 @@ module battleRuntime {
     else if (state.goblin.reactionAvailable and not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
       openReactionWindow(recordFighterAttackRoll(revealFighterHidden(state)), {
         trigger: AttackHit,
+        procedure: ShieldReactionProcedure,
         eligibleReactors: Set(Goblin),
         offeredReactors: Set(),
         continuation: ResumeTrueStrikeWeaponAttack,
@@ -2883,6 +3163,7 @@ module battleRuntime {
     else if (state.goblin.reactionAvailable and not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
       openReactionWindow(recordFighterAttackRoll(revealFighterHidden(state)), {
         trigger: AttackHit,
+        procedure: ShieldReactionProcedure,
         eligibleReactors: Set(Goblin),
         offeredReactors: Set(),
         continuation: ResumeRayOfFrost,
@@ -2911,6 +3192,7 @@ module battleRuntime {
     else if (state.goblin.reactionAvailable and not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
       openReactionWindow(recordFighterAttackRoll(revealFighterHidden(state)), {
         trigger: AttackHit,
+        procedure: ShieldReactionProcedure,
         eligibleReactors: Set(Goblin),
         offeredReactors: Set(),
         continuation: ResumePoisonSpray,
@@ -2939,6 +3221,7 @@ module battleRuntime {
     else if (state.goblin.reactionAvailable and not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
       openReactionWindow(recordFighterAttackRoll(revealFighterHidden(state)), {
         trigger: AttackHit,
+        procedure: ShieldReactionProcedure,
         eligibleReactors: Set(Goblin),
         offeredReactors: Set(),
         continuation: ResumeChillTouch,
@@ -3526,6 +3809,7 @@ module battleRuntime {
                 DissonantWhispersOpportunityAttackWindow(
                   openReactionWindow(afterReactionSpend, {
                     trigger: OpportunityAttack,
+                    procedure: OpportunityAttackReactionProcedure,
                     eligibleReactors: Set(Fighter),
                     offeredReactors: Set(),
                     continuation: ResumeDissonantWhispersMovementThenAfterDamage({
@@ -3682,11 +3966,7 @@ module battleRuntime {
       val afterCasterEarlyEnd = battleStateAfterSanctuaryEarlyEndForActor(state, Fighter)
       val targetCombatant = combatantForActor(afterCasterEarlyEnd, target)
       stateWithActorCombatant(
-        {
-          ...afterCasterEarlyEnd,
-          bonusActionAvailable: false,
-          spellSlotExpendedThisTurn: true,
-        },
+        commitActorSpellSlotUse({ ...afterCasterEarlyEnd, bonusActionAvailable: false }, Fighter),
         target,
         combatantWithSanctuaryWard(targetCombatant, Fighter),
       )
@@ -3789,7 +4069,7 @@ module battleRuntime {
   ): BattleState =
     if (
       reactorCanReact(state, reactor) and
-      canExpendSpellSlotThisTurn(state) and
+      canActorExpendSpellSlotThisTurn(state, reactor) and
       targets.size() >= 1 and
       targetCount == targets.size() and
       targetCount <= 5 and
@@ -3797,18 +4077,17 @@ module battleRuntime {
     ) {
       val spentReaction = spendReaction(state, reactor)
       val effect = featherFallMitigationActiveEffect
-      {
-        ...spentReaction,
-        fighter: if (targets.contains(Fighter))
-          { ...spentReaction.fighter, activeEffects: spentReaction.fighter.activeEffects.union(Set(effect)) }
-        else
-          spentReaction.fighter,
-        goblin: if (targets.contains(Goblin))
-          { ...spentReaction.goblin, activeEffects: spentReaction.goblin.activeEffects.union(Set(effect)) }
-        else
-          spentReaction.goblin,
-        spellSlotExpendedThisTurn: true,
-      }
+	      commitActorSpellSlotUse({
+	        ...spentReaction,
+	        fighter: if (targets.contains(Fighter))
+	          { ...spentReaction.fighter, activeEffects: spentReaction.fighter.activeEffects.union(Set(effect)) }
+	        else
+	          spentReaction.fighter,
+	        goblin: if (targets.contains(Goblin))
+	          { ...spentReaction.goblin, activeEffects: spentReaction.goblin.activeEffects.union(Set(effect)) }
+	        else
+	          spentReaction.goblin,
+	      }, reactor)
     } else {
       state
     }
@@ -3863,7 +4142,7 @@ module battleRuntime {
       targets.size() <= jumpMovementReplacementMaxTargets(slotLevel)
     ) {
       val effect = jumpMovementReplacementActiveEffect
-      {
+      commitActorSpellSlotUse({
         ...state,
         fighter: if (targets.contains(Fighter))
           { ...state.fighter, activeEffects: state.fighter.activeEffects.union(Set(effect)) }
@@ -3874,8 +4153,7 @@ module battleRuntime {
         else
           state.goblin,
         bonusActionAvailable: false,
-        spellSlotExpendedThisTurn: true,
-      }
+      }, Fighter)
     } else {
       state
     }
@@ -3941,15 +4219,14 @@ module battleRuntime {
           movementSpeed(concentrationBase.fighter, speedKind),
         ),
       )
-      {
+      commitActorSpellSlotUse({
         ...dashed,
         fighter: {
           ...dashed.fighter,
           concentrating: true,
           activeEffects: dashed.fighter.activeEffects.union(Set(ExpeditiousRetreatDashBonusAction)),
         },
-        spellSlotExpendedThisTurn: true,
-      }
+      }, Fighter)
     } else {
       state
     }
@@ -4199,6 +4476,7 @@ module battleRuntime {
     else if (goblinCanOpportunityAttack(state, provokedByTable))
       openReactionWindow(state, {
         trigger: OpportunityAttack,
+        procedure: OpportunityAttackReactionProcedure,
         eligibleReactors: Set(Goblin),
         offeredReactors: Set(),
         continuation: ResumeMovement({ speedKind: speedKind, movementCost: movementCost }),
@@ -4306,11 +4584,10 @@ module battleRuntime {
         state.fighter,
         directHitPointRestorationHealing(healingRoll, spellcastingAbilityModifier)
       )
-      {
-        ...spendFighterSpellActionCost(state, actionCost),
-        fighter: healed,
-        spellSlotExpendedThisTurn: true,
-      }
+	      commitActorSpellSlotUse({
+	        ...spendFighterSpellActionCost(state, actionCost),
+	        fighter: healed,
+	      }, Fighter)
     } else {
       state
     }
@@ -4393,11 +4670,10 @@ module battleRuntime {
           state
       val effected = scalarBuffTargetedState(concentrationBase, invocation, targets, slotLevel, rolledDice)
       val spent = spendFighterSpellActionCost(effected, actionCost)
-      {
-        ...spent,
-        fighter: { ...spent.fighter, concentrating: if (battleRuntimeScalarBuffRequiresConcentration(battleRuntimeScalarBuffProfileForInvocation(invocation))) true else spent.fighter.concentrating },
-        spellSlotExpendedThisTurn: true,
-      }
+	      commitActorSpellSlotUse({
+	        ...spent,
+	        fighter: { ...spent.fighter, concentrating: if (battleRuntimeScalarBuffRequiresConcentration(battleRuntimeScalarBuffProfileForInvocation(invocation))) true else spent.fighter.concentrating },
+	      }, Fighter)
     } else {
       state
     }
@@ -4430,12 +4706,11 @@ module battleRuntime {
       val heroismEffects = battleRuntimeScalarBuffEffects(BattleRuntimeHeroismScalarBuff, spellcastingAbilityModifier)
         .map(scalarBuffActiveEffect)
       val spent = spendFighterSpellActionCost(concentrationBase, SpellMagicAction)
-      {
-        ...spent,
-        fighter: if (targets.contains(Fighter)) { ...spent.fighter, concentrating: true, activeEffects: spent.fighter.activeEffects.union(heroismEffects) } else { ...spent.fighter, concentrating: true },
-        goblin: if (targets.contains(Goblin)) { ...spent.goblin, activeEffects: spent.goblin.activeEffects.union(heroismEffects) } else spent.goblin,
-        spellSlotExpendedThisTurn: true,
-      }
+	      commitActorSpellSlotUse({
+	        ...spent,
+	        fighter: if (targets.contains(Fighter)) { ...spent.fighter, concentrating: true, activeEffects: spent.fighter.activeEffects.union(heroismEffects) } else { ...spent.fighter, concentrating: true },
+	        goblin: if (targets.contains(Goblin)) { ...spent.goblin, activeEffects: spent.goblin.activeEffects.union(heroismEffects) } else spent.goblin,
+	      }, Fighter)
     } else {
       state
     }
@@ -4450,16 +4725,15 @@ module battleRuntime {
       not(state.fighter.incapacitated) and
       not(fighterHasRage(state))
     )
-      {
-        ...state,
-        fighter: {
-          ...state.fighter,
-          activeEffects: activeEffectsWithoutDivineFavor(state.fighter.activeEffects)
-            .union(Set(DivineFavorWeaponDamageRider({ durationTicks: favorWeaponDamageRiderDurationTicks }))),
-        },
-        bonusActionAvailable: false,
-        spellSlotExpendedThisTurn: true,
-      }
+	      commitActorSpellSlotUse({
+	        ...state,
+	        fighter: {
+	          ...state.fighter,
+	          activeEffects: activeEffectsWithoutDivineFavor(state.fighter.activeEffects)
+	            .union(Set(DivineFavorWeaponDamageRider({ durationTicks: favorWeaponDamageRiderDurationTicks }))),
+	        },
+	        bonusActionAvailable: false,
+	      }, Fighter)
     else
       state
 
@@ -4504,12 +4778,11 @@ module battleRuntime {
       not(state.fighter.incapacitated) and
       not(fighterHasRage(state))
     )
-      {
-        ...state,
-        bonusActionAvailable: false,
-        spellSlotExpendedThisTurn: true,
-        goblin: applyDamageFromSource(state.goblin, smiteDamageRoll * (if (attackCritical) 2 else 1), 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter),
-      }
+	      commitActorSpellSlotUse({
+	        ...state,
+	        bonusActionAvailable: false,
+	        goblin: applyDamageFromSource(state.goblin, smiteDamageRoll * (if (attackCritical) 2 else 1), 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter),
+	      }, Fighter)
     else
       state
 
@@ -4555,23 +4828,22 @@ module battleRuntime {
       not(state.fighter.incapacitated) and
       not(fighterHasRage(state))
     )
-      {
-      val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
-      {
-        ...withoutPrior,
-        fighter: { ...withoutPrior.fighter, concentrating: not(goblinSavingThrowSucceeded) },
-        goblin: if (goblinSavingThrowSucceeded)
+	      {
+	      val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
+	      commitActorSpellSlotUse({
+	        ...withoutPrior,
+	        fighter: { ...withoutPrior.fighter, concentrating: not(goblinSavingThrowSucceeded) },
+	        goblin: if (goblinSavingThrowSucceeded)
           withoutPrior.goblin
         else
           {
             ...withoutPrior.goblin,
             activeEffects: activeEffectsWithoutEnsnaringStrike(withoutPrior.goblin.activeEffects)
               .union(Set(EnsnaringStrikeRestrained({ damageDice: ensnaringStrikeDamageDiceForSlot(slotLevel) }))),
-          },
-        bonusActionAvailable: false,
-        spellSlotExpendedThisTurn: true,
-      }
-    }
+	          },
+	        bonusActionAvailable: false,
+	      }, Fighter)
+	    }
     else
       state
 
@@ -4630,19 +4902,18 @@ module battleRuntime {
       not(state.fighter.incapacitated) and
       not(fighterHasRage(state))
     )
-      {
-        ...state,
-        goblin: {
-          ...applyDamageFromSource(state.goblin, smiteDamageRoll * (if (attackCritical) 2 else 1), 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter),
+	      commitActorSpellSlotUse({
+	        ...state,
+	        goblin: {
+	          ...applyDamageFromSource(state.goblin, smiteDamageRoll * (if (attackCritical) 2 else 1), 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter),
           activeEffects: activeEffectsWithoutSearingSmite(state.goblin.activeEffects)
             .union(Set(SearingSmiteBurning({
               damageDice: searingSmiteDamageDiceForSlot(slotLevel),
               durationTicks: searingSmiteDurationTicks,
             }))),
-        },
-        bonusActionAvailable: false,
-        spellSlotExpendedThisTurn: true,
-      }
+	        },
+	        bonusActionAvailable: false,
+	      }, Fighter)
     else
       state
 
@@ -4704,10 +4975,10 @@ module battleRuntime {
       not(state.fighter.incapacitated) and
       not(fighterHasRage(state))
     )
-      {
-        ...state,
-        fighter: {
-          ...state.fighter,
+	      commitActorSpellSlotUse({
+	        ...state,
+	        fighter: {
+	          ...state.fighter,
           concentrating: true,
             activeEffects: activeEffectsWithoutHuntersMark(state.fighter.activeEffects)
             .union(Set(HuntersMarkDamageRider({
@@ -4715,10 +4986,9 @@ module battleRuntime {
               transfer: AwaitingTargetDrop,
               durationTicks: huntersMarkDurationTicks(slotLevel),
             }))),
-        },
-        bonusActionAvailable: false,
-        spellSlotExpendedThisTurn: true,
-      }
+	        },
+	        bonusActionAvailable: false,
+	      }, Fighter)
     else
       state
 
@@ -4768,7 +5038,7 @@ module battleRuntime {
         ...state,
         fighter: {
           ...state.fighter,
-              activeEffects: activeEffectsWithoutHuntersMark(state.fighter.activeEffects)
+          activeEffects: activeEffectsWithoutHuntersMark(state.fighter.activeEffects)
             .union(Set(HuntersMarkDamageRider({
               target: target,
               transfer: AwaitingTargetDrop,
@@ -4797,7 +5067,7 @@ module battleRuntime {
       not(state.fighter.incapacitated) and
       not(fighterHasRage(state))
     )
-      {
+      commitActorSpellSlotUse({
         ...state,
         fighter: {
           ...state.fighter,
@@ -4811,8 +5081,7 @@ module battleRuntime {
             }))),
         },
         bonusActionAvailable: false,
-        spellSlotExpendedThisTurn: true,
-      }
+      }, Fighter)
     else
       state
 
@@ -5001,12 +5270,15 @@ module battleRuntime {
         goblin: { ...state.goblin, activeEffects: activeEffectsWithoutSpellEffectConcentration(state.goblin.activeEffects) },
       }
       val effected = rollModifierTargetedState(concentrationBase, invocation, affectedTargets)
-      {
+      val resolved = {
         ...effected,
         fighter: { ...effected.fighter, concentrating: true },
         actionAvailable: false,
-        spellSlotExpendedThisTurn: state.spellSlotExpendedThisTurn or rollModifierSpendsLevelOneSlot(invocation),
       }
+      if (rollModifierSpendsLevelOneSlot(invocation))
+        commitActorSpellSlotUse(resolved, Fighter)
+      else
+        resolved
     } else {
       state
     }
@@ -5613,6 +5885,7 @@ module battleRuntime {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
       openReactionWindow({ ...rolled, fighter: fighterWithoutProduceFlameHeldLight(rolled) }, {
         trigger: AttackHit,
+        procedure: ShieldReactionProcedure,
         eligibleReactors: Set(Goblin),
         offeredReactors: Set(),
         continuation: ResumeProduceFlameHurl,
@@ -5969,6 +6242,7 @@ module battleRuntime {
       | CureWounds => true
       | MassHealingWord => true
       | Shield => true
+      | Counterspell => true
       | FalseLife => true
       | Longstrider => true
       | ShieldOfFaith => true
@@ -6000,7 +6274,7 @@ module battleRuntime {
     }
 
   pure def canExpendSpellSlotThisTurn(state: BattleState): bool =
-    not(state.spellSlotExpendedThisTurn)
+    canActorExpendSpellSlotThisTurn(state, currentActor(state))
 
   pure def canDiscoverSpellActs(canCastSpells: bool, raging: bool): bool =
     canCastSpells and not(battleRuntimeRagePreventsSpellcasting(raging))
@@ -7063,23 +7337,21 @@ module battleRuntime {
     if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)))
       state
     else
-      {
+      commitActorSpellSlotUse({
         ...state,
         fighter: saveGatedDamageTarget(BurningHandsSaveGate, state.fighter, fighterSavingThrowSucceeded, damageRoll, fighterConcentrationSaveSucceeded, Fighter),
         goblin: saveGatedDamageTarget(BurningHandsSaveGate, state.goblin, goblinSavingThrowSucceeded, damageRoll, goblinConcentrationSaveSucceeded, Fighter),
         actionAvailable: false,
-        spellSlotExpendedThisTurn: true,
-      }
+      }, Fighter)
 
   pure def resolveBurningHandsEmptyArea(state: BattleState): BattleState =
     if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)))
       state
     else
-      {
+      commitActorSpellSlotUse({
         ...state,
         actionAvailable: false,
-        spellSlotExpendedThisTurn: true,
-      }
+      }, Fighter)
 
   pure def saveGatedConditionTarget(
     invocation: SaveGatedConditionInvocation,
@@ -7165,7 +7437,7 @@ module battleRuntime {
       state
     else {
       val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
-      {
+      commitActorSpellSlotUse({
         ...withoutPrior,
         fighter: { ...withoutPrior.fighter, concentrating: true },
         goblin: sleepInitialSaveTarget(
@@ -7178,8 +7450,7 @@ module battleRuntime {
           Fighter,
         ),
         actionAvailable: false,
-        spellSlotExpendedThisTurn: true,
-      }
+      }, Fighter)
     }
 
   pure def sleepRepeatSaveDue(effects: Set[ActiveEffect], actor: Actor, round: int): bool =
@@ -7356,13 +7627,12 @@ module battleRuntime {
       state
     else {
       val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
-      {
+      commitActorSpellSlotUse({
         ...withoutPrior,
         fighter: { ...withoutPrior.fighter, concentrating: true },
         goblin: hideousLaughterTarget(withoutPrior.goblin, Goblin, goblinSavingThrowSucceeded, Fighter),
         actionAvailable: false,
-        spellSlotExpendedThisTurn: true,
-      }
+      }, Fighter)
     }
 
   pure def hideousLaughterRepeatSaveDue(effects: Set[ActiveEffect], actor: Actor): bool =
@@ -7436,7 +7706,7 @@ module battleRuntime {
     if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)))
       state
     else
-      {
+      commitActorSpellSlotUse({
         ...state,
         fighter: {
           ...state.fighter,
@@ -7445,8 +7715,7 @@ module battleRuntime {
         },
         goblin: if (goblinIncludedInArea) combatantAfterGreaseSave(state.goblin, goblinSavingThrowSucceeded) else state.goblin,
         actionAvailable: false,
-        spellSlotExpendedThisTurn: true,
-      }
+      }, Fighter)
 
   pure def greaseGroundHazardActive(state: BattleState, areaId: int): bool =
     state.fighter.activeEffects.exists(effect => match effect {
@@ -7509,7 +7778,7 @@ module battleRuntime {
       state
     else {
       val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
-      {
+      commitActorSpellSlotUse({
         ...withoutPrior,
         fighter: {
           ...withoutPrior.fighter,
@@ -7522,8 +7791,7 @@ module battleRuntime {
             }))),
         },
         actionAvailable: false,
-        spellSlotExpendedThisTurn: true,
-      }
+      }, Fighter)
     }
 
   pure def fogCloudObscurementActive(state: BattleState, areaId: int): bool =
@@ -7575,7 +7843,7 @@ module battleRuntime {
     )
       state
     else
-      {
+      commitActorSpellSlotUse({
         ...state,
         fighter: if (failedTargets.contains(Fighter)) {
           ...state.fighter,
@@ -7588,8 +7856,7 @@ module battleRuntime {
             .union(Set(commandPendingEffectFor(state, Goblin, option))),
         } else state.goblin,
         actionAvailable: false,
-        spellSlotExpendedThisTurn: true,
-      }
+      }, Fighter)
 
   pure def commandPendingEffectsForActor(state: BattleState, actor: Actor, option: CommandOption): Set[ActiveEffect] =
     match actor {
@@ -7793,6 +8060,7 @@ module battleRuntime {
       else if (provokesOpportunityAttack)
         openReactionWindow(state, {
           trigger: OpportunityAttack,
+          procedure: OpportunityAttackReactionProcedure,
           eligibleReactors: if (actor == Fighter) Set(Goblin) else Set(Fighter),
           offeredReactors: Set(),
           continuation: ResumeCommandFleeMovement({
@@ -7888,13 +8156,12 @@ module battleRuntime {
     )
       state
     else
-      {
+      commitActorSpellSlotUse({
         ...state,
         fighter: if (fighterTargeted) saveGatedConditionTarget(invocation, state, state.fighter, fighterSavingThrowSucceeded, Fighter, HumanoidCreature) else state.fighter,
         goblin: if (goblinTargeted) saveGatedConditionTarget(invocation, state, state.goblin, goblinSavingThrowSucceeded, Fighter, HumanoidCreature) else state.goblin,
         actionAvailable: false,
-        spellSlotExpendedThisTurn: true,
-      }
+      }, Fighter)
 
   pure def resolveColorSpray(
     state: BattleState,
@@ -7904,23 +8171,21 @@ module battleRuntime {
     if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)))
       state
     else
-      {
+      commitActorSpellSlotUse({
         ...state,
         fighter: saveGatedConditionTarget(ColorSpraySaveGate, state, state.fighter, fighterSavingThrowSucceeded, Fighter, HumanoidCreature),
         goblin: saveGatedConditionTarget(ColorSpraySaveGate, state, state.goblin, goblinSavingThrowSucceeded, Fighter, HumanoidCreature),
         actionAvailable: false,
-        spellSlotExpendedThisTurn: true,
-      }
+      }, Fighter)
 
   pure def resolveColorSprayEmptyArea(state: BattleState): BattleState =
     if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)))
       state
     else
-      {
+      commitActorSpellSlotUse({
         ...state,
         actionAvailable: false,
-        spellSlotExpendedThisTurn: true,
-      }
+      }, Fighter)
 
   pure def saveGatedAttackRollAdvantageTarget(
     invocation: SaveGatedAttackRollAdvantageInvocation,
@@ -7964,7 +8229,7 @@ module battleRuntime {
       state
     else {
       val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
-      {
+      commitActorSpellSlotUse({
         ...withoutPrior,
         fighter: { ...saveGatedAttackRollAdvantageTarget(FaerieFireSaveGate, withoutPrior.fighter, fighterSavingThrowSucceeded), concentrating: true },
         goblin: saveGatedAttackRollAdvantageTarget(FaerieFireSaveGate, withoutPrior.goblin, goblinSavingThrowSucceeded),
@@ -7972,8 +8237,7 @@ module battleRuntime {
           objectTargets.map(objectTarget => FaerieFireObjectOutline({ source: Fighter, object: objectTarget }))
         ),
         actionAvailable: false,
-        spellSlotExpendedThisTurn: true,
-      }
+      }, Fighter)
     }
 
   pure def resolveFaerieFire(
@@ -7992,13 +8256,12 @@ module battleRuntime {
       state
     else {
       val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
-      {
+      commitActorSpellSlotUse({
         ...withoutPrior,
         fighter: { ...withoutPrior.fighter, concentrating: true },
         goblin: saveGatedConditionTarget(EntangleSaveGate, withoutPrior, withoutPrior.goblin, goblinSavingThrowSucceeded, Fighter, HumanoidCreature),
         actionAvailable: false,
-        spellSlotExpendedThisTurn: true,
-      }
+      }, Fighter)
     }
 
   pure def escapeEntangle(state: BattleState, checkSucceeded: bool): BattleState =
@@ -8030,13 +8293,15 @@ module battleRuntime {
       state
     else {
       val damaged = saveGatedDamageTarget(invocation, state.goblin, savingThrowSucceeded, damageRoll, concentrationSaveSucceeded, Fighter)
-      {
+      val resolved = {
         ...state,
         goblin: damaged,
         actionAvailable: false,
-        spellSlotExpendedThisTurn:
-          if (saveGatedDamageSpendsLevelOneSlot(invocation)) true else state.spellSlotExpendedThisTurn,
       }
+      if (saveGatedDamageSpendsLevelOneSlot(invocation))
+        commitActorSpellSlotUse(resolved, Fighter)
+      else
+        resolved
     }
 
   pure def resolveSacredFlame(
@@ -8109,6 +8374,7 @@ module battleRuntime {
       if (hit and state.goblin.reactionAvailable and not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
         openReactionWindow(rolled, {
           trigger: AttackHit,
+          procedure: ShieldReactionProcedure,
           eligibleReactors: Set(Goblin),
           offeredReactors: Set(),
           continuation: ResumeIceKnife,
@@ -8138,13 +8404,12 @@ module battleRuntime {
             iceKnifeBurstTarget(rolled.fighter, fighterSavingThrowSucceeded, burstDamageRoll, fighterConcentrationSaveSucceeded)
           else
             rolled.fighter
-        {
+        commitActorSpellSlotUse({
           ...rolled,
           fighter: damagedFighter,
           goblin: damagedGoblin,
           actionAvailable: false,
-          spellSlotExpendedThisTurn: true,
-        }
+        }, Fighter)
       }
     }
 
@@ -8939,6 +9204,7 @@ module battleRuntime {
     all {
       assert(pendingReactionFrame(awaiting.interruptStack[0]) == HasPendingReactionFrame({
         trigger: AttackHit,
+        procedure: ShieldReactionProcedure,
         eligibleReactors: Set(Goblin),
         offeredReactors: Set(),
         continuation: ResumeRayOfFrost,
@@ -8962,6 +9228,7 @@ module battleRuntime {
   run test_shield_reaction_spell_spends_turn_spell_slot = {
     val awaiting = openReactionWindow(initialState, {
       trigger: SpellCast,
+      procedure: ShieldReactionProcedure,
       eligibleReactors: Set(Fighter),
       offeredReactors: Set(),
       continuation: ResumeRayOfFrost,
@@ -8970,18 +9237,139 @@ module battleRuntime {
     all {
       assert(resolved.fighter.activeEffects.contains(ShieldArmorClassBonus)),
       assert(not(resolved.fighter.reactionAvailable)),
-      assert(resolved.spellSlotExpendedThisTurn),
+      assert(battleActorHasCommittedSpellSlotUse(resolved, Fighter)),
     }
   }
 
   run test_shield_reaction_spell_rejects_second_slot_spell_in_same_turn = {
-    val awaiting = openReactionWindow({ ...initialState, spellSlotExpendedThisTurn: true }, {
+    val awaiting = openReactionWindow({ ...initialState, spellSlotUsesThisTurn: Set(BattleCommittedSpellSlotUse(Fighter)) }, {
       trigger: SpellCast,
+      procedure: ShieldReactionProcedure,
       eligibleReactors: Set(Fighter),
       offeredReactors: Set(),
       continuation: ResumeRayOfFrost,
     })
     assert(resolveReaction(awaiting, Fighter) == awaiting)
+  }
+
+  run test_counterspell_reaction_spell_ends_spell_cast_window_and_wastes_casting_action = {
+    val awaiting = openReactionWindow(initialState, {
+      trigger: SpellCast,
+      procedure: CounterspellReactionProcedure({
+        triggeringCaster: Fighter,
+        triggeringCastingResource: CounterspellMagicAction,
+        triggeringSpellLevel: 1,
+        triggeringSpellUsesSlot: true,
+        counterspellSlotLevel: 3,
+        triggeringCasterConSaveSucceeded: true,
+        counterspellSpellCastReaction: CounterspellSpellCastNotCountered,
+      }),
+      eligibleReactors: Set(Goblin),
+      offeredReactors: Set(),
+      continuation: ResumeRayOfFrost,
+    })
+    val resolved = resolveReaction(awaiting, Goblin)
+    all {
+      assert(resolved.interruptStack == []),
+      assert(not(resolved.goblin.reactionAvailable)),
+      assert(not(battleActorHasSpellSlotUse(resolved, Fighter))),
+      assert(battleActorHasCommittedSpellSlotUse(resolved, Goblin)),
+      assert(not(resolved.actionAvailable)),
+      assert(resolved.goblin.hp == 10),
+    }
+  }
+
+  run test_counterspell_reaction_spell_failed_save_gate_resumes_triggering_spell = {
+    val awaiting = openReactionWindow(initialState, {
+      trigger: SpellCast,
+      procedure: CounterspellReactionProcedure({
+        triggeringCaster: Fighter,
+        triggeringCastingResource: CounterspellMagicAction,
+        triggeringSpellLevel: 4,
+        triggeringSpellUsesSlot: true,
+        counterspellSlotLevel: 3,
+        triggeringCasterConSaveSucceeded: true,
+        counterspellSpellCastReaction: CounterspellSpellCastNotCountered,
+      }),
+      eligibleReactors: Set(Goblin),
+      offeredReactors: Set(),
+      continuation: ResumeRayOfFrost,
+    })
+    val resolved = resolveReaction(awaiting, Goblin)
+    all {
+      assert(resolved.interruptStack == []),
+      assert(not(resolved.goblin.reactionAvailable)),
+      assert(battleActorHasCommittedSpellSlotUse(resolved, Fighter)),
+      assert(battleActorHasCommittedSpellSlotUse(resolved, Goblin)),
+      assert(not(resolved.actionAvailable)),
+      assert(resolved.goblin.hp == 6),
+    }
+  }
+
+  run test_counterspell_reaction_spell_can_be_counterspelled_before_slot_commit = {
+    val awaiting = openReactionWindow(initialState, {
+      trigger: SpellCast,
+      procedure: CounterspellReactionProcedure({
+        triggeringCaster: Fighter,
+        triggeringCastingResource: CounterspellMagicAction,
+        triggeringSpellLevel: 1,
+        triggeringSpellUsesSlot: false,
+        counterspellSlotLevel: 3,
+        triggeringCasterConSaveSucceeded: true,
+        counterspellSpellCastReaction: CounterspellSpellCastCounteredByReaction({
+          reactor: Fighter,
+          counterspellSlotLevel: 3,
+          counterspellCasterConSaveSucceeded: true,
+        }),
+      }),
+      eligibleReactors: Set(Goblin),
+      offeredReactors: Set(),
+      continuation: ResumeRayOfFrost,
+    })
+    val resolved = resolveReaction(awaiting, Goblin)
+    all {
+      assert(resolved.interruptStack == []),
+      assert(not(resolved.fighter.reactionAvailable)),
+      assert(not(resolved.goblin.reactionAvailable)),
+      assert(battleActorHasCommittedSpellSlotUse(resolved, Fighter)),
+      assert(not(battleActorHasSpellSlotUse(resolved, Goblin))),
+      assert(not(resolved.actionAvailable)),
+      assert(resolved.goblin.hp == 6),
+    }
+  }
+
+  run test_counterspell_nested_reaction_requires_reaction_availability = {
+    val reactionSpellState = {
+      ...initialState,
+      fighter: { ...initialState.fighter, reactionAvailable: false },
+    }
+    val awaiting = openReactionWindow(reactionSpellState, {
+      trigger: SpellCast,
+      procedure: CounterspellReactionProcedure({
+        triggeringCaster: Fighter,
+        triggeringCastingResource: CounterspellReaction,
+        triggeringSpellLevel: 3,
+        triggeringSpellUsesSlot: true,
+        counterspellSlotLevel: 3,
+        triggeringCasterConSaveSucceeded: true,
+        counterspellSpellCastReaction: CounterspellSpellCastCounteredByReaction({
+          reactor: Fighter,
+          counterspellSlotLevel: 3,
+          counterspellCasterConSaveSucceeded: true,
+        }),
+      }),
+      eligibleReactors: Set(Goblin),
+      offeredReactors: Set(),
+      continuation: ResumeRayOfFrost,
+    })
+    val resolved = resolveReaction(awaiting, Goblin)
+    all {
+      assert(resolved.interruptStack == []),
+      assert(not(resolved.fighter.reactionAvailable)),
+      assert(not(resolved.goblin.reactionAvailable)),
+      assert(not(battleActorHasSpellSlotUse(resolved, Fighter))),
+      assert(battleActorHasCommittedSpellSlotUse(resolved, Goblin)),
+    }
   }
 
   run test_normal_rage_ends_when_drop_to_zero_sets_unconscious = {
@@ -9033,7 +9421,7 @@ module battleRuntime {
       assert(resolved.fighter.activeEffects.contains(GreaseGroundHazard({ areaId: greaseAreaId, durationTicks: greaseDurationTicks }))),
       assert(resolved.goblin.prone),
       assert(not(resolved.actionAvailable)),
-      assert(resolved.spellSlotExpendedThisTurn),
+      assert(battleActorHasCommittedSpellSlotUse(resolved, Fighter)),
     }
   }
 
@@ -9085,7 +9473,7 @@ module battleRuntime {
       }))),
       assert(resolved.fighter.concentrating),
       assert(not(resolved.actionAvailable)),
-      assert(resolved.spellSlotExpendedThisTurn),
+      assert(battleActorHasCommittedSpellSlotUse(resolved, Fighter)),
     }
   }
 
@@ -9123,7 +9511,7 @@ module battleRuntime {
   run test_command_grovel_records_next_turn_pending_effect_on_failed_save = {
     val resolved = resolveCommand(initialState, Set(Goblin), Set(Goblin), 1, CommandGrovelOption)
     all {
-      assert(resolved.spellSlotExpendedThisTurn),
+      assert(battleActorHasCommittedSpellSlotUse(resolved, Fighter)),
       assert(not(resolved.actionAvailable)),
       assert(resolved.goblin.activeEffects.contains(CommandPending({
         source: Fighter,
@@ -9308,6 +9696,7 @@ module battleRuntime {
       assert(followed.interruptStack.length() == 1),
       assert(pendingReactionFrame(followed.interruptStack[0]) == HasPendingReactionFrame({
         trigger: OpportunityAttack,
+        procedure: OpportunityAttackReactionProcedure,
         eligibleReactors: Set(Fighter),
         offeredReactors: Set(),
         continuation: ResumeCommandFleeMovement({
@@ -9326,16 +9715,16 @@ module battleRuntime {
       assert(cure.fighter.hp == 12),
       assert(not(cure.actionAvailable)),
       assert(cure.bonusActionAvailable),
-      assert(cure.spellSlotExpendedThisTurn),
+      assert(battleActorHasCommittedSpellSlotUse(cure, Fighter)),
       assert(massWord.fighter.hp == 12),
       assert(massWord.actionAvailable),
       assert(not(massWord.bonusActionAvailable)),
-      assert(massWord.spellSlotExpendedThisTurn),
+      assert(battleActorHasCommittedSpellSlotUse(massWord, Fighter)),
     }
   }
 
   run test_direct_hit_point_restoration_rejects_second_slot_spell_in_same_turn = {
-    val wounded = { ...initialState, fighter: { ...initialState.fighter, hp: 4 }, spellSlotExpendedThisTurn: true }
+    val wounded = commitActorSpellSlotUse({ ...initialState, fighter: { ...initialState.fighter, hp: 4 } }, Fighter)
     assert(resolveDirectHitPointRestoration(wounded, CureWoundsRestoration, 1, 7, 3) == wounded)
   }
 
@@ -9616,7 +10005,7 @@ module battleRuntime {
       assert(huntersMarkDurationTicks(4) == 4800),
       assert(huntersMarkDurationTicks(5) == 14400),
       assert(resolveFavoredEnemyHuntersMark(initialState, Goblin, 2).favoredEnemyUsesRemaining == 1),
-      assert(not(resolveFavoredEnemyHuntersMark(initialState, Goblin, 2).state.spellSlotExpendedThisTurn)),
+      assert(not(battleActorHasSpellSlotUse(resolveFavoredEnemyHuntersMark(initialState, Goblin, 2).state, Fighter))),
       assert(activeEffectsContainHuntersMark(resolveFavoredEnemyHuntersMark(initialState, Goblin, 2).state.fighter.activeEffects)),
       assert(resolveFavoredEnemyHuntersMark(initialState, Goblin, 0).state == initialState),
       assert(fighterHuntersMarkDamage(4, Set(HuntersMarkDamageRider({ target: Goblin, transfer: AwaitingTargetDrop, durationTicks: 600 })), Goblin) == 4),
@@ -9700,13 +10089,13 @@ module battleRuntime {
     }
   }
 
-  run test_guidance_preserves_existing_spell_slot_expended_turn_guard = {
-    val alreadySpent = { ...initialState, spellSlotExpendedThisTurn: true }
+  run test_guidance_preserves_existing_turn_spell_slot_guard = {
+    val alreadySpent = commitActorSpellSlotUse(initialState, Fighter)
     val result = resolveRollModifierSpell(alreadySpent, GuidanceRollModifier, Set(Fighter), Set(), 0)
     all {
       assert(result.fighter.concentrating),
       assert(result.fighter.activeEffects.contains(GuidanceAbilityCheckBonus)),
-      assert(result.spellSlotExpendedThisTurn),
+      assert(battleActorHasCommittedSpellSlotUse(result, Fighter)),
     }
   }
 
@@ -9990,7 +10379,7 @@ module battleRuntime {
     val result = resolveBurningHands(initialState, false, true, 6, true, true)
     all {
       assert(result.actionAvailable == false),
-      assert(result.spellSlotExpendedThisTurn == true),
+      assert(battleActorHasCommittedSpellSlotUse(result, Fighter)),
       assert(result.fighter.hp == 6),
       assert(result.goblin.hp == 7),
     }
@@ -10000,7 +10389,7 @@ module battleRuntime {
     val result = resolveBurningHandsEmptyArea(initialState)
     all {
       assert(result.actionAvailable == false),
-      assert(result.spellSlotExpendedThisTurn == true),
+      assert(battleActorHasCommittedSpellSlotUse(result, Fighter)),
       assert(result.fighter.hp == 12),
       assert(result.goblin.hp == 10),
     }
@@ -10011,7 +10400,7 @@ module battleRuntime {
     val result = resolveIceKnife(noReaction, 20, 20, 5, false, false, false, 6, true, true)
     all {
       assert(result.actionAvailable == false),
-      assert(result.spellSlotExpendedThisTurn),
+      assert(battleActorHasCommittedSpellSlotUse(result, Fighter)),
       assert(result.attackRollMadeThisTurn),
       assert(result.goblin.hp == 0),
       assert(result.fighter.hp == 12),
@@ -10023,10 +10412,10 @@ module battleRuntime {
     val succeeded = resolveIceKnife(initialState, 1, 1, 5, true, false, false, 6, true, true)
     all {
       assert(failed.actionAvailable == false),
-      assert(failed.spellSlotExpendedThisTurn),
+      assert(battleActorHasCommittedSpellSlotUse(failed, Fighter)),
       assert(failed.goblin.hp == 4),
       assert(succeeded.actionAvailable == false),
-      assert(succeeded.spellSlotExpendedThisTurn),
+      assert(battleActorHasCommittedSpellSlotUse(succeeded, Fighter)),
       assert(succeeded.goblin.hp == 10),
     }
   }
@@ -10057,13 +10446,14 @@ module battleRuntime {
     all {
       assert(pendingReactionFrame(awaiting.interruptStack[0]) == HasPendingReactionFrame({
         trigger: AttackHit,
+        procedure: ShieldReactionProcedure,
         eligibleReactors: Set(Goblin),
         offeredReactors: Set(),
         continuation: ResumeIceKnife,
       })),
       assert(awaiting.goblin.hp == 10),
       assert(awaiting.actionAvailable),
-      assert(not(awaiting.spellSlotExpendedThisTurn)),
+      assert(not(battleActorHasSpellSlotUse(awaiting, Fighter))),
     }
   }
 
@@ -10072,7 +10462,7 @@ module battleRuntime {
     val blinded = ColorSprayBlinded({ source: Fighter, expiresAtRound: 2 })
     all {
       assert(result.actionAvailable == false),
-      assert(result.spellSlotExpendedThisTurn == true),
+      assert(battleActorHasCommittedSpellSlotUse(result, Fighter)),
       assert(result.fighter.activeEffects.contains(blinded)),
       assert(not(result.goblin.activeEffects.contains(blinded))),
     }
@@ -10096,7 +10486,7 @@ module battleRuntime {
     val result = resolveColorSprayEmptyArea(initialState)
     all {
       assert(result.actionAvailable == false),
-      assert(result.spellSlotExpendedThisTurn == true),
+      assert(battleActorHasCommittedSpellSlotUse(result, Fighter)),
       assert(not(result.fighter.activeEffects.exists(effect => match effect {
         | ColorSprayBlinded(_) => true
         | _ => false
@@ -10113,7 +10503,7 @@ module battleRuntime {
     val broken = breakConcentrationSpellEffects(lit, Fighter)
     all {
       assert(lit.actionAvailable == false),
-      assert(lit.spellSlotExpendedThisTurn == true),
+      assert(battleActorHasCommittedSpellSlotUse(lit, Fighter)),
       assert(lit.fighter.concentrating),
       assert(not(lit.fighter.activeEffects.contains(FaerieFireOutline))),
       assert(lit.goblin.activeEffects.contains(FaerieFireOutline)),
@@ -10243,7 +10633,7 @@ module battleRuntime {
     val broken = breakConcentrationSpellEffects(slept, Fighter)
     all {
       assert(not(slept.actionAvailable)),
-      assert(slept.spellSlotExpendedThisTurn),
+      assert(battleActorHasCommittedSpellSlotUse(slept, Fighter)),
       assert(slept.fighter.concentrating),
       assert(slept.goblin.incapacitated),
       assert(slept.goblin.activeEffects.contains(SleepPendingRepeatSave({
@@ -10263,12 +10653,12 @@ module battleRuntime {
     val exhaustionImmune = resolveSleepTargetAdmission(initialState, false, false, true)
     all {
       assert(not(nonSleeper.actionAvailable)),
-      assert(nonSleeper.spellSlotExpendedThisTurn),
+      assert(battleActorHasCommittedSpellSlotUse(nonSleeper, Fighter)),
       assert(nonSleeper.fighter.concentrating),
       assert(not(nonSleeper.goblin.incapacitated)),
       assert(not(combatantHasSleepEffect(nonSleeper.goblin))),
       assert(not(exhaustionImmune.actionAvailable)),
-      assert(exhaustionImmune.spellSlotExpendedThisTurn),
+      assert(battleActorHasCommittedSpellSlotUse(exhaustionImmune, Fighter)),
       assert(exhaustionImmune.fighter.concentrating),
       assert(not(exhaustionImmune.goblin.incapacitated)),
       assert(not(combatantHasSleepEffect(exhaustionImmune.goblin))),
@@ -10462,7 +10852,7 @@ module battleRuntime {
     all {
       assert(result.actionAvailable == false),
       assert(result.goblin.hp == 3),
-      assert(not(result.spellSlotExpendedThisTurn)),
+      assert(not(battleActorHasSpellSlotUse(result, Fighter))),
     }
   }
 
@@ -10473,7 +10863,7 @@ module battleRuntime {
       assert(result.actionAvailable == false),
       assert(result.goblin.hp == 4),
       assert(result.goblin.activeEffects.contains(ChillTouchHitPointRegainPrevented({ source: Fighter, expiresAtRound: 2 }))),
-      assert(not(result.spellSlotExpendedThisTurn)),
+      assert(not(battleActorHasSpellSlotUse(result, Fighter))),
     }
   }
 
@@ -10548,10 +10938,10 @@ module battleRuntime {
     all {
       assert(result.actionAvailable == false),
       assert(result.goblin.hp == 6),
-      assert(not(result.spellSlotExpendedThisTurn)),
+      assert(not(battleActorHasSpellSlotUse(result, Fighter))),
       assert(twoHits.actionAvailable == false),
       assert(twoHits.goblin.hp == 0),
-      assert(not(twoHits.spellSlotExpendedThisTurn)),
+      assert(not(battleActorHasSpellSlotUse(twoHits, Fighter))),
     }
   }
 
@@ -10561,24 +10951,24 @@ module battleRuntime {
     all {
       assert(failed.actionAvailable == false),
       assert(failed.goblin.hp == 3),
-      assert(not(failed.spellSlotExpendedThisTurn)),
+      assert(not(battleActorHasSpellSlotUse(failed, Fighter))),
       assert(succeeded.actionAvailable == false),
       assert(succeeded.goblin.hp == 10),
-      assert(not(succeeded.spellSlotExpendedThisTurn)),
+      assert(not(battleActorHasSpellSlotUse(succeeded, Fighter))),
     }
   }
 
   run test_inflict_wounds_spends_slot_and_halves_damage_on_successful_saving_throw = {
     val failed = resolveInflictWounds(initialState, false, 10, true)
     val succeeded = resolveInflictWounds(initialState, true, 10, true)
-    val alreadySpent = { ...initialState, spellSlotExpendedThisTurn: true }
+    val alreadySpent = commitActorSpellSlotUse(initialState, Fighter)
     all {
       assert(failed.actionAvailable == false),
       assert(failed.goblin.hp == 0),
-      assert(failed.spellSlotExpendedThisTurn),
+      assert(battleActorHasCommittedSpellSlotUse(failed, Fighter)),
       assert(succeeded.actionAvailable == false),
       assert(succeeded.goblin.hp == 5),
-      assert(succeeded.spellSlotExpendedThisTurn),
+      assert(battleActorHasCommittedSpellSlotUse(succeeded, Fighter)),
       assert(resolveInflictWounds(alreadySpent, false, 10, true) == alreadySpent),
     }
   }
@@ -10955,7 +11345,7 @@ module battleRuntime {
     all {
       assert(result.fighter.activeEffects.contains(mageArmorActiveEffect(mageArmorDurationTicks))),
       assert(not(result.actionAvailable)),
-      assert(not(result.spellSlotExpendedThisTurn)),
+      assert(not(battleActorHasSpellSlotUse(result, Fighter))),
     }
   }
 
@@ -10965,7 +11355,7 @@ module battleRuntime {
     all {
       assert(not(activeEffectsContainMageArmor(result.fighter.activeEffects))),
       assert(result.actionAvailable),
-      assert(not(result.spellSlotExpendedThisTurn)),
+      assert(not(battleActorHasSpellSlotUse(result, Fighter))),
     }
   }
 
@@ -10975,7 +11365,7 @@ module battleRuntime {
     all {
       assert(result.fighter.activeEffects == Set(mageArmorActiveEffect(mageArmorDurationTicks))),
       assert(not(result.actionAvailable)),
-      assert(not(result.spellSlotExpendedThisTurn)),
+      assert(not(battleActorHasSpellSlotUse(result, Fighter))),
     }
   }
 
@@ -11053,7 +11443,7 @@ module battleRuntime {
     all {
       assert(result.actionAvailable),
       assert(not(result.bonusActionAvailable)),
-      assert(result.spellSlotExpendedThisTurn),
+      assert(battleActorHasCommittedSpellSlotUse(result, Fighter)),
       assert(result.dashMovementBonus == 30),
       assert(movementRemainingForFighterWithSpeedKind(result, WalkSpeedKind) == 60),
       assert(result.fighter.concentrating),
@@ -11093,7 +11483,7 @@ module battleRuntime {
     val tooMany = resolveJumpMovementReplacementSpell(initialState, Set(Fighter, Goblin), Set(Fighter, Goblin), 1)
     all {
       assert(not(firstSlot.bonusActionAvailable)),
-      assert(firstSlot.spellSlotExpendedThisTurn),
+      assert(battleActorHasCommittedSpellSlotUse(firstSlot, Fighter)),
       assert(firstSlot.fighter.activeEffects.contains(JumpMovementReplacement({ durationTicks: 10, usedThisTurn: false }))),
       assert(secondSlot.fighter.activeEffects.contains(JumpMovementReplacement({ durationTicks: 10, usedThisTurn: false }))),
       assert(secondSlot.goblin.activeEffects.contains(JumpMovementReplacement({ durationTicks: 10, usedThisTurn: false }))),
@@ -11107,15 +11497,19 @@ module battleRuntime {
     val noReaction = resolveFeatherFallSpell({ ...initialState, fighter: { ...initialState.fighter, reactionAvailable: false } }, Fighter, Set(Fighter), Set(Fighter), 1)
     val nonFallingTarget = resolveFeatherFallSpell(initialState, Fighter, Set(Fighter, Goblin), Set(Fighter), 2)
     val tooMany = resolveFeatherFallSpell(initialState, Fighter, Set(Fighter, Goblin), Set(Fighter, Goblin), 6)
+    val goblinTurnSpentSlot = commitActorSpellSlotUse(endTurn(initialState), Goblin)
+    val offTurnResolved = resolveFeatherFallSpell(goblinTurnSpentSlot, Fighter, Set(Fighter), Set(Fighter), 1)
     all {
       assert(not(resolved.fighter.reactionAvailable)),
-      assert(resolved.spellSlotExpendedThisTurn),
+      assert(battleActorHasCommittedSpellSlotUse(resolved, Fighter)),
       assert(resolved.fighter.activeEffects.contains(FeatherFallMitigation({ durationTicks: 10 }))),
       assert(resolved.goblin.activeEffects.contains(FeatherFallMitigation({ durationTicks: 10 }))),
       assert(activeFeatherFallDescentRateCapFeetPerRound(resolved.fighter.activeEffects) == 60),
       assert(noReaction == { ...initialState, fighter: { ...initialState.fighter, reactionAvailable: false } }),
       assert(nonFallingTarget == initialState),
       assert(tooMany == initialState),
+      assert(battleActorHasCommittedSpellSlotUse(offTurnResolved, Goblin)),
+      assert(battleActorHasCommittedSpellSlotUse(offTurnResolved, Fighter)),
     }
   }
 
@@ -11178,7 +11572,7 @@ module battleRuntime {
     all {
       assert(favored.fighter.activeEffects.contains(DivineFavorWeaponDamageRider({ durationTicks: favorWeaponDamageRiderDurationTicks }))),
       assert(not(favored.bonusActionAvailable)),
-      assert(favored.spellSlotExpendedThisTurn),
+      assert(battleActorHasCommittedSpellSlotUse(favored, Fighter)),
       assert(hit.goblin.hp == 0),
     }
   }
@@ -11205,12 +11599,12 @@ module battleRuntime {
 
   run test_divine_smite_after_hit_spends_bonus_action_and_slot_without_base_attack_replay = {
     val smote = resolveDivineSmiteAfterMeleeHit(initialState, 1, 5, HumanoidCreature, false, true)
-    val alreadySpent = resolveDivineSmiteAfterMeleeHit({ ...initialState, spellSlotExpendedThisTurn: true }, 1, 5, HumanoidCreature, false, true)
+    val alreadySpent = resolveDivineSmiteAfterMeleeHit(commitActorSpellSlotUse(initialState, Fighter), 1, 5, HumanoidCreature, false, true)
     val critical = resolveDivineSmiteAfterMeleeHit(initialState, 1, 5, HumanoidCreature, true, true)
     all {
       assert(smote.goblin.hp == 5),
       assert(not(smote.bonusActionAvailable)),
-      assert(smote.spellSlotExpendedThisTurn),
+      assert(battleActorHasCommittedSpellSlotUse(smote, Fighter)),
       assert(alreadySpent.goblin.hp == initialState.goblin.hp),
       assert(critical.goblin.hp == 0),
     }
@@ -11228,7 +11622,7 @@ module battleRuntime {
       assert(ensnared.goblin.activeEffects.contains(EnsnaringStrikeRestrained({ damageDice: 1 }))),
       assert(ensnared.fighter.concentrating),
       assert(not(ensnared.bonusActionAvailable)),
-      assert(ensnared.spellSlotExpendedThisTurn),
+      assert(battleActorHasCommittedSpellSlotUse(ensnared, Fighter)),
       assert(damaged.goblin.hp == initialState.goblin.hp - 4),
       assert(not(escaped.goblin.activeEffects.contains(EnsnaringStrikeRestrained({ damageDice: 1 })))),
       assert(not(escaped.fighter.concentrating)),
@@ -11251,7 +11645,7 @@ module battleRuntime {
       assert(seared.goblin.hp == initialState.goblin.hp - 6),
       assert(seared.goblin.activeEffects.contains(SearingSmiteBurning({ damageDice: 3, durationTicks: searingSmiteDurationTicks }))),
       assert(not(seared.bonusActionAvailable)),
-      assert(seared.spellSlotExpendedThisTurn),
+      assert(battleActorHasCommittedSpellSlotUse(seared, Fighter)),
       assert(stillBurning.goblin.hp == 0),
       assert(activeEffectsContainSearingSmite(stillBurning.goblin.activeEffects)),
       assert(ended.goblin.hp == 0),
@@ -11292,7 +11686,7 @@ module battleRuntime {
     all {
       assert(hit.goblin.hp == 0),
       assert(not(hit.actionAvailable)),
-      assert(not(hit.spellSlotExpendedThisTurn)),
+      assert(not(battleActorHasSpellSlotUse(hit, Fighter))),
       assert(spellInvocationSpendsLevelOneSlot(TrueStrike) == false),
       assert(trueStrikeWeaponAttackModifier(3, 3) == 6),
       assert(trueStrikeDamageAfterAdjustments(4, 5, 3, 5, Radiant) == 12),
@@ -11317,7 +11711,7 @@ module battleRuntime {
     all {
       assert(club.fighter.activeEffects.contains(shillelaghEffect(ShillelaghClub, 3, 1))),
       assert(not(club.bonusActionAvailable)),
-      assert(not(club.spellSlotExpendedThisTurn)),
+      assert(not(battleActorHasSpellSlotUse(club, Fighter))),
       assert(quarterstaff.fighter.activeEffects.contains(shillelaghEffect(ShillelaghQuarterstaff, 3, 1))),
       assert(resolveShillelagh(initialState, HeldOtherWeapon, 3, 1) == initialState),
       assert(resolveShillelagh(initialState, HeldNoWeapon, 3, 1) == initialState),
@@ -11379,7 +11773,7 @@ module battleRuntime {
       assert(result.fighter.activeEffects.contains(ProduceFlameHeldLight({ durationTicks: produceFlameDurationTicks }))),
       assert(not(result.bonusActionAvailable)),
       assert(result.actionAvailable),
-      assert(not(result.spellSlotExpendedThisTurn)),
+      assert(not(battleActorHasSpellSlotUse(result, Fighter))),
       assert(produceFlameBrightLightRadiusFeet == 20),
       assert(produceFlameDimLightAdditionalFeet == 20),
       assert(battleRuntimeLightEmitters(result).contains(produceFlameHeldLightEmitter(produceFlameDurationTicks))),
@@ -11479,7 +11873,7 @@ module battleRuntime {
       assert(result.lightEmitters.contains(lightObjectEmitter(LightObjectTarget))),
       assert(not(result.actionAvailable)),
       assert(result.bonusActionAvailable),
-      assert(not(result.spellSlotExpendedThisTurn)),
+      assert(not(battleActorHasSpellSlotUse(result, Fighter))),
       assert(result.fighter.activeEffects == Set()),
       assert(result.goblin.activeEffects == Set()),
       assert(lightBrightLightRadiusFeet == 20),
@@ -11596,6 +11990,7 @@ module battleRuntime {
       assert(awaiting.interruptStack.length() == 1),
       assert(pendingReactionFrame(awaiting.interruptStack[0]) == HasPendingReactionFrame({
         trigger: AttackHit,
+        procedure: ShieldReactionProcedure,
         eligibleReactors: Set(Goblin),
         offeredReactors: Set(),
         continuation: ResumeProduceFlameHurl,
@@ -11838,6 +12233,7 @@ module battleRuntime {
       assert(awaiting.interruptStack.length() == 1),
       assert(pendingReactionFrame(awaiting.interruptStack[0]) == HasPendingReactionFrame({
         trigger: OpportunityAttack,
+        procedure: OpportunityAttackReactionProcedure,
         eligibleReactors: Set(Goblin),
         offeredReactors: Set(),
         continuation: ResumeMovement({ speedKind: WalkSpeedKind, movementCost: 5 }),
@@ -11875,6 +12271,7 @@ module battleRuntime {
       assert(awaiting.interruptStack.length() == 1),
       assert(pendingReactionFrame(awaiting.interruptStack[0]) == HasPendingReactionFrame({
         trigger: AfterDamage,
+        procedure: DamageInterruptionReactionProcedure,
         eligibleReactors: Set(Fighter),
         offeredReactors: Set(),
         continuation: ResumeHellishRebukeAfterDamage({
@@ -11891,7 +12288,16 @@ module battleRuntime {
       ...initialState,
       fighter: { ...initialState.fighter, reactionAvailable: false },
     }
-    val noSlot = { ...initialState, spellSlotExpendedThisTurn: true }
+    val noSlot = commitActorSpellSlotUse(initialState, Fighter)
+    val goblinTurnSpentSlot = commitActorSpellSlotUse(endTurn(initialState), Goblin)
+    val offTurnWindow = openHellishRebukeAfterDamageReactionWindow(
+      goblinTurnSpentSlot,
+      Goblin,
+      Fighter,
+      HellishRebukeDamageFromVisibleCreatureWithin60Feet,
+      true,
+      1,
+    )
     val available = {
       hellishRebukeAvailable: true,
       reactionAvailable: true,
@@ -11910,6 +12316,7 @@ module battleRuntime {
       assert(openHellishRebukeAfterDamageReactionWindow(noReaction, Goblin, Fighter, HellishRebukeDamageFromVisibleCreatureWithin60Feet, true, 1) == noReaction),
       assert(openHellishRebukeAfterDamageReactionWindow(noSlot, Goblin, Fighter, HellishRebukeDamageFromVisibleCreatureWithin60Feet, true, 1) == noSlot),
       assert(openHellishRebukeAfterDamageReactionWindow(initialState, Goblin, Fighter, HellishRebukeDamageFromVisibleCreatureWithin60Feet, false, 1) == initialState),
+      assert(offTurnWindow.interruptStack.length() == 1),
     }
   }
 
@@ -11917,15 +12324,19 @@ module battleRuntime {
     val continuation = { damager: Goblin, damaged: Fighter, slotLevel: 2 }
     val failedSave = resolveHellishRebukeAfterDamageReaction(initialState, continuation, false, 3, true)
     val successfulSave = resolveHellishRebukeAfterDamageReaction(initialState, continuation, true, 5, true)
+    val goblinTurnSpentSlot = commitActorSpellSlotUse(endTurn(initialState), Goblin)
+    val offTurnResolved = resolveHellishRebukeAfterDamageReaction(goblinTurnSpentSlot, continuation, false, 3, true)
     all {
       assert(hellishRebukeDamageDice(1) == 2),
       assert(hellishRebukeDamageDice(2) == 3),
       assert(failedSave.goblin.hp == 7),
       assert(failedSave.fighter.reactionAvailable == false),
-      assert(failedSave.spellSlotExpendedThisTurn),
+      assert(battleActorHasCommittedSpellSlotUse(failedSave, Fighter)),
       assert(successfulSave.goblin.hp == 8),
       assert(successfulSave.fighter.reactionAvailable == false),
-      assert(successfulSave.spellSlotExpendedThisTurn),
+      assert(battleActorHasCommittedSpellSlotUse(successfulSave, Fighter)),
+      assert(battleActorHasCommittedSpellSlotUse(offTurnResolved, Goblin)),
+      assert(battleActorHasCommittedSpellSlotUse(offTurnResolved, Fighter)),
     }
   }
 
@@ -11934,7 +12345,7 @@ module battleRuntime {
       ...initialState,
       fighter: { ...initialState.fighter, reactionAvailable: false },
     }
-    val noSlot = { ...initialState, spellSlotExpendedThisTurn: true }
+    val noSlot = commitActorSpellSlotUse(initialState, Fighter)
     val continuation = { damager: Goblin, damaged: Fighter, slotLevel: 1 }
     all {
       assert(resolveHellishRebukeAfterDamageReaction(noReaction, continuation, false, 3, true) == noReaction),
@@ -11963,6 +12374,7 @@ module battleRuntime {
             assert(result.interruptStack.length() == 1),
             assert(pendingReactionFrame(result.interruptStack[0]) == HasPendingReactionFrame({
               trigger: AfterDamage,
+              procedure: DamageInterruptionReactionProcedure,
               eligibleReactors: Set(Fighter),
               offeredReactors: Set(),
               continuation: ResumeAfterDamage,
@@ -11981,6 +12393,7 @@ module battleRuntime {
             assert(result.interruptStack.length() == 1),
             assert(pendingReactionFrame(result.interruptStack[0]) == HasPendingReactionFrame({
               trigger: AfterDamage,
+              procedure: DamageInterruptionReactionProcedure,
               eligibleReactors: Set(Fighter),
               offeredReactors: Set(),
               continuation: ResumeAfterDamage,
@@ -12020,6 +12433,7 @@ module battleRuntime {
             assert(result.interruptStack.length() == 1),
             assert(pendingReactionFrame(result.interruptStack[0]) == HasPendingReactionFrame({
               trigger: AfterDamage,
+              procedure: DamageInterruptionReactionProcedure,
               eligibleReactors: Set(Fighter),
               offeredReactors: Set(),
               continuation: ResumeAfterDamage,
@@ -12044,6 +12458,7 @@ module battleRuntime {
             assert(result.interruptStack.length() == 1),
             assert(pendingReactionFrame(result.interruptStack[0]) == HasPendingReactionFrame({
               trigger: OpportunityAttack,
+              procedure: OpportunityAttackReactionProcedure,
               eligibleReactors: Set(Fighter),
               offeredReactors: Set(),
               continuation: ResumeDissonantWhispersMovementThenAfterDamage({
@@ -12073,6 +12488,7 @@ module battleRuntime {
             assert(resumed.interruptStack.length() == 1),
             assert(pendingReactionFrame(resumed.interruptStack[0]) == HasPendingReactionFrame({
               trigger: AfterDamage,
+              procedure: DamageInterruptionReactionProcedure,
               eligibleReactors: Set(Fighter),
               offeredReactors: Set(),
               continuation: ResumeAfterDamage,
@@ -12094,6 +12510,7 @@ module battleRuntime {
   run test_after_damage_reaction_resolves_through_damage_interruption_contract = {
     val awaitingReaction = openReactionWindow(initialState, {
       trigger: AfterDamage,
+      procedure: DamageInterruptionReactionProcedure,
       eligibleReactors: Set(Fighter),
       offeredReactors: Set(),
       continuation: ResumeAfterDamage,
@@ -12138,6 +12555,7 @@ module battleRuntime {
     val readied = { ...readySpell(initialState), actionAvailable: true }
     val awaitingReaction = openReactionWindow(readied, {
       trigger: AttackHit,
+      procedure: ReadiedSpellReleaseReactionProcedure,
       eligibleReactors: Set(Fighter),
       offeredReactors: Set(),
       continuation: ResumeAttack({ damage: 7 }),
@@ -12206,7 +12624,7 @@ module battleRuntime {
   run test_sanctuary_early_end_lifecycle = {
     val fighterWarded = resolveSanctuarySpell(initialState, Fighter)
     val afterAttackRoll = recordFighterAttackRoll(fighterWarded)
-    val afterSpellCast = resolveSanctuarySpell({ ...fighterWarded, bonusActionAvailable: true, spellSlotExpendedThisTurn: false }, Goblin)
+    val afterSpellCast = resolveSanctuarySpell({ ...fighterWarded, bonusActionAvailable: true, spellSlotUsesThisTurn: Set() }, Goblin)
     val afterDamage = battleStateAfterSanctuaryEarlyEndForActor(fighterWarded, Fighter)
     all {
       assert(activeEffectsContainSanctuaryWard(fighterWarded.fighter.activeEffects)),

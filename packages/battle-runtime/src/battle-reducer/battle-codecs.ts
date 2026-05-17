@@ -726,6 +726,13 @@ const BattleTargetSpatialFactSchema = Schema.Union(
     rangeFeet: MovementFeet,
   }),
   Schema.Struct({
+    kind: Schema.Literal("counterspellTriggerCasterVisibleWithinRange"),
+    reactorId: CombatantId,
+    casterId: CombatantId,
+    spellId: Schema.String,
+    rangeFeet: MovementFeet,
+  }),
+  Schema.Struct({
     kind: Schema.Literal("grappleTargetWithinReach"),
     grapplerId: CombatantId,
     targetId: CombatantId,
@@ -1619,21 +1626,42 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       armorClassBonus: Schema.Number,
       negatedSpellIds: Schema.Array(Schema.String),
     }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("counterspell"),
+      spell: BattleRuntimeObjectSchema,
+      ability: Schema.Literal("con"),
+      dc: BattleRuntimeObjectSchema,
+      targeting: Schema.Struct({ kind: Schema.Literal("singleCombatant") }),
+      rangeFeet: MovementFeet,
+    }),
     SupportedHealingSpellInvocationSchema,
   ) as unknown as Schema.Schema<SupportedSpellInvocation>;
 
 export const BattleHoleSchema = Schema.Union(
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("targetChoice"),
-    choices: Schema.Array(CombatantId),
-    requiresTableSpatialFact: Schema.optionalWith(Schema.Boolean, {
-      exact: true,
+    Schema.Struct({
+      ...BattleHoleBaseSchema,
+      kind: Schema.Literal("targetChoice"),
+      choices: Schema.Array(CombatantId),
+      requiresTableSpatialFact: Schema.optionalWith(Schema.Boolean, {
+        exact: true,
+      }),
     }),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("objectTargetChoice"),
+    Schema.Struct({
+      ...BattleHoleBaseSchema,
+      kind: Schema.Literal("targetSpatialFacts"),
+      spellBeingCast: Schema.Struct({
+        casterId: CombatantId,
+        spellId: SpellId,
+        castLevel: Schema.Number,
+        components: Schema.Array(Schema.Literal("V", "S", "M")),
+      }),
+      requiresTableSpatialFact: Schema.Literal(true),
+    }),
+    Schema.Struct({
+      ...BattleHoleBaseSchema,
+      kind: Schema.Literal("objectTargetChoice"),
     requiresTableSpatialFact: Schema.Literal(true),
   }),
   Schema.Struct({
@@ -3121,7 +3149,18 @@ const RuntimeActionResourceSchema = Schema.Union(
 const BattleTurnSnapshotSchema = Schema.Struct({
   actionResources: Schema.Array(RuntimeActionResourceSchema),
   bonusActionAvailable: Schema.Boolean,
-  spellSlotExpendedThisTurn: Schema.Boolean,
+  spellSlotUsesThisTurn: Schema.Array(
+    Schema.Union(
+      Schema.Struct({
+        kind: Schema.Literal("pending"),
+        combatantId: CombatantId,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("committed"),
+        combatantId: CombatantId,
+      }),
+    ),
+  ),
   attackRollMadeThisTurn: Schema.Boolean,
   attackDamageRidersUsedThisTurn: Schema.Array(
     Schema.Struct({

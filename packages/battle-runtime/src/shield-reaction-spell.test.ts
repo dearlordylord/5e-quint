@@ -508,7 +508,11 @@ describe("Shield Reaction spell", () => {
       tag: "resolved",
       snapshot: {
         pendingReaction: null,
-        turn: { spellSlotExpendedThisTurn: true },
+        turn: {
+          spellSlotUsesThisTurn: [
+            { kind: "committed", combatantId: spellCasterId },
+          ],
+        },
       },
     });
     if (resolved.tag !== "resolved") {

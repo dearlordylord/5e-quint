@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 362,
-      "numerator": 117,
-      "percent": "32.3%"
+      "numerator": 118,
+      "percent": "32.6%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 429,
-      "numerator": 144,
-      "percent": "33.6%"
+      "numerator": 145,
+      "percent": "33.8%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,47 +59,47 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 145
+      "value": 146
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 94,
-      "numerator": 94,
+      "denominator": 95,
+      "numerator": 95,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 145,
-      "numerator": 145,
+      "denominator": 146,
+      "numerator": 146,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 62,
-      "numerator": 62,
+      "denominator": 63,
+      "numerator": 63,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 62,
-      "numerator": 62,
+      "denominator": 63,
+      "numerator": 63,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 62,
-      "numerator": 62,
+      "denominator": 63,
+      "numerator": 63,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 62,
-      "numerator": 62,
+      "denominator": 63,
+      "numerator": 63,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 94,
+      "denominator": 95,
       "numerator": 85,
-      "percent": "90.4%"
+      "percent": "89.5%"
     },
     "supportedProfileCoverage": {
-      "denominator": 118,
-      "numerator": 94,
-      "percent": "79.7%"
+      "denominator": 119,
+      "numerator": 95,
+      "percent": "79.8%"
     }
   },
   "metricSemantics": [
@@ -1523,6 +1523,33 @@
       ]
     },
     {
+      "id": "spell.reaction-counterspell",
+      "profileKind": "reaction",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/reaction-triggered-spells.ts"
+      ],
+      "sourceBoundary": "The runtime consumes typed table-supplied spell-cast Reaction facts establishing that a reactor can see a spell caster within 60 feet, requires Counterspell spell access, an available Reaction, an available Spell Slot, and the SRD same-turn spell-slot ledger, opens a spell-cast Reaction frame before the triggering spell resolves, resolves automatic or Constitution-save-gated interruption, releases the triggering pending slot when the spell is countered, and exposes nested spell-cast Reaction facts so Counterspell can itself be countered. Spell visibility, range geometry, and component witnesses remain table-supplied facts.",
+      "taskRefs": [
+        "SRDINV91A"
+      ],
+      "title": "Reaction spell interrupts a visible spell cast through Counterspell",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/counterspell-reaction-spell.test.ts"
+        }
+      ]
+    },
+    {
       "id": "spell.invocation-jump-movement-replacement",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -2668,6 +2695,22 @@
         "spell.invocation-condition-save"
       ],
       "taskId": "SRDINV91C"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Counterspell's spell-cast Reaction frame, per-combatant same-turn Spell Slot ledger, automatic and Constitution-save-gated interruption, triggering slot release on a countered spell, and recursive Counterspell interruption before the first Counterspell slot commits.",
+      "profileIds": [
+        "spell.reaction-counterspell"
+      ],
+      "taskId": "SRDINV91A"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime reducer tests cover Counterspell discovery from spell-cast Reaction facts, automatic and save-gated interruption, triggering slot release, stale reactor closure, no-target spell facts, Shield and save-gated spell interruption, recursive Counterspell, and same-turn Spell Slot rejection.",
+      "profileIds": [
+        "spell.reaction-counterspell"
+      ],
+      "taskId": "SRDINV91A"
     },
     {
       "claimKind": "completed-runtime-parity",
@@ -8028,6 +8071,64 @@
       ],
       "sourceRecordPath": "packages/surface/content/command.json",
       "unitId": "command"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "spell.reaction-counterspell"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001",
+          "RAW-PTG-REACTIONS-002"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "QMBT22"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.reaction-counterspell",
+          "profileKind": "reaction",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+            "packages/battle-runtime/src/battle-reducer/reaction-triggered-spells.ts"
+          ],
+          "sourceBoundary": "The runtime consumes typed table-supplied spell-cast Reaction facts establishing that a reactor can see a spell caster within 60 feet, requires Counterspell spell access, an available Reaction, an available Spell Slot, and the SRD same-turn spell-slot ledger, opens a spell-cast Reaction frame before the triggering spell resolves, resolves automatic or Constitution-save-gated interruption, releases the triggering pending slot when the spell is countered, and exposes nested spell-cast Reaction facts so Counterspell can itself be countered. Spell visibility, range geometry, and component witnesses remain table-supplied facts.",
+          "taskRefs": [
+            "SRDINV91A"
+          ],
+          "title": "Reaction spell interrupts a visible spell cast through Counterspell",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/counterspell-reaction-spell.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/counterspell.json",
+      "unitId": "counterspell"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -13805,24 +13906,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/continual_flame.json",
       "unitId": "continual_flame"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/counterspell.json",
-      "unitId": "counterspell"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

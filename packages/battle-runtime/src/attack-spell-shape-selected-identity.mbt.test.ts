@@ -733,7 +733,7 @@ function projectAttackSpellShapeSelectedIdentityState(
   return {
     targetHp: target.hp,
     spellSlotSpentThisTurn:
-      state.currentTurnResources.spellSlotExpendedThisTurn,
+      state.currentTurnResources.spellSlotUsesThisTurn.some((use) => use.kind === "committed"),
     level1SlotsRemaining: level1SlotsRemaining(state, casterId),
     activeEffectKind: effectKind,
     activeEffectCount: activeEffectCount(state, effectKind),
