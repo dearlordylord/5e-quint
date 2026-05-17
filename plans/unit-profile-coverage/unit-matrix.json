@@ -93,8 +93,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 93,
-      "numerator": 52,
-      "percent": "55.9%"
+      "numerator": 53,
+      "percent": "57%"
     },
     "supportedProfileCoverage": {
       "denominator": 117,
@@ -10507,6 +10507,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "QMBT34"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1H-MASS-CURE-WOUNDS"
         }
       ],
       "executableMechanics": true,

@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "L1H-MASS-CURE-WOUNDS",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Mass Cure Wounds Selected Identity Replay"
     },
     {
@@ -226,7 +226,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-S-Z.md` Sanctuary.
 
 ### Task 7 - L1H-MASS-CURE-WOUNDS - Mass Cure Wounds Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `mass_cure_wounds` if it remains in the
 supported selected identity denominator after the precheck. Keep this as a tail

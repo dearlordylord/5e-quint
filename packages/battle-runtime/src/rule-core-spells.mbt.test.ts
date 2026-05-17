@@ -2,11 +2,13 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt spell-procedure-core magic_missile ray_of_frost acid_splash
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt healing-stabilization healing_word cure_wounds
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-MASS-CURE-WOUNDS mass_cure_wounds
 // UNIT-IDENTITY-MBT-REPLAY: spell-procedure-core magic_missile doMagicMissileNeedsAllocation doMagicMissileLow doReadySpellHold doReleaseReadiedSpell
 // UNIT-IDENTITY-MBT-REPLAY: spell-procedure-core ray_of_frost doRayOfFrostNeedsTarget doRayOfFrostNeedsAttackRoll doRayOfFrostNeedsDamageRoll doRayOfFrostMiss doRayOfFrostHit doRayOfFrostCritical
 // UNIT-IDENTITY-MBT-REPLAY: spell-procedure-core acid_splash doAcidSplashNeedsSavingThrow doAcidSplashNeedsDamageRoll doAcidSplashAllSuccess doAcidSplashOneFail
 // UNIT-IDENTITY-MBT-REPLAY: healing-stabilization healing_word doHealingWordNeedsTarget doHealingWordNeedsHealingRoll doHealingWordWounded doHealingWordZeroHp
 // UNIT-IDENTITY-MBT-REPLAY: healing-stabilization cure_wounds doCureWoundsNeedsTarget doCureWoundsNeedsHealingRoll doCureWoundsWounded
+// UNIT-IDENTITY-MBT-REPLAY: L1H-MASS-CURE-WOUNDS mass_cure_wounds doMassCureWoundsNeedsTargetList doMassCureWoundsNeedsHealingRoll doMassCureWoundsWounded
 import * as path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
@@ -170,7 +172,10 @@ type SelectedUnitIdentityReplaySequence = {
   readonly expected: RuleCoreSpellProjection;
 };
 type SelectedUnitIdentityReplay = {
-  readonly taskId: "spell-procedure-core" | "healing-stabilization";
+  readonly taskId:
+    | "spell-procedure-core"
+    | "healing-stabilization"
+    | "L1H-MASS-CURE-WOUNDS";
   readonly unitId: string;
   readonly actions: readonly RuleCoreSpellDriverAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
@@ -433,6 +438,51 @@ const selectedUnitIdentityReplays = [
           targetHp: 12,
           spellSlotSpentThisTurn: true,
           level1SlotsRemaining: 1,
+          lastResult: "resolved",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "L1H-MASS-CURE-WOUNDS",
+    unitId: "mass_cure_wounds",
+    actions: [
+      "doMassCureWoundsNeedsTargetList",
+      "doMassCureWoundsNeedsHealingRoll",
+      "doMassCureWoundsWounded",
+    ],
+    sequences: [
+      {
+        name: "target-list-hole",
+        actions: ["doMassCureWoundsNeedsTargetList"],
+        expected: expectedSpellProjection({
+          targetHp: 4,
+          secondTargetHp: 4,
+          level1SlotsRemaining: 0,
+          holes: ["SpellTargetList"],
+          lastResult: "needsHoles",
+        }),
+      },
+      {
+        name: "healing-roll-hole",
+        actions: ["doMassCureWoundsNeedsHealingRoll"],
+        expected: expectedSpellProjection({
+          targetHp: 4,
+          secondTargetHp: 4,
+          level1SlotsRemaining: 0,
+          holes: ["DamageRoll"],
+          lastResult: "needsHoles",
+        }),
+      },
+      {
+        name: "wounded-targets",
+        actions: ["doMassCureWoundsWounded"],
+        expected: expectedSpellProjection({
+          actionAvailable: false,
+          targetHp: 12,
+          secondTargetHp: 12,
+          spellSlotSpentThisTurn: true,
+          level1SlotsRemaining: 0,
           lastResult: "resolved",
         }),
       },
