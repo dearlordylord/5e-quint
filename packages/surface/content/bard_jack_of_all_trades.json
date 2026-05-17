@@ -1,7 +1,7 @@
 {
   "acquiredAtLevel": 2,
   "className": "bard",
-  "description": "You can add half your Proficiency Bonus (round down) to any ability check you make that doesn't already use your Proficiency Bonus.",
+  "description": "You can add half your Proficiency Bonus (round down) to any ability check you make that uses a skill proficiency you lack and that doesn't otherwise use your Proficiency Bonus.",
   "id": "bard_jack_of_all_trades",
   "kind": "class_feature",
   "mechanics": {

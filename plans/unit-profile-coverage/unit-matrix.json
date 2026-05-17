@@ -13456,10 +13456,10 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "later-level-only",
-          "owner": "future Character Sheet or Ability Check roll-mode profile owner",
-          "reason": "The feature is acquired after level 1 and depends on whether the Ability Check uses a skill proficiency the character lacks and otherwise does not use Proficiency Bonus. Current promoted Unit profiles do not model that passive half-proficiency computation."
+          "owner": "future character-sheet.ability-check-proficiency-bonus profile",
+          "reason": "The feature is acquired after level 1 and depends on a concrete Ability Check witness with a skill, the existing CharacterBuild skill and Expertise proficiency facts, and whether another rule already contributes Proficiency Bonus. Current promoted Unit profiles do not model that passive half-proficiency computation, and generic modify_roll_numeric cannot make the RAW gate executable."
         },
-        "reason": "Jack of All Trades is a level-2 passive Ability Check proficiency supplement; no promoted Unit profile is claimed until a skill-proficiency-aware Ability Check bonus profile is modeled.",
+        "reason": "Jack of All Trades is a level-2 passive Ability Check proficiency supplement; no promoted Unit profile is claimed until a Character Sheet Ability Check Proficiency Bonus projection can execute the skill-proficiency and no-other-Proficiency-Bonus gates.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",

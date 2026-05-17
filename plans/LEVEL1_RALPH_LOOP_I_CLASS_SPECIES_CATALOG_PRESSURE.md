@@ -73,7 +73,7 @@
     {
       "number": 12,
       "id": "L1I-BARD-JACK-OF-ALL-TRADES-PROFILE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Bard Jack Of All Trades Ability Check Profile"
     },
     {
@@ -209,7 +209,7 @@ Every task runs:
 | 9 | L1I-WARLOCK-WIZARD-KNOWLEDGE-FEATURES - Warlock Wizard Knowledge Feature Catalog Pressure | done | 1 | Warlock/Wizard knowledge-feature disposition without stealing D invocation work |
 | 10 | L1I-SPECIES-TRAIT-PRESSURE-SPLIT - Species Trait Catalog Pressure Split | done | 1 | species trait split artifact and unsupported-profile claims for eight species trait records |
 | 11 | L1I-DRUID-NATURES-WARD - Druid Nature's Ward Catalog Pressure | done | 1 | Druid later feature disposition without stealing D Primal Order work |
-| 12 | L1I-BARD-JACK-OF-ALL-TRADES-PROFILE - Bard Jack Of All Trades Ability Check Profile | ready-for-research | 4 | decide the smallest skill-proficiency-aware Ability Check half-Proficiency Bonus profile boundary |
+| 12 | L1I-BARD-JACK-OF-ALL-TRADES-PROFILE - Bard Jack Of All Trades Ability Check Profile | done | 4 | decision artifact and unsupported-profile claim for Jack of All Trades |
 | 13 | L1I-WORDS-OF-CREATION-POWER-WORD-RIDER - Words Of Creation Power Word Rider Profile | blocked | supported `power_word_heal` and `power_word_kill` spell invocation profiles | second-target rider support after host Power Word spells are promoted |
 | 14 | L1I-BARBARIAN-DANGER-SENSE-ROLL-MODE - Barbarian Danger Sense Saving Throw Roll-Mode Profile | ready-for-research | 5 | decide the smallest passive Dexterity Saving Throw Advantage profile boundary |
 | 15 | L1I-PALADIN-SMITE-FREE-CAST-PROFILE - Paladin's Smite Free-Cast Spell Access Profile | blocked | owner decision to expand Paladin battle support past level 1 | future Spell Access and class-feature free-cast support that reuses `divine_smite` |
@@ -442,7 +442,7 @@ D-owned `druid_primal_order`.
 
 ### Task 12 - L1I-BARD-JACK-OF-ALL-TRADES-PROFILE - Bard Jack Of All Trades Ability Check Profile
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `bard_jack_of_all_trades`.
 
@@ -452,6 +452,16 @@ profile must model the RAW gate that the Ability Check uses a skill proficiency
 the Bard lacks and does not otherwise use Proficiency Bonus; do not admit the
 existing generic `modify_roll_numeric` surface shape as a supported profile
 until that gate is executable at the owning boundary.
+
+Result:
+`plans/unit-profile-coverage/L1I_CLASS_SPECIES_BARD_JACK_OF_ALL_TRADES_PROFILE.md`.
+Jack of All Trades remains `unsupported-profile`. The smallest future
+supported owner is `character-sheet.ability-check-proficiency-bonus`, because
+the RAW gate needs one boundary that sees a concrete Ability Check Skill
+witness, existing CharacterBuild Skill and Expertise proficiency facts, and
+whether any other rule already contributes Proficiency Bonus. The generic
+`modify_roll_numeric` authored surface remains catalog pressure only until that
+gate is executable.
 
 ### Task 13 - L1I-WORDS-OF-CREATION-POWER-WORD-RIDER - Words Of Creation Power Word Rider Profile
 
