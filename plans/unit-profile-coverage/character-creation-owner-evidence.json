@@ -2399,9 +2399,9 @@
       ]
     },
     "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations": {
-      "taskId": "SRDINV18A",
-      "profile": "level-1 Warlock Eldritch Invocation choice support profile",
-      "summary": "Eldritch Invocations are discovered from the Warlock feature-choice Surface record and the runtime SRD invocation option catalog, filled through the eldritch_invocations support profile, finalized as selected invocation ownership, and projected into CharacterBuild features without treating invocation options as retained Unit refs.",
+      "taskId": "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE",
+      "profile": "all-level Warlock Eldritch Invocation choice and advancement support profile",
+      "summary": "Eldritch Invocations are discovered from the Warlock feature-choice Surface record and the runtime SRD invocation option catalog, filled through the eldritch_invocations support profile, finalized as selected invocation ownership, and advanced through the CharacterBuild class-level gain boundary. Warlock-level gains derive counts from the Surface Warlock Invocations column, replacement validates final prerequisites and prerequisite-retention lockout, non-Repeatable duplicate selections are rejected, and invocation options are not treated as retained Unit refs.",
       "discovery": [
         "packages/character-creation-runtime/src/discovery.ts:classFeatureGrantChoiceHoles",
         "packages/character-creation-runtime/src/eldritch-invocations.ts:levelOneEldritchInvocationChoiceOptions"
@@ -2411,15 +2411,20 @@
         "packages/character-creation-runtime/src/fill-reducer.ts:applyUnitFill"
       ],
       "finalization": [
-        "packages/character-creation-runtime/src/finalization.ts:allFinalizedChoicesSupported"
+        "packages/character-creation-runtime/src/finalization.ts:allFinalizedChoicesSupported",
+        "packages/character-creation-runtime/src/character-build-advancement.ts:advanceCharacterBuildClassLevel"
       ],
       "buildProjection": [
         "packages/character-creation-runtime/src/finalization.ts:finalizedClassChoiceFeaturesForSupportedChoices",
-        "packages/character-creation-runtime/src/eldritch-invocations.ts:selectedEldritchInvocationFeatures"
+        "packages/character-creation-runtime/src/eldritch-invocations.ts:selectedEldritchInvocationFeatures",
+        "packages/character-creation-runtime/src/character-build-advancement.ts:warlockLevelGainWithEldritchInvocations"
       ],
       "tests": [
         "packages/character-creation-runtime/src/index.test.ts:discovers level-1 Warlock Eldritch Invocation options from the invocation catalog",
-        "packages/character-creation-runtime/src/index.test.ts:finalizes a selected Warlock Eldritch Invocation as option ownership, not a retained Unit ref"
+        "packages/character-creation-runtime/src/index.test.ts:finalizes a selected Warlock Eldritch Invocation as option ownership, not a retained Unit ref",
+        "packages/character-creation-runtime/src/index.test.ts:advances a finalized Warlock build and gains invocations from the Warlock table",
+        "packages/character-creation-runtime/src/index.test.ts:blocks replacing an invocation required by another selected invocation",
+        "packages/character-creation-runtime/src/index.test.ts:enforces duplicate invocation selections except Repeatable invocations"
       ]
     },
     "srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic": {

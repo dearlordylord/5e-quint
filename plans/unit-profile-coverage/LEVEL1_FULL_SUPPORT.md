@@ -67,7 +67,7 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | `silent_image` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
 | `speak_with_animals` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
 | `thunderwave` | open-profile-accounting | profile-subset-supported | installed | table-spatial-derivation | Runtime-owned push geometry, collision/pathfinding, and final-position derivation remain table/spatial derivations.; Broad object inventory simulation and sound propagation simulation remain table/spatial derivations. |
-| `warlock_eldritch_invocations` | closed-later-level-only | profile-subset-supported | installed | later-level-only | The remaining invocation replacement and prerequisite-retention mechanics occur after the level-1 invocation choice has already been finalized.; The remaining invocation gain, prerequisite, and repeatability mechanics occur after the level-1 invocation choice has already been finalized. |
+| `warlock_eldritch_invocations` | closed-later-level-only | profile-subset-supported | installed | later-level-only | Warlock Pact Magic cantrip increases at levels 4 and 10, prepared-spell changes, and Pact Slot progression must be advanced before all-level invocation prerequisite checks can claim full lifecycle ownership. |
 
 ## Outside Denominator Pressure
 

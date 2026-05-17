@@ -252,11 +252,9 @@ function discoverClassSpellcastingHoles(
   facts: ReadableClassCreationFacts,
   draft: CharacterDraft,
 ): readonly CreationHole[] {
-  return classSpellcastingChoiceHoles(
-    classUnitId,
-    facts,
-    classLevel,
-  ).flatMap((hole) => unselectedUnitChoiceHole(draft, hole));
+  return classSpellcastingChoiceHoles(classUnitId, facts, classLevel).flatMap(
+    (hole) => unselectedUnitChoiceHole(draft, hole),
+  );
 }
 
 export function classSpellcastingChoiceHoles(
@@ -1346,7 +1344,7 @@ function uniqueSkills(skills: readonly Skill[]): readonly Skill[] {
   return skills.filter((skill, index) => skills.indexOf(skill) === index);
 }
 
-function classLevelChoiceCountAtLevel(
+export function classLevelChoiceCountAtLevel(
   choiceCount:
     | Extract<EffectAtom, { readonly kind: "grant_expertise" }>["choiceCount"]
     | FeatureChoiceMechanics["choiceCount"],

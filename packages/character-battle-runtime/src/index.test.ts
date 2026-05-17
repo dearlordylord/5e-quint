@@ -1939,7 +1939,10 @@ function pactBladeInvocationBuild(
             {
               kind: "selectedEldritchInvocation",
               selectedFromUnitId: "warlock_eldritch_invocations",
-              invocationId: eldritchInvocationId("pact_of_the_blade"),
+              selection: {
+                kind: "nonRepeatable",
+                invocationId: eldritchInvocationId("pact_of_the_blade"),
+              },
             },
           ],
     equipment: {
@@ -2334,7 +2337,10 @@ function armorOfShadowsWarlockBuild(
           {
             kind: "selectedEldritchInvocation" as const,
             selectedFromUnitId: "warlock_eldritch_invocations",
-            invocationId: eldritchInvocationId("armor_of_shadows"),
+            selection: {
+              kind: "nonRepeatable" as const,
+              invocationId: eldritchInvocationId("armor_of_shadows"),
+            },
           },
         ]),
   ];
@@ -2395,7 +2401,10 @@ function warlockInvocationBuild(input: {
           {
             kind: "selectedEldritchInvocation" as const,
             selectedFromUnitId: "warlock_eldritch_invocations",
-            invocationId: eldritchInvocationId("pact_of_the_chain"),
+            selection: {
+              kind: "nonRepeatable" as const,
+              invocationId: eldritchInvocationId("pact_of_the_chain"),
+            },
           },
         ]),
   ];
@@ -2425,7 +2434,10 @@ function pactOfTheTomeWarlockBuild(input?: {
               selectedFromUnitId:
                 input?.pactOfTheTomeSelectedFromUnitId ??
                 "warlock_eldritch_invocations",
-              invocationId: eldritchInvocationId("pact_of_the_tome"),
+              selection: {
+                kind: "nonRepeatable" as const,
+                invocationId: eldritchInvocationId("pact_of_the_tome"),
+              },
             },
           ]),
       ...(input?.extraFeatures ?? []),
@@ -2475,7 +2487,10 @@ function eldritchMindInvocationBuild(): CharacterBuild {
       {
         kind: "selectedEldritchInvocation",
         selectedFromUnitId: "warlock_eldritch_invocations",
-        invocationId: eldritchInvocationId("eldritch_mind"),
+        selection: {
+          kind: "nonRepeatable",
+          invocationId: eldritchInvocationId("eldritch_mind"),
+        },
       },
     ],
   };

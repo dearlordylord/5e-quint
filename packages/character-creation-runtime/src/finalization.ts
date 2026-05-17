@@ -1278,7 +1278,10 @@ function supportedFinalizationChoiceHoles(input: {
         choices: input.selections.choices,
         classUnitId,
         classFacts: facts,
-        classLevel: classLevelForUnit(input.selections.progression, classUnitId),
+        classLevel: classLevelForUnit(
+          input.selections.progression,
+          classUnitId,
+        ),
         unitLibrary: input.unitLibrary,
       }).flatMap((hole) => compact([requireUnitChoiceCreationHole(hole)])),
   );
@@ -1840,7 +1843,10 @@ export function finalizedBuildSpellcasting(input: {
       const projection = finalizedBuildSpellcastingSource({
         classUnitId,
         classFacts,
-        classLevel: classLevelForUnit(input.selections.progression, classUnitId),
+        classLevel: classLevelForUnit(
+          input.selections.progression,
+          classUnitId,
+        ),
         includeEmptySource: classUnitId === startingUnitId,
         selections: input.selections,
         supportedSelections: input.supportedSelections,

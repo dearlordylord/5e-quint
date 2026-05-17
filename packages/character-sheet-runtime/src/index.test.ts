@@ -176,6 +176,226 @@ describe("Character Sheet runtime", () => {
     expect(Either.isLeft(sheet)).toBe(true);
   });
 
+  test("round-trips stored Eldritch Invocation repeatable choices through sheet parsing", () => {
+    const sheet = parseCharacterSheet(
+      {
+        ...storedAvailableSheetInput({
+          characterId: "character:repeatable-invocation",
+          build: {
+            ...armorClassBuild({ startingClass: "class_warlock" }),
+            spellcasting: warlockSpellcastingWithCantrips(["eldritch_blast"]),
+            features: [
+              {
+                kind: "selectedEldritchInvocation",
+                selectedFromUnitId: "warlock_eldritch_invocations",
+                selection: {
+                  kind: "repeatable",
+                  invocationId: "repelling_blast",
+                  repeatableChoice: {
+                    kind: "knownWarlockCantrip",
+                    cantripId: "eldritch_blast",
+                  },
+                },
+              },
+              {
+                kind: "selectedEldritchInvocation",
+                selectedFromUnitId: "warlock_eldritch_invocations",
+                selection: {
+                  kind: "repeatable",
+                  invocationId: "lessons_of_the_first_ones",
+                  repeatableChoice: {
+                    kind: "originFeat",
+                    featUnitId: "feat_savage_attacker",
+                  },
+                },
+              },
+            ],
+          },
+        }),
+        spellSlotExpenditures: [],
+        pactSlotExpenditure: { slotLevel: 1, count: 1, expended: 0 },
+      },
+      unitLibrary,
+    );
+
+    const parsed = requireRight(sheet);
+    expect(parsed.build.features).toEqual(
+      expect.arrayContaining([
+        {
+          kind: "selectedEldritchInvocation",
+          selectedFromUnitId: "warlock_eldritch_invocations",
+          selection: {
+            kind: "repeatable",
+            invocationId: "repelling_blast",
+            repeatableChoice: {
+              kind: "knownWarlockCantrip",
+              cantripId: "eldritch_blast",
+            },
+          },
+        },
+        {
+          kind: "selectedEldritchInvocation",
+          selectedFromUnitId: "warlock_eldritch_invocations",
+          selection: {
+            kind: "repeatable",
+            invocationId: "lessons_of_the_first_ones",
+            repeatableChoice: {
+              kind: "originFeat",
+              featUnitId: "feat_savage_attacker",
+            },
+          },
+        },
+      ]),
+    );
+  });
+
+  test("rejects stored Eldritch Invocation cantrip choices absent from known Warlock cantrips", () => {
+    const invalidBuilds = [
+      {
+        characterId: "character:unknown-warlock-cantrip",
+        repeatableChoiceCantripId: "eldritch_blast",
+        knownCantrips: ["poison_spray"],
+      },
+      {
+        characterId: "character:non-warlock-cantrip",
+        repeatableChoiceCantripId: "fire_bolt",
+        knownCantrips: ["fire_bolt"],
+      },
+    ] as const;
+
+    for (const input of invalidBuilds) {
+      const sheet = parseCharacterSheet(
+        storedAvailableSheetInput({
+          characterId: input.characterId,
+          build: {
+            ...armorClassBuild({ startingClass: "class_warlock" }),
+            spellcasting: warlockSpellcastingWithCantrips(input.knownCantrips),
+            features: [
+              {
+                kind: "selectedEldritchInvocation",
+                selectedFromUnitId: "warlock_eldritch_invocations",
+                selection: {
+                  kind: "repeatable",
+                  invocationId: "repelling_blast",
+                  repeatableChoice: {
+                    kind: "knownWarlockCantrip",
+                    cantripId: input.repeatableChoiceCantripId,
+                  },
+                },
+              },
+            ],
+          },
+        }),
+        unitLibrary,
+      );
+
+      expect(sheet).toMatchObject({
+        _tag: "Left",
+        left: {
+          message:
+            "Character Build Eldritch Invocation repeatable known cantrip choice must be a known Warlock cantrip.",
+        },
+      });
+    }
+  });
+
+  test("rejects malformed stored Eldritch Invocation repeatable choices", () => {
+    const sheet = parseCharacterSheet(
+      storedAvailableSheetInput({
+        characterId: "character:bad-repeatable-invocation",
+        build: {
+          ...armorClassBuild({ startingClass: "class_warlock" }),
+          features: [
+            {
+              kind: "selectedEldritchInvocation",
+              selectedFromUnitId: "warlock_eldritch_invocations",
+              selection: {
+                kind: "repeatable",
+                invocationId: "repelling_blast",
+                repeatableChoice: {
+                  kind: "knownWarlockCantrip",
+                },
+              },
+            },
+          ],
+        },
+      }),
+      unitLibrary,
+    );
+
+    expect(sheet).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Character Build Eldritch Invocation repeatable choice is invalid.",
+      },
+    });
+  });
+
+  test("rejects stored Eldritch Invocation repeatable choices inconsistent with the invocation catalog", () => {
+    const invalidFeatures = [
+      {
+        kind: "selectedEldritchInvocation",
+        selectedFromUnitId: "warlock_eldritch_invocations",
+        selection: {
+          kind: "repeatable",
+          invocationId: "armor_of_shadows",
+          repeatableChoice: {
+            kind: "knownWarlockCantrip",
+            cantripId: "eldritch_blast",
+          },
+        },
+      },
+      {
+        kind: "selectedEldritchInvocation",
+        selectedFromUnitId: "warlock_eldritch_invocations",
+        selection: {
+          kind: "nonRepeatable",
+          invocationId: "repelling_blast",
+        },
+      },
+      {
+        kind: "selectedEldritchInvocation",
+        selectedFromUnitId: "warlock_eldritch_invocations",
+        selection: {
+          kind: "repeatable",
+          invocationId: "lessons_of_the_first_ones",
+          repeatableChoice: {
+            kind: "knownWarlockCantrip",
+            cantripId: "eldritch_blast",
+          },
+        },
+      },
+      {
+        kind: "selectedEldritchInvocation",
+        selectedFromUnitId: "warlock_eldritch_invocations",
+        selection: {
+          kind: "repeatable",
+          invocationId: "repelling_blast",
+          repeatableChoice: {
+            kind: "knownWarlockCantrip",
+            cantripId: "minor_illusion",
+          },
+        },
+      },
+    ] as const;
+
+    for (const feature of invalidFeatures) {
+      const sheet = parseCharacterSheet(
+        storedAvailableSheetInput({
+          characterId: `character:invalid-${feature.selection.invocationId}`,
+          build: {
+            ...armorClassBuild({ startingClass: "class_warlock" }),
+            features: [feature],
+          },
+        }),
+        unitLibrary,
+      );
+
+      expect(Either.isLeft(sheet)).toBe(true);
+    }
+  });
+
   test("round-trips stored Book of Shadows Spell Access through sheet parsing", () => {
     const bookOfShadows = {
       tag: "bookOfShadows",
@@ -193,7 +413,10 @@ describe("Character Sheet runtime", () => {
             {
               kind: "selectedEldritchInvocation",
               selectedFromUnitId: "warlock_eldritch_invocations",
-              invocationId: "pact_of_the_tome",
+              selection: {
+                kind: "nonRepeatable",
+                invocationId: "pact_of_the_tome",
+              },
             },
           ],
           spellcasting: {
@@ -1322,6 +1545,22 @@ function spellbookRitualSheet(input: {
   );
 }
 
+function storedAvailableSheetInput(input: {
+  readonly characterId: string;
+  readonly build: unknown;
+}) {
+  return {
+    tag: "available",
+    characterId: input.characterId,
+    build: input.build,
+    maximumHp: 12,
+    hitPoints: { tag: "positive", currentHp: 12, tempHp: 0 },
+    conditions: [],
+    spentHitDice: [],
+    resourceExpenditures: [],
+  };
+}
+
 function requireRight<A, E>(either: Either.Either<A, E>): A {
   if (Either.isRight(either)) return either.right;
   throw new Error(`Expected Either.right, got ${JSON.stringify(either.left)}.`);
@@ -1410,6 +1649,30 @@ function armorClassBuild(input: {
       loadout: {
         ...(armorItemId === undefined ? {} : { armor: armorItemId }),
         ...(shieldItemId === undefined ? {} : { shield: shieldItemId }),
+      },
+    },
+  };
+}
+
+function warlockSpellcastingWithCantrips(
+  cantrips: readonly string[],
+): NonNullable<CharacterBuild["spellcasting"]> {
+  return {
+    sources: [
+      {
+        sourceUnitId: "class_warlock",
+        spellcastingAbility: "cha",
+        cantrips,
+        spellbook: [],
+        preparedSpells: [],
+        spellcastingFocuses: ["arcane_focus"],
+      },
+    ],
+    slotPools: {
+      pactMagic: {
+        kind: "pactMagic",
+        slotLevel: 1,
+        count: 1,
       },
     },
   };

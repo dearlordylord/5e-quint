@@ -12,6 +12,8 @@ import {
   classUnitIdToClassName,
   CHARACTER_CLASS_LEVELS,
   characterEquipmentItemSourceFromId,
+  eldritchInvocationOptionForInvocationId,
+  eldritchInvocationRepeatableChoiceSatisfiesRule,
   eldritchInvocationId,
   parseCharacterEquipmentItemId,
   progressionClassUnitIds,
@@ -20,6 +22,7 @@ import {
   type CharacterBuild,
   type CharacterBuildBookOfShadowsSpellAccess,
   type CharacterBuildEquipment,
+  type CharacterBuildEldritchInvocationRepeatableChoice,
   type CharacterBuildFeature,
   type CharacterBuildHitDiePool,
   type CharacterBuildPactMagicSlotPool,
@@ -96,6 +99,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import {
   allCantripsFromAnyClassSpellList,
+  allCantripsFromClassSpellList,
   allLeveledSpellsFromAnyClassSpellList,
 } from "@dnd/surface/surface/schema";
 import { favoredEnemyHuntersMarkFreeCastGrantsForUnit } from "@dnd/surface/surface/types";
@@ -271,10 +275,8 @@ export type CharacterSheetLongRestInput =
   | {
       readonly sheet: CharacterSheet;
       readonly unitLibrary: UnitCatalog;
-      readonly weaponMasteryReselections: ReadonlyNonEmptyArray<
-        CharacterSheetWeaponMasteryReselection
-      >;
-};
+      readonly weaponMasteryReselections: ReadonlyNonEmptyArray<CharacterSheetWeaponMasteryReselection>;
+    };
 
 export type CharacterSheetLayOnHandsInput = {
   readonly source: CharacterSheet;
@@ -971,9 +973,7 @@ function characterBuildWithWeaponMasteryReselections<
 >(input: {
   readonly build: TBuild;
   readonly unitLibrary: UnitCatalog;
-  readonly reselections: ReadonlyNonEmptyArray<
-    CharacterSheetWeaponMasteryReselection
-  >;
+  readonly reselections: ReadonlyNonEmptyArray<CharacterSheetWeaponMasteryReselection>;
 }): Either.Either<TBuild, CharacterSheetIssue> {
   if (input.reselections.length === 0) {
     return characterSheetIssue(
@@ -3209,7 +3209,7 @@ function parseCharacterBuild(
   if (Either.isLeft(proficiencyChoices)) {
     return Either.left(proficiencyChoices.left);
   }
-  const features = parseStoredFeatures(value.features);
+  const features = parseStoredFeatures(value.features, unitLibrary);
   if (Either.isLeft(features)) return Either.left(features.left);
   const spellcasting =
     value.spellcasting === undefined
@@ -3237,9 +3237,63 @@ function parseCharacterBuild(
     build,
     unitLibrary,
   );
-  return Either.isLeft(bookOfShadowsIssue)
-    ? Either.left(bookOfShadowsIssue.left)
+  if (Either.isLeft(bookOfShadowsIssue)) {
+    return Either.left(bookOfShadowsIssue.left);
+  }
+  const eldritchInvocationIssue =
+    storedEldritchInvocationKnownCantripSelectionIssue(build, unitLibrary);
+  return Either.isLeft(eldritchInvocationIssue)
+    ? Either.left(eldritchInvocationIssue.left)
     : Either.right(build);
+}
+
+function storedEldritchInvocationKnownCantripSelectionIssue(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): Either.Either<void, CharacterSheetIssue> {
+  const knownWarlockCantrips = knownWarlockCantripIdsForStoredBuild(
+    build,
+    unitLibrary,
+  );
+  for (const feature of build.features) {
+    if (
+      feature.kind !== "selectedEldritchInvocation" ||
+      feature.selection.kind !== "repeatable" ||
+      feature.selection.repeatableChoice.kind !== "knownWarlockCantrip"
+    ) {
+      continue;
+    }
+    if (
+      !knownWarlockCantrips.has(feature.selection.repeatableChoice.cantripId)
+    ) {
+      return characterSheetIssue(
+        "Character Build Eldritch Invocation repeatable known cantrip choice must be a known Warlock cantrip.",
+      );
+    }
+  }
+  return Either.right(undefined);
+}
+
+function knownWarlockCantripIdsForStoredBuild(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): ReadonlySet<UnitRecord["id"]> {
+  const cantripIds = new Set<UnitRecord["id"]>();
+  for (const source of build.spellcasting?.sources ?? []) {
+    const sourceClassName = classUnitIdToClassName({
+      unitLibrary,
+      classUnitId: source.sourceUnitId,
+    });
+    if (Either.isLeft(sourceClassName) || sourceClassName.right !== "warlock") {
+      continue;
+    }
+    for (const cantripId of source.cantrips) {
+      if (allCantripsFromClassSpellList("warlock", [cantripId])) {
+        cantripIds.add(cantripId);
+      }
+    }
+  }
+  return cantripIds;
 }
 
 function parseStoredProgression(
@@ -3385,7 +3439,8 @@ function hasSelectedWarlockEldritchInvocation(
   return build.features.some((feature) => {
     if (
       feature.kind !== "selectedEldritchInvocation" ||
-      feature.invocationId !== eldritchInvocationId("pact_of_the_tome")
+      feature.selection.invocationId !==
+        eldritchInvocationId("pact_of_the_tome")
     ) {
       return false;
     }
@@ -3539,6 +3594,7 @@ function parseStoredProficiencyChoices(
 
 function parseStoredFeatures(
   value: unknown,
+  unitLibrary: UnitCatalog,
 ): Either.Either<readonly CharacterBuildFeature[], CharacterSheetIssue> {
   if (!Array.isArray(value)) {
     return characterSheetIssue("Character Build requires features.");
@@ -3559,11 +3615,18 @@ function parseStoredFeatures(
       });
     } else if (
       feature.kind === "selectedEldritchInvocation" &&
-      typeof feature.invocationId === "string"
+      isRecord(feature.selection)
     ) {
+      const selection = parseStoredEldritchInvocationSelection(
+        feature.selection,
+        unitLibrary,
+      );
+      if (Either.isLeft(selection)) {
+        return Either.left(selection.left);
+      }
       features.push({
         kind: "selectedEldritchInvocation" as const,
-        invocationId: eldritchInvocationId(feature.invocationId),
+        selection: selection.right,
         selectedFromUnitId: feature.selectedFromUnitId,
       });
     } else if (feature.kind === "abilityCheckBonus") {
@@ -3580,6 +3643,94 @@ function parseStoredFeatures(
     }
   }
   return Either.right(features);
+}
+
+function parseStoredEldritchInvocationSelection(
+  value: Readonly<Record<string, unknown>>,
+  unitLibrary: UnitCatalog,
+): Either.Either<
+  Extract<
+    CharacterBuildFeature,
+    { readonly kind: "selectedEldritchInvocation" }
+  >["selection"],
+  CharacterSheetIssue
+> {
+  if (typeof value.invocationId !== "string") {
+    return characterSheetIssue(
+      "Character Build Eldritch Invocation selection is invalid.",
+    );
+  }
+  const invocationId = eldritchInvocationId(value.invocationId);
+  const option = eldritchInvocationOptionForInvocationId(invocationId);
+  if (option === undefined) {
+    return characterSheetIssue(
+      "Character Build Eldritch Invocation selection is invalid.",
+    );
+  }
+  if (option.repeatability.kind === "once") {
+    return value.kind === "nonRepeatable"
+      ? Either.right({ kind: "nonRepeatable", invocationId })
+      : characterSheetIssue(
+          "Character Build Eldritch Invocation selection is invalid.",
+        );
+  }
+
+  if (value.kind !== "repeatable") {
+    return characterSheetIssue(
+      "Character Build Eldritch Invocation selection is invalid.",
+    );
+  }
+  const repeatableChoiceInput = value.repeatableChoice;
+  const repeatableChoice =
+    parseStoredEldritchInvocationRepeatableChoice(repeatableChoiceInput);
+  if (Either.isLeft(repeatableChoice)) {
+    return Either.left(repeatableChoice.left);
+  }
+
+  return eldritchInvocationRepeatableChoiceSatisfiesRule({
+    unitLibrary,
+    choiceRule: option.repeatability.choice,
+    repeatableChoice: repeatableChoice.right,
+  })
+    ? Either.right({
+        kind: "repeatable",
+        invocationId,
+        repeatableChoice: repeatableChoice.right,
+      })
+    : characterSheetIssue(
+        "Character Build Eldritch Invocation repeatable choice is invalid.",
+      );
+}
+
+function parseStoredEldritchInvocationRepeatableChoice(
+  value: unknown,
+): Either.Either<
+  CharacterBuildEldritchInvocationRepeatableChoice,
+  CharacterSheetIssue
+> {
+  if (!isRecord(value) || typeof value.kind !== "string") {
+    return characterSheetIssue(
+      "Character Build Eldritch Invocation repeatable choice is invalid.",
+    );
+  }
+  if (
+    value.kind === "knownWarlockCantrip" &&
+    typeof value.cantripId === "string"
+  ) {
+    return Either.right({
+      kind: "knownWarlockCantrip",
+      cantripId: value.cantripId,
+    });
+  }
+  if (value.kind === "originFeat" && typeof value.featUnitId === "string") {
+    return Either.right({
+      kind: "originFeat",
+      featUnitId: value.featUnitId,
+    });
+  }
+  return characterSheetIssue(
+    "Character Build Eldritch Invocation repeatable choice is invalid.",
+  );
 }
 
 function parseStoredAbilityCheckBonusFeature(input: {

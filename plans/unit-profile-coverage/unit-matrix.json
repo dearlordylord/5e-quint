@@ -2205,11 +2205,12 @@
       "runtimeOwners": [
         "packages/character-creation-runtime/src/index.ts"
       ],
-      "sourceBoundary": "CharacterBuild progression plus Surface class-feature grant_feat options; replacement is accepted only as part of a class-level gain and rewrites selected CharacterBuild feature refs without parallel selection state.",
+      "sourceBoundary": "CharacterBuild progression plus Surface class-feature choice facts; replacement and gain choices are accepted only as part of a class-level gain and rewrite existing CharacterBuild feature refs or selected invocation ownership without parallel selected-option state.",
       "taskRefs": [
-        "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE"
+        "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE",
+        "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE"
       ],
-      "title": "Character Creation advances CharacterBuild class levels with class-feature replacement refs",
+      "title": "Character Creation advances CharacterBuild class levels with class-feature replacement and gain choices",
       "verificationOwners": [
         {
           "kind": "runtime-test",
@@ -2244,11 +2245,12 @@
       "runtimeOwners": [
         "packages/character-creation-runtime/src/index.ts"
       ],
-      "sourceBoundary": "Warlock Eldritch Invocations class-feature choice plus the runtime SRD invocation option catalog; selected invocation execution remains owned by selected invocation profiles.",
+      "sourceBoundary": "Warlock Eldritch Invocations class-feature choice, Surface Warlock invocation count facts, and the runtime SRD invocation option catalog; CharacterBuild stores selected invocation ownership plus Repeatable associated choice identity while selected invocation execution remains owned by selected invocation profiles.",
       "taskRefs": [
-        "AT-L1-03S"
+        "AT-L1-03S",
+        "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE"
       ],
-      "title": "Character Creation finalizes Eldritch Invocation choices as selected invocation ownership",
+      "title": "Character Creation finalizes and advances Eldritch Invocation choices as selected invocation ownership",
       "verificationOwners": [
         {
           "kind": "runtime-test",
@@ -3771,6 +3773,15 @@
         "character-creation.class-feature-advancement-replacement"
       ],
       "taskId": "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused character-creation runtime tests cover Warlock level gains that add invocations from the Surface invocation count table, optional Warlock-level replacement with prerequisite gating, prerequisite-retention lockout, Repeatable invocation associated-choice identity, and duplicate-selection enforcement.",
+      "profileIds": [
+        "character-creation.eldritch-invocation-choice",
+        "character-creation.class-feature-advancement-replacement"
+      ],
+      "taskId": "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE"
     }
   ],
   "units": [
@@ -4123,11 +4134,12 @@
           "runtimeOwners": [
             "packages/character-creation-runtime/src/index.ts"
           ],
-          "sourceBoundary": "CharacterBuild progression plus Surface class-feature grant_feat options; replacement is accepted only as part of a class-level gain and rewrites selected CharacterBuild feature refs without parallel selection state.",
+          "sourceBoundary": "CharacterBuild progression plus Surface class-feature choice facts; replacement and gain choices are accepted only as part of a class-level gain and rewrite existing CharacterBuild feature refs or selected invocation ownership without parallel selected-option state.",
           "taskRefs": [
-            "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE"
+            "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE",
+            "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE"
           ],
-          "title": "Character Creation advances CharacterBuild class levels with class-feature replacement refs",
+          "title": "Character Creation advances CharacterBuild class levels with class-feature replacement and gain choices",
           "verificationOwners": [
             {
               "kind": "runtime-test",
@@ -5832,29 +5844,26 @@
           {
             "battleReadinessClosure": {
               "kind": "later-level-only",
-              "owner": "future Warlock invocation advancement/replacement owner",
-              "reason": "The remaining invocation replacement and prerequisite-retention mechanics occur after the level-1 invocation choice has already been finalized."
+              "owner": "future Warlock Pact Magic advancement task",
+              "reason": "Warlock Pact Magic cantrip increases at levels 4 and 10, prepared-spell changes, and Pact Slot progression must be advanced before all-level invocation prerequisite checks can claim full lifecycle ownership."
             },
-            "followUpTaskId": "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE",
-            "mechanic": "Warlock-level invocation replacement when gaining a Warlock level, including the prerequisite-retention rule that blocks replacing an invocation required by another selected invocation"
-          },
-          {
-            "battleReadinessClosure": {
-              "kind": "later-level-only",
-              "owner": "future Warlock invocation advancement/replacement owner",
-              "reason": "The remaining invocation gain, prerequisite, and repeatability mechanics occur after the level-1 invocation choice has already been finalized."
-            },
-            "followUpTaskId": "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE",
-            "mechanic": "Later-level invocation gains from the Warlock Invocations column, including prerequisite gating and duplicate-selection enforcement across retained invocations"
+            "followUpTaskId": "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT",
+            "mechanic": "Warlock Pact Magic cantrip, prepared-spell, and Pact Slot facts are only finalized at level 1; advancing those spellcasting facts on later Warlock levels remains outside this task, so invocation known-cantrip prerequisites consume current CharacterBuild spellcasting facts without owning Pact Magic advancement."
           }
         ],
         "profileIds": [
-          "character-creation.eldritch-invocation-choice"
+          "character-creation.eldritch-invocation-choice",
+          "character-creation.class-feature-advancement-replacement"
         ],
         "supportedMechanics": [
           "Level 1 Warlock character creation discovers the Eldritch Invocation choice from the Surface class-feature record",
           "Character Creation admits the level-1 eligible invocation options by filtering the SRD invocation option catalog to options with no prerequisites at level 1",
           "Character Creation finalizes one selected invocation as selected Eldritch Invocation ownership with selectedFromUnitId warlock_eldritch_invocations",
+          "When a Warlock level is gained, Character Creation derives the required selected invocation count from the Surface Warlock Invocations column and requires exactly the newly gained invocation choices",
+          "When a Warlock level is gained, Character Creation can replace one selected invocation selection, including one Repeatable invocation instance identified by its associated choice, with another invocation selection for which the final build qualifies",
+          "Invocation prerequisite gating checks minimum Warlock level, selected prerequisite invocations, and known Warlock cantrip damage prerequisites from current CharacterBuild spellcasting facts",
+          "Invocation replacement is blocked when another retained selected invocation has the replaced invocation as a prerequisite",
+          "Duplicate non-Repeatable selected invocations are rejected; Repeatable selected invocations require distinct associated choices",
           "Selected invocation execution remains owned by the selected invocation option profiles"
         ],
         "tag": "profile-subset-supported"
@@ -5864,7 +5873,7 @@
         {
           "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
-          "taskId": "AT-L1-05"
+          "taskId": "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE"
         }
       ],
       "executableMechanics": true,
@@ -5877,11 +5886,32 @@
           "runtimeOwners": [
             "packages/character-creation-runtime/src/index.ts"
           ],
-          "sourceBoundary": "Warlock Eldritch Invocations class-feature choice plus the runtime SRD invocation option catalog; selected invocation execution remains owned by selected invocation profiles.",
+          "sourceBoundary": "Warlock Eldritch Invocations class-feature choice, Surface Warlock invocation count facts, and the runtime SRD invocation option catalog; CharacterBuild stores selected invocation ownership plus Repeatable associated choice identity while selected invocation execution remains owned by selected invocation profiles.",
           "taskRefs": [
-            "AT-L1-03S"
+            "AT-L1-03S",
+            "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE"
           ],
-          "title": "Character Creation finalizes Eldritch Invocation choices as selected invocation ownership",
+          "title": "Character Creation finalizes and advances Eldritch Invocation choices as selected invocation ownership",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-creation.class-feature-advancement-replacement",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "CharacterBuild progression plus Surface class-feature choice facts; replacement and gain choices are accepted only as part of a class-level gain and rewrite existing CharacterBuild feature refs or selected invocation ownership without parallel selected-option state.",
+          "taskRefs": [
+            "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE",
+            "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE"
+          ],
+          "title": "Character Creation advances CharacterBuild class levels with class-feature replacement and gain choices",
           "verificationOwners": [
             {
               "kind": "runtime-test",

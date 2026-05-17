@@ -15537,8 +15537,8 @@
       "battleReadinessClosure": {
         "source": "deferred-mechanics",
         "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "future Warlock invocation advancement/replacement owner",
-        "reason": "The remaining invocation replacement and prerequisite-retention mechanics occur after the level-1 invocation choice has already been finalized.; The remaining invocation gain, prerequisite, and repeatability mechanics occur after the level-1 invocation choice has already been finalized."
+        "owner": "future Warlock Pact Magic advancement task",
+        "reason": "Warlock Pact Magic cantrip increases at levels 4 and 10, prepared-spell changes, and Pact Slot progression must be advanced before all-level invocation prerequisite checks can claim full lifecycle ownership."
       },
       "ownerEvidence": [
         {
@@ -15548,7 +15548,7 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV18A level-1 Warlock Eldritch Invocation choice support profile; Eldritch Invocations are discovered from the Warlock feature-choice Surface record and the runtime SRD invocation option catalog, filled through the eldritch_invocations support profile, finalized as selected invocation ownership, and projected into CharacterBuild features without treating invocation options as retained Unit refs.",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE all-level Warlock Eldritch Invocation choice and advancement support profile; Eldritch Invocations are discovered from the Warlock feature-choice Surface record and the runtime SRD invocation option catalog, filled through the eldritch_invocations support profile, finalized as selected invocation ownership, and advanced through the CharacterBuild class-level gain boundary. Warlock-level gains derive counts from the Surface Warlock Invocations column, replacement validates final prerequisites and prerequisite-retention lockout, non-Repeatable duplicate selections are rejected, and invocation options are not treated as retained Unit refs.",
           "status": "owner evidence present"
         }
       ],

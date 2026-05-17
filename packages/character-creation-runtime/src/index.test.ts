@@ -46,6 +46,7 @@ import {
   creationHoleId,
   discoverCreationHoles,
   draftRevision,
+  eldritchInvocationId,
   fillCreationHoles,
   finalizeCharacterDraft,
   fighterLevelGainWithFightingStyleReplacement,
@@ -62,9 +63,12 @@ import {
   unitChoiceSourceHoleIdText,
   unitChoiceSourceKey,
   unitChoiceSourceUnitId,
+  warlockLevelGainWithEldritchInvocations,
   type CharacterDraft,
   type CharacterChoiceSelection,
   type CharacterBuild,
+  type CharacterBuildEldritchInvocationRepeatableChoice,
+  type CharacterBuildWarlockEldritchInvocationSelectionInput,
   type CharacterBuildProficiencies,
   type ChoiceCardinality,
   type CreationFill,
@@ -117,7 +121,7 @@ import {
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.skill-expertise-choice
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.class-feature-advancement-replacement
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-03 fighter_fighting_style
-// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-05 warlock_eldritch_invocations
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE warlock_eldritch_invocations
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-06 cleric_divine_order druid_primal_order
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-07 rogue_expertise
 
@@ -166,6 +170,173 @@ function finalizedCompleteManifestBuild(): CharacterBuild {
   }
 
   return result.build;
+}
+
+function testClassUnitId(classUnitId: UnitRecord["id"]) {
+  return expectRight(classUnitIdFromUnitId({ unitLibrary, classUnitId }));
+}
+
+function finalizedWarlockBuild(draftId: string): CharacterBuild {
+  const result = finalizeCharacterDraft({
+    draft: completeSupportedProgressionDraft({
+      draftId,
+      progression: testProgression("class_warlock", 1),
+    }),
+    unitLibrary,
+  });
+  if (result.tag !== "ready") {
+    throw new Error(
+      `Expected Warlock finalization to be ready, received ${result.tag}`,
+    );
+  }
+
+  return result.build;
+}
+
+function warlockSpellcastingSourceWithKnownCantrips(
+  cantripIds: readonly UnitRecord["id"][],
+): NonNullable<CharacterBuild["spellcasting"]>["sources"][number] {
+  const classFacts = readableClassFacts("class_warlock");
+  if (
+    !("spellcasting" in classFacts) ||
+    classFacts.spellcasting.kind !== "pact_magic_spellcasting_creation"
+  ) {
+    throw new Error("Expected Warlock Pact Magic spellcasting facts.");
+  }
+  const spellcasting = classFacts.spellcasting;
+
+  return {
+    sourceUnitId: "class_warlock",
+    spellcastingAbility: spellcasting.spellcastingAbility,
+    cantrips: cantripIds,
+    spellbook: [],
+    preparedSpells: [],
+    spellcastingFocuses: [spellcasting.spellcastingFocus],
+  };
+}
+
+function warlockBuildWithKnownWarlockCantrips(
+  build: CharacterBuild,
+  cantripIds: readonly UnitRecord["id"][],
+): CharacterBuild {
+  const warlockSource = warlockSpellcastingSourceWithKnownCantrips(cantripIds);
+  if (build.spellcasting === undefined) {
+    return {
+      ...build,
+      spellcasting: {
+        sources: [warlockSource],
+        slotPools: {},
+      },
+    };
+  }
+  const spellcasting = build.spellcasting;
+  const firstSource = spellcasting.sources[0];
+  if (firstSource === undefined) {
+    throw new Error("Warlock test build must have a spellcasting source.");
+  }
+  const withCantrips = (
+    source: (typeof spellcasting.sources)[number],
+  ): (typeof spellcasting.sources)[number] =>
+    source.sourceUnitId === "class_warlock"
+      ? { ...source, cantrips: [...source.cantrips, ...cantripIds] }
+      : source;
+  const hasWarlockSource = spellcasting.sources.some(
+    (source) => source.sourceUnitId === "class_warlock",
+  );
+
+  return {
+    ...build,
+    spellcasting: {
+      ...spellcasting,
+      sources: hasWarlockSource
+        ? [
+            withCantrips(firstSource),
+            ...spellcasting.sources.slice(1).map(withCantrips),
+          ]
+        : [warlockSource, ...spellcasting.sources],
+    },
+  };
+}
+
+function nonRepeatableEldritchInvocation(
+  invocationId: string,
+): CharacterBuildWarlockEldritchInvocationSelectionInput {
+  return {
+    kind: "nonRepeatable",
+    invocationId: eldritchInvocationId(invocationId),
+  };
+}
+
+function repeatableEldritchInvocation(
+  invocationId: string,
+  repeatableChoice: CharacterBuildEldritchInvocationRepeatableChoice,
+): CharacterBuildWarlockEldritchInvocationSelectionInput {
+  return {
+    kind: "repeatable",
+    invocationId: eldritchInvocationId(invocationId),
+    repeatableChoice,
+  };
+}
+
+function warlockLevelFiveBuildWithThirstingBlade(): CharacterBuild {
+  const warlockClassUnitId = testClassUnitId("class_warlock");
+  const levelTwo = expectRight(
+    advanceCharacterBuildClassLevel({
+      build: finalizedWarlockBuild("draft:warlock-level-five-source"),
+      unitLibrary,
+      levelGain: expectRight(
+        warlockLevelGainWithEldritchInvocations({
+          unitLibrary,
+          classUnitId: warlockClassUnitId,
+          hitPointRule: { tag: "fixedHigherLevelGain" },
+          gainedInvocations: [
+            nonRepeatableEldritchInvocation("pact_of_the_blade"),
+            nonRepeatableEldritchInvocation("devils_sight"),
+          ],
+        }),
+      ),
+    }),
+  );
+  const levelThree = expectRight(
+    advanceCharacterBuildClassLevel({
+      build: levelTwo,
+      unitLibrary,
+      levelGain: {
+        tag: "classLevelGain",
+        classUnitId: warlockClassUnitId,
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+      },
+    }),
+  );
+  const levelFour = expectRight(
+    advanceCharacterBuildClassLevel({
+      build: levelThree,
+      unitLibrary,
+      levelGain: {
+        tag: "classLevelGain",
+        classUnitId: warlockClassUnitId,
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+      },
+    }),
+  );
+
+  return expectRight(
+    advanceCharacterBuildClassLevel({
+      build: levelFour,
+      unitLibrary,
+      levelGain: expectRight(
+        warlockLevelGainWithEldritchInvocations({
+          unitLibrary,
+          classUnitId: warlockClassUnitId,
+          hitPointRule: { tag: "fixedHigherLevelGain" },
+          gainedInvocations: [
+            nonRepeatableEldritchInvocation("thirsting_blade"),
+            nonRepeatableEldritchInvocation("eldritch_mind"),
+          ],
+        }),
+      ),
+    }),
+  );
 }
 
 function testProgression(
@@ -2230,7 +2401,11 @@ describe("character creation finalization", () => {
       ),
     ).toEqual(["guidance"]);
     expect(
-      selectedChoiceOptionIds(druidWarden, "druid_primal_order", "primal_order"),
+      selectedChoiceOptionIds(
+        druidWarden,
+        "druid_primal_order",
+        "primal_order",
+      ),
     ).toEqual(["warden"]);
     expect(
       selectedChoiceOptionIds(
@@ -2296,9 +2471,9 @@ describe("character creation finalization", () => {
         },
       ]),
     );
-    expect(
-      druidMagicianBuild.build.spellcasting?.sources[0]?.cantrips,
-    ).toEqual(expect.arrayContaining(["guidance"]));
+    expect(druidMagicianBuild.build.spellcasting?.sources[0]?.cantrips).toEqual(
+      expect.arrayContaining(["guidance"]),
+    );
     expect(druidMagicianBuild.build.features).toEqual(
       expect.arrayContaining([
         {
@@ -2393,9 +2568,9 @@ describe("character creation finalization", () => {
     expect(
       spellcastingSourceCantrips(clericBuild.build, "class_cleric"),
     ).toEqual(expect.arrayContaining(["light"]));
-    expect(
-      spellcastingSourceCantrips(druidBuild.build, "class_druid"),
-    ).toEqual(expect.arrayContaining(["guidance"]));
+    expect(spellcastingSourceCantrips(druidBuild.build, "class_druid")).toEqual(
+      expect.arrayContaining(["guidance"]),
+    );
   });
 
   test("finalizes non-Wizard level-1 Spell Access from Surface class spellcasting facts", () => {
@@ -3276,7 +3451,10 @@ describe("character creation finalization", () => {
     expect(result.build.features).toContainEqual({
       kind: "selectedEldritchInvocation",
       selectedFromUnitId: "warlock_eldritch_invocations",
-      invocationId: "armor_of_shadows",
+      selection: {
+        kind: "nonRepeatable",
+        invocationId: "armor_of_shadows",
+      },
     });
     expect(
       result.build.features.some(
@@ -3296,6 +3474,377 @@ describe("character creation finalization", () => {
         (ref) => ref.unitId,
       ),
     ).not.toContain("armor_of_shadows");
+  });
+
+  test("advances a finalized Warlock build and gains invocations from the Warlock table", () => {
+    const build = finalizedWarlockBuild("draft:warlock-invocation-level-2");
+    const warlockClassUnitId = testClassUnitId("class_warlock");
+    const levelGain = expectRight(
+      warlockLevelGainWithEldritchInvocations({
+        unitLibrary,
+        classUnitId: warlockClassUnitId,
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        gainedInvocations: [
+          nonRepeatableEldritchInvocation("pact_of_the_blade"),
+          nonRepeatableEldritchInvocation("devils_sight"),
+        ],
+      }),
+    );
+
+    const result = expectRight(
+      advanceCharacterBuildClassLevel({
+        build,
+        unitLibrary,
+        levelGain,
+      }),
+    );
+
+    expect(computeTotalLevel(result.progression)).toBe(2);
+    expect(
+      selectedBuildEldritchInvocationIds(
+        result,
+        "warlock_eldritch_invocations",
+      ),
+    ).toEqual(["armor_of_shadows", "pact_of_the_blade", "devils_sight"]);
+  });
+
+  test("rejects a plain Warlock level gain when the invocation count increases", () => {
+    const build = finalizedWarlockBuild(
+      "draft:warlock-missing-invocation-gain",
+    );
+    const levelGain = {
+      tag: "classLevelGain",
+      classUnitId: testClassUnitId("class_warlock"),
+      hitPointRule: { tag: "fixedHigherLevelGain" },
+    } as const satisfies CharacterBuildClassLevelGain;
+
+    const result = advanceCharacterBuildClassLevel({
+      build,
+      unitLibrary,
+      levelGain,
+    });
+
+    expect(result).toMatchObject({
+      _tag: "Left",
+      left: { code: "invalidEldritchInvocationSelectionCount" },
+    });
+  });
+
+  test("rejects Warlock invocation gains that do not meet prerequisites", () => {
+    const build = finalizedWarlockBuild(
+      "draft:warlock-invocation-prerequisite",
+    );
+    const levelGain = expectRight(
+      warlockLevelGainWithEldritchInvocations({
+        unitLibrary,
+        classUnitId: testClassUnitId("class_warlock"),
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        gainedInvocations: [
+          nonRepeatableEldritchInvocation("ascendant_step"),
+          nonRepeatableEldritchInvocation("devils_sight"),
+        ],
+      }),
+    );
+
+    const result = advanceCharacterBuildClassLevel({
+      build,
+      unitLibrary,
+      levelGain,
+    });
+
+    expect(result).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "unmetEldritchInvocationPrerequisite",
+        invocationId: "ascendant_step",
+      },
+    });
+  });
+
+  test("blocks replacing an invocation required by another selected invocation", () => {
+    const levelFiveBuild = warlockLevelFiveBuildWithThirstingBlade();
+    const levelGain = expectRight(
+      warlockLevelGainWithEldritchInvocations({
+        unitLibrary,
+        classUnitId: testClassUnitId("class_warlock"),
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        gainedInvocations: [],
+        replacement: {
+          replaceInvocation: nonRepeatableEldritchInvocation(
+            "pact_of_the_blade",
+          ),
+          selectedInvocation: nonRepeatableEldritchInvocation(
+            "pact_of_the_chain",
+          ),
+        },
+      }),
+    );
+
+    const result = advanceCharacterBuildClassLevel({
+      build: levelFiveBuild,
+      unitLibrary,
+      levelGain,
+    });
+
+    expect(result).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "lockedEldritchInvocationReplacement",
+        replaceInvocationId: "pact_of_the_blade",
+        dependentInvocationId: "thirsting_blade",
+      },
+    });
+  });
+
+  test("enforces duplicate invocation selection identity for Repeatable and non-Repeatable invocations", () => {
+    const build = warlockBuildWithKnownWarlockCantrips(
+      finalizedWarlockBuild("draft:warlock-invocation-duplicates"),
+      ["eldritch_blast", "poison_spray"],
+    );
+    const eldritchBlastChoice = {
+      kind: "knownWarlockCantrip",
+      cantripId: "eldritch_blast",
+    } as const satisfies CharacterBuildEldritchInvocationRepeatableChoice;
+    const poisonSprayChoice = {
+      kind: "knownWarlockCantrip",
+      cantripId: "poison_spray",
+    } as const satisfies CharacterBuildEldritchInvocationRepeatableChoice;
+    const duplicateArmorLevelGain = expectRight(
+      warlockLevelGainWithEldritchInvocations({
+        unitLibrary,
+        classUnitId: testClassUnitId("class_warlock"),
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        gainedInvocations: [
+          nonRepeatableEldritchInvocation("armor_of_shadows"),
+          nonRepeatableEldritchInvocation("devils_sight"),
+        ],
+      }),
+    );
+    expect(
+      advanceCharacterBuildClassLevel({
+        build,
+        unitLibrary,
+        levelGain: duplicateArmorLevelGain,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "duplicateEldritchInvocationSelection",
+        invocationId: "armor_of_shadows",
+      },
+    });
+
+    const duplicateRepeatableLevelGain = expectRight(
+      warlockLevelGainWithEldritchInvocations({
+        unitLibrary,
+        classUnitId: testClassUnitId("class_warlock"),
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        gainedInvocations: [
+          repeatableEldritchInvocation("repelling_blast", eldritchBlastChoice),
+          repeatableEldritchInvocation("repelling_blast", eldritchBlastChoice),
+        ],
+      }),
+    );
+    expect(
+      advanceCharacterBuildClassLevel({
+        build,
+        unitLibrary,
+        levelGain: duplicateRepeatableLevelGain,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "duplicateEldritchInvocationSelection",
+        invocationId: "repelling_blast",
+      },
+    });
+
+    const repeatableLevelGain = expectRight(
+      warlockLevelGainWithEldritchInvocations({
+        unitLibrary,
+        classUnitId: testClassUnitId("class_warlock"),
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        gainedInvocations: [
+          repeatableEldritchInvocation("repelling_blast", eldritchBlastChoice),
+          repeatableEldritchInvocation("repelling_blast", poisonSprayChoice),
+        ],
+      }),
+    );
+    const repeatableResult = expectRight(
+      advanceCharacterBuildClassLevel({
+        build,
+        unitLibrary,
+        levelGain: repeatableLevelGain,
+      }),
+    );
+    expect(
+      selectedBuildEldritchInvocations(
+        repeatableResult,
+        "warlock_eldritch_invocations",
+      ),
+    ).toEqual([
+      { invocationId: "armor_of_shadows" },
+      {
+        invocationId: "repelling_blast",
+        repeatableChoice: eldritchBlastChoice,
+      },
+      {
+        invocationId: "repelling_blast",
+        repeatableChoice: poisonSprayChoice,
+      },
+    ]);
+  });
+
+  test("replaces one Repeatable invocation selection by associated choice", () => {
+    const build = warlockBuildWithKnownWarlockCantrips(
+      finalizedWarlockBuild("draft:warlock-repeatable-replacement"),
+      ["eldritch_blast", "poison_spray"],
+    );
+    const eldritchBlastChoice = {
+      kind: "knownWarlockCantrip",
+      cantripId: "eldritch_blast",
+    } as const satisfies CharacterBuildEldritchInvocationRepeatableChoice;
+    const poisonSprayChoice = {
+      kind: "knownWarlockCantrip",
+      cantripId: "poison_spray",
+    } as const satisfies CharacterBuildEldritchInvocationRepeatableChoice;
+    const levelTwo = expectRight(
+      advanceCharacterBuildClassLevel({
+        build,
+        unitLibrary,
+        levelGain: expectRight(
+          warlockLevelGainWithEldritchInvocations({
+            unitLibrary,
+            classUnitId: testClassUnitId("class_warlock"),
+            hitPointRule: { tag: "fixedHigherLevelGain" },
+            gainedInvocations: [
+              repeatableEldritchInvocation(
+                "repelling_blast",
+                eldritchBlastChoice,
+              ),
+              repeatableEldritchInvocation(
+                "repelling_blast",
+                poisonSprayChoice,
+              ),
+            ],
+          }),
+        ),
+      }),
+    );
+
+    const result = expectRight(
+      advanceCharacterBuildClassLevel({
+        build: levelTwo,
+        unitLibrary,
+        levelGain: expectRight(
+          warlockLevelGainWithEldritchInvocations({
+            unitLibrary,
+            classUnitId: testClassUnitId("class_warlock"),
+            hitPointRule: { tag: "fixedHigherLevelGain" },
+            gainedInvocations: [],
+            replacement: {
+              replaceInvocation: repeatableEldritchInvocation(
+                "repelling_blast",
+                eldritchBlastChoice,
+              ),
+              selectedInvocation: nonRepeatableEldritchInvocation(
+                "devils_sight",
+              ),
+            },
+          }),
+        ),
+      }),
+    );
+
+    expect(
+      selectedBuildEldritchInvocations(result, "warlock_eldritch_invocations"),
+    ).toEqual([
+      { invocationId: "armor_of_shadows" },
+      { invocationId: "devils_sight" },
+      {
+        invocationId: "repelling_blast",
+        repeatableChoice: poisonSprayChoice,
+      },
+    ]);
+  });
+
+  test("requires Repeatable known-cantrip choices to be selected Warlock-list cantrips that match the invocation rule", () => {
+    const build = warlockBuildWithKnownWarlockCantrips(
+      finalizedWarlockBuild("draft:warlock-repeatable-cantrip-choice"),
+      ["fire_bolt"],
+    );
+    const levelGain = expectRight(
+      warlockLevelGainWithEldritchInvocations({
+        unitLibrary,
+        classUnitId: testClassUnitId("class_warlock"),
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        gainedInvocations: [
+          repeatableEldritchInvocation("repelling_blast", {
+            kind: "knownWarlockCantrip",
+            cantripId: "fire_bolt",
+          }),
+          nonRepeatableEldritchInvocation("devils_sight"),
+        ],
+      }),
+    );
+
+    expect(
+      advanceCharacterBuildClassLevel({
+        build,
+        unitLibrary,
+        levelGain,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "invalidRepeatableEldritchInvocationChoice",
+        invocationId: "repelling_blast",
+      },
+    });
+  });
+
+  test("admits True Strike as a Warlock damage cantrip via its spell-granted weapon attack", () => {
+    const build = warlockBuildWithKnownWarlockCantrips(
+      finalizedWarlockBuild("draft:warlock-true-strike-invocations"),
+      ["true_strike"],
+    );
+    const trueStrikeChoice = {
+      kind: "knownWarlockCantrip",
+      cantripId: "true_strike",
+    } as const satisfies CharacterBuildEldritchInvocationRepeatableChoice;
+    const levelGain = expectRight(
+      warlockLevelGainWithEldritchInvocations({
+        unitLibrary,
+        classUnitId: testClassUnitId("class_warlock"),
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        gainedInvocations: [
+          repeatableEldritchInvocation("agonizing_blast", trueStrikeChoice),
+          repeatableEldritchInvocation("repelling_blast", trueStrikeChoice),
+        ],
+      }),
+    );
+
+    const result = expectRight(
+      advanceCharacterBuildClassLevel({
+        build,
+        unitLibrary,
+        levelGain,
+      }),
+    );
+
+    expect(
+      selectedBuildEldritchInvocations(result, "warlock_eldritch_invocations"),
+    ).toEqual([
+      { invocationId: "armor_of_shadows" },
+      {
+        invocationId: "agonizing_blast",
+        repeatableChoice: trueStrikeChoice,
+      },
+      {
+        invocationId: "repelling_blast",
+        repeatableChoice: trueStrikeChoice,
+      },
+    ]);
   });
 
   test("collects all missing class Unit issues while projecting a build", () => {
@@ -4556,6 +5105,40 @@ function selectedBuildClassChoiceUnitIds(
     feature.kind === "selectedClassChoice" &&
     feature.selectedFromUnitId === selectedFromUnitId
       ? [feature.unitId]
+      : [],
+  );
+}
+
+function selectedBuildEldritchInvocationIds(
+  build: CharacterBuild,
+  selectedFromUnitId: UnitRecord["id"],
+): readonly string[] {
+  return build.features.flatMap((feature) =>
+    feature.kind === "selectedEldritchInvocation" &&
+    feature.selectedFromUnitId === selectedFromUnitId
+      ? [feature.selection.invocationId]
+      : [],
+  );
+}
+
+function selectedBuildEldritchInvocations(
+  build: CharacterBuild,
+  selectedFromUnitId: UnitRecord["id"],
+): readonly {
+  readonly invocationId: string;
+  readonly repeatableChoice?: CharacterBuildEldritchInvocationRepeatableChoice;
+}[] {
+  return build.features.flatMap((feature) =>
+    feature.kind === "selectedEldritchInvocation" &&
+    feature.selectedFromUnitId === selectedFromUnitId
+      ? [
+          {
+            invocationId: feature.selection.invocationId,
+            ...(feature.selection.kind === "nonRepeatable"
+              ? {}
+              : { repeatableChoice: feature.selection.repeatableChoice }),
+          },
+        ]
       : [],
   );
 }

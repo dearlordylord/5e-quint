@@ -1002,9 +1002,30 @@ export type CharacterBuildFeature =
     })
   | (CharacterBuildSelectedFeatureSource & {
       readonly kind: "selectedEldritchInvocation";
-      readonly invocationId: EldritchInvocationId;
+      readonly selection: CharacterBuildEldritchInvocationSelection;
     })
   | CharacterBuildAbilityCheckBonusFeature;
+
+export type CharacterBuildEldritchInvocationSelection =
+  | {
+      readonly kind: "nonRepeatable";
+      readonly invocationId: EldritchInvocationId;
+    }
+  | {
+      readonly kind: "repeatable";
+      readonly invocationId: EldritchInvocationId;
+      readonly repeatableChoice: CharacterBuildEldritchInvocationRepeatableChoice;
+    };
+
+export type CharacterBuildEldritchInvocationRepeatableChoice =
+  | {
+      readonly kind: "knownWarlockCantrip";
+      readonly cantripId: UnitRecord["id"];
+    }
+  | {
+      readonly kind: "originFeat";
+      readonly featUnitId: UnitRecord["id"];
+    };
 
 type CharacterBuildAbilityCheckBonusFeature =
   CharacterBuildSelectedFeatureSource & {
@@ -1071,6 +1092,10 @@ export type CharacterBuildSpellcastingFocus =
   | Extract<
       ClassSpellcastingCreation,
       { readonly kind: "list_prepared_spellcasting_creation" }
+    >["spellcastingFocus"]
+  | Extract<
+      ClassSpellcastingCreation,
+      { readonly kind: "pact_magic_spellcasting_creation" }
     >["spellcastingFocus"];
 export type CharacterBuildSpellLevel =
   WizardSpellcastingCreation["spellbookAccess"]["spells"][number]["spellLevel"];

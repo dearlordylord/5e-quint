@@ -67,8 +67,14 @@
     {
       "number": 9,
       "id": "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Warlock Eldritch Invocation Lifecycle"
+    },
+    {
+      "number": 18,
+      "id": "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT",
+      "status": "ready-for-research",
+      "title": "Warlock Pact Magic Advancement"
     },
     {
       "number": 10,
@@ -141,6 +147,7 @@ Every Ralph prompt for this loop must include:
 | `AT-L1-04` Weapon Mastery character/rest profile | `barbarian_weapon_mastery`, `fighter_weapon_mastery`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery` | initial choice plus Long Rest reselection support |
 | `AT-L1-05` Warlock Eldritch Invocations profile | `warlock_eldritch_invocations` | level-1 invocation choice evidence; all-level lifecycle guard |
 | `L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE` Warlock Eldritch Invocation lifecycle | `warlock_eldritch_invocations` | later-level invocation gains, Warlock-level replacement, prerequisite-retention lockout, and duplicate-selection enforcement |
+| `L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT` Warlock Pact Magic advancement | `class_warlock`, `warlock_eldritch_invocations` prerequisite facts | Warlock cantrip, prepared-spell, and Pact Slot CharacterBuild facts across Warlock level gains so invocation prerequisite checks consume fresh Pact Magic facts |
 | `AT-L1-06` Cleric/Druid order profile | `cleric_divine_order`, `druid_primal_order` | Divine/Primal Order option projection |
 | `AT-L1-07` Rogue Expertise profile | `rogue_expertise` | level-1 two-skill Expertise choice evidence; level 6 lifecycle guard |
 | `L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT` Rogue Expertise level 6 grant | `rogue_expertise` | later-level additional two-skill Expertise choice |
@@ -161,9 +168,11 @@ Every Ralph prompt for this loop must include:
 6. `L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE` is complete: Character
    Creation owns the shared post-finalization class-level gain boundary needed
    to promote `fighter_fighting_style` to all-level support.
-7. Implement `L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE` after `AT-L1-05`
-   when promoting `warlock_eldritch_invocations` from the level-1 subset to
-   all-level support.
+7. `L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE` is complete for invocation
+   gain/replacement/duplicate/prerequisite-retention mechanics. Keep
+   `warlock_eldritch_invocations` at subset support until
+   `L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT` owns fresh Pact Magic build facts across
+   Warlock level gains.
 8. Implement `L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT` after `AT-L1-07` when
    promoting `rogue_expertise` from the level-1 subset to all-level support.
 
@@ -202,9 +211,12 @@ Lifecycle gates:
   `mastery_sap`, and `mastery_topple` may be cited as child mastery-property
   execution evidence, but it does not satisfy the container Long Rest
   reselection gate and should not be recreated here.
-- `warlock_eldritch_invocations` needs replacement/gain and prerequisite
-  retention ownership before all-level support. The concrete follow-up is
-  `L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE`.
+- `warlock_eldritch_invocations` now owns replacement/gain, duplicate-selection,
+  repeatable-selection identity, and prerequisite-retention behavior over
+  existing CharacterBuild facts. It still needs
+  `L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT` before all-level support because Pact
+  Magic cantrips, prepared spells, and pact slots must advance as explicit
+  CharacterBuild facts rather than being inferred from class tables.
 
 For `AT-L1-08`:
 
@@ -268,7 +280,8 @@ For `AT-L1-08`:
 | 7 | L1C-AT04 - Weapon Mastery Character And Rest Profile | done | L1C-AT03S | Includes Long Rest reselection support; selected mastery-property MBT does not satisfy this gate. |
 | 8 | L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT - Fighter Fighting Style Advancement Replacement | done | L1C-AT03 | Retargeted remaining all-level work to `L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE`. |
 | 17 | L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE - Character Advancement Replacement Lifecycle | done | L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT | Shared CharacterBuild class-level gain boundary promoted `fighter_fighting_style` to all-level support. |
-| 9 | L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE - Warlock Eldritch Invocation Lifecycle | ready-for-implementation-after-light-research | L1C-AT05 | Required before `warlock_eldritch_invocations` can move from level-1 subset support to all-level support. |
+| 9 | L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE - Warlock Eldritch Invocation Lifecycle | done | L1C-AT05 | Invocation gain, replacement, repeatable-selection identity, duplicate-selection enforcement, and prerequisite-retention are owned over existing CharacterBuild facts. |
+| 18 | L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT - Warlock Pact Magic Advancement | ready-for-research | L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE | Advance Warlock cantrip, prepared-spell, and Pact Slot CharacterBuild facts on later Warlock levels before `warlock_eldritch_invocations` can claim full all-level prerequisite ownership. |
 | 10 | L1C-L1X-01 - Create Or Destroy Water No-Matrix Decision | ready-for-research | none | Decide environment/fog owner; no Unit claim without admitted UnitRecord. |
 | 11 | L1C-L1X-05 - Floating Disk No-Matrix Decision | ready-for-research | none | Decide object/inventory movement owner. |
 | 12 | L1C-L1X-06 - Goodberry No-Matrix Decision | ready-for-research | none | Decide Character Sheet consumable/inventory owner. |
@@ -619,7 +632,7 @@ Plan Impact:
 
 ### Task 9 - L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE - Warlock Eldritch Invocation Lifecycle
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Implement the residual all-level lifecycle mechanics for
 `warlock_eldritch_invocations`.
@@ -651,10 +664,59 @@ Verification:
   files are touched beyond comments
 - `/simplify` convergence, minimum two rounds
 
+Result:
+
+- Character Creation now owns later-level invocation gains, Warlock-level
+  invocation replacement, duplicate selection checks, repeatable invocation
+  selection identity, prerequisite checks against existing build facts, and
+  prerequisite-retention replacement lockout.
+- `warlock_eldritch_invocations` remains `profile-subset-supported` rather than
+  all-level `supported-profile` because Pact Magic advancement facts are
+  deliberately left to Task 18.
+- `/simplify` convergence was attempted repeatedly but is blocked by Claude Code
+  org access in this environment; code review found no actionable code findings.
+
 Plan Impact:
 
-- Add follow-up tasks only for newly discovered durable invocation lifecycle
-  gaps.
+- Task 18 owns the remaining Pact Magic advancement boundary before all-level
+  Warlock invocation support can be claimed.
+
+### Task 18 - L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT - Warlock Pact Magic Advancement
+
+Status: `ready-for-research`
+
+Research and implement the Warlock Pact Magic CharacterBuild advancement facts
+that Task 9 deliberately does not own.
+
+Scope:
+
+- Own Warlock Pact Magic facts consumed by Character Creation advancement:
+  Warlock cantrips known, prepared spells, Pact Magic slot level/count, and
+  Warlock-level replacement choices for cantrips and prepared spells.
+- Read `.references/srd-5.2.1/Classes/Warlock.md` Level 1 Pact Magic and
+  `UBIQUITOUS_LANGUAGE.md` before changing modeled behavior.
+- Reuse the shared CharacterBuild class-level gain boundary from
+  `L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE`; do not add parallel
+  spellcasting state.
+- Ensure `warlock_eldritch_invocations` prerequisite checks consume fresh
+  CharacterBuild Warlock cantrip facts after Warlock levels that change known
+  cantrips.
+- Do not move individual spell execution or selected invocation execution under
+  the Warlock class container.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`
+- `pnpm unit-profile-coverage:check`
+- `pnpm --filter @dnd/character-creation-runtime test` if Character Creation
+  runtime/test files are touched beyond comments
+- `/simplify` convergence, minimum two rounds
+
+Plan Impact:
+
+- Convert `warlock_eldritch_invocations` from `profile-subset-supported` to
+  all-level `supported-profile` only if Pact Magic advancement facts and Task 9
+  invocation lifecycle facts are both owned.
 
 ### Task 10 - L1C-L1X-01 - Create Or Destroy Water No-Matrix Decision
 

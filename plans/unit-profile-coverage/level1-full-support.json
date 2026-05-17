@@ -1215,7 +1215,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "The remaining invocation replacement and prerequisite-retention mechanics occur after the level-1 invocation choice has already been finalized.; The remaining invocation gain, prerequisite, and repeatability mechanics occur after the level-1 invocation choice has already been finalized.",
+      "reason": "Warlock Pact Magic cantrip increases at levels 4 and 10, prepared-spell changes, and Pact Slot progression must be advanced before all-level invocation prerequisite checks can claim full lifecycle ownership.",
       "sourceRecordPath": "packages/surface/content/warlock_eldritch_invocations.json",
       "sourceRows": [
         {
