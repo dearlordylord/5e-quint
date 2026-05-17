@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L1L-LANGUAGE-ACCESS-PRECHECK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Druidic And Thieves Cant Language Access Precheck"
     },
     {
@@ -130,11 +130,24 @@ Every implementation task runs:
 Do not run battle-runtime MBT for this lane unless the implementation actually
 changes battle-runtime behavior. This lane should normally not do that.
 
+## Task 1 Precheck Result
+
+`plans/unit-profile-coverage/L1L_LANGUAGE_ACCESS_PRECHECK.md` is the durable
+Task 1 output. It concludes that no battle-runtime behavior is needed for
+`druid_druidic` or `rogue_thieves_cant`.
+
+Later tasks should keep `originLanguages` as only Common plus two Standard
+Languages and add a required `classFeatureLanguages` projection for
+class-feature language facts. The projection should distinguish fixed grants
+from feature choices, keep `sourceUnitId`, use shared `Language` values, and
+centralize a closed Surface `languageId` to `Language` parser/codec before
+finalization or stored-build parsing consumes authored grants.
+
 ## Task Table
 
 | Order | Task | Status | Blocks On | Output |
 | ---: | --- | --- | --- | --- |
-| 1 | L1L-LANGUAGE-ACCESS-PRECHECK - Druidic And Thieves Cant Language Access Precheck | ready-for-research | none | exact implementation shape and gap list for class-granted languages, extra language choice, Druidic Spell Access, and runtime-detached residuals |
+| 1 | L1L-LANGUAGE-ACCESS-PRECHECK - Druidic And Thieves Cant Language Access Precheck | done | none | `plans/unit-profile-coverage/L1L_LANGUAGE_ACCESS_PRECHECK.md` records the exact implementation shape and gap list for class-granted languages, extra language choice, Druidic Spell Access, and runtime-detached residuals |
 | 2 | L1L-CHARACTER-BUILD-LANGUAGE-FACTS - CharacterBuild Class Granted Language Facts | ready-for-research | 1 | class-granted language facts represented separately from origin languages and derived from authored feature grants |
 | 3 | L1L-ROGUE-EXTRA-LANGUAGE-CHOICE - Rogue Thieves Cant Extra Language Choice | ready-for-research | 1-2 | one additional language choice from Character Creation language tables, without duplicating fixed or origin languages |
 | 4 | L1L-CHARACTER-SHEET-LANGUAGE-PERSISTENCE - Character Sheet Language Persistence | ready-for-research | 2-3 | stored CharacterBuild parser/sheet creation preserves origin and class-granted language facts distinctly |
@@ -145,7 +158,7 @@ changes battle-runtime behavior. This lane should normally not do that.
 
 ### Task 1 - L1L-LANGUAGE-ACCESS-PRECHECK - Druidic And Thieves Cant Language Access Precheck
 
-Status: `ready-for-research`
+Status: `done`
 
 Inputs:
 
@@ -176,6 +189,11 @@ Acceptance:
   unrepresentable or locally rejected at parse/finalization boundaries;
 - RAW anchors and ubiquitous-language terms are cited.
 
+Result:
+
+- `plans/unit-profile-coverage/L1L_LANGUAGE_ACCESS_PRECHECK.md` records the
+  accepted RAW/domain precheck output for later implementation tasks.
+
 ### Task 2 - L1L-CHARACTER-BUILD-LANGUAGE-FACTS - CharacterBuild Class Granted Language Facts
 
 Status: `ready-for-research`
@@ -188,7 +206,8 @@ where that prevents ambiguous ownership.
 
 Inputs:
 
-- Task 1 precheck.
+- Task 1 precheck output:
+  `plans/unit-profile-coverage/L1L_LANGUAGE_ACCESS_PRECHECK.md`.
 - `packages/character-creation-runtime/src/types.ts`.
 - `packages/character-creation-runtime/src/finalization.ts`.
 - Surface `grant_language` records.
@@ -210,6 +229,15 @@ Acceptance:
   are excluded by an explicit supported gate, not silently ignored;
 - no hidden-message or communication adjudication state is added.
 
+Task 1 shape to consume:
+
+- add a required `classFeatureLanguages` field on `CharacterBuild`;
+- represent fixed `grant_language` facts as `classFeatureLanguageGrant` and
+  later chosen feature languages as `classFeatureLanguageChoice`;
+- keep `sourceUnitId` and canonical shared `Language` values;
+- centralize Surface `languageId` parsing so unsupported ids become typed
+  issues rather than silently skipped facts.
+
 ### Task 3 - L1L-ROGUE-EXTRA-LANGUAGE-CHOICE - Rogue Thieves Cant Extra Language Choice
 
 Status: `ready-for-research`
@@ -221,7 +249,8 @@ standard origin languages.
 
 Inputs:
 
-- Task 1 precheck.
+- Task 1 precheck output:
+  `plans/unit-profile-coverage/L1L_LANGUAGE_ACCESS_PRECHECK.md`.
 - Task 2 language fact shape.
 - `packages/character-creation-runtime/src/discovery.ts`.
 - `packages/character-creation-runtime/src/fill-reducer.ts`.
