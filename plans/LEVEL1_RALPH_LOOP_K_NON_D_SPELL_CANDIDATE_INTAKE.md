@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L1K-DAMAGE-SPELL-CANDIDATES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Damage Spell Candidate Intake"
     },
     {
@@ -135,7 +135,7 @@ Every task runs:
 | Order | Task | Status | Blocks On | Output |
 | ---: | --- | --- | --- | --- |
 | 1 | L1K-PRECHECK - Non-D Spell Candidate Precheck | done | none | refreshed non-D spell candidate set and exclusion list |
-| 2 | L1K-DAMAGE-SPELL-CANDIDATES - Damage Spell Candidate Intake | ready-for-research | 1 | candidate split for damage spells outside D |
+| 2 | L1K-DAMAGE-SPELL-CANDIDATES - Damage Spell Candidate Intake | done | 1 | candidate split for damage spells outside D |
 | 3 | L1K-CONDITION-CONTROL-CANDIDATES - Condition Control Spell Candidate Intake | ready-for-research | 1 | candidate split for condition/control spells outside D |
 | 4 | L1K-PROTECTION-RESTORATION-CANDIDATES - Protection Restoration Spell Candidate Intake | ready-for-research | 1 | candidate split for protection/restoration spells outside D |
 | 5 | L1K-MOBILITY-TRANSFORMATION-CANDIDATES - Mobility Transformation Spell Candidate Intake | ready-for-research | 1 | candidate split for mobility/transformation spells outside D |
@@ -157,13 +157,23 @@ Decision artifact: `plans/unit-profile-coverage/L1K_NON_D_SPELL_CANDIDATE_PRECHE
 
 ### Task 2 - L1K-DAMAGE-SPELL-CANDIDATES - Damage Spell Candidate Intake
 
-Status: `ready-for-research`
+Status: `done`
 
 Initial candidates: `acid_arrow`, `scorching_ray`, `shatter`,
 `lightning_bolt`, `cone_of_cold`, `blight`, and `mind_spike`.
 
 Classify by existing damage profile fit, new profile need, or later expansion
 queue. Do not implement a broad spell runtime.
+
+Decision artifact:
+`plans/unit-profile-coverage/L1K_DAMAGE_SPELL_CANDIDATE_INTAKE.md`.
+
+Final split:
+
+- existing damage profile fit: `blight`;
+- new damage profile need: `acid_arrow`, `scorching_ray`, `shatter`,
+  `lightning_bolt`, `cone_of_cold`;
+- later expansion queue: `mind_spike`.
 
 ### Task 3 - L1K-CONDITION-CONTROL-CANDIDATES - Condition Control Spell Candidate Intake
 
