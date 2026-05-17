@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "L1I-SPECIES-TRAIT-PRESSURE-SPLIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Species Trait Catalog Pressure Split"
     },
     {
@@ -93,6 +93,30 @@
       "id": "L1I-PALADIN-SMITE-FREE-CAST-PROFILE",
       "status": "blocked",
       "title": "Paladin's Smite Free-Cast Spell Access Profile"
+    },
+    {
+      "number": 16,
+      "id": "L1I-SPECIES-CHARACTER-ADMISSION-SLICE",
+      "status": "ready-for-research",
+      "title": "Non-Orc Species Character Admission Slice"
+    },
+    {
+      "number": 17,
+      "id": "L1I-DRAGONBORN-BREATH-WEAPON-PROFILE",
+      "status": "blocked",
+      "title": "Dragonborn Breath Weapon Feature Profile"
+    },
+    {
+      "number": 18,
+      "id": "L1I-SPECIES-PASSIVE-RESISTANCE-PROFILE",
+      "status": "blocked",
+      "title": "Species Passive Resistance Profile"
+    },
+    {
+      "number": 19,
+      "id": "L1I-SPECIES-CONDITION-ROLL-MODE-PROFILES",
+      "status": "blocked",
+      "title": "Species Condition Roll-Mode Profiles"
     }
   ]
 }
@@ -171,12 +195,16 @@ Every task runs:
 | 7 | L1I-RANGER-LATER-FEATURES - Ranger Later Feature Catalog Pressure | done | 1 | Ranger feature disposition without stealing D Favored Enemy work |
 | 8 | L1I-MONK-BODY-AND-MIND - Monk Body And Mind Catalog Pressure | done | 1 | Monk feature disposition without stealing D Martial Arts scaling |
 | 9 | L1I-WARLOCK-WIZARD-KNOWLEDGE-FEATURES - Warlock Wizard Knowledge Feature Catalog Pressure | done | 1 | Warlock/Wizard knowledge-feature disposition without stealing D invocation work |
-| 10 | L1I-SPECIES-TRAIT-PRESSURE-SPLIT - Species Trait Catalog Pressure Split | ready-for-research | 1 | split species traits into runtime-supported, runtime-detached, later-level, or follow-up lanes |
+| 10 | L1I-SPECIES-TRAIT-PRESSURE-SPLIT - Species Trait Catalog Pressure Split | done | 1 | species trait split artifact and unsupported-profile claims for eight species trait records |
 | 11 | L1I-DRUID-NATURES-WARD - Druid Nature's Ward Catalog Pressure | ready-for-research | 1 | Druid later feature disposition without stealing D Primal Order work |
 | 12 | L1I-BARD-JACK-OF-ALL-TRADES-PROFILE - Bard Jack Of All Trades Ability Check Profile | ready-for-research | 4 | decide the smallest skill-proficiency-aware Ability Check half-Proficiency Bonus profile boundary |
 | 13 | L1I-WORDS-OF-CREATION-POWER-WORD-RIDER - Words Of Creation Power Word Rider Profile | blocked | supported `power_word_heal` and `power_word_kill` spell invocation profiles | second-target rider support after host Power Word spells are promoted |
 | 14 | L1I-BARBARIAN-DANGER-SENSE-ROLL-MODE - Barbarian Danger Sense Saving Throw Roll-Mode Profile | ready-for-research | 5 | decide the smallest passive Dexterity Saving Throw Advantage profile boundary |
 | 15 | L1I-PALADIN-SMITE-FREE-CAST-PROFILE - Paladin's Smite Free-Cast Spell Access Profile | blocked | owner decision to expand Paladin battle support past level 1 | future Spell Access and class-feature free-cast support that reuses `divine_smite` |
+| 16 | L1I-SPECIES-CHARACTER-ADMISSION-SLICE - Non-Orc Species Character Admission Slice | ready-for-research | 10 | smallest character-creation admission slice for Elf, Dragonborn, Dwarf, Goliath, and Tiefling species before runtime relies on their trait refs |
+| 17 | L1I-DRAGONBORN-BREATH-WEAPON-PROFILE - Dragonborn Breath Weapon Feature Profile | blocked | 16 | future species attack-replacement profile that reuses one Draconic Ancestry source fact for Breath Weapon and Damage Resistance |
+| 18 | L1I-SPECIES-PASSIVE-RESISTANCE-PROFILE - Species Passive Resistance Profile | blocked | 16 | future target-side passive Resistance profile for character-derived species traits without duplicating Stat Block or active-effect resistance state |
+| 19 | L1I-SPECIES-CONDITION-ROLL-MODE-PROFILES - Species Condition Roll-Mode Profiles | blocked | 14, 16 | future condition-scoped Ability Check and Saving Throw roll-mode support for Powerful Build and Dwarven Resilience |
 
 ### Task 1 - L1I-PRECHECK - Non-D Class Species Pressure Precheck
 
@@ -354,7 +382,7 @@ constrained filter rather than create a Wizard-only proficiency adapter.
 
 ### Task 10 - L1I-SPECIES-TRAIT-PRESSURE-SPLIT - Species Trait Catalog Pressure Split
 
-Status: `ready-for-research`
+Status: `done`
 
 Units: `elf_darkvision`, `species_dragonborn_breath_weapon`,
 `species_dragonborn_damage_resistance`, `species_dragonborn_darkvision`,
@@ -364,6 +392,17 @@ Units: `elf_darkvision`, `species_dragonborn_breath_weapon`,
 Split these into runtime-supported, character fact, runtime-detached sense, or
 future widening follow-up lanes. Do not implement a broad species runtime in
 this task.
+
+Result:
+`plans/unit-profile-coverage/L1I_CLASS_SPECIES_SPECIES_TRAIT_PRESSURE_SPLIT.md`.
+All eight species-trait records are closed with `unsupported-profile` claims.
+The four Darkvision Units are runtime-detached sense facts. Dragonborn Breath
+Weapon remains a future attack-replacement feature profile. Dragonborn Damage
+Resistance and Dwarven Resilience preserve future passive target-side
+Resistance ownership without reusing generic active-effect resistance as a
+species profile. Powerful Build splits into durable carrying-capacity character
+projection plus future Grappled escape roll-mode support. Follow-up Tasks 16-19
+preserve the executable lanes without adding a broad species runtime here.
 
 ### Task 11 - L1I-DRUID-NATURES-WARD - Druid Nature's Ward Catalog Pressure
 
@@ -428,3 +467,48 @@ class-feature free-cast resource. The owner must retain `paladin_paladins_smite`
 as the source Unit and reuse the existing `divine_smite` after-hit spell
 invocation procedure instead of duplicating selected spell identity or D-owned
 Weapon Mastery work.
+
+### Task 16 - L1I-SPECIES-CHARACTER-ADMISSION-SLICE - Non-Orc Species Character Admission Slice
+
+Status: `ready-for-research`
+
+Follow-up from Task 10. Decide and implement the smallest character-creation
+admission slice that can retain Elf, Dragonborn, Dwarf, Goliath, and Tiefling
+species source facts and trait Unit refs in finalized CharacterBuilds. Keep
+provenance on the authored SRD Surface records, avoid duplicating derived
+combat projections, and do not add promoted battle behavior in this slice.
+
+### Task 17 - L1I-DRAGONBORN-BREATH-WEAPON-PROFILE - Dragonborn Breath Weapon Feature Profile
+
+Status: `blocked`
+
+Blocked on Task 16 so non-Orc species traits can reach character-derived
+creature facts. Model Breath Weapon only after one Draconic Ancestry source fact
+can supply both Breath Weapon damage type and Dragonborn Damage Resistance.
+The profile must compose Attack-action attack replacement, Cone/Line area
+membership, Dexterity Saving Throw half damage, character-level dice scaling,
+and Proficiency Bonus Long Rest resource tracking without installing a broad
+species runtime.
+
+### Task 18 - L1I-SPECIES-PASSIVE-RESISTANCE-PROFILE - Species Passive Resistance Profile
+
+Status: `blocked`
+
+Blocked on Task 16 so character-derived species traits can reach target-side
+damage projection. Decide the smallest passive Resistance profile for
+`species_dragonborn_damage_resistance` and the Poison Resistance half of
+`dwarf_dwarven_resilience`. Do not duplicate Stat Block resistances, active
+spell effects, or active feature state. Dragonborn resistance must reuse the
+same Draconic Ancestry source fact as Task 17, and Dwarven Resilience's saving
+throw Advantage remains owned by Task 19.
+
+### Task 19 - L1I-SPECIES-CONDITION-ROLL-MODE-PROFILES - Species Condition Roll-Mode Profiles
+
+Status: `blocked`
+
+Blocked on Tasks 14 and 16 so the roll-mode owner and non-Orc species admission
+surface are available first. Decide the condition-scoped roll-mode profile
+family for `dwarf_dwarven_resilience` saving throw Advantage to avoid or end
+Poisoned and `species_goliath_powerful_build` Ability Check Advantage to end
+Grappled. Reuse the generic roll-mode boundary from Danger Sense if it lands;
+do not create species-specific roll-mode adapters.

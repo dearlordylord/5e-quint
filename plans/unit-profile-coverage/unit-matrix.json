@@ -13971,6 +13971,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "sight/illumination projection owner",
+          "reason": "Darkvision sense grants provide observer sense and range facts; promoted battle execution consumes derived sight and illumination projections plus table-supplied distance and visibility facts rather than executing species trait Units directly."
+        },
+        "reason": "Darkvision is an authored species sense fact with no standalone promoted Unit profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "species_trait",
@@ -17021,6 +17031,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future species attack-replacement feature profile owner",
+          "reason": "Breath Weapon needs an explicit species feature profile that composes Attack-action attack replacement, area membership, Dexterity save-for-half damage, Draconic Ancestry damage-type selection, character-level dice scaling, and Proficiency Bonus Long Rest resource tracking."
+        },
+        "reason": "Breath Weapon is a level-1 species attack replacement with area save-gated damage, Draconic Ancestry damage type, shape choice, character-level dice scaling, and a Proficiency Bonus Long Rest use pool; no broad species runtime profile is promoted in this task.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "species_trait",
@@ -17039,6 +17059,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future target-side resistance and Draconic Ancestry character fact owner",
+          "reason": "Dragonborn Damage Resistance requires one Draconic Ancestry source fact shared with Breath Weapon and a passive target-side damage adjustment profile; current promoted damage modifiers consume Stat Block or active-effect resistances rather than absent species trait Units."
+        },
+        "reason": "Dragonborn Damage Resistance is a passive target-side Resistance trait keyed to Draconic Ancestry; no promoted species trait resistance profile is claimed.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "species_trait",
@@ -17057,6 +17087,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "sight/illumination projection owner",
+          "reason": "Darkvision sense grants provide observer sense and range facts; promoted battle execution consumes derived sight and illumination projections plus table-supplied distance and visibility facts rather than executing species trait Units directly."
+        },
+        "reason": "Darkvision is an authored species sense fact with no standalone promoted Unit profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "species_trait",
@@ -17075,6 +17115,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "sight/illumination projection owner",
+          "reason": "Darkvision sense grants provide observer sense and range facts; promoted battle execution consumes derived sight and illumination projections plus table-supplied distance and visibility facts rather than executing species trait Units directly."
+        },
+        "reason": "Darkvision is an authored species sense fact with no standalone promoted Unit profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "species_trait",
@@ -17093,6 +17143,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future target-side resistance and poison saving-throw roll-mode owner",
+          "reason": "Dwarven Resilience should be modeled at a target-side damage adjustment and condition-scoped Saving Throw roll-mode boundary, preserving its single species trait identity without claiming a generic grant_resistance profile."
+        },
+        "reason": "Dwarven Resilience combines Poison Resistance with Advantage on saving throws to avoid or end the Poisoned condition; no promoted species trait resistance or save roll-mode profile is claimed.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "species_trait",
@@ -17111,6 +17171,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "character-sheet carrying-capacity projection and future grapple-escape ability-check roll-mode owner",
+          "reason": "Powerful Build needs a split owner: its one-size-larger carrying capacity is durable Character Sheet or inventory projection, while its Advantage on ability checks to end Grappled remains future condition-scoped Ability Check roll-mode support outside current promoted battle Unit profiles."
+        },
+        "reason": "Powerful Build splits into a durable carrying-capacity character fact and an Ability Check Advantage fact for ending the Grappled condition; no standalone promoted battle Unit profile is claimed.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "species_trait",
@@ -17129,6 +17199,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "sight/illumination projection owner",
+          "reason": "Darkvision sense grants provide observer sense and range facts; promoted battle execution consumes derived sight and illumination projections plus table-supplied distance and visibility facts rather than executing species trait Units directly."
+        },
+        "reason": "Darkvision is an authored species sense fact with no standalone promoted Unit profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "species_trait",
