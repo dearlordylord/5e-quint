@@ -3,12 +3,14 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-ENSNARING-STRIKE ensnaring_strike
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-FALSE-LIFE false_life
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-HEROISM heroism
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-HUNTERS-MARK hunters_mark
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-HEX hex
 // UNIT-IDENTITY-MBT-REPLAY: L1E-DIVINE-FAVOR divine_favor doDivineFavorWeaponDamageRider
 // UNIT-IDENTITY-MBT-REPLAY: L1E-DIVINE-SMITE divine_smite doDivineSmiteAfterHitDamage
 // UNIT-IDENTITY-MBT-REPLAY: L1E-ENSNARING-STRIKE ensnaring_strike doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape
 // UNIT-IDENTITY-MBT-REPLAY: L1E-FALSE-LIFE false_life doFalseLifeTemporaryHitPoints
 // UNIT-IDENTITY-MBT-REPLAY: L1E-HEROISM heroism doHeroismFrightenedImmunityTurnStartTemporaryHitPoints
+// UNIT-IDENTITY-MBT-REPLAY: L1E-HUNTERS-MARK hunters_mark doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer
 // UNIT-IDENTITY-MBT-REPLAY: L1E-HEX hex doHexMarkedDamageRiderAndLaterTurnTransfer
 import * as path from "node:path";
 
@@ -76,6 +78,7 @@ const level1BuffMarkSmiteSelectedIdentityDriverSchema = {
   doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape: {},
   doFalseLifeTemporaryHitPoints: {},
   doHeroismFrightenedImmunityTurnStartTemporaryHitPoints: {},
+  doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer: {},
   doHexMarkedDamageRiderAndLaterTurnTransfer: {},
   step: {},
 } as const;
@@ -89,6 +92,7 @@ const divineSmiteUnitId = "divine_smite";
 const ensnaringStrikeUnitId = "ensnaring_strike";
 const falseLifeUnitId = "false_life";
 const heroismUnitId = "heroism";
+const huntersMarkUnitId = "hunters_mark";
 const hexUnitId = "hex";
 const level1BuffMarkSmiteSpellIds = [
   divineFavorUnitId,
@@ -96,6 +100,7 @@ const level1BuffMarkSmiteSpellIds = [
   ensnaringStrikeUnitId,
   falseLifeUnitId,
   heroismUnitId,
+  huntersMarkUnitId,
   hexUnitId,
 ] as const;
 type Level1BuffMarkSmiteSpellId = (typeof level1BuffMarkSmiteSpellIds)[number];
@@ -110,8 +115,18 @@ const hexDamageHoleSourceSpellIds = [
   hexUnitId,
 ] as const satisfies ReadonlyArray<Level1BuffMarkSmiteSpellId>;
 type HexSourceSpellId = (typeof hexDamageHoleSourceSpellIds)[number] | "none";
+const markedDamageRiderSourceSpellIds = [
+  huntersMarkUnitId,
+  hexUnitId,
+] as const satisfies ReadonlyArray<Level1BuffMarkSmiteSpellId>;
+type MarkedDamageRiderSourceSpellId =
+  (typeof markedDamageRiderSourceSpellIds)[number];
+type HuntersMarkSourceSpellId = typeof huntersMarkUnitId | "none";
 type EnsnaringStrikeSourceSpellId = typeof ensnaringStrikeUnitId | "none";
-type BonusActionCastSpellId = typeof divineFavorUnitId | typeof hexUnitId;
+type BonusActionCastSpellId =
+  | typeof divineFavorUnitId
+  | typeof huntersMarkUnitId
+  | typeof hexUnitId;
 type AttackHitBonusActionSpellId =
   | typeof divineSmiteUnitId
   | typeof ensnaringStrikeUnitId;
@@ -130,10 +145,15 @@ type HexMarkedTarget = "target" | "transferTarget" | "none";
 type HexTransferKind = "awaitingTargetDrop" | "availableAfterTurn" | "none";
 type HexRetargetTiming = "laterTurn" | "none";
 type HexAbilityCheckAbility = "wis" | "none";
-type HexActiveMarkEffect = Extract<
+type MarkedDamageRiderActiveEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "spellMarkedDamageRider" }
 >;
+type HexActiveMarkEffect = MarkedDamageRiderActiveEffect;
+type HuntersMarkActiveMarkEffect = MarkedDamageRiderActiveEffect;
+type HuntersMarkMarkedTarget = "target" | "transferTarget" | "none";
+type HuntersMarkTransferKind = "awaitingTargetDrop" | "available" | "none";
+type HuntersMarkRetargetTiming = "sameTurn" | "none";
 type CharacterCreatureInit = Extract<
   BattleCreatureInit["creatureInit"],
   { readonly kind: "character" }
@@ -171,6 +191,17 @@ type Level1BuffMarkSmiteSelectedIdentityProjection = {
   readonly turnStartDamageDieSize: number;
   readonly escapeCheckAbility: "str" | "none";
   readonly escapeCheckSkill: "athletics" | "none";
+  readonly huntersMarkDamageHoleSourceSpellId: HuntersMarkSourceSpellId;
+  readonly huntersMarkDamageHoleDamageType: "force" | "none";
+  readonly huntersMarkDamageHoleDice: number;
+  readonly huntersMarkDamageHoleDieSize: number;
+  readonly huntersMarkActiveMarkSourceSpellId: HuntersMarkSourceSpellId;
+  readonly huntersMarkActiveMarkTarget: HuntersMarkMarkedTarget;
+  readonly huntersMarkConcentrationSourceSpellId: HuntersMarkSourceSpellId;
+  readonly huntersMarkTransferKindOnDropTurn: HuntersMarkTransferKind;
+  readonly huntersMarkActiveMarkTransferKind: HuntersMarkTransferKind;
+  readonly huntersMarkActiveMarkRetargetTiming: HuntersMarkRetargetTiming;
+  readonly huntersMarkTransferVisibleOnDropTurn: boolean;
   readonly hexDamageHoleSourceSpellId: HexSourceSpellId;
   readonly hexDamageHoleDamageType: "necrotic" | "none";
   readonly hexDamageHoleDice: number;
@@ -189,6 +220,7 @@ type Level1BuffMarkSmiteSelectedIdentityProjection = {
     | "ensnaringStrike"
     | "falseLife"
     | "heroism"
+    | "huntersMark"
     | "hex";
 };
 type EnsnaringStrikeLifecycleProjection = Pick<
@@ -224,6 +256,21 @@ type HexDamageHoleProjection = Pick<
   | "hexDamageHoleDice"
   | "hexDamageHoleDieSize"
 >;
+type HuntersMarkDamageHoleProjection = Pick<
+  Level1BuffMarkSmiteSelectedIdentityProjection,
+  | "huntersMarkDamageHoleSourceSpellId"
+  | "huntersMarkDamageHoleDamageType"
+  | "huntersMarkDamageHoleDice"
+  | "huntersMarkDamageHoleDieSize"
+>;
+type HuntersMarkActiveMarkProjection = Pick<
+  Level1BuffMarkSmiteSelectedIdentityProjection,
+  | "huntersMarkActiveMarkSourceSpellId"
+  | "huntersMarkActiveMarkTarget"
+  | "huntersMarkConcentrationSourceSpellId"
+  | "huntersMarkActiveMarkTransferKind"
+  | "huntersMarkActiveMarkRetargetTiming"
+>;
 type HexActiveMarkProjection = Pick<
   Level1BuffMarkSmiteSelectedIdentityProjection,
   | "hexActiveMarkSourceSpellId"
@@ -244,6 +291,7 @@ type SelectedUnitIdentityReplay = {
     | "L1E-ENSNARING-STRIKE"
     | "L1E-FALSE-LIFE"
     | "L1E-HEROISM"
+    | "L1E-HUNTERS-MARK"
     | "L1E-HEX";
   readonly unitId: Level1BuffMarkSmiteSpellId;
   readonly actions: readonly Level1BuffMarkSmiteSelectedIdentityDriverAction[];
@@ -276,8 +324,8 @@ type ScalarBuffTemporaryHitPointsRollHole = BattleSpellHealingRollHole & {
 
 const casterId = combatantId("level1-buff-mark-smite-caster");
 const targetId = combatantId("level1-buff-mark-smite-target");
-const hexTransferTargetId = combatantId(
-  "level1-buff-mark-smite-hex-transfer-target",
+const markedDamageTransferTargetId = combatantId(
+  "level1-buff-mark-smite-marked-damage-transfer-target",
 );
 const partySide = battleCombatantSide("party");
 const oppositionSide = battleCombatantSide("opposition");
@@ -445,6 +493,37 @@ const selectedUnitIdentityReplays = [
       },
     ],
   },
+  {
+    taskId: "L1E-HUNTERS-MARK",
+    unitId: "hunters_mark",
+    actions: ["doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer"],
+    sequences: [
+      {
+        name: "marked-force-damage-concentration-and-same-turn-transfer",
+        actions: [
+          "doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer",
+        ],
+        expected: expectedProjection({
+          targetHp: 0,
+          spellSlotSpentThisTurn: false,
+          level1SlotsRemaining: 1,
+          casterConcentrating: true,
+          huntersMarkDamageHoleSourceSpellId: "hunters_mark",
+          huntersMarkDamageHoleDamageType: "force",
+          huntersMarkDamageHoleDice: 1,
+          huntersMarkDamageHoleDieSize: 6,
+          huntersMarkActiveMarkSourceSpellId: "hunters_mark",
+          huntersMarkActiveMarkTarget: "transferTarget",
+          huntersMarkConcentrationSourceSpellId: "hunters_mark",
+          huntersMarkTransferKindOnDropTurn: "available",
+          huntersMarkActiveMarkTransferKind: "awaitingTargetDrop",
+          huntersMarkActiveMarkRetargetTiming: "sameTurn",
+          huntersMarkTransferVisibleOnDropTurn: true,
+          lastResult: "huntersMark",
+        }),
+      },
+    ],
+  },
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
 describe("Level 1 buff mark smite selected identity MBT", () => {
@@ -508,6 +587,11 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
     let hexDamageHoleRider:
       | NonNullable<BattleDamageRollHole["spellMarkedDamageRiders"]>[number]
       | undefined;
+    let huntersMarkDamageHoleRider:
+      | NonNullable<BattleDamageRollHole["spellMarkedDamageRiders"]>[number]
+      | undefined;
+    let huntersMarkTransferKindOnDropTurn: HuntersMarkTransferKind = "none";
+    let huntersMarkTransferVisibleOnDropTurn = false;
     let hexTransferKindOnDropTurn: HexTransferKind = "none";
     let hexTransferVisibleOnDropTurn = false;
     let ensnaringStrikeLifecycle = defaultEnsnaringStrikeLifecycleProjection();
@@ -520,6 +604,9 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
     function resetProcedureProjections(): void {
       damageRider = undefined;
       hexDamageHoleRider = undefined;
+      huntersMarkDamageHoleRider = undefined;
+      huntersMarkTransferKindOnDropTurn = "none";
+      huntersMarkTransferVisibleOnDropTurn = false;
       hexTransferKindOnDropTurn = "none";
       hexTransferVisibleOnDropTurn = false;
       ensnaringStrikeLifecycle = defaultEnsnaringStrikeLifecycleProjection();
@@ -795,12 +882,101 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
         );
         heroismEffects = heroismEffectsProjection(state);
       },
+      doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer: () => {
+        state = level1BuffMarkSmiteBattle({
+          preparedSpells: [spellRecord(huntersMarkUnitId)],
+          sourceClassName: "ranger",
+          targetKind: "statBlock",
+          includeMarkedDamageTransferTarget: true,
+        });
+        resetProcedureProjections();
+
+        const castAct = bonusActionSpellAct(state, huntersMarkUnitId);
+        const castTarget = requireHole(castAct.initialHoles, "targetChoice");
+        const cast = resolveBattleSubject({
+          state,
+          subject: castAct.subject,
+          fills: [
+            spellTargetFill(castTarget, huntersMarkUnitId, casterId, targetId),
+          ],
+        });
+        if (cast.tag !== "resolved") {
+          throw new Error(
+            `Expected Hunter's Mark to resolve, got ${cast.tag}.`,
+          );
+        }
+
+        state = advanceMarkedDamageRoundToCasterTurn(cast.state);
+        const hit = resolveLongswordHitWithAttackRoll({ state });
+        const damage = requireDamageRollHole(
+          requireNeedsHoles(hit.afterAttackRoll),
+        );
+        huntersMarkDamageHoleRider = spellMarkedDamageRider(
+          damage,
+          huntersMarkUnitId,
+        );
+        const damaged = resolveBattleSubject({
+          state,
+          subject: hit.subject,
+          fills: [
+            hit.targetFill,
+            hit.attackFill,
+            damageRollFillWithGroups(damage, [[4], [5]]),
+          ],
+        });
+        if (damaged.tag !== "resolved") {
+          throw new Error(
+            `Expected Hunter's Mark attack to resolve, got ${damaged.tag}.`,
+          );
+        }
+
+        state = damaged.state;
+        const markedTarget = state.combatants.get(targetId);
+        if (markedTarget === undefined) {
+          throw new Error("Expected Hunter's Mark target.");
+        }
+        state = applyBattleHitPointDamage({
+          state,
+          target: markedTarget,
+          damageAmount: 1,
+          deathFailuresAtZeroHp: 1,
+          damageSourceId: casterId,
+        });
+        huntersMarkTransferVisibleOnDropTurn = markedDamageTransferActVisible(
+          state,
+          huntersMarkUnitId,
+        );
+        huntersMarkTransferKindOnDropTurn = huntersMarkActiveMarkTransferKind(
+          huntersMarkActiveMarkEffect(state),
+        );
+
+        const transferAct = markedDamageTransferAct(state, huntersMarkUnitId);
+        const transferTarget = requireHole(
+          transferAct.initialHoles,
+          "targetChoice",
+        );
+        recordResolvedResult(
+          resolveBattleSubject({
+            state,
+            subject: transferAct.subject,
+            fills: [
+              spellTargetFill(
+                transferTarget,
+                huntersMarkUnitId,
+                casterId,
+                markedDamageTransferTargetId,
+              ),
+            ],
+          }),
+          "huntersMark",
+        );
+      },
       doHexMarkedDamageRiderAndLaterTurnTransfer: () => {
         state = level1BuffMarkSmiteBattle({
           preparedSpells: [spellRecord(hexUnitId)],
           sourceClassName: "warlock",
           targetKind: "statBlock",
-          includeHexTransferTarget: true,
+          includeMarkedDamageTransferTarget: true,
         });
         resetProcedureProjections();
 
@@ -822,7 +998,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
           throw new Error(`Expected Hex to resolve, got ${cast.tag}.`);
         }
 
-        state = advanceHexRoundToCasterTurn(cast.state);
+        state = advanceMarkedDamageRoundToCasterTurn(cast.state);
         const hit = resolveLongswordHitWithAttackRoll({ state });
         const damage = requireDamageRollHole(
           requireNeedsHoles(hit.afterAttackRoll),
@@ -843,7 +1019,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
           );
         }
 
-        state = advanceHexRoundToCasterTurn(damaged.state);
+        state = advanceMarkedDamageRoundToCasterTurn(damaged.state);
         const cursedTarget = state.combatants.get(targetId);
         if (cursedTarget === undefined) {
           throw new Error("Expected Hex cursed target.");
@@ -855,13 +1031,16 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
           deathFailuresAtZeroHp: 1,
           damageSourceId: casterId,
         });
-        hexTransferVisibleOnDropTurn = hexTransferActVisible(state);
+        hexTransferVisibleOnDropTurn = markedDamageTransferActVisible(
+          state,
+          hexUnitId,
+        );
         hexTransferKindOnDropTurn = hexActiveMarkTransferKind(
           hexActiveMarkEffect(state),
         );
 
-        state = advanceHexRoundToCasterTurn(state);
-        const transferAct = bonusActionSpellAct(state, hexUnitId);
+        state = advanceMarkedDamageRoundToCasterTurn(state);
+        const transferAct = markedDamageTransferAct(state, hexUnitId);
         const transferTarget = requireHole(
           transferAct.initialHoles,
           "targetChoice",
@@ -875,7 +1054,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
                 transferTarget,
                 hexUnitId,
                 casterId,
-                hexTransferTargetId,
+                markedDamageTransferTargetId,
               ),
             ],
           }),
@@ -887,6 +1066,9 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
         projectLevel1BuffMarkSmiteSelectedIdentityState(
           state,
           damageRider,
+          huntersMarkDamageHoleRider,
+          huntersMarkTransferKindOnDropTurn,
+          huntersMarkTransferVisibleOnDropTurn,
           hexDamageHoleRider,
           hexTransferKindOnDropTurn,
           hexTransferVisibleOnDropTurn,
@@ -932,6 +1114,17 @@ function expectedProjection(
     turnStartDamageDieSize: 0,
     escapeCheckAbility: "none",
     escapeCheckSkill: "none",
+    huntersMarkDamageHoleSourceSpellId: "none",
+    huntersMarkDamageHoleDamageType: "none",
+    huntersMarkDamageHoleDice: 0,
+    huntersMarkDamageHoleDieSize: 0,
+    huntersMarkActiveMarkSourceSpellId: "none",
+    huntersMarkActiveMarkTarget: "none",
+    huntersMarkConcentrationSourceSpellId: "none",
+    huntersMarkTransferKindOnDropTurn: "none",
+    huntersMarkActiveMarkTransferKind: "none",
+    huntersMarkActiveMarkRetargetTiming: "none",
+    huntersMarkTransferVisibleOnDropTurn: false,
     hexDamageHoleSourceSpellId: "none",
     hexDamageHoleDamageType: "none",
     hexDamageHoleDice: 0,
@@ -985,7 +1178,7 @@ function level1BuffMarkSmiteBattle(
     readonly preparedSpells?: readonly SpellRecord[];
     readonly sourceClassName?: CharacterClassName;
     readonly targetKind?: "character" | "statBlock";
-    readonly includeHexTransferTarget?: boolean;
+    readonly includeMarkedDamageTransferTarget?: boolean;
   } = {},
 ): BattleState {
   const sourceClassName = input.sourceClassName ?? "paladin";
@@ -1028,11 +1221,11 @@ function level1BuffMarkSmiteBattle(
         },
       }),
       target,
-      ...(input.includeHexTransferTarget === true
+      ...(input.includeMarkedDamageTransferTarget === true
         ? [
             level1BuffMarkSmiteStatBlockCreature({
-              combatantId: hexTransferTargetId,
-              displayName: "Level 1 buff Hex transfer target",
+              combatantId: markedDamageTransferTargetId,
+              displayName: "Level 1 buff marked damage transfer target",
               initiative: 5,
               side: oppositionSide,
             }),
@@ -1422,7 +1615,7 @@ function spellWeaponDamageRider(
 
 function spellMarkedDamageRider(
   hole: BattleDamageRollHole,
-  spellId: Exclude<HexSourceSpellId, "none">,
+  spellId: MarkedDamageRiderSourceSpellId,
 ): NonNullable<BattleDamageRollHole["spellMarkedDamageRiders"]>[number] {
   const rider = hole.spellMarkedDamageRiders?.find(
     (candidate) => candidate.sourceSpellId === spellId,
@@ -1514,18 +1707,21 @@ function requireAttackHitWindow(
   return result;
 }
 
-function advanceHexRoundToCasterTurn(state: BattleState): BattleState {
+function advanceMarkedDamageRoundToCasterTurn(state: BattleState): BattleState {
   const targetTurn = requireResolvedResult(
     endTurn({ state, actorId: casterId }),
-    "Expected Hex caster turn to end.",
+    "Expected marked damage rider caster turn to end.",
   ).state;
   const transferTargetTurn = requireResolvedResult(
     endTurn({ state: targetTurn, actorId: targetId }),
-    "Expected Hex target turn to end.",
+    "Expected marked damage rider target turn to end.",
   ).state;
   return requireResolvedResult(
-    endTurn({ state: transferTargetTurn, actorId: hexTransferTargetId }),
-    "Expected Hex transfer target turn to end.",
+    endTurn({
+      state: transferTargetTurn,
+      actorId: markedDamageTransferTargetId,
+    }),
+    "Expected marked damage transfer target turn to end.",
   ).state;
 }
 
@@ -1539,11 +1735,36 @@ function requireResolvedResult(
   return result;
 }
 
-function hexTransferActVisible(state: BattleState): boolean {
-  return discoverBattleActs(state).some(
-    (candidate) =>
-      candidate.subject.tag === "bonusActionSpell" &&
-      candidate.subject.invocation.spellId === hexUnitId,
+function markedDamageTransferActVisible(
+  state: BattleState,
+  spellId: MarkedDamageRiderSourceSpellId,
+): boolean {
+  return discoverBattleActs(state).some((candidate) =>
+    isMarkedDamageTransferAct(candidate, spellId),
+  );
+}
+
+function markedDamageTransferAct(
+  state: BattleState,
+  spellId: MarkedDamageRiderSourceSpellId,
+): BonusActionSpellAct {
+  const act = discoverBattleActs(state).find((candidate) =>
+    isMarkedDamageTransferAct(candidate, spellId),
+  );
+  if (act === undefined) {
+    throw new Error(`Expected ${spellId} marked damage transfer act.`);
+  }
+  return act;
+}
+
+function isMarkedDamageTransferAct(
+  candidate: AvailableBattleAct,
+  spellId: MarkedDamageRiderSourceSpellId,
+): candidate is BonusActionSpellAct {
+  return (
+    candidate.subject.tag === "bonusActionSpell" &&
+    candidate.subject.invocation.tag === "spellEffect" &&
+    candidate.subject.invocation.spellId === spellId
   );
 }
 
@@ -1641,6 +1862,11 @@ function projectLevel1BuffMarkSmiteSelectedIdentityState(
   damageRider:
     | NonNullable<BattleDamageRollHole["spellWeaponDamageRiders"]>[number]
     | undefined,
+  huntersMarkDamageHoleRider:
+    | NonNullable<BattleDamageRollHole["spellMarkedDamageRiders"]>[number]
+    | undefined,
+  huntersMarkTransferKindOnDropTurn: HuntersMarkTransferKind,
+  huntersMarkTransferVisibleOnDropTurn: boolean,
   hexDamageHoleRider:
     | NonNullable<BattleDamageRollHole["spellMarkedDamageRiders"]>[number]
     | undefined,
@@ -1682,6 +1908,10 @@ function projectLevel1BuffMarkSmiteSelectedIdentityState(
     targetRestrained: snapshotHasCondition(target.conditions, "restrained"),
     casterConcentrating: caster.concentrating,
     ...ensnaringStrikeLifecycle,
+    ...huntersMarkDamageHoleProjection(huntersMarkDamageHoleRider),
+    ...huntersMarkActiveMarkProjection(state),
+    huntersMarkTransferKindOnDropTurn,
+    huntersMarkTransferVisibleOnDropTurn,
     ...hexDamageHoleProjection(hexDamageHoleRider),
     ...hexActiveMarkProjection(state),
     hexTransferKindOnDropTurn,
@@ -1773,6 +2003,133 @@ function heroismSourceSpellId(
   );
 }
 
+function huntersMarkDamageHoleProjection(
+  rider:
+    | NonNullable<BattleDamageRollHole["spellMarkedDamageRiders"]>[number]
+    | undefined,
+): HuntersMarkDamageHoleProjection {
+  return {
+    huntersMarkDamageHoleSourceSpellId: huntersMarkSourceSpellId(rider),
+    huntersMarkDamageHoleDamageType:
+      rider?.damage.damageType === "force" ? "force" : "none",
+    huntersMarkDamageHoleDice: rider?.damage.expr.dice ?? 0,
+    huntersMarkDamageHoleDieSize: rider?.damage.expr.dieSize ?? 0,
+  };
+}
+
+function huntersMarkActiveMarkProjection(
+  state: BattleState,
+): HuntersMarkActiveMarkProjection {
+  const effect = huntersMarkActiveMarkEffect(state);
+  return {
+    huntersMarkActiveMarkSourceSpellId: huntersMarkSourceSpellId(effect),
+    huntersMarkActiveMarkTarget: huntersMarkActiveMarkTarget(effect),
+    huntersMarkConcentrationSourceSpellId:
+      effect === undefined
+        ? "none"
+        : huntersMarkConcentrationSourceSpellId(state),
+    huntersMarkActiveMarkTransferKind:
+      huntersMarkActiveMarkTransferKind(effect),
+    huntersMarkActiveMarkRetargetTiming:
+      huntersMarkActiveMarkRetargetTiming(effect),
+  };
+}
+
+function huntersMarkActiveMarkEffect(
+  state: BattleState,
+): HuntersMarkActiveMarkEffect | undefined {
+  const caster = state.combatants.get(casterId);
+  if (caster === undefined) {
+    throw new Error("Expected Hunter's Mark caster.");
+  }
+  return caster.activeEffects.find(
+    (effect): effect is HuntersMarkActiveMarkEffect =>
+      effect.kind === "spellMarkedDamageRider" &&
+      effect.sourceSpellId === huntersMarkUnitId &&
+      effect.sourceCombatantId === casterId,
+  );
+}
+
+function huntersMarkSourceSpellId(
+  effect: { readonly sourceSpellId: string } | undefined,
+): HuntersMarkSourceSpellId {
+  if (effect === undefined) {
+    return "none";
+  }
+  if (effect.sourceSpellId === huntersMarkUnitId) {
+    return huntersMarkUnitId;
+  }
+  throw new Error(
+    `Unexpected Hunter's Mark source spell id ${effect.sourceSpellId}.`,
+  );
+}
+
+function huntersMarkActiveMarkTarget(
+  effect: Pick<HuntersMarkActiveMarkEffect, "targetCombatantId"> | undefined,
+): HuntersMarkMarkedTarget {
+  if (effect === undefined) {
+    return "none";
+  }
+  if (effect.targetCombatantId === targetId) {
+    return "target";
+  }
+  if (effect.targetCombatantId === markedDamageTransferTargetId) {
+    return "transferTarget";
+  }
+  throw new Error(
+    `Unexpected Hunter's Mark target id ${effect.targetCombatantId}.`,
+  );
+}
+
+function huntersMarkConcentrationSourceSpellId(
+  state: BattleState,
+): HuntersMarkSourceSpellId {
+  const caster = state.combatants.get(casterId);
+  if (caster === undefined) {
+    throw new Error("Expected Hunter's Mark caster.");
+  }
+  if (caster.concentration === null) {
+    return "none";
+  }
+  if (caster.concentration.sourceSpellId === huntersMarkUnitId) {
+    return huntersMarkUnitId;
+  }
+  throw new Error(
+    `Unexpected Hunter's Mark Concentration source spell id ${caster.concentration.sourceSpellId}.`,
+  );
+}
+
+function huntersMarkActiveMarkTransferKind(
+  effect: Pick<HuntersMarkActiveMarkEffect, "transfer"> | undefined,
+): HuntersMarkTransferKind {
+  if (effect === undefined) {
+    return "none";
+  }
+  if (
+    effect.transfer.kind === "awaitingTargetDrop" ||
+    effect.transfer.kind === "available"
+  ) {
+    return effect.transfer.kind;
+  }
+  throw new Error(
+    `Unexpected Hunter's Mark transfer kind ${effect.transfer.kind}.`,
+  );
+}
+
+function huntersMarkActiveMarkRetargetTiming(
+  effect: Pick<HuntersMarkActiveMarkEffect, "transfer"> | undefined,
+): HuntersMarkRetargetTiming {
+  if (effect === undefined) {
+    return "none";
+  }
+  if (effect.transfer.retargetTiming === "sameTurn") {
+    return "sameTurn";
+  }
+  throw new Error(
+    `Unexpected Hunter's Mark retarget timing ${effect.transfer.retargetTiming}.`,
+  );
+}
+
 function hexDamageHoleProjection(
   rider:
     | NonNullable<BattleDamageRollHole["spellMarkedDamageRiders"]>[number]
@@ -1834,7 +2191,7 @@ function hexActiveMarkTarget(
   if (effect.targetCombatantId === targetId) {
     return "target";
   }
-  if (effect.targetCombatantId === hexTransferTargetId) {
+  if (effect.targetCombatantId === markedDamageTransferTargetId) {
     return "transferTarget";
   }
   throw new Error(
@@ -2029,6 +2386,42 @@ function normalizeLevel1BuffMarkSmiteSelectedIdentityQuintState(
       "escape check",
     ),
     escapeCheckSkill: athleticsSkillFromQuint(state["qEscapeCheckSkill"]),
+    huntersMarkDamageHoleSourceSpellId: huntersMarkSourceSpellIdFromQuint(
+      state["qHuntersMarkDamageHoleSourceSpellId"],
+    ),
+    huntersMarkDamageHoleDamageType: huntersMarkDamageTypeFromQuint(
+      state["qHuntersMarkDamageHoleDamageType"],
+    ),
+    huntersMarkDamageHoleDice: numberFromQuintInt(
+      state["qHuntersMarkDamageHoleDice"],
+      "qHuntersMarkDamageHoleDice",
+    ),
+    huntersMarkDamageHoleDieSize: numberFromQuintInt(
+      state["qHuntersMarkDamageHoleDieSize"],
+      "qHuntersMarkDamageHoleDieSize",
+    ),
+    huntersMarkActiveMarkSourceSpellId: huntersMarkSourceSpellIdFromQuint(
+      state["qHuntersMarkActiveMarkSourceSpellId"],
+    ),
+    huntersMarkActiveMarkTarget: huntersMarkMarkedTargetFromQuint(
+      state["qHuntersMarkActiveMarkTarget"],
+    ),
+    huntersMarkConcentrationSourceSpellId: huntersMarkSourceSpellIdFromQuint(
+      state["qHuntersMarkConcentrationSourceSpellId"],
+    ),
+    huntersMarkTransferKindOnDropTurn: huntersMarkTransferKindFromQuint(
+      state["qHuntersMarkTransferKindOnDropTurn"],
+    ),
+    huntersMarkActiveMarkTransferKind: huntersMarkTransferKindFromQuint(
+      state["qHuntersMarkActiveMarkTransferKind"],
+    ),
+    huntersMarkActiveMarkRetargetTiming: huntersMarkRetargetTimingFromQuint(
+      state["qHuntersMarkActiveMarkRetargetTiming"],
+    ),
+    huntersMarkTransferVisibleOnDropTurn: booleanField(
+      state,
+      "qHuntersMarkTransferVisibleOnDropTurn",
+    ),
     hexDamageHoleSourceSpellId: hexSourceSpellIdFromQuint(
       state["qHexDamageHoleSourceSpellId"],
     ),
@@ -2175,6 +2568,51 @@ function athleticsSkillFromQuint(raw: unknown): "athletics" | "none" {
   throw new Error(`Unexpected escape check skill ${String(raw)}.`);
 }
 
+function huntersMarkSourceSpellIdFromQuint(
+  raw: unknown,
+): HuntersMarkSourceSpellId {
+  if (raw === "none" || raw === huntersMarkUnitId) {
+    return raw;
+  }
+  throw new Error(`Unexpected Hunter's Mark source spell id ${String(raw)}.`);
+}
+
+function huntersMarkDamageTypeFromQuint(
+  raw: unknown,
+): Level1BuffMarkSmiteSelectedIdentityProjection["huntersMarkDamageHoleDamageType"] {
+  if (raw === "force" || raw === "none") {
+    return raw;
+  }
+  throw new Error(`Unexpected Hunter's Mark damage type ${String(raw)}.`);
+}
+
+function huntersMarkMarkedTargetFromQuint(
+  raw: unknown,
+): HuntersMarkMarkedTarget {
+  if (raw === "target" || raw === "transferTarget" || raw === "none") {
+    return raw;
+  }
+  throw new Error(`Unexpected Hunter's Mark target ${String(raw)}.`);
+}
+
+function huntersMarkTransferKindFromQuint(
+  raw: unknown,
+): HuntersMarkTransferKind {
+  if (raw === "awaitingTargetDrop" || raw === "available" || raw === "none") {
+    return raw;
+  }
+  throw new Error(`Unexpected Hunter's Mark transfer kind ${String(raw)}.`);
+}
+
+function huntersMarkRetargetTimingFromQuint(
+  raw: unknown,
+): HuntersMarkRetargetTiming {
+  if (raw === "sameTurn" || raw === "none") {
+    return raw;
+  }
+  throw new Error(`Unexpected Hunter's Mark retarget timing ${String(raw)}.`);
+}
+
 function hexSourceSpellIdFromQuint(raw: unknown): HexSourceSpellId {
   if (raw === "none" || raw === hexUnitId) {
     return raw;
@@ -2233,6 +2671,7 @@ function mbtLastResult(
     raw === "ensnaringStrike" ||
     raw === "falseLife" ||
     raw === "heroism" ||
+    raw === "huntersMark" ||
     raw === "hex"
   ) {
     return raw;

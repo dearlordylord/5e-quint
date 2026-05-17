@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "L1E-HUNTERS-MARK",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Hunter's Mark Selected Identity Replay"
     },
     {
@@ -207,7 +207,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-E-L.md` Hex.
 
 ### Task 8 - L1E-HUNTERS-MARK - Hunter's Mark Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `hunters_mark`. Only assert runtime-owned
 mark, transfer, Concentration, and damage-rider behavior; do not model finding

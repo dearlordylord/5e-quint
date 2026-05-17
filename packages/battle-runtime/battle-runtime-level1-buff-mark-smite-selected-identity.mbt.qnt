@@ -30,6 +30,17 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
   var qTurnStartDamageDieSize: int
   var qEscapeCheckAbility: str
   var qEscapeCheckSkill: str
+  var qHuntersMarkDamageHoleSourceSpellId: str
+  var qHuntersMarkDamageHoleDamageType: str
+  var qHuntersMarkDamageHoleDice: int
+  var qHuntersMarkDamageHoleDieSize: int
+  var qHuntersMarkActiveMarkSourceSpellId: str
+  var qHuntersMarkActiveMarkTarget: str
+  var qHuntersMarkConcentrationSourceSpellId: str
+  var qHuntersMarkTransferKindOnDropTurn: str
+  var qHuntersMarkActiveMarkTransferKind: str
+  var qHuntersMarkActiveMarkRetargetTiming: str
+  var qHuntersMarkTransferVisibleOnDropTurn: bool
   var qHexDamageHoleSourceSpellId: str
   var qHexDamageHoleDamageType: str
   var qHexDamageHoleDice: int
@@ -73,6 +84,17 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     turnStartDamageDieSize: int,
     escapeCheckAbility: str,
     escapeCheckSkill: str,
+    huntersMarkDamageHoleSourceSpellId: str,
+    huntersMarkDamageHoleDamageType: str,
+    huntersMarkDamageHoleDice: int,
+    huntersMarkDamageHoleDieSize: int,
+    huntersMarkActiveMarkSourceSpellId: str,
+    huntersMarkActiveMarkTarget: str,
+    huntersMarkConcentrationSourceSpellId: str,
+    huntersMarkTransferKindOnDropTurn: str,
+    huntersMarkActiveMarkTransferKind: str,
+    huntersMarkActiveMarkRetargetTiming: str,
+    huntersMarkTransferVisibleOnDropTurn: bool,
     hexDamageHoleSourceSpellId: str,
     hexDamageHoleDamageType: str,
     hexDamageHoleDice: int,
@@ -115,6 +137,17 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     qTurnStartDamageDieSize' = turnStartDamageDieSize,
     qEscapeCheckAbility' = escapeCheckAbility,
     qEscapeCheckSkill' = escapeCheckSkill,
+    qHuntersMarkDamageHoleSourceSpellId' = huntersMarkDamageHoleSourceSpellId,
+    qHuntersMarkDamageHoleDamageType' = huntersMarkDamageHoleDamageType,
+    qHuntersMarkDamageHoleDice' = huntersMarkDamageHoleDice,
+    qHuntersMarkDamageHoleDieSize' = huntersMarkDamageHoleDieSize,
+    qHuntersMarkActiveMarkSourceSpellId' = huntersMarkActiveMarkSourceSpellId,
+    qHuntersMarkActiveMarkTarget' = huntersMarkActiveMarkTarget,
+    qHuntersMarkConcentrationSourceSpellId' = huntersMarkConcentrationSourceSpellId,
+    qHuntersMarkTransferKindOnDropTurn' = huntersMarkTransferKindOnDropTurn,
+    qHuntersMarkActiveMarkTransferKind' = huntersMarkActiveMarkTransferKind,
+    qHuntersMarkActiveMarkRetargetTiming' = huntersMarkActiveMarkRetargetTiming,
+    qHuntersMarkTransferVisibleOnDropTurn' = huntersMarkTransferVisibleOnDropTurn,
     qHexDamageHoleSourceSpellId' = hexDamageHoleSourceSpellId,
     qHexDamageHoleDamageType' = hexDamageHoleDamageType,
     qHexDamageHoleDice' = hexDamageHoleDice,
@@ -129,7 +162,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     qLastResult' = lastResult,
   }
 
-  action recordNonHexProjection(
+  action recordWithoutMarkedDamageProjection(
     divineFavorActiveRiderCount: int,
     targetHp: int,
     casterTempHp: int,
@@ -201,10 +234,21 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     "none",
     "none",
     false,
+    "none",
+    "none",
+    0,
+    0,
+    "none",
+    "none",
+    "none",
+    "none",
+    "none",
+    "none",
+    false,
     lastResult,
   )
 
-  action init = recordNonHexProjection(
+  action init = recordWithoutMarkedDamageProjection(
     0, 12, 0, false, false, 2, "none", "none", 0, 0,
     "none", 0, 0, 0,
     "none", "none", "none", 0,
@@ -214,7 +258,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
 
   action doDivineFavorWeaponDamageRider = all {
     qLastResult == "init",
-    recordNonHexProjection(
+    recordWithoutMarkedDamageProjection(
       1, 5, 0, false, true, 1, "divine_favor", "radiant", 1, 4,
       "none", 0, 0, 0,
       "none", "none", "none", 0,
@@ -225,7 +269,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
 
   action doDivineSmiteAfterHitDamage = all {
     qLastResult == "init",
-    recordNonHexProjection(
+    recordWithoutMarkedDamageProjection(
       0, 1, 0, false, true, 1, "divine_smite", "radiant", 2, 8,
       "none", 0, 0, 0,
       "none", "none", "none", 0,
@@ -236,7 +280,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
 
   action doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape = all {
     qLastResult == "init",
-    recordNonHexProjection(
+    recordWithoutMarkedDamageProjection(
       0, 5, 0, false, false, 1, "none", "none", 0, 0,
       "none", 0, 0, 0,
       "none", "none", "none", 0,
@@ -250,7 +294,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
 
   action doFalseLifeTemporaryHitPoints = all {
     qLastResult == "init",
-    recordNonHexProjection(
+    recordWithoutMarkedDamageProjection(
       0, 12, 11, false, true, 1, "none", "none", 0, 0,
       "false_life", 2, 4, 4,
       "none", "none", "none", 0,
@@ -261,12 +305,29 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
 
   action doHeroismFrightenedImmunityTurnStartTemporaryHitPoints = all {
     qLastResult == "init",
-    recordNonHexProjection(
+    recordWithoutMarkedDamageProjection(
       0, 12, 3, false, false, 1, "none", "none", 0, 0,
       "none", 0, 0, 0,
       "heroism", "frightened", "heroism", 3,
       false, false, true, "none", "none", "none", "none", 0, 0, "none", "none",
       "heroism",
+    ),
+  }
+
+  action doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer = all {
+    qLastResult == "init",
+    recordProjection(
+      0, 0, 0, false, false, 1, "none", "none", 0, 0,
+      "none", 0, 0, 0,
+      "none", "none", "none", 0,
+      false, false, true, "none", "none", "none", "none", 0, 0, "none", "none",
+      "hunters_mark", "force", 1, 6,
+      "hunters_mark", "transferTarget", "hunters_mark",
+      "available", "awaitingTargetDrop", "sameTurn", true,
+      "none", "none", 0, 0,
+      "none", "none", "none",
+      "none", "none", "none", false,
+      "huntersMark",
     ),
   }
 
@@ -277,6 +338,9 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
       "none", 0, 0, 0,
       "none", "none", "none", 0,
       false, false, true, "none", "none", "none", "none", 0, 0, "none", "none",
+      "none", "none", 0, 0,
+      "none", "none", "none",
+      "none", "none", "none", false,
       "hex", "necrotic", 1, 6,
       "hex", "transferTarget", "wis",
       "availableAfterTurn", "awaitingTargetDrop", "laterTurn", false,
@@ -290,6 +354,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape,
     doFalseLifeTemporaryHitPoints,
     doHeroismFrightenedImmunityTurnStartTemporaryHitPoints,
+    doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer,
     doHexMarkedDamageRiderAndLaterTurnTransfer,
   }
 }
