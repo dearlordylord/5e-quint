@@ -85,7 +85,7 @@
     {
       "number": 11,
       "id": "L1C-L1X-05",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Floating Disk No-Matrix Decision"
     },
     {
@@ -283,7 +283,7 @@ For `AT-L1-08`:
 | 9 | L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE - Warlock Eldritch Invocation Lifecycle | done | L1C-AT05 | Invocation gain, replacement, repeatable-selection identity, duplicate-selection enforcement, and prerequisite-retention are owned over existing CharacterBuild facts. |
 | 18 | L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT - Warlock Pact Magic Advancement | done | L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE | Advance Warlock cantrip, prepared-spell, and Pact Slot CharacterBuild facts on later Warlock levels before `warlock_eldritch_invocations` can claim full all-level prerequisite ownership. |
 | 10 | L1C-L1X-01 - Create Or Destroy Water No-Matrix Decision | done | none | Decision keeps runtime-detached table/environment adjudication; no owner selected and no Unit claim without admitted UnitRecord. |
-| 11 | L1C-L1X-05 - Floating Disk No-Matrix Decision | ready-for-research | none | Decide object/inventory movement owner. |
+| 11 | L1C-L1X-05 - Floating Disk No-Matrix Decision | done | none | Decision keeps runtime-detached table/object/inventory adjudication; no owner selected and no Unit claim without admitted UnitRecord. |
 | 12 | L1C-L1X-06 - Goodberry No-Matrix Decision | ready-for-research | none | Decide Character Sheet consumable/inventory owner. |
 | 13 | L1C-L1X-08 - Mage Hand No-Matrix Decision | ready-for-research | none | Decide object-control owner. |
 | 14 | L1C-L1X-09 - Mending No-Matrix Decision | ready-for-research | none | Decide equipment/object repair owner. |
@@ -746,7 +746,7 @@ Plan Impact:
 
 ### Task 11 - L1C-L1X-05 - Floating Disk No-Matrix Decision
 
-Status: `ready-for-research`
+Status: `done`
 
 Research `AT-L1X-05` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
