@@ -16379,6 +16379,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "later-level-only",
+          "owner": "future level-20 Character Sheet ability-score projection owner",
+          "reason": "The feature mutates durable Character Sheet Ability Scores at level 20, capping Dexterity and Wisdom at 25. Battle runtime should consume derived creature statistics rather than duplicate this class-feature ability-score state."
+        },
+        "reason": "Body and Mind is a level-20 permanent Dexterity and Wisdom Ability Score increase; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",

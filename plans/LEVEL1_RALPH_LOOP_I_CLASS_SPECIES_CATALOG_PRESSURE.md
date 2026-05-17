@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "L1I-MONK-BODY-AND-MIND",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Monk Body And Mind Catalog Pressure"
     },
     {
@@ -169,7 +169,7 @@ Every task runs:
 | 5 | L1I-BARBARIAN-LATER-FEATURES - Barbarian Later Feature Catalog Pressure | done | 1 | closure artifact and unsupported-profile claims for Barbarian later-feature records |
 | 6 | L1I-PALADIN-SMITE-STYLE-SURFACE - Paladin Smite And Fighting Style Surface Pressure | done | 1 | closure artifact and unsupported-profile claims for Paladin Fighting Style and Paladin's Smite |
 | 7 | L1I-RANGER-LATER-FEATURES - Ranger Later Feature Catalog Pressure | done | 1 | Ranger feature disposition without stealing D Favored Enemy work |
-| 8 | L1I-MONK-BODY-AND-MIND - Monk Body And Mind Catalog Pressure | ready-for-research | 1 | Monk feature disposition without stealing D Martial Arts scaling |
+| 8 | L1I-MONK-BODY-AND-MIND - Monk Body And Mind Catalog Pressure | done | 1 | Monk feature disposition without stealing D Martial Arts scaling |
 | 9 | L1I-WARLOCK-WIZARD-KNOWLEDGE-FEATURES - Warlock Wizard Knowledge Feature Catalog Pressure | ready-for-research | 1 | Warlock/Wizard knowledge-feature disposition without stealing D invocation work |
 | 10 | L1I-SPECIES-TRAIT-PRESSURE-SPLIT - Species Trait Catalog Pressure Split | ready-for-research | 1 | split species traits into runtime-supported, runtime-detached, later-level, or follow-up lanes |
 | 11 | L1I-DRUID-NATURES-WARD - Druid Nature's Ward Catalog Pressure | ready-for-research | 1 | Druid later feature disposition without stealing D Primal Order work |
@@ -314,12 +314,20 @@ shape is not claimed as a promoted battle Unit profile.
 
 ### Task 8 - L1I-MONK-BODY-AND-MIND - Monk Body And Mind Catalog Pressure
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `monk_body_and_mind`.
 
 Do not touch `monk_martial_arts`; D owns that scaling. Classify this feature as
 later-level, character fact, or future supported profile.
+
+Result:
+`plans/unit-profile-coverage/L1I_CLASS_SPECIES_MONK_BODY_AND_MIND_CLOSURE.md`.
+`monk_body_and_mind` is closed as an explicit `unsupported-profile` claim. Body
+and Mind is a level-20 durable Character Sheet ability-score projection:
+Dexterity and Wisdom each increase by 4, capped at 25. It is not a standalone
+promoted battle Unit profile, and the task does not touch D-owned
+`monk_martial_arts` scaling.
 
 ### Task 9 - L1I-WARLOCK-WIZARD-KNOWLEDGE-FEATURES - Warlock Wizard Knowledge Feature Catalog Pressure
 
