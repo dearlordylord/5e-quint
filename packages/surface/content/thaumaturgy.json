@@ -1,0 +1,55 @@
+{
+  "description": "You manifest a minor wonder within range. Choose one of the spell's effects. Booming Voice makes your voice boom up to three times as loud as normal for 1 minute and gives you Advantage on Charisma (Intimidation) checks for the duration. If you cast this spell multiple times, you can have up to three of its 1-minute effects active at a time.",
+  "id": "thaumaturgy",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "kind": "self"
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": false,
+      "v": true
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "level": 0,
+    "operations": [
+      {
+        "effect": {
+          "abilityFilter": ["cha"],
+          "affects": "self_roll",
+          "kind": "modify_roll_advantage",
+          "mode": "advantage",
+          "on": ["ability_check"],
+          "skillFilter": {
+            "kind": "fixed",
+            "skills": ["intimidation"]
+          }
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      }
+    ],
+    "range": {
+      "feet": 30,
+      "kind": "point"
+    },
+    "school": "transmutation"
+  },
+  "name": "Thaumaturgy",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Thaumaturgy"
+  }
+}

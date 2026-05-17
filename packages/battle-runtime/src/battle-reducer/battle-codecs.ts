@@ -77,6 +77,7 @@ import {
   COMMAND_OPTIONS,
   ELDRITCH_BLAST_BEAM_COUNTS,
   SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS,
+  THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
 } from "./domain-constants.ts";
 
 const BATTLE_SURFACE_SKILLS = SURFACE_SKILLS;
@@ -1441,6 +1442,15 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       ),
     }),
     Schema.Struct({
+      access: ClassCantripSpellAccessSchema,
+      resource: NoSpellInvocationResourceSchema,
+      procedure: Schema.Literal("thaumaturgyBoomingVoice"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      activeEffect: BattleRuntimeObjectSchema,
+      rangeFeet: MovementFeet,
+    }),
+    Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("creatureTypeProtection"),
@@ -1642,28 +1652,28 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
   ) as unknown as Schema.Schema<SupportedSpellInvocation>;
 
 export const BattleHoleSchema = Schema.Union(
-    Schema.Struct({
-      ...BattleHoleBaseSchema,
-      kind: Schema.Literal("targetChoice"),
-      choices: Schema.Array(CombatantId),
-      requiresTableSpatialFact: Schema.optionalWith(Schema.Boolean, {
-        exact: true,
-      }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("targetChoice"),
+    choices: Schema.Array(CombatantId),
+    requiresTableSpatialFact: Schema.optionalWith(Schema.Boolean, {
+      exact: true,
     }),
-    Schema.Struct({
-      ...BattleHoleBaseSchema,
-      kind: Schema.Literal("targetSpatialFacts"),
-      spellBeingCast: Schema.Struct({
-        casterId: CombatantId,
-        spellId: SpellId,
-        castLevel: Schema.Number,
-        components: Schema.Array(Schema.Literal("V", "S", "M")),
-      }),
-      requiresTableSpatialFact: Schema.Literal(true),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("targetSpatialFacts"),
+    spellBeingCast: Schema.Struct({
+      casterId: CombatantId,
+      spellId: SpellId,
+      castLevel: Schema.Number,
+      components: Schema.Array(Schema.Literal("V", "S", "M")),
     }),
-    Schema.Struct({
-      ...BattleHoleBaseSchema,
-      kind: Schema.Literal("objectTargetChoice"),
+    requiresTableSpatialFact: Schema.Literal(true),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("objectTargetChoice"),
     requiresTableSpatialFact: Schema.Literal(true),
   }),
   Schema.Struct({
@@ -1820,6 +1830,16 @@ export const BattleHoleSchema = Schema.Union(
     label: Schema.String,
     spell: SupportedSpellInvocationSchema,
     choices: Schema.Array(AbilitySchema),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("thaumaturgyActiveOneMinuteEffectCount"),
+    label: Schema.String,
+    spell: SupportedSpellInvocationSchema,
+    maximumActiveOneMinuteEffects: Schema.Literal(
+      THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
+    ),
+    requiresTableSpellEffectCount: Schema.Literal(true),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2017,7 +2037,7 @@ export const BattleHoleSchema = Schema.Union(
     kind: Schema.Literal("abilityCheck"),
     label: Schema.String,
     ability: AbilitySchema,
-    skill: Schema.Literal("stealth", "perception", "survival", "athletics"),
+    skill: Schema.Literal(...BATTLE_SURFACE_SKILLS),
     dc: DifficultyClass,
     rollMode: Schema.optionalWith(Schema.Literal(...ATTACK_ROLL_MODES), {
       exact: true,
@@ -2365,6 +2385,13 @@ type BattleFillEncoded =
       readonly kind: "abilityChoice";
       readonly holeId: string;
       readonly value: Ability;
+    }
+  | {
+      readonly kind: "thaumaturgyActiveOneMinuteEffectCount";
+      readonly holeId: string;
+      readonly value: {
+        readonly activeOneMinuteEffectCount: number;
+      };
     }
   | {
       readonly kind: "commandOptionChoice";
@@ -2823,6 +2850,16 @@ export const BattleFillSchema: Schema.Schema<
       kind: Schema.Literal("abilityChoice"),
       holeId: BattleHoleIdSchema,
       value: AbilitySchema,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("thaumaturgyActiveOneMinuteEffectCount"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Struct({
+        activeOneMinuteEffectCount: Schema.Number.pipe(
+          Schema.int(),
+          Schema.greaterThanOrEqualTo(0),
+        ),
+      }),
     }),
     Schema.Struct({
       kind: Schema.Literal("commandOptionChoice"),

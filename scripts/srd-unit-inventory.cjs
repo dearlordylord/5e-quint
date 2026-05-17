@@ -262,14 +262,6 @@ const spellUnitMissingClassifications = new Map([
     },
   ],
   [
-    "thaumaturgy",
-    {
-      kind: "catalog-only-closure",
-      reason:
-        "Minor wonders, voice-volume Advantage on Intimidation checks, unlocked-door/window movement, harmless tremors, and cosmetic effects are noncombat utility effects outside promoted runtime owners.",
-    },
-  ],
-  [
     "unseen_servant",
     {
       kind: "catalog-only-closure",

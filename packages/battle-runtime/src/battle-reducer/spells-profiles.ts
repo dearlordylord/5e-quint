@@ -25,13 +25,13 @@ import {
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either, Match } from "effect";
 import {
-	  type BattleCreatureState,
-	  type BattleState,
-	  type BattleTurnResources,
-	  type BattleTurnSpellSlotUse,
-	  type PersistentArmorSpellInvocation,
-	  type SupportedSpellInvocation,
-	} from "../battle-reducer.ts";
+  type BattleCreatureState,
+  type BattleState,
+  type BattleTurnResources,
+  type BattleTurnSpellSlotUse,
+  type PersistentArmorSpellInvocation,
+  type SupportedSpellInvocation,
+} from "../battle-reducer.ts";
 import type {
   CharacterBattleInvocationSpellAccessState,
   CharacterBattleSpellcastingState,
@@ -83,6 +83,7 @@ import {
   supportedPreparedScalarBuffSpellProfile,
   supportedPreparedSlotSpellProfile,
   supportedPreparedWeaponDamageRiderSpellProfile,
+  supportedCantripThaumaturgyBoomingVoiceSpellProfile,
 } from "./spells-profiles-support.ts";
 export * from "./spells-profiles-support.ts";
 import { supportedPreparedSanctuaryTargetingInterdictionSpellProfile } from "./sanctuary-targeting-interdiction.ts";
@@ -330,21 +331,21 @@ export function supportedSpellActs(
         spellcasting.spellcastingAbilityModifier,
       ),
     ),
-	    ...preparedSpells.flatMap((spell) =>
-	      supportedPreparedShieldReactionSpellProfile(
-	        spell,
-	        spellcasting.spellSlots,
-	      ),
-	    ),
-	    ...preparedSpells.flatMap((spell) =>
-	      supportedPreparedCounterspellReactionSpellProfile(
-	        spell,
-	        spellcasting.spellSlots,
-	      ),
-	    ),
-	    ...preparedSpells.flatMap((spell) =>
-	      supportedPreparedHellishRebukeReactionSpellProfile(
-	        spell,
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedShieldReactionSpellProfile(
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedCounterspellReactionSpellProfile(
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedHellishRebukeReactionSpellProfile(
+        spell,
         spellcasting.spellSlots,
       ),
     ),
@@ -396,6 +397,12 @@ export function supportedSpellActs(
     ),
     ...cantrips.flatMap((spell) =>
       supportedCantripRollModifierSpellProfile(actor.combatantId, spell),
+    ),
+    ...cantrips.flatMap((spell) =>
+      supportedCantripThaumaturgyBoomingVoiceSpellProfile(
+        actor.combatantId,
+        spell,
+      ),
     ),
     ...cantrips.flatMap((spell) =>
       supportedCantripDamageReductionSpellProfile(actor.combatantId, spell),

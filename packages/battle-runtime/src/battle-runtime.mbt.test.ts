@@ -3530,6 +3530,11 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
       "Battle runtime MBT does not model Dancing Lights placement holes.",
     );
   }
+  if (hole.kind === "thaumaturgyActiveOneMinuteEffectCount") {
+    throw new Error(
+      "Battle runtime MBT does not model Thaumaturgy active-effect count holes.",
+    );
+  }
   if (hole.kind === "targetSpatialFacts") {
     // The active MBT suites do not branch on Counterspell table facts; they
     // prefill this projection-only hole with an empty fact set before submit.

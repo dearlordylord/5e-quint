@@ -164,8 +164,8 @@
       "numerator": 367,
       "percent": "100%",
       "rowsByStatus": {
-        "accepted": 278,
-        "accepted-no-battle-effect": 89
+        "accepted": 279,
+        "accepted-no-battle-effect": 88
       }
     },
     "levelOneClassContainers": 12,
@@ -174,13 +174,13 @@
       "non-runtime": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 283,
+      "catalog-installed-owner-evidence-present": 284,
       "non-runtime": 12,
-      "catalog-only/dead-for-now": 72
+      "catalog-only/dead-for-now": 71
     },
     "spellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 139,
-      "catalog-only/dead-for-now": 72
+      "catalog-installed-owner-evidence-present": 140,
+      "catalog-only/dead-for-now": 71
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -528,7 +528,7 @@
       "title": "Classify Installed Cantrip and Level-1 Spell Units",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Classify installed SRD cantrip and level-1 Spell Unit owner evidence separately from missing and catalog-only spell rows.",
-      "rowCount": 157,
+      "rowCount": 158,
       "rowIds": [
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_dancing_lights",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_light",
@@ -557,6 +557,7 @@
         "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_resistance",
         "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_sacred_flame",
         "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_spare_the_dying",
+        "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_thaumaturgy",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_bane",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_bless",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_command",
@@ -696,7 +697,7 @@
       "title": "Review Catalog-Only Cantrip and Level-1 Spell Units",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Keep catalog-only spell pressure explicit and counted without forcing unrelated class or nonspell rows into the same task.",
-      "rowCount": 72,
+      "rowCount": 71,
       "rowIds": [
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_mage_hand",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_mending",
@@ -712,7 +713,6 @@
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_speak_with_animals",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_unseen_servant",
         "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_mending",
-        "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_thaumaturgy",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_create_or_destroy_water",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_detect_evil_and_good",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_detect_magic",
@@ -6617,19 +6617,39 @@
       "detail": "Thaumaturgy (Transmutation; —)",
       "candidateUnitId": "thaumaturgy",
       "surface": {
-        "state": "outside-surface-runtime-mechanics"
+        "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "thaumaturgy",
+        "sourceRecordPath": "packages/surface/content/thaumaturgy.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "thaumaturgy"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Minor wonders, voice-volume Advantage on Intimidation checks, unlocked-door/window movement, harmless tremors, and cosmetic effects are noncombat utility effects outside promoted runtime owners.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "runtime-detached presentation/environment owner",
+        "reason": "Thaumaturgy's non-Booming minor wonders alter appearance, flames, doors/windows, sounds, and tremors; promoted battle runtime owns only Booming Voice's check Advantage and consumes total active-effect count witnesses for the shared cap."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit thaumaturgy is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L1D2-THAUMATURGY-BOOMING-VOICE at packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_bane",

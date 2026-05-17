@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 362,
-      "numerator": 126,
-      "percent": "34.8%"
+      "denominator": 363,
+      "numerator": 127,
+      "percent": "35%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 434,
-      "numerator": 158,
-      "percent": "36.4%"
+      "denominator": 435,
+      "numerator": 159,
+      "percent": "36.6%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 159
+      "value": 160
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 105,
@@ -67,28 +67,28 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 159,
-      "numerator": 159,
+      "denominator": 160,
+      "numerator": 160,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 63,
-      "numerator": 63,
+      "denominator": 64,
+      "numerator": 64,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 63,
-      "numerator": 63,
+      "denominator": 64,
+      "numerator": 64,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 63,
-      "numerator": 63,
+      "denominator": 64,
+      "numerator": 64,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 63,
-      "numerator": 63,
+      "denominator": 64,
+      "numerator": 64,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -97,9 +97,9 @@
       "percent": "99%"
     },
     "supportedProfileCoverage": {
-      "denominator": 127,
+      "denominator": 128,
       "numerator": 105,
-      "percent": "82.7%"
+      "percent": "82%"
     }
   },
   "metricSemantics": [
@@ -2346,6 +2346,31 @@
           "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
         }
       ]
+    },
+    {
+      "id": "spell.invocation-self-ability-check-advantage",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "sourceBoundary": "The runtime consumes the authored Thaumaturgy Booming Voice cantrip effect, a caller-supplied count of total currently active Thaumaturgy 1-minute effects, and caller-created Charisma (Intimidation) Ability Check or Influence witnesses. Other Thaumaturgy minor wonders and their non-battle presentation/environment effects remain runtime-detached table adjudication.",
+      "taskRefs": [
+        "L1D2-THAUMATURGY-BOOMING-VOICE"
+      ],
+      "title": "Spell invocation creates a self Spell Effect that projects Ability Check Advantage from caller-supplied witnesses",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts"
+        }
+      ]
     }
   ],
   "taskClaims": [
@@ -3907,6 +3932,22 @@
         "character-creation.class-feature-advancement-replacement"
       ],
       "taskId": "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Thaumaturgy Booming Voice's one-minute self effect, total active-effect-count cap witness with replacement refresh semantics, Charisma (Intimidation) Ability Check Advantage projection, normal Advantage/Disadvantage cancellation, Magic Action spend, and no Spell Slot spend.",
+      "profileIds": [
+        "spell.invocation-self-ability-check-advantage"
+      ],
+      "taskId": "L1D2-THAUMATURGY-BOOMING-VOICE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Thaumaturgy catalog admission, Booming Voice action-time cantrip discovery, required total active 1-minute effect count witness, three-effect cap rejection, at-cap replacement refresh, inconsistent total-count witness rejection, one-minute self active-effect projection, Magic Action/no-slot/no-Concentration resource behavior, Charisma (Intimidation) Influence witness Advantage, nonmatching checks, and Hex cancellation.",
+      "profileIds": [
+        "spell.invocation-self-ability-check-advantage"
+      ],
+      "taskId": "L1D2-THAUMATURGY-BOOMING-VOICE"
     }
   ],
   "units": [
@@ -11517,6 +11558,77 @@
       ],
       "sourceRecordPath": "packages/surface/content/starry_wisp.json",
       "unitId": "starry_wisp"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "runtime-detached presentation/environment owner",
+              "reason": "Thaumaturgy's non-Booming minor wonders alter appearance, flames, doors/windows, sounds, and tremors; promoted battle runtime owns only Booming Voice's check Advantage and consumes total active-effect count witnesses for the shared cap."
+            },
+            "mechanic": "Altered Eyes, Fire Play, Invisible Hand, Phantom Sound, Tremors, and non-Booming presentation/environment consequences remain runtime-detached table adjudication"
+          }
+        ],
+        "profileIds": [
+          "spell.invocation-self-ability-check-advantage"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Booming Voice Magic Action cantrip cast with no Spell Slot spend",
+          "caller-supplied total active Thaumaturgy 1-minute effect count enforcing the three-active-effects cap without persistent utility state",
+          "one-minute self Spell Effect for Booming Voice",
+          "Advantage projection for caller-supplied Charisma (Intimidation) Ability Check or Influence witnesses with normal Advantage/Disadvantage cancellation"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L1D2-THAUMATURGY-BOOMING-VOICE"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-self-ability-check-advantage",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the authored Thaumaturgy Booming Voice cantrip effect, a caller-supplied count of total currently active Thaumaturgy 1-minute effects, and caller-created Charisma (Intimidation) Ability Check or Influence witnesses. Other Thaumaturgy minor wonders and their non-battle presentation/environment effects remain runtime-detached table adjudication.",
+          "taskRefs": [
+            "L1D2-THAUMATURGY-BOOMING-VOICE"
+          ],
+          "title": "Spell invocation creates a self Spell Effect that projects Ability Check Advantage from caller-supplied witnesses",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/thaumaturgy.json",
+      "unitId": "thaumaturgy"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

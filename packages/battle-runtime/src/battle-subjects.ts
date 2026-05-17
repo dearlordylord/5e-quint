@@ -75,6 +75,7 @@ export const CANTRIP_SPELL_PROCEDURES = [
   "spellAttackDamage",
   "saveGatedDamage",
   "rollModifier",
+  "thaumaturgyBoomingVoice",
 ] as const;
 export type CantripSpellProcedure = (typeof CANTRIP_SPELL_PROCEDURES)[number];
 

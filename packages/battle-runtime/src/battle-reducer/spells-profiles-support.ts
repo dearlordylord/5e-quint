@@ -46,6 +46,7 @@ import {
   type ScalarBuffSpellEffect,
   type ScalarBuffSpellTargeting,
   type SupportedSpellInvocation,
+  type ThaumaturgyBoomingVoiceSpellInvocation,
 } from "../battle-reducer.ts";
 import {
   characterResourceIsFavoredEnemyFreeCast,
@@ -59,6 +60,8 @@ import {
   HUNTERS_MARK_FINDING_SKILLS,
   PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES,
   PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS,
+  THAUMATURGY_BOOMING_VOICE_DURATION_TICKS,
+  THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL,
 } from "./domain-constants.ts";
 import { supportedDamageAmountExpr } from "./spells-profiles-save-gates.ts";
 import {
@@ -1467,6 +1470,90 @@ export function supportedCantripRollModifierSpellProfile(
           ...projection,
         },
       ];
+}
+
+export function supportedCantripThaumaturgyBoomingVoiceSpellProfile(
+  actorId: CombatantId,
+  spell: SpellRecord,
+): readonly ThaumaturgyBoomingVoiceSpellInvocation[] {
+  const projection = thaumaturgyBoomingVoiceProjection(actorId, spell);
+  return projection === null
+    ? []
+    : [
+        {
+          access: { tag: "classCantrip" },
+          resource: { tag: "none" },
+          procedure: "thaumaturgyBoomingVoice",
+          spell,
+          actionCost: "magicAction",
+          ...projection,
+        },
+      ];
+}
+
+export function thaumaturgyBoomingVoiceProjection(
+  actorId: CombatantId,
+  spell: SpellRecord,
+): Pick<
+  ThaumaturgyBoomingVoiceSpellInvocation,
+  "activeEffect" | "rangeFeet"
+> | null {
+  if (
+    spell.name !== "Thaumaturgy" ||
+    spell.provenance.kind !== "srd-5.2.1" ||
+    spell.provenance.section !== "Spells/Descriptions-S-Z#Thaumaturgy" ||
+    spell.mechanics.family !== "ongoing_effect" ||
+    spell.mechanics.level !== 0 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "point" ||
+    spell.mechanics.range.feet !== 30 ||
+    spell.mechanics.duration.kind !== "timed" ||
+    spell.mechanics.duration.value.unit !== "minute" ||
+    spell.mechanics.duration.value.amount !== 1 ||
+    spell.mechanics.attachment.kind !== "self" ||
+    spell.mechanics.operations.length !== 1
+  ) {
+    return null;
+  }
+  const operation = spell.mechanics.operations[0];
+  const effect = operation?.effect;
+  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
+    spell.mechanics.duration.value,
+  );
+  const skillFilter =
+    effect?.kind === "modify_roll_advantage"
+      ? rollModifierSkillFilter(effect.skillFilter)
+      : null;
+  const abilityFilter =
+    effect?.kind === "modify_roll_advantage" ? effect.abilityFilter : undefined;
+  if (
+    Either.isLeft(durationTicks) ||
+    Number(durationTicks.right) !==
+      Number(THAUMATURGY_BOOMING_VOICE_DURATION_TICKS) ||
+    operation?.trigger.kind !== "passive" ||
+    effect?.kind !== "modify_roll_advantage" ||
+    effect.mode !== "advantage" ||
+    (effect.affects ?? "self_roll") !== "self_roll" ||
+    !sameStringSet(effect.on, ["ability_check"]) ||
+    !Array.isArray(abilityFilter) ||
+    !sameStringSet(abilityFilter, ["cha"]) ||
+    skillFilter?.kind !== "fixed" ||
+    skillFilter.skill !== THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL
+  ) {
+    return null;
+  }
+  return {
+    activeEffect: {
+      kind: "thaumaturgyBoomingVoice",
+      sourceSpellId: spell.id,
+      sourceCombatantId: actorId,
+      expiresAt: {
+        kind: "duration",
+        durationTicks: durationTicks.right,
+      },
+    },
+    rangeFeet: movementFeet(spell.mechanics.range.feet),
+  };
 }
 
 export function supportedCantripDamageReductionSpellProfile(

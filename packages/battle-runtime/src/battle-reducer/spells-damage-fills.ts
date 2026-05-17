@@ -61,6 +61,7 @@ import {
   type BattleSpellHealingRollHole,
   type BattleSpellSavingThrowOutcomeHole,
   type BattleSpellSkillChoiceHole,
+  type BattleThaumaturgyActiveOneMinuteEffectCountHole,
   type BattleSpellTargetAllocation,
   type BattleState,
   type BattleTargetChoiceHole,
@@ -72,6 +73,11 @@ import {
   type SupportedDamageSpellInvocation,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
+import {
+  THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
+  THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_INSTANCE,
+  THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
+} from "./domain-constants.ts";
 
 const OBJECT_DAMAGE_IMMUNITIES = [
   "poison",
@@ -622,6 +628,23 @@ export function spellAbilityChoiceHole(
   };
 }
 
+export function thaumaturgyActiveOneMinuteEffectCountHole(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "thaumaturgyBoomingVoice" }
+  >,
+): BattleThaumaturgyActiveOneMinuteEffectCountHole {
+  return {
+    kind: "thaumaturgyActiveOneMinuteEffectCount",
+    holeId: THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
+    holeInstanceKey: THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_INSTANCE,
+    label: `${invocation.spell.name} total active 1-minute effects`,
+    spell: invocation,
+    maximumActiveOneMinuteEffects: THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
+    requiresTableSpellEffectCount: true,
+  };
+}
+
 export function scalarBuffInitialHoles(
   invocation: Extract<
     SupportedSpellInvocation,
@@ -753,8 +776,8 @@ export function spellSavingThrowTargeting(
   return invocation.procedure === "counterspell"
     ? { kind: "singleCombatant" }
     : invocation.procedure === "attackBurstSaveDamage"
-    ? invocation.burst.targeting
-    : invocation.targeting;
+      ? invocation.burst.targeting
+      : invocation.targeting;
 }
 
 export function spellAreaTargetingLabel(
