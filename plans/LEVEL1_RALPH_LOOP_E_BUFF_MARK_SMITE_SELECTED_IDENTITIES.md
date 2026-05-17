@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L1E-DIVINE-FAVOR",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Divine Favor Selected Identity Replay"
     },
     {
@@ -153,7 +153,7 @@ record moved Units in this plan. No behavior changes.
 
 ### Task 2 - L1E-DIVINE-FAVOR - Divine Favor Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `divine_favor`, binding the spell Unit
 through the supported weapon damage rider projection.
