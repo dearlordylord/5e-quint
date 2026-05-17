@@ -166,6 +166,7 @@
 {"unitId":"sanctuary","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84G","ownerPath":"packages/battle-runtime/src/sanctuary-targeting-interdiction.test.ts"}}
 {"unitId":"sanctuary","evidence":{"tag":"selected-identity-mbt","taskId":"L1H-SANCTUARY","ownerPath":"packages/battle-runtime/src/sanctuary-selected-identity.mbt.test.ts"}}
 {"unitId":"shillelagh","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84H","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
+{"unitId":"shillelagh","evidence":{"tag":"selected-identity-mbt","taskId":"L1E-SHILLELAGH","ownerPath":"packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts"}}
 {"unitId":"find_familiar","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84I5","ownerPath":"packages/battle-runtime/src/find-familiar-lifecycle.test.ts"}}
 {"unitId":"fighter_fighting_style","evidence":{"tag":"deterministic-admission-projection","taskId":"AT-L1-03","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"fighter_weapon_mastery","evidence":{"tag":"deterministic-admission-projection","taskId":"AT-L1-04","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
