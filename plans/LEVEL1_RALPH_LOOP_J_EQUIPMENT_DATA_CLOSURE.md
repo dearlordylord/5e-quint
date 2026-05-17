@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "L1J-FIREARM-EXOTIC-WEAPON-DATA",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Firearm Exotic Weapon Non Runtime Data Closure"
     },
     {
@@ -127,7 +127,7 @@ Every task runs:
 | 6 | L1J-POLEARM-REACH-WEAPON-DATA - Polearm Reach Weapon Non Runtime Data Closure | done | 1 | explicit closure for polearm/reach authored records |
 | 7 | L1J-RANGED-WEAPON-DATA - Ranged Weapon Non Runtime Data Closure | done | 1 | explicit closure for ranged authored records |
 | 8 | L1J-THROWN-FINESSE-WEAPON-DATA - Thrown Finesse Weapon Non Runtime Data Closure | done | 1 | explicit closure for thrown/finesse authored records |
-| 9 | L1J-FIREARM-EXOTIC-WEAPON-DATA - Firearm Exotic Weapon Non Runtime Data Closure | ready-for-research | 1 | explicit closure for firearm/exotic authored records |
+| 9 | L1J-FIREARM-EXOTIC-WEAPON-DATA - Firearm Exotic Weapon Non Runtime Data Closure | done | 1 | explicit closure for firearm/exotic authored records |
 | 10 | L1J-INSTALLED-EQUIPMENT-ROW-ALIGNMENT - Installed Equipment Row Alignment | ready-for-research | 1 | align existing installed equipment/weapon unsupported rows with the same closure language |
 
 ### Task 1 - L1J-PRECHECK - Non-D Equipment Data Precheck
@@ -218,12 +218,15 @@ Decision artifact:
 
 ### Task 9 - L1J-FIREARM-EXOTIC-WEAPON-DATA - Firearm Exotic Weapon Non Runtime Data Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Units include `weapon_musket` and `weapon_pistol`.
 
 Do not introduce firearm combat behavior; close only authored data/catalog
 pressure.
+
+Decision artifact:
+`plans/unit-profile-coverage/L1J_FIREARM_EXOTIC_WEAPON_DATA_CLOSURE.md`.
 
 ### Task 10 - L1J-INSTALLED-EQUIPMENT-ROW-ALIGNMENT - Installed Equipment Row Alignment
 
