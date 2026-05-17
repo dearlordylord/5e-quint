@@ -31,8 +31,8 @@ This is the default `%` for level-1 plus level-2 readiness questions. It uses th
 
 #### Level 1-2 Battle Readiness by Status
 
-- accepted: 288
-- accepted-no-battle-effect: 182
+- accepted: 289
+- accepted-no-battle-effect: 181
 - battle-runtime-required: 74
 - owner-evidence-required: 12
 
@@ -43,8 +43,8 @@ This is the default `%` for level-1 plus level-2 readiness questions. It uses th
 
 ### Level-2 Rows by Disposition
 
-- catalog-installed-owner-evidence-present: 6
-- catalog-only/dead-for-now: 3
+- catalog-installed-owner-evidence-present: 7
+- catalog-only/dead-for-now: 2
 - missing-authored-record: 12
 - non-runtime: 12
 
@@ -336,7 +336,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Monk Unarmored Movement|class feature||current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|owner-evidence-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Monk.md:92|
 |Monk Uncanny Metabolism|class feature||current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|owner-evidence-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Monk.md:96|
 |Monk level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Monk.md:33|
-|Paladin Fighting Style|class feature||current-surface-can-express-source-facts|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|selection-grant-container: selected Fighting Style feat Unit profiles and future Blessed Warrior Spell Access character owner||Decide whether to admit/support, or keep catalog-only closure counted.|.references/srd-5.2.1/Classes/Paladin.md:90|
+|Paladin Fighting Style|class feature||current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted|profile-subset-remaining-mechanics-closed: future Paladin advancement cantrip replacement owner|Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Paladin.md:90|
 |Paladin Paladin's Smite|class feature||current-surface-can-express-source-facts|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|later-level-only: future Paladin's Smite Spell Access and class-feature free-cast resource owner||Decide whether to admit/support, or keep catalog-only closure counted.|.references/srd-5.2.1/Classes/Paladin.md:96|
 |Paladin level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Paladin.md:36|
 |Ranger Deft Explorer|class feature||current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|owner-evidence-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Ranger.md:88|

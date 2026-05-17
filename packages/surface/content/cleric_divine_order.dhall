@@ -55,7 +55,7 @@ let divineOrder =
       , description =
           "Choose Protector for Martial weapon proficiency and Heavy armor training, or Thaumaturge for one Cleric cantrip and a Wisdom-modifier bonus to Arcana or Religion checks."
       , mechanics =
-          { family = "suborder_choice"
+          { family = "class_feature_acquisition_choice"
           , choiceKey = "divine_order"
           , timing = "class_feature_acquisition"
           , options =

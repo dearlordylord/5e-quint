@@ -74,6 +74,7 @@ const requiredFirstVerticalUnitIds = [
   "bard_jack_of_all_trades",
   ...task183ClassFeatureUnitIds,
   ...task184WeaponMasteryUnitIds,
+  "paladin_fighting_style",
   "subclass_fighter_champion",
   "subclass_wizard_evoker",
   "rogue_evasion",
@@ -1497,7 +1498,7 @@ describe("SRD Unit catalog boundary", () => {
           kind: "class_feature",
           mechanics: expect.objectContaining({
             choiceKey: "divine_order",
-            family: "suborder_choice",
+            family: "class_feature_acquisition_choice",
           }),
         }),
         expect.objectContaining({
@@ -1515,7 +1516,7 @@ describe("SRD Unit catalog boundary", () => {
           kind: "class_feature",
           mechanics: expect.objectContaining({
             choiceKey: "primal_order",
-            family: "suborder_choice",
+            family: "class_feature_acquisition_choice",
           }),
         }),
         expect.objectContaining({

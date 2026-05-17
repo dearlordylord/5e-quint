@@ -792,7 +792,7 @@ describe("character-creation Surface records", () => {
         description: "Divine Order test shape.",
         mechanics: {
           choiceKey: "divine_order",
-          family: "suborder_choice",
+          family: "class_feature_acquisition_choice",
           timing: "class_feature_acquisition",
           options: [
             {
@@ -888,7 +888,7 @@ describe("character-creation Surface records", () => {
         description: "Primal Order test shape.",
         mechanics: {
           choiceKey: "primal_order",
-          family: "suborder_choice",
+          family: "class_feature_acquisition_choice",
           timing: "class_feature_acquisition",
           options: [
             {

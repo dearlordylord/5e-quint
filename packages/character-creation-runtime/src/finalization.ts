@@ -15,6 +15,7 @@ import { SKILLS } from "@dnd/surface/surface/types";
 import type {
   Ability,
   ArmorTrainingCategory,
+  ClassFeatureRecord,
   ClassSpellcastingCreation,
   ListPreparedSpellcastingCreation,
   ProficiencyGrant,
@@ -27,7 +28,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import {
   discoverCreationHoles,
-  selectedSuborderSpellAccessChoiceHoles,
+  selectedClassFeatureAcquisitionGrantChoiceHoles,
 } from "./discovery.ts";
 import { type CharacterProgression } from "./character-progression-algebra.ts";
 import {
@@ -73,14 +74,12 @@ import {
   CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
   CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
   CLASS_PREPARED_SPELL_CHOICE_KEY,
-  DIVINE_ORDER_CHOICE_KEY,
   CLASS_SUBCLASS_CHOICE_KEY,
   CLASS_EQUIPMENT_CHOICE_KEY,
   CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
   CLASS_TOOL_PROFICIENCY_CHOICE_KEY,
   EXACTLY_ONE_CHOICE,
   MULTICLASS_PROFICIENCY_CHOICE_KEYS,
-  PRIMAL_ORDER_CHOICE_KEY,
   WIZARD_CANTRIP_CHOICE_KEY,
   WIZARD_PREPARED_SPELL_CHOICE_KEY,
   WIZARD_SPELLBOOK_CHOICE_KEY,
@@ -704,10 +703,11 @@ export function buildCharacterBuild(input: {
   if (Either.isLeft(buildSpellcasting)) {
     return Either.left(buildSpellcasting.left);
   }
-  const abilityCheckBonusFeatures = finalizedSuborderAbilityCheckBonusFeatures(
-    input.supportedSelections.unitChoices,
-    input.unitLibrary,
-  );
+  const abilityCheckBonusFeatures =
+    finalizedClassFeatureAcquisitionAbilityCheckBonusFeatures(
+      input.supportedSelections.unitChoices,
+      input.unitLibrary,
+    );
   if (Either.isLeft(abilityCheckBonusFeatures)) {
     return Either.left(abilityCheckBonusFeatures.left);
   }
@@ -1473,18 +1473,16 @@ function supportedFinalizationChoiceHoles(input: {
       startingClassUnitId(input.selections.progression),
     ),
   ).flatMap((hole) => compact([requireUnitChoiceCreationHole(hole)]));
-  const suborderSpellAccessHoles = [...input.classFactsByUnitId].flatMap(
-    ([classUnitId, facts]) =>
-      selectedSuborderSpellAccessChoiceHoles({
-        choices: input.selections.choices,
-        classUnitId,
-        classFacts: facts,
-        classLevel: classLevelForUnit(
-          input.selections.progression,
-          classUnitId,
-        ),
-        unitLibrary: input.unitLibrary,
-      }).flatMap((hole) => compact([requireUnitChoiceCreationHole(hole)])),
+  const selectedClassFeatureAcquisitionGrantHoles = [
+    ...input.classFactsByUnitId,
+  ].flatMap(([classUnitId, facts]) =>
+    selectedClassFeatureAcquisitionGrantChoiceHoles({
+      choices: input.selections.choices,
+      classUnitId,
+      classFacts: facts,
+      classLevel: classLevelForUnit(input.selections.progression, classUnitId),
+      unitLibrary: input.unitLibrary,
+    }).flatMap((hole) => compact([requireUnitChoiceCreationHole(hole)])),
   );
   const backgroundToolHole = backgroundToolChoiceSpec(
     input.backgroundFacts.toolProficiency,
@@ -1499,7 +1497,7 @@ function supportedFinalizationChoiceHoles(input: {
     ...multiclassProficiencyHoles,
     ...selectedFeatAbilityScoreHoles,
     ...spellcastingHoles,
-    ...suborderSpellAccessHoles,
+    ...selectedClassFeatureAcquisitionGrantHoles,
     ...(backgroundToolHole == null
       ? []
       : compact([
@@ -1836,28 +1834,23 @@ function finalizedClassChoiceFeaturesForSupportedChoices(
   });
 }
 
-function finalizedSuborderAbilityCheckBonusFeatures(
+function finalizedClassFeatureAcquisitionAbilityCheckBonusFeatures(
   unitChoices: readonly UnitChoiceSelection[],
   unitLibrary: UnitCatalog,
 ): Either.Either<readonly CharacterBuildFeature[], FinalizationIssues> {
   const features: CharacterBuildFeature[] = [];
   const issues: CreationFinalizationIssue[] = [];
   for (const selection of unitChoices) {
-    if (!isSuborderChoiceKey(selection.source.choiceKey)) {
-      continue;
-    }
-
-    const feature = unitLibrary.getUnit(selection.source.unitId);
-    if (
-      Option.isNone(feature) ||
-      feature.value.kind !== "class_feature" ||
-      feature.value.mechanics.family !== "suborder_choice"
-    ) {
+    const mechanics = classFeatureAcquisitionChoiceMechanicsForSelection(
+      selection,
+      unitLibrary,
+    );
+    if (mechanics === undefined) {
       continue;
     }
 
     const optionIds = new Set(choiceSelectionOptionIds(selection));
-    for (const option of feature.value.mechanics.options) {
+    for (const option of mechanics.options) {
       if (!optionIds.has(creationChoiceOptionId(option.id))) {
         continue;
       }
@@ -1867,14 +1860,14 @@ function finalizedSuborderAbilityCheckBonusFeatures(
           continue;
         }
 
-        const projected = suborderAbilityCheckBonusFeature(
+        const projected = classFeatureAcquisitionAbilityCheckBonusFeature(
           selection.source.unitId,
           grant,
         );
         if (projected === undefined) {
           issues.push(
             illegalFinalizationIssue(
-              `Cannot project supported suborder ability-check bonus for ${selection.source.unitId}:${option.id}.`,
+              `Cannot project supported class-feature acquisition ability-check bonus for ${selection.source.unitId}:${option.id}.`,
             ),
           );
           continue;
@@ -1890,7 +1883,7 @@ function finalizedSuborderAbilityCheckBonusFeatures(
     : Either.left(collectedIssues);
 }
 
-function suborderAbilityCheckBonusFeature(
+function classFeatureAcquisitionAbilityCheckBonusFeature(
   selectedFromUnitId: UnitRecord["id"],
   grant: ModifyRollNumericGrant,
 ): CharacterBuildFeature | undefined {
@@ -2109,7 +2102,7 @@ function finalizedBuildSpellcastingSource(input: {
             supportedSelections.unitChoices,
             unitSource(classUnitId, CLASS_CANTRIP_CHOICE_KEY),
           )),
-      ...selectedSuborderCantripUnitRefs(input),
+      ...selectedClassFeatureAcquisitionCantripUnitRefs(input),
     ];
     const preparedSpells = selectedUnitRefsForChoiceSource(
       supportedSelections.unitChoices,
@@ -2214,7 +2207,7 @@ function finalizedBuildSpellcastingSource(input: {
   };
 }
 
-function selectedSuborderCantripUnitRefs(input: {
+function selectedClassFeatureAcquisitionCantripUnitRefs(input: {
   readonly classUnitId: UnitRecord["id"];
   readonly classFacts: ClassCreationFacts;
   readonly classLevel: number;
@@ -2222,7 +2215,7 @@ function selectedSuborderCantripUnitRefs(input: {
   readonly supportedSelections: ExecutableSupportSelections;
   readonly unitLibrary: UnitCatalog;
 }): readonly UnitRecord["id"][] {
-  return selectedSuborderSpellAccessChoiceHoles({
+  return selectedClassFeatureAcquisitionGrantChoiceHoles({
     choices: input.selections.choices,
     classUnitId: input.classUnitId,
     classFacts: input.classFacts,
@@ -2230,7 +2223,8 @@ function selectedSuborderCantripUnitRefs(input: {
     unitLibrary: input.unitLibrary,
   }).flatMap((hole) => {
     const unitHole = requireUnitChoiceCreationHole(hole);
-    return unitHole === undefined
+    return unitHole === undefined ||
+      unitHole.source.choiceKey !== CLASS_CANTRIP_CHOICE_KEY
       ? []
       : selectedUnitRefsForChoiceSource(
           input.supportedSelections.unitChoices,
@@ -2747,9 +2741,17 @@ function decodedClassFeatureProficiencySubjects(
       continue;
     }
 
-    if (isSuborderChoiceKey(selection.source.choiceKey)) {
+    if (
+      classFeatureAcquisitionChoiceMechanicsForSelection(
+        selection,
+        unitLibrary,
+      ) !== undefined
+    ) {
       subjects.push(
-        ...suborderFixedProficiencySubjects(selection, unitLibrary),
+        ...classFeatureAcquisitionFixedProficiencySubjects(
+          selection,
+          unitLibrary,
+        ),
       );
       continue;
     }
@@ -2833,20 +2835,43 @@ function backgroundSkillProficiencies(
   return facts.tag === "readable" ? facts.value.skillProficiencies : [];
 }
 
-function suborderFixedProficiencySubjects(
+type ClassFeatureAcquisitionChoiceMechanics = Extract<
+  ClassFeatureRecord["mechanics"],
+  { readonly family: "class_feature_acquisition_choice" }
+>;
+
+function classFeatureAcquisitionChoiceMechanicsForSelection(
   selection: UnitChoiceSelection,
   unitLibrary: UnitCatalog,
-): readonly ParsedProficiencyGrantSubject[] {
+): ClassFeatureAcquisitionChoiceMechanics | undefined {
   const feature = unitLibrary.getUnit(selection.source.unitId);
   if (
     Option.isNone(feature) ||
     feature.value.kind !== "class_feature" ||
-    feature.value.mechanics.family !== "suborder_choice"
+    feature.value.mechanics.family !== "class_feature_acquisition_choice"
   ) {
+    return undefined;
+  }
+  const featureChoiceKey = unitChoiceKey(feature.value.mechanics.choiceKey);
+  return Either.isRight(featureChoiceKey) &&
+    featureChoiceKey.right === selection.source.choiceKey
+    ? feature.value.mechanics
+    : undefined;
+}
+
+function classFeatureAcquisitionFixedProficiencySubjects(
+  selection: UnitChoiceSelection,
+  unitLibrary: UnitCatalog,
+): readonly ParsedProficiencyGrantSubject[] {
+  const mechanics = classFeatureAcquisitionChoiceMechanicsForSelection(
+    selection,
+    unitLibrary,
+  );
+  if (mechanics === undefined) {
     return [];
   }
   const optionIds = new Set(choiceSelectionOptionIds(selection));
-  return feature.value.mechanics.options
+  return mechanics.options
     .filter((option) => optionIds.has(creationChoiceOptionId(option.id)))
     .flatMap((option) =>
       option.mechanics.grants.flatMap((grant) =>
@@ -2861,13 +2886,6 @@ function suborderFixedProficiencySubjects(
       );
       return Either.isRight(decoded) ? [decoded.right] : [];
     });
-}
-
-function isSuborderChoiceKey(choiceKey: UnitChoiceKey): boolean {
-  return (
-    choiceKey === DIVINE_ORDER_CHOICE_KEY ||
-    choiceKey === PRIMAL_ORDER_CHOICE_KEY
-  );
 }
 
 function isMulticlassProficiencyChoiceKey(choiceKey: UnitChoiceKey): boolean {

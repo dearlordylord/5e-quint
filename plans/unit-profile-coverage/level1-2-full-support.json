@@ -1608,20 +1608,15 @@
       "unitId": "moonbeam"
     },
     {
-      "catalogDisposition": {
-        "category": "unsupported-widening-pressure",
-        "planningLane": "QMBT18",
-        "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "unsupported-profile",
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "selection-grant-container"
+        "later-level-only"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "The class feature opens a level-2 choice between a Fighting Style feat and Blessed Warrior's Cleric cantrip Spell Access. Selected Fighting Style feat Units own executable battle behavior, and Blessed Warrior cantrip access and replacement belong to Character Sheet Spell Access rather than duplicate battle Unit state.",
+      "reason": "Blessed Warrior cantrip replacement only occurs on later Paladin level gains after the level-2 acquisition choice is complete.",
       "sourceRecordPath": "packages/surface/content/paladin_fighting_style.json",
       "sourceRows": [
         {
@@ -1637,8 +1632,8 @@
           }
         }
       ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
+      "status": "closed-later-level-only",
+      "strictTargetClosed": true,
       "unitId": "paladin_fighting_style"
     },
     {
@@ -2669,23 +2664,23 @@
     },
     {
       "count": 4,
-      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
-      "status": "open-profile-accounting",
-      "unitIds": [
-        "paladin_fighting_style",
-        "paladin_paladins_smite",
-        "shatter",
-        "wizard_scholar"
-      ]
-    },
-    {
-      "count": 3,
       "description": "The in-scope behavior is complete and every remaining residual is outside this strict accounting scope.",
       "status": "closed-later-level-only",
       "unitIds": [
         "barbarian_weapon_mastery",
         "fighter_weapon_mastery",
+        "paladin_fighting_style",
         "ranger_favored_enemy"
+      ]
+    },
+    {
+      "count": 3,
+      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
+      "status": "open-profile-accounting",
+      "unitIds": [
+        "paladin_paladins_smite",
+        "shatter",
+        "wizard_scholar"
       ]
     },
     {
@@ -2704,8 +2699,8 @@
       "numerator": 470,
       "percent": "84.5%",
       "rowsByStatus": {
-        "accepted": 288,
-        "accepted-no-battle-effect": 182,
+        "accepted": 289,
+        "accepted-no-battle-effect": 181,
         "battle-runtime-required": 74,
         "owner-evidence-required": 12
       }
@@ -2717,8 +2712,8 @@
     },
     "strictTargetClosure": {
       "denominator": 135,
-      "numerator": 100,
-      "percent": "74.1%"
+      "numerator": 101,
+      "percent": "74.8%"
     }
   },
   "openFrontier": [
@@ -2761,11 +2756,10 @@
       ]
     },
     {
-      "count": 4,
+      "count": 3,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
-        "paladin_fighting_style",
         "paladin_paladins_smite",
         "shatter",
         "wizard_scholar"
@@ -6439,15 +6433,15 @@
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
       "missing": 31,
-      "profile-subset-supported": 6,
+      "profile-subset-supported": 7,
       "supported-profile": 84,
-      "unsupported-profile": 14
+      "unsupported-profile": 13
     },
     "groupsByStatus": {
       "closed-character-fact-and-runtime-detached-split": 2,
-      "closed-later-level-only": 3,
+      "closed-later-level-only": 4,
       "closed-runtime-detached-table-adjudication": 11,
-      "open-profile-accounting": 4,
+      "open-profile-accounting": 3,
       "open-runtime-behavior": 31,
       "supported-profile": 84
     },

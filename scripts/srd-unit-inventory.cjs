@@ -747,6 +747,27 @@ function installedLevelTwoClassFeatureOwnerClassification(
   const characterSheetEvidence = ownerEvidenceSources.characterSheet.get(
     row.id,
   );
+  const characterCreationEvidence = ownerEvidenceSources.characterCreation.get(
+    row.id,
+  );
+  if (
+    characterCreationEvidence &&
+    claimUsesOnlyProfilePrefix(claim, characterCreationProfileIdPrefix)
+  ) {
+    return {
+      kind: "evidence-present",
+      owner: "character-creation-runtime",
+      evidence: characterCreationEvidence,
+    };
+  }
+  if (claimUsesOnlyProfilePrefix(claim, characterCreationProfileIdPrefix)) {
+    return {
+      kind: "evidence-required",
+      owner: "character-creation-runtime",
+      requirement:
+        "Add checker-readable character-creation owner evidence before treating this level-2 class feature as operationally supported.",
+    };
+  }
   if (
     characterSheetEvidence &&
     claimUsesOnlyProfilePrefix(claim, characterSheetProfileIdPrefix)

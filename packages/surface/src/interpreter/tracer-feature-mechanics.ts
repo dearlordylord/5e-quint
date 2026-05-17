@@ -57,13 +57,13 @@ export function traceClassFeatureMechanics(
       });
       return [masteryId];
     }
-    case "suborder_choice": {
-      const choiceId = ids("suborder");
+    case "class_feature_acquisition_choice": {
+      const choiceId = ids("classFeatureAcquisitionChoice");
       nodes.push({
         id: choiceId,
         category: "procedure",
-        atomKind: "suborder_choice",
-        label: `suborder_choice\n${m.choiceKey}\n${m.options.map((option) => option.displayName).join(" | ")}`,
+        atomKind: "class_feature_acquisition_choice",
+        label: `class_feature_acquisition_choice\n${m.choiceKey}\n${m.options.map((option) => option.displayName).join(" | ")}`,
       });
       for (const option of m.options) {
         const optionId = tracePassiveMechanics(

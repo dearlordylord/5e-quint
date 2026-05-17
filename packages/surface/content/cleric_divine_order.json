@@ -6,7 +6,7 @@
   "kind": "class_feature",
   "mechanics": {
     "choiceKey": "divine_order",
-    "family": "suborder_choice",
+    "family": "class_feature_acquisition_choice",
     "options": [
       {
         "displayName": "Protector",

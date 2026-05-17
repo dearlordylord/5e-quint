@@ -446,8 +446,8 @@ const FeatureChoiceSelectionRepeatabilitySchema = Schema.Union(
   }),
 );
 
-export const SuborderChoiceMechanicsSchema = Schema.Struct({
-  family: Schema.Literal("suborder_choice"),
+export const ClassFeatureAcquisitionChoiceMechanicsSchema = Schema.Struct({
+  family: Schema.Literal("class_feature_acquisition_choice"),
   choiceKey: NonEmptyStringSchema,
   timing: Schema.Literal("class_feature_acquisition"),
   options: Schema.NonEmptyArray(
@@ -560,7 +560,7 @@ export const ClassFeatureMechanicsSchema = Schema.Union(
   ClassFeatureComponentMechanicsSchema,
   CompositeClassFeatureMechanicsSchema,
   FeatureChoiceMechanicsSchema,
-  SuborderChoiceMechanicsSchema,
+  ClassFeatureAcquisitionChoiceMechanicsSchema,
   ClassSpellcastingProjectionMechanicsSchema,
   WeaponMasteryChoiceMechanicsSchema,
   SpellbookRitualAccessMechanicsSchema,
@@ -571,7 +571,7 @@ export const ClassFeatureMechanicsSchema = Schema.Union(
 export const ClassGeneralFeatureMechanicsSchema = Schema.Union(
   ClassFeatureComponentMechanicsSchema,
   CompositeClassFeatureMechanicsSchema,
-  SuborderChoiceMechanicsSchema,
+  ClassFeatureAcquisitionChoiceMechanicsSchema,
   WeaponMasteryChoiceMechanicsSchema,
 );
 

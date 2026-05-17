@@ -42,8 +42,10 @@ import {
   PHASE1_WEAPON_FLAIL_UNIT_ID,
   PHASE1_WEAPON_LONGSWORD_UNIT_ID,
   PRIMAL_ORDER_CHOICE_KEY,
+  PALADIN_FIGHTING_STYLE_CHOICE_KEY,
   RANGER_MULTICLASS_SKILL_PROFICIENCY_CHOICE_KEY,
   ROGUE_MULTICLASS_SKILL_PROFICIENCY_CHOICE_KEY,
+  SRD_PALADIN_CLASS_UNIT_ID,
   SRD_LEVEL_ONE_CLASS_UNIT_IDS,
   SRD_CHARACTER_ADMISSION_SPECIES_UNIT_IDS,
   progressionOptionId,
@@ -167,6 +169,7 @@ type SupportedDraftChoicePath = (typeof SUPPORTED_DRAFT_CHOICE_PATHS)[number];
 const SUPPORTED_PROGRESSIONS = [
   ...SRD_LEVEL_ONE_CLASS_UNIT_IDS.map(supportedLevelOneProgression),
   supportedSameClassSecondLevelProgression(PHASE1_CLASS_FIGHTER_UNIT_ID),
+  supportedSameClassSecondLevelProgression(SRD_PALADIN_CLASS_UNIT_ID),
   supportedSameClassProgression(SRD_ROGUE_CLASS_UNIT_ID, 6),
   ...SRD_LEVEL_ONE_CLASS_UNIT_IDS.filter(
     (classUnitId) => classUnitId !== PHASE1_CLASS_FIGHTER_UNIT_ID,
@@ -302,6 +305,10 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
     [PRIMAL_ORDER_CHOICE_KEY]: [
       creationChoiceOptionId("magician"),
       creationChoiceOptionId("warden"),
+    ],
+    [PALADIN_FIGHTING_STYLE_CHOICE_KEY]: [
+      creationChoiceOptionId("fighting_style_feat"),
+      creationChoiceOptionId("blessed_warrior"),
     ],
     [CLASS_TOOL_PROFICIENCY_CHOICE_KEY]: SUPPORTED_PROFICIENCY_GRANT_OPTION_IDS,
     [BARD_MULTICLASS_SKILL_PROFICIENCY_CHOICE_KEY]:

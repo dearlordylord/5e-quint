@@ -10,10 +10,11 @@ let ClassSpellAccess : Type = { spellId : Text, spellLevel : Natural }
 let paladin =
       { armorTraining = { categories = [ "light", "medium", "heavy", "shield" ], kind = "trained" }
       , className = "paladin"
-      , description = "SRD Paladin class creation facts for a level-1 character, including class-list prepared Spell Access, Spell Slots, and spellcasting focus facts."
+      , description = "SRD Paladin class creation facts for level-1 characters plus the level-2 Fighting Style class-feature grant, including class-list prepared Spell Access, Spell Slots, and spellcasting focus facts."
       , featureGrants =
         [ { level = 1, unitId = "paladin_lay_on_hands" }
         , { level = 1, unitId = "paladin_weapon_mastery" }
+        , { level = 2, unitId = "paladin_fighting_style" }
         ]
       , hitPointDie = 10
       , id = "class_paladin"
@@ -29,7 +30,7 @@ let paladin =
           }
       , name = "Paladin"
       , primaryAbilities = { abilities = [ "str", "cha" ], kind = "all_of" }
-      , provenance = { kind = "srd-5.2.1", section = "Classes/Paladin.md:3-24,33-35,66-82" }
+      , provenance = { kind = "srd-5.2.1", section = "Classes/Paladin.md:3-24,33-35,66-95" }
       , savingThrowProficiencies = [ "wis", "cha" ]
       , skillProficiencyChoice =
         { choose = 2, options = [ "athletics", "insight", "intimidation", "medicine", "persuasion", "religion" ] }

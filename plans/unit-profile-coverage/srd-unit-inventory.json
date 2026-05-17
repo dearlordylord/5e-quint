@@ -78,6 +78,7 @@
         "srd521:classes/paladin:level-1:mastery-pressure:paladin_weapon_mastery",
         "srd521:classes/paladin:level-1:multiclass-entry:paladin_multiclass_entry_traits",
         "srd521:classes/paladin:level-1:spell-access:paladin_spellcasting",
+        "srd521:classes/paladin:level-2:class-feature-grant:paladin_fighting_style",
         "srd521:classes/ranger:level-1:class-container:ranger_class_container",
         "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy",
         "srd521:classes/ranger:level-1:core-trait:ranger_armor_training",
@@ -175,8 +176,8 @@
       "numerator": 470,
       "percent": "84.5%",
       "rowsByStatus": {
-        "accepted": 288,
-        "accepted-no-battle-effect": 182,
+        "accepted": 289,
+        "accepted-no-battle-effect": 181,
         "owner-evidence-required": 12,
         "battle-runtime-required": 74
       }
@@ -187,16 +188,16 @@
       "non-runtime": 12
     },
     "levelTwoRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 6,
+      "catalog-installed-owner-evidence-present": 7,
       "non-runtime": 12,
       "missing-authored-record": 12,
-      "catalog-only/dead-for-now": 3
+      "catalog-only/dead-for-now": 2
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 293,
+      "catalog-installed-owner-evidence-present": 294,
       "non-runtime": 24,
       "missing-authored-record": 86,
-      "catalog-only/dead-for-now": 153
+      "catalog-only/dead-for-now": 152
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 143,
@@ -13443,20 +13444,31 @@
         "sourceRecordPath": "packages/surface/content/paladin_fighting_style.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "paladin_fighting_style"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "unit-claim",
-        "kind": "selection-grant-container",
-        "owner": "selected Fighting Style feat Unit profiles and future Blessed Warrior Spell Access character owner",
-        "reason": "The class feature opens a level-2 choice between a Fighting Style feat and Blessed Warrior's Cleric cantrip Spell Access. Selected Fighting Style feat Units own executable battle behavior, and Blessed Warrior cantrip access and replacement belong to Character Sheet Spell Access rather than duplicate battle Unit state."
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "future Paladin advancement cantrip replacement owner",
+        "reason": "Blessed Warrior cantrip replacement only occurs on later Paladin level gains after the level-2 acquisition choice is complete."
       },
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit paladin_fighting_style is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L12G-CLASS-PALADIN-FIGHTING-STYLE character-creation Paladin Fighting Style branch and grant-selection support profile; Paladin Fighting Style is discovered from the Surface class-feature acquisition choice, fill-gated to Fighting Style feat or Blessed Warrior, finalized through the selected branch's downstream feat or cantrip choices, and projected without duplicating selected feat or cantrip behavior on the Paladin feature Unit.",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/paladin:level-2:class-feature-grant:paladin_paladins_smite",

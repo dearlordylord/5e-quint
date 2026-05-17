@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "L12G-CLASS-PALADIN-FIGHTING-STYLE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Paladin Fighting Style Support"
     },
     {
@@ -791,7 +791,7 @@ Acceptance:
 
 ### Task 7 - L12G-CLASS-PALADIN-FIGHTING-STYLE - Paladin Fighting Style Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `paladin_fighting_style`. Gate task: 7 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
