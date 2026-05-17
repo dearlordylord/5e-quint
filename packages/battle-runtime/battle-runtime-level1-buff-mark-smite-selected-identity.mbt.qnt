@@ -5,7 +5,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
   var qTargetHp: int
   var qSpellSlotSpentThisTurn: bool
   var qLevel1SlotsRemaining: int
-  var qDivineFavorDamageRiderProjected: bool
+  var qDamageRiderSourceSpellId: str
   var qDamageRiderDamageType: str
   var qDamageRiderDice: int
   var qDamageRiderDieSize: int
@@ -16,7 +16,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     targetHp: int,
     spellSlotSpentThisTurn: bool,
     level1SlotsRemaining: int,
-    divineFavorDamageRiderProjected: bool,
+    damageRiderSourceSpellId: str,
     damageRiderDamageType: str,
     damageRiderDice: int,
     damageRiderDieSize: int,
@@ -26,21 +26,27 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     qTargetHp' = targetHp,
     qSpellSlotSpentThisTurn' = spellSlotSpentThisTurn,
     qLevel1SlotsRemaining' = level1SlotsRemaining,
-    qDivineFavorDamageRiderProjected' = divineFavorDamageRiderProjected,
+    qDamageRiderSourceSpellId' = damageRiderSourceSpellId,
     qDamageRiderDamageType' = damageRiderDamageType,
     qDamageRiderDice' = damageRiderDice,
     qDamageRiderDieSize' = damageRiderDieSize,
     qLastResult' = lastResult,
   }
 
-  action init = recordProjection(0, 12, false, 2, false, "none", 0, 0, "init")
+  action init = recordProjection(0, 12, false, 2, "none", "none", 0, 0, "init")
 
   action doDivineFavorWeaponDamageRider = all {
     qLastResult == "init",
-    recordProjection(1, 5, true, 1, true, "radiant", 1, 4, "divineFavor"),
+    recordProjection(1, 5, true, 1, "divine_favor", "radiant", 1, 4, "divineFavor"),
+  }
+
+  action doDivineSmiteAfterHitDamage = all {
+    qLastResult == "init",
+    recordProjection(0, 1, true, 1, "divine_smite", "radiant", 2, 8, "divineSmite"),
   }
 
   action step = any {
     doDivineFavorWeaponDamageRider,
+    doDivineSmiteAfterHitDamage,
   }
 }

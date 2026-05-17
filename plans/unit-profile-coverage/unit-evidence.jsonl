@@ -99,6 +99,7 @@
 {"unitId":"divine_favor","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV31A","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"divine_favor","evidence":{"tag":"selected-identity-mbt","taskId":"L1E-DIVINE-FAVOR","ownerPath":"packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts"}}
 {"unitId":"divine_smite","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV31C","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
+{"unitId":"divine_smite","evidence":{"tag":"selected-identity-mbt","taskId":"L1E-DIVINE-SMITE","ownerPath":"packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts"}}
 {"unitId":"ensnaring_strike","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV31D","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"searing_smite","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV31E","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"true_strike","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV31F","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}

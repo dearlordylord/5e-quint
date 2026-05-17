@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L1E-DIVINE-SMITE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Divine Smite Selected Identity Replay"
     },
     {
@@ -162,7 +162,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-A-D.md` Divine Favor.
 
 ### Task 3 - L1E-DIVINE-SMITE - Divine Smite Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `divine_smite`, proving after-hit damage
 resolution uses the authored Unit identity and existing supported profile.

@@ -1,5 +1,7 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-DIVINE-FAVOR divine_favor
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-DIVINE-SMITE divine_smite
 // UNIT-IDENTITY-MBT-REPLAY: L1E-DIVINE-FAVOR divine_favor doDivineFavorWeaponDamageRider
+// UNIT-IDENTITY-MBT-REPLAY: L1E-DIVINE-SMITE divine_smite doDivineSmiteAfterHitDamage
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -28,6 +30,7 @@ import {
   combatantId,
   discoverBattleActs,
   initiativeScore,
+  resolveBattleReaction,
   resolveBattleSubject,
   snapshotBattle,
   startBattle,
@@ -37,6 +40,7 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
+  type BattleReactionProcedureChoice,
   type BattleRolledDiceFill,
   type BattleState,
   type BattleSubject,
@@ -46,6 +50,7 @@ import {
 const level1BuffMarkSmiteSelectedIdentityDriverSchema = {
   init: {},
   doDivineFavorWeaponDamageRider: {},
+  doDivineSmiteAfterHitDamage: {},
   step: {},
 } as const;
 type Level1BuffMarkSmiteSelectedIdentityDriverAction = Exclude<
@@ -54,18 +59,23 @@ type Level1BuffMarkSmiteSelectedIdentityDriverAction = Exclude<
 >;
 
 const divineFavorUnitId = "divine_favor";
-type Level1BuffMarkSmiteSpellId = typeof divineFavorUnitId;
+const divineSmiteUnitId = "divine_smite";
+const level1BuffMarkSmiteSpellIds = [
+  divineFavorUnitId,
+  divineSmiteUnitId,
+] as const;
+type Level1BuffMarkSmiteSpellId = (typeof level1BuffMarkSmiteSpellIds)[number];
 
 type Level1BuffMarkSmiteSelectedIdentityProjection = {
   readonly divineFavorActiveRiderCount: number;
   readonly targetHp: number;
   readonly spellSlotSpentThisTurn: boolean;
   readonly level1SlotsRemaining: number;
-  readonly divineFavorDamageRiderProjected: boolean;
+  readonly damageRiderSourceSpellId: Level1BuffMarkSmiteSpellId | "none";
   readonly damageRiderDamageType: "radiant" | "none";
   readonly damageRiderDice: number;
   readonly damageRiderDieSize: number;
-  readonly lastResult: "init" | "divineFavor";
+  readonly lastResult: "init" | "divineFavor" | "divineSmite";
 };
 type SelectedUnitIdentityReplaySequence = {
   readonly name: string;
@@ -73,7 +83,7 @@ type SelectedUnitIdentityReplaySequence = {
   readonly expected: Level1BuffMarkSmiteSelectedIdentityProjection;
 };
 type SelectedUnitIdentityReplay = {
-  readonly taskId: "L1E-DIVINE-FAVOR";
+  readonly taskId: "L1E-DIVINE-FAVOR" | "L1E-DIVINE-SMITE";
   readonly unitId: Level1BuffMarkSmiteSpellId;
   readonly actions: readonly Level1BuffMarkSmiteSelectedIdentityDriverAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
@@ -115,11 +125,32 @@ const selectedUnitIdentityReplays = [
           targetHp: 5,
           spellSlotSpentThisTurn: true,
           level1SlotsRemaining: 1,
-          divineFavorDamageRiderProjected: true,
+          damageRiderSourceSpellId: "divine_favor",
           damageRiderDamageType: "radiant",
           damageRiderDice: 1,
           damageRiderDieSize: 4,
           lastResult: "divineFavor",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "L1E-DIVINE-SMITE",
+    unitId: "divine_smite",
+    actions: ["doDivineSmiteAfterHitDamage"],
+    sequences: [
+      {
+        name: "after-hit-radiant-damage-uses-selected-spell-identity",
+        actions: ["doDivineSmiteAfterHitDamage"],
+        expected: expectedProjection({
+          targetHp: 1,
+          spellSlotSpentThisTurn: true,
+          level1SlotsRemaining: 1,
+          damageRiderSourceSpellId: "divine_smite",
+          damageRiderDamageType: "radiant",
+          damageRiderDice: 2,
+          damageRiderDieSize: 8,
+          lastResult: "divineSmite",
         }),
       },
     ],
@@ -179,70 +210,110 @@ describe("Level 1 buff mark smite selected identity MBT", () => {
 });
 
 function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
-  return defineDriver(
-    level1BuffMarkSmiteSelectedIdentityDriverSchema,
-    () => {
-      let state = level1BuffMarkSmiteBattle();
-      let damageRider:
-        | NonNullable<BattleDamageRollHole["spellWeaponDamageRiders"]>[number]
-        | undefined;
-      let lastResult: Level1BuffMarkSmiteSelectedIdentityProjection["lastResult"] =
-        "init";
+  return defineDriver(level1BuffMarkSmiteSelectedIdentityDriverSchema, () => {
+    let state = level1BuffMarkSmiteBattle();
+    let damageRider:
+      | NonNullable<BattleDamageRollHole["spellWeaponDamageRiders"]>[number]
+      | undefined;
+    let lastResult: Level1BuffMarkSmiteSelectedIdentityProjection["lastResult"] =
+      "init";
 
-      function reset(): void {
-        state = level1BuffMarkSmiteBattle();
+    function reset(): void {
+      state = level1BuffMarkSmiteBattle();
+      damageRider = undefined;
+      lastResult = "init";
+    }
+
+    function recordResolvedResult(
+      result: BattleResolutionResult,
+      resultKind: Exclude<
+        Level1BuffMarkSmiteSelectedIdentityProjection["lastResult"],
+        "init"
+      >,
+    ): void {
+      if (result.tag !== "resolved") {
+        throw new Error(
+          `Expected Level 1 buff mark smite action to resolve, got ${result.tag}.`,
+        );
+      }
+      state = result.state;
+      lastResult = resultKind;
+    }
+
+    return {
+      init: reset,
+      doDivineFavorWeaponDamageRider: () => {
+        state = level1BuffMarkSmiteBattle({
+          preparedSpells: [spellRecord(divineFavorUnitId)],
+        });
         damageRider = undefined;
-        lastResult = "init";
-      }
 
-      function recordResolvedResult(
-        result: BattleResolutionResult,
-        resultKind: Exclude<
-          Level1BuffMarkSmiteSelectedIdentityProjection["lastResult"],
-          "init"
-        >,
-      ): void {
-        if (result.tag !== "resolved") {
-          throw new Error(
-            `Expected Level 1 buff mark smite action to resolve, got ${result.tag}.`,
-          );
+        const cast = resolveBattleSubject({
+          state,
+          subject: bonusActionSpellAct(state, divineFavorUnitId).subject,
+          fills: [],
+        });
+        if (cast.tag !== "resolved") {
+          throw new Error(`Expected Divine Favor to resolve, got ${cast.tag}.`);
         }
-        state = result.state;
-        lastResult = resultKind;
-      }
+        state = cast.state;
 
-      return {
-        init: reset,
-        doDivineFavorWeaponDamageRider: () => {
-          state = level1BuffMarkSmiteBattle({
-            preparedSpells: [spellRecord(divineFavorUnitId)],
-          });
-          damageRider = undefined;
+        const attack = resolveLongswordHit({ state });
+        damageRider = attack.damageRider;
+        recordResolvedResult(attack.result, "divineFavor");
+      },
+      doDivineSmiteAfterHitDamage: () => {
+        state = level1BuffMarkSmiteBattle({
+          preparedSpells: [spellRecord(divineSmiteUnitId)],
+        });
+        damageRider = undefined;
 
-          const cast = resolveBattleSubject({
-            state,
-            subject: bonusActionSpellAct(state, divineFavorUnitId).subject,
-            fills: [],
-          });
-          if (cast.tag !== "resolved") {
-            throw new Error(`Expected Divine Favor to resolve, got ${cast.tag}.`);
-          }
-          state = cast.state;
-
-          const attack = resolveLongswordHit({ state });
-          damageRider = attack.damageRider;
-          recordResolvedResult(attack.result, "divineFavor");
-        },
-        step: () => {},
-        getState: () =>
-          projectLevel1BuffMarkSmiteSelectedIdentityState(
-            state,
-            damageRider,
-            lastResult,
+        const hit = resolveLongswordHitWithAttackRoll({ state });
+        const attackHitWindow = requireAttackHitWindow(hit.afterAttackRoll);
+        const smiteChoice = attackHitBonusActionSpellChoice(
+          attackHitWindow,
+          divineSmiteUnitId,
+        );
+        const afterSmite = resolveBattleReaction({
+          state: attackHitWindow.state,
+          fill: reactionDecisionFill(
+            requireHole(attackHitWindow.holes, "reactionDecision"),
+            {
+              kind: "resolve",
+              reactorId: casterId,
+              choice: {
+                kind: "castAttackHitBonusActionSpell",
+                invocation: smiteChoice.invocation,
+                fills: [],
+              },
+            },
           ),
-      };
-    },
-  );
+        });
+        const afterSmiteDamage = requireNeedsHoles(afterSmite);
+        const damage = requireDamageRollHole(afterSmiteDamage);
+        damageRider = spellWeaponDamageRider(damage, divineSmiteUnitId);
+        recordResolvedResult(
+          resolveBattleSubject({
+            state: afterSmiteDamage.state,
+            subject: hit.subject,
+            fills: [
+              hit.targetFill,
+              hit.attackFill,
+              damageRollFillWithGroups(damage, [[4], [3, 4]]),
+            ],
+          }),
+          "divineSmite",
+        );
+      },
+      step: () => {},
+      getState: () =>
+        projectLevel1BuffMarkSmiteSelectedIdentityState(
+          state,
+          damageRider,
+          lastResult,
+        ),
+    };
+  });
 }
 
 function expectedProjection(
@@ -253,7 +324,7 @@ function expectedProjection(
     targetHp: 12,
     spellSlotSpentThisTurn: false,
     level1SlotsRemaining: 2,
-    divineFavorDamageRiderProjected: false,
+    damageRiderSourceSpellId: "none",
     damageRiderDamageType: "none",
     damageRiderDice: 0,
     damageRiderDieSize: 0,
@@ -389,13 +460,36 @@ function bonusActionSpellAct(
   return act;
 }
 
-function resolveLongswordHit(input: {
+function resolveLongswordHit(input: { readonly state: BattleState }): {
+  readonly damageRider: NonNullable<
+    BattleDamageRollHole["spellWeaponDamageRiders"]
+  >[number];
+  readonly result: BattleResolutionResult;
+} {
+  const hit = resolveLongswordHitWithAttackRoll(input);
+  const damage = requireDamageRollHole(requireNeedsHoles(hit.afterAttackRoll));
+  const damageRider = spellWeaponDamageRider(damage, divineFavorUnitId);
+  return {
+    damageRider,
+    result: resolveBattleSubject({
+      state: input.state,
+      subject: hit.subject,
+      fills: [
+        hit.targetFill,
+        hit.attackFill,
+        damageRollFillWithGroups(damage, [[4], [3]]),
+      ],
+    }),
+  };
+}
+
+function resolveLongswordHitWithAttackRoll(input: {
   readonly state: BattleState;
 }): {
-  readonly damageRider:
-    | NonNullable<BattleDamageRollHole["spellWeaponDamageRiders"]>[number]
-    | undefined;
-  readonly result: BattleResolutionResult;
+  readonly subject: Extract<BattleSubject, { readonly tag: "action" }>;
+  readonly targetFill: Extract<BattleFill, { readonly kind: "targetChoice" }>;
+  readonly attackFill: Extract<BattleFill, { readonly kind: "attackRoll" }>;
+  readonly afterAttackRoll: BattleResolutionResult;
 } {
   const subject = weaponAttackSubject("Longsword");
   const target = requireResultHole(
@@ -415,27 +509,14 @@ function resolveLongswordHit(input: {
     total: 15,
     naturalD20: 10,
   });
-  const damage = requireResultHole(
-    resolveBattleSubject({
+  return {
+    subject,
+    targetFill,
+    attackFill,
+    afterAttackRoll: resolveBattleSubject({
       state: input.state,
       subject,
       fills: [targetFill, attackFill],
-    }),
-    "rolledDice",
-  );
-  const damageRider = damage.spellWeaponDamageRiders?.find(
-    (rider) => rider.sourceSpellId === divineFavorUnitId,
-  );
-  return {
-    damageRider,
-    result: resolveBattleSubject({
-      state: input.state,
-      subject,
-      fills: [
-        targetFill,
-        attackFill,
-        damageRollFillWithGroups(damage, [[4], [3]]),
-      ],
     }),
   };
 }
@@ -541,14 +622,57 @@ function rolledDiceGroup(
   };
 }
 
+function reactionDecisionFill(
+  hole: Extract<BattleHole, { readonly kind: "reactionDecision" }>,
+  value: Extract<BattleFill, { readonly kind: "reactionDecision" }>["value"],
+): Extract<BattleFill, { readonly kind: "reactionDecision" }> {
+  return { kind: "reactionDecision", holeId: hole.holeId, value };
+}
+
+function spellWeaponDamageRider(
+  hole: BattleDamageRollHole,
+  spellId: Level1BuffMarkSmiteSpellId,
+): NonNullable<BattleDamageRollHole["spellWeaponDamageRiders"]>[number] {
+  const rider = hole.spellWeaponDamageRiders?.find(
+    (candidate) => candidate.sourceSpellId === spellId,
+  );
+  if (rider === undefined) {
+    throw new Error(`Expected ${spellId} spell weapon damage rider.`);
+  }
+  return rider;
+}
+
 function requireResultHole<K extends BattleHole["kind"]>(
   result: BattleResolutionResult,
   kind: K,
 ): Extract<BattleHole, { readonly kind: K }> {
+  return requireHole(requireNeedsHoles(result).holes, kind);
+}
+
+function requireNeedsHoles(
+  result: BattleResolutionResult,
+): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> {
   if (result.tag !== "needsHoles") {
     throw new Error(`Expected needsHoles result, got ${result.tag}.`);
   }
-  const hole = result.holes.find(
+  return result;
+}
+
+function requireDamageRollHole(
+  result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
+): BattleDamageRollHole {
+  const hole = requireHole(result.holes, "rolledDice");
+  if (!("attack" in hole)) {
+    throw new Error("Expected attack damage roll hole.");
+  }
+  return hole;
+}
+
+function requireHole<K extends BattleHole["kind"]>(
+  holes: readonly BattleHole[],
+  kind: K,
+): Extract<BattleHole, { readonly kind: K }> {
+  const hole = holes.find(
     (candidate): candidate is Extract<BattleHole, { readonly kind: K }> =>
       candidate.kind === kind,
   );
@@ -556,6 +680,42 @@ function requireResultHole<K extends BattleHole["kind"]>(
     throw new Error(`Expected ${kind} hole.`);
   }
   return hole;
+}
+
+function requireAttackHitWindow(
+  result: BattleResolutionResult,
+): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> {
+  if (
+    result.tag !== "needsHoles" ||
+    result.snapshot.pendingReaction?.trigger !== "attackHit"
+  ) {
+    throw new Error("Expected attack-hit reaction window.");
+  }
+  return result;
+}
+
+function attackHitBonusActionSpellChoice(
+  result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
+  spellId: Level1BuffMarkSmiteSpellId,
+): Extract<
+  BattleReactionProcedureChoice,
+  { readonly kind: "castAttackHitBonusActionSpell" }
+> {
+  const choice = result.snapshot.pendingReaction?.choices.find(
+    (
+      candidate,
+    ): candidate is Extract<
+      BattleReactionProcedureChoice,
+      { readonly kind: "castAttackHitBonusActionSpell" }
+    > =>
+      candidate.kind === "castAttackHitBonusActionSpell" &&
+      candidate.reactorId === casterId &&
+      candidate.invocation.spellId === spellId,
+  );
+  if (choice === undefined) {
+    throw new Error(`Expected ${spellId} after-hit Bonus Action Spell choice.`);
+  }
+  return choice;
 }
 
 function projectLevel1BuffMarkSmiteSelectedIdentityState(
@@ -578,8 +738,7 @@ function projectLevel1BuffMarkSmiteSelectedIdentityState(
       state.currentTurnResources.spellSlotExpendedThisTurn,
     level1SlotsRemaining: level1SlotsRemaining(state),
     divineFavorActiveRiderCount: divineFavorActiveRiderCount(state),
-    divineFavorDamageRiderProjected:
-      damageRider?.sourceSpellId === divineFavorUnitId,
+    damageRiderSourceSpellId: damageRiderSourceSpellId(damageRider),
     damageRiderDamageType:
       damageRider?.damage.damageType === "radiant" ? "radiant" : "none",
     damageRiderDice: damageRider?.damage.expr.dice ?? 0,
@@ -588,13 +747,37 @@ function projectLevel1BuffMarkSmiteSelectedIdentityState(
   };
 }
 
+function damageRiderSourceSpellId(
+  damageRider:
+    | NonNullable<BattleDamageRollHole["spellWeaponDamageRiders"]>[number]
+    | undefined,
+): Level1BuffMarkSmiteSelectedIdentityProjection["damageRiderSourceSpellId"] {
+  if (damageRider === undefined) {
+    return "none";
+  }
+  if (isLevel1BuffMarkSmiteSpellId(damageRider.sourceSpellId)) {
+    return damageRider.sourceSpellId;
+  }
+  throw new Error(
+    `Unexpected damage rider source spell id ${damageRider.sourceSpellId}.`,
+  );
+}
+
+function isLevel1BuffMarkSmiteSpellId(
+  value: string,
+): value is Level1BuffMarkSmiteSpellId {
+  return level1BuffMarkSmiteSpellIds.some((spellId) => spellId === value);
+}
+
 function divineFavorActiveRiderCount(state: BattleState): number {
   return (
-    state.combatants.get(casterId)?.activeEffects.filter(
-      (effect) =>
-        effect.kind === "spellWeaponDamageRider" &&
-        effect.sourceSpellId === divineFavorUnitId,
-    ).length ?? 0
+    state.combatants
+      .get(casterId)
+      ?.activeEffects.filter(
+        (effect) =>
+          effect.kind === "spellWeaponDamageRider" &&
+          effect.sourceSpellId === divineFavorUnitId,
+      ).length ?? 0
   );
 }
 
@@ -624,9 +807,8 @@ function normalizeLevel1BuffMarkSmiteSelectedIdentityQuintState(
       state["qLevel1SlotsRemaining"],
       "qLevel1SlotsRemaining",
     ),
-    divineFavorDamageRiderProjected: booleanField(
-      state,
-      "qDivineFavorDamageRiderProjected",
+    damageRiderSourceSpellId: damageRiderSourceSpellIdFromQuint(
+      state["qDamageRiderSourceSpellId"],
     ),
     damageRiderDamageType: damageRiderDamageType(
       state["qDamageRiderDamageType"],
@@ -665,6 +847,18 @@ function booleanField(
   throw new Error(`Expected Quint boolean field ${field}.`);
 }
 
+function damageRiderSourceSpellIdFromQuint(
+  raw: unknown,
+): Level1BuffMarkSmiteSelectedIdentityProjection["damageRiderSourceSpellId"] {
+  if (raw === "none") {
+    return raw;
+  }
+  if (typeof raw === "string" && isLevel1BuffMarkSmiteSpellId(raw)) {
+    return raw;
+  }
+  throw new Error(`Unexpected damage rider source spell id ${String(raw)}.`);
+}
+
 function damageRiderDamageType(
   raw: unknown,
 ): Level1BuffMarkSmiteSelectedIdentityProjection["damageRiderDamageType"] {
@@ -677,7 +871,7 @@ function damageRiderDamageType(
 function mbtLastResult(
   raw: unknown,
 ): Level1BuffMarkSmiteSelectedIdentityProjection["lastResult"] {
-  if (raw === "init" || raw === "divineFavor") {
+  if (raw === "init" || raw === "divineFavor" || raw === "divineSmite") {
     return raw;
   }
   throw new Error(`Unexpected MBT result ${String(raw)}.`);

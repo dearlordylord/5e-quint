@@ -93,8 +93,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 93,
-      "numerator": 48,
-      "percent": "51.6%"
+      "numerator": 49,
+      "percent": "52.7%"
     },
     "supportedProfileCoverage": {
       "denominator": 117,
@@ -7503,6 +7503,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV31C"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1E-DIVINE-SMITE"
         }
       ],
       "executableMechanics": true,
