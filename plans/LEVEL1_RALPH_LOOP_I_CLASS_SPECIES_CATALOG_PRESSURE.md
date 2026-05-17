@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "L1I-WARLOCK-WIZARD-KNOWLEDGE-FEATURES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Warlock Wizard Knowledge Feature Catalog Pressure"
     },
     {
@@ -170,7 +170,7 @@ Every task runs:
 | 6 | L1I-PALADIN-SMITE-STYLE-SURFACE - Paladin Smite And Fighting Style Surface Pressure | done | 1 | closure artifact and unsupported-profile claims for Paladin Fighting Style and Paladin's Smite |
 | 7 | L1I-RANGER-LATER-FEATURES - Ranger Later Feature Catalog Pressure | done | 1 | Ranger feature disposition without stealing D Favored Enemy work |
 | 8 | L1I-MONK-BODY-AND-MIND - Monk Body And Mind Catalog Pressure | done | 1 | Monk feature disposition without stealing D Martial Arts scaling |
-| 9 | L1I-WARLOCK-WIZARD-KNOWLEDGE-FEATURES - Warlock Wizard Knowledge Feature Catalog Pressure | ready-for-research | 1 | Warlock/Wizard knowledge-feature disposition without stealing D invocation work |
+| 9 | L1I-WARLOCK-WIZARD-KNOWLEDGE-FEATURES - Warlock Wizard Knowledge Feature Catalog Pressure | done | 1 | Warlock/Wizard knowledge-feature disposition without stealing D invocation work |
 | 10 | L1I-SPECIES-TRAIT-PRESSURE-SPLIT - Species Trait Catalog Pressure Split | ready-for-research | 1 | split species traits into runtime-supported, runtime-detached, later-level, or follow-up lanes |
 | 11 | L1I-DRUID-NATURES-WARD - Druid Nature's Ward Catalog Pressure | ready-for-research | 1 | Druid later feature disposition without stealing D Primal Order work |
 | 12 | L1I-BARD-JACK-OF-ALL-TRADES-PROFILE - Bard Jack Of All Trades Ability Check Profile | ready-for-research | 4 | decide the smallest skill-proficiency-aware Ability Check half-Proficiency Bonus profile boundary |
@@ -331,12 +331,26 @@ promoted battle Unit profile, and the task does not touch D-owned
 
 ### Task 9 - L1I-WARLOCK-WIZARD-KNOWLEDGE-FEATURES - Warlock Wizard Knowledge Feature Catalog Pressure
 
-Status: `ready-for-research`
+Status: `done`
 
 Units: `warlock_contact_patron`, `warlock_fiend_spells`, `wizard_scholar`.
 
 Do not touch `warlock_eldritch_invocations` or `wizard_arcane_recovery`; D owns
 those selected identity tasks. Classify the listed features only.
+
+Result:
+`plans/unit-profile-coverage/L1I_CLASS_SPECIES_WARLOCK_WIZARD_KNOWLEDGE_FEATURES_CLOSURE.md`.
+The three Warlock/Wizard knowledge-feature records are closed as explicit
+`unsupported-profile` claims. `warlock_contact_patron` is a level-9 Spell
+Access and once-per-Long-Rest Contact Other Plane no-slot cast whose
+feature-scoped automatic Intelligence Saving Throw success needs a future
+feature-scoped spell-invocation override owner. `warlock_fiend_spells` is a
+level-3 subclass Spell Access progression whose authored record currently
+carries only the level-3 grants, not the level-5, level-7, and level-9
+threshold rows. `wizard_scholar` is a level-2 build-time Expertise choice
+constrained to six skills in which the Wizard already has proficiency; future
+support should reuse the existing owned-skill Expertise path with that
+constrained filter rather than create a Wizard-only proficiency adapter.
 
 ### Task 10 - L1I-SPECIES-TRAIT-PRESSURE-SPLIT - Species Trait Catalog Pressure Split
 

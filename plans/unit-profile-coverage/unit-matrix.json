@@ -17543,6 +17543,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "later-level-only",
+          "owner": "future Contact Patron Spell Access and feature-scoped spell-invocation override owner",
+          "reason": "The feature is acquired after level 1, adds Contact Other Plane Spell Access, and changes only the Contact Patron no-slot Spell Invocation used to contact the patron by auto-succeeding on Contact Other Plane's Intelligence Saving Throw. Current promoted owners handle Favored Enemy's narrower Hunter's Mark free-cast resource and selected invocation Spell Access, not this level-9 feature-scoped save override or its table-mediated divination answers."
+        },
+        "reason": "Contact Patron is a level-9 always-prepared Contact Other Plane Spell Access and once-per-Long-Rest patron-contact no-slot cast with a feature-scoped automatic Intelligence Saving Throw success; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -17561,6 +17571,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "later-level-only",
+          "owner": "future subclass Spell Access progression owner",
+          "reason": "The feature is acquired after level 1 and grants progressively level-gated prepared Spell Access. The authored Surface record contains the level-3 grants but lacks the level-5, level-7, and level-9 threshold grants, so promoting the record now would overstate RAW support for the full Fiend Spells table."
+        },
+        "reason": "Fiend Spells is a level-3 subclass always-prepared Spell Access progression across Warlock levels 3, 5, 7, and 9; no standalone promoted battle Unit profile is claimed for the partial authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -18219,6 +18239,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "later-level-only",
+          "owner": "future constrained Character Creation skill Expertise choice owner",
+          "reason": "The feature is acquired after level 1 and belongs to durable Character Sheet proficiency projection. Existing Rogue Expertise support admits owned skill proficiencies without Expertise, but Scholar additionally intersects that owned-skill set with a fixed six-skill list; the current authored modify-roll shape cannot represent that acquisition-time prerequisite without semantic leakage."
+        },
+        "reason": "Scholar is a level-2 build-time Expertise choice constrained to one of six skills in which the character already has proficiency; no standalone promoted battle Unit profile is claimed until the constrained Character Creation Expertise choice is modeled.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
