@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "L1E-SEARING-SMITE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Searing Smite Selected Identity Replay"
     },
     {
@@ -227,7 +227,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-E-L.md` Longstrider.
 
 ### Task 10 - L1E-SEARING-SMITE - Searing Smite Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `searing_smite`, including after-hit timed
 damage and save cleanup within the supported runtime boundary.

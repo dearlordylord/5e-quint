@@ -23,7 +23,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Runtime mapping coverage | 62/62 | 100% |
 | Runtime parity coverage | 62/62 | 100% |
 | Deterministic admission/projection coverage | 94/94 | 100% |
-| Selected identity MBT coverage | 72/94 | 76.6% |
+| Selected identity MBT coverage | 73/94 | 77.7% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -949,6 +949,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `resistance` | `spell.invocation-damage-reduction` | roll-modifier-buff | `packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts` |
 | `sacred_flame` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | level1-damage-spell-selected-identity | `packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts` |
 | `sanctuary` | `spell.invocation-sanctuary-targeting-interdiction` | L1H-SANCTUARY | `packages/battle-runtime/src/sanctuary-selected-identity.mbt.test.ts` |
+| `searing_smite` | `spell.invocation-after-hit-timed-damage-save` | L1E-SEARING-SMITE | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
 | `shocking_grasp` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | attack-spell-shape | `packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts` |
 | `sorcerous_burst` | `spell.invocation-damage-save-or-attack` | level1-damage-spell-selected-identity | `packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts` |
 | `spare_the_dying` | `spell.invocation-make-stable` | healing-stabilization | `packages/battle-runtime/src/healing-stabilization-selected-identity.mbt.test.ts` |

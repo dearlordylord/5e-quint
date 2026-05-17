@@ -6,6 +6,7 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-HUNTERS-MARK hunters_mark
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-HEX hex
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-LONGSTRIDER longstrider
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-SEARING-SMITE searing_smite
 // UNIT-IDENTITY-MBT-REPLAY: L1E-DIVINE-FAVOR divine_favor doDivineFavorWeaponDamageRider
 // UNIT-IDENTITY-MBT-REPLAY: L1E-DIVINE-SMITE divine_smite doDivineSmiteAfterHitDamage
 // UNIT-IDENTITY-MBT-REPLAY: L1E-ENSNARING-STRIKE ensnaring_strike doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape
@@ -14,6 +15,7 @@
 // UNIT-IDENTITY-MBT-REPLAY: L1E-HUNTERS-MARK hunters_mark doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer
 // UNIT-IDENTITY-MBT-REPLAY: L1E-HEX hex doHexMarkedDamageRiderAndLaterTurnTransfer
 // UNIT-IDENTITY-MBT-REPLAY: L1E-LONGSTRIDER longstrider doLongstriderSpeedIncrease
+// UNIT-IDENTITY-MBT-REPLAY: L1E-SEARING-SMITE searing_smite doSearingSmiteAfterHitTimedDamageAndSaveCleanup
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -69,6 +71,7 @@ import {
 import type {
   BattleActiveEffect,
   BattleSpellTurnStartDamageRollHole,
+  BattleSpellTurnStartSavingThrowOutcomeHole,
 } from "./battle-reducer.ts";
 import { KnockedOutConditionState } from "./battle-reducer.ts";
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
@@ -83,6 +86,7 @@ const level1BuffMarkSmiteSelectedIdentityDriverSchema = {
   doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer: {},
   doHexMarkedDamageRiderAndLaterTurnTransfer: {},
   doLongstriderSpeedIncrease: {},
+  doSearingSmiteAfterHitTimedDamageAndSaveCleanup: {},
   step: {},
 } as const;
 type Level1BuffMarkSmiteSelectedIdentityDriverAction = Exclude<
@@ -98,6 +102,7 @@ const heroismUnitId = "heroism";
 const huntersMarkUnitId = "hunters_mark";
 const hexUnitId = "hex";
 const longstriderUnitId = "longstrider";
+const searingSmiteUnitId = "searing_smite";
 const level1BuffMarkSmiteSpellIds = [
   divineFavorUnitId,
   divineSmiteUnitId,
@@ -107,12 +112,20 @@ const level1BuffMarkSmiteSpellIds = [
   huntersMarkUnitId,
   hexUnitId,
   longstriderUnitId,
+  searingSmiteUnitId,
 ] as const;
 type Level1BuffMarkSmiteSpellId = (typeof level1BuffMarkSmiteSpellIds)[number];
+const spellWeaponDamageRiderSourceSpellIds = [
+  divineFavorUnitId,
+  divineSmiteUnitId,
+  searingSmiteUnitId,
+] as const satisfies ReadonlyArray<Level1BuffMarkSmiteSpellId>;
+type SpellWeaponDamageRiderSourceSpellId =
+  (typeof spellWeaponDamageRiderSourceSpellIds)[number];
 const damageRiderSourceSpellIds = [
   divineFavorUnitId,
   divineSmiteUnitId,
-] as const satisfies ReadonlyArray<Level1BuffMarkSmiteSpellId>;
+] as const satisfies ReadonlyArray<SpellWeaponDamageRiderSourceSpellId>;
 type DamageRiderSourceSpellId =
   | (typeof damageRiderSourceSpellIds)[number]
   | "none";
@@ -134,7 +147,8 @@ type BonusActionCastSpellId =
   | typeof hexUnitId;
 type AttackHitBonusActionSpellId =
   | typeof divineSmiteUnitId
-  | typeof ensnaringStrikeUnitId;
+  | typeof ensnaringStrikeUnitId
+  | typeof searingSmiteUnitId;
 type ActionCastSpellId =
   | typeof falseLifeUnitId
   | typeof heroismUnitId
@@ -154,6 +168,10 @@ type HeroismTurnStartTemporaryHitPointsEffect = Extract<
 type LongstriderSpeedDeltaEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "speedDelta" }
+>;
+type SearingSmiteTurnStartDamageAndSaveEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "spellTurnStartDamageAndSave" }
 >;
 type HexMarkedTarget = "target" | "transferTarget" | "none";
 type HexTransferKind = "awaitingTargetDrop" | "availableAfterTurn" | "none";
@@ -231,6 +249,7 @@ type Level1BuffMarkSmiteSelectedIdentityProjection = {
   readonly hexActiveMarkTransferKind: HexTransferKind;
   readonly hexActiveMarkRetargetTiming: HexRetargetTiming;
   readonly hexTransferVisibleOnDropTurn: boolean;
+  readonly searingSmiteLifecycle: SearingSmiteLifecycleProjection;
   readonly lastResult:
     | "init"
     | "divineFavor"
@@ -240,7 +259,8 @@ type Level1BuffMarkSmiteSelectedIdentityProjection = {
     | "heroism"
     | "huntersMark"
     | "hex"
-    | "longstrider";
+    | "longstrider"
+    | "searingSmite";
 };
 type EnsnaringStrikeLifecycleProjection = Pick<
   Level1BuffMarkSmiteSelectedIdentityProjection,
@@ -298,6 +318,27 @@ type HexActiveMarkProjection = Pick<
   | "hexActiveMarkTransferKind"
   | "hexActiveMarkRetargetTiming"
 >;
+type SearingSmiteDamageProjection = {
+  readonly sourceSpellId: typeof searingSmiteUnitId;
+  readonly damageType: "fire";
+  readonly dice: number;
+  readonly dieSize: number;
+};
+type SearingSmiteTurnStartSaveProjection = {
+  readonly sourceSpellId: typeof searingSmiteUnitId;
+  readonly ability: "con";
+  readonly successEnds: "spell";
+};
+type SearingSmiteLifecycleProjection =
+  | { readonly tag: "none" }
+  | {
+      readonly tag: "afterHitTimedDamageAndSaveCleanup";
+      readonly immediateDamage: SearingSmiteDamageProjection;
+      readonly activeBeforeSuccessfulSave: true;
+      readonly turnStartDamage: SearingSmiteDamageProjection;
+      readonly turnStartSave: SearingSmiteTurnStartSaveProjection;
+      readonly activeAfterSuccessfulSave: false;
+    };
 type SelectedUnitIdentityReplaySequence = {
   readonly name: string;
   readonly actions: readonly Level1BuffMarkSmiteSelectedIdentityDriverAction[];
@@ -312,7 +353,8 @@ type SelectedUnitIdentityReplay = {
     | "L1E-HEROISM"
     | "L1E-HUNTERS-MARK"
     | "L1E-HEX"
-    | "L1E-LONGSTRIDER";
+    | "L1E-LONGSTRIDER"
+    | "L1E-SEARING-SMITE";
   readonly unitId: Level1BuffMarkSmiteSpellId;
   readonly actions: readonly Level1BuffMarkSmiteSelectedIdentityDriverAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
@@ -564,6 +606,45 @@ const selectedUnitIdentityReplays = [
       },
     ],
   },
+  {
+    taskId: "L1E-SEARING-SMITE",
+    unitId: "searing_smite",
+    actions: ["doSearingSmiteAfterHitTimedDamageAndSaveCleanup"],
+    sequences: [
+      {
+        name: "after-hit-fire-damage-turn-start-damage-and-save-cleanup",
+        actions: ["doSearingSmiteAfterHitTimedDamageAndSaveCleanup"],
+        expected: expectedProjection({
+          targetHp: 1,
+          spellSlotSpentThisTurn: false,
+          level1SlotsRemaining: 1,
+          searingSmiteLifecycle: {
+            tag: "afterHitTimedDamageAndSaveCleanup",
+            immediateDamage: {
+              sourceSpellId: "searing_smite",
+              damageType: "fire",
+              dice: 1,
+              dieSize: 6,
+            },
+            activeBeforeSuccessfulSave: true,
+            turnStartDamage: {
+              sourceSpellId: "searing_smite",
+              damageType: "fire",
+              dice: 1,
+              dieSize: 6,
+            },
+            turnStartSave: {
+              sourceSpellId: "searing_smite",
+              ability: "con",
+              successEnds: "spell",
+            },
+            activeAfterSuccessfulSave: false,
+          },
+          lastResult: "searingSmite",
+        }),
+      },
+    ],
+  },
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
 describe("Level 1 buff mark smite selected identity MBT", () => {
@@ -638,6 +719,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
     let falseLifeTemporaryHitPoints =
       defaultFalseLifeTemporaryHitPointsProjection();
     let heroismEffects = defaultHeroismEffectsProjection();
+    let searingSmiteLifecycle = defaultSearingSmiteLifecycleProjection();
     let lastResult: Level1BuffMarkSmiteSelectedIdentityProjection["lastResult"] =
       "init";
 
@@ -653,6 +735,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
       falseLifeTemporaryHitPoints =
         defaultFalseLifeTemporaryHitPointsProjection();
       heroismEffects = defaultHeroismEffectsProjection();
+      searingSmiteLifecycle = defaultSearingSmiteLifecycleProjection();
     }
 
     function reset(): void {
@@ -1115,16 +1198,90 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
             state,
             subject: act.subject,
             fills: [
-              spellTargetFill(
-                target,
-                longstriderUnitId,
-                casterId,
-                targetId,
-              ),
+              spellTargetFill(target, longstriderUnitId, casterId, targetId),
             ],
           }),
           "longstrider",
         );
+      },
+      doSearingSmiteAfterHitTimedDamageAndSaveCleanup: () => {
+        state = level1BuffMarkSmiteBattle({
+          preparedSpells: [spellRecord(searingSmiteUnitId)],
+        });
+        resetProcedureProjections();
+
+        const hit = resolveLongswordHitWithAttackRoll({ state });
+        const attackHitWindow = requireAttackHitWindow(hit.afterAttackRoll);
+        const searingSmiteChoice = attackHitBonusActionSpellChoice(
+          attackHitWindow,
+          searingSmiteUnitId,
+        );
+        const afterSearingSmite = resolveBattleReaction({
+          state: attackHitWindow.state,
+          fill: reactionDecisionFill(
+            requireHole(attackHitWindow.holes, "reactionDecision"),
+            {
+              kind: "resolve",
+              reactorId: casterId,
+              choice: {
+                kind: "castAttackHitBonusActionSpell",
+                invocation: searingSmiteChoice.invocation,
+                fills: [],
+              },
+            },
+          ),
+        });
+        const afterSearingSmiteDamage = requireNeedsHoles(afterSearingSmite);
+        const weaponDamage = requireDamageRollHole(afterSearingSmiteDamage);
+        const immediateDamage = spellWeaponDamageRider(
+          weaponDamage,
+          searingSmiteUnitId,
+        );
+        const afterWeaponDamage = resolveBattleSubject({
+          state: afterSearingSmiteDamage.state,
+          subject: hit.subject,
+          fills: [
+            hit.targetFill,
+            hit.attackFill,
+            damageRollFillWithGroups(weaponDamage, [[4], [3]]),
+          ],
+        });
+        if (afterWeaponDamage.tag !== "resolved") {
+          throw new Error("Expected Searing Smite host attack to resolve.");
+        }
+        const activeBeforeSuccessfulSave =
+          searingSmiteActiveEffect(afterWeaponDamage.state) !== undefined;
+
+        const awaitingTurnStart = requireNeedsHoles(
+          endTurn({
+            state: afterWeaponDamage.state,
+            actorId: casterId,
+          }),
+        );
+        const turnStartDamage =
+          requireSpellTurnStartDamageRollHole(awaitingTurnStart);
+        const turnStartSave =
+          requireSpellTurnStartSavingThrowOutcomeHole(awaitingTurnStart);
+        recordResolvedResult(
+          endTurn({
+            state: afterWeaponDamage.state,
+            actorId: casterId,
+            fills: [
+              damageRollFillWithGroups(turnStartDamage, [[4]]),
+              savingThrowOutcomeFill(turnStartSave, [
+                { targetId, succeeded: true },
+              ]),
+            ],
+          }),
+          "searingSmite",
+        );
+        searingSmiteLifecycle = searingSmiteLifecycleProjection({
+          immediateDamage,
+          activeBeforeSuccessfulSave,
+          turnStartDamage,
+          turnStartSave,
+          stateAfterSuccessfulSave: state,
+        });
       },
       step: () => {},
       getState: () =>
@@ -1140,6 +1297,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
           ensnaringStrikeLifecycle,
           falseLifeTemporaryHitPoints,
           heroismEffects,
+          searingSmiteLifecycle,
           lastResult,
         ),
     };
@@ -1205,6 +1363,7 @@ function expectedProjection(
     hexActiveMarkTransferKind: "none",
     hexActiveMarkRetargetTiming: "none",
     hexTransferVisibleOnDropTurn: false,
+    searingSmiteLifecycle: defaultSearingSmiteLifecycleProjection(),
     lastResult: "init",
     ...overrides,
   };
@@ -1240,6 +1399,10 @@ function defaultHeroismEffectsProjection(): HeroismEffectsProjection {
     turnStartTemporaryHitPointsSourceSpellId: "none",
     turnStartTemporaryHitPointsAmount: 0,
   };
+}
+
+function defaultSearingSmiteLifecycleProjection(): SearingSmiteLifecycleProjection {
+  return { tag: "none" };
 }
 
 function level1BuffMarkSmiteBattle(
@@ -1671,7 +1834,7 @@ function abilityCheckFill(
 
 function spellWeaponDamageRider(
   hole: BattleDamageRollHole,
-  spellId: Exclude<DamageRiderSourceSpellId, "none">,
+  spellId: SpellWeaponDamageRiderSourceSpellId,
 ): NonNullable<BattleDamageRollHole["spellWeaponDamageRiders"]>[number] {
   const rider = hole.spellWeaponDamageRiders?.find(
     (candidate) => candidate.sourceSpellId === spellId,
@@ -1746,6 +1909,16 @@ function requireSpellTurnStartDamageRollHole(
   const hole = requireHole(result.holes, "rolledDice");
   if (!("spellTurnStartDamage" in hole)) {
     throw new Error("Expected spell turn-start damage roll hole.");
+  }
+  return hole;
+}
+
+function requireSpellTurnStartSavingThrowOutcomeHole(
+  result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
+): BattleSpellTurnStartSavingThrowOutcomeHole {
+  const hole = requireHole(result.holes, "savingThrowOutcome");
+  if (!("spellTurnStartSave" in hole)) {
+    throw new Error("Expected spell turn-start Saving Throw outcome hole.");
   }
   return hole;
 }
@@ -1926,6 +2099,122 @@ function ensnaringStrikeTurnStartDamageSourceSpellId(
     : "none";
 }
 
+function searingSmiteActiveEffect(
+  state: BattleState,
+): SearingSmiteTurnStartDamageAndSaveEffect | undefined {
+  const target = state.combatants.get(targetId);
+  if (target === undefined) {
+    throw new Error("Expected Searing Smite target.");
+  }
+  return target.activeEffects.find(
+    (effect): effect is SearingSmiteTurnStartDamageAndSaveEffect =>
+      effect.kind === "spellTurnStartDamageAndSave" &&
+      effect.sourceSpellId === searingSmiteUnitId &&
+      effect.sourceCombatantId === casterId,
+  );
+}
+
+function searingSmiteLifecycleProjection(input: {
+  readonly immediateDamage: NonNullable<
+    BattleDamageRollHole["spellWeaponDamageRiders"]
+  >[number];
+  readonly activeBeforeSuccessfulSave: boolean;
+  readonly turnStartDamage: BattleSpellTurnStartDamageRollHole;
+  readonly turnStartSave: BattleSpellTurnStartSavingThrowOutcomeHole;
+  readonly stateAfterSuccessfulSave: BattleState;
+}): SearingSmiteLifecycleProjection {
+  if (!input.activeBeforeSuccessfulSave) {
+    throw new Error("Expected Searing Smite timed damage to be active.");
+  }
+  if (searingSmiteActiveEffect(input.stateAfterSuccessfulSave) !== undefined) {
+    throw new Error(
+      "Expected Searing Smite successful save to remove timed damage.",
+    );
+  }
+  return {
+    tag: "afterHitTimedDamageAndSaveCleanup",
+    immediateDamage: searingSmiteDamageProjectionFromRider(
+      input.immediateDamage,
+    ),
+    activeBeforeSuccessfulSave: true,
+    turnStartDamage: searingSmiteTurnStartDamageProjection(
+      input.turnStartDamage,
+    ),
+    turnStartSave: searingSmiteTurnStartSaveProjection(input.turnStartSave),
+    activeAfterSuccessfulSave: false,
+  };
+}
+
+function searingSmiteDamageProjectionFromRider(
+  rider: NonNullable<BattleDamageRollHole["spellWeaponDamageRiders"]>[number],
+): SearingSmiteDamageProjection {
+  return searingSmiteDamageProjection({
+    sourceSpellId: rider.sourceSpellId,
+    damageType: rider.damage.damageType,
+    dice: rider.damage.expr.dice,
+    dieSize: rider.damage.expr.dieSize,
+  });
+}
+
+function searingSmiteTurnStartDamageProjection(
+  hole: BattleSpellTurnStartDamageRollHole,
+): SearingSmiteDamageProjection {
+  return searingSmiteDamageProjection({
+    sourceSpellId: hole.spellTurnStartDamage.sourceSpellId,
+    damageType: hole.spellTurnStartDamage.damage.damageType,
+    dice: hole.spellTurnStartDamage.damage.expr.dice,
+    dieSize: hole.spellTurnStartDamage.damage.expr.dieSize,
+  });
+}
+
+function searingSmiteDamageProjection(input: {
+  readonly sourceSpellId: string;
+  readonly damageType: string;
+  readonly dice: number;
+  readonly dieSize: number;
+}): SearingSmiteDamageProjection {
+  if (input.sourceSpellId !== searingSmiteUnitId) {
+    throw new Error(
+      `Unexpected Searing Smite source spell id ${input.sourceSpellId}.`,
+    );
+  }
+  if (input.damageType !== "fire") {
+    throw new Error(
+      `Unexpected Searing Smite damage type ${input.damageType}.`,
+    );
+  }
+  return {
+    sourceSpellId: searingSmiteUnitId,
+    damageType: "fire",
+    dice: input.dice,
+    dieSize: input.dieSize,
+  };
+}
+
+function searingSmiteTurnStartSaveProjection(
+  hole: BattleSpellTurnStartSavingThrowOutcomeHole,
+): SearingSmiteTurnStartSaveProjection {
+  const save = hole.spellTurnStartSave.save;
+  if (hole.spellTurnStartSave.sourceSpellId !== searingSmiteUnitId) {
+    throw new Error(
+      `Unexpected Searing Smite source spell id ${hole.spellTurnStartSave.sourceSpellId}.`,
+    );
+  }
+  if (save.ability !== "con") {
+    throw new Error(`Unexpected Searing Smite save ability ${save.ability}.`);
+  }
+  if (save.successEnds !== "spell") {
+    throw new Error(
+      `Unexpected Searing Smite save success end ${save.successEnds}.`,
+    );
+  }
+  return {
+    sourceSpellId: searingSmiteUnitId,
+    ability: "con",
+    successEnds: "spell",
+  };
+}
+
 function projectLevel1BuffMarkSmiteSelectedIdentityState(
   state: BattleState,
   damageRider:
@@ -1944,6 +2233,7 @@ function projectLevel1BuffMarkSmiteSelectedIdentityState(
   ensnaringStrikeLifecycle: EnsnaringStrikeLifecycleProjection,
   falseLifeTemporaryHitPoints: FalseLifeTemporaryHitPointsProjection,
   heroismEffects: HeroismEffectsProjection,
+  searingSmiteLifecycle: SearingSmiteLifecycleProjection,
   lastResult: Level1BuffMarkSmiteSelectedIdentityProjection["lastResult"],
 ): Level1BuffMarkSmiteSelectedIdentityProjection {
   const snapshot = snapshotBattle(state);
@@ -1987,6 +2277,7 @@ function projectLevel1BuffMarkSmiteSelectedIdentityState(
     ...hexActiveMarkProjection(state),
     hexTransferKindOnDropTurn,
     hexTransferVisibleOnDropTurn,
+    searingSmiteLifecycle,
     lastResult,
   };
 }
@@ -2092,9 +2383,7 @@ function longstriderSpeedEffectProjection(
   };
 }
 
-function longstriderSpeedEffect(
-  state: BattleState,
-):
+function longstriderSpeedEffect(state: BattleState):
   | {
       readonly target: Exclude<LongstriderSpeedEffectTarget, "none">;
       readonly effect: LongstriderSpeedDeltaEffect;
@@ -2596,6 +2885,7 @@ function normalizeLevel1BuffMarkSmiteSelectedIdentityQuintState(
       state,
       "qHexTransferVisibleOnDropTurn",
     ),
+    searingSmiteLifecycle: searingSmiteLifecycleFromQuint(state),
     lastResult: mbtLastResult(state["qLastResult"]),
   };
 }
@@ -2817,6 +3107,201 @@ function hexRetargetTimingFromQuint(raw: unknown): HexRetargetTiming {
   throw new Error(`Unexpected Hex retarget timing ${String(raw)}.`);
 }
 
+function searingSmiteLifecycleFromQuint(
+  state: Readonly<Record<string, unknown>>,
+): SearingSmiteLifecycleProjection {
+  const immediateSource = state["qSearingSmiteImmediateDamageSourceSpellId"];
+  if (immediateSource === "none") {
+    assertSearingSmiteNoLifecycleFromQuint(state);
+    return { tag: "none" };
+  }
+  return {
+    tag: "afterHitTimedDamageAndSaveCleanup",
+    immediateDamage: {
+      sourceSpellId: searingSmiteRequiredSourceSpellIdFromQuint(
+        immediateSource,
+        "immediate damage",
+      ),
+      damageType: searingSmiteRequiredDamageTypeFromQuint(
+        state["qSearingSmiteImmediateDamageDamageType"],
+        "immediate damage",
+      ),
+      dice: numberFromQuintInt(
+        state["qSearingSmiteImmediateDamageDice"],
+        "qSearingSmiteImmediateDamageDice",
+      ),
+      dieSize: numberFromQuintInt(
+        state["qSearingSmiteImmediateDamageDieSize"],
+        "qSearingSmiteImmediateDamageDieSize",
+      ),
+    },
+    activeBeforeSuccessfulSave: searingSmiteRequiredBooleanFromQuint(
+      state,
+      "qSearingSmiteActiveBeforeSuccessfulSave",
+      true,
+    ),
+    turnStartDamage: {
+      sourceSpellId: searingSmiteRequiredSourceSpellIdFromQuint(
+        state["qSearingSmiteTurnStartDamageSourceSpellId"],
+        "turn-start damage",
+      ),
+      damageType: searingSmiteRequiredDamageTypeFromQuint(
+        state["qSearingSmiteTurnStartDamageDamageType"],
+        "turn-start damage",
+      ),
+      dice: numberFromQuintInt(
+        state["qSearingSmiteTurnStartDamageDice"],
+        "qSearingSmiteTurnStartDamageDice",
+      ),
+      dieSize: numberFromQuintInt(
+        state["qSearingSmiteTurnStartDamageDieSize"],
+        "qSearingSmiteTurnStartDamageDieSize",
+      ),
+    },
+    turnStartSave: {
+      sourceSpellId: searingSmiteRequiredSourceSpellIdFromQuint(
+        state["qSearingSmiteTurnStartSaveSourceSpellId"],
+        "turn-start save",
+      ),
+      ability: searingSmiteRequiredSaveAbilityFromQuint(
+        state["qSearingSmiteTurnStartSaveAbility"],
+      ),
+      successEnds: searingSmiteRequiredSaveSuccessEndsFromQuint(
+        state["qSearingSmiteTurnStartSaveSuccessEnds"],
+      ),
+    },
+    activeAfterSuccessfulSave: searingSmiteRequiredBooleanFromQuint(
+      state,
+      "qSearingSmiteActiveAfterSuccessfulSave",
+      false,
+    ),
+  };
+}
+
+function assertSearingSmiteNoLifecycleFromQuint(
+  state: Readonly<Record<string, unknown>>,
+): void {
+  assertQuintField(
+    state["qSearingSmiteImmediateDamageDamageType"],
+    "none",
+    "qSearingSmiteImmediateDamageDamageType",
+  );
+  assertQuintIntField(state, "qSearingSmiteImmediateDamageDice", 0);
+  assertQuintIntField(state, "qSearingSmiteImmediateDamageDieSize", 0);
+  assertQuintField(
+    state["qSearingSmiteActiveBeforeSuccessfulSave"],
+    false,
+    "qSearingSmiteActiveBeforeSuccessfulSave",
+  );
+  assertQuintField(
+    state["qSearingSmiteTurnStartDamageSourceSpellId"],
+    "none",
+    "qSearingSmiteTurnStartDamageSourceSpellId",
+  );
+  assertQuintField(
+    state["qSearingSmiteTurnStartDamageDamageType"],
+    "none",
+    "qSearingSmiteTurnStartDamageDamageType",
+  );
+  assertQuintIntField(state, "qSearingSmiteTurnStartDamageDice", 0);
+  assertQuintIntField(state, "qSearingSmiteTurnStartDamageDieSize", 0);
+  assertQuintField(
+    state["qSearingSmiteTurnStartSaveSourceSpellId"],
+    "none",
+    "qSearingSmiteTurnStartSaveSourceSpellId",
+  );
+  assertQuintField(
+    state["qSearingSmiteTurnStartSaveAbility"],
+    "none",
+    "qSearingSmiteTurnStartSaveAbility",
+  );
+  assertQuintField(
+    state["qSearingSmiteTurnStartSaveSuccessEnds"],
+    "none",
+    "qSearingSmiteTurnStartSaveSuccessEnds",
+  );
+  assertQuintField(
+    state["qSearingSmiteActiveAfterSuccessfulSave"],
+    false,
+    "qSearingSmiteActiveAfterSuccessfulSave",
+  );
+}
+
+function searingSmiteRequiredSourceSpellIdFromQuint(
+  raw: unknown,
+  label: string,
+): typeof searingSmiteUnitId {
+  if (raw === searingSmiteUnitId) {
+    return raw;
+  }
+  throw new Error(
+    `Unexpected Searing Smite ${label} source spell id ${String(raw)}.`,
+  );
+}
+
+function searingSmiteRequiredDamageTypeFromQuint(
+  raw: unknown,
+  label: string,
+): "fire" {
+  if (raw === "fire") {
+    return raw;
+  }
+  throw new Error(
+    `Unexpected Searing Smite ${label} damage type ${String(raw)}.`,
+  );
+}
+
+function searingSmiteRequiredSaveAbilityFromQuint(raw: unknown): "con" {
+  if (raw === "con") {
+    return raw;
+  }
+  throw new Error(
+    `Unexpected Searing Smite turn-start save ability ${String(raw)}.`,
+  );
+}
+
+function searingSmiteRequiredSaveSuccessEndsFromQuint(raw: unknown): "spell" {
+  if (raw === "spell") {
+    return raw;
+  }
+  throw new Error(
+    `Unexpected Searing Smite turn-start save success end ${String(raw)}.`,
+  );
+}
+
+function searingSmiteRequiredBooleanFromQuint<const T extends boolean>(
+  state: Readonly<Record<string, unknown>>,
+  field: string,
+  expected: T,
+): T {
+  const value = booleanField(state, field);
+  if (value === expected) {
+    return expected;
+  }
+  throw new Error(`Expected Quint field ${field} to be ${String(expected)}.`);
+}
+
+function assertQuintIntField(
+  state: Readonly<Record<string, unknown>>,
+  field: string,
+  expected: number,
+): void {
+  const value = numberFromQuintInt(state[field], field);
+  if (value !== expected) {
+    throw new Error(`Expected Quint field ${field} to be ${expected}.`);
+  }
+}
+
+function assertQuintField(
+  raw: unknown,
+  expected: string | boolean,
+  field: string,
+): void {
+  if (raw !== expected) {
+    throw new Error(`Expected Quint field ${field} to be ${String(expected)}.`);
+  }
+}
+
 function mbtLastResult(
   raw: unknown,
 ): Level1BuffMarkSmiteSelectedIdentityProjection["lastResult"] {
@@ -2829,7 +3314,8 @@ function mbtLastResult(
     raw === "heroism" ||
     raw === "huntersMark" ||
     raw === "hex" ||
-    raw === "longstrider"
+    raw === "longstrider" ||
+    raw === "searingSmite"
   ) {
     return raw;
   }
