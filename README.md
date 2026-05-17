@@ -80,11 +80,6 @@ pnpm test                       # workspace package tests
 pnpm dev                        # React UI
 ```
 
-## Archived v0
-
-`packages/v0` is archived restore-source material and is intentionally outside
-the active workspace. See `packages/v0/README.md`.
-
 ## SRD parity
 
 The spec formalizes the SRD and nothing else — no homebrew, no licensed content. Where the formalization requires choices the SRD doesn't prescribe, those are documented in [`ASSUMPTIONS.md`](ASSUMPTIONS.md).

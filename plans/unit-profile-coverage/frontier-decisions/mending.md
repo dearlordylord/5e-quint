@@ -69,13 +69,6 @@
 - `packages/character-sheet-runtime/README.md:68` through
   `packages/character-sheet-runtime/README.md:75` defer mutable
   carried/equipped equipment to a future equipment module.
-- `packages/v0/src/features/spell-registry.ts:2777` through
-  `packages/v0/src/features/spell-registry.ts:2786` contain archived
-  restore-source Mending metadata. `README.md:83` through `README.md:86` and
-  `packages/v0/README.md:3` through `packages/v0/README.md:7` keep that
-  package outside the active workspace and forbid using it as the source of
-  truth for current runtime work.
-
 ## Owner Classification
 
 - `packageOwner`: `null`
@@ -182,7 +175,5 @@ repair the physical break or tear without representing magical restoration.
   existing claim/profile/evidence row files.
 - Package owner boundaries checked against `packages/battle-runtime/README.md`
   and `packages/character-sheet-runtime/README.md`.
-- Archived `packages/v0` Mending metadata checked and excluded as
-  restore-source material, not active package ownership.
 - Coverage verification: `pnpm unit-profile-coverage:check`.
 - MBT: not run; this decision artifact changes no promoted runtime behavior.

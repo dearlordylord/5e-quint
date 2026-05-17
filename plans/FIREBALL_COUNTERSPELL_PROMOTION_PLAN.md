@@ -2,9 +2,8 @@
 
 ## Purpose
 
-Move the old six-wizard Fireball/Counterspell battle idea out of `packages/v0`
-restore-source material and into the active Surface + `@dnd/battle-runtime`
-architecture without importing `@dnd/v0` or preserving its React/runtime model.
+Move the six-wizard Fireball/Counterspell battle idea into the active Surface +
+`@dnd/battle-runtime` architecture.
 
 ## Current Worktree Slice
 
@@ -130,11 +129,10 @@ The design has to settle these domain questions before implementation:
   slot on its turn cannot expend another spell slot on Counterspell during that
   same turn. Slotless spell casts remain governed by their own access/resource
   facts.
-- How do multiple Counterspells form a reaction chain? The old v0 lane modeled a
-  `PISpellCast` window, pushed the interrupted spell onto a spell stack when
-  Counterspell was cast, and returned to the prior Counterspell window after
-  resolving the nested one. Use this as inspiration only; the active promoted
-  runtime needs its own SRD 5.2.1-aligned continuation model and Quint parity.
+- How do multiple Counterspells form a reaction chain? The active promoted
+  runtime needs an SRD 5.2.1-aligned continuation model that can push the
+  interrupted spell while Counterspell resolves and then return to the prior
+  interruption window, with Quint parity.
 - How does Ready share the "spell is being cast" trigger without changing the
   Counterspell target? Ready may react to spell-cast timing, but Counterspell
   eligibility remains about the triggering caster and observable Components, not
@@ -166,19 +164,18 @@ The design has to settle these domain questions before implementation:
   prepared Fireball/Counterspell, and the needed spell slots.
 - Do not wait for full legal level-up UI. The projection should be a typed
   battle input until character creation can produce the same facts.
-- Recreate the old v0 scenario as an active runtime demo: Fireball slingers plus
-  Counterspell-capable reactors, including the recursive chain that used to be
-  E -> B -> F -> C.
-- Wire the React battle scene to the active `@dnd/battle-runtime` projection,
-  not to v0.
+- Recreate the scripted duel as an active runtime demo: Fireball slingers plus
+  Counterspell-capable reactors, including the recursive E -> B -> F -> C
+  chain.
+- Wire the React battle scene to the active `@dnd/battle-runtime` projection.
 
 ### Phase 4B: Full Demo Parity
 
-Implemented in the worktree: the promoted React demo now runs the full duel as
-151 visible playback beats, using active Surface content plus
-`@dnd/battle-runtime` resolution. It includes:
+Implemented: the promoted React demo now runs the full duel as 151 visible
+playback beats, using active Surface content plus `@dnd/battle-runtime`
+resolution. It includes:
 
-- six Wizard-like combatants in the old A, D, B, E, C, F initiative order;
+- six Wizard-like combatants in A, D, B, E, C, F initiative order;
 - Fireball, Shatter, Counterspell, turn advancement, and death saving throws;
 - Shatter's SRD 5.2.1 clauses for Construct save Disadvantage and
   nonmagical unattended object damage as explicit runtime projections/facts;
@@ -188,8 +185,7 @@ Implemented in the worktree: the promoted React demo now runs the full duel as
   area selection, saving throw outcomes, damage rolls, damage application, and
   death saves.
 
-The old quarantined `packages/v0/src/demo/fireball-battle.ts`
-`FIREBALL_BATTLE` script has 149 machine events:
+The reference script had 149 machine events:
 
 - 1 `BATTLE_INIT`;
 - 34 `BATTLE_START_TURN`;
@@ -204,12 +200,12 @@ That 149-event count is a complete scripted duel: the opening Fireball,
 Counterspell chain, a return Fireball, later Shatters and Fireballs, reaction
 passes, after-damage passes, knockouts, death saves, deaths, and stabilization.
 
-The promoted 151-step version is intentionally not a one-event-for-one-event v0
-port. The new runtime does not model v0's generic save-failed pass and
+The promoted 151-step version is intentionally not a one-event-for-one-event
+port. The active runtime does not model generic save-failed passes and
 after-damage decline pseudo-events when no SRD reaction choice exists. Instead,
-it surfaces the active runtime holes and projections that do exist: spell-cast
-reaction facts, reaction decisions, area selection, saving throw outcomes,
-grouped damage rolls, turn advancement, and death saving throws.
+it surfaces the runtime holes and projections that do exist: spell-cast reaction
+facts, reaction decisions, area selection, saving throw outcomes, grouped damage
+rolls, turn advancement, and death saving throws.
 
 ## Verification
 

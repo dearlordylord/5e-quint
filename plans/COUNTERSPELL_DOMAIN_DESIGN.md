@@ -176,7 +176,7 @@ turn actor or an off-turn reactor.
 - currently resolving Counterspell invocation
 - continuation for resuming or dissipating each interrupted invocation
 
-The old v0 lane used a spell-cast pending-interrupt window plus a spell stack
+Prototype work used a spell-cast pending-interrupt window plus a spell stack
 and returned to the prior window after resolving the nested Counterspell. That
 is useful as shape inspiration only. The active model must be SRD 5.2.1 first
 and must keep Quint and TypeScript in parity.

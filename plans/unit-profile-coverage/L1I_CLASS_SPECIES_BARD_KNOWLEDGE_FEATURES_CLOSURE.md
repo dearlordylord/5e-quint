@@ -47,11 +47,6 @@ catalog admission, or selected spell implementation changed.
 - `packages/character-creation-runtime/src/index.test.ts:4890-5060`: focused
   coverage proves a class-feature skill proficiency grant can be discovered,
   filled, finalized, and projected into CharacterBuild proficiencies.
-- `packages/v0/src/features/class-bard.ts:49-55`,
-  `packages/v0/src/features/class-bard.ts:114-127`: legacy helpers expose
-  Jack of All Trades, Words of Creation, and Lore Bonus Proficiencies level
-  predicates, but these are not checker-readable promoted Unit profile owners.
-
 ## Current Generated State
 
 Before this task, the three Bard records were authored SRD Surface records with

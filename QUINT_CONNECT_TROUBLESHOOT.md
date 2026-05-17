@@ -79,7 +79,7 @@ invocation with no caching.
 **Solution:** `scripts/compile-battle-spec.cjs` captures the compiled evaluator input once.
 `@firfi/quint-connect`'s `compiledInput` option feeds it directly to the evaluator on subsequent runs.
 
-### Finding 5: The Rust evaluator has a `nthreads=1` deadlock bug (v0.5.0)
+### Finding 5: The Rust evaluator has a `nthreads=1` deadlock bug (0.5.0)
 
 When `nthreads=1` and `nruns>1`, the evaluator completes the first sample then deadlocks.
 `quint run` avoids this by setting `nthreads = Math.min(maxSamples, os.cpus().length)`.
@@ -155,7 +155,7 @@ Systematic scaling tests with isolated perf specs show:
 The `compile-battle-spec.cjs` output is **byte-identical** to a fresh `toExpr()` serialization.
 Verified by running `toExpr()` + `json-bigint.stringify()` on the same spec and comparing the
 7.3MB output byte-by-byte. The "format difference" noted in earlier versions of this document
-was a false finding, similar to the v0.6.0 regression attribution.
+was a false finding, similar to the 0.6.0 regression attribution.
 
 The compile-script cache saves the ~15s parse/typecheck overhead but cannot help with the
 evaluator's simulation time, which is 10s–180s+ per step for the full battle spec.
@@ -312,9 +312,9 @@ killall -9 quint_evaluator
 
 ## Quint Version Notes
 
-- **Quint CLI:** v0.31.0 (compile script uses its JS API)
-- **Evaluator:** v0.5.0 and v0.6.0 have **identical source code** (1 irrelevant line change).
-  Both produce identical performance. Earlier reports of v0.6.0 regression were caused by
+- **Quint CLI:** 0.31.0 (compile script uses its JS API)
+- **Evaluator:** 0.5.0 and 0.6.0 have **identical source code** (1 irrelevant line change).
+  Both produce identical performance. Earlier reports of 0.6.0 regression were caused by
   zombie evaluator processes consuming CPU during testing.
 - **Upgrading is safe:** `npm i -g @informalsystems/quint@0.32.0` + `./scripts/build-quint-evaluator.sh`
   (source build needed for GLIBC 2.36 compat).
@@ -382,7 +382,7 @@ for complex keys (sets, records used as map keys). Our creature ID keys (integer
 
 ## Future Work
 
-1. ~~**Publish quint-connect**~~ DONE — v0.8.1 with `compiledInput` option
+1. ~~**Publish quint-connect**~~ DONE — 0.8.1 with `compiledInput` option
 2. ~~**Fix compile-battle-spec.cjs format**~~ NOT NEEDED — format is byte-identical to `quint run`
    (see Finding 9). The evaluator is slow because of action complexity, not format differences.
 3. ~~**File Quint issue: json-bigint round-trip sensitivity**~~ WON'T FILE — the evaluator

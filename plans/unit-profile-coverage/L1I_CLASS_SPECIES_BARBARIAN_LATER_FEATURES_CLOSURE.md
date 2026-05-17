@@ -35,10 +35,6 @@ catalog admission, or D-owned Weapon Mastery work changed.
   Unit catalog includes `class_barbarian`, `barbarian_weapon_mastery`,
   `barbarian_rage`, `barbarian_reckless_attack`, and
   `barbarian_fast_movement`, but not the two Task 5 records.
-- `packages/v0/src/features/class-barbarian.ts:505-607` and
-  `packages/v0/src/features/feature-bridge-barbarian.ts:1-30`: legacy helper
-  functions expose Danger Sense and Primal Champion predicates/projections,
-  but these are not checker-readable promoted Unit profile owners.
 - `packages/character-creation-runtime/src/finalization.ts:2288-2374` and
   `packages/character-creation-runtime/src/index.test.ts:3085-3315`: current
   character creation support applies selected class-feature ability-score

@@ -22,7 +22,7 @@ else
 fi
 
 # 2. Check if fuzzer is still running
-FUZZ_PROCS=$(ps aux | grep -E 'mbt-fuzz|invariant-fuzz|fuzz-all|fuzz-overnight' | grep -v grep | wc -l)
+FUZZ_PROCS=$(ps aux | grep -E 'invariant-fuzz' | grep -v grep | wc -l)
 FUZZ_PROCS="${FUZZ_PROCS// /}"
 if [ "$FUZZ_PROCS" -eq 0 ]; then
   echo "WARNING: No fuzzer process found! May have crashed."

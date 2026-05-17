@@ -48,8 +48,7 @@ Do not manually split these classes of files:
   `scripts/content-surface-survey/results-srd/**`, generated trace outputs;
 - lockfiles;
 - archived restore-source material unless a restore task explicitly targets it:
-  `packages/v0/**`, root `battle.qnt`, root `creature.qnt`, and root
-  `dndTest.qnt`.
+  root `battle.qnt`, root `creature.qnt`, and root `dndTest.qnt`.
 
 For generated artifacts, prefer changing the generator to emit shards or an
 index when agents need context. Do not hand-edit generated outputs just to lower
@@ -691,4 +690,3 @@ Connascence checks:
   tags, tuple positions, and action sequencing protocols.
 - Preserve executable assumptions. Do not replace type-enforced or parser-
   enforced assumptions with comments.
-

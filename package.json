@@ -9,10 +9,9 @@
     "raw-coverage:check:self-test": "node scripts/raw-coverage-check.cjs --self-test",
     "unit-profile-coverage:check": "node scripts/unit-profile-coverage-check.cjs",
     "unit-profile-coverage:check:self-test": "node scripts/unit-profile-coverage-check.cjs --self-test",
-    "check:v0-quarantine": "node scripts/check-v0-quarantine.cjs",
     "lint": "pnpm --filter @dnd/mcp lint && pnpm --filter @dnd/app lint",
     "circular": "pnpm --filter @dnd/mcp circular && pnpm --filter @dnd/app circular",
-    "quality": "pnpm check:authored-id-dispatch && pnpm check:v0-quarantine && pnpm lint && pnpm circular && pnpm typecheck",
+    "quality": "pnpm check:authored-id-dispatch && pnpm lint && pnpm circular && pnpm typecheck",
     "typecheck": "turbo typecheck",
     "test": "turbo test"
   },

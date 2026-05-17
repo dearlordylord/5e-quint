@@ -33,10 +33,6 @@ const ALLOWLIST_PATH_RULES = [
     pattern: /^packages\/mcp\/src\/(?:composition-root|content-tools)\.ts$/,
   },
   {
-    reason: "legacy-v0-quarantine",
-    pattern: /^packages\/v0\/src\//,
-  },
-  {
     reason: "fixture-boundary",
     pattern: /^packages\/app\/src\/components\/trace-visualizer\//,
   },
@@ -48,6 +44,11 @@ const ALLOWLIST_PATH_RULES = [
   {
     reason: "battle-runtime-spell-access-boundary",
     pattern: /^packages\/battle-runtime\/src\/character-battle-resources\.ts$/,
+  },
+  {
+    reason: "battle-runtime-unit-profile-admission-test-support-boundary",
+    pattern:
+      /^packages\/battle-runtime\/src\/unit-profile-admission-spell-fill-support\.ts$/,
   },
 ];
 

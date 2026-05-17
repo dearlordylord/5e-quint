@@ -1011,7 +1011,7 @@ write_process_snapshot() {
       rg -v 'rg ' || true
     printf '\n## MBT / Quint\n\n'
     ps -eo pid,ppid,etimes,stat,cmd |
-      rg 'vitest|quint_evaluator|mbt-fuzz|fuzz-all|fuzz-overnight|escalate-fuzz' |
+      rg 'vitest|quint_evaluator|invariant-fuzz' |
       rg -v 'rg ' || true
   } >"$output_file"
 }
@@ -1054,8 +1054,7 @@ Read AGENTS.md/CLAUDE.md first and follow the repo instructions. Important local
   ps aux | grep quint_evaluator | grep -v grep
   If a prior quint_evaluator is alive, stop it with killall -9 quint_evaluator before starting. If a vitest/MBT process is alive, do not start another MBT run; wait for it or report the blocker.
 - Run MBT with the repo background/timing protocol from AGENTS.md, never as a casual foreground exploratory command.
-- Never run ./scripts/mbt-fuzz.sh, ./scripts/fuzz-all.sh, ./scripts/fuzz-overnight.sh, or any MBT command with MBT_DEV=1 or MBT_SAVE_TRACES=1 in a Ralph task run. Ralph verification must stay on Tier 1 / Tier 1b only unless the task explicitly requires a higher tier.
-- Ralph task worktrees replace the shared fuzz / overnight verification scripts with hard-fail stubs. Those tracked script diffs are harness noise, not task-owned product changes. Do not treat those stubbed script files as part of your implementation.
+- Never run MBT with MBT_DEV=1 or MBT_SAVE_TRACES=1 in a Ralph task run. Use package-local promoted MBT commands only when the task explicitly requires them.
 - Do not write to the memory system.
 - Broad verification is diagnostic, not an automatic scope-expander. If lint/typecheck/test verification surfaces a confirmed unrelated baseline failure outside the touched ownership surface, stop broad verification immediately, record that baseline noise, and do not continue repo-wide cleanup inside this task. Only keep fixing failures that are caused by your task diff itself.
 
@@ -1102,8 +1101,6 @@ Review report output path: $report
 Review the implementation diff against $task_base_sha. Do not modify repository files. Read the task file and context packet first; use the full plan only for dependency/follow-up checks. Focus on correctness, Task $task_no coverage, repo instruction violations, missing verification, duplicated state, and SRD/UBIQUITOUS_LANGUAGE traceability for modeled rules. Flag any changes that implement later tasks prematurely. If you decide verification requires MBT, first check for existing vitest/quint_evaluator processes per AGENTS.md and do not launch a second MBT run while one is alive.
 Do not edit the main repo worktree at $repo_root or any sibling task worktree.
 Treat unrelated repo-wide baseline failures as noise unless the reviewed diff clearly causes them. A task should not be rejected merely for not repairing pre-existing broad verification failures outside its touched ownership surface.
-Ralph task worktrees replace the shared fuzz / overnight verification scripts with hard-fail stubs before implementers start. Treat diffs to \`scripts/mbt-fuzz*.sh\`, \`scripts/fuzz-*.sh\`, \`scripts/escalate-fuzz.sh\`, and \`scripts/measure-tier-timing.sh\` as harness-injected noise unless the implementation made additional edits beyond the standard stub content.
-
 Strict review checklist:
 - Task-only scope: no later-task implementation unless the task explicitly requires it.
 - RAW/UBIQUITOUS_LANGUAGE traceability for every modeled rule.
@@ -1224,8 +1221,7 @@ Requirements:
 - Keep the main worktree on $output_branch; do not merge branches blindly.
 - Preserve repo constraints: pnpm only, no redundant state, Quint parity, SRD traceability for modeled rules, scarce MBT usage.
 - Before any MBT run, check for existing vitest and quint_evaluator processes per AGENTS.md. Kill stale quint_evaluator processes, and do not launch a second MBT while another vitest/MBT run is alive.
-- Never run ./scripts/mbt-fuzz.sh, ./scripts/fuzz-all.sh, ./scripts/fuzz-overnight.sh, or any MBT command with MBT_DEV=1 or MBT_SAVE_TRACES=1 in a Ralph task run. If verification needs MBT, stay on Tier 1 / Tier 1b unless the task explicitly requires a higher tier.
-- Ralph task worktrees replace the shared fuzz / overnight verification scripts with hard-fail stubs before implementers start. Treat those script diffs as harness noise, not task-owned changes, unless the implementation went beyond the standard stub content.
+- Never run MBT with MBT_DEV=1 or MBT_SAVE_TRACES=1 in a Ralph task run. If verification needs MBT, use the package-local promoted command unless the task explicitly requires a higher tier.
 - Run appropriate verification after applying the final result, using "$test_command" unless a narrower repo-approved command is justified.
 - If broader verification surfaces a confirmed unrelated baseline failure outside the touched ownership surface, stop broad verification at that point and record the baseline noise instead of continuing repo-wide cleanup.
 - Inspect the implementation and review for Plan Impact. Update the source plan file at $plan_file only when you learned a genuinely new durable planning fact. Do not add attempt-numbered notes or parser-error reminders to the plan. Keep attempt-specific rejection detail in the decider final and review artifacts instead. If no durable plan update is needed, say so explicitly in the final Plan Impact section.
@@ -1593,13 +1589,7 @@ save_diff() {
   local workspace="$1"
   local output_file="$2"
   local diff_base_sha="$3"
-  git -C "$workspace" diff --binary "$diff_base_sha" -- . \
-    ':(exclude)scripts/mbt-fuzz.sh' \
-    ':(exclude)scripts/mbt-fuzz-timed.sh' \
-    ':(exclude)scripts/fuzz-all.sh' \
-    ':(exclude)scripts/fuzz-overnight.sh' \
-    ':(exclude)scripts/escalate-fuzz.sh' \
-    ':(exclude)scripts/measure-tier-timing.sh' >"$output_file"
+  git -C "$workspace" diff --binary "$diff_base_sha" >"$output_file"
 }
 
 save_full_diff() {
@@ -1619,7 +1609,6 @@ bootstrap_worktree_install() {
 
   for path in \
     "node_modules" \
-    "packages/v0/node_modules" \
     "packages/mcp/node_modules"; do
     if [[ -e "$workspace/$path" || -L "$workspace/$path" ]]; then
       rm -rf "$workspace/$path"
@@ -1646,7 +1635,6 @@ bootstrap_worktree_install() {
 worktree_has_install() {
   local root="$1"
   [[ -d "$root/node_modules" ]] &&
-    [[ -d "$root/packages/v0/node_modules" ]] &&
     [[ -d "$root/packages/mcp/node_modules" ]]
 }
 
@@ -1669,35 +1657,12 @@ find_worktree_install_source() {
   return 1
 }
 
-disable_fuzz_scripts_in_worktree() {
-  local workspace="$1"
-  local path
-
-  for path in \
-    "scripts/mbt-fuzz.sh" \
-    "scripts/mbt-fuzz-timed.sh" \
-    "scripts/fuzz-all.sh" \
-    "scripts/fuzz-overnight.sh" \
-    "scripts/escalate-fuzz.sh" \
-    "scripts/measure-tier-timing.sh"; do
-    [[ -f "$workspace/$path" ]] || continue
-    cat >"$workspace/$path" <<'EOF'
-#!/usr/bin/env bash
-set -euo pipefail
-echo "This script is disabled inside Ralph task worktrees." >&2
-echo "Use Tier 1 / Tier 1b MBT or focused non-fuzz verification instead." >&2
-exit 97
-EOF
-    chmod 0555 "$workspace/$path"
-  done
-}
-
 kill_stray_mbt_processes() {
   local pid
   while read -r pid _rest; do
     [[ -n "$pid" ]] || continue
     kill "$pid" >/dev/null 2>&1 || true
-  done < <(pgrep -af 'scripts/(mbt-fuzz|mbt-fuzz-timed|fuzz-all|fuzz-overnight|escalate-fuzz|measure-tier-timing)\.sh' || true)
+  done < <(pgrep -af 'scripts/invariant-fuzz\.sh' || true)
   killall -9 quint_evaluator >/dev/null 2>&1 || true
 }
 
@@ -2329,7 +2294,6 @@ run_task_attempt() {
 
   git worktree add -B "$implementation_branch" "$implementation_worktree" "$task_base_sha"
   bootstrap_worktree_install "$implementation_worktree"
-  disable_fuzz_scripts_in_worktree "$implementation_worktree"
 
   local implementation_status=0
   run_implementation_pipeline "$implementation_runner" "$implementation_worktree" "$attempt_root" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha" "$task_context_file" || implementation_status=$?

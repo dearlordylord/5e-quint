@@ -63,15 +63,6 @@
   `packages/character-sheet-runtime/README.md:75` defer non-spell resources
   beyond promoted Lay On Hands and mutable carried/equipped equipment to future
   modules.
-- `packages/v0/src/features/spell-conjuration.ts:16` through
-  `packages/v0/src/features/spell-conjuration.ts:18` and
-  `packages/v0/src/features/spell-registry.ts:2016` through
-  `packages/v0/src/features/spell-registry.ts:2025` contain archived
-  restore-source Goodberry constants and spell metadata. `README.md:83`
-  through `README.md:86` and `packages/v0/README.md:3` through
-  `packages/v0/README.md:7` keep that package outside the active workspace and
-  forbid using it as the source of truth for current character-runtime work.
-
 ## Owner Classification
 
 - `packageOwner`: `null`
@@ -173,7 +164,5 @@ state field.
 - Character Sheet ownership checked against
   `packages/character-sheet-runtime/README.md` and
   `packages/character-sheet-runtime/src/index.ts`.
-- Archived `packages/v0` Goodberry constants and metadata checked and excluded
-  as restore-source material, not active package ownership.
 - Coverage verification: `pnpm unit-profile-coverage:check`.
 - MBT: not run; this decision artifact changes no promoted runtime behavior.

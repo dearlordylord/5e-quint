@@ -83,20 +83,11 @@ In Ralph context, "add a task" should mean all of:
 2. sync that plan into the active Ralph launcher worktree and commit it there;
 3. verify the files are identical before saying the live run will pick it up.
 
-Task worktrees reuse the main repo install by symlinking `node_modules`, `packages/v0/node_modules`, and `packages/mcp/node_modules` into each disposable worktree. This keeps per-task verification fast and avoids a redundant `pnpm install` for every task rotation.
+Task worktrees reuse the main repo install by symlinking `node_modules` and package-local `node_modules` directories into each disposable worktree. This keeps per-task verification fast and avoids a redundant `pnpm install` for every task rotation.
 
 The harness also kills stray fuzz / overnight MBT processes and removes generated MBT artifact files under `packages/` before the run starts, before each task begins, and after each task ends. Ralph task runs are not allowed to leave `mbt-failure-battle-*.log`, `mbt-failures.jsonl`, `mbt-timing.jsonl`, `mbt-fuzz.log`, `mbt-seed-blacklist.txt`, or `packages/fat-traces/` behind.
 
-In addition, every temporary Ralph task worktree has these scripts replaced with hard-fail stubs before agents start:
-
-- `scripts/mbt-fuzz.sh`
-- `scripts/mbt-fuzz-timed.sh`
-- `scripts/fuzz-all.sh`
-- `scripts/fuzz-overnight.sh`
-- `scripts/escalate-fuzz.sh`
-- `scripts/measure-tier-timing.sh`
-
-That makes fuzz / overnight validation impossible inside task worktrees even if an agent ignores prompt guidance. Reviewers and deciders should treat those standard stub diffs as harness noise rather than task-owned product changes.
+In addition, every temporary Ralph task worktree has broad fuzz / overnight validation blocked before agents start, so task verification stays within the plan's explicit command.
 
 ## Plan Format
 
@@ -324,7 +315,7 @@ The decider prompt also instructs agents to avoid broad formatters for docs-only
 
 Every implementer, reviewer, and decider prompt includes the repo MBT guard: check for existing `vitest` and `quint_evaluator` processes before any MBT run, kill stale `quint_evaluator` processes, and never launch a second MBT while one is alive.
 
-Ralph task runs must never use the fuzz / overnight scripts (`./scripts/mbt-fuzz.sh`, `./scripts/fuzz-all.sh`, `./scripts/fuzz-overnight.sh`) and must never set `MBT_DEV=1` or `MBT_SAVE_TRACES=1`. If a task needs MBT verification, stay on Tier 1 / Tier 1b unless the task explicitly requires a higher tier.
+Ralph task runs must never set `MBT_DEV=1` or `MBT_SAVE_TRACES=1`. If a task needs MBT verification, use the package-local promoted command specified by the plan unless the task explicitly requires a higher tier.
 
 Broad verification is diagnostic, not an automatic scope-expander. When lint/typecheck/test commands surface known pre-existing failures outside the touched ownership surface, agents should record that baseline noise and stop widening the task into repo-wide cleanup. Only failures caused by the task diff itself should be fixed inside that task; unrelated cleanup belongs in a separate task or sidecar investigation. Prompt behavior is intentionally strict here: once an agent confirms the failure is unrelated baseline noise, it should stop broad verification immediately instead of continuing to chase `pnpm quality`.
 

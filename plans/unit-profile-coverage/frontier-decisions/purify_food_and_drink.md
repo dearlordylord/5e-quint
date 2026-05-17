@@ -66,11 +66,6 @@
 - `packages/character-sheet-runtime/README.md:68` through
   `packages/character-sheet-runtime/README.md:75` defer mutable
   carried/equipped equipment to a future equipment module.
-- `packages/v0/src/features/spell-registry.ts:3248` through
-  `packages/v0/src/features/spell-registry.ts:3258` contain archived
-  restore-source Purify Food and Drink metadata. `packages/v0` is not an active
-  package owner for current runtime work.
-
 ## Owner Classification
 
 - `packageOwner`: `null`
@@ -169,7 +164,5 @@ as a spell-specific parallel flag.
 - Package owner boundaries checked against
   `packages/character-sheet-runtime/README.md` and
   `packages/battle-runtime/README.md`.
-- Archived `packages/v0` Purify Food and Drink metadata checked and excluded as
-  restore-source material, not active package ownership.
 - Coverage verification: `pnpm unit-profile-coverage:check`.
 - MBT: not run; this decision artifact changes no promoted runtime behavior.
