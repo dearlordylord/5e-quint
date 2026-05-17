@@ -15097,13 +15097,13 @@
         "state": "installed",
         "unitId": "grease"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV66 table/spatial owner",
-        "reason": "Automatic area membership, pathfinding, and grid geometry derivation remain table/spatial derivations."
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial owner",
+        "reason": "Automatic area membership, pathfinding, and grid geometry derivation remain runtime-detached table/spatial derivations outside the Grease runtime profile."
       },
       "ownerEvidence": [
         {
@@ -18655,13 +18655,13 @@
         "state": "installed",
         "unitId": "grease"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV66 table/spatial owner",
-        "reason": "Automatic area membership, pathfinding, and grid geometry derivation remain table/spatial derivations."
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial owner",
+        "reason": "Automatic area membership, pathfinding, and grid geometry derivation remain runtime-detached table/spatial derivations outside the Grease runtime profile."
       },
       "ownerEvidence": [
         {

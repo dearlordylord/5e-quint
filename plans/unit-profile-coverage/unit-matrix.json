@@ -62,8 +62,8 @@
       "value": 145
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 96,
-      "numerator": 96,
+      "denominator": 97,
+      "numerator": 97,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 96,
-      "numerator": 87,
-      "percent": "90.6%"
+      "denominator": 97,
+      "numerator": 88,
+      "percent": "90.7%"
     },
     "supportedProfileCoverage": {
       "denominator": 118,
-      "numerator": 96,
-      "percent": "81.4%"
+      "numerator": 97,
+      "percent": "82.2%"
     }
   },
   "metricSemantics": [
@@ -9116,17 +9116,11 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "SRDINV66 table/spatial owner",
-              "reason": "Automatic area membership, pathfinding, and grid geometry derivation remain table/spatial derivations."
-            },
-            "followUpTaskId": "SRDINV66",
-            "mechanic": "automatic area membership, pathfinding, and grid geometry derivation for Grease movement"
-          }
-        ],
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "table/spatial owner",
+          "reason": "Automatic area membership, pathfinding, and grid geometry derivation remain runtime-detached table/spatial derivations outside the Grease runtime profile."
+        },
         "profileIds": [
           "spell.invocation-grease-ground-hazard"
         ],
@@ -9140,7 +9134,7 @@
           "table-triggered enter-area and end-turn-in-area Dexterity save procedures",
           "caller-supplied Grease Difficult Terrain movement facts that validate active hazard identity and spend total Movement distance plus one extra foot per foot moved through Grease"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [

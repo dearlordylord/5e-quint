@@ -585,47 +585,6 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "table-spatial-derivation"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Automatic area membership, pathfinding, and grid geometry derivation remain table/spatial derivations.",
-      "sourceRecordPath": "packages/surface/content/grease.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Grease",
-          "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_grease",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 255,
-            "lineStart": 255,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Grease",
-          "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_grease",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 176,
-            "lineStart": 176,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "grease"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
         "social-knowledge-effect"
       ],
       "collectionId": "srd-5.2.1",
@@ -1177,7 +1136,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 70,
+      "count": 71,
       "description": "Full support exists at the Unit profile boundary for strict level-1 accounting.",
       "status": "supported-profile",
       "unitIds": [
@@ -1209,6 +1168,7 @@
         "fighter_second_wind",
         "fire_bolt",
         "fog_cloud",
+        "grease",
         "guidance",
         "guiding_bolt",
         "healing_word",
@@ -1271,12 +1231,11 @@
       ]
     },
     {
-      "count": 7,
+      "count": 6,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
         "feather_fall",
-        "grease",
         "hunters_mark",
         "jump",
         "light",
@@ -1317,23 +1276,22 @@
     },
     "strictRuntimeProfileSupport": {
       "denominator": 93,
-      "numerator": 70,
-      "percent": "75.3%"
+      "numerator": 71,
+      "percent": "76.3%"
     },
     "strictTargetClosure": {
       "denominator": 93,
-      "numerator": 86,
-      "percent": "92.5%"
+      "numerator": 87,
+      "percent": "93.5%"
     }
   },
   "openFrontier": [
     {
-      "count": 7,
+      "count": 6,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
         "feather_fall",
-        "grease",
         "hunters_mark",
         "jump",
         "light",
@@ -3618,18 +3576,18 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 120,
     "groupsByClaimTag": {
-      "profile-subset-supported": 12,
-      "supported-profile": 70,
+      "profile-subset-supported": 11,
+      "supported-profile": 71,
       "unsupported-profile": 11
     },
     "groupsByStatus": {
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 4,
       "closed-runtime-detached-table-adjudication": 10,
-      "open-profile-accounting": 7,
-      "supported-profile": 70
+      "open-profile-accounting": 6,
+      "supported-profile": 71
     },
-    "nonSupportedFrontier": 23,
+    "nonSupportedFrontier": 22,
     "strictDenominator": 93
   }
 }
