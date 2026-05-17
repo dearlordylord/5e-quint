@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "L1D2-WIZARD-ARCANE-RECOVERY",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Wizard Arcane Recovery Selected Identity Replay"
     },
     {
