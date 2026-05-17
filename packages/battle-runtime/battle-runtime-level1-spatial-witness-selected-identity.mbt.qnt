@@ -4,6 +4,13 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
   var qLightEmitterCount: int
   var qDimLightEmitterCount: int
   var qRetainedLightIdentityCount: int
+  var qFaerieFireOutlinedCreatureCount: int
+  var qFaerieFireOutlinedObjectCount: int
+  var qFaerieFireCreatureAttackRollMode: str
+  var qFaerieFireInvisibleCreatureAttackRollMode: str
+  var qFaerieFireObjectAttackRollMode: str
+  var qFaerieFireTargetInvisible: bool
+  var qFaerieFireObjectInvisibleBenefitDenied: bool
   var qProjectedIllumination: str
   var qOrdinarySightObscurement: str
   var qDarkvisionSightObscurement: str
@@ -18,6 +25,13 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     lightEmitterCount: int,
     dimLightEmitterCount: int,
     retainedLightIdentityCount: int,
+    faerieFireOutlinedCreatureCount: int,
+    faerieFireOutlinedObjectCount: int,
+    faerieFireCreatureAttackRollMode: str,
+    faerieFireInvisibleCreatureAttackRollMode: str,
+    faerieFireObjectAttackRollMode: str,
+    faerieFireTargetInvisible: bool,
+    faerieFireObjectInvisibleBenefitDenied: bool,
     projectedIllumination: str,
     ordinarySightObscurement: str,
     darkvisionSightObscurement: str,
@@ -31,6 +45,13 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     qLightEmitterCount' = lightEmitterCount,
     qDimLightEmitterCount' = dimLightEmitterCount,
     qRetainedLightIdentityCount' = retainedLightIdentityCount,
+    qFaerieFireOutlinedCreatureCount' = faerieFireOutlinedCreatureCount,
+    qFaerieFireOutlinedObjectCount' = faerieFireOutlinedObjectCount,
+    qFaerieFireCreatureAttackRollMode' = faerieFireCreatureAttackRollMode,
+    qFaerieFireInvisibleCreatureAttackRollMode' = faerieFireInvisibleCreatureAttackRollMode,
+    qFaerieFireObjectAttackRollMode' = faerieFireObjectAttackRollMode,
+    qFaerieFireTargetInvisible' = faerieFireTargetInvisible,
+    qFaerieFireObjectInvisibleBenefitDenied' = faerieFireObjectInvisibleBenefitDenied,
     qProjectedIllumination' = projectedIllumination,
     qOrdinarySightObscurement' = ordinarySightObscurement,
     qDarkvisionSightObscurement' = darkvisionSightObscurement,
@@ -45,6 +66,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
   action init =
     recordProjection(
       0, 0, 0,
+      0, 0, "normal", "normal", "normal", false, false,
       "darkness", "heavilyObscured", "lightlyObscured", "darkness",
       0, false, true, true,
       "init",
@@ -54,13 +76,26 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     qLastResult == "init",
     recordProjection(
       2, 2, 2,
+      0, 0, "normal", "normal", "normal", false, false,
       "dimLight", "lightlyObscured", "unobscured", "darkness",
       0, true, false, false,
       "dancingLightsMovableDimLight",
     ),
   }
 
+  action doFaerieFireOutlineAdvantageInvisibleDimLight = all {
+    qLastResult == "init",
+    recordProjection(
+      2, 2, 0,
+      1, 1, "advantage", "advantage", "advantage", true, true,
+      "dimLight", "lightlyObscured", "unobscured", "darkness",
+      0, true, true, true,
+      "faerieFireOutlineAdvantageInvisibleDimLight",
+    ),
+  }
+
   action step = any {
     doDancingLightsMovableDimLight,
+    doFaerieFireOutlineAdvantageInvisibleDimLight,
   }
 }

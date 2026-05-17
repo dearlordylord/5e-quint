@@ -93,8 +93,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 93,
-      "numerator": 48,
-      "percent": "51.6%"
+      "numerator": 49,
+      "percent": "52.7%"
     },
     "supportedProfileCoverage": {
       "denominator": 117,
@@ -7746,6 +7746,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV58C"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "level1-spatial-witness"
         }
       ],
       "executableMechanics": true,

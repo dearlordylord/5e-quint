@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L1F-FAERIE-FIRE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Faerie Fire Selected Identity Replay"
     },
     {
@@ -173,13 +173,21 @@ automation.
 
 ### Task 3 - L1F-FAERIE-FIRE - Faerie Fire Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `faerie_fire`, covering save-gated outline,
 attack-roll Advantage, Invisible benefit denial, and Dim Light emitter projection
 within the existing table-witness boundary.
 
 RAW: `.references/srd-5.2.1/Spells/Descriptions-E-L.md` Faerie Fire.
+
+Result: `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts`
+and
+`packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt`
+record the selected-identity replay for Faerie Fire save-gated creature outline,
+object outline, attack-roll Advantage against visible outlined creatures and
+objects, Invisible benefit denial, Dim Light emitter projection, and
+table-supplied projection witnesses without runtime-owned map automation.
 
 ### Task 4 - L1F-FEATHER-FALL - Feather Fall Selected Identity Replay
 

@@ -1,5 +1,6 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt level1-spatial-witness dancing_lights
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt level1-spatial-witness dancing_lights faerie_fire
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness dancing_lights doDancingLightsMovableDimLight
+// UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness faerie_fire doFaerieFireOutlineAdvantageInvisibleDimLight
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -10,7 +11,18 @@ import {
   canSpendAction,
   canSpendBonusAction,
 } from "@dnd/shared-algebras/action-economy-algebra";
-import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
+import {
+  armorClass,
+  defaultArmorClassState,
+} from "@dnd/shared-algebras/armor-class-algebra";
+import {
+  applyCondition,
+  hasCondition,
+} from "@dnd/shared-algebras/conditions-algebra";
+import {
+  ATTACK_ROLL_MODES,
+  type AttackRollMode,
+} from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
   Hp,
   abilityModifier,
@@ -28,6 +40,7 @@ import {
   battleCombatantSide,
   battleId,
   battleIlluminationFromLightEmitters,
+  battleObjectId,
   battleObscurementZones,
   battleSightObscurement,
   battleTablePositionId,
@@ -35,6 +48,7 @@ import {
   combatantId,
   discoverBattleActs,
   initiativeScore,
+  objectInvisibleBenefitDenied,
   resolveBattleSubject,
   snapshotBattle,
   startBattle,
@@ -45,6 +59,8 @@ import {
   type BattleIllumination,
   type BattleLightEmitter,
   type BattleLightEmitterProjectionFact,
+  type BattleObjectId,
+  type BattleResolutionResult,
   type BattleSightObscurement,
   type BattleState,
   type BattleSubject,
@@ -54,6 +70,7 @@ import {
 const level1SpatialWitnessSelectedIdentityDriverSchema = {
   init: {},
   doDancingLightsMovableDimLight: {},
+  doFaerieFireOutlineAdvantageInvisibleDimLight: {},
   step: {},
 } as const;
 type Level1SpatialWitnessSelectedIdentityDriverAction = Exclude<
@@ -65,6 +82,13 @@ type Level1SpatialWitnessSelectedIdentityProjection = {
   readonly lightEmitterCount: number;
   readonly dimLightEmitterCount: number;
   readonly retainedLightIdentityCount: number;
+  readonly faerieFireOutlinedCreatureCount: number;
+  readonly faerieFireOutlinedObjectCount: number;
+  readonly faerieFireCreatureAttackRollMode: ProjectedAttackRollMode;
+  readonly faerieFireInvisibleCreatureAttackRollMode: ProjectedAttackRollMode;
+  readonly faerieFireObjectAttackRollMode: ProjectedAttackRollMode;
+  readonly faerieFireTargetInvisible: boolean;
+  readonly faerieFireObjectInvisibleBenefitDenied: boolean;
   readonly projectedIllumination: BattleIllumination;
   readonly ordinarySightObscurement: BattleSightObscurement;
   readonly darkvisionSightObscurement: BattleSightObscurement;
@@ -73,8 +97,27 @@ type Level1SpatialWitnessSelectedIdentityProjection = {
   readonly casterConcentrating: boolean;
   readonly magicActionAvailable: boolean;
   readonly bonusActionAvailable: boolean;
-  readonly lastResult: "init" | "dancingLightsMovableDimLight";
+  readonly lastResult:
+    | "init"
+    | "dancingLightsMovableDimLight"
+    | "faerieFireOutlineAdvantageInvisibleDimLight";
 };
+type ProjectedAttackRollMode = AttackRollMode;
+const dancingLightsUnitId = "dancing_lights";
+const faerieFireUnitId = "faerie_fire";
+const starryWispUnitId = "starry_wisp";
+const level1SpatialWitnessSelectedUnitIds = [
+  dancingLightsUnitId,
+  faerieFireUnitId,
+] as const;
+type Level1SpatialWitnessSelectedUnitId =
+  (typeof level1SpatialWitnessSelectedUnitIds)[number];
+const level1SpatialWitnessCatalogSpellIds = [
+  ...level1SpatialWitnessSelectedUnitIds,
+  starryWispUnitId,
+] as const;
+type Level1SpatialWitnessCatalogSpellId =
+  (typeof level1SpatialWitnessCatalogSpellIds)[number];
 type SelectedUnitIdentityReplaySequence = {
   readonly name: string;
   readonly actions: readonly Level1SpatialWitnessSelectedIdentityDriverAction[];
@@ -82,7 +125,7 @@ type SelectedUnitIdentityReplaySequence = {
 };
 type SelectedUnitIdentityReplay = {
   readonly taskId: "level1-spatial-witness";
-  readonly unitId: "dancing_lights";
+  readonly unitId: Level1SpatialWitnessSelectedUnitId;
   readonly actions: readonly Level1SpatialWitnessSelectedIdentityDriverAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
 };
@@ -108,14 +151,17 @@ type DancingLightEmitter = SpellLightEmitter & {
   readonly attachment: DancingLightAttachment;
 };
 
-const dancingLightsUnitId = "dancing_lights";
-const casterId = combatantId("level1-spatial-witness-dancing-lights-caster");
-const observerId = combatantId("level1-spatial-witness-dancing-lights-observer");
+const casterId = combatantId("level1-spatial-witness-caster");
+const observerId = combatantId("level1-spatial-witness-observer");
 const partySide = battleCombatantSide("party");
 const oppositionSide = battleCombatantSide("opposition");
 const dancingLightsDimLightRadiusFeet = movementFeet(10);
 const dancingLightsSiblingSpacingFeet = movementFeet(10);
 const dancingLightsMoveDistanceFeet = movementFeet(10);
+const faerieFireDimLightRadiusFeet = movementFeet(10);
+const faerieFireObjectId = battleObjectId("level1-faerie-fire-object");
+const faerieFireObjectArmorClass = armorClass(13);
+const starryWispObjectTargetRangeFeet = movementFeet(60);
 const darkvisionWitnessRangeFeet = movementFeet(60);
 
 const unitCatalogResult = buildUnitCatalog({
@@ -148,6 +194,35 @@ const selectedUnitIdentityReplays = [
           magicActionAvailable: false,
           bonusActionAvailable: false,
           lastResult: "dancingLightsMovableDimLight",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "level1-spatial-witness",
+    unitId: "faerie_fire",
+    actions: ["doFaerieFireOutlineAdvantageInvisibleDimLight"],
+    sequences: [
+      {
+        name: "save-gated-outline-advantage-invisible-denial-and-dim-light",
+        actions: ["doFaerieFireOutlineAdvantageInvisibleDimLight"],
+        expected: expectedProjection({
+          lightEmitterCount: 2,
+          dimLightEmitterCount: 2,
+          faerieFireOutlinedCreatureCount: 1,
+          faerieFireOutlinedObjectCount: 1,
+          faerieFireCreatureAttackRollMode: "advantage",
+          faerieFireInvisibleCreatureAttackRollMode: "advantage",
+          faerieFireObjectAttackRollMode: "advantage",
+          faerieFireTargetInvisible: true,
+          faerieFireObjectInvisibleBenefitDenied: true,
+          projectedIllumination: "dimLight",
+          ordinarySightObscurement: "lightlyObscured",
+          darkvisionSightObscurement: "unobscured",
+          casterConcentrating: true,
+          magicActionAvailable: true,
+          bonusActionAvailable: true,
+          lastResult: "faerieFireOutlineAdvantageInvisibleDimLight",
         }),
       },
     ],
@@ -207,76 +282,123 @@ describe("Level 1 spatial witness selected identity MBT", () => {
 });
 
 function createLevel1SpatialWitnessSelectedIdentityDriver() {
-  return defineDriver(
-    level1SpatialWitnessSelectedIdentityDriverSchema,
-    () => {
-      let state = dancingLightsBattle();
-      let retainedLightIdentityCount = 0;
-      let lastResult: Level1SpatialWitnessSelectedIdentityProjection["lastResult"] =
-        "init";
+  return defineDriver(level1SpatialWitnessSelectedIdentityDriverSchema, () => {
+    let state = dancingLightsBattle();
+    let retainedLightIdentityCount = 0;
+    let faerieFireCreatureAttackRollMode: ProjectedAttackRollMode = "normal";
+    let faerieFireInvisibleCreatureAttackRollMode: ProjectedAttackRollMode =
+      "normal";
+    let faerieFireObjectAttackRollMode: ProjectedAttackRollMode = "normal";
+    let lastResult: Level1SpatialWitnessSelectedIdentityProjection["lastResult"] =
+      "init";
 
-      function reset(): void {
+    function reset(): void {
+      state = dancingLightsBattle();
+      retainedLightIdentityCount = 0;
+      faerieFireCreatureAttackRollMode = "normal";
+      faerieFireInvisibleCreatureAttackRollMode = "normal";
+      faerieFireObjectAttackRollMode = "normal";
+      lastResult = "init";
+    }
+
+    return {
+      init: reset,
+      doDancingLightsMovableDimLight: () => {
         state = dancingLightsBattle();
-        retainedLightIdentityCount = 0;
-        lastResult = "init";
-      }
-
-      return {
-        init: reset,
-        doDancingLightsMovableDimLight: () => {
-          state = dancingLightsBattle();
-          const castAct = dancingLightsSeparateCastAct(state);
-          const cast = resolveBattleSubject({
-            state,
-            subject: castAct.subject,
-            fills: [
-              separateCastPlacement(
-                requireHole(castAct.initialHoles, "dancingLightsPlacement"),
-              ),
-            ],
-          });
-          if (cast.tag !== "resolved") {
-            throw new Error(
-              `Expected Dancing Lights cast to resolve, got ${cast.tag}.`,
-            );
-          }
-
-          const beforeMoveEmitters = dancingLightEmitters(cast.state);
-          const moveAct = dancingLightsRepositionAct(cast.state);
-          const moved = resolveBattleSubject({
-            state: cast.state,
-            subject: moveAct.subject,
-            fills: [
-              separateRepositionPlacement(
-                requireHole(moveAct.initialHoles, "dancingLightsPlacement"),
-                beforeMoveEmitters,
-              ),
-            ],
-          });
-          if (moved.tag !== "resolved") {
-            throw new Error(
-              `Expected Dancing Lights reposition to resolve, got ${moved.tag}.`,
-            );
-          }
-
-          const afterMoveEmitters = dancingLightEmitters(moved.state);
-          retainedLightIdentityCount = retainedIdentityCount(
-            beforeMoveEmitters,
-            afterMoveEmitters,
+        const castAct = dancingLightsSeparateCastAct(state);
+        const cast = resolveBattleSubject({
+          state,
+          subject: castAct.subject,
+          fills: [
+            separateCastPlacement(
+              requireHole(castAct.initialHoles, "dancingLightsPlacement"),
+            ),
+          ],
+        });
+        if (cast.tag !== "resolved") {
+          throw new Error(
+            `Expected Dancing Lights cast to resolve, got ${cast.tag}.`,
           );
-          state = moved.state;
-          lastResult = "dancingLightsMovableDimLight";
-        },
-        step: () => {},
-        getState: () =>
-          projectLevel1SpatialWitnessSelectedIdentityState(
-            state,
-            retainedLightIdentityCount,
-            lastResult,
-          ),
-      };
-    },
-  );
+        }
+
+        const beforeMoveEmitters = dancingLightEmitters(cast.state);
+        const moveAct = dancingLightsRepositionAct(cast.state);
+        const moved = resolveBattleSubject({
+          state: cast.state,
+          subject: moveAct.subject,
+          fills: [
+            separateRepositionPlacement(
+              requireHole(moveAct.initialHoles, "dancingLightsPlacement"),
+              beforeMoveEmitters,
+            ),
+          ],
+        });
+        if (moved.tag !== "resolved") {
+          throw new Error(
+            `Expected Dancing Lights reposition to resolve, got ${moved.tag}.`,
+          );
+        }
+
+        const afterMoveEmitters = dancingLightEmitters(moved.state);
+        retainedLightIdentityCount = retainedIdentityCount(
+          beforeMoveEmitters,
+          afterMoveEmitters,
+        );
+        state = moved.state;
+        lastResult = "dancingLightsMovableDimLight";
+      },
+      doFaerieFireOutlineAdvantageInvisibleDimLight: () => {
+        state = faerieFireBattle();
+        retainedLightIdentityCount = 0;
+        const act = faerieFireAct(state);
+        const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+        const outlined = resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [
+            faerieFireSavingThrowOutcomeFill(
+              savingThrow,
+              [
+                { targetId: casterId, succeeded: true },
+                { targetId: observerId, succeeded: false },
+              ],
+              [faerieFireObjectId],
+            ),
+          ],
+        });
+        if (outlined.tag !== "resolved") {
+          throw new Error(
+            `Expected Faerie Fire outline to resolve, got ${outlined.tag}.`,
+          );
+        }
+
+        const afterVisibleTargetTurns = advanceBackToCasterTurn(outlined.state);
+        faerieFireCreatureAttackRollMode = attackRollModeForMeleeTarget(
+          afterVisibleTargetTurns,
+        );
+
+        const invisibleOutlined = advanceBackToCasterTurn(
+          withInvisibleObserver(outlined.state),
+        );
+        faerieFireInvisibleCreatureAttackRollMode =
+          attackRollModeForMeleeTarget(invisibleOutlined);
+        faerieFireObjectAttackRollMode =
+          attackRollModeForFaerieFireObject(invisibleOutlined);
+        state = invisibleOutlined;
+        lastResult = "faerieFireOutlineAdvantageInvisibleDimLight";
+      },
+      step: () => {},
+      getState: () =>
+        projectLevel1SpatialWitnessSelectedIdentityState(
+          state,
+          retainedLightIdentityCount,
+          faerieFireCreatureAttackRollMode,
+          faerieFireInvisibleCreatureAttackRollMode,
+          faerieFireObjectAttackRollMode,
+          lastResult,
+        ),
+    };
+  });
 }
 
 function expectedProjection(
@@ -286,6 +408,13 @@ function expectedProjection(
     lightEmitterCount: 0,
     dimLightEmitterCount: 0,
     retainedLightIdentityCount: 0,
+    faerieFireOutlinedCreatureCount: 0,
+    faerieFireOutlinedObjectCount: 0,
+    faerieFireCreatureAttackRollMode: "normal",
+    faerieFireInvisibleCreatureAttackRollMode: "normal",
+    faerieFireObjectAttackRollMode: "normal",
+    faerieFireTargetInvisible: false,
+    faerieFireObjectInvisibleBenefitDenied: false,
     projectedIllumination: "darkness",
     ordinarySightObscurement: "heavilyObscured",
     darkvisionSightObscurement: "lightlyObscured",
@@ -325,6 +454,44 @@ function dancingLightsBattle(): BattleState {
       spatialWitnessCreature({
         combatantId: observerId,
         displayName: "Spatial witness observer",
+        initiative: 10,
+        side: oppositionSide,
+      }),
+    ],
+  });
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
+function faerieFireBattle(): BattleState {
+  const faerieFire = spellRecord(faerieFireUnitId);
+  const starryWisp = spellRecord(starryWispUnitId);
+  const result = startBattle({
+    battleId: battleId("level1-spatial-witness-selected-identity"),
+    combatants: [
+      spatialWitnessCreature({
+        combatantId: casterId,
+        displayName: "Faerie Fire caster",
+        initiative: 20,
+        side: partySide,
+        spellcasting: {
+          sourceClassName: "druid",
+          spellcastingAbilityModifier: abilityModifier(3),
+          proficiencyBonus: proficiencyBonus(2),
+          canCastSpells: true,
+          cantrips: [starryWisp],
+          preparedSpells: [faerieFire],
+          featurePreparedSpells: [],
+          invocationSpellAccesses: [],
+          spellbookRitualSpellAccesses: [],
+          spellSlots: [{ spellLevel: 1, count: 1 }],
+        },
+      }),
+      spatialWitnessCreature({
+        combatantId: observerId,
+        displayName: "Faerie Fire target",
         initiative: 10,
         side: oppositionSide,
       }),
@@ -387,7 +554,9 @@ function spatialWitnessCreature(input: {
   };
 }
 
-function spellRecord(spellUnitId: typeof dancingLightsUnitId): SpellRecord {
+function spellRecord(
+  spellUnitId: Level1SpatialWitnessCatalogSpellId,
+): SpellRecord {
   const unit = unitLibrary.requireUnit(spellUnitId);
   if (unit.kind !== "spell") {
     throw new Error(`Expected SRD catalog unit ${spellUnitId} to be a Spell.`);
@@ -417,6 +586,19 @@ function dancingLightsRepositionAct(state: BattleState): BonusActionSpellAct {
   );
   if (act === undefined) {
     throw new Error("Expected Dancing Lights reposition Bonus Action.");
+  }
+  return act;
+}
+
+function faerieFireAct(state: BattleState): ActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.spellId === faerieFireUnitId &&
+      candidate.subject.invocation.procedure === "saveGatedAttackRollAdvantage",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Faerie Fire save-gated outline action.");
   }
   return act;
 }
@@ -480,6 +662,29 @@ function separateRepositionPlacement(
   };
 }
 
+function faerieFireSavingThrowOutcomeFill(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+  outcomes: readonly {
+    readonly targetId: CombatantId;
+    readonly succeeded: boolean;
+  }[],
+  affectedObjectIds: readonly BattleObjectId[],
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    value: {
+      area: {
+        kind: "faerieFireArea",
+        originAnchorId: casterId,
+        affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
+        affectedObjectIds,
+      },
+      outcomes,
+    },
+  };
+}
+
 function requireHole<K extends BattleHole["kind"]>(
   holes: readonly BattleHole[],
   kind: K,
@@ -494,48 +699,251 @@ function requireHole<K extends BattleHole["kind"]>(
   return hole;
 }
 
+function requireResultHole<K extends BattleHole["kind"]>(
+  result: BattleResolutionResult,
+  kind: K,
+): Extract<BattleHole, { readonly kind: K }> {
+  if (result.tag === "invalid") {
+    throw new Error(result.message);
+  }
+  if (result.tag !== "needsHoles") {
+    throw new Error(`Expected ${kind} hole, got ${result.tag}.`);
+  }
+  return requireHole(result.holes, kind);
+}
+
+function advanceBackToCasterTurn(state: BattleState): BattleState {
+  return resolveEndTurn(
+    resolveEndTurn(state, casterId, "Faerie Fire caster"),
+    observerId,
+    "Faerie Fire target",
+  );
+}
+
+function resolveEndTurn(
+  state: BattleState,
+  actorId: CombatantId,
+  label: string,
+): BattleState {
+  const result = resolveBattleSubject({
+    state,
+    subject: {
+      tag: "runtimeCommand",
+      actorId,
+      command: "endTurn",
+    },
+    fills: [],
+  });
+  if (result.tag !== "resolved") {
+    throw new Error(`Expected ${label} End Turn to resolve.`);
+  }
+  return result.state;
+}
+
+function withInvisibleObserver(state: BattleState): BattleState {
+  const observer = state.combatants.get(observerId);
+  if (observer === undefined) {
+    throw new Error("Expected Faerie Fire observer combatant.");
+  }
+  if (observer.positiveHpUnconscious !== null) {
+    throw new Error("Expected a conscious Faerie Fire observer combatant.");
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(observerId, {
+      ...observer,
+      conditions: applyCondition(observer.conditions, "invisible"),
+    }),
+  };
+}
+
+function attackRollModeForMeleeTarget(
+  state: BattleState,
+): ProjectedAttackRollMode {
+  const subject: BattleSubject = {
+    tag: "action",
+    actorId: casterId,
+    action: "attack",
+    attackName: "Unarmed Strike",
+  };
+  const targetChoice = requireResultHole(
+    resolveBattleSubject({ state, subject, fills: [] }),
+    "targetChoice",
+  );
+  const attackRoll = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: [attackTargetFill(targetChoice)],
+    }),
+    "attackRoll",
+  );
+  return attackRoll.rollMode ?? "normal";
+}
+
+function attackTargetFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  return {
+    kind: "targetChoice",
+    holeId: hole.holeId,
+    value: observerId,
+    spatialFacts: [
+      {
+        kind: "attackTargetInMeleeReach",
+        actorId: casterId,
+        targetId: observerId,
+        attackName: "Unarmed Strike",
+      },
+    ],
+  };
+}
+
+function attackRollModeForFaerieFireObject(
+  state: BattleState,
+): ProjectedAttackRollMode {
+  const act = actionSpellAct(state, starryWispUnitId);
+  const objectTarget = requireHole(act.initialHoles, "objectTargetChoice");
+  const attackRoll = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [spellObjectTargetFill(objectTarget)],
+    }),
+    "attackRoll",
+  );
+  return attackRoll.rollMode ?? "normal";
+}
+
+function actionSpellAct(
+  state: BattleState,
+  spellUnitId: Level1SpatialWitnessCatalogSpellId,
+): ActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.spellId === spellUnitId,
+  );
+  if (act === undefined) {
+    throw new Error(`Expected ${spellUnitId} action spell act.`);
+  }
+  return act;
+}
+
+function spellObjectTargetFill(
+  hole: Extract<BattleHole, { readonly kind: "objectTargetChoice" }>,
+): Extract<BattleFill, { readonly kind: "objectTargetChoice" }> {
+  return {
+    kind: "objectTargetChoice",
+    holeId: hole.holeId,
+    value: faerieFireObjectId,
+    spatialFacts: [
+      {
+        kind: "spellObjectTarget",
+        casterId,
+        objectId: faerieFireObjectId,
+        spellId: starryWispUnitId,
+        rangeFeet: starryWispObjectTargetRangeFeet,
+        armorClass: faerieFireObjectArmorClass,
+        damageDisposition: { kind: "tableResolved" },
+      },
+      {
+        kind: "spellObjectTargetSight",
+        casterId,
+        objectId: faerieFireObjectId,
+        spellId: starryWispUnitId,
+        attackerCanSeeObject: true,
+      },
+    ],
+  };
+}
+
 function projectLevel1SpatialWitnessSelectedIdentityState(
   state: BattleState,
   retainedLightIdentityCount: number,
+  faerieFireCreatureAttackRollMode: ProjectedAttackRollMode,
+  faerieFireInvisibleCreatureAttackRollMode: ProjectedAttackRollMode,
+  faerieFireObjectAttackRollMode: ProjectedAttackRollMode,
   lastResult: Level1SpatialWitnessSelectedIdentityProjection["lastResult"],
 ): Level1SpatialWitnessSelectedIdentityProjection {
   const snapshot = snapshotBattle(state);
-  const emitters = dancingLightEmitters(state);
+  const emitters = selectedLightEmitters(state, lastResult);
   const projectedIllumination = battleIlluminationFromLightEmitters(
     snapshot.lightEmitters,
-    matchingProjectionFacts(emitters),
+    matchingProjectionFacts(state, lastResult),
   );
   const mismatchedWitnessIllumination = battleIlluminationFromLightEmitters(
     snapshot.lightEmitters,
-    mismatchedProjectionFacts(emitters),
+    mismatchedProjectionFacts(state, lastResult),
   );
   return {
     lightEmitterCount: emitters.length,
     dimLightEmitterCount: emitters.filter(
       (emitter) =>
         emitter.emission.kind === "dim" &&
-        emitter.emission.radiusFeet === dancingLightsDimLightRadiusFeet,
+        emitter.emission.radiusFeet === dimLightRadiusFeet(lastResult),
     ).length,
     retainedLightIdentityCount,
+    faerieFireOutlinedCreatureCount: faerieFireOutlinedCreatureCount(state),
+    faerieFireOutlinedObjectCount: faerieFireOutlinedObjectCount(state),
+    faerieFireCreatureAttackRollMode,
+    faerieFireInvisibleCreatureAttackRollMode,
+    faerieFireObjectAttackRollMode,
+    faerieFireTargetInvisible: faerieFireTargetInvisible(state),
+    faerieFireObjectInvisibleBenefitDenied:
+      faerieFireObjectInvisibleBenefitDenied(state),
     projectedIllumination,
     ordinarySightObscurement: battleSightObscurement(projectedIllumination),
-    darkvisionSightObscurement: battleSightObscurement(
-      projectedIllumination,
-      {
-        kind: "darkvision",
-        rangeFeet: darkvisionWitnessRangeFeet,
-        distanceFeet: dancingLightsDimLightRadiusFeet,
-      },
-    ),
+    darkvisionSightObscurement: battleSightObscurement(projectedIllumination, {
+      kind: "darkvision",
+      rangeFeet: darkvisionWitnessRangeFeet,
+      distanceFeet: dimLightRadiusFeet(lastResult),
+    }),
     mismatchedWitnessIllumination,
     obscurementZoneCount: battleObscurementZones(state).length,
-    casterConcentrating:
-      state.combatants.get(casterId)?.concentration?.sourceSpellId ===
-      dancingLightsUnitId,
+    casterConcentrating: casterConcentratingOnSelectedUnit(state, lastResult),
     magicActionAvailable: canSpendAction(state.currentTurnResources, "magic"),
     bonusActionAvailable: canSpendBonusAction(state.currentTurnResources),
     lastResult,
   };
+}
+
+function selectedLightEmitters(
+  state: BattleState,
+  lastResult: Level1SpatialWitnessSelectedIdentityProjection["lastResult"],
+): readonly SpellLightEmitter[] {
+  if (lastResult === "dancingLightsMovableDimLight") {
+    return dancingLightEmitters(state);
+  }
+  if (lastResult === "faerieFireOutlineAdvantageInvisibleDimLight") {
+    return faerieFireEmitters(state);
+  }
+  return [];
+}
+
+function dimLightRadiusFeet(
+  lastResult: Level1SpatialWitnessSelectedIdentityProjection["lastResult"],
+) {
+  return lastResult === "faerieFireOutlineAdvantageInvisibleDimLight"
+    ? faerieFireDimLightRadiusFeet
+    : dancingLightsDimLightRadiusFeet;
+}
+
+function casterConcentratingOnSelectedUnit(
+  state: BattleState,
+  lastResult: Level1SpatialWitnessSelectedIdentityProjection["lastResult"],
+): boolean {
+  if (lastResult === "init") {
+    return false;
+  }
+  const sourceSpellId =
+    lastResult === "faerieFireOutlineAdvantageInvisibleDimLight"
+      ? faerieFireUnitId
+      : dancingLightsUnitId;
+  return (
+    state.combatants.get(casterId)?.concentration?.sourceSpellId ===
+    sourceSpellId
+  );
 }
 
 function dancingLightEmitters(
@@ -550,7 +958,52 @@ function dancingLightEmitters(
   );
 }
 
+function faerieFireEmitters(state: BattleState): readonly SpellLightEmitter[] {
+  return snapshotBattle(state).lightEmitters.filter(
+    (emitter): emitter is SpellLightEmitter =>
+      emitter.kind === "spellLightEmitter" &&
+      emitter.sourceSpellId === faerieFireUnitId &&
+      emitter.sourceCombatantId === casterId,
+  );
+}
+
 function matchingProjectionFacts(
+  state: BattleState,
+  lastResult: Level1SpatialWitnessSelectedIdentityProjection["lastResult"],
+): readonly BattleLightEmitterProjectionFact[] {
+  if (lastResult === "dancingLightsMovableDimLight") {
+    return dancingLightsMatchingProjectionFacts(dancingLightEmitters(state));
+  }
+  if (lastResult === "faerieFireOutlineAdvantageInvisibleDimLight") {
+    return [
+      faerieFireCombatantProjectionFact(observerId),
+      faerieFireObjectProjectionFact(faerieFireObjectId),
+    ];
+  }
+  return [];
+}
+
+function mismatchedProjectionFacts(
+  state: BattleState,
+  lastResult: Level1SpatialWitnessSelectedIdentityProjection["lastResult"],
+): readonly BattleLightEmitterProjectionFact[] {
+  if (lastResult === "dancingLightsMovableDimLight") {
+    return dancingLightsMismatchedProjectionFacts(dancingLightEmitters(state));
+  }
+  if (lastResult === "faerieFireOutlineAdvantageInvisibleDimLight") {
+    return [
+      faerieFireCombatantProjectionFact(
+        combatantId("level1-faerie-fire-stale-combatant"),
+      ),
+      faerieFireObjectProjectionFact(
+        battleObjectId("level1-faerie-fire-stale-object"),
+      ),
+    ];
+  }
+  return [];
+}
+
+function dancingLightsMatchingProjectionFacts(
   emitters: readonly DancingLightEmitter[],
 ): readonly BattleLightEmitterProjectionFact[] {
   const firstEmitter = emitters[0];
@@ -564,7 +1017,7 @@ function matchingProjectionFacts(
       ];
 }
 
-function mismatchedProjectionFacts(
+function dancingLightsMismatchedProjectionFacts(
   emitters: readonly DancingLightEmitter[],
 ): readonly BattleLightEmitterProjectionFact[] {
   const firstEmitter = emitters[0];
@@ -578,6 +1031,27 @@ function mismatchedProjectionFacts(
       ];
 }
 
+function faerieFireCombatantProjectionFact(
+  combatantId: CombatantId,
+): BattleLightEmitterProjectionFact {
+  return {
+    kind: "combatant",
+    combatantId,
+    distanceFeet: faerieFireDimLightRadiusFeet,
+  };
+}
+
+function faerieFireObjectProjectionFact(
+  objectId: BattleObjectId,
+): BattleLightEmitterProjectionFact {
+  return {
+    kind: "object",
+    objectId,
+    distanceFeet: faerieFireDimLightRadiusFeet,
+    opaqueCover: true,
+  };
+}
+
 function projectionFactForEmitter(
   emitter: DancingLightEmitter,
   positionId: DancingLightAttachment["positionId"],
@@ -589,6 +1063,41 @@ function projectionFactForEmitter(
     form: emitter.attachment.form,
     distanceFeet: dancingLightsDimLightRadiusFeet,
   };
+}
+
+function faerieFireOutlinedCreatureCount(state: BattleState): number {
+  return [...state.combatants.values()].reduce(
+    (count, combatant) =>
+      count +
+      combatant.activeEffects.filter(
+        (effect) =>
+          effect.kind === "faerieFireOutline" &&
+          effect.sourceSpellId === faerieFireUnitId &&
+          effect.sourceCombatantId === casterId,
+      ).length,
+    0,
+  );
+}
+
+function faerieFireOutlinedObjectCount(state: BattleState): number {
+  return state.objectOutlines.filter(
+    (outline) =>
+      outline.kind === "faerieFireObjectOutline" &&
+      outline.sourceSpellId === faerieFireUnitId &&
+      outline.sourceCombatantId === casterId,
+  ).length;
+}
+
+function faerieFireTargetInvisible(state: BattleState): boolean {
+  const target = state.combatants.get(observerId);
+  if (target === undefined) {
+    throw new Error("Expected Faerie Fire observer combatant.");
+  }
+  return hasCondition(target.conditions, "invisible");
+}
+
+function faerieFireObjectInvisibleBenefitDenied(state: BattleState): boolean {
+  return objectInvisibleBenefitDenied(state, faerieFireObjectId);
 }
 
 function retainedIdentityCount(
@@ -619,6 +1128,31 @@ function normalizeLevel1SpatialWitnessSelectedIdentityQuintState(
     retainedLightIdentityCount: numberFromQuintInt(
       state["qRetainedLightIdentityCount"],
       "qRetainedLightIdentityCount",
+    ),
+    faerieFireOutlinedCreatureCount: numberFromQuintInt(
+      state["qFaerieFireOutlinedCreatureCount"],
+      "qFaerieFireOutlinedCreatureCount",
+    ),
+    faerieFireOutlinedObjectCount: numberFromQuintInt(
+      state["qFaerieFireOutlinedObjectCount"],
+      "qFaerieFireOutlinedObjectCount",
+    ),
+    faerieFireCreatureAttackRollMode: mbtAttackRollMode(
+      state["qFaerieFireCreatureAttackRollMode"],
+    ),
+    faerieFireInvisibleCreatureAttackRollMode: mbtAttackRollMode(
+      state["qFaerieFireInvisibleCreatureAttackRollMode"],
+    ),
+    faerieFireObjectAttackRollMode: mbtAttackRollMode(
+      state["qFaerieFireObjectAttackRollMode"],
+    ),
+    faerieFireTargetInvisible: booleanField(
+      state,
+      "qFaerieFireTargetInvisible",
+    ),
+    faerieFireObjectInvisibleBenefitDenied: booleanField(
+      state,
+      "qFaerieFireObjectInvisibleBenefitDenied",
     ),
     projectedIllumination: mbtIllumination(state["qProjectedIllumination"]),
     ordinarySightObscurement: mbtSightObscurement(
@@ -663,6 +1197,19 @@ function booleanField(
   throw new Error(`Expected Quint boolean field ${field}.`);
 }
 
+function mbtAttackRollMode(raw: unknown): ProjectedAttackRollMode {
+  if (isProjectedAttackRollMode(raw)) {
+    return raw;
+  }
+  throw new Error(`Unexpected attack roll mode ${String(raw)}.`);
+}
+
+function isProjectedAttackRollMode(
+  raw: unknown,
+): raw is ProjectedAttackRollMode {
+  return ATTACK_ROLL_MODES.some((mode) => mode === raw);
+}
+
 function mbtIllumination(raw: unknown): BattleIllumination {
   if (raw === "brightLight" || raw === "dimLight" || raw === "darkness") {
     return raw;
@@ -684,7 +1231,11 @@ function mbtSightObscurement(raw: unknown): BattleSightObscurement {
 function mbtLastResult(
   raw: unknown,
 ): Level1SpatialWitnessSelectedIdentityProjection["lastResult"] {
-  if (raw === "init" || raw === "dancingLightsMovableDimLight") {
+  if (
+    raw === "init" ||
+    raw === "dancingLightsMovableDimLight" ||
+    raw === "faerieFireOutlineAdvantageInvisibleDimLight"
+  ) {
     return raw;
   }
   throw new Error(`Unexpected MBT result ${String(raw)}.`);
