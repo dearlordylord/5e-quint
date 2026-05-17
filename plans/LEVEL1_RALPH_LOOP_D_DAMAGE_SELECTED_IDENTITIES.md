@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "L1D-VICIOUS-MOCKERY",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Vicious Mockery Selected Identity Replay"
     },
     {
@@ -226,7 +226,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-S-Z.md` Starry Wisp.
 
 ### Task 9 - L1D-VICIOUS-MOCKERY - Vicious Mockery Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `vicious_mockery`, including damage plus the
 supported next-attack-roll disadvantage projection if that is the existing

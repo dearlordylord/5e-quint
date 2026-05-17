@@ -6,6 +6,7 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
   var qLevel1SlotsRemaining: int
   var qPrimaryTargetHp: int
   var qPrimaryTargetPoisoned: bool
+  var qPrimaryTargetNextAttackRollDisadvantage: bool
   var qSecondaryTargetHp: int
   var qLastResult: str
 
@@ -15,6 +16,7 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
     level1SlotsRemaining: int,
     primaryTargetHp: int,
     primaryTargetPoisoned: bool,
+    primaryTargetNextAttackRollDisadvantage: bool,
     secondaryTargetHp: int,
     lastResult: str,
   ): bool = all {
@@ -23,11 +25,12 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
     qLevel1SlotsRemaining' = level1SlotsRemaining,
     qPrimaryTargetHp' = primaryTargetHp,
     qPrimaryTargetPoisoned' = primaryTargetPoisoned,
+    qPrimaryTargetNextAttackRollDisadvantage' = primaryTargetNextAttackRollDisadvantage,
     qSecondaryTargetHp' = secondaryTargetHp,
     qLastResult' = lastResult,
   }
 
-  action init = recordProjection(true, false, 1, 12, false, 12, "init")
+  action init = recordProjection(true, false, 1, 12, false, false, 12, "init")
 
   action doResolveBurningHandsMixedConeSavingThrows = all {
     qLastResult == "init",
@@ -36,6 +39,7 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
       true,
       0,
       6,
+      false,
       false,
       9,
       "burningHandsMixedConeSavingThrows",
@@ -50,6 +54,7 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
       0,
       4,
       false,
+      false,
       12,
       "iceKnifeHitAttackDamageAndBurstSavingThrows",
     ),
@@ -62,6 +67,7 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
       true,
       0,
       8,
+      false,
       false,
       12,
       "iceKnifeMissBurstSavingThrows",
@@ -76,6 +82,7 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
       1,
       5,
       false,
+      false,
       12,
       "poisonSpraySpellAttackDamage",
     ),
@@ -89,6 +96,7 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
       0,
       5,
       true,
+      false,
       12,
       "rayOfSicknessSpellAttackDamageAndPoisoned",
     ),
@@ -101,6 +109,7 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
       false,
       1,
       5,
+      false,
       false,
       12,
       "sacredFlameDexteritySavingThrowRadiantDamage",
@@ -115,6 +124,7 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
       1,
       2,
       false,
+      false,
       12,
       "sorcerousBurstSpellAttackDamage",
     ),
@@ -128,8 +138,23 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
       1,
       12,
       false,
+      false,
       12,
       "starryWispObjectSpellAttackDamageAndDimLight",
+    ),
+  }
+
+  action doResolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage = all {
+    qLastResult == "init",
+    recordProjection(
+      false,
+      false,
+      1,
+      6,
+      false,
+      true,
+      12,
+      "viciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage",
     ),
   }
 
@@ -142,5 +167,6 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
     doResolveSacredFlameDexteritySavingThrowRadiantDamage,
     doResolveSorcerousBurstSpellAttackDamage,
     doResolveStarryWispObjectSpellAttackDamageAndDimLight,
+    doResolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage,
   }
 }

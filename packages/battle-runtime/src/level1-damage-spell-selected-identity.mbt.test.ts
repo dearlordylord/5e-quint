@@ -1,4 +1,4 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt level1-damage-spell-selected-identity burning_hands ice_knife poison_spray ray_of_sickness sacred_flame sorcerous_burst starry_wisp
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt level1-damage-spell-selected-identity burning_hands ice_knife poison_spray ray_of_sickness sacred_flame sorcerous_burst starry_wisp vicious_mockery
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity burning_hands doResolveBurningHandsMixedConeSavingThrows
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity ice_knife doResolveIceKnifeHitAttackDamageAndBurstSavingThrows doResolveIceKnifeMissBurstSavingThrows
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity poison_spray doResolvePoisonSpraySpellAttackDamage
@@ -6,6 +6,7 @@
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity sacred_flame doResolveSacredFlameDexteritySavingThrowRadiantDamage
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity sorcerous_burst doResolveSorcerousBurstSpellAttackDamage
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity starry_wisp doResolveStarryWispObjectSpellAttackDamageAndDimLight
+// UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity vicious_mockery doResolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -65,6 +66,8 @@ const level1DamageSpellSelectedIdentityDriverSchema = {
   doResolveSacredFlameDexteritySavingThrowRadiantDamage: {},
   doResolveSorcerousBurstSpellAttackDamage: {},
   doResolveStarryWispObjectSpellAttackDamageAndDimLight: {},
+  doResolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage:
+    {},
   step: {},
 } as const;
 type Level1DamageSpellSelectedIdentityDriverAction = Exclude<
@@ -80,6 +83,7 @@ const level1DamageSpellUnitIds = [
   "sacred_flame",
   "sorcerous_burst",
   "starry_wisp",
+  "vicious_mockery",
 ] as const;
 type Level1DamageSpellUnitId = (typeof level1DamageSpellUnitIds)[number];
 const level1DamageSpellSelectedIdentityResults = [
@@ -92,6 +96,7 @@ const level1DamageSpellSelectedIdentityResults = [
   "sacredFlameDexteritySavingThrowRadiantDamage",
   "sorcerousBurstSpellAttackDamage",
   "starryWispObjectSpellAttackDamageAndDimLight",
+  "viciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage",
 ] as const;
 type Level1DamageSpellSelectedIdentityResult =
   (typeof level1DamageSpellSelectedIdentityResults)[number];
@@ -102,6 +107,7 @@ type Level1DamageSpellSelectedIdentityProjection = {
   readonly level1SlotsRemaining: number;
   readonly primaryTargetHp: number;
   readonly primaryTargetPoisoned: boolean;
+  readonly primaryTargetNextAttackRollDisadvantage: boolean;
   readonly secondaryTargetHp: number;
   readonly lastResult: Level1DamageSpellSelectedIdentityResult;
 };
@@ -128,8 +134,14 @@ type SpellAttackDamageInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "spellAttackDamage" }
 >;
+type SaveGatedDamageInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "saveGatedDamage" }
+>;
 type SpellPostDamageRider =
   SpellAttackDamageInvocation["postDamageRiders"][number];
+type SpellFailedSavePostDamageRider =
+  SaveGatedDamageInvocation["failedSavePostDamageRiders"][number];
 type CharacterCreatureInit = Extract<
   BattleCreatureInit["creatureInit"],
   { readonly kind: "character" }
@@ -194,6 +206,10 @@ const level1DamageSpellInvocationProfiles = {
   starry_wisp: {
     tag: "cantrip",
     procedure: "spellAttackDamage",
+  },
+  vicious_mockery: {
+    tag: "cantrip",
+    procedure: "saveGatedDamage",
   },
 } as const satisfies Record<
   Level1DamageSpellUnitId,
@@ -386,6 +402,31 @@ const selectedUnitIdentityReplays = [
       },
     ],
   },
+  {
+    taskId: "level1-damage-spell-selected-identity",
+    unitId: "vicious_mockery",
+    actions: [
+      "doResolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage",
+    ],
+    sequences: [
+      {
+        name: "cantrip-wisdom-saving-throw-psychic-damage-and-next-attack-disadvantage",
+        actions: [
+          "doResolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage",
+        ],
+        expected: expectedProjection({
+          actionAvailable: false,
+          spellSlotSpentThisTurn: false,
+          level1SlotsRemaining: 1,
+          primaryTargetHp: 6,
+          primaryTargetNextAttackRollDisadvantage: true,
+          secondaryTargetHp: 12,
+          lastResult:
+            "viciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage",
+        }),
+      },
+    ],
+  },
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
 describe("Level 1 damage spell selected identity MBT", () => {
@@ -525,6 +566,16 @@ function createLevel1DamageSpellSelectedIdentityDriver() {
           "starryWispObjectSpellAttackDamageAndDimLight",
         );
       },
+      doResolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage:
+        () => {
+          state = level1DamageSpellBattle(srdSpellRecord("vicious_mockery"));
+          recordResolvedResult(
+            resolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage(
+              state,
+            ),
+            "viciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage",
+          );
+        },
       step: () => {},
       getState: () =>
         projectLevel1DamageSpellSelectedIdentityState(state, lastResult),
@@ -541,6 +592,7 @@ function expectedProjection(
     level1SlotsRemaining: 1,
     primaryTargetHp: 12,
     primaryTargetPoisoned: false,
+    primaryTargetNextAttackRollDisadvantage: false,
     secondaryTargetHp: 12,
     lastResult: "init",
     ...overrides,
@@ -798,6 +850,46 @@ function resolveStarryWispObjectSpellAttackDamageAndDimLight(
   });
   assertStarryWispObjectResolution(result);
   return result;
+}
+
+function resolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage(
+  state: BattleState,
+): BattleResolutionResult {
+  const act = actionSpellAct(state, "vicious_mockery");
+  const target = requireHole(act.initialHoles, "targetChoice");
+  assertSinglePrimaryTargetChoiceProfile(target, "Vicious Mockery");
+  const targetChoice = spellTargetFill(
+    target,
+    "vicious_mockery",
+    primaryTargetId,
+  );
+  const savingThrow = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetChoice],
+    }),
+    "savingThrowOutcome",
+  );
+  assertViciousMockerySavingThrowProfile(savingThrow);
+  const savingThrowFill = targetSavingThrowOutcomeFill(savingThrow, {
+    targetId: primaryTargetId,
+    succeeded: false,
+  });
+  const damage = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetChoice, savingThrowFill],
+    }),
+    "rolledDice",
+  );
+  assertViciousMockeryDamageProfile(damage);
+  return resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [targetChoice, savingThrowFill, damageRollFill(damage, [6])],
+  });
 }
 
 function resolveIceKnifeAttackAndBurstSavingThrows(
@@ -1456,6 +1548,74 @@ function assertSacredFlameDamageProfile(
   }
 }
 
+function assertViciousMockerySavingThrowProfile(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+): void {
+  if (!("spell" in hole)) {
+    throw new Error(
+      "Expected Vicious Mockery spell Saving Throw outcome hole.",
+    );
+  }
+  const invocation = hole.spell;
+  if (
+    invocation.procedure !== "saveGatedDamage" ||
+    invocation.spell.id !== "vicious_mockery" ||
+    invocation.resource.tag !== "none" ||
+    hole.ability !== "wis" ||
+    hole.dc.kind !== "caster_spell_save_dc" ||
+    invocation.targeting.kind !== "singleCombatant" ||
+    invocation.damage.expr.dice !== 1 ||
+    invocation.damage.expr.dieSize !== 6 ||
+    invocation.damage.damageType !== "psychic" ||
+    invocation.successDamage !== "none" ||
+    Number(invocation.rangeFeet) !== 60
+  ) {
+    throw new Error("Vicious Mockery Saving Throw profile drifted.");
+  }
+  assertViciousMockeryFailedSavePostDamageRiders(
+    invocation.failedSavePostDamageRiders,
+  );
+}
+
+function assertViciousMockeryDamageProfile(
+  hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
+): void {
+  if (!("spell" in hole) || !("critical" in hole)) {
+    throw new Error("Expected Vicious Mockery spell damage roll hole.");
+  }
+  const invocation = hole.spell;
+  if (
+    invocation.procedure !== "saveGatedDamage" ||
+    invocation.spell.id !== "vicious_mockery" ||
+    invocation.resource.tag !== "none" ||
+    invocation.damage.expr.dice !== 1 ||
+    invocation.damage.expr.dieSize !== 6 ||
+    invocation.damage.damageType !== "psychic" ||
+    invocation.successDamage !== "none" ||
+    hole.critical
+  ) {
+    throw new Error("Vicious Mockery damage profile drifted.");
+  }
+  assertViciousMockeryFailedSavePostDamageRiders(
+    invocation.failedSavePostDamageRiders,
+  );
+}
+
+function assertViciousMockeryFailedSavePostDamageRiders(
+  riders: readonly SpellFailedSavePostDamageRider[],
+): void {
+  const [rider] = riders;
+  if (
+    riders.length !== 1 ||
+    rider === undefined ||
+    rider.kind !== "nextAttackRollByTarget" ||
+    rider.mode !== "disadvantage" ||
+    rider.expiresAt !== "endOfTargetNextTurn"
+  ) {
+    throw new Error("Vicious Mockery failed-save rider profile drifted.");
+  }
+}
+
 function assertSorcerousBurstDamageTypeChoiceProfile(
   hole: Extract<BattleHole, { readonly kind: "damageTypeChoice" }>,
 ): void {
@@ -1699,9 +1859,28 @@ function projectLevel1DamageSpellSelectedIdentityState(
     level1SlotsRemaining: level1SlotsRemaining(state, casterId),
     primaryTargetHp: primaryTarget.hp,
     primaryTargetPoisoned: primaryTarget.conditions.includes("poisoned"),
+    primaryTargetNextAttackRollDisadvantage:
+      primaryTargetHasViciousMockeryNextAttackRollDisadvantage(state),
     secondaryTargetHp: secondaryTarget.hp,
     lastResult,
   };
+}
+
+function primaryTargetHasViciousMockeryNextAttackRollDisadvantage(
+  state: BattleState,
+): boolean {
+  return (
+    state.combatants
+      .get(primaryTargetId)
+      ?.activeEffects.some(
+        (effect) =>
+          effect.kind === "nextAttackRollBySelf" &&
+          "sourceSpellId" in effect &&
+          effect.sourceSpellId === "vicious_mockery" &&
+          effect.sourceCombatantId === casterId &&
+          effect.mode === "disadvantage",
+      ) === true
+  );
 }
 
 function level1SlotsRemaining(
@@ -1734,6 +1913,10 @@ function normalizeLevel1DamageSpellSelectedIdentityQuintState(
       "qPrimaryTargetHp",
     ),
     primaryTargetPoisoned: booleanField(state, "qPrimaryTargetPoisoned"),
+    primaryTargetNextAttackRollDisadvantage: booleanField(
+      state,
+      "qPrimaryTargetNextAttackRollDisadvantage",
+    ),
     secondaryTargetHp: numberFromQuintInt(
       state["qSecondaryTargetHp"],
       "qSecondaryTargetHp",
