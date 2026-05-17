@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L1E-BUFF-PRECHECK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Post-C Buff Mark Smite Identity Reconciliation"
     },
     {
@@ -145,7 +145,7 @@ Every task runs:
 
 ### Task 1 - L1E-BUFF-PRECHECK - Post-C Buff Mark Smite Identity Reconciliation
 
-Status: `ready-for-research`
+Status: `done`
 
 After Loop C lands, reconcile this loop's Unit list against the refreshed strict
 report and selected identity frontier. Remove any Unit already covered, and
