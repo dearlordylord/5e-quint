@@ -191,6 +191,7 @@
 {"unitId":"druid_primal_order","evidence":{"tag":"selected-identity-mbt","taskId":"L1D2-CLERIC-DRUID-ORDER","ownerPath":"packages/character-creation-runtime/src/cleric-druid-order-selected-identity.mbt.test.ts"}}
 {"unitId":"rogue_expertise","evidence":{"tag":"deterministic-admission-projection","taskId":"AT-L1-07","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"rogue_expertise","evidence":{"tag":"deterministic-admission-projection","taskId":"L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT","ownerPath":"packages/character-creation-runtime/src/rogue-expertise-level6.test.ts"}}
+{"unitId":"rogue_expertise","evidence":{"tag":"selected-identity-mbt","taskId":"L1D2-ROGUE-EXPERTISE","ownerPath":"packages/character-creation-runtime/src/rogue-expertise-selected-identity.mbt.test.ts"}}
 {"unitId":"barbarian_unarmored_defense","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV91B","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"barbarian_unarmored_defense","evidence":{"tag":"selected-identity-mbt","taskId":"armor-class-base-formula","ownerPath":"packages/character-sheet-runtime/src/armor-class-base-selected-identity.mbt.test.ts"}}
 {"unitId":"monk_unarmored_defense","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV91B","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}

@@ -93,8 +93,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 94,
-      "numerator": 89,
-      "percent": "94.7%"
+      "numerator": 90,
+      "percent": "95.7%"
     },
     "supportedProfileCoverage": {
       "denominator": 118,
@@ -5753,6 +5753,11 @@
           "ownerPath": "packages/character-creation-runtime/src/rogue-expertise-level6.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/rogue-expertise-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1D2-ROGUE-EXPERTISE"
         }
       ],
       "executableMechanics": true,

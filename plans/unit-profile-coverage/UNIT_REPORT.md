@@ -23,7 +23,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Runtime mapping coverage | 62/62 | 100% |
 | Runtime parity coverage | 62/62 | 100% |
 | Deterministic admission/projection coverage | 94/94 | 100% |
-| Selected identity MBT coverage | 89/94 | 94.7% |
+| Selected identity MBT coverage | 90/94 | 95.7% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -911,6 +911,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `rogue_cunning_action` | `unit-feature.alternate-action-cost` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `rogue_evasion` | `unit-feature.save-damage-replacement` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `rogue_uncanny_dodge` | `unit-feature.reaction-roll-or-damage-reduction` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `rogue_expertise` | `character-creation.skill-expertise-choice` | L1D2-ROGUE-EXPERTISE | `packages/character-creation-runtime/src/rogue-expertise-selected-identity.mbt.test.ts` |
 | `rogue_sneak_attack` | `unit-feature.attack-damage-rider` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `sorcerer_innate_sorcery` | `unit-feature.innate-sorcery-activation` | L1D2-SORCERER-INNATE-SORCERY | `packages/battle-runtime/src/feature-selected-identity.mbt.test.ts` |
 | `wizard_ritual_adept` | `character-sheet.spellbook-ritual-invocation` | spellbook-ritual-invocation | `packages/character-sheet-runtime/src/spellbook-ritual-selected-identity.mbt.test.ts` |
