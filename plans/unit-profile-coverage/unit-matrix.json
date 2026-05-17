@@ -93,8 +93,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 93,
-      "numerator": 53,
-      "percent": "57%"
+      "numerator": 54,
+      "percent": "58.1%"
     },
     "supportedProfileCoverage": {
       "denominator": 117,
@@ -10569,6 +10569,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "QMBT32"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1H-MASS-HEALING-WORD"
         }
       ],
       "executableMechanics": true,

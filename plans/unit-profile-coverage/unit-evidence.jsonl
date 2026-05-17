@@ -61,6 +61,7 @@
 {"unitId":"cure_wounds","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT32","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"cure_wounds","evidence":{"tag":"selected-identity-mbt","taskId":"healing-stabilization","ownerPath":"packages/battle-runtime/src/rule-core-spells.mbt.test.ts"}}
 {"unitId":"mass_healing_word","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT32","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
+{"unitId":"mass_healing_word","evidence":{"tag":"selected-identity-mbt","taskId":"L1H-MASS-HEALING-WORD","ownerPath":"packages/battle-runtime/src/rule-core-spells.mbt.test.ts"}}
 {"unitId":"mass_cure_wounds","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT34","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"mass_cure_wounds","evidence":{"tag":"selected-identity-mbt","taskId":"L1H-MASS-CURE-WOUNDS","ownerPath":"packages/battle-runtime/src/rule-core-spells.mbt.test.ts"}}
 {"unitId":"feat_boon_of_combat_prowess","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT56","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}

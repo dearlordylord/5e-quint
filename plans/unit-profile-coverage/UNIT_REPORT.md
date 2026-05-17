@@ -23,7 +23,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Runtime mapping coverage | 62/62 | 100% |
 | Runtime parity coverage | 62/62 | 100% |
 | Deterministic admission/projection coverage | 93/93 | 100% |
-| Selected identity MBT coverage | 53/93 | 57% |
+| Selected identity MBT coverage | 54/93 | 58.1% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -918,6 +918,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `mage_armor` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | L1H-MAGE-ARMOR | `packages/battle-runtime/src/mage-armor-selected-identity.mbt.test.ts` |
 | `magic_missile` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | spell-procedure-core | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
 | `mass_cure_wounds` | `spell.hit-point-restoration` | L1H-MASS-CURE-WOUNDS | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
+| `mass_healing_word` | `spell.hit-point-restoration` | L1H-MASS-HEALING-WORD | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
 | `healing_word` | `spell.hit-point-restoration` | healing-stabilization | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
 | `shield` | `spell.reaction-shield` | reaction-interruption | `packages/battle-runtime/src/reaction-spell-selected-identity.mbt.test.ts` |
 | `shield_of_faith` | `spell.scalar-buff` | roll-modifier-buff | `packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts` |

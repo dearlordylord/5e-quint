@@ -3,12 +3,14 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt spell-procedure-core magic_missile ray_of_frost acid_splash
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt healing-stabilization healing_word cure_wounds
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-MASS-CURE-WOUNDS mass_cure_wounds
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-MASS-HEALING-WORD mass_healing_word
 // UNIT-IDENTITY-MBT-REPLAY: spell-procedure-core magic_missile doMagicMissileNeedsAllocation doMagicMissileLow doReadySpellHold doReleaseReadiedSpell
 // UNIT-IDENTITY-MBT-REPLAY: spell-procedure-core ray_of_frost doRayOfFrostNeedsTarget doRayOfFrostNeedsAttackRoll doRayOfFrostNeedsDamageRoll doRayOfFrostMiss doRayOfFrostHit doRayOfFrostCritical
 // UNIT-IDENTITY-MBT-REPLAY: spell-procedure-core acid_splash doAcidSplashNeedsSavingThrow doAcidSplashNeedsDamageRoll doAcidSplashAllSuccess doAcidSplashOneFail
 // UNIT-IDENTITY-MBT-REPLAY: healing-stabilization healing_word doHealingWordNeedsTarget doHealingWordNeedsHealingRoll doHealingWordWounded doHealingWordZeroHp
 // UNIT-IDENTITY-MBT-REPLAY: healing-stabilization cure_wounds doCureWoundsNeedsTarget doCureWoundsNeedsHealingRoll doCureWoundsWounded
 // UNIT-IDENTITY-MBT-REPLAY: L1H-MASS-CURE-WOUNDS mass_cure_wounds doMassCureWoundsNeedsTargetList doMassCureWoundsNeedsHealingRoll doMassCureWoundsWounded
+// UNIT-IDENTITY-MBT-REPLAY: L1H-MASS-HEALING-WORD mass_healing_word doMassHealingWordNeedsTargetList doMassHealingWordNeedsHealingRoll doMassHealingWordWounded
 import * as path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
@@ -175,7 +177,8 @@ type SelectedUnitIdentityReplay = {
   readonly taskId:
     | "spell-procedure-core"
     | "healing-stabilization"
-    | "L1H-MASS-CURE-WOUNDS";
+    | "L1H-MASS-CURE-WOUNDS"
+    | "L1H-MASS-HEALING-WORD";
   readonly unitId: string;
   readonly actions: readonly RuleCoreSpellDriverAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
@@ -438,6 +441,51 @@ const selectedUnitIdentityReplays = [
           targetHp: 12,
           spellSlotSpentThisTurn: true,
           level1SlotsRemaining: 1,
+          lastResult: "resolved",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "L1H-MASS-HEALING-WORD",
+    unitId: "mass_healing_word",
+    actions: [
+      "doMassHealingWordNeedsTargetList",
+      "doMassHealingWordNeedsHealingRoll",
+      "doMassHealingWordWounded",
+    ],
+    sequences: [
+      {
+        name: "target-list-hole",
+        actions: ["doMassHealingWordNeedsTargetList"],
+        expected: expectedSpellProjection({
+          targetHp: 4,
+          secondTargetHp: 4,
+          level1SlotsRemaining: 0,
+          holes: ["SpellTargetList"],
+          lastResult: "needsHoles",
+        }),
+      },
+      {
+        name: "healing-roll-hole",
+        actions: ["doMassHealingWordNeedsHealingRoll"],
+        expected: expectedSpellProjection({
+          targetHp: 4,
+          secondTargetHp: 4,
+          level1SlotsRemaining: 0,
+          holes: ["DamageRoll"],
+          lastResult: "needsHoles",
+        }),
+      },
+      {
+        name: "wounded-targets",
+        actions: ["doMassHealingWordWounded"],
+        expected: expectedSpellProjection({
+          bonusActionAvailable: false,
+          targetHp: 12,
+          secondTargetHp: 12,
+          spellSlotSpentThisTurn: true,
+          level1SlotsRemaining: 0,
           lastResult: "resolved",
         }),
       },

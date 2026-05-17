@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "L1H-MASS-HEALING-WORD",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Mass Healing Word Selected Identity Replay"
     },
     {
@@ -236,7 +236,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-M-P.md` Mass Cure Wounds.
 
 ### Task 8 - L1H-MASS-HEALING-WORD - Mass Healing Word Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `mass_healing_word` if it remains in the
 supported selected identity denominator after the precheck. Keep this as a tail
