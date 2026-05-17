@@ -1182,6 +1182,9 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
   helpers imported by the canonical spec.
 - `battle-runtime-armor-class.qnt` - Armor Class and Mage Armor projection
   helpers imported by the canonical spec.
+- `battle-runtime-thaumaturgy.qnt` - Thaumaturgy Booming Voice active effect,
+  one-minute effect count, and self ability-check Advantage helpers imported by
+  the canonical spec.
 - `battle-runtime.mbt.qnt` - package-local randomized model for the selected
   integrated promoted MBT path.
 

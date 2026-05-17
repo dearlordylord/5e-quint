@@ -52,6 +52,7 @@ module battleRuntime {
   import battleRuntimeLight.* from "./battle-runtime-light"
   import battleRuntimeCreatureTypeProtection.* from "./battle-runtime-creature-type-protection"
   import battleRuntimeArmorClass.* from "./battle-runtime-armor-class"
+  import battleRuntimeThaumaturgy.* from "./battle-runtime-thaumaturgy"
 
   // SRD traceability for this canonical battle runtime spec:
   // - Playing-the-Game.md lines 479-495: combat proceeds in rounds and turns
@@ -4182,48 +4183,6 @@ module battleRuntime {
       })
     ) AdvantageAbilityCheck else NormalAbilityCheck
 
-  pure def thaumaturgyBoomingVoiceDurationTicks: int = 10
-
-  pure def thaumaturgyMaxActiveOneMinuteEffects: int = 3
-
-  pure def thaumaturgyBoomingVoiceActiveEffect(source: Actor): ActiveEffect =
-    ThaumaturgyBoomingVoice({
-      source: source,
-      durationTicks: thaumaturgyBoomingVoiceDurationTicks,
-    })
-
-  pure def activeEffectsWithoutThaumaturgyBoomingVoice(effects: Set[ActiveEffect], source: Actor): Set[ActiveEffect] =
-    effects.filter(effect => match effect {
-      | ThaumaturgyBoomingVoice(data) => data.source != source
-      | _ => true
-    })
-
-  pure def activeEffectsContainThaumaturgyBoomingVoice(effects: Set[ActiveEffect], source: Actor): bool =
-    effects.exists(effect => match effect {
-      | ThaumaturgyBoomingVoice(data) => data.source == source
-      | _ => false
-    })
-
-  pure def thaumaturgyActiveOneMinuteEffectCountAfterBoomingVoiceCast(
-    effects: Set[ActiveEffect],
-    source: Actor,
-    activeOneMinuteEffectCount: int,
-  ): int =
-    if (activeEffectsContainThaumaturgyBoomingVoice(effects, source))
-      activeOneMinuteEffectCount
-    else
-      activeOneMinuteEffectCount + 1
-
-  pure def thaumaturgyBoomingVoiceAbilityCheckRollMode(effects: Set[ActiveEffect], actor: Actor, ability: Ability, skill: AbilityCheckSkill): AbilityCheckRollMode =
-    if (
-      ability == ChaAbility and
-      skill == IntimidationSkill and
-      effects.exists(effect => match effect {
-        | ThaumaturgyBoomingVoice(data) => data.source == actor
-        | _ => false
-      })
-    ) AdvantageAbilityCheck else NormalAbilityCheck
-
   pure def requiredAbilityCheckRollMode(
     disadvantageMode: AbilityCheckRollMode,
     advantageMode: AbilityCheckRollMode,
@@ -4239,31 +4198,7 @@ module battleRuntime {
       NormalAbilityCheck
 
   pure def resolveThaumaturgyBoomingVoice(state: BattleState, activeOneMinuteEffectCount: int): BattleState =
-    if (
-      currentActor(state) == Fighter and
-      activeOneMinuteEffectCount >= 0 and
-      (
-        not(activeEffectsContainThaumaturgyBoomingVoice(state.fighter.activeEffects, Fighter)) or
-        activeOneMinuteEffectCount > 0
-      ) and
-      thaumaturgyActiveOneMinuteEffectCountAfterBoomingVoiceCast(state.fighter.activeEffects, Fighter, activeOneMinuteEffectCount) <= thaumaturgyMaxActiveOneMinuteEffects and
-      state.actionAvailable and
-      not(state.fighter.unconscious) and
-      not(state.fighter.incapacitated) and
-      not(fighterHasRage(state))
-    ) {
-      {
-        ...state,
-        fighter: {
-          ...state.fighter,
-          activeEffects: activeEffectsWithoutThaumaturgyBoomingVoice(state.fighter.activeEffects, Fighter)
-            .union(Set(thaumaturgyBoomingVoiceActiveEffect(Fighter))),
-        },
-        actionAvailable: false,
-      }
-    } else {
-      state
-    }
+    resolveFighterThaumaturgyBoomingVoice(state, currentActor(state), activeOneMinuteEffectCount, fighterHasRage(state))
 
   pure def rollModifierMaximumTargets(invocation: RollModifierSpell, slotLevel: int): int =
     match invocation {
