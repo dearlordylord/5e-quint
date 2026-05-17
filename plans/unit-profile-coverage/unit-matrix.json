@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 362,
-      "numerator": 116,
-      "percent": "32%"
+      "numerator": 117,
+      "percent": "32.3%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 429,
-      "numerator": 143,
-      "percent": "33.3%"
+      "numerator": 144,
+      "percent": "33.6%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 144
+      "value": 145
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 93,
-      "numerator": 93,
+      "denominator": 94,
+      "numerator": 94,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 144,
-      "numerator": 144,
+      "denominator": 145,
+      "numerator": 145,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 93,
+      "denominator": 94,
       "numerator": 56,
-      "percent": "60.2%"
+      "percent": "59.6%"
     },
     "supportedProfileCoverage": {
-      "denominator": 117,
-      "numerator": 93,
-      "percent": "79.5%"
+      "denominator": 118,
+      "numerator": 94,
+      "percent": "79.7%"
     }
   },
   "metricSemantics": [
@@ -944,6 +944,25 @@
       ]
     },
     {
+      "id": "character-sheet.short-rest-spell-slot-recovery",
+      "profileKind": "character-sheet",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "CharacterBuild Wizard progression plus installed Arcane Recovery class-feature Unit; ordinary Spell Slot expenditure state remains separate from Pact Slot recovery",
+      "taskRefs": [
+        "SRDINV24"
+      ],
+      "title": "Character Sheet applies Short Rest ordinary Spell Slot recovery from Wizard Arcane Recovery and resets that use on Long Rest",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
       "id": "character-sheet.spellbook-ritual-invocation",
       "profileKind": "character-sheet",
       "qntOwners": [],
@@ -955,6 +974,25 @@
         "SRDINV26"
       ],
       "title": "Character Sheet admits ritual spell invocation from spellbook Spell Access and ritual-tagged Spell Definitions",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-sheet.weapon-mastery-reselection",
+      "profileKind": "character-sheet",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "CharacterBuild selected class-choice refs plus Surface Weapon Mastery class-feature choose, Long Rest change count, and eligible weapon facts; selected mastery-property execution remains owned by selected Mastery Property Unit profiles",
+      "taskRefs": [
+        "AT-L1-04"
+      ],
+      "title": "Character Sheet applies Long Rest Weapon Mastery reselection to selected class-choice refs",
       "verificationOwners": [
         {
           "kind": "runtime-test",
@@ -2141,6 +2179,144 @@
           "ownerPath": "packages/battle-runtime/src/find-familiar-lifecycle.test.ts"
         }
       ]
+    },
+    {
+      "id": "character-creation.class-feature-feat-choice",
+      "profileKind": "character-creation",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "Surface class-feature grant_feat records plus Character Draft Unit-backed selections; selected feat execution remains owned by the selected feat Unit profile.",
+      "taskRefs": [
+        "AT-L1-03S"
+      ],
+      "title": "Character Creation finalizes class-feature feat choices as selected build feature refs",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-creation.class-feature-advancement-replacement",
+      "profileKind": "character-creation",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "CharacterBuild progression plus Surface class-feature and class spellcasting facts; replacement and gain choices are accepted only as part of a class-level gain and rewrite existing CharacterBuild feature refs, selected invocation ownership, or Warlock Pact Magic spellcasting facts without parallel selected-option state.",
+      "taskRefs": [
+        "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE",
+        "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE",
+        "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
+      ],
+      "title": "Character Creation advances CharacterBuild class levels with class-feature replacement and gain choices",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-creation.warlock-pact-magic-advancement",
+      "profileKind": "character-creation",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "Surface Warlock Pact Magic progression rows and class spell list facts project into the CharacterBuild Warlock spellcasting source and Pact Magic slot pool during Warlock class-level gains; spell execution and selected invocation execution remain owned by selected spell and invocation profiles.",
+      "taskRefs": [
+        "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
+      ],
+      "title": "Character Creation advances Warlock Pact Magic build facts from Surface progression",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-creation.weapon-mastery-choice",
+      "profileKind": "character-creation",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "Surface Weapon Mastery class-feature records plus class weapon proficiencies and Character Draft selections; mastery-property execution remains owned by selected mastery Unit profiles.",
+      "taskRefs": [
+        "AT-L1-03S",
+        "AT-L1-04"
+      ],
+      "title": "Character Creation finalizes Weapon Mastery weapon choices as selected class-choice refs",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-creation.eldritch-invocation-choice",
+      "profileKind": "character-creation",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "Warlock Eldritch Invocations class-feature choice, Surface Warlock invocation count facts, current CharacterBuild Warlock Pact Magic cantrip facts, and the runtime SRD invocation option catalog; CharacterBuild stores selected invocation ownership plus Repeatable associated choice identity while selected invocation execution remains owned by selected invocation profiles.",
+      "taskRefs": [
+        "AT-L1-03S",
+        "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE",
+        "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
+      ],
+      "title": "Character Creation finalizes and advances Eldritch Invocation choices as selected invocation ownership",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-creation.class-feature-option-projection",
+      "profileKind": "character-creation",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "Surface class-feature option records such as Divine Order and Primal Order projected from accepted Character Draft selections into CharacterBuild facts.",
+      "taskRefs": [
+        "AT-L1-03S"
+      ],
+      "title": "Character Creation projects class-feature option choices into build facts",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-creation.skill-expertise-choice",
+      "profileKind": "character-creation",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "Surface grant-expertise class-feature choices over existing CharacterBuild skill proficiencies projected into Expertise proficiency levels.",
+      "taskRefs": [
+        "AT-L1-03S"
+      ],
+      "title": "Character Creation finalizes skill Expertise choices into build proficiency levels",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ]
     }
   ],
   "taskClaims": [
@@ -2452,6 +2628,14 @@
         "character-sheet.armor-class-base-formula"
       ],
       "taskId": "SRDINV23"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Character Sheet Short Rest Spell Slot recovery runtime tests for Wizard Arcane Recovery ordinary Spell Slot refund, once-per-Long-Rest use, level budget rejection, feature ownership, and Long Rest reset.",
+      "profileIds": [
+        "character-sheet.short-rest-spell-slot-recovery"
+      ],
+      "taskId": "SRDINV24"
     },
     {
       "claimKind": "completed-runtime-parity",
@@ -3530,6 +3714,27 @@
       "taskId": "SRDINV84I5"
     },
     {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Character Creation runtime tests and support-profile owner markers cover shared class-feature feat, Weapon Mastery, Eldritch Invocation, class-feature option projection, and skill Expertise choice boundaries.",
+      "profileIds": [
+        "character-creation.class-feature-feat-choice",
+        "character-creation.weapon-mastery-choice",
+        "character-creation.eldritch-invocation-choice",
+        "character-creation.class-feature-option-projection",
+        "character-creation.skill-expertise-choice"
+      ],
+      "taskId": "AT-L1-03S"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Character Sheet Long Rest tests cover Weapon Mastery reselection for Fighter, Barbarian, Paladin, Ranger, and Rogue by replacing selected class-choice refs from Surface feature eligibility while leaving mastery-property execution to selected Mastery Property Unit profiles.",
+      "profileIds": [
+        "character-creation.weapon-mastery-choice",
+        "character-sheet.weapon-mastery-reselection"
+      ],
+      "taskId": "AT-L1-04"
+    },
+    {
       "claimKind": "qnt-proof",
       "note": "Promoted battle-runtime Quint facts for Produce Flame's source-owned held Bright Light 20-foot radius plus Dim Light for an additional 20 feet emitter projection, recast replacement, duration cleanup, and hurl cleanup.",
       "profileIds": [
@@ -3598,6 +3803,33 @@
         "spell.invocation-dancing-lights-movable-dim-light"
       ],
       "taskId": "SRDINV89C"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused character-creation runtime tests cover CharacterBuild class-level gain with Fighter Fighting Style replacement as one advancement operation.",
+      "profileIds": [
+        "character-creation.class-feature-advancement-replacement"
+      ],
+      "taskId": "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused character-creation runtime tests cover Warlock level gains that add invocations from the Surface invocation count table, optional Warlock-level replacement with prerequisite gating, prerequisite-retention lockout, Repeatable invocation associated-choice identity, and duplicate-selection enforcement.",
+      "profileIds": [
+        "character-creation.eldritch-invocation-choice",
+        "character-creation.class-feature-advancement-replacement"
+      ],
+      "taskId": "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused character-creation runtime tests cover Warlock Pact Magic advancement from Surface progression facts, including cantrip and prepared-spell gains, Warlock-level cantrip and prepared-spell replacement, Pact Slot count and slot-level projection, and invocation prerequisite checks against freshly updated Warlock cantrip facts.",
+      "profileIds": [
+        "character-creation.warlock-pact-magic-advancement",
+        "character-creation.eldritch-invocation-choice",
+        "character-creation.class-feature-advancement-replacement"
+      ],
+      "taskId": "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
     }
   ],
   "units": [
@@ -3899,16 +4131,72 @@
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
           "owner": "selected Fighting Style feat Unit",
-          "reason": "The class feature chooses a Fighting Style feat; the selected feat Unit owns executable battle pressure."
+          "reason": "The class feature owns Fighting Style selection and Fighter-level replacement; selected Fighting Style feat Units own executable battle pressure."
         },
-        "reason": "Choice/grant container; selected Fighting Style feat carries executable pressure.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "character-creation.class-feature-feat-choice",
+          "character-creation.class-feature-advancement-replacement"
+        ],
+        "supportedMechanics": [
+          "Level 1 Fighter character creation discovers the Fighting Style feat choice from the Surface class-feature record",
+          "Character Creation admits one selected Fighting Style feat and finalizes it as a selected CharacterBuild feature ref with selectedFromUnitId fighter_fighting_style",
+          "When a Fighter level is gained, Character Creation can replace the existing selected Fighting Style feat ref with a different supported Fighting Style feat ref in the same advancement operation",
+          "Selected Fighting Style feat execution remains owned by the selected feat Unit profile"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "AT-L1-03"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-creation.class-feature-feat-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface class-feature grant_feat records plus Character Draft Unit-backed selections; selected feat execution remains owned by the selected feat Unit profile.",
+          "taskRefs": [
+            "AT-L1-03S"
+          ],
+          "title": "Character Creation finalizes class-feature feat choices as selected build feature refs",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-creation.class-feature-advancement-replacement",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "CharacterBuild progression plus Surface class-feature and class spellcasting facts; replacement and gain choices are accepted only as part of a class-level gain and rewrite existing CharacterBuild feature refs, selected invocation ownership, or Warlock Pact Magic spellcasting facts without parallel selected-option state.",
+          "taskRefs": [
+            "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE",
+            "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE",
+            "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
+          ],
+          "title": "Character Creation advances CharacterBuild class levels with class-feature replacement and gain choices",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/fighter_fighting_style.json",
       "unitId": "fighter_fighting_style"
     },
@@ -3980,19 +4268,79 @@
         "status": "installed"
       },
       "claim": {
-        "battleReadinessClosure": {
-          "kind": "selection-grant-container",
-          "owner": "selected Mastery Property Unit",
-          "reason": "The class feature grants weapon mastery choices; selected mastery property Units own executable battle pressure."
-        },
-        "reason": "Weapon mastery grant container; mastery Unit carries executable pressure.",
-        "tag": "unsupported-profile"
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "later-level-only",
+              "owner": "SRDINV78 later-level Weapon Mastery count scaling",
+              "reason": "The remaining Fighter Weapon Mastery selected-weapon count increases occur only after level 1."
+            },
+            "followUpTaskId": "SRDINV78",
+            "mechanic": "later-level Fighter Weapon Mastery selected-weapon count increases beyond the three level-1 selections"
+          }
+        ],
+        "profileIds": [
+          "character-creation.weapon-mastery-choice",
+          "character-sheet.weapon-mastery-reselection"
+        ],
+        "supportedMechanics": [
+          "Level 1 Fighter character creation discovers and finalizes three selected Weapon Mastery weapon refs from the Surface class-feature record",
+          "Character Sheet Long Rest reselection reads the Surface feature's one-choice Long Rest change count and eligible Simple or Martial weapon facts, then replaces the selected CharacterBuild class-choice refs without parallel state",
+          "Selected mastery-property execution remains owned by selected Mastery Property Unit profiles"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "AT-L1-04"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-creation.weapon-mastery-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface Weapon Mastery class-feature records plus class weapon proficiencies and Character Draft selections; mastery-property execution remains owned by selected mastery Unit profiles.",
+          "taskRefs": [
+            "AT-L1-03S",
+            "AT-L1-04"
+          ],
+          "title": "Character Creation finalizes Weapon Mastery weapon choices as selected class-choice refs",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-sheet.weapon-mastery-reselection",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "CharacterBuild selected class-choice refs plus Surface Weapon Mastery class-feature choose, Long Rest change count, and eligible weapon facts; selected mastery-property execution remains owned by selected Mastery Property Unit profiles",
+          "taskRefs": [
+            "AT-L1-04"
+          ],
+          "title": "Character Sheet applies Long Rest Weapon Mastery reselection to selected class-choice refs",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/fighter_weapon_mastery.json",
       "unitId": "fighter_weapon_mastery"
     },
@@ -4471,19 +4819,79 @@
         "status": "installed"
       },
       "claim": {
-        "battleReadinessClosure": {
-          "kind": "selection-grant-container",
-          "owner": "selected Mastery Property Unit",
-          "reason": "The class feature grants weapon mastery choices; selected mastery property Units own executable battle pressure."
-        },
-        "reason": "Weapon mastery grant container; mastery Unit carries executable pressure.",
-        "tag": "unsupported-profile"
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "later-level-only",
+              "owner": "SRDINV78 later-level Weapon Mastery count scaling",
+              "reason": "The remaining Barbarian Weapon Mastery selected-weapon count increases occur only after level 1."
+            },
+            "followUpTaskId": "SRDINV78",
+            "mechanic": "later-level Barbarian Weapon Mastery selected-weapon count increases beyond the two level-1 selections"
+          }
+        ],
+        "profileIds": [
+          "character-creation.weapon-mastery-choice",
+          "character-sheet.weapon-mastery-reselection"
+        ],
+        "supportedMechanics": [
+          "Level 1 Barbarian character creation discovers and finalizes two selected melee Weapon Mastery weapon refs from the Surface class-feature record",
+          "Character Sheet Long Rest reselection reads the Surface feature's one-choice Long Rest change count and eligible Simple or Martial Melee weapon facts, then replaces the selected CharacterBuild class-choice refs without parallel state",
+          "Selected mastery-property execution remains owned by selected Mastery Property Unit profiles"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "AT-L1-04"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-creation.weapon-mastery-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface Weapon Mastery class-feature records plus class weapon proficiencies and Character Draft selections; mastery-property execution remains owned by selected mastery Unit profiles.",
+          "taskRefs": [
+            "AT-L1-03S",
+            "AT-L1-04"
+          ],
+          "title": "Character Creation finalizes Weapon Mastery weapon choices as selected class-choice refs",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-sheet.weapon-mastery-reselection",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "CharacterBuild selected class-choice refs plus Surface Weapon Mastery class-feature choose, Long Rest change count, and eligible weapon facts; selected mastery-property execution remains owned by selected Mastery Property Unit profiles",
+          "taskRefs": [
+            "AT-L1-04"
+          ],
+          "title": "Character Sheet applies Long Rest Weapon Mastery reselection to selected class-choice refs",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/barbarian_weapon_mastery.json",
       "unitId": "barbarian_weapon_mastery"
     },
@@ -4676,19 +5084,48 @@
         "status": "installed"
       },
       "claim": {
-        "battleReadinessClosure": {
-          "kind": "selection-grant-container",
-          "owner": "character-creation-runtime",
-          "reason": "Divine Order is a character-creation suborder choice; no promoted battle Unit profile consumes the container directly."
-        },
-        "reason": "Class feature source facts are authored for character creation choices; no promoted battle Unit profile consumes this suborder choice directly.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "character-creation.class-feature-option-projection"
+        ],
+        "supportedMechanics": [
+          "Level 1 Cleric character creation discovers both Divine Order options from the Surface class-feature record",
+          "Character Creation admits Protector and projects its Martial weapon and Heavy armor proficiency grants into CharacterBuild proficiency facts",
+          "Character Creation admits Thaumaturge in starting-class and supported multiclass-entry progressions, discovers and finalizes its extra Cleric cantrip choice, and projects its Wisdom-modifier bonus to Intelligence Ability Checks using Arcana or Religion into CharacterBuild feature facts",
+          "Character Creation preserves the selected Divine Order projection as runtime-owned CharacterBuild output"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "AT-L1-06"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-creation.class-feature-option-projection",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface class-feature option records such as Divine Order and Primal Order projected from accepted Character Draft selections into CharacterBuild facts.",
+          "taskRefs": [
+            "AT-L1-03S"
+          ],
+          "title": "Character Creation projects class-feature option choices into build facts",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/cleric_divine_order.json",
       "unitId": "cleric_divine_order"
     },
@@ -4722,19 +5159,48 @@
         "status": "installed"
       },
       "claim": {
-        "battleReadinessClosure": {
-          "kind": "selection-grant-container",
-          "owner": "character-creation-runtime",
-          "reason": "Primal Order is a character-creation suborder choice; no promoted battle Unit profile consumes the container directly."
-        },
-        "reason": "Class feature source facts are authored for character creation choices; no promoted battle Unit profile consumes this suborder choice directly.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "character-creation.class-feature-option-projection"
+        ],
+        "supportedMechanics": [
+          "Level 1 Druid character creation discovers both Primal Order options from the Surface class-feature record",
+          "Character Creation admits Magician in starting-class and supported multiclass-entry progressions, discovers and finalizes its extra Druid cantrip choice, and projects its Wisdom-modifier bonus to Intelligence Ability Checks using Arcana or Nature into CharacterBuild feature facts",
+          "Character Creation admits Warden and projects its Martial weapon and Medium armor proficiency grants into CharacterBuild proficiency facts",
+          "Character Creation preserves the selected Primal Order projection as runtime-owned CharacterBuild output"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "AT-L1-06"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-creation.class-feature-option-projection",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface class-feature option records such as Divine Order and Primal Order projected from accepted Character Draft selections into CharacterBuild facts.",
+          "taskRefs": [
+            "AT-L1-03S"
+          ],
+          "title": "Character Creation projects class-feature option choices into build facts",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/druid_primal_order.json",
       "unitId": "druid_primal_order"
     },
@@ -4955,6 +5421,15 @@
             },
             "followUpTaskId": "SRDINV78",
             "mechanic": "later-level Favored Enemy free-cast count scaling beyond two uses"
+          },
+          {
+            "battleReadinessClosure": {
+              "kind": "social-knowledge-effect",
+              "owner": "SRDINV66 ability-check roll-mode owner",
+              "reason": "Hunter's Mark finding Advantage is an ability-check roll-mode projection, not additional battle reducer behavior for Favored Enemy."
+            },
+            "followUpTaskId": "SRDINV66",
+            "mechanic": "Hunter's Mark Perception/Survival finding Advantage remains deferred to ability-check roll-mode work"
           }
         ],
         "profileIds": [
@@ -4966,7 +5441,7 @@
         "supportedMechanics": [
           "always-prepared Hunter's Mark access through retained prepared Spell Access",
           "two-use Favored Enemy Long Rest free-cast resource at Ranger level 1",
-          "free-cast Hunter's Mark uses the existing marked damage rider, target gate, Concentration ownership, Bonus Action cost, and Wisdom (Perception or Survival) Advantage to find the marked target",
+          "free-cast Hunter's Mark uses the existing marked damage rider, target gate, Concentration ownership, and Bonus Action cost",
           "normal Spell Slot Hunter's Mark casting remains available when the free-cast resource is exhausted"
         ],
         "tag": "profile-subset-supported"
@@ -5226,19 +5701,53 @@
         "status": "installed"
       },
       "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "character-creation-runtime",
-          "reason": "Expertise is a character-creation skill choice boundary, not a promoted battle Unit profile."
-        },
-        "reason": "Class feature source facts are authored for character creation skill Expertise choices; no promoted battle Unit profile consumes this choice directly.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "character-creation.skill-expertise-choice"
+        ],
+        "supportedMechanics": [
+          "Level 1 Rogue character creation discovers the Expertise grant over owned skill proficiencies from the Surface class-feature record",
+          "Character Creation admits exactly two selected owned skill proficiencies for the level-1 Rogue Expertise choice",
+          "Character Creation admits the Rogue level 6 Expertise increase as four total selected owned skill proficiencies from the same Surface grant-expertise record",
+          "Character Creation finalizes the selected skills as CharacterBuild Expertise proficiency levels through the existing build proficiency projection without duplicating CharacterBuild proficiency state"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "AT-L1-07"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/rogue-expertise-level6.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-creation.skill-expertise-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface grant-expertise class-feature choices over existing CharacterBuild skill proficiencies projected into Expertise proficiency levels.",
+          "taskRefs": [
+            "AT-L1-03S"
+          ],
+          "title": "Character Creation finalizes skill Expertise choices into build proficiency levels",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/rogue_expertise.json",
       "unitId": "rogue_expertise"
     },
@@ -5401,17 +5910,102 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
-          "owner": "selected Eldritch Invocation option Unit",
-          "reason": "The class feature chooses an invocation option; individual invocation Units own executable pressure."
+          "owner": "selected Eldritch Invocation option profiles",
+          "reason": "The class feature owns selection and Warlock-level lifecycle, including Pact Magic prerequisite facts; selected invocation option profiles own executable battle behavior."
         },
-        "reason": "Invocation choice source facts are authored; individual invocation option execution is outside this class-feature Unit profile.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "character-creation.eldritch-invocation-choice",
+          "character-creation.class-feature-advancement-replacement",
+          "character-creation.warlock-pact-magic-advancement"
+        ],
+        "supportedMechanics": [
+          "Level 1 Warlock character creation discovers the Eldritch Invocation choice from the Surface class-feature record",
+          "Character Creation admits the level-1 eligible invocation options by filtering the SRD invocation option catalog to options with no prerequisites at level 1",
+          "Character Creation finalizes one selected invocation as selected Eldritch Invocation ownership with selectedFromUnitId warlock_eldritch_invocations",
+          "Character Creation finalizes Warlock level-1 Pact Magic cantrips, prepared spells, and Pact Slot capacity from Surface class spellcasting facts",
+          "When a Warlock level is gained, Character Creation derives the required selected invocation count from the Surface Warlock Invocations column and requires exactly the newly gained invocation choices",
+          "When a Warlock level is gained, Character Creation can replace one selected invocation selection, including one Repeatable invocation instance identified by its associated choice, with another invocation selection for which the final build qualifies",
+          "When a Warlock level is gained, Character Creation advances Pact Magic cantrip totals, prepared-spell totals, Pact Slot count and slot level, and optional cantrip or prepared-spell replacement from the Surface Warlock table before checking invocation prerequisites",
+          "Invocation prerequisite gating checks minimum Warlock level, selected prerequisite invocations, and known Warlock cantrip damage prerequisites from current CharacterBuild spellcasting facts after Pact Magic advancement",
+          "Invocation replacement is blocked when another retained selected invocation has the replaced invocation as a prerequisite",
+          "Duplicate non-Repeatable selected invocations are rejected; Repeatable selected invocations require distinct associated choices",
+          "Selected invocation execution remains owned by the selected invocation option profiles"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-creation.eldritch-invocation-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Warlock Eldritch Invocations class-feature choice, Surface Warlock invocation count facts, current CharacterBuild Warlock Pact Magic cantrip facts, and the runtime SRD invocation option catalog; CharacterBuild stores selected invocation ownership plus Repeatable associated choice identity while selected invocation execution remains owned by selected invocation profiles.",
+          "taskRefs": [
+            "AT-L1-03S",
+            "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE",
+            "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
+          ],
+          "title": "Character Creation finalizes and advances Eldritch Invocation choices as selected invocation ownership",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-creation.class-feature-advancement-replacement",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "CharacterBuild progression plus Surface class-feature and class spellcasting facts; replacement and gain choices are accepted only as part of a class-level gain and rewrite existing CharacterBuild feature refs, selected invocation ownership, or Warlock Pact Magic spellcasting facts without parallel selected-option state.",
+          "taskRefs": [
+            "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE",
+            "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE",
+            "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
+          ],
+          "title": "Character Creation advances CharacterBuild class levels with class-feature replacement and gain choices",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-creation.warlock-pact-magic-advancement",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface Warlock Pact Magic progression rows and class spell list facts project into the CharacterBuild Warlock spellcasting source and Pact Magic slot pool during Warlock class-level gains; spell execution and selected invocation execution remain owned by selected spell and invocation profiles.",
+          "taskRefs": [
+            "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
+          ],
+          "title": "Character Creation advances Warlock Pact Magic build facts from Surface progression",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/warlock_eldritch_invocations.json",
       "unitId": "warlock_eldritch_invocations"
     },
@@ -5469,19 +6063,43 @@
         "status": "installed"
       },
       "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "character-sheet/rest runtime",
-          "reason": "Short Rest Spell Slot recovery is outside promoted battle runtime."
-        },
-        "reason": "Spell slot recovery outside battle is not a promoted Unit profile yet.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "character-sheet.short-rest-spell-slot-recovery"
+        ],
+        "rawRequirementIds": [],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "SRDINV91B"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-sheet.short-rest-spell-slot-recovery",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "CharacterBuild Wizard progression plus installed Arcane Recovery class-feature Unit; ordinary Spell Slot expenditure state remains separate from Pact Slot recovery",
+          "taskRefs": [
+            "SRDINV24"
+          ],
+          "title": "Character Sheet applies Short Rest ordinary Spell Slot recovery from Wizard Arcane Recovery and resets that use on Long Rest",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/wizard_arcane_recovery.json",
       "unitId": "wizard_arcane_recovery"
     },
@@ -5863,16 +6481,70 @@
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
           "owner": "selected Mastery Property Unit",
-          "reason": "The class feature grants weapon mastery choices; selected mastery property Units own executable battle pressure."
+          "reason": "The class feature owns Weapon Mastery selection and Long Rest reselection; selected Mastery Property Units own executable battle pressure."
         },
-        "reason": "Weapon mastery grant container; mastery Unit carries executable pressure.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "character-creation.weapon-mastery-choice",
+          "character-sheet.weapon-mastery-reselection"
+        ],
+        "supportedMechanics": [
+          "Level 1 Paladin character creation discovers and finalizes two selected proficient Weapon Mastery weapon refs from the Surface class-feature record",
+          "Character Sheet Long Rest reselection reads the Surface feature's two-choice Long Rest change count and eligible proficient weapon facts, then replaces the selected CharacterBuild class-choice refs without parallel state",
+          "Selected mastery-property execution remains owned by selected Mastery Property Unit profiles"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "AT-L1-04"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-creation.weapon-mastery-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface Weapon Mastery class-feature records plus class weapon proficiencies and Character Draft selections; mastery-property execution remains owned by selected mastery Unit profiles.",
+          "taskRefs": [
+            "AT-L1-03S",
+            "AT-L1-04"
+          ],
+          "title": "Character Creation finalizes Weapon Mastery weapon choices as selected class-choice refs",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-sheet.weapon-mastery-reselection",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "CharacterBuild selected class-choice refs plus Surface Weapon Mastery class-feature choose, Long Rest change count, and eligible weapon facts; selected mastery-property execution remains owned by selected Mastery Property Unit profiles",
+          "taskRefs": [
+            "AT-L1-04"
+          ],
+          "title": "Character Sheet applies Long Rest Weapon Mastery reselection to selected class-choice refs",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/paladin_weapon_mastery.json",
       "unitId": "paladin_weapon_mastery"
     },
@@ -6004,16 +6676,70 @@
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
           "owner": "selected Mastery Property Unit",
-          "reason": "The class feature grants weapon mastery choices; selected mastery property Units own executable battle pressure."
+          "reason": "The class feature owns Weapon Mastery selection and Long Rest reselection; selected Mastery Property Units own executable battle pressure."
         },
-        "reason": "Weapon mastery grant container; mastery Unit carries executable pressure.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "character-creation.weapon-mastery-choice",
+          "character-sheet.weapon-mastery-reselection"
+        ],
+        "supportedMechanics": [
+          "Level 1 Ranger character creation discovers and finalizes two selected proficient Weapon Mastery weapon refs from the Surface class-feature record",
+          "Character Sheet Long Rest reselection reads the Surface feature's two-choice Long Rest change count and eligible proficient weapon facts, then replaces the selected CharacterBuild class-choice refs without parallel state",
+          "Selected mastery-property execution remains owned by selected Mastery Property Unit profiles"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "AT-L1-04"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-creation.weapon-mastery-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface Weapon Mastery class-feature records plus class weapon proficiencies and Character Draft selections; mastery-property execution remains owned by selected mastery Unit profiles.",
+          "taskRefs": [
+            "AT-L1-03S",
+            "AT-L1-04"
+          ],
+          "title": "Character Creation finalizes Weapon Mastery weapon choices as selected class-choice refs",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-sheet.weapon-mastery-reselection",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "CharacterBuild selected class-choice refs plus Surface Weapon Mastery class-feature choose, Long Rest change count, and eligible weapon facts; selected mastery-property execution remains owned by selected Mastery Property Unit profiles",
+          "taskRefs": [
+            "AT-L1-04"
+          ],
+          "title": "Character Sheet applies Long Rest Weapon Mastery reselection to selected class-choice refs",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/ranger_weapon_mastery.json",
       "unitId": "ranger_weapon_mastery"
     },
@@ -6027,16 +6753,70 @@
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
           "owner": "selected Mastery Property Unit",
-          "reason": "The class feature grants weapon mastery choices; selected mastery property Units own executable battle pressure."
+          "reason": "The class feature owns Weapon Mastery selection and Long Rest reselection; selected Mastery Property Units own executable battle pressure."
         },
-        "reason": "Weapon mastery grant container; mastery Unit carries executable pressure.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "character-creation.weapon-mastery-choice",
+          "character-sheet.weapon-mastery-reselection"
+        ],
+        "supportedMechanics": [
+          "Level 1 Rogue character creation discovers and finalizes two selected proficient Weapon Mastery weapon refs from the Surface class-feature record",
+          "Character Sheet Long Rest reselection reads the Surface feature's two-choice Long Rest change count and eligible proficient weapon facts, then replaces the selected CharacterBuild class-choice refs without parallel state",
+          "Selected mastery-property execution remains owned by selected Mastery Property Unit profiles"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "AT-L1-04"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-creation.weapon-mastery-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface Weapon Mastery class-feature records plus class weapon proficiencies and Character Draft selections; mastery-property execution remains owned by selected mastery Unit profiles.",
+          "taskRefs": [
+            "AT-L1-03S",
+            "AT-L1-04"
+          ],
+          "title": "Character Creation finalizes Weapon Mastery weapon choices as selected class-choice refs",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-sheet.weapon-mastery-reselection",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "CharacterBuild selected class-choice refs plus Surface Weapon Mastery class-feature choose, Long Rest change count, and eligible weapon facts; selected mastery-property execution remains owned by selected Mastery Property Unit profiles",
+          "taskRefs": [
+            "AT-L1-04"
+          ],
+          "title": "Character Sheet applies Long Rest Weapon Mastery reselection to selected class-choice refs",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/rogue_weapon_mastery.json",
       "unitId": "rogue_weapon_mastery"
     },
@@ -7726,6 +8506,17 @@
         "status": "installed"
       },
       "claim": {
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "table-spatial-derivation",
+              "owner": "table/spatial and presentation owners",
+              "reason": "Color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the runtime boundary."
+            },
+            "followUpTaskId": "SRDINV89D",
+            "mechanic": "color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the runtime boundary"
+          }
+        ],
         "profileIds": [
           "spell.invocation-attack-roll-advantage-save"
         ],
@@ -7733,17 +8524,16 @@
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
         ],
         "supportedMechanics": [
-          "20-foot point-origin Cube affected-creature boundary consumes typed table-supplied area membership witnesses",
+          "20-foot point-origin Cube affected-creature boundary with table-supplied area membership",
           "Dexterity save-gated affected creatures",
           "Concentration-owned outline effect that grants attack-roll Advantage against failed-save affected creatures when the attacker can see them and denies benefits from the Invisible condition",
-          "typed table-supplied faerieFireArea affected-object witnesses create concentration-owned object outline projections",
-          "object-target spell attacks consume typed table-supplied object sight witnesses to grant attack-roll Advantage against outlined objects",
+          "caller-supplied object ids for objects in the Cube create concentration-owned object outline projections",
+          "object-target spell attacks consume caller-supplied object sight facts to grant attack-roll Advantage against outlined objects",
           "affected creatures and objects shed concentration-owned Dim Light emitter facts in a 10-foot radius attached to their outline effects",
-          "typed table-supplied emitter projection witnesses derive Dim Light illumination from Faerie Fire object and creature emitters",
-          "derived Dim Light illumination projects Lightly Obscured sight consequences and Darkvision-adjusted sight consequences without duplicating emitter state",
-          "residual checklist: color rendering is runtime-detached presentation; automatic line-of-sight drawing, map geometry, and pathfinding derivation are runtime-detached table adjudication/presentation and no promoted runtime procedure consumes them"
+          "caller-supplied emitter projection facts derive Dim Light illumination from Faerie Fire object and creature emitters",
+          "derived Dim Light illumination projects Lightly Obscured sight consequences and Darkvision-adjusted sight consequences without duplicating emitter state"
         ],
-        "tag": "supported-profile"
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -7796,6 +8586,17 @@
         "status": "installed"
       },
       "claim": {
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "table-spatial-derivation",
+              "owner": "SRDINV55 table/spatial owner",
+              "reason": "Fall-distance derivation, map elevation, and landing geometry simulation remain table/spatial derivations."
+            },
+            "followUpTaskId": "SRDINV55",
+            "mechanic": "fall-distance derivation, map elevation, and landing geometry simulation remain outside the runtime boundary"
+          }
+        ],
         "profileIds": [
           "spell.invocation-feather-fall-mitigation"
         ],
@@ -7804,15 +8605,14 @@
           "RAW-PTG-REACTIONS-002"
         ],
         "supportedMechanics": [
-          "typed table-supplied falling Reaction trigger witness for the caster or a visible creature within 60 feet",
-          "up-to-five falling creature target admission using typed table-supplied falling and range witnesses",
+          "caller-supplied falling Reaction trigger for the caster or a visible creature within 60 feet",
+          "up-to-five falling creature target admission using caller-supplied falling and range facts",
           "Reaction and level-1 Spell Slot spend",
           "one-minute per-target Feather Fall mitigation effect",
           "active 60-foot-per-round descent-rate cap projection",
-          "typed table-supplied landing witness cleanup that ends the landed target's mitigation, emits no-fall-damage outcome, and suppresses Falling-Prone when Feather Fall prevents damage",
-          "residual checklist: fall-distance derivation, map elevation, and landing-geometry derivation are runtime-detached table adjudication; the promoted runtime consumes falling/range and landing witnesses and does not derive elevation, fall distance, or landing geometry"
+          "caller-supplied landing cleanup that ends the landed target's mitigation, emits no-fall-damage outcome, and suppresses Falling-Prone when Feather Fall prevents damage"
         ],
-        "tag": "supported-profile"
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -8009,6 +8809,24 @@
         "status": "installed"
       },
       "claim": {
+        "reason": "Fireball is installed as SRD spell catalog data for the non-level-1 spell expansion lane, but no promoted battle-runtime Fireball invocation profile is claimed yet.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/fireball.json",
+      "unitId": "fireball"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "deferredMechanics": [
           {
             "battleReadinessClosure": {
@@ -8091,6 +8909,17 @@
         "status": "installed"
       },
       "claim": {
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "table-spatial-derivation",
+              "owner": "SRDINV66 table/spatial owner",
+              "reason": "Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain table/spatial derivations."
+            },
+            "followUpTaskId": "SRDINV66",
+            "mechanic": "automatic area membership, line of sight, map illumination, pathfinding, and wind derivation"
+          }
+        ],
         "profileIds": [
           "spell.invocation-fog-cloud-obscurement"
         ],
@@ -8098,14 +8927,13 @@
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
         ],
         "supportedMechanics": [
-          "typed table-supplied point-origin fog area identity witness",
+          "caller-supplied point-origin fog area identity",
           "Concentration-owned Heavily Obscured area projection",
-          "20-foot Sphere radius at level 1 with +20 feet per slot above 1",
-          "one-hour Concentration duration and Concentration-break cleanup",
-          "typed table-triggered strong-wind dispersal command cleanup for the active fog area",
-          "residual checklist: automatic area membership, line-of-sight drawing, map illumination, pathfinding, and wind derivation are runtime-detached table adjudication/presentation; the promoted runtime consumes the fog area identity witness and typed strong-wind command and does not derive area membership, line of sight, map illumination, pathfinding, or wind"
+          "20-foot radius at level 1 with +20 feet per slot above 1",
+          "one-hour Concentration duration cleanup",
+          "table-supplied strong-wind dispersal cleanup"
         ],
-        "tag": "supported-profile"
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -8215,6 +9043,17 @@
         "status": "installed"
       },
       "claim": {
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "table-spatial-derivation",
+              "owner": "SRDINV66 table/spatial owner",
+              "reason": "Automatic area membership, pathfinding, and grid geometry derivation remain table/spatial derivations."
+            },
+            "followUpTaskId": "SRDINV66",
+            "mechanic": "automatic area membership, pathfinding, and grid geometry derivation for Grease movement"
+          }
+        ],
         "profileIds": [
           "spell.invocation-grease-ground-hazard"
         ],
@@ -8222,14 +9061,13 @@
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
         ],
         "supportedMechanics": [
-          "one-minute Grease ground hazard lifecycle keyed by typed table-supplied ground-area id",
-          "on-cast Dexterity Saving Throw consumes typed table-supplied affected-target membership witnesses for creatures standing in the Grease area",
+          "one-minute Grease ground hazard lifecycle keyed by caller-supplied ground-area id",
+          "on-cast Dexterity Saving Throw for caller-supplied affected creatures",
           "Prone application on failed Grease saves",
-          "table-triggered enter-area and end-turn-in-area Dexterity save procedures keyed by the active hazard identity",
-          "typed table-supplied Grease Difficult Terrain movement facts validate active hazard identity and spend total Movement distance plus one extra foot per foot moved through Grease",
-          "residual checklist: automatic area membership, pathfinding, path selection, and grid geometry derivation for Grease movement are runtime-detached table adjudication/presentation; the promoted runtime consumes ground-area, affected-target, per-trigger save, and movement-distance witnesses and does not derive area membership, paths, or grid geometry"
+          "table-triggered enter-area and end-turn-in-area Dexterity save procedures",
+          "caller-supplied Grease Difficult Terrain movement facts that validate active hazard identity and spend total Movement distance plus one extra foot per foot moved through Grease"
         ],
-        "tag": "supported-profile"
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -8524,6 +9362,17 @@
         "status": "installed"
       },
       "claim": {
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "social-knowledge-effect",
+              "owner": "SRDINV66 ability-check roll-mode owner",
+              "reason": "Wisdom (Perception or Survival) Advantage to find the marked target is ability-check roll-mode state outside the promoted damage-rider runtime."
+            },
+            "followUpTaskId": "SRDINV66",
+            "mechanic": "classified gap: caller-supplied Wisdom (Perception or Survival) Advantage roll-mode projection to find the marked target; no dedicated SRDINV63 implementation task"
+          }
+        ],
         "profileIds": [
           "spell.invocation-marked-damage-rider"
         ],
@@ -8534,12 +9383,11 @@
           "Bonus Action cast with Spell Slot spend",
           "Concentration-owned mark identity on one combatant target",
           "extra Force damage when the caster hits the marked target with an Attack Roll",
-          "Wisdom (Perception or Survival) Ability Check Advantage to find the marked target from caller-supplied finding facts",
           "Bonus Action transfer only after the marked target drops to 0 Hit Points",
           "slot-scaled Concentration maximum of 1 hour at slots 1-2, 8 hours at slots 3-4, and 24 hours at slots 5+",
           "Concentration cleanup and maximum-duration expiration remove the marked-target damage rider"
         ],
-        "tag": "supported-profile"
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -8791,6 +9639,26 @@
         "status": "installed"
       },
       "claim": {
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "table-spatial-derivation",
+              "owner": "SRDINV55 table/spatial owner",
+              "reason": "Runtime-owned jump arc, pathfinding, collision, and final-position derivation remain table/spatial derivations."
+            },
+            "followUpTaskId": "SRDINV55",
+            "mechanic": "runtime-owned jump arc, pathfinding, collision, and final-position derivation"
+          },
+          {
+            "battleReadinessClosure": {
+              "kind": "table-spatial-derivation",
+              "owner": "SRDINV55 table/spatial owner",
+              "reason": "Runtime-owned Difficult Terrain landing Acrobatics check derivation remains a table/spatial derivation."
+            },
+            "followUpTaskId": "SRDINV55",
+            "mechanic": "runtime-owned Difficult Terrain landing Acrobatics check derivation"
+          }
+        ],
         "profileIds": [
           "spell.invocation-jump-movement-replacement"
         ],
@@ -8804,12 +9672,11 @@
           "slot-scaled target count",
           "one-minute spell-owned duration",
           "once on each target turn use marker",
-          "typed table-supplied jump Movement witness that spends exactly 10 feet of Movement for a positive jump distance up to 30 feet",
-          "typed table-supplied legal-destination landing witness that rejects illegal landings without deriving final position",
-          "Prone outcome for typed table-supplied failed Difficult Terrain landing Dexterity (Acrobatics) witness",
-          "residual checklist: jump arc, pathfinding, collision, final-position, legal-destination derivation, and Difficult Terrain landing Dexterity (Acrobatics) check derivation are runtime-detached table adjudication; the promoted runtime consumes distance and landing witnesses and does not derive path, collision, or final position"
+          "10-foot Movement spend for up to 30 feet of jump movement",
+          "caller-supplied legal landing facts",
+          "Prone outcome for caller-supplied failed Difficult Terrain landing Acrobatics facts"
         ],
-        "tag": "supported-profile"
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -8860,6 +9727,17 @@
         "status": "installed"
       },
       "claim": {
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "table-spatial-derivation",
+              "owner": "table/spatial and presentation owners",
+              "reason": "Colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the object-emitter runtime boundary."
+            },
+            "followUpTaskId": "SRDINV89D",
+            "mechanic": "colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the object-emitter runtime boundary"
+          }
+        ],
         "profileIds": [
           "spell.invocation-object-light"
         ],
@@ -8868,17 +9746,16 @@
         ],
         "supportedMechanics": [
           "Magic Action cantrip cast with no Spell Slot spend",
-          "typed table-supplied touched object identity, size, and worn/carried witnesses",
+          "caller-supplied touched object identity, size, and worn/carried facts",
           "Large-or-smaller object admission",
           "rejection when the object is worn or carried by someone else",
           "source-owned object-attached Bright Light 20-foot radius plus Dim Light for an additional 20 feet",
           "one-hour duration cleanup",
           "same-caster recast replacement of the prior Light emitter",
-          "typed table-supplied emitter projection witnesses derive Bright Light, Dim Light, and opaque-cover suppression from the existing Light object emitter",
-          "derived Dim Light illumination projects Lightly Obscured sight consequences and Darkvision-adjusted sight consequences without duplicating emitter state",
-          "residual checklist: colored-light rendering is runtime-detached presentation; automatic line-of-sight drawing, map geometry, and pathfinding derivation are runtime-detached table adjudication/presentation and no promoted runtime procedure consumes them"
+          "caller-supplied emitter projection facts derive Bright Light, Dim Light, and opaque-cover suppression from the existing Light object emitter",
+          "derived Dim Light illumination projects Lightly Obscured sight consequences and Darkvision-adjusted sight consequences without duplicating emitter state"
         ],
-        "tag": "supported-profile"
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -10236,10 +11113,10 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached detection adjudication owner",
-          "reason": "Sensing, occlusion, and Hallow discovery are runtime-detached exploration/detection table adjudication outside promoted battle runtime."
+          "owner": "exploration/detection owner",
+          "reason": "Sensing, occlusion, and Hallow discovery are exploration/detection state outside promoted battle runtime."
         },
-        "reason": "Detection/occlusion search semantics and Hallow discovery are runtime-detached exploration table adjudication, not promoted battle Unit profiles.",
+        "reason": "Detection/occlusion search semantics and Hallow discovery are not promoted as battle Unit profiles.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
@@ -10259,10 +11136,10 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached detection adjudication owner",
-          "reason": "Magic sensing, aura viewing, and school identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime."
+          "owner": "exploration/detection owner",
+          "reason": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime."
         },
-        "reason": "Detection/concentration search semantics are runtime-detached exploration table adjudication, not a promoted battle Unit profile.",
+        "reason": "Detection/concentration search semantics are not promoted as a battle Unit profile.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
@@ -10282,10 +11159,10 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached detection adjudication owner",
-          "reason": "Poison, disease, creature-kind sensing, occlusion, and identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime."
+          "owner": "exploration/detection owner",
+          "reason": "Poison, disease, creature-kind sensing, occlusion, and identification are exploration/detection state outside promoted battle runtime."
         },
-        "reason": "Detection/occlusion search semantics and poison/disease identification are runtime-detached exploration table adjudication, not promoted battle Unit profiles.",
+        "reason": "Detection/occlusion search semantics and poison/disease identification are not promoted as battle Unit profiles.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
@@ -10983,6 +11860,26 @@
         "status": "installed"
       },
       "claim": {
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "table-spatial-derivation",
+              "owner": "SRDINV55 table/spatial owner",
+              "reason": "Runtime-owned push geometry, collision/pathfinding, and final-position derivation remain table/spatial derivations."
+            },
+            "followUpTaskId": "SRDINV55",
+            "mechanic": "runtime-owned push geometry, collision/pathfinding, and final-position derivation"
+          },
+          {
+            "battleReadinessClosure": {
+              "kind": "table-spatial-derivation",
+              "owner": "SRDINV55 table/spatial owner",
+              "reason": "Broad object inventory simulation and sound propagation simulation remain table/spatial derivations."
+            },
+            "followUpTaskId": "SRDINV55",
+            "mechanic": "broad object inventory simulation and sound propagation simulation"
+          }
+        ],
         "profileIds": [
           "spell.invocation-damage-save-or-attack"
         ],
@@ -10990,14 +11887,13 @@
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
         ],
         "supportedMechanics": [
-          "self-origin 15-foot Cube Constitution Saving Throw boundary consumes typed table-supplied affected-creature witnesses",
-          "slot-scaled Thunder damage with half damage on successful Saving Throws",
-          "failed-save creature push consumes typed table-supplied pushed-destination or blocked-push disposition witnesses and does not derive push geometry or final position",
-          "unsecured-object push consumes typed table-supplied object identity and pushed-destination or blocked-push disposition witnesses for objects entirely within the Cube",
-          "audible thunderous boom consumes a typed table-supplied sound witness matching the 300-foot radius",
-          "residual checklist: push destination legality, blockage, collision/pathfinding, and final-position derivation are runtime-detached table adjudication/presentation; unsecured-object inventory discovery and object-location derivation are runtime-detached table adjudication/presentation; sound propagation/listener discovery is runtime-detached table adjudication/presentation; the promoted runtime consumes the supplied push/object/boom witnesses and does not derive geometry, object inventory, or sound propagation"
+          "self-origin 15-foot Cube Constitution Saving Throw boundary with table-supplied affected creatures",
+          "slot-scaled Thunder damage with half damage on successful saves",
+          "failed-save creature push consumed from caller-supplied legal destination or blocked-push facts",
+          "unsecured-object push disposition consumed from caller-supplied object facts",
+          "audible thunderous boom evidence within 300 feet"
         ],
-        "tag": "supported-profile"
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -11186,10 +12082,10 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached illusion adjudication owner",
-          "reason": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are runtime-detached illusion/exploration table adjudication outside promoted battle runtime."
+          "owner": "illusion/exploration owner",
+          "reason": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are illusion/exploration state outside promoted battle runtime."
         },
-        "reason": "Sound/image illusion creation, physical-interaction reveal, faint rendering after Study, and recast expiry are runtime-detached illusion/exploration table adjudication outside promoted runtime owners.",
+        "reason": "Sound/image illusion creation, physical-interaction reveal, faint rendering after Study, and recast expiry are illusion/exploration state outside promoted runtime owners.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
@@ -11212,7 +12108,7 @@
             "battleReadinessClosure": {
               "kind": "social-knowledge-effect",
               "owner": "SRDINV41 social/knowledge owner",
-              "reason": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are runtime-detached social/knowledge table adjudication outside promoted battle runtime."
+              "reason": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are social/knowledge state outside promoted battle runtime."
             },
             "followUpTaskId": "SRDINV41",
             "mechanic": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are not represented in battle runtime state"
@@ -11760,10 +12656,10 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached security/exploration adjudication owner",
-          "reason": "Warded area truth, intrusion events, designated exceptions, audible or mental alarm presentation, and sleep wake-up results are runtime-detached table adjudication outside promoted battle runtime."
+          "owner": "runtime-detached table/exploration owner",
+          "reason": "Alarm is an exploration/table procedure; promoted battle runtime does not own hidden monitoring, map patrol, or notification adjudication."
         },
-        "reason": "Intrusion ward placement, designated non-triggering creatures, audible or mental alert delivery, and sleep wake-up adjudication are runtime-detached table adjudication, not a promoted battle Unit profile.",
+        "reason": "Alarm setup, warded-area monitoring, creature-size/travel adjudication, audible or mental notification, and sleep-wake handling are runtime-detached table/exploration state outside promoted battle Unit profiles.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
@@ -12616,10 +13512,10 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached language/information adjudication owner",
-          "reason": "Language comprehension, signed and written text access, page-reading time, and secret-message exclusion are runtime-detached table adjudication outside promoted battle runtime."
+          "owner": "runtime-detached language/communication owner",
+          "reason": "Language comprehension and secret-message adjudication are table-owned communication facts outside promoted battle runtime."
         },
-        "reason": "Literal language, signed-language, and written-language comprehension; page-reading pace; and secret-message exclusion are runtime-detached information-disclosure table adjudication, not a promoted battle Unit profile.",
+        "reason": "Language comprehension, text interpretation, and secret-message limitations are runtime-detached table/communication adjudication outside promoted battle Unit profiles.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
@@ -13167,24 +14063,6 @@
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [],
-      "sourceRecordPath": "packages/surface/content/fireball.json",
-      "unitId": "fireball"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
       "sourceRecordPath": "packages/surface/content/flame_blade.json",
       "unitId": "flame_blade"
     },
@@ -13490,10 +14368,10 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached item/information adjudication owner",
-          "reason": "Magic item properties, Attunement and charge knowledge, ongoing-spell identification, spell-origin naming, and creature spell-effect information are runtime-detached table adjudication outside promoted battle runtime."
+          "owner": "runtime-detached identification/table owner",
+          "reason": "Identification facts are supplied by the table or item/knowledge owner; promoted battle runtime does not model discovery of hidden item or spell facts."
         },
-        "reason": "Magic item, magical object, ongoing-spell, and creature spell-effect information disclosure is runtime-detached table adjudication, not a promoted battle Unit profile.",
+        "reason": "Magic-item identification, attunement/property discovery, and spell-affecting-object or spell-affecting-creature identification are runtime-detached table adjudication outside promoted battle Unit profiles.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
@@ -15642,10 +16520,10 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached illusion adjudication owner",
-          "reason": "Image content, movement appearance, physical interaction, Study action adjudication, and seeing-through behavior are runtime-detached table adjudication outside promoted battle runtime."
+          "owner": "illusion/exploration owner",
+          "reason": "Silent Image creates table-adjudicated illusion and presentation state; promoted battle runtime does not own image rendering or discovery adjudication."
         },
-        "reason": "Visual illusion content, movement presentation, physical-interaction reveal, Study adjudication, and see-through results are runtime-detached illusion table adjudication, not a promoted battle Unit profile.",
+        "reason": "Illusory image placement, investigation, physical-interaction reveal, and presentation are runtime-detached illusion/exploration adjudication outside promoted battle Unit profiles.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
@@ -15688,10 +16566,10 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached social/language adjudication owner",
-          "reason": "Beast conversation, Influence action options, and information remembered by Beasts are runtime-detached table adjudication outside promoted battle runtime."
+          "owner": "runtime-detached communication/social owner",
+          "reason": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes."
         },
-        "reason": "Beast communication, Influence options, and local-information disclosure are runtime-detached social table adjudication, not a promoted battle Unit profile.",
+        "reason": "Beast communication, information exchange, and table-mediated social outcomes are runtime-detached exploration/social adjudication outside promoted battle Unit profiles.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",

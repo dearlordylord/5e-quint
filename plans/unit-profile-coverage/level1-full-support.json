@@ -14,7 +14,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "Warded area truth, intrusion events, designated exceptions, audible or mental alarm presentation, and sleep wake-up results are runtime-detached table adjudication outside promoted battle runtime.",
+      "reason": "Alarm is an exploration/table procedure; promoted battle runtime does not own hidden monitoring, map patrol, or notification adjudication.",
       "sourceRecordPath": "packages/surface/content/alarm.json",
       "sourceRows": [
         {
@@ -48,14 +48,14 @@
     },
     {
       "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
+      "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "selection-grant-container"
+        "later-level-only"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "The class feature grants weapon mastery choices; selected mastery property Units own executable battle pressure.",
+      "reason": "The remaining Barbarian Weapon Mastery selected-weapon count increases occur only after level 1.",
       "sourceRecordPath": "packages/surface/content/barbarian_weapon_mastery.json",
       "sourceRows": [
         {
@@ -71,8 +71,8 @@
           }
         }
       ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
+      "status": "closed-later-level-only",
+      "strictTargetClosed": true,
       "unitId": "barbarian_weapon_mastery"
     },
     {
@@ -113,7 +113,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are runtime-detached social/knowledge table adjudication outside promoted battle runtime.",
+      "reason": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are social/knowledge state outside promoted battle runtime.",
       "sourceRecordPath": "packages/surface/content/charm_person.json",
       "sourceRows": [
         {
@@ -182,35 +182,6 @@
       "unitId": "charm_person"
     },
     {
-      "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "selection-grant-container"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "Divine Order is a character-creation suborder choice; no promoted battle Unit profile consumes the container directly.",
-      "sourceRecordPath": "packages/surface/content/cleric_divine_order.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Cleric Divine Order",
-          "id": "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order",
-          "levelBand": "level-1",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 87,
-            "lineStart": 80,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "cleric_divine_order"
-    },
-    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -224,7 +195,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "Language comprehension, signed and written text access, page-reading time, and secret-message exclusion are runtime-detached table adjudication outside promoted battle runtime.",
+      "reason": "Language comprehension and secret-message adjudication are table-owned communication facts outside promoted battle runtime.",
       "sourceRecordPath": "packages/surface/content/comprehend_languages.json",
       "sourceRows": [
         {
@@ -289,7 +260,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "Sensing, occlusion, and Hallow discovery are runtime-detached exploration/detection table adjudication outside promoted battle runtime.",
+      "reason": "Sensing, occlusion, and Hallow discovery are exploration/detection state outside promoted battle runtime.",
       "sourceRecordPath": "packages/surface/content/detect_evil_and_good.json",
       "sourceRows": [
         {
@@ -330,7 +301,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "Magic sensing, aura viewing, and school identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime.",
+      "reason": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime.",
       "sourceRecordPath": "packages/surface/content/detect_magic.json",
       "sourceRows": [
         {
@@ -443,7 +414,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "Poison, disease, creature-kind sensing, occlusion, and identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime.",
+      "reason": "Poison, disease, creature-kind sensing, occlusion, and identification are exploration/detection state outside promoted battle runtime.",
       "sourceRecordPath": "packages/surface/content/detect_poison_and_disease.json",
       "sourceRows": [
         {
@@ -530,72 +501,108 @@
     },
     {
       "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
+      "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "selection-grant-container"
+        "table-spatial-derivation"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "Primal Order is a character-creation suborder choice; no promoted battle Unit profile consumes the container directly.",
-      "sourceRecordPath": "packages/surface/content/druid_primal_order.json",
+      "kind": "spell",
+      "reason": "Color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the runtime boundary.",
+      "sourceRecordPath": "packages/surface/content/faerie_fire.json",
       "sourceRows": [
         {
-          "category": "class feature",
-          "concept": "Druid Primal Order",
-          "id": "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order",
-          "levelBand": "level-1",
-          "rowKind": "class-feature-grant",
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Faerie Fire",
+          "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_faerie_fire",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
           "source": {
-            "lineEnd": 94,
-            "lineStart": 87,
+            "lineEnd": 172,
+            "lineStart": 172,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Druid spell list Faerie Fire",
+          "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_faerie_fire",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 211,
+            "lineStart": 211,
             "path": ".references/srd-5.2.1/Classes/Druid.md"
           }
         }
       ],
       "status": "open-profile-accounting",
       "strictTargetClosed": false,
-      "unitId": "druid_primal_order"
+      "unitId": "faerie_fire"
     },
     {
       "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
+      "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "selection-grant-container"
+        "table-spatial-derivation"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "The class feature chooses a Fighting Style feat; the selected feat Unit owns executable battle pressure.",
-      "sourceRecordPath": "packages/surface/content/fighter_fighting_style.json",
+      "kind": "spell",
+      "reason": "Fall-distance derivation, map elevation, and landing geometry simulation remain table/spatial derivations.",
+      "sourceRecordPath": "packages/surface/content/feather_fall.json",
       "sourceRows": [
         {
-          "category": "class feature",
-          "concept": "Fighter Fighting Style",
-          "id": "srd521:classes/fighter:level-1:class-feature-grant:fighter_fighting_style",
-          "levelBand": "level-1",
-          "rowKind": "class-feature-grant",
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Feather Fall",
+          "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_feather_fall",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
           "source": {
-            "lineEnd": 61,
-            "lineStart": 56,
-            "path": ".references/srd-5.2.1/Classes/Fighter.md"
+            "lineEnd": 173,
+            "lineStart": 173,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Sorcerer spell list Feather Fall",
+          "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_feather_fall",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 253,
+            "lineStart": 253,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Feather Fall",
+          "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_feather_fall",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 172,
+            "lineStart": 172,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
           }
         }
       ],
       "status": "open-profile-accounting",
       "strictTargetClosed": false,
-      "unitId": "fighter_fighting_style"
+      "unitId": "feather_fall"
     },
     {
       "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
+      "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "selection-grant-container"
+        "later-level-only"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "The class feature grants weapon mastery choices; selected mastery property Units own executable battle pressure.",
+      "reason": "The remaining Fighter Weapon Mastery selected-weapon count increases occur only after level 1.",
       "sourceRecordPath": "packages/surface/content/fighter_weapon_mastery.json",
       "sourceRows": [
         {
@@ -611,9 +618,144 @@
           }
         }
       ],
+      "status": "closed-later-level-only",
+      "strictTargetClosed": true,
+      "unitId": "fighter_weapon_mastery"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "table-spatial-derivation"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain table/spatial derivations.",
+      "sourceRecordPath": "packages/surface/content/fog_cloud.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Druid spell list Fog Cloud",
+          "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_fog_cloud",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 212,
+            "lineStart": 212,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Ranger spell list Fog Cloud",
+          "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_fog_cloud",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 171,
+            "lineStart": 171,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Sorcerer spell list Fog Cloud",
+          "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_fog_cloud",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 254,
+            "lineStart": 254,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Fog Cloud",
+          "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_fog_cloud",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 175,
+            "lineStart": 175,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
       "status": "open-profile-accounting",
       "strictTargetClosed": false,
-      "unitId": "fighter_weapon_mastery"
+      "unitId": "fog_cloud"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "table-spatial-derivation"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Automatic area membership, pathfinding, and grid geometry derivation remain table/spatial derivations.",
+      "sourceRecordPath": "packages/surface/content/grease.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Sorcerer spell list Grease",
+          "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_grease",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 255,
+            "lineStart": 255,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Grease",
+          "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_grease",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 176,
+            "lineStart": 176,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "status": "open-profile-accounting",
+      "strictTargetClosed": false,
+      "unitId": "grease"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "social-knowledge-effect"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Wisdom (Perception or Survival) Advantage to find the marked target is ability-check roll-mode state outside the promoted damage-rider runtime.",
+      "sourceRecordPath": "packages/surface/content/hunters_mark.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Ranger spell list Hunter's Mark",
+          "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_hunters_mark",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 173,
+            "lineStart": 173,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
+        }
+      ],
+      "status": "open-profile-accounting",
+      "strictTargetClosed": false,
+      "unitId": "hunters_mark"
     },
     {
       "catalogDisposition": {
@@ -629,7 +771,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "Magic item properties, Attunement and charge knowledge, ongoing-spell identification, spell-origin naming, and creature spell-effect information are runtime-detached table adjudication outside promoted battle runtime.",
+      "reason": "Identification facts are supplied by the table or item/knowledge owner; promoted battle runtime does not model discovery of hidden item or spell facts.",
       "sourceRecordPath": "packages/surface/content/identify.json",
       "sourceRows": [
         {
@@ -663,6 +805,136 @@
     },
     {
       "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "table-spatial-derivation"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Runtime-owned jump arc, pathfinding, collision, and final-position derivation remain table/spatial derivations.; Runtime-owned Difficult Terrain landing Acrobatics check derivation remains a table/spatial derivation.",
+      "sourceRecordPath": "packages/surface/content/jump.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Druid spell list Jump",
+          "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_jump",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 216,
+            "lineStart": 216,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Ranger spell list Jump",
+          "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_jump",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 174,
+            "lineStart": 174,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Sorcerer spell list Jump",
+          "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_jump",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 257,
+            "lineStart": 257,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Jump",
+          "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_jump",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 181,
+            "lineStart": 181,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "status": "open-profile-accounting",
+      "strictTargetClosed": false,
+      "unitId": "jump"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "table-spatial-derivation"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the object-emitter runtime boundary.",
+      "sourceRecordPath": "packages/surface/content/light.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Light",
+          "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_light",
+          "levelBand": "spell-level-0",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 148,
+            "lineStart": 148,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Cleric spell list Light",
+          "id": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_light",
+          "levelBand": "spell-level-0",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 151,
+            "lineStart": 151,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Sorcerer spell list Light",
+          "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_light",
+          "levelBand": "spell-level-0",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 228,
+            "lineStart": 228,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Light",
+          "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_light",
+          "levelBand": "spell-level-0",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 147,
+            "lineStart": 147,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "status": "open-profile-accounting",
+      "strictTargetClosed": false,
+      "unitId": "light"
+    },
+    {
+      "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
         "outside-runtime-presentation-exploration"
@@ -670,7 +942,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are runtime-detached illusion/exploration table adjudication outside promoted battle runtime.",
+      "reason": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are illusion/exploration state outside promoted battle runtime.",
       "sourceRecordPath": "packages/surface/content/minor_illusion.json",
       "sourceRows": [
         {
@@ -757,43 +1029,15 @@
     },
     {
       "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "selection-grant-container"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "The class feature grants weapon mastery choices; selected mastery property Units own executable battle pressure.",
-      "sourceRecordPath": "packages/surface/content/paladin_weapon_mastery.json",
-      "sourceRows": [
-        {
-          "category": "mastery pressure",
-          "concept": "Paladin Weapon Mastery",
-          "id": "srd521:classes/paladin:level-1:mastery-pressure:paladin_weapon_mastery",
-          "levelBand": "level-1",
-          "rowKind": "mastery-pressure",
-          "source": {
-            "lineEnd": 89,
-            "lineStart": 84,
-            "path": ".references/srd-5.2.1/Classes/Paladin.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "paladin_weapon_mastery"
-    },
-    {
-      "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "later-level-only"
+        "later-level-only",
+        "social-knowledge-effect"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "The remaining Favored Enemy free-cast count changes occur only after level 1.",
+      "reason": "The remaining Favored Enemy free-cast count changes occur only after level 1.; Hunter's Mark finding Advantage is an ability-check roll-mode projection, not additional battle reducer behavior for Favored Enemy.",
       "sourceRecordPath": "packages/surface/content/ranger_favored_enemy.json",
       "sourceRows": [
         {
@@ -809,67 +1053,9 @@
           }
         }
       ],
-      "status": "closed-later-level-only",
-      "strictTargetClosed": true,
+      "status": "open-profile-accounting",
+      "strictTargetClosed": false,
       "unitId": "ranger_favored_enemy"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "selection-grant-container"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "The class feature grants weapon mastery choices; selected mastery property Units own executable battle pressure.",
-      "sourceRecordPath": "packages/surface/content/ranger_weapon_mastery.json",
-      "sourceRows": [
-        {
-          "category": "mastery pressure",
-          "concept": "Ranger Weapon Mastery",
-          "id": "srd521:classes/ranger:level-1:mastery-pressure:ranger_weapon_mastery",
-          "levelBand": "level-1",
-          "rowKind": "mastery-pressure",
-          "source": {
-            "lineEnd": 87,
-            "lineStart": 82,
-            "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "ranger_weapon_mastery"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "outside-battle-runtime"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "Expertise is a character-creation skill choice boundary, not a promoted battle Unit profile.",
-      "sourceRecordPath": "packages/surface/content/rogue_expertise.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Rogue Expertise",
-          "id": "srd521:classes/rogue:level-1:class-feature-grant:rogue_expertise",
-          "levelBand": "level-1",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 62,
-            "lineStart": 57,
-            "path": ".references/srd-5.2.1/Classes/Rogue.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "rogue_expertise"
     },
     {
       "catalogStatus": "installed",
@@ -901,35 +1087,6 @@
       "unitId": "rogue_thieves_cant"
     },
     {
-      "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "selection-grant-container"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "The class feature grants weapon mastery choices; selected mastery property Units own executable battle pressure.",
-      "sourceRecordPath": "packages/surface/content/rogue_weapon_mastery.json",
-      "sourceRows": [
-        {
-          "category": "mastery pressure",
-          "concept": "Rogue Weapon Mastery",
-          "id": "srd521:classes/rogue:level-1:mastery-pressure:rogue_weapon_mastery",
-          "levelBand": "level-1",
-          "rowKind": "mastery-pressure",
-          "source": {
-            "lineEnd": 80,
-            "lineStart": 75,
-            "path": ".references/srd-5.2.1/Classes/Rogue.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "rogue_weapon_mastery"
-    },
-    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -943,7 +1100,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "Image content, movement appearance, physical interaction, Study action adjudication, and seeing-through behavior are runtime-detached table adjudication outside promoted battle runtime.",
+      "reason": "Silent Image creates table-adjudicated illusion and presentation state; promoted battle runtime does not own image rendering or discovery adjudication.",
       "sourceRecordPath": "packages/surface/content/silent_image.json",
       "sourceRows": [
         {
@@ -1001,7 +1158,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "Beast conversation, Influence action options, and information remembered by Beasts are runtime-detached table adjudication outside promoted battle runtime.",
+      "reason": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes.",
       "sourceRecordPath": "packages/surface/content/speak_with_animals.json",
       "sourceRows": [
         {
@@ -1059,67 +1216,74 @@
     },
     {
       "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
+      "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "selection-grant-container"
+        "table-spatial-derivation"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "The class feature chooses an invocation option; individual invocation Units own executable pressure.",
-      "sourceRecordPath": "packages/surface/content/warlock_eldritch_invocations.json",
+      "kind": "spell",
+      "reason": "Runtime-owned push geometry, collision/pathfinding, and final-position derivation remain table/spatial derivations.; Broad object inventory simulation and sound propagation simulation remain table/spatial derivations.",
+      "sourceRecordPath": "packages/surface/content/thunderwave.json",
       "sourceRows": [
         {
-          "category": "class feature",
-          "concept": "Warlock Eldritch Invocations",
-          "id": "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations",
-          "levelBand": "level-1",
-          "rowKind": "class-feature-grant",
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Thunderwave",
+          "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_thunderwave",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
           "source": {
-            "lineEnd": 67,
-            "lineStart": 56,
-            "path": ".references/srd-5.2.1/Classes/Warlock.md"
+            "lineEnd": 183,
+            "lineStart": 183,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
           }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "warlock_eldritch_invocations"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "outside-battle-runtime"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "Short Rest Spell Slot recovery is outside promoted battle runtime.",
-      "sourceRecordPath": "packages/surface/content/wizard_arcane_recovery.json",
-      "sourceRows": [
+        },
         {
-          "category": "class feature",
-          "concept": "Wizard Arcane Recovery",
-          "id": "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery",
-          "levelBand": "level-1",
-          "rowKind": "class-feature-grant",
+          "category": "spell Unit pressure",
+          "concept": "Druid spell list Thunderwave",
+          "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_thunderwave",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
           "source": {
-            "lineEnd": 103,
-            "lineStart": 98,
+            "lineEnd": 221,
+            "lineStart": 221,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Sorcerer spell list Thunderwave",
+          "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_thunderwave",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 264,
+            "lineStart": 264,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Thunderwave",
+          "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_thunderwave",
+          "levelBand": "spell-level-1",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 190,
+            "lineStart": 190,
             "path": ".references/srd-5.2.1/Classes/Wizard.md"
           }
         }
       ],
       "status": "open-profile-accounting",
       "strictTargetClosed": false,
-      "unitId": "wizard_arcane_recovery"
+      "unitId": "thunderwave"
     }
   ],
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 67,
+      "count": 68,
       "description": "Full support exists at the Unit profile boundary for strict level-1 accounting.",
       "status": "supported-profile",
       "unitIds": [
@@ -1132,6 +1296,7 @@
         "burning_hands",
         "chill_touch",
         "chromatic_orb",
+        "cleric_divine_order",
         "color_spray",
         "command",
         "cure_wounds",
@@ -1139,17 +1304,15 @@
         "dissonant_whispers",
         "divine_favor",
         "divine_smite",
+        "druid_primal_order",
         "eldritch_blast",
         "ensnaring_strike",
         "entangle",
         "expeditious_retreat",
-        "faerie_fire",
         "false_life",
-        "feather_fall",
+        "fighter_fighting_style",
         "fighter_second_wind",
         "fire_bolt",
-        "fog_cloud",
-        "grease",
         "guidance",
         "guiding_bolt",
         "healing_word",
@@ -1157,23 +1320,24 @@
         "heroism",
         "hex",
         "hideous_laughter",
-        "hunters_mark",
         "ice_knife",
         "inflict_wounds",
-        "jump",
-        "light",
         "longstrider",
         "mage_armor",
         "magic_missile",
         "monk_unarmored_defense",
         "paladin_lay_on_hands",
+        "paladin_weapon_mastery",
         "poison_spray",
         "produce_flame",
         "protection_from_evil_and_good",
+        "ranger_weapon_mastery",
         "ray_of_frost",
         "ray_of_sickness",
         "resistance",
+        "rogue_expertise",
         "rogue_sneak_attack",
+        "rogue_weapon_mastery",
         "sacred_flame",
         "sanctuary",
         "searing_smite",
@@ -1186,28 +1350,11 @@
         "sorcerous_burst",
         "spare_the_dying",
         "starry_wisp",
-        "thunderwave",
         "true_strike",
         "vicious_mockery",
-        "wizard_ritual_adept"
-      ]
-    },
-    {
-      "count": 11,
-      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
-      "status": "open-profile-accounting",
-      "unitIds": [
-        "barbarian_weapon_mastery",
-        "cleric_divine_order",
-        "druid_primal_order",
-        "fighter_fighting_style",
-        "fighter_weapon_mastery",
-        "paladin_weapon_mastery",
-        "ranger_weapon_mastery",
-        "rogue_expertise",
-        "rogue_weapon_mastery",
         "warlock_eldritch_invocations",
-        "wizard_arcane_recovery"
+        "wizard_arcane_recovery",
+        "wizard_ritual_adept"
       ]
     },
     {
@@ -1228,13 +1375,30 @@
       ]
     },
     {
-      "count": 3,
+      "count": 9,
+      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
+      "status": "open-profile-accounting",
+      "unitIds": [
+        "faerie_fire",
+        "feather_fall",
+        "fog_cloud",
+        "grease",
+        "hunters_mark",
+        "jump",
+        "light",
+        "ranger_favored_enemy",
+        "thunderwave"
+      ]
+    },
+    {
+      "count": 4,
       "description": "The level-1 behavior is complete and every remaining residual is later-level-only.",
       "status": "closed-later-level-only",
       "unitIds": [
+        "barbarian_weapon_mastery",
         "bard_bardic_inspiration",
-        "monk_martial_arts",
-        "ranger_favored_enemy"
+        "fighter_weapon_mastery",
+        "monk_martial_arts"
       ]
     },
     {
@@ -1253,38 +1417,36 @@
       "numerator": 367,
       "percent": "100%",
       "rowsByStatus": {
-        "accepted": 276,
-        "accepted-no-battle-effect": 91
+        "accepted": 278,
+        "accepted-no-battle-effect": 89
       }
     },
     "strictRuntimeProfileSupport": {
       "denominator": 93,
-      "numerator": 67,
-      "percent": "72%"
+      "numerator": 68,
+      "percent": "73.1%"
     },
     "strictTargetClosure": {
       "denominator": 93,
-      "numerator": 82,
-      "percent": "88.2%"
+      "numerator": 84,
+      "percent": "90.3%"
     }
   },
   "openFrontier": [
     {
-      "count": 11,
+      "count": 9,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
-        "barbarian_weapon_mastery",
-        "cleric_divine_order",
-        "druid_primal_order",
-        "fighter_fighting_style",
-        "fighter_weapon_mastery",
-        "paladin_weapon_mastery",
-        "ranger_weapon_mastery",
-        "rogue_expertise",
-        "rogue_weapon_mastery",
-        "warlock_eldritch_invocations",
-        "wizard_arcane_recovery"
+        "faerie_fire",
+        "feather_fall",
+        "fog_cloud",
+        "grease",
+        "hunters_mark",
+        "jump",
+        "light",
+        "ranger_favored_enemy",
+        "thunderwave"
       ]
     }
   ],
@@ -3564,18 +3726,18 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 120,
     "groupsByClaimTag": {
-      "profile-subset-supported": 4,
-      "supported-profile": 67,
-      "unsupported-profile": 22
+      "profile-subset-supported": 14,
+      "supported-profile": 68,
+      "unsupported-profile": 11
     },
     "groupsByStatus": {
       "closed-character-fact-and-runtime-detached-split": 2,
-      "closed-later-level-only": 3,
+      "closed-later-level-only": 4,
       "closed-runtime-detached-table-adjudication": 10,
-      "open-profile-accounting": 11,
-      "supported-profile": 67
+      "open-profile-accounting": 9,
+      "supported-profile": 68
     },
-    "nonSupportedFrontier": 26,
+    "nonSupportedFrontier": 25,
     "strictDenominator": 93
   }
 }

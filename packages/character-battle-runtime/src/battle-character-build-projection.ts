@@ -476,7 +476,7 @@ function hasSelectedEldritchInvocation(
   return build.features.some(
     (feature) =>
       feature.kind === "selectedEldritchInvocation" &&
-      feature.invocationId === invocationId,
+      feature.selection.invocationId === invocationId,
   );
 }
 
@@ -490,7 +490,7 @@ function hasSelectedWarlockEldritchInvocation(
   return build.features.some((feature) => {
     if (
       feature.kind !== "selectedEldritchInvocation" ||
-      feature.invocationId !== input.invocationId
+      feature.selection.invocationId !== input.invocationId
     ) {
       return false;
     }

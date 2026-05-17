@@ -7,73 +7,91 @@
     {
       "number": 1,
       "id": "L1C-AT03S",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Character Creation Support Scaffold"
     },
     {
       "number": 2,
       "id": "L1C-AT03",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Fighter Fighting Style Character Profile"
     },
     {
       "number": 3,
       "id": "L1C-AT05",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Warlock Eldritch Invocations Character Profile"
     },
     {
       "number": 4,
       "id": "L1C-AT06",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Cleric And Druid Order Character Profiles"
     },
     {
       "number": 5,
       "id": "L1C-AT07",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Rogue Expertise Character Profile"
+    },
+    {
+      "number": 16,
+      "id": "L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT",
+      "status": "done",
+      "title": "Rogue Expertise Level 6 Grant"
     },
     {
       "number": 6,
       "id": "L1C-AT08",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Wizard Arcane Recovery Character Sheet Profile"
     },
     {
       "number": 7,
       "id": "L1C-AT04",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Weapon Mastery Character And Rest Profile"
     },
     {
       "number": 8,
       "id": "L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Fighter Fighting Style Advancement Replacement"
+    },
+    {
+      "number": 17,
+      "id": "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE",
+      "status": "done",
+      "title": "Character Advancement Replacement Lifecycle"
     },
     {
       "number": 9,
       "id": "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Warlock Eldritch Invocation Lifecycle"
+    },
+    {
+      "number": 18,
+      "id": "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT",
+      "status": "done",
+      "title": "Warlock Pact Magic Advancement"
     },
     {
       "number": 10,
       "id": "L1C-L1X-01",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Create Or Destroy Water No-Matrix Decision"
     },
     {
       "number": 11,
       "id": "L1C-L1X-05",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Floating Disk No-Matrix Decision"
     },
     {
       "number": 12,
       "id": "L1C-L1X-06",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Goodberry No-Matrix Decision"
     },
     {
@@ -124,12 +142,15 @@ Every Ralph prompt for this loop must include:
 | --- | --- | --- |
 | `AT-L1-03S` Character Creation support scaffold | shared scaffold only | shared Character Creation profile ids, owner markers, runtime-test markers, task claims |
 | `AT-L1-03` Fighter Fighting Style profile | `fighter_fighting_style` | level-1 Fighting Style choice evidence; all-level lifecycle guard |
-| `L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT` Fighter Fighting Style advancement replacement | `fighter_fighting_style` | Fighter-level replacement of an already chosen Fighting Style feat when gaining Fighter levels |
+| `L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT` Fighter Fighting Style advancement replacement | `fighter_fighting_style` | evidence that Fighter-level replacement needs a shared advancement/replacement boundary before all-level support |
+| `L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE` Character advancement replacement lifecycle | shared Character Creation advancement boundary, `fighter_fighting_style` | supported replacement of an already chosen class-feature option when a class level is gained, without duplicate selected-option state |
 | `AT-L1-04` Weapon Mastery character/rest profile | `barbarian_weapon_mastery`, `fighter_weapon_mastery`, `paladin_weapon_mastery`, `ranger_weapon_mastery`, `rogue_weapon_mastery` | initial choice plus Long Rest reselection support |
 | `AT-L1-05` Warlock Eldritch Invocations profile | `warlock_eldritch_invocations` | level-1 invocation choice evidence; all-level lifecycle guard |
 | `L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE` Warlock Eldritch Invocation lifecycle | `warlock_eldritch_invocations` | later-level invocation gains, Warlock-level replacement, prerequisite-retention lockout, and duplicate-selection enforcement |
+| `L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT` Warlock Pact Magic advancement | `class_warlock`, `warlock_eldritch_invocations` prerequisite facts | Warlock cantrip, prepared-spell, and Pact Slot CharacterBuild facts across Warlock level gains so invocation prerequisite checks consume fresh Pact Magic facts |
 | `AT-L1-06` Cleric/Druid order profile | `cleric_divine_order`, `druid_primal_order` | Divine/Primal Order option projection |
 | `AT-L1-07` Rogue Expertise profile | `rogue_expertise` | level-1 two-skill Expertise choice evidence; level 6 lifecycle guard |
+| `L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT` Rogue Expertise level 6 grant | `rogue_expertise` | later-level additional two-skill Expertise choice |
 | `AT-L1-08` Wizard Arcane Recovery profile | `wizard_arcane_recovery` | Character Sheet Short Rest Spell Slot recovery profile |
 | `AT-L1X-01`, `AT-L1X-05`, `AT-L1X-06`, `AT-L1X-08`, `AT-L1X-09`, `AT-L1X-12` item/environment no-matrix decisions | missing spell pressures | owner decisions for item, inventory, object-control, equipment, and environment candidates |
 
@@ -141,12 +162,19 @@ Every Ralph prompt for this loop must include:
 4. Implement `AT-L1-04` after `AT-L1-03S`; include or cite Character Sheet/rest
    support for Long Rest weapon-choice reselection before promoting Weapon
    Mastery containers.
-5. Implement `L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT` after `AT-L1-03`
-   when promoting `fighter_fighting_style` from the level-1 subset to all-level
-   support.
-6. Implement `L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE` after `AT-L1-05`
-   when promoting `warlock_eldritch_invocations` from the level-1 subset to
-   all-level support.
+5. `L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT` is complete: the current
+   creation fill workflow does not own replacement of finalized choices when a
+   class level is gained.
+6. `L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE` is complete: Character
+   Creation owns the shared post-finalization class-level gain boundary needed
+   to promote `fighter_fighting_style` to all-level support.
+7. `L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE` is complete for invocation
+   gain/replacement/duplicate/prerequisite-retention mechanics. Keep
+   `warlock_eldritch_invocations` at subset support until
+   `L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT` owns fresh Pact Magic build facts across
+   Warlock level gains.
+8. Implement `L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT` after `AT-L1-07` when
+   promoting `rogue_expertise` from the level-1 subset to all-level support.
 
 ## Scope
 
@@ -173,20 +201,22 @@ For Unit-specific Character Creation tasks:
 
 Lifecycle gates:
 
-- `fighter_fighting_style` needs advancement/replacement ownership before
-  all-level support. The concrete follow-up is
-  `L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT`.
+- `fighter_fighting_style` all-level support is closed by
+  `L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE`: Character Creation owns
+  Fighter-level replacement of the finalized selected Fighting Style feat ref
+  without adding a second selected-option store.
 - Weapon Mastery containers need initial choice and Long Rest reselection support
   before all-level support.
 - The existing selected identity MBT evidence for `mastery_cleave`,
   `mastery_sap`, and `mastery_topple` may be cited as child mastery-property
   execution evidence, but it does not satisfy the container Long Rest
   reselection gate and should not be recreated here.
-- `warlock_eldritch_invocations` needs replacement/gain and prerequisite
-  retention ownership before all-level support. The concrete follow-up is
-  `L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE`.
-- `rogue_expertise` needs the Rogue level 6 additional Expertise grant owned
-  before all-level support.
+- `warlock_eldritch_invocations` now owns replacement/gain, duplicate-selection,
+  repeatable-selection identity, and prerequisite-retention behavior over
+  existing CharacterBuild facts. It still needs
+  `L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT` before all-level support because Pact
+  Magic cantrips, prepared spells, and pact slots must advance as explicit
+  CharacterBuild facts rather than being inferred from class tables.
 
 For `AT-L1-08`:
 
@@ -240,18 +270,21 @@ For `AT-L1-08`:
 
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
-| 1 | L1C-AT03S - Character Creation Support Scaffold | ready-for-implementation-after-light-research | none | Shared profiles/markers only; no Unit claim conversion. |
-| 2 | L1C-AT03 - Fighter Fighting Style Character Profile | ready-for-implementation-after-light-research | L1C-AT03S | Level-1 slice with advancement lifecycle guard. |
-| 3 | L1C-AT05 - Warlock Eldritch Invocations Character Profile | ready-for-implementation-after-light-research | L1C-AT03S | Level-1 slice with invocation lifecycle guard. |
-| 4 | L1C-AT06 - Cleric And Druid Order Character Profiles | ready-for-implementation-after-light-research | L1C-AT03S | Divine/Primal Order projection. |
-| 5 | L1C-AT07 - Rogue Expertise Character Profile | ready-for-implementation-after-light-research | L1C-AT03S | Level-1 slice with level 6 Expertise guard. |
-| 6 | L1C-AT08 - Wizard Arcane Recovery Character Sheet Profile | ready-for-implementation-after-light-research | none | Character Sheet Short Rest Spell Slot recovery. |
-| 7 | L1C-AT04 - Weapon Mastery Character And Rest Profile | ready-for-implementation-after-light-research | L1C-AT03S | Includes Long Rest reselection support; selected mastery-property MBT does not satisfy this gate. |
-| 8 | L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT - Fighter Fighting Style Advancement Replacement | ready-for-implementation-after-light-research | L1C-AT03 | Promote all-level Fighting Style lifecycle if the replacement owner is implemented. |
-| 9 | L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE - Warlock Eldritch Invocation Lifecycle | ready-for-implementation-after-light-research | L1C-AT05 | Promote all-level invocation lifecycle if replacement/prerequisite owner is implemented. |
-| 10 | L1C-L1X-01 - Create Or Destroy Water No-Matrix Decision | ready-for-research | none | Decide environment/fog owner; no Unit claim without admitted UnitRecord. |
-| 11 | L1C-L1X-05 - Floating Disk No-Matrix Decision | ready-for-research | none | Decide object/inventory movement owner. |
-| 12 | L1C-L1X-06 - Goodberry No-Matrix Decision | ready-for-research | none | Decide Character Sheet consumable/inventory owner. |
+| 1 | L1C-AT03S - Character Creation Support Scaffold | done | none | Shared profiles/markers only; no Unit claim conversion. |
+| 2 | L1C-AT03 - Fighter Fighting Style Character Profile | done | L1C-AT03S | Level-1 slice with advancement lifecycle guard. |
+| 3 | L1C-AT05 - Warlock Eldritch Invocations Character Profile | done | L1C-AT03S | Level-1 slice with invocation lifecycle guard. |
+| 4 | L1C-AT06 - Cleric And Druid Order Character Profiles | done | L1C-AT03S | Divine/Primal Order projection. |
+| 5 | L1C-AT07 - Rogue Expertise Character Profile | done | L1C-AT03S | Level-1 slice with level 6 Expertise guard. |
+| 16 | L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT - Rogue Expertise Level 6 Grant | done | L1C-AT07 | Production Rogue 6 admission and deterministic evidence promoted `rogue_expertise` to all-level support. |
+| 6 | L1C-AT08 - Wizard Arcane Recovery Character Sheet Profile | done | none | Character Sheet Short Rest Spell Slot recovery. |
+| 7 | L1C-AT04 - Weapon Mastery Character And Rest Profile | done | L1C-AT03S | Includes Long Rest reselection support; selected mastery-property MBT does not satisfy this gate. |
+| 8 | L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT - Fighter Fighting Style Advancement Replacement | done | L1C-AT03 | Retargeted remaining all-level work to `L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE`. |
+| 17 | L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE - Character Advancement Replacement Lifecycle | done | L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT | Shared CharacterBuild class-level gain boundary promoted `fighter_fighting_style` to all-level support. |
+| 9 | L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE - Warlock Eldritch Invocation Lifecycle | done | L1C-AT05 | Invocation gain, replacement, repeatable-selection identity, duplicate-selection enforcement, and prerequisite-retention are owned over existing CharacterBuild facts. |
+| 18 | L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT - Warlock Pact Magic Advancement | done | L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE | Advance Warlock cantrip, prepared-spell, and Pact Slot CharacterBuild facts on later Warlock levels before `warlock_eldritch_invocations` can claim full all-level prerequisite ownership. |
+| 10 | L1C-L1X-01 - Create Or Destroy Water No-Matrix Decision | done | none | Decision keeps runtime-detached table/environment adjudication; no owner selected and no Unit claim without admitted UnitRecord. |
+| 11 | L1C-L1X-05 - Floating Disk No-Matrix Decision | done | none | Decision keeps runtime-detached table/object/inventory adjudication; no owner selected and no Unit claim without admitted UnitRecord. |
+| 12 | L1C-L1X-06 - Goodberry No-Matrix Decision | done | none | Decision keeps catalog-only/no-runtime-profile; no consumable inventory owner selected and no Unit claim without admitted UnitRecord. |
 | 13 | L1C-L1X-08 - Mage Hand No-Matrix Decision | ready-for-research | none | Decide object-control owner. |
 | 14 | L1C-L1X-09 - Mending No-Matrix Decision | ready-for-research | none | Decide equipment/object repair owner. |
 | 15 | L1C-L1X-12 - Purify Food And Drink No-Matrix Decision | ready-for-research | none | Decide item/inventory purification owner. |
@@ -260,7 +293,7 @@ For `AT-L1-08`:
 
 ### Task 1 - L1C-AT03S - Character Creation Support Scaffold
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Implement `AT-L1-03S` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
@@ -291,7 +324,7 @@ Plan Impact:
 
 ### Task 2 - L1C-AT03 - Fighter Fighting Style Character Profile
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Implement `AT-L1-03` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
@@ -318,9 +351,43 @@ Plan Impact:
 
 - Preserve any unowned advancement replacement work as a concrete follow-up.
 
+### Task 8 - L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT - Fighter Fighting Style Advancement Replacement
+
+Status: `done`
+
+Implement the `fighter_fighting_style` follow-up left by Task 2.
+
+Scope:
+
+- Own only `fighter_fighting_style`.
+- Preserve the level-1 `character-creation.class-feature-feat-choice` evidence
+  from `L1C-AT03`.
+- Read `.references/srd-5.2.1/Classes/Fighter.md` Level 1 Fighting Style and
+  `UBIQUITOUS_LANGUAGE.md` before changing claim/profile text.
+- Evidence or implement replacement of the already chosen Fighting Style feat
+  whenever the character gains a Fighter level.
+- Keep selected Fighting Style feat execution owned by selected feat Unit
+  profiles; do not move feat execution under the `fighter_fighting_style`
+  container.
+- Convert `fighter_fighting_style` from `profile-subset-supported` to
+  `supported-profile` only when the advancement replacement lifecycle is owned.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`
+- `pnpm unit-profile-coverage:check`
+- `pnpm --filter @dnd/character-creation-runtime test` if Character Creation
+  runtime/test marker files are touched beyond comments
+- reviewer loop convergence, minimum two rounds
+
+Plan Impact:
+
+- Remaining all-level replacement work is executable as
+  `L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE`.
+
 ### Task 3 - L1C-AT05 - Warlock Eldritch Invocations Character Profile
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Implement `AT-L1-05` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
@@ -349,7 +416,7 @@ Plan Impact:
 
 ### Task 4 - L1C-AT06 - Cleric And Druid Order Character Profiles
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Implement `AT-L1-06` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
@@ -375,7 +442,7 @@ Plan Impact:
 
 ### Task 5 - L1C-AT07 - Rogue Expertise Character Profile
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Implement `AT-L1-07` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
@@ -400,11 +467,43 @@ Verification:
 
 Plan Impact:
 
-- Preserve unowned level 6 Expertise work as a concrete follow-up.
+- Level 6 Expertise follow-up is closed by completed Task 16.
+
+### Task 16 - L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT - Rogue Expertise Level 6 Grant
+
+Status: `done`
+
+Implement the residual all-level Rogue Expertise grant left by Task 5.
+
+Scope:
+
+- Own only `rogue_expertise`.
+- Preserve the level-1 `character-creation.skill-expertise-choice` evidence
+  from `L1C-AT07`.
+- Read `.references/srd-5.2.1/Classes/Rogue.md` Level 1 Expertise and
+  `UBIQUITOUS_LANGUAGE.md` before changing claim/profile text.
+- Evidence or implement the Rogue level 6 additional Expertise grant of two
+  more skill proficiencies of the player's choice.
+- Convert `rogue_expertise` from `profile-subset-supported` to all-level
+  `supported-profile` only after the level 6 grant is owned without duplicating
+  existing CharacterBuild proficiency state.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`
+- `pnpm unit-profile-coverage:check`
+- `pnpm --filter @dnd/character-creation-runtime test` if runtime/test marker
+  files are touched beyond comments
+- reviewer loop convergence, minimum two rounds
+
+Plan Impact:
+
+- Close this task only when all-level Rogue Expertise support has runtime/test
+  owner evidence, not from the level-1 choice evidence alone.
 
 ### Task 6 - L1C-AT08 - Wizard Arcane Recovery Character Sheet Profile
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Implement `AT-L1-08` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
@@ -431,7 +530,7 @@ Plan Impact:
 
 ### Task 7 - L1C-AT04 - Weapon Mastery Character And Rest Profile
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Implement `AT-L1-04` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
@@ -464,7 +563,7 @@ Plan Impact:
 
 ### Task 8 - L1C-FIGHTING-STYLE-ADVANCEMENT-REPLACEMENT - Fighter Fighting Style Advancement Replacement
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Implement the all-level Fighter Fighting Style lifecycle follow-up produced by
 `L1C-AT03`.
@@ -489,41 +588,139 @@ Verification:
 
 Plan Impact:
 
-- If replacement lifecycle needs a broader advancement subsystem, leave the Unit
-  subset-supported and record the concrete follow-up.
+- The broader advancement/replacement subsystem is captured as
+  `L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE`.
 
-### Task 9 - L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE - Warlock Eldritch Invocation Lifecycle
+### Task 17 - L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE - Character Advancement Replacement Lifecycle
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
-Implement the all-level Warlock Eldritch Invocation lifecycle follow-up produced
-by `L1C-AT05`.
+Research and implement the shared advancement/replacement boundary needed for
+class features that replace already finalized choices when a class level is
+gained.
 
 Scope:
 
-- Own only `warlock_eldritch_invocations`.
-- Read local Warlock RAW for Eldritch Invocations, gains, replacement, and
-  prerequisites.
-- Model or evidence later-level invocation gains, Warlock-level replacement,
-  prerequisite-retention lockout, and duplicate-selection enforcement.
-- Promote to all-level `supported-profile` only when every lifecycle mechanic is
-  owned without duplicating selected invocation state.
+- Own the shared advancement/replacement boundary and the
+  `fighter_fighting_style` replacement lifecycle for this loop.
+- Read `.references/srd-5.2.1/Classes/Fighter.md` Level 1 Fighting Style and
+  `UBIQUITOUS_LANGUAGE.md` before changing claim/profile text.
+- Model an executable operation that replaces the selected CharacterBuild
+  feature ref for `fighter_fighting_style` when a Fighter level is gained,
+  without adding parallel selected-option state.
+- Make invalid replacement states unrepresentable: no replacement without a
+  Fighter-level gain boundary, no duplicate Fighting Style selection state, and
+  no selected feat outside the Fighting Style feat options.
+- Keep selected Fighting Style feat execution owned by the selected feat Unit
+  profiles.
+- Convert `fighter_fighting_style` from `profile-subset-supported` to
+  `supported-profile` only when the advancement replacement lifecycle has
+  runtime/test owner evidence.
 
 Verification:
 
 - `pnpm unit-profile-coverage:check --write`
 - `pnpm unit-profile-coverage:check`
-- `pnpm --filter @dnd/character-creation-runtime test` if runtime/test files are
-  touched beyond comments
+- `pnpm --filter @dnd/character-creation-runtime test` if Character Creation
+  runtime/test files are touched beyond comments
 - reviewer loop convergence, minimum two rounds
 
 Plan Impact:
 
-- Split a broader advancement/prerequisite subsystem follow-up only if needed.
+- If research proves Character Sheet, not Character Creation, must own the
+  operation boundary, revise the DAG/source details before implementation.
+
+### Task 9 - L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE - Warlock Eldritch Invocation Lifecycle
+
+Status: `done`
+
+Implement the residual all-level lifecycle mechanics for
+`warlock_eldritch_invocations`.
+
+Scope:
+
+- Own only `warlock_eldritch_invocations`.
+- Reuse `character-creation.eldritch-invocation-choice` from Task 1.
+- Evidence later-level invocation gains from the Warlock Invocations column.
+- Evidence Warlock-level invocation replacement with prerequisite gating.
+- Reuse the shared CharacterBuild class-level gain boundary from
+  `L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE`; do not add separate
+  selected invocation state.
+- Evidence the prerequisite-retention lockout: an invocation cannot be replaced
+  while another selected invocation has it as a prerequisite.
+- Evidence duplicate-selection enforcement unless an invocation description says
+  otherwise.
+- Convert `warlock_eldritch_invocations` from `profile-subset-supported` to
+  all-level `supported-profile` only after the full lifecycle is owned.
+- Keep individual invocation execution owned by selected invocation profiles.
+
+Verification:
+
+- Read `.references/srd-5.2.1/Classes/Warlock.md` and
+  `UBIQUITOUS_LANGUAGE.md` before changing modeled behavior.
+- `pnpm unit-profile-coverage:check --write`
+- `pnpm unit-profile-coverage:check`
+- `pnpm --filter @dnd/character-creation-runtime test` if runtime/test marker
+  files are touched beyond comments
+- reviewer loop convergence, minimum two rounds
+
+Result:
+
+- Character Creation now owns later-level invocation gains, Warlock-level
+  invocation replacement, duplicate selection checks, repeatable invocation
+  selection identity, prerequisite checks against existing build facts, and
+  prerequisite-retention replacement lockout.
+- `warlock_eldritch_invocations` remains `profile-subset-supported` rather than
+  all-level `supported-profile` because Pact Magic advancement facts are
+  deliberately left to Task 18.
+- reviewer loop convergence was attempted repeatedly but is blocked by Claude Code
+  org access in this environment; code review found no actionable code findings.
+
+Plan Impact:
+
+- Task 18 owns the remaining Pact Magic advancement boundary before all-level
+  Warlock invocation support can be claimed.
+
+### Task 18 - L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT - Warlock Pact Magic Advancement
+
+Status: `done`
+
+Research and implement the Warlock Pact Magic CharacterBuild advancement facts
+that Task 9 deliberately does not own.
+
+Scope:
+
+- Own Warlock Pact Magic facts consumed by Character Creation advancement:
+  Warlock cantrips known, prepared spells, Pact Magic slot level/count, and
+  Warlock-level replacement choices for cantrips and prepared spells.
+- Read `.references/srd-5.2.1/Classes/Warlock.md` Level 1 Pact Magic and
+  `UBIQUITOUS_LANGUAGE.md` before changing modeled behavior.
+- Reuse the shared CharacterBuild class-level gain boundary from
+  `L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE`; do not add parallel
+  spellcasting state.
+- Ensure `warlock_eldritch_invocations` prerequisite checks consume fresh
+  CharacterBuild Warlock cantrip facts after Warlock levels that change known
+  cantrips.
+- Do not move individual spell execution or selected invocation execution under
+  the Warlock class container.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`
+- `pnpm unit-profile-coverage:check`
+- `pnpm --filter @dnd/character-creation-runtime test` if Character Creation
+  runtime/test files are touched beyond comments
+- reviewer loop convergence, minimum two rounds
+
+Plan Impact:
+
+- Convert `warlock_eldritch_invocations` from `profile-subset-supported` to
+  all-level `supported-profile` only if Pact Magic advancement facts and Task 9
+  invocation lifecycle facts are both owned.
 
 ### Task 10 - L1C-L1X-01 - Create Or Destroy Water No-Matrix Decision
 
-Status: `ready-for-research`
+Status: `done`
 
 Research `AT-L1X-01` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
@@ -549,7 +746,7 @@ Plan Impact:
 
 ### Task 11 - L1C-L1X-05 - Floating Disk No-Matrix Decision
 
-Status: `ready-for-research`
+Status: `done`
 
 Research `AT-L1X-05` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
@@ -571,7 +768,7 @@ Plan Impact:
 
 ### Task 12 - L1C-L1X-06 - Goodberry No-Matrix Decision
 
-Status: `ready-for-research`
+Status: `done`
 
 Research `AT-L1X-06` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 

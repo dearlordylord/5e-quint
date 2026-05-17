@@ -57,6 +57,12 @@ are derived from the Unit catalog at projection boundaries. The initial
 progression fill selects this whole profile; a level-1 class entry is not a
 separate promoted creation concept.
 
+Character Build Class Level Gain - post-finalization operation that appends one
+class advancement entry to `CharacterBuild.progression`. Replacement choices
+that RAW makes available when gaining that class level, such as Fighter Fighting
+Style replacement, are part of this operation rather than a separate selected
+state store.
+
 Support Profile - package-private runtime boundary that says which discovered
 Unit-backed draft choices, Unit choice families, option ids, equipment
 purchases, and selected-equipment loadout slots this package can currently finalize. It is not

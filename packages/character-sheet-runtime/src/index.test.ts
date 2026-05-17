@@ -37,12 +37,16 @@ import {
   timePassed,
   type CharacterSheet,
   type CharacterSheetInput,
+  type CharacterSheetWeaponMasteryReselection,
 } from "./index.ts";
 
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.armor-class-base-formula
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.healing-resource-action
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.short-rest-spell-slot-recovery
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.spellbook-ritual-invocation
-// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B barbarian_unarmored_defense monk_unarmored_defense paladin_lay_on_hands wizard_ritual_adept
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.weapon-mastery-reselection
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B barbarian_unarmored_defense monk_unarmored_defense paladin_lay_on_hands wizard_arcane_recovery wizard_ritual_adept
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-04 fighter_weapon_mastery barbarian_weapon_mastery paladin_weapon_mastery ranger_weapon_mastery rogue_weapon_mastery
 
 const build = armorClassBuild({ startingClass: "class_fighter" });
 
@@ -68,6 +72,8 @@ const ritualAdeptRejectsNonRitualSpellTestName =
   "rejects Wizard Ritual Adept for a spellbook spell without the Ritual tag";
 const ritualAdeptRejectsMissingFeatureTestName =
   "rejects spellbook ritual invocation without a spellbook Ritual Access feature";
+const weaponMasteryLongRestReselectionTestName =
+  "Long Rest reselects Weapon Mastery choices from Surface feature eligibility";
 
 function createFreshCharacterSheet(
   input: Omit<CharacterSheetInput, "conditions"> &
@@ -170,6 +176,226 @@ describe("Character Sheet runtime", () => {
     expect(Either.isLeft(sheet)).toBe(true);
   });
 
+  test("round-trips stored Eldritch Invocation repeatable choices through sheet parsing", () => {
+    const sheet = parseCharacterSheet(
+      {
+        ...storedAvailableSheetInput({
+          characterId: "character:repeatable-invocation",
+          build: {
+            ...armorClassBuild({ startingClass: "class_warlock" }),
+            spellcasting: warlockSpellcastingWithCantrips(["eldritch_blast"]),
+            features: [
+              {
+                kind: "selectedEldritchInvocation",
+                selectedFromUnitId: "warlock_eldritch_invocations",
+                selection: {
+                  kind: "repeatable",
+                  invocationId: "repelling_blast",
+                  repeatableChoice: {
+                    kind: "knownWarlockCantrip",
+                    cantripId: "eldritch_blast",
+                  },
+                },
+              },
+              {
+                kind: "selectedEldritchInvocation",
+                selectedFromUnitId: "warlock_eldritch_invocations",
+                selection: {
+                  kind: "repeatable",
+                  invocationId: "lessons_of_the_first_ones",
+                  repeatableChoice: {
+                    kind: "originFeat",
+                    featUnitId: "feat_savage_attacker",
+                  },
+                },
+              },
+            ],
+          },
+        }),
+        spellSlotExpenditures: [],
+        pactSlotExpenditure: { slotLevel: 1, count: 1, expended: 0 },
+      },
+      unitLibrary,
+    );
+
+    const parsed = requireRight(sheet);
+    expect(parsed.build.features).toEqual(
+      expect.arrayContaining([
+        {
+          kind: "selectedEldritchInvocation",
+          selectedFromUnitId: "warlock_eldritch_invocations",
+          selection: {
+            kind: "repeatable",
+            invocationId: "repelling_blast",
+            repeatableChoice: {
+              kind: "knownWarlockCantrip",
+              cantripId: "eldritch_blast",
+            },
+          },
+        },
+        {
+          kind: "selectedEldritchInvocation",
+          selectedFromUnitId: "warlock_eldritch_invocations",
+          selection: {
+            kind: "repeatable",
+            invocationId: "lessons_of_the_first_ones",
+            repeatableChoice: {
+              kind: "originFeat",
+              featUnitId: "feat_savage_attacker",
+            },
+          },
+        },
+      ]),
+    );
+  });
+
+  test("rejects stored Eldritch Invocation cantrip choices absent from known Warlock cantrips", () => {
+    const invalidBuilds = [
+      {
+        characterId: "character:unknown-warlock-cantrip",
+        repeatableChoiceCantripId: "eldritch_blast",
+        knownCantrips: ["poison_spray"],
+      },
+      {
+        characterId: "character:non-warlock-cantrip",
+        repeatableChoiceCantripId: "fire_bolt",
+        knownCantrips: ["fire_bolt"],
+      },
+    ] as const;
+
+    for (const input of invalidBuilds) {
+      const sheet = parseCharacterSheet(
+        storedAvailableSheetInput({
+          characterId: input.characterId,
+          build: {
+            ...armorClassBuild({ startingClass: "class_warlock" }),
+            spellcasting: warlockSpellcastingWithCantrips(input.knownCantrips),
+            features: [
+              {
+                kind: "selectedEldritchInvocation",
+                selectedFromUnitId: "warlock_eldritch_invocations",
+                selection: {
+                  kind: "repeatable",
+                  invocationId: "repelling_blast",
+                  repeatableChoice: {
+                    kind: "knownWarlockCantrip",
+                    cantripId: input.repeatableChoiceCantripId,
+                  },
+                },
+              },
+            ],
+          },
+        }),
+        unitLibrary,
+      );
+
+      expect(sheet).toMatchObject({
+        _tag: "Left",
+        left: {
+          message:
+            "Character Build Eldritch Invocation repeatable known cantrip choice must be a known Warlock cantrip.",
+        },
+      });
+    }
+  });
+
+  test("rejects malformed stored Eldritch Invocation repeatable choices", () => {
+    const sheet = parseCharacterSheet(
+      storedAvailableSheetInput({
+        characterId: "character:bad-repeatable-invocation",
+        build: {
+          ...armorClassBuild({ startingClass: "class_warlock" }),
+          features: [
+            {
+              kind: "selectedEldritchInvocation",
+              selectedFromUnitId: "warlock_eldritch_invocations",
+              selection: {
+                kind: "repeatable",
+                invocationId: "repelling_blast",
+                repeatableChoice: {
+                  kind: "knownWarlockCantrip",
+                },
+              },
+            },
+          ],
+        },
+      }),
+      unitLibrary,
+    );
+
+    expect(sheet).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Character Build Eldritch Invocation repeatable choice is invalid.",
+      },
+    });
+  });
+
+  test("rejects stored Eldritch Invocation repeatable choices inconsistent with the invocation catalog", () => {
+    const invalidFeatures = [
+      {
+        kind: "selectedEldritchInvocation",
+        selectedFromUnitId: "warlock_eldritch_invocations",
+        selection: {
+          kind: "repeatable",
+          invocationId: "armor_of_shadows",
+          repeatableChoice: {
+            kind: "knownWarlockCantrip",
+            cantripId: "eldritch_blast",
+          },
+        },
+      },
+      {
+        kind: "selectedEldritchInvocation",
+        selectedFromUnitId: "warlock_eldritch_invocations",
+        selection: {
+          kind: "nonRepeatable",
+          invocationId: "repelling_blast",
+        },
+      },
+      {
+        kind: "selectedEldritchInvocation",
+        selectedFromUnitId: "warlock_eldritch_invocations",
+        selection: {
+          kind: "repeatable",
+          invocationId: "lessons_of_the_first_ones",
+          repeatableChoice: {
+            kind: "knownWarlockCantrip",
+            cantripId: "eldritch_blast",
+          },
+        },
+      },
+      {
+        kind: "selectedEldritchInvocation",
+        selectedFromUnitId: "warlock_eldritch_invocations",
+        selection: {
+          kind: "repeatable",
+          invocationId: "repelling_blast",
+          repeatableChoice: {
+            kind: "knownWarlockCantrip",
+            cantripId: "minor_illusion",
+          },
+        },
+      },
+    ] as const;
+
+    for (const feature of invalidFeatures) {
+      const sheet = parseCharacterSheet(
+        storedAvailableSheetInput({
+          characterId: `character:invalid-${feature.selection.invocationId}`,
+          build: {
+            ...armorClassBuild({ startingClass: "class_warlock" }),
+            features: [feature],
+          },
+        }),
+        unitLibrary,
+      );
+
+      expect(Either.isLeft(sheet)).toBe(true);
+    }
+  });
+
   test("round-trips stored Book of Shadows Spell Access through sheet parsing", () => {
     const bookOfShadows = {
       tag: "bookOfShadows",
@@ -187,7 +413,10 @@ describe("Character Sheet runtime", () => {
             {
               kind: "selectedEldritchInvocation",
               selectedFromUnitId: "warlock_eldritch_invocations",
-              invocationId: "pact_of_the_tome",
+              selection: {
+                kind: "nonRepeatable",
+                invocationId: "pact_of_the_tome",
+              },
             },
           ],
           spellcasting: {
@@ -579,6 +808,125 @@ describe("Character Sheet runtime", () => {
       expended: 0,
     });
     expect(rested.restFeatureUses).toEqual([]);
+  });
+
+  test(weaponMasteryLongRestReselectionTestName, () => {
+    const cases = [
+      {
+        classUnitId: "class_fighter",
+        featureUnitId: "fighter_weapon_mastery",
+        before: ["weapon_longsword", "weapon_dagger", "weapon_spear"],
+        after: ["weapon_longsword", "weapon_dagger", "weapon_shortsword"],
+      },
+      {
+        classUnitId: "class_barbarian",
+        featureUnitId: "barbarian_weapon_mastery",
+        before: ["weapon_longsword", "weapon_dagger"],
+        after: ["weapon_longsword", "weapon_shortsword"],
+      },
+      {
+        classUnitId: "class_paladin",
+        featureUnitId: "paladin_weapon_mastery",
+        before: ["weapon_longsword", "weapon_dagger"],
+        after: ["weapon_spear", "weapon_flail"],
+      },
+      {
+        classUnitId: "class_ranger",
+        featureUnitId: "ranger_weapon_mastery",
+        before: ["weapon_longsword", "weapon_dagger"],
+        after: ["weapon_spear", "weapon_flail"],
+      },
+      {
+        classUnitId: "class_rogue",
+        featureUnitId: "rogue_weapon_mastery",
+        before: ["weapon_dagger", "weapon_shortbow"],
+        after: ["weapon_spear", "weapon_shortsword"],
+      },
+    ] as const;
+
+    for (const testCase of cases) {
+      const sheet = requireRight(
+        createFreshCharacterSheet({
+          characterId: characterSheetId(
+            `character:${testCase.featureUnitId}:long-rest`,
+          ),
+          build: weaponMasteryBuild({
+            startingClass: testCase.classUnitId,
+            featureUnitId: testCase.featureUnitId,
+            selectedWeaponUnitIds: testCase.before,
+          }),
+          maximumHp: Hp(12),
+          currentHp: Hp(6),
+          tempHp: Hp(2),
+          unitLibrary,
+        }),
+      );
+      const reselection = {
+        featureUnitId: testCase.featureUnitId,
+        selectedWeaponUnitIds: testCase.after,
+      } satisfies CharacterSheetWeaponMasteryReselection;
+
+      const rested = requireRight(
+        completeLongRest({
+          sheet,
+          unitLibrary,
+          weaponMasteryReselections: [reselection],
+        }),
+      );
+
+      expect(
+        selectedClassChoiceUnitIds(rested.build, testCase.featureUnitId),
+      ).toEqual(testCase.after);
+      expect(rested.hitPoints).toEqual({
+        tag: "positive",
+        currentHp: 12,
+        tempHp: 0,
+      });
+    }
+  });
+
+  test("rejects Weapon Mastery Long Rest reselection above the Surface change count", () => {
+    const sheet = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:fighter-mastery-reject"),
+        build: weaponMasteryBuild({
+          startingClass: "class_fighter",
+          featureUnitId: "fighter_weapon_mastery",
+          selectedWeaponUnitIds: [
+            "weapon_longsword",
+            "weapon_dagger",
+            "weapon_spear",
+          ],
+        }),
+        maximumHp: Hp(12),
+        currentHp: Hp(12),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+
+    const result = completeLongRest({
+      sheet,
+      unitLibrary,
+      weaponMasteryReselections: [
+        {
+          featureUnitId: "fighter_weapon_mastery",
+          selectedWeaponUnitIds: [
+            "weapon_longsword",
+            "weapon_shortsword",
+            "weapon_flail",
+          ],
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Weapon Mastery Long Rest reselection changes too many weapon choices.",
+      },
+    });
   });
 
   test(layOnHandsSpendsHealingPoolTestName, () => {
@@ -1197,9 +1545,52 @@ function spellbookRitualSheet(input: {
   );
 }
 
+function storedAvailableSheetInput(input: {
+  readonly characterId: string;
+  readonly build: unknown;
+}) {
+  return {
+    tag: "available",
+    characterId: input.characterId,
+    build: input.build,
+    maximumHp: 12,
+    hitPoints: { tag: "positive", currentHp: 12, tempHp: 0 },
+    conditions: [],
+    spentHitDice: [],
+    resourceExpenditures: [],
+  };
+}
+
 function requireRight<A, E>(either: Either.Either<A, E>): A {
   if (Either.isRight(either)) return either.right;
   throw new Error(`Expected Either.right, got ${JSON.stringify(either.left)}.`);
+}
+
+function weaponMasteryBuild(input: {
+  readonly startingClass: string;
+  readonly featureUnitId: string;
+  readonly selectedWeaponUnitIds: readonly string[];
+}): CharacterBuild {
+  return {
+    ...armorClassBuild({ startingClass: input.startingClass }),
+    features: input.selectedWeaponUnitIds.map((unitId) => ({
+      kind: "selectedClassChoice" as const,
+      selectedFromUnitId: input.featureUnitId,
+      unitId,
+    })),
+  };
+}
+
+function selectedClassChoiceUnitIds(
+  build: CharacterBuild,
+  featureUnitId: string,
+): readonly string[] {
+  return build.features.flatMap((feature) =>
+    feature.kind === "selectedClassChoice" &&
+    feature.selectedFromUnitId === featureUnitId
+      ? [feature.unitId]
+      : [],
+  );
 }
 
 function armorClassBuild(input: {
@@ -1258,6 +1649,30 @@ function armorClassBuild(input: {
       loadout: {
         ...(armorItemId === undefined ? {} : { armor: armorItemId }),
         ...(shieldItemId === undefined ? {} : { shield: shieldItemId }),
+      },
+    },
+  };
+}
+
+function warlockSpellcastingWithCantrips(
+  cantrips: readonly string[],
+): NonNullable<CharacterBuild["spellcasting"]> {
+  return {
+    sources: [
+      {
+        sourceUnitId: "class_warlock",
+        spellcastingAbility: "cha",
+        cantrips,
+        spellbook: [],
+        preparedSpells: [],
+        spellcastingFocuses: ["arcane_focus"],
+      },
+    ],
+    slotPools: {
+      pactMagic: {
+        kind: "pactMagic",
+        slotLevel: 1,
+        count: 1,
       },
     },
   };

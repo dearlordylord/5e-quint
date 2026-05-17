@@ -1081,6 +1081,16 @@ const PactSlotProjectionSchema = Schema.Struct({
   }),
 });
 
+const PactMagicProgressionSchema = Schema.NonEmptyArray(
+  Schema.Struct({
+    atLevel: PositiveIntegerSchema,
+    cantripTotal: PositiveIntegerSchema,
+    preparedSpellTotal: PositiveIntegerSchema,
+    pactSlotCount: PositiveIntegerSchema,
+    pactSlotLevel: PositiveIntegerSchema,
+  }),
+);
+
 const SpellbookSpellAccessSchema = Schema.Struct({
   spellId: NonEmptyStringSchema,
   spellLevel: PositiveIntegerSchema,
@@ -1355,6 +1365,47 @@ export const CLASS_SPELL_LISTS = {
         "speak_with_animals",
         "unseen_servant",
       ],
+      2: [
+        "darkness",
+        "enthrall",
+        "hold_person",
+        "invisibility",
+        "mind_spike",
+        "mirror_image",
+        "misty_step",
+        "ray_of_enfeeblement",
+        "spider_climb",
+        "suggestion",
+      ],
+      3: [
+        "counterspell",
+        "dispel_magic",
+        "fear",
+        "fly",
+        "gaseous_form",
+        "hypnotic_pattern",
+        "magic_circle",
+        "major_image",
+        "remove_curse",
+        "tongues",
+        "vampiric_touch",
+      ],
+      4: [
+        "banishment",
+        "blight",
+        "charm_monster",
+        "dimension_door",
+        "hallucinatory_terrain",
+      ],
+      5: [
+        "contact_other_plane",
+        "dream",
+        "hold_monster",
+        "mislead",
+        "planar_binding",
+        "scrying",
+        "teleportation_circle",
+      ],
     },
   },
 } as const satisfies Record<ClassSpellcastingClassName, ClassSpellList>;
@@ -1362,6 +1413,16 @@ export const CLASS_SPELL_LISTS = {
 export const classSpellList = (
   className: ClassSpellcastingClassName,
 ): ClassSpellList => CLASS_SPELL_LISTS[className];
+
+export const classSpellListPreparedSpellLevel = (
+  className: ClassSpellcastingClassName,
+  spellId: string,
+): number | undefined => {
+  const entry = Object.entries(classSpellList(className).leveled).find(
+    ([_spellLevel, spellIds]) => spellIds?.includes(spellId) === true,
+  );
+  return entry === undefined ? undefined : Number.parseInt(entry[0], 10);
+};
 
 export const allCantripsFromClassSpellList = (
   className: ClassSpellcastingClassName,
@@ -1376,10 +1437,10 @@ export const allPreparedSpellsFromClassSpellList = (
   className: ClassSpellcastingClassName,
   spells: readonly { readonly spellId: string; readonly spellLevel: number }[],
 ): boolean =>
-  spells.every((spell) =>
-    (classSpellList(className).leveled[spell.spellLevel] ?? []).includes(
-      spell.spellId,
-    ),
+  spells.every(
+    (spell) =>
+      classSpellListPreparedSpellLevel(className, spell.spellId) ===
+      spell.spellLevel,
   );
 
 export const allCantripsFromAnyClassSpellList = (
@@ -1575,6 +1636,7 @@ export const PactMagicSpellcastingCreationSchema = Schema.Struct({
     }),
   }),
   pactSlotProjection: PactSlotProjectionSchema,
+  pactMagicProgression: PactMagicProgressionSchema,
   spellcastingFocus: Schema.Literal("arcane_focus"),
 }).pipe(
   Schema.filter(
@@ -1591,6 +1653,8 @@ export const PactMagicSpellcastingCreationSchema = Schema.Struct({
       return (
         distinctStrings(spellcasting.cantripAccess.spellIds) &&
         allSpellIdsDistinct(spellcasting.preparedAccess.spells) &&
+        distinctPactMagicProgressionLevels(spellcasting.pactMagicProgression) &&
+        pactMagicProgressionMatchesLevelOneFacts(spellcasting) &&
         allSpellLevelsAtOrBelow(
           spellcasting.preparedAccess.spells,
           spellcasting.pactSlotProjection.spellLevel,
@@ -1693,6 +1757,66 @@ export const WizardSpellcastingCreationSchema = Schema.Struct({
   ),
 );
 
+function distinctPactMagicProgressionLevels(
+  input: readonly {
+    readonly atLevel: number;
+  }[],
+): boolean {
+  return distinctStrings(input.map((row) => row.atLevel.toString()));
+}
+
+function pactMagicProgressionAtLevel(
+  progression: readonly {
+    readonly atLevel: number;
+    readonly cantripTotal: number;
+    readonly preparedSpellTotal: number;
+    readonly pactSlotCount: number;
+    readonly pactSlotLevel: number;
+  }[],
+  classLevel: number,
+):
+  | {
+      readonly atLevel: number;
+      readonly cantripTotal: number;
+      readonly preparedSpellTotal: number;
+      readonly pactSlotCount: number;
+      readonly pactSlotLevel: number;
+    }
+  | undefined {
+  return progression
+    .filter((row) => row.atLevel <= classLevel)
+    .sort((left, right) => left.atLevel - right.atLevel)
+    .at(-1);
+}
+
+function pactMagicProgressionMatchesLevelOneFacts(spellcasting: {
+  readonly cantripAccess: { readonly choose: number };
+  readonly preparedAccess: { readonly choose: number };
+  readonly pactSlotProjection: {
+    readonly count: number;
+    readonly spellLevel: number;
+  };
+  readonly pactMagicProgression: readonly {
+    readonly atLevel: number;
+    readonly cantripTotal: number;
+    readonly preparedSpellTotal: number;
+    readonly pactSlotCount: number;
+    readonly pactSlotLevel: number;
+  }[];
+}): boolean {
+  const levelOne = pactMagicProgressionAtLevel(
+    spellcasting.pactMagicProgression,
+    1,
+  );
+  return (
+    levelOne?.atLevel === 1 &&
+    levelOne.cantripTotal === spellcasting.cantripAccess.choose &&
+    levelOne.preparedSpellTotal === spellcasting.preparedAccess.choose &&
+    levelOne.pactSlotCount === spellcasting.pactSlotProjection.count &&
+    levelOne.pactSlotLevel === spellcasting.pactSlotProjection.spellLevel
+  );
+}
+
 export const ClassSpellcastingCreationSchema = Schema.Union(
   ListPreparedSpellcastingCreationSchema,
   PactMagicSpellcastingCreationSchema,
@@ -1787,21 +1911,32 @@ export const PactMagicClassRecordSchema = Schema.Struct({
   spellcasting: PactMagicSpellcastingCreationSchema,
 }).pipe(
   Schema.filter(
-    (unit) =>
-      unit.spellcasting.cantripAccess.choose === 2 &&
-      unit.spellcasting.cantripAccess.spellIds.length === 2 &&
-      unit.spellcasting.preparedAccess.choose === 2 &&
-      unit.spellcasting.preparedAccess.spells.length === 2 &&
-      unit.spellcasting.pactSlotProjection.count === 1 &&
-      unit.spellcasting.pactSlotProjection.spellLevel === 1 &&
-      allCantripsFromClassSpellList(
-        unit.className,
-        unit.spellcasting.cantripAccess.spellIds,
-      ) &&
-      allPreparedSpellsFromClassSpellList(
-        unit.className,
-        unit.spellcasting.preparedAccess.spells,
-      ),
+    (unit) => {
+      const levelOne = pactMagicProgressionAtLevel(
+        unit.spellcasting.pactMagicProgression,
+        1,
+      );
+      return (
+        unit.spellcasting.cantripAccess.choose === 2 &&
+        unit.spellcasting.cantripAccess.spellIds.length === 2 &&
+        unit.spellcasting.preparedAccess.choose === 2 &&
+        unit.spellcasting.preparedAccess.spells.length === 2 &&
+        unit.spellcasting.pactSlotProjection.count === 1 &&
+        unit.spellcasting.pactSlotProjection.spellLevel === 1 &&
+        levelOne?.cantripTotal === 2 &&
+        levelOne.preparedSpellTotal === 2 &&
+        levelOne.pactSlotCount === 1 &&
+        levelOne.pactSlotLevel === 1 &&
+        allCantripsFromClassSpellList(
+          unit.className,
+          unit.spellcasting.cantripAccess.spellIds,
+        ) &&
+        allPreparedSpellsFromClassSpellList(
+          unit.className,
+          unit.spellcasting.preparedAccess.spells,
+        )
+      );
+    },
     {
       message: () =>
         "Warlock Pact Magic class records must match level-1 cantrip, prepared-spell, Pact Slot count, Pact Slot level, and Warlock spell list facts.",

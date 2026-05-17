@@ -137,8 +137,13 @@
       "schema": "dnd.srd-character-sheet-owner-evidence.v1",
       "rowIds": [
         "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense",
+        "srd521:classes/barbarian:level-1:mastery-pressure:barbarian_weapon_mastery",
+        "srd521:classes/fighter:level-1:mastery-pressure:fighter_weapon_mastery",
         "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense",
         "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands",
+        "srd521:classes/paladin:level-1:mastery-pressure:paladin_weapon_mastery",
+        "srd521:classes/ranger:level-1:mastery-pressure:ranger_weapon_mastery",
+        "srd521:classes/rogue:level-1:mastery-pressure:rogue_weapon_mastery",
         "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery",
         "srd521:classes/wizard:level-1:class-feature-grant:wizard_ritual_adept"
       ],
@@ -159,8 +164,8 @@
       "numerator": 367,
       "percent": "100%",
       "rowsByStatus": {
-        "accepted": 276,
-        "accepted-no-battle-effect": 91
+        "accepted": 278,
+        "accepted-no-battle-effect": 89
       }
     },
     "levelOneClassContainers": 12,
@@ -3791,13 +3796,13 @@
         "state": "installed",
         "unitId": "barbarian_weapon_mastery"
       },
-      "unitProfileDisposition": "unsupported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "unit-claim",
-        "kind": "selection-grant-container",
-        "owner": "selected Mastery Property Unit",
-        "reason": "The class feature grants weapon mastery choices; selected mastery property Units own executable battle pressure."
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "SRDINV78 later-level Weapon Mastery count scaling",
+        "reason": "The remaining Barbarian Weapon Mastery selected-weapon count increases occur only after level 1."
       },
       "ownerEvidence": [
         {
@@ -3806,13 +3811,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime",
-          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV20 level-1 Barbarian Weapon Mastery support profile; Barbarian Weapon Mastery options are discovered from the feature grant and Surface class weapon proficiencies, filled through supported melee weapon choices, finalized as selected class-choice refs, and retained as build Unit refs.",
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; AT-L1-04 Character Sheet Weapon Mastery Long Rest reselection runtime; Barbarian Weapon Mastery is read from the installed Surface class-feature record and applied during Long Rest as a one-choice reselection over eligible Simple or Martial Melee weapons. The runtime replaces selected CharacterBuild class-choice refs and stores no parallel Weapon Mastery state.",
           "status": "owner evidence present"
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/barbarian:level-1:multiclass-entry:barbarian_multiclass_entry_traits",
@@ -4545,8 +4550,14 @@
         "state": "installed",
         "unitId": "light"
       },
-      "unitProfileDisposition": "supported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "table/spatial and presentation owners",
+        "reason": "Colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the object-emitter runtime boundary."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -4680,8 +4691,8 @@
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached illusion adjudication owner",
-        "reason": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are runtime-detached illusion/exploration table adjudication outside promoted battle runtime."
+        "owner": "illusion/exploration owner",
+        "reason": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are illusion/exploration state outside promoted battle runtime."
       },
       "ownerEvidence": [
         {
@@ -4690,12 +4701,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "runtime-detached illusion adjudication owner",
-          "evidence": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are runtime-detached illusion/exploration table adjudication outside promoted battle runtime.",
+          "owner": "illusion/exploration owner",
+          "evidence": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are illusion/exploration state outside promoted battle runtime.",
           "status": "catalog-only/dead-for-now closure"
         }
       ],
-      "nextAction": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are runtime-detached illusion/exploration table adjudication outside promoted battle runtime.",
+      "nextAction": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are illusion/exploration state outside promoted battle runtime.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -4974,7 +4985,7 @@
         "source": "deferred-mechanics",
         "kind": "profile-subset-remaining-mechanics-closed",
         "owner": "SRDINV41 social/knowledge owner",
-        "reason": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are runtime-detached social/knowledge table adjudication outside promoted battle runtime."
+        "reason": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are social/knowledge state outside promoted battle runtime."
       },
       "ownerEvidence": [
         {
@@ -5108,11 +5119,11 @@
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached language/information adjudication owner",
-        "reason": "Language comprehension, signed and written text access, page-reading time, and secret-message exclusion are runtime-detached table adjudication outside promoted battle runtime."
+        "owner": "runtime-detached language/communication owner",
+        "reason": "Language comprehension and secret-message adjudication are table-owned communication facts outside promoted battle runtime."
       },
       "ownerEvidence": [],
-      "nextAction": "Language comprehension, signed and written text access, page-reading time, and secret-message exclusion are runtime-detached table adjudication outside promoted battle runtime.",
+      "nextAction": "Language comprehension and secret-message adjudication are table-owned communication facts outside promoted battle runtime.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -5189,8 +5200,8 @@
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached detection adjudication owner",
-        "reason": "Magic sensing, aura viewing, and school identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime."
+        "owner": "exploration/detection owner",
+        "reason": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime."
       },
       "ownerEvidence": [
         {
@@ -5199,12 +5210,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "runtime-detached detection adjudication owner",
-          "evidence": "Magic sensing, aura viewing, and school identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime.",
+          "owner": "exploration/detection owner",
+          "evidence": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime.",
           "status": "catalog-only/dead-for-now closure"
         }
       ],
-      "nextAction": "Magic sensing, aura viewing, and school identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime.",
+      "nextAction": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -5305,8 +5316,14 @@
         "state": "installed",
         "unitId": "faerie_fire"
       },
-      "unitProfileDisposition": "supported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "table/spatial and presentation owners",
+        "reason": "Color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the runtime boundary."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -5348,8 +5365,14 @@
         "state": "installed",
         "unitId": "feather_fall"
       },
-      "unitProfileDisposition": "supported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "SRDINV55 table/spatial owner",
+        "reason": "Fall-distance derivation, map elevation, and landing geometry simulation remain table/spatial derivations."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -5525,11 +5548,11 @@
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached item/information adjudication owner",
-        "reason": "Magic item properties, Attunement and charge knowledge, ongoing-spell identification, spell-origin naming, and creature spell-effect information are runtime-detached table adjudication outside promoted battle runtime."
+        "owner": "runtime-detached identification/table owner",
+        "reason": "Identification facts are supplied by the table or item/knowledge owner; promoted battle runtime does not model discovery of hidden item or spell facts."
       },
       "ownerEvidence": [],
-      "nextAction": "Magic item properties, Attunement and charge knowledge, ongoing-spell identification, spell-origin naming, and creature spell-effect information are runtime-detached table adjudication outside promoted battle runtime.",
+      "nextAction": "Identification facts are supplied by the table or item/knowledge owner; promoted battle runtime does not model discovery of hidden item or spell facts.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -5635,11 +5658,11 @@
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached illusion adjudication owner",
-        "reason": "Image content, movement appearance, physical interaction, Study action adjudication, and seeing-through behavior are runtime-detached table adjudication outside promoted battle runtime."
+        "owner": "illusion/exploration owner",
+        "reason": "Silent Image creates table-adjudicated illusion and presentation state; promoted battle runtime does not own image rendering or discovery adjudication."
       },
       "ownerEvidence": [],
-      "nextAction": "Image content, movement appearance, physical interaction, Study action adjudication, and seeing-through behavior are runtime-detached table adjudication outside promoted battle runtime.",
+      "nextAction": "Silent Image creates table-adjudicated illusion and presentation state; promoted battle runtime does not own image rendering or discovery adjudication.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -5716,11 +5739,11 @@
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached social/language adjudication owner",
-        "reason": "Beast conversation, Influence action options, and information remembered by Beasts are runtime-detached table adjudication outside promoted battle runtime."
+        "owner": "runtime-detached communication/social owner",
+        "reason": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes."
       },
       "ownerEvidence": [],
-      "nextAction": "Beast conversation, Influence action options, and information remembered by Beasts are runtime-detached table adjudication outside promoted battle runtime.",
+      "nextAction": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -5749,8 +5772,14 @@
         "state": "installed",
         "unitId": "thunderwave"
       },
-      "unitProfileDisposition": "supported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "SRDINV55 table/spatial owner",
+        "reason": "Runtime-owned push geometry, collision/pathfinding, and final-position derivation remain table/spatial derivations.; Broad object inventory simulation and sound propagation simulation remain table/spatial derivations."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -5864,14 +5893,8 @@
         "state": "installed",
         "unitId": "cleric_divine_order"
       },
-      "unitProfileDisposition": "unsupported-profile",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "unit-claim",
-        "kind": "selection-grant-container",
-        "owner": "character-creation-runtime",
-        "reason": "Divine Order is a character-creation suborder choice; no promoted battle Unit profile consumes the container directly."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -5880,7 +5903,7 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV18 level-1 Cleric class-feature support profile; Divine Order is discovered as a class-feature acquisition choice, support-gated to Protector in the current profile, finalized from the selected option, and projected into CharacterBuild weapon and armor-training facts.",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; AT-L1-06 character-creation.class-feature-option-projection support profile; Divine Order is discovered as a class-feature acquisition choice, support-gated to Protector and Thaumaturge, finalized from the selected option, and projected into CharacterBuild weapon, armor-training, cantrip, and Intelligence Ability Check bonus facts.",
           "status": "owner evidence present"
         }
       ],
@@ -6428,8 +6451,14 @@
         "state": "installed",
         "unitId": "light"
       },
-      "unitProfileDisposition": "supported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "table/spatial and presentation owners",
+        "reason": "Colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the object-emitter runtime boundary."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -6864,8 +6893,8 @@
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached detection adjudication owner",
-        "reason": "Sensing, occlusion, and Hallow discovery are runtime-detached exploration/detection table adjudication outside promoted battle runtime."
+        "owner": "exploration/detection owner",
+        "reason": "Sensing, occlusion, and Hallow discovery are exploration/detection state outside promoted battle runtime."
       },
       "ownerEvidence": [
         {
@@ -6874,12 +6903,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "runtime-detached detection adjudication owner",
-          "evidence": "Sensing, occlusion, and Hallow discovery are runtime-detached exploration/detection table adjudication outside promoted battle runtime.",
+          "owner": "exploration/detection owner",
+          "evidence": "Sensing, occlusion, and Hallow discovery are exploration/detection state outside promoted battle runtime.",
           "status": "catalog-only/dead-for-now closure"
         }
       ],
-      "nextAction": "Sensing, occlusion, and Hallow discovery are runtime-detached exploration/detection table adjudication outside promoted battle runtime.",
+      "nextAction": "Sensing, occlusion, and Hallow discovery are exploration/detection state outside promoted battle runtime.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -6913,8 +6942,8 @@
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached detection adjudication owner",
-        "reason": "Magic sensing, aura viewing, and school identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime."
+        "owner": "exploration/detection owner",
+        "reason": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime."
       },
       "ownerEvidence": [
         {
@@ -6923,12 +6952,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "runtime-detached detection adjudication owner",
-          "evidence": "Magic sensing, aura viewing, and school identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime.",
+          "owner": "exploration/detection owner",
+          "evidence": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime.",
           "status": "catalog-only/dead-for-now closure"
         }
       ],
-      "nextAction": "Magic sensing, aura viewing, and school identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime.",
+      "nextAction": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -6962,8 +6991,8 @@
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached detection adjudication owner",
-        "reason": "Poison, disease, creature-kind sensing, occlusion, and identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime."
+        "owner": "exploration/detection owner",
+        "reason": "Poison, disease, creature-kind sensing, occlusion, and identification are exploration/detection state outside promoted battle runtime."
       },
       "ownerEvidence": [
         {
@@ -6972,12 +7001,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "runtime-detached detection adjudication owner",
-          "evidence": "Poison, disease, creature-kind sensing, occlusion, and identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime.",
+          "owner": "exploration/detection owner",
+          "evidence": "Poison, disease, creature-kind sensing, occlusion, and identification are exploration/detection state outside promoted battle runtime.",
           "status": "catalog-only/dead-for-now closure"
         }
       ],
-      "nextAction": "Poison, disease, creature-kind sensing, occlusion, and identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime.",
+      "nextAction": "Poison, disease, creature-kind sensing, occlusion, and identification are exploration/detection state outside promoted battle runtime.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -7385,14 +7414,8 @@
         "state": "installed",
         "unitId": "druid_primal_order"
       },
-      "unitProfileDisposition": "unsupported-profile",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "unit-claim",
-        "kind": "selection-grant-container",
-        "owner": "character-creation-runtime",
-        "reason": "Primal Order is a character-creation suborder choice; no promoted battle Unit profile consumes the container directly."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -7401,7 +7424,7 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV18 level-1 Druid class-feature support profile; Primal Order is discovered as a class-feature acquisition choice, support-gated to Warden in the current profile, finalized from the selected option, and projected into CharacterBuild weapon and armor-training facts.",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; AT-L1-06 character-creation.class-feature-option-projection support profile; Primal Order is discovered as a class-feature acquisition choice, support-gated to Magician and Warden, finalized from the selected option, and projected into CharacterBuild cantrip, Intelligence Ability Check bonus, weapon, and armor-training facts.",
           "status": "owner evidence present"
         }
       ],
@@ -8421,7 +8444,7 @@
         "source": "deferred-mechanics",
         "kind": "profile-subset-remaining-mechanics-closed",
         "owner": "SRDINV41 social/knowledge owner",
-        "reason": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are runtime-detached social/knowledge table adjudication outside promoted battle runtime."
+        "reason": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are social/knowledge state outside promoted battle runtime."
       },
       "ownerEvidence": [
         {
@@ -8541,8 +8564,8 @@
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached detection adjudication owner",
-        "reason": "Magic sensing, aura viewing, and school identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime."
+        "owner": "exploration/detection owner",
+        "reason": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime."
       },
       "ownerEvidence": [
         {
@@ -8551,12 +8574,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "runtime-detached detection adjudication owner",
-          "evidence": "Magic sensing, aura viewing, and school identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime.",
+          "owner": "exploration/detection owner",
+          "evidence": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime.",
           "status": "catalog-only/dead-for-now closure"
         }
       ],
-      "nextAction": "Magic sensing, aura viewing, and school identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime.",
+      "nextAction": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -8590,8 +8613,8 @@
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached detection adjudication owner",
-        "reason": "Poison, disease, creature-kind sensing, occlusion, and identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime."
+        "owner": "exploration/detection owner",
+        "reason": "Poison, disease, creature-kind sensing, occlusion, and identification are exploration/detection state outside promoted battle runtime."
       },
       "ownerEvidence": [
         {
@@ -8600,12 +8623,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "runtime-detached detection adjudication owner",
-          "evidence": "Poison, disease, creature-kind sensing, occlusion, and identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime.",
+          "owner": "exploration/detection owner",
+          "evidence": "Poison, disease, creature-kind sensing, occlusion, and identification are exploration/detection state outside promoted battle runtime.",
           "status": "catalog-only/dead-for-now closure"
         }
       ],
-      "nextAction": "Poison, disease, creature-kind sensing, occlusion, and identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime.",
+      "nextAction": "Poison, disease, creature-kind sensing, occlusion, and identification are exploration/detection state outside promoted battle runtime.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -8677,8 +8700,14 @@
         "state": "installed",
         "unitId": "faerie_fire"
       },
-      "unitProfileDisposition": "supported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "table/spatial and presentation owners",
+        "reason": "Color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the runtime boundary."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -8720,8 +8749,14 @@
         "state": "installed",
         "unitId": "fog_cloud"
       },
-      "unitProfileDisposition": "supported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "SRDINV66 table/spatial owner",
+        "reason": "Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain table/spatial derivations."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -8878,8 +8913,14 @@
         "state": "installed",
         "unitId": "jump"
       },
-      "unitProfileDisposition": "supported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "SRDINV55 table/spatial owner",
+        "reason": "Runtime-owned jump arc, pathfinding, collision, and final-position derivation remain table/spatial derivations.; Runtime-owned Difficult Terrain landing Acrobatics check derivation remains a table/spatial derivation."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -9041,11 +9082,11 @@
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached social/language adjudication owner",
-        "reason": "Beast conversation, Influence action options, and information remembered by Beasts are runtime-detached table adjudication outside promoted battle runtime."
+        "owner": "runtime-detached communication/social owner",
+        "reason": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes."
       },
       "ownerEvidence": [],
-      "nextAction": "Beast conversation, Influence action options, and information remembered by Beasts are runtime-detached table adjudication outside promoted battle runtime.",
+      "nextAction": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -9074,8 +9115,14 @@
         "state": "installed",
         "unitId": "thunderwave"
       },
-      "unitProfileDisposition": "supported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "SRDINV55 table/spatial owner",
+        "reason": "Runtime-owned push geometry, collision/pathfinding, and final-position derivation remain table/spatial derivations.; Broad object inventory simulation and sound propagation simulation remain table/spatial derivations."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -9160,13 +9207,13 @@
         "state": "installed",
         "unitId": "fighter_fighting_style"
       },
-      "unitProfileDisposition": "unsupported-profile",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "selection-grant-container",
         "owner": "selected Fighting Style feat Unit",
-        "reason": "The class feature chooses a Fighting Style feat; the selected feat Unit owns executable battle pressure."
+        "reason": "The class feature owns Fighting Style selection and Fighter-level replacement; selected Fighting Style feat Units own executable battle pressure."
       },
       "ownerEvidence": [
         {
@@ -9176,7 +9223,7 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV1B level-1 Fighter support profile; Fighter progression discovers and fills the Fighting Style Unit-backed choice, finalizes the selected feat ref, and projects it through CharacterBuild feature Unit refs.",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV1B level-1 Fighter support profile; Fighter progression discovers and fills the Fighting Style Unit-backed choice, finalizes the selected feat ref, and can replace that ref when a Fighter level is gained through the CharacterBuild advancement boundary.",
           "status": "owner evidence present"
         }
       ],
@@ -9632,13 +9679,13 @@
         "state": "installed",
         "unitId": "fighter_weapon_mastery"
       },
-      "unitProfileDisposition": "unsupported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "unit-claim",
-        "kind": "selection-grant-container",
-        "owner": "selected Mastery Property Unit",
-        "reason": "The class feature grants weapon mastery choices; selected mastery property Units own executable battle pressure."
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "SRDINV78 later-level Weapon Mastery count scaling",
+        "reason": "The remaining Fighter Weapon Mastery selected-weapon count increases occur only after level 1."
       },
       "ownerEvidence": [
         {
@@ -9647,13 +9694,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime",
-          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV1B level-1 Fighter support profile; Fighter Weapon Mastery options are discovered from the feature grant, filled through supported weapon choices, finalized as selected class-choice refs, and retained as build Unit refs.",
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; AT-L1-04 Character Sheet Weapon Mastery Long Rest reselection runtime; Fighter Weapon Mastery is read from the installed Surface class-feature record and applied during Long Rest as a one-choice reselection over eligible Simple or Martial weapons. The runtime replaces selected CharacterBuild class-choice refs and stores no parallel Weapon Mastery state.",
           "status": "owner evidence present"
         }
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/fighter:level-1:multiclass-entry:fighter_multiclass_entry_traits",
@@ -10809,13 +10856,13 @@
         "state": "installed",
         "unitId": "paladin_weapon_mastery"
       },
-      "unitProfileDisposition": "unsupported-profile",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "selection-grant-container",
         "owner": "selected Mastery Property Unit",
-        "reason": "The class feature grants weapon mastery choices; selected mastery property Units own executable battle pressure."
+        "reason": "The class feature owns Weapon Mastery selection and Long Rest reselection; selected Mastery Property Units own executable battle pressure."
       },
       "ownerEvidence": [
         {
@@ -10824,8 +10871,8 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime",
-          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV20 level-1 Paladin Weapon Mastery support profile; Paladin Weapon Mastery options are discovered from the feature grant and Surface class weapon proficiencies, filled through supported proficient weapon choices, finalized as selected class-choice refs, and retained as build Unit refs.",
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; AT-L1-04 Character Sheet Weapon Mastery Long Rest reselection runtime; Paladin Weapon Mastery is read from the installed Surface class-feature record and applied during Long Rest as a two-choice reselection over eligible proficient weapons. The runtime replaces selected CharacterBuild class-choice refs and stores no parallel Weapon Mastery state.",
           "status": "owner evidence present"
         }
       ],
@@ -11084,8 +11131,8 @@
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached detection adjudication owner",
-        "reason": "Sensing, occlusion, and Hallow discovery are runtime-detached exploration/detection table adjudication outside promoted battle runtime."
+        "owner": "exploration/detection owner",
+        "reason": "Sensing, occlusion, and Hallow discovery are exploration/detection state outside promoted battle runtime."
       },
       "ownerEvidence": [
         {
@@ -11094,12 +11141,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "runtime-detached detection adjudication owner",
-          "evidence": "Sensing, occlusion, and Hallow discovery are runtime-detached exploration/detection table adjudication outside promoted battle runtime.",
+          "owner": "exploration/detection owner",
+          "evidence": "Sensing, occlusion, and Hallow discovery are exploration/detection state outside promoted battle runtime.",
           "status": "catalog-only/dead-for-now closure"
         }
       ],
-      "nextAction": "Sensing, occlusion, and Hallow discovery are runtime-detached exploration/detection table adjudication outside promoted battle runtime.",
+      "nextAction": "Sensing, occlusion, and Hallow discovery are exploration/detection state outside promoted battle runtime.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -11133,8 +11180,8 @@
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached detection adjudication owner",
-        "reason": "Magic sensing, aura viewing, and school identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime."
+        "owner": "exploration/detection owner",
+        "reason": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime."
       },
       "ownerEvidence": [
         {
@@ -11143,12 +11190,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "runtime-detached detection adjudication owner",
-          "evidence": "Magic sensing, aura viewing, and school identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime.",
+          "owner": "exploration/detection owner",
+          "evidence": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime.",
           "status": "catalog-only/dead-for-now closure"
         }
       ],
-      "nextAction": "Magic sensing, aura viewing, and school identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime.",
+      "nextAction": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -11182,8 +11229,8 @@
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached detection adjudication owner",
-        "reason": "Poison, disease, creature-kind sensing, occlusion, and identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime."
+        "owner": "exploration/detection owner",
+        "reason": "Poison, disease, creature-kind sensing, occlusion, and identification are exploration/detection state outside promoted battle runtime."
       },
       "ownerEvidence": [
         {
@@ -11192,12 +11239,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "runtime-detached detection adjudication owner",
-          "evidence": "Poison, disease, creature-kind sensing, occlusion, and identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime.",
+          "owner": "exploration/detection owner",
+          "evidence": "Poison, disease, creature-kind sensing, occlusion, and identification are exploration/detection state outside promoted battle runtime.",
           "status": "catalog-only/dead-for-now closure"
         }
       ],
-      "nextAction": "Poison, disease, creature-kind sensing, occlusion, and identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime.",
+      "nextAction": "Poison, disease, creature-kind sensing, occlusion, and identification are exploration/detection state outside promoted battle runtime.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -11561,8 +11608,8 @@
       "battleReadinessClosure": {
         "source": "deferred-mechanics",
         "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV78 later-level scaling",
-        "reason": "The remaining Favored Enemy free-cast count changes occur only after level 1."
+        "owner": "SRDINV78 later-level scaling; SRDINV66 ability-check roll-mode owner",
+        "reason": "The remaining Favored Enemy free-cast count changes occur only after level 1.; Hunter's Mark finding Advantage is an ability-check roll-mode projection, not additional battle reducer behavior for Favored Enemy."
       },
       "ownerEvidence": [
         {
@@ -11985,13 +12032,13 @@
         "state": "installed",
         "unitId": "ranger_weapon_mastery"
       },
-      "unitProfileDisposition": "unsupported-profile",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "selection-grant-container",
         "owner": "selected Mastery Property Unit",
-        "reason": "The class feature grants weapon mastery choices; selected mastery property Units own executable battle pressure."
+        "reason": "The class feature owns Weapon Mastery selection and Long Rest reselection; selected Mastery Property Units own executable battle pressure."
       },
       "ownerEvidence": [
         {
@@ -12000,8 +12047,8 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime",
-          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV20 level-1 Ranger Weapon Mastery support profile; Ranger Weapon Mastery options are discovered from the feature grant and Surface class weapon proficiencies, filled through supported proficient weapon choices, finalized as selected class-choice refs, and retained as build Unit refs.",
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; AT-L1-04 Character Sheet Weapon Mastery Long Rest reselection runtime; Ranger Weapon Mastery is read from the installed Surface class-feature record and applied during Long Rest as a two-choice reselection over eligible proficient weapons. The runtime replaces selected CharacterBuild class-choice refs and stores no parallel Weapon Mastery state.",
           "status": "owner evidence present"
         }
       ],
@@ -12131,11 +12178,11 @@
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached security/exploration adjudication owner",
-        "reason": "Warded area truth, intrusion events, designated exceptions, audible or mental alarm presentation, and sleep wake-up results are runtime-detached table adjudication outside promoted battle runtime."
+        "owner": "runtime-detached table/exploration owner",
+        "reason": "Alarm is an exploration/table procedure; promoted battle runtime does not own hidden monitoring, map patrol, or notification adjudication."
       },
       "ownerEvidence": [],
-      "nextAction": "Warded area truth, intrusion events, designated exceptions, audible or mental alarm presentation, and sleep wake-up results are runtime-detached table adjudication outside promoted battle runtime.",
+      "nextAction": "Alarm is an exploration/table procedure; promoted battle runtime does not own hidden monitoring, map patrol, or notification adjudication.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -12255,8 +12302,8 @@
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached detection adjudication owner",
-        "reason": "Magic sensing, aura viewing, and school identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime."
+        "owner": "exploration/detection owner",
+        "reason": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime."
       },
       "ownerEvidence": [
         {
@@ -12265,12 +12312,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "runtime-detached detection adjudication owner",
-          "evidence": "Magic sensing, aura viewing, and school identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime.",
+          "owner": "exploration/detection owner",
+          "evidence": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime.",
           "status": "catalog-only/dead-for-now closure"
         }
       ],
-      "nextAction": "Magic sensing, aura viewing, and school identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime.",
+      "nextAction": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -12304,8 +12351,8 @@
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached detection adjudication owner",
-        "reason": "Poison, disease, creature-kind sensing, occlusion, and identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime."
+        "owner": "exploration/detection owner",
+        "reason": "Poison, disease, creature-kind sensing, occlusion, and identification are exploration/detection state outside promoted battle runtime."
       },
       "ownerEvidence": [
         {
@@ -12314,12 +12361,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "runtime-detached detection adjudication owner",
-          "evidence": "Poison, disease, creature-kind sensing, occlusion, and identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime.",
+          "owner": "exploration/detection owner",
+          "evidence": "Poison, disease, creature-kind sensing, occlusion, and identification are exploration/detection state outside promoted battle runtime.",
           "status": "catalog-only/dead-for-now closure"
         }
       ],
-      "nextAction": "Poison, disease, creature-kind sensing, occlusion, and identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime.",
+      "nextAction": "Poison, disease, creature-kind sensing, occlusion, and identification are exploration/detection state outside promoted battle runtime.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -12434,8 +12481,14 @@
         "state": "installed",
         "unitId": "fog_cloud"
       },
-      "unitProfileDisposition": "supported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "SRDINV66 table/spatial owner",
+        "reason": "Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain table/spatial derivations."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -12506,8 +12559,14 @@
         "state": "installed",
         "unitId": "hunters_mark"
       },
-      "unitProfileDisposition": "supported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "SRDINV66 ability-check roll-mode owner",
+        "reason": "Wisdom (Perception or Survival) Advantage to find the marked target is ability-check roll-mode state outside the promoted damage-rider runtime."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -12549,8 +12608,14 @@
         "state": "installed",
         "unitId": "jump"
       },
-      "unitProfileDisposition": "supported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "SRDINV55 table/spatial owner",
+        "reason": "Runtime-owned jump arc, pathfinding, collision, and final-position derivation remain table/spatial derivations.; Runtime-owned Difficult Terrain landing Acrobatics check derivation remains a table/spatial derivation."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -12640,11 +12705,11 @@
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached social/language adjudication owner",
-        "reason": "Beast conversation, Influence action options, and information remembered by Beasts are runtime-detached table adjudication outside promoted battle runtime."
+        "owner": "runtime-detached communication/social owner",
+        "reason": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes."
       },
       "ownerEvidence": [],
-      "nextAction": "Beast conversation, Influence action options, and information remembered by Beasts are runtime-detached table adjudication outside promoted battle runtime.",
+      "nextAction": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -12716,14 +12781,8 @@
         "state": "installed",
         "unitId": "rogue_expertise"
       },
-      "unitProfileDisposition": "unsupported-profile",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "unit-claim",
-        "kind": "outside-battle-runtime",
-        "owner": "character-creation-runtime",
-        "reason": "Expertise is a character-creation skill choice boundary, not a promoted battle Unit profile."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -13286,13 +13345,13 @@
         "state": "installed",
         "unitId": "rogue_weapon_mastery"
       },
-      "unitProfileDisposition": "unsupported-profile",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "selection-grant-container",
         "owner": "selected Mastery Property Unit",
-        "reason": "The class feature grants weapon mastery choices; selected mastery property Units own executable battle pressure."
+        "reason": "The class feature owns Weapon Mastery selection and Long Rest reselection; selected Mastery Property Units own executable battle pressure."
       },
       "ownerEvidence": [
         {
@@ -13301,8 +13360,8 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime",
-          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV20 level-1 Rogue Weapon Mastery support profile; Rogue Weapon Mastery options are discovered from the feature grant and Surface class weapon proficiencies, filled through supported proficient weapon choices, finalized as selected class-choice refs, and retained as build Unit refs.",
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; AT-L1-04 Character Sheet Weapon Mastery Long Rest reselection runtime; Rogue Weapon Mastery is read from the installed Surface class-feature record and applied during Long Rest as a two-choice reselection over eligible proficient weapons. The runtime replaces selected CharacterBuild class-choice refs and stores no parallel Weapon Mastery state.",
           "status": "owner evidence present"
         }
       ],
@@ -14143,8 +14202,14 @@
         "state": "installed",
         "unitId": "light"
       },
-      "unitProfileDisposition": "supported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "table/spatial and presentation owners",
+        "reason": "Colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the object-emitter runtime boundary."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -14278,8 +14343,8 @@
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached illusion adjudication owner",
-        "reason": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are runtime-detached illusion/exploration table adjudication outside promoted battle runtime."
+        "owner": "illusion/exploration owner",
+        "reason": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are illusion/exploration state outside promoted battle runtime."
       },
       "ownerEvidence": [
         {
@@ -14288,12 +14353,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "runtime-detached illusion adjudication owner",
-          "evidence": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are runtime-detached illusion/exploration table adjudication outside promoted battle runtime.",
+          "owner": "illusion/exploration owner",
+          "evidence": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are illusion/exploration state outside promoted battle runtime.",
           "status": "catalog-only/dead-for-now closure"
         }
       ],
-      "nextAction": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are runtime-detached illusion/exploration table adjudication outside promoted battle runtime.",
+      "nextAction": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are illusion/exploration state outside promoted battle runtime.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -14615,7 +14680,7 @@
         "source": "deferred-mechanics",
         "kind": "profile-subset-remaining-mechanics-closed",
         "owner": "SRDINV41 social/knowledge owner",
-        "reason": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are runtime-detached social/knowledge table adjudication outside promoted battle runtime."
+        "reason": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are social/knowledge state outside promoted battle runtime."
       },
       "ownerEvidence": [
         {
@@ -14749,11 +14814,11 @@
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached language/information adjudication owner",
-        "reason": "Language comprehension, signed and written text access, page-reading time, and secret-message exclusion are runtime-detached table adjudication outside promoted battle runtime."
+        "owner": "runtime-detached language/communication owner",
+        "reason": "Language comprehension and secret-message adjudication are table-owned communication facts outside promoted battle runtime."
       },
       "ownerEvidence": [],
-      "nextAction": "Language comprehension, signed and written text access, page-reading time, and secret-message exclusion are runtime-detached table adjudication outside promoted battle runtime.",
+      "nextAction": "Language comprehension and secret-message adjudication are table-owned communication facts outside promoted battle runtime.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -14787,8 +14852,8 @@
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached detection adjudication owner",
-        "reason": "Magic sensing, aura viewing, and school identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime."
+        "owner": "exploration/detection owner",
+        "reason": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime."
       },
       "ownerEvidence": [
         {
@@ -14797,12 +14862,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "runtime-detached detection adjudication owner",
-          "evidence": "Magic sensing, aura viewing, and school identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime.",
+          "owner": "exploration/detection owner",
+          "evidence": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime.",
           "status": "catalog-only/dead-for-now closure"
         }
       ],
-      "nextAction": "Magic sensing, aura viewing, and school identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime.",
+      "nextAction": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -14946,8 +15011,14 @@
         "state": "installed",
         "unitId": "feather_fall"
       },
-      "unitProfileDisposition": "supported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "SRDINV55 table/spatial owner",
+        "reason": "Fall-distance derivation, map elevation, and landing geometry simulation remain table/spatial derivations."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -14989,8 +15060,14 @@
         "state": "installed",
         "unitId": "fog_cloud"
       },
-      "unitProfileDisposition": "supported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "SRDINV66 table/spatial owner",
+        "reason": "Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain table/spatial derivations."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -15032,8 +15109,14 @@
         "state": "installed",
         "unitId": "grease"
       },
-      "unitProfileDisposition": "supported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "SRDINV66 table/spatial owner",
+        "reason": "Automatic area membership, pathfinding, and grid geometry derivation remain table/spatial derivations."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -15118,8 +15201,14 @@
         "state": "installed",
         "unitId": "jump"
       },
-      "unitProfileDisposition": "supported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "SRDINV55 table/spatial owner",
+        "reason": "Runtime-owned jump arc, pathfinding, collision, and final-position derivation remain table/spatial derivations.; Runtime-owned Difficult Terrain landing Acrobatics check derivation remains a table/spatial derivation."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -15338,11 +15427,11 @@
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached illusion adjudication owner",
-        "reason": "Image content, movement appearance, physical interaction, Study action adjudication, and seeing-through behavior are runtime-detached table adjudication outside promoted battle runtime."
+        "owner": "illusion/exploration owner",
+        "reason": "Silent Image creates table-adjudicated illusion and presentation state; promoted battle runtime does not own image rendering or discovery adjudication."
       },
       "ownerEvidence": [],
-      "nextAction": "Image content, movement appearance, physical interaction, Study action adjudication, and seeing-through behavior are runtime-detached table adjudication outside promoted battle runtime.",
+      "nextAction": "Silent Image creates table-adjudicated illusion and presentation state; promoted battle runtime does not own image rendering or discovery adjudication.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -15414,8 +15503,14 @@
         "state": "installed",
         "unitId": "thunderwave"
       },
-      "unitProfileDisposition": "supported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "SRDINV55 table/spatial owner",
+        "reason": "Runtime-owned push geometry, collision/pathfinding, and final-position derivation remain table/spatial derivations.; Broad object inventory simulation and sound propagation simulation remain table/spatial derivations."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -15500,13 +15595,13 @@
         "state": "installed",
         "unitId": "warlock_eldritch_invocations"
       },
-      "unitProfileDisposition": "unsupported-profile",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "selection-grant-container",
-        "owner": "selected Eldritch Invocation option Unit",
-        "reason": "The class feature chooses an invocation option; individual invocation Units own executable pressure."
+        "owner": "selected Eldritch Invocation option profiles",
+        "reason": "The class feature owns selection and Warlock-level lifecycle, including Pact Magic prerequisite facts; selected invocation option profiles own executable battle behavior."
       },
       "ownerEvidence": [
         {
@@ -15516,7 +15611,7 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV18A level-1 Warlock Eldritch Invocation choice support profile; Eldritch Invocations are discovered from the Warlock feature-choice Surface record and the runtime SRD invocation option catalog, filled through the eldritch_invocations support profile, finalized as selected invocation ownership, and projected into CharacterBuild features without treating invocation options as retained Unit refs.",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT all-level Warlock Eldritch Invocation choice and advancement support profile; Eldritch Invocations are discovered from the Warlock feature-choice Surface record and the runtime SRD invocation option catalog, filled through the eldritch_invocations support profile, finalized as selected invocation ownership, and advanced through the CharacterBuild class-level gain boundary. Warlock-level gains derive counts from the Surface Warlock Invocations column, replacement validates final prerequisites and prerequisite-retention lockout, non-Repeatable duplicate selections are rejected, and invocation options are not treated as retained Unit refs. Warlock cantrip prerequisites consume the CharacterBuild Pact Magic cantrip facts after Warlock class-level gains apply Pact Magic cantrip changes.",
           "status": "owner evidence present"
         }
       ],
@@ -15559,7 +15654,7 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; SRDINV18 level-1 Warlock class-feature support profile; Pact Magic is retained through the finalized CharacterBuild feature Unit refs for supported Warlock progressions; executable feature behavior remains owned by downstream feature/runtime projections.",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT Warlock Pact Magic CharacterBuild spellcasting advancement support profile; Pact Magic is read from the Surface Warlock class spellcasting facts, discovered as cantrip and prepared-spell choices, finalized into a CharacterBuild Warlock spellcasting source plus Pact Magic slot pool, and advanced through the CharacterBuild class-level gain boundary from the Surface Warlock Pact Magic progression rows. Spell execution remains owned by selected spell profiles.",
           "status": "owner evidence present"
         }
       ],
@@ -16141,8 +16236,8 @@
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached illusion adjudication owner",
-        "reason": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are runtime-detached illusion/exploration table adjudication outside promoted battle runtime."
+        "owner": "illusion/exploration owner",
+        "reason": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are illusion/exploration state outside promoted battle runtime."
       },
       "ownerEvidence": [
         {
@@ -16151,12 +16246,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "runtime-detached illusion adjudication owner",
-          "evidence": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are runtime-detached illusion/exploration table adjudication outside promoted battle runtime.",
+          "owner": "illusion/exploration owner",
+          "evidence": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are illusion/exploration state outside promoted battle runtime.",
           "status": "catalog-only/dead-for-now closure"
         }
       ],
-      "nextAction": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are runtime-detached illusion/exploration table adjudication outside promoted battle runtime.",
+      "nextAction": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are illusion/exploration state outside promoted battle runtime.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -16349,7 +16444,7 @@
         "source": "deferred-mechanics",
         "kind": "profile-subset-remaining-mechanics-closed",
         "owner": "SRDINV41 social/knowledge owner",
-        "reason": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are runtime-detached social/knowledge table adjudication outside promoted battle runtime."
+        "reason": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are social/knowledge state outside promoted battle runtime."
       },
       "ownerEvidence": [
         {
@@ -16397,11 +16492,11 @@
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached language/information adjudication owner",
-        "reason": "Language comprehension, signed and written text access, page-reading time, and secret-message exclusion are runtime-detached table adjudication outside promoted battle runtime."
+        "owner": "runtime-detached language/communication owner",
+        "reason": "Language comprehension and secret-message adjudication are table-owned communication facts outside promoted battle runtime."
       },
       "ownerEvidence": [],
-      "nextAction": "Language comprehension, signed and written text access, page-reading time, and secret-message exclusion are runtime-detached table adjudication outside promoted battle runtime.",
+      "nextAction": "Language comprehension and secret-message adjudication are table-owned communication facts outside promoted battle runtime.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -16435,8 +16530,8 @@
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached detection adjudication owner",
-        "reason": "Magic sensing, aura viewing, and school identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime."
+        "owner": "exploration/detection owner",
+        "reason": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime."
       },
       "ownerEvidence": [
         {
@@ -16445,12 +16540,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "runtime-detached detection adjudication owner",
-          "evidence": "Magic sensing, aura viewing, and school identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime.",
+          "owner": "exploration/detection owner",
+          "evidence": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime.",
           "status": "catalog-only/dead-for-now closure"
         }
       ],
-      "nextAction": "Magic sensing, aura viewing, and school identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime.",
+      "nextAction": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -16728,11 +16823,11 @@
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached social/language adjudication owner",
-        "reason": "Beast conversation, Influence action options, and information remembered by Beasts are runtime-detached table adjudication outside promoted battle runtime."
+        "owner": "runtime-detached communication/social owner",
+        "reason": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes."
       },
       "ownerEvidence": [],
-      "nextAction": "Beast conversation, Influence action options, and information remembered by Beasts are runtime-detached table adjudication outside promoted battle runtime.",
+      "nextAction": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -16833,14 +16928,8 @@
         "state": "installed",
         "unitId": "wizard_arcane_recovery"
       },
-      "unitProfileDisposition": "unsupported-profile",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
-      "battleReadinessClosure": {
-        "source": "unit-claim",
-        "kind": "outside-battle-runtime",
-        "owner": "character-sheet/rest runtime",
-        "reason": "Short Rest Spell Slot recovery is outside promoted battle runtime."
-      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -17598,8 +17687,14 @@
         "state": "installed",
         "unitId": "light"
       },
-      "unitProfileDisposition": "supported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "table/spatial and presentation owners",
+        "reason": "Colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the object-emitter runtime boundary."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -17733,8 +17828,8 @@
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached illusion adjudication owner",
-        "reason": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are runtime-detached illusion/exploration table adjudication outside promoted battle runtime."
+        "owner": "illusion/exploration owner",
+        "reason": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are illusion/exploration state outside promoted battle runtime."
       },
       "ownerEvidence": [
         {
@@ -17743,12 +17838,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "runtime-detached illusion adjudication owner",
-          "evidence": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are runtime-detached illusion/exploration table adjudication outside promoted battle runtime.",
+          "owner": "illusion/exploration owner",
+          "evidence": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are illusion/exploration state outside promoted battle runtime.",
           "status": "catalog-only/dead-for-now closure"
         }
       ],
-      "nextAction": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are runtime-detached illusion/exploration table adjudication outside promoted battle runtime.",
+      "nextAction": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are illusion/exploration state outside promoted battle runtime.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -17983,11 +18078,11 @@
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached security/exploration adjudication owner",
-        "reason": "Warded area truth, intrusion events, designated exceptions, audible or mental alarm presentation, and sleep wake-up results are runtime-detached table adjudication outside promoted battle runtime."
+        "owner": "runtime-detached table/exploration owner",
+        "reason": "Alarm is an exploration/table procedure; promoted battle runtime does not own hidden monitoring, map patrol, or notification adjudication."
       },
       "ownerEvidence": [],
-      "nextAction": "Warded area truth, intrusion events, designated exceptions, audible or mental alarm presentation, and sleep wake-up results are runtime-detached table adjudication outside promoted battle runtime.",
+      "nextAction": "Alarm is an exploration/table procedure; promoted battle runtime does not own hidden monitoring, map patrol, or notification adjudication.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -18065,7 +18160,7 @@
         "source": "deferred-mechanics",
         "kind": "profile-subset-remaining-mechanics-closed",
         "owner": "SRDINV41 social/knowledge owner",
-        "reason": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are runtime-detached social/knowledge table adjudication outside promoted battle runtime."
+        "reason": "Friendly disposition, social interaction effects, and target knowledge when the spell ends are social/knowledge state outside promoted battle runtime."
       },
       "ownerEvidence": [
         {
@@ -18199,11 +18294,11 @@
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached language/information adjudication owner",
-        "reason": "Language comprehension, signed and written text access, page-reading time, and secret-message exclusion are runtime-detached table adjudication outside promoted battle runtime."
+        "owner": "runtime-detached language/communication owner",
+        "reason": "Language comprehension and secret-message adjudication are table-owned communication facts outside promoted battle runtime."
       },
       "ownerEvidence": [],
-      "nextAction": "Language comprehension, signed and written text access, page-reading time, and secret-message exclusion are runtime-detached table adjudication outside promoted battle runtime.",
+      "nextAction": "Language comprehension and secret-message adjudication are table-owned communication facts outside promoted battle runtime.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -18237,8 +18332,8 @@
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached detection adjudication owner",
-        "reason": "Magic sensing, aura viewing, and school identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime."
+        "owner": "exploration/detection owner",
+        "reason": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime."
       },
       "ownerEvidence": [
         {
@@ -18247,12 +18342,12 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "runtime-detached detection adjudication owner",
-          "evidence": "Magic sensing, aura viewing, and school identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime.",
+          "owner": "exploration/detection owner",
+          "evidence": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime.",
           "status": "catalog-only/dead-for-now closure"
         }
       ],
-      "nextAction": "Magic sensing, aura viewing, and school identification are runtime-detached exploration/detection table adjudication outside promoted battle runtime.",
+      "nextAction": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -18396,8 +18491,14 @@
         "state": "installed",
         "unitId": "feather_fall"
       },
-      "unitProfileDisposition": "supported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "SRDINV55 table/spatial owner",
+        "reason": "Fall-distance derivation, map elevation, and landing geometry simulation remain table/spatial derivations."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -18517,8 +18618,14 @@
         "state": "installed",
         "unitId": "fog_cloud"
       },
-      "unitProfileDisposition": "supported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "SRDINV66 table/spatial owner",
+        "reason": "Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain table/spatial derivations."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -18560,8 +18667,14 @@
         "state": "installed",
         "unitId": "grease"
       },
-      "unitProfileDisposition": "supported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "SRDINV66 table/spatial owner",
+        "reason": "Automatic area membership, pathfinding, and grid geometry derivation remain table/spatial derivations."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -18694,11 +18807,11 @@
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached item/information adjudication owner",
-        "reason": "Magic item properties, Attunement and charge knowledge, ongoing-spell identification, spell-origin naming, and creature spell-effect information are runtime-detached table adjudication outside promoted battle runtime."
+        "owner": "runtime-detached identification/table owner",
+        "reason": "Identification facts are supplied by the table or item/knowledge owner; promoted battle runtime does not model discovery of hidden item or spell facts."
       },
       "ownerEvidence": [],
-      "nextAction": "Magic item properties, Attunement and charge knowledge, ongoing-spell identification, spell-origin naming, and creature spell-effect information are runtime-detached table adjudication outside promoted battle runtime.",
+      "nextAction": "Identification facts are supplied by the table or item/knowledge owner; promoted battle runtime does not model discovery of hidden item or spell facts.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -18756,8 +18869,14 @@
         "state": "installed",
         "unitId": "jump"
       },
-      "unitProfileDisposition": "supported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "SRDINV55 table/spatial owner",
+        "reason": "Runtime-owned jump arc, pathfinding, collision, and final-position derivation remain table/spatial derivations.; Runtime-owned Difficult Terrain landing Acrobatics check derivation remains a table/spatial derivation."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -19062,11 +19181,11 @@
       "battleReadinessClosure": {
         "source": "unit-claim",
         "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached illusion adjudication owner",
-        "reason": "Image content, movement appearance, physical interaction, Study action adjudication, and seeing-through behavior are runtime-detached table adjudication outside promoted battle runtime."
+        "owner": "illusion/exploration owner",
+        "reason": "Silent Image creates table-adjudicated illusion and presentation state; promoted battle runtime does not own image rendering or discovery adjudication."
       },
       "ownerEvidence": [],
-      "nextAction": "Image content, movement appearance, physical interaction, Study action adjudication, and seeing-through behavior are runtime-detached table adjudication outside promoted battle runtime.",
+      "nextAction": "Silent Image creates table-adjudicated illusion and presentation state; promoted battle runtime does not own image rendering or discovery adjudication.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -19138,8 +19257,14 @@
         "state": "installed",
         "unitId": "thunderwave"
       },
-      "unitProfileDisposition": "supported-profile",
+      "unitProfileDisposition": "profile-subset-supported",
       "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "SRDINV55 table/spatial owner",
+        "reason": "Runtime-owned push geometry, collision/pathfinding, and final-position derivation remain table/spatial derivations.; Broad object inventory simulation and sound propagation simulation remain table/spatial derivations."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",

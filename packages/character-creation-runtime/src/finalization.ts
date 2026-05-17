@@ -21,10 +21,14 @@ import type {
   ProficiencyGrantSubject,
   Skill,
   StartingEquipmentChoice,
+  EffectAtom,
   UnitRecord,
   WizardSpellcastingCreation,
 } from "@dnd/surface/surface/types";
-import { discoverCreationHoles } from "./discovery.ts";
+import {
+  discoverCreationHoles,
+  selectedSuborderSpellAccessChoiceHoles,
+} from "./discovery.ts";
 import { type CharacterProgression } from "./character-progression-algebra.ts";
 import {
   classLevelForUnit,
@@ -115,7 +119,10 @@ import {
   type CharacterBuildProficiencies,
   type CharacterBuildProficiencyChoiceSubject,
   type CharacterBuildResource,
+  type CharacterBuildPactMagicSlotPool,
   type CharacterBuildSpellcasting,
+  type CharacterBuildSpellcastingSource,
+  type CharacterBuildSpellcastingSlotPool,
   type CharacterBuildSpellSlotCapacity,
   type CreationChoiceOption,
   type CharacterChoiceSelection,
@@ -156,6 +163,14 @@ type LoadoutChoiceSelection = Extract<
 type ReadableClassSpellcasting =
   | ClassSpellcastingCreation
   | WizardSpellcastingCreation;
+type ModifyRollNumericGrant = Extract<
+  EffectAtom,
+  { readonly kind: "modify_roll_numeric" }
+>;
+type FixedModifyRollAbilityFilter = Extract<
+  NonNullable<ModifyRollNumericGrant["abilityFilter"]>,
+  readonly Ability[]
+>;
 
 const BACKGROUND_ABILITY_SCORE_INCREASE_MAX_SCORE = 20;
 
@@ -648,16 +663,27 @@ export function buildCharacterBuild(input: {
   if (Either.isLeft(proficiencyChoices)) {
     return Either.left(proficiencyChoices.left);
   }
-  const buildSpellcasting = finalizedBuildSpellcasting(
-    selectedClassUnitId,
-    classFacts,
-    classLevelForUnit(selections.progression, selectedClassUnitId),
-    input.supportedSelections,
+  const buildSpellcasting = finalizedBuildSpellcasting({
+    classFactsByUnitId: classFactsByUnitId.right,
+    selections,
+    supportedSelections: input.supportedSelections,
+    unitLibrary: input.unitLibrary,
+  });
+  if (Either.isLeft(buildSpellcasting)) {
+    return Either.left(buildSpellcasting.left);
+  }
+  const abilityCheckBonusFeatures = finalizedSuborderAbilityCheckBonusFeatures(
+    input.supportedSelections.unitChoices,
+    input.unitLibrary,
   );
+  if (Either.isLeft(abilityCheckBonusFeatures)) {
+    return Either.left(abilityCheckBonusFeatures.left);
+  }
   const buildFeatures: readonly CharacterBuildFeature[] = [
     ...finalizedClassChoiceFeaturesForSupportedChoices(
       input.supportedSelections.unitChoices,
     ),
+    ...abilityCheckBonusFeatures.right,
   ];
   const buildEquipment = finalizedBuildEquipmentForSupportedLoadoutChoices(
     selections,
@@ -677,7 +703,9 @@ export function buildCharacterBuild(input: {
     abilityScores: finalAbilityScores,
     proficiencyChoices: proficiencyChoices.right,
     features: buildFeatures,
-    ...(buildSpellcasting == null ? {} : { spellcasting: buildSpellcasting }),
+    ...(buildSpellcasting.right == null
+      ? {}
+      : { spellcasting: buildSpellcasting.right }),
     equipment: buildEquipment.right,
   });
 }
@@ -1245,6 +1273,19 @@ function supportedFinalizationChoiceHoles(input: {
       startingClassUnitId(input.selections.progression),
     ),
   ).flatMap((hole) => compact([requireUnitChoiceCreationHole(hole)]));
+  const suborderSpellAccessHoles = [...input.classFactsByUnitId].flatMap(
+    ([classUnitId, facts]) =>
+      selectedSuborderSpellAccessChoiceHoles({
+        choices: input.selections.choices,
+        classUnitId,
+        classFacts: facts,
+        classLevel: classLevelForUnit(
+          input.selections.progression,
+          classUnitId,
+        ),
+        unitLibrary: input.unitLibrary,
+      }).flatMap((hole) => compact([requireUnitChoiceCreationHole(hole)])),
+  );
   const backgroundToolHole = backgroundToolChoiceSpec(
     input.backgroundFacts.toolProficiency,
   );
@@ -1258,6 +1299,7 @@ function supportedFinalizationChoiceHoles(input: {
     ...multiclassProficiencyHoles,
     ...selectedFeatAbilityScoreHoles,
     ...spellcastingHoles,
+    ...suborderSpellAccessHoles,
     ...(backgroundToolHole == null
       ? []
       : compact([
@@ -1594,6 +1636,99 @@ function finalizedClassChoiceFeaturesForSupportedChoices(
   });
 }
 
+function finalizedSuborderAbilityCheckBonusFeatures(
+  unitChoices: readonly UnitChoiceSelection[],
+  unitLibrary: UnitCatalog,
+): Either.Either<readonly CharacterBuildFeature[], FinalizationIssues> {
+  const features: CharacterBuildFeature[] = [];
+  const issues: CreationFinalizationIssue[] = [];
+  for (const selection of unitChoices) {
+    if (!isSuborderChoiceKey(selection.source.choiceKey)) {
+      continue;
+    }
+
+    const feature = unitLibrary.getUnit(selection.source.unitId);
+    if (
+      Option.isNone(feature) ||
+      feature.value.kind !== "class_feature" ||
+      feature.value.mechanics.family !== "suborder_choice"
+    ) {
+      continue;
+    }
+
+    const optionIds = new Set(choiceSelectionOptionIds(selection));
+    for (const option of feature.value.mechanics.options) {
+      if (!optionIds.has(creationChoiceOptionId(option.id))) {
+        continue;
+      }
+
+      for (const grant of option.mechanics.grants) {
+        if (grant.kind !== "modify_roll_numeric") {
+          continue;
+        }
+
+        const projected = suborderAbilityCheckBonusFeature(
+          selection.source.unitId,
+          grant,
+        );
+        if (projected === undefined) {
+          issues.push(
+            illegalFinalizationIssue(
+              `Cannot project supported suborder ability-check bonus for ${selection.source.unitId}:${option.id}.`,
+            ),
+          );
+          continue;
+        }
+        features.push(projected);
+      }
+    }
+  }
+
+  const collectedIssues = nonEmptyReadonlyArray(issues);
+  return collectedIssues == null
+    ? Either.right(features)
+    : Either.left(collectedIssues);
+}
+
+function suborderAbilityCheckBonusFeature(
+  selectedFromUnitId: UnitRecord["id"],
+  grant: ModifyRollNumericGrant,
+): CharacterBuildFeature | undefined {
+  const abilityFilter = fixedModifyRollAbilityFilter(grant.abilityFilter);
+  if (
+    grant.on.length !== 1 ||
+    grant.on[0] !== "ability_check" ||
+    grant.delta.kind !== "ability_modifier" ||
+    grant.delta.sign !== "+" ||
+    grant.delta.minimum === undefined ||
+    grant.skillFilter?.kind !== "fixed" ||
+    abilityFilter?.length !== 1 ||
+    grant.count !== undefined
+  ) {
+    return undefined;
+  }
+
+  return {
+    kind: "abilityCheckBonus",
+    selectedFromUnitId,
+    ability: abilityFilter[0],
+    skills: grant.skillFilter.skills,
+    bonus: {
+      kind: "abilityModifier",
+      ability: grant.delta.ability,
+      minimum: grant.delta.minimum,
+    },
+  };
+}
+
+function fixedModifyRollAbilityFilter(
+  abilityFilter: ModifyRollNumericGrant["abilityFilter"],
+): FixedModifyRollAbilityFilter | undefined {
+  return abilityFilter === undefined || "kind" in abilityFilter
+    ? undefined
+    : abilityFilter;
+}
+
 export function finalizedBuildEquipment(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
@@ -1692,43 +1827,148 @@ function finalizedBuildEquipmentForSupportedLoadoutChoices(
   });
 }
 
-export function finalizedBuildSpellcasting(
-  classUnitId: UnitRecord["id"],
-  classFacts: ClassCreationFacts,
-  classLevel: number,
-  supportedSelections: ExecutableSupportSelections,
-): CharacterBuildSpellcasting | undefined {
+type FinalizedSpellcastingSourceProjection = {
+  readonly source: CharacterBuildSpellcastingSource;
+  readonly spellcastingSlotPool?: CharacterBuildSpellcastingSlotPool;
+  readonly pactMagicSlotPool?: CharacterBuildPactMagicSlotPool;
+};
+
+export function finalizedBuildSpellcasting(input: {
+  readonly classFactsByUnitId: ClassFactsByUnitId;
+  readonly selections: FinalizedCharacterSelections;
+  readonly supportedSelections: ExecutableSupportSelections;
+  readonly unitLibrary: UnitCatalog;
+}): Either.Either<CharacterBuildSpellcasting | undefined, FinalizationIssues> {
+  const startingUnitId = startingClassUnitId(input.selections.progression);
+  const projections = [...input.classFactsByUnitId].flatMap(
+    ([classUnitId, classFacts]) => {
+      const projection = finalizedBuildSpellcastingSource({
+        classUnitId,
+        classFacts,
+        classLevel: classLevelForUnit(
+          input.selections.progression,
+          classUnitId,
+        ),
+        includeEmptySource: classUnitId === startingUnitId,
+        selections: input.selections,
+        supportedSelections: input.supportedSelections,
+        unitLibrary: input.unitLibrary,
+      });
+      return projection === undefined ? [] : [projection];
+    },
+  );
+  const sources = nonEmptyReadonlyArray(
+    projections.map((projection) => projection.source),
+  );
+  if (sources === undefined) {
+    return Either.right(undefined);
+  }
+
+  const spellcastingSlotPool = singleSpellcastingSlotPool(projections);
+  if (Either.isLeft(spellcastingSlotPool)) {
+    return Either.left([spellcastingSlotPool.left]);
+  }
+  const pactMagicSlotPool = singlePactMagicSlotPool(projections);
+  if (Either.isLeft(pactMagicSlotPool)) {
+    return Either.left([pactMagicSlotPool.left]);
+  }
+
+  return Either.right({
+    sources,
+    slotPools: {
+      ...(spellcastingSlotPool.right === undefined
+        ? {}
+        : { spellcasting: spellcastingSlotPool.right }),
+      ...(pactMagicSlotPool.right === undefined
+        ? {}
+        : { pactMagic: pactMagicSlotPool.right }),
+    },
+  });
+}
+
+function finalizedBuildSpellcastingSource(input: {
+  readonly classUnitId: UnitRecord["id"];
+  readonly classFacts: ClassCreationFacts;
+  readonly classLevel: number;
+  readonly includeEmptySource: boolean;
+  readonly selections: FinalizedCharacterSelections;
+  readonly supportedSelections: ExecutableSupportSelections;
+  readonly unitLibrary: UnitCatalog;
+}): FinalizedSpellcastingSourceProjection | undefined {
+  const { classUnitId, classFacts, classLevel, supportedSelections } = input;
   const spellcasting = classSpellcastingCreation(classFacts, classLevel);
   if (spellcasting == null) {
     return undefined;
   }
 
   if (isListPreparedSpellcastingCreation(spellcasting)) {
-    return {
-      sources: [
-        {
-          sourceUnitId: classUnitId,
-          spellcastingAbility: spellcasting.spellcastingAbility,
-          cantrips:
-            spellcasting.cantripAccess == null
-              ? []
-              : selectedUnitRefsForChoice(
-                  supportedSelections.unitChoices,
-                  CLASS_CANTRIP_CHOICE_KEY,
-                ),
-          spellbook: [],
-          preparedSpells: selectedUnitRefsForChoice(
+    const cantrips = [
+      ...(spellcasting.cantripAccess == null
+        ? []
+        : selectedUnitRefsForChoiceSource(
             supportedSelections.unitChoices,
-            CLASS_PREPARED_SPELL_CHOICE_KEY,
-          ),
-          spellcastingFocuses: [spellcasting.spellcastingFocus],
-        },
-      ],
-      slotPools: {
-        spellcasting: {
-          kind: "spellcasting",
-          slots: spellcasting.spellSlotProjection.slots,
-        },
+            unitSource(classUnitId, CLASS_CANTRIP_CHOICE_KEY),
+          )),
+      ...selectedSuborderCantripUnitRefs(input),
+    ];
+    const preparedSpells = selectedUnitRefsForChoiceSource(
+      supportedSelections.unitChoices,
+      unitSource(classUnitId, CLASS_PREPARED_SPELL_CHOICE_KEY),
+    );
+    if (
+      !input.includeEmptySource &&
+      cantrips.length === 0 &&
+      preparedSpells.length === 0
+    ) {
+      return undefined;
+    }
+
+    return {
+      source: {
+        sourceUnitId: classUnitId,
+        spellcastingAbility: spellcasting.spellcastingAbility,
+        cantrips,
+        spellbook: [],
+        preparedSpells,
+        spellcastingFocuses: [spellcasting.spellcastingFocus],
+      },
+      spellcastingSlotPool: {
+        kind: "spellcasting",
+        slots: spellcasting.spellSlotProjection.slots,
+      },
+    };
+  }
+
+  if (isPactMagicSpellcastingCreation(spellcasting)) {
+    const cantrips = selectedUnitRefsForChoiceSource(
+      supportedSelections.unitChoices,
+      unitSource(classUnitId, CLASS_CANTRIP_CHOICE_KEY),
+    );
+    const preparedSpells = selectedUnitRefsForChoiceSource(
+      supportedSelections.unitChoices,
+      unitSource(classUnitId, CLASS_PREPARED_SPELL_CHOICE_KEY),
+    );
+    if (
+      !input.includeEmptySource &&
+      cantrips.length === 0 &&
+      preparedSpells.length === 0
+    ) {
+      return undefined;
+    }
+
+    return {
+      source: {
+        sourceUnitId: classUnitId,
+        spellcastingAbility: spellcasting.spellcastingAbility,
+        cantrips,
+        spellbook: [],
+        preparedSpells,
+        spellcastingFocuses: [spellcasting.spellcastingFocus],
+      },
+      pactMagicSlotPool: {
+        kind: "pactMagic",
+        slotLevel: spellcasting.pactSlotProjection.spellLevel,
+        count: spellcasting.pactSlotProjection.count,
       },
     };
   }
@@ -1737,33 +1977,116 @@ export function finalizedBuildSpellcasting(
     return undefined;
   }
 
+  const cantrips = selectedUnitRefsForChoiceSource(
+    supportedSelections.unitChoices,
+    unitSource(classUnitId, WIZARD_CANTRIP_CHOICE_KEY),
+  );
+  const spellbook = selectedUnitRefsForChoiceSource(
+    supportedSelections.unitChoices,
+    unitSource(classUnitId, WIZARD_SPELLBOOK_CHOICE_KEY),
+  );
+  const preparedSpells = selectedUnitRefsForChoiceSource(
+    supportedSelections.unitChoices,
+    unitSource(classUnitId, WIZARD_PREPARED_SPELL_CHOICE_KEY),
+  );
+  if (
+    !input.includeEmptySource &&
+    cantrips.length === 0 &&
+    spellbook.length === 0 &&
+    preparedSpells.length === 0
+  ) {
+    return undefined;
+  }
+
   return {
-    sources: [
-      {
-        sourceUnitId: classUnitId,
-        spellcastingAbility: spellcasting.spellcastingAbility,
-        cantrips: selectedUnitRefsForChoice(
-          supportedSelections.unitChoices,
-          WIZARD_CANTRIP_CHOICE_KEY,
-        ),
-        spellbook: selectedUnitRefsForChoice(
-          supportedSelections.unitChoices,
-          WIZARD_SPELLBOOK_CHOICE_KEY,
-        ),
-        preparedSpells: selectedUnitRefsForChoice(
-          supportedSelections.unitChoices,
-          WIZARD_PREPARED_SPELL_CHOICE_KEY,
-        ),
-        spellcastingFocuses: spellcasting.spellcastingFocuses,
-      },
-    ],
-    slotPools: {
-      spellcasting: {
-        kind: "spellcasting",
-        slots: spellcasting.spellSlotProjection.slots,
-      },
+    source: {
+      sourceUnitId: classUnitId,
+      spellcastingAbility: spellcasting.spellcastingAbility,
+      cantrips,
+      spellbook,
+      preparedSpells,
+      spellcastingFocuses: spellcasting.spellcastingFocuses,
+    },
+    spellcastingSlotPool: {
+      kind: "spellcasting",
+      slots: spellcasting.spellSlotProjection.slots,
     },
   };
+}
+
+function selectedSuborderCantripUnitRefs(input: {
+  readonly classUnitId: UnitRecord["id"];
+  readonly classFacts: ClassCreationFacts;
+  readonly classLevel: number;
+  readonly selections: FinalizedCharacterSelections;
+  readonly supportedSelections: ExecutableSupportSelections;
+  readonly unitLibrary: UnitCatalog;
+}): readonly UnitRecord["id"][] {
+  return selectedSuborderSpellAccessChoiceHoles({
+    choices: input.selections.choices,
+    classUnitId: input.classUnitId,
+    classFacts: input.classFacts,
+    classLevel: input.classLevel,
+    unitLibrary: input.unitLibrary,
+  }).flatMap((hole) => {
+    const unitHole = requireUnitChoiceCreationHole(hole);
+    return unitHole === undefined
+      ? []
+      : selectedUnitRefsForChoiceSource(
+          input.supportedSelections.unitChoices,
+          unitHole.source,
+        );
+  });
+}
+
+function singleSpellcastingSlotPool(
+  projections: readonly FinalizedSpellcastingSourceProjection[],
+): Either.Either<
+  CharacterBuildSpellcastingSlotPool | undefined,
+  CreationFinalizationIssue
+> {
+  const pools = projections.flatMap((projection) =>
+    projection.spellcastingSlotPool === undefined
+      ? []
+      : [projection.spellcastingSlotPool],
+  );
+  const first = pools[0];
+  if (first === undefined) {
+    return Either.right(undefined);
+  }
+  if (pools.length === 1) {
+    return Either.right(first);
+  }
+
+  return Either.left(
+    illegalFinalizationIssue(
+      "Cannot finalize multiclass Spell Slot pools without a supported multiclass slot projection.",
+    ),
+  );
+}
+
+function singlePactMagicSlotPool(
+  projections: readonly FinalizedSpellcastingSourceProjection[],
+): Either.Either<
+  CharacterBuildPactMagicSlotPool | undefined,
+  CreationFinalizationIssue
+> {
+  const pools = projections.flatMap((projection) =>
+    projection.pactMagicSlotPool === undefined
+      ? []
+      : [projection.pactMagicSlotPool],
+  );
+  const first = pools[0];
+  if (first === undefined) {
+    return Either.right(undefined);
+  }
+  if (pools.length === 1) {
+    return Either.right(first);
+  }
+
+  return Either.left(
+    illegalFinalizationIssue("Cannot finalize multiple Pact Magic slot pools."),
+  );
 }
 
 function ownedEquipmentDefaultSlot(
@@ -1805,6 +2128,15 @@ function isListPreparedSpellcastingCreation(
   return spellcasting.kind === "list_prepared_spellcasting_creation";
 }
 
+function isPactMagicSpellcastingCreation(
+  spellcasting: ReadableClassSpellcasting,
+): spellcasting is Extract<
+  ClassSpellcastingCreation,
+  { readonly kind: "pact_magic_spellcasting_creation" }
+> {
+  return spellcasting.kind === "pact_magic_spellcasting_creation";
+}
+
 function isWizardSpellcastingCreation(
   spellcasting: ReadableClassSpellcasting,
 ): spellcasting is WizardSpellcastingCreation {
@@ -1817,6 +2149,19 @@ function selectedUnitRefsForChoice(
 ): readonly UnitRecord["id"][] {
   return unitChoices
     .filter((choice) => choice.source.choiceKey === choiceKey)
+    .flatMap((choice) =>
+      choice.options.flatMap((option) =>
+        option.unitRef == null ? [] : [option.unitRef.unitId],
+      ),
+    );
+}
+
+function selectedUnitRefsForChoiceSource(
+  unitChoices: readonly UnitChoiceSelection[],
+  source: UnitChoiceSource,
+): readonly UnitRecord["id"][] {
+  return unitChoices
+    .filter((choice) => sameCreationHoleSource(choice.source, source))
     .flatMap((choice) =>
       choice.options.flatMap((option) =>
         option.unitRef == null ? [] : [option.unitRef.unitId],

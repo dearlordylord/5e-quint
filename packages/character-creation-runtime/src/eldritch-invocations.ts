@@ -1,10 +1,19 @@
-import type { UnitRecord } from "@dnd/surface/surface/types";
+import type {
+  EffectAtom,
+  FeatRecord,
+  SpellRecord,
+  UnitRecord,
+} from "@dnd/surface/surface/types";
+import { Option } from "effect";
 import {
   creationChoiceOptionId,
   eldritchInvocationId,
+  type CharacterBuildEldritchInvocationRepeatableChoice,
+  type CharacterBuildEldritchInvocationSelection,
   type CreationChoiceOption,
   type CreationChoiceOptionId,
   type EldritchInvocationId,
+  type UnitCatalog,
 } from "./types.ts";
 
 export type EldritchInvocationPrerequisite =
@@ -23,12 +32,45 @@ export type EldritchInvocationOption = {
   readonly optionId: CreationChoiceOptionId;
   readonly label: string;
   readonly prerequisites: readonly EldritchInvocationPrerequisite[];
+  readonly repeatability:
+    | { readonly kind: "once" }
+    | {
+        readonly kind: "repeatable";
+        readonly choice: EldritchInvocationRepeatableChoiceRule;
+      };
 };
+
+export type EldritchInvocationRepeatableChoiceRule =
+  | {
+      readonly kind: "knownWarlockCantrip";
+      readonly cantrip: "deals_damage" | "attack_roll_damage";
+      readonly minimumRangeFeet?: number;
+    }
+  | { readonly kind: "originFeat" };
+
+export type EldritchInvocationSelection =
+  CharacterBuildEldritchInvocationSelection;
+
+type SpellActivationMechanics = Extract<
+  SpellRecord["mechanics"],
+  { readonly family: "activation" }
+>;
+type SpellActivationPhase = SpellActivationMechanics["phases"][number];
+type SaveGatePhase = Extract<
+  SpellActivationPhase,
+  { readonly kind: "save_gate" }
+>;
+type DirectPhaseEffect = NonNullable<
+  Extract<SpellActivationPhase, { readonly kind: "direct" }>["effects"]
+>[number];
+
+const ORIGIN_FEAT_CATEGORY = "origin" as const satisfies FeatRecord["category"];
 
 function invocationOption(input: {
   readonly invocationId: string | EldritchInvocationId;
   readonly label: string;
   readonly prerequisites?: readonly EldritchInvocationPrerequisite[];
+  readonly repeatability?: EldritchInvocationOption["repeatability"];
 }): EldritchInvocationOption {
   const invocationId = eldritchInvocationId(input.invocationId);
   return {
@@ -36,6 +78,7 @@ function invocationOption(input: {
     optionId: creationChoiceOptionId(invocationId),
     label: input.label,
     prerequisites: input.prerequisites ?? [],
+    repeatability: input.repeatability ?? { kind: "once" },
   };
 }
 
@@ -48,12 +91,10 @@ function knownInvocation(
   };
 }
 
-const PACT_OF_THE_BLADE_INVOCATION_ID = eldritchInvocationId(
-  "pact_of_the_blade",
-);
-const PACT_OF_THE_CHAIN_INVOCATION_ID = eldritchInvocationId(
-  "pact_of_the_chain",
-);
+const PACT_OF_THE_BLADE_INVOCATION_ID =
+  eldritchInvocationId("pact_of_the_blade");
+const PACT_OF_THE_CHAIN_INVOCATION_ID =
+  eldritchInvocationId("pact_of_the_chain");
 const PACT_OF_THE_TOME_INVOCATION_ID = eldritchInvocationId("pact_of_the_tome");
 const THIRSTING_BLADE_INVOCATION_ID = eldritchInvocationId("thirsting_blade");
 
@@ -67,6 +108,10 @@ export const SRD_ELDRITCH_INVOCATION_OPTIONS = [
       { kind: "minimumWarlockLevel", level: 2 },
       { kind: "knownWarlockCantrip", cantrip: "deals_damage" },
     ],
+    repeatability: {
+      kind: "repeatable",
+      choice: { kind: "knownWarlockCantrip", cantrip: "deals_damage" },
+    },
   }),
   invocationOption({
     invocationId: "armor_of_shadows",
@@ -106,6 +151,14 @@ export const SRD_ELDRITCH_INVOCATION_OPTIONS = [
       { kind: "minimumWarlockLevel", level: 2 },
       { kind: "knownWarlockCantrip", cantrip: "deals_damage" },
     ],
+    repeatability: {
+      kind: "repeatable",
+      choice: {
+        kind: "knownWarlockCantrip",
+        cantrip: "deals_damage",
+        minimumRangeFeet: 10,
+      },
+    },
   }),
   invocationOption({
     invocationId: "fiendish_vigor",
@@ -142,6 +195,7 @@ export const SRD_ELDRITCH_INVOCATION_OPTIONS = [
     invocationId: "lessons_of_the_first_ones",
     label: "Lessons of the First Ones",
     prerequisites: [{ kind: "minimumWarlockLevel", level: 2 }],
+    repeatability: { kind: "repeatable", choice: { kind: "originFeat" } },
   }),
   invocationOption({
     invocationId: "lifedrinker",
@@ -195,6 +249,13 @@ export const SRD_ELDRITCH_INVOCATION_OPTIONS = [
       { kind: "minimumWarlockLevel", level: 2 },
       { kind: "knownWarlockCantrip", cantrip: "attack_roll_damage" },
     ],
+    repeatability: {
+      kind: "repeatable",
+      choice: {
+        kind: "knownWarlockCantrip",
+        cantrip: "attack_roll_damage",
+      },
+    },
   }),
   invocationOption({
     invocationId: THIRSTING_BLADE_INVOCATION_ID,
@@ -241,13 +302,84 @@ export function eldritchInvocationIdForOptionId(
   )?.invocationId;
 }
 
+export function eldritchInvocationOptionForInvocationId(
+  invocationId: EldritchInvocationId,
+): EldritchInvocationOption | undefined {
+  return SRD_ELDRITCH_INVOCATION_OPTIONS.find(
+    (option) => option.invocationId === invocationId,
+  );
+}
+
+export function isRepeatableEldritchInvocation(
+  invocationId: EldritchInvocationId,
+): boolean {
+  return (
+    eldritchInvocationOptionForInvocationId(invocationId)?.repeatability
+      .kind === "repeatable"
+  );
+}
+
+export function eldritchInvocationRepeatableChoiceSatisfiesRule(input: {
+  readonly unitLibrary: UnitCatalog;
+  readonly choiceRule: EldritchInvocationRepeatableChoiceRule;
+  readonly repeatableChoice: CharacterBuildEldritchInvocationRepeatableChoice;
+}): boolean {
+  if (input.choiceRule.kind === "originFeat") {
+    return (
+      input.repeatableChoice.kind === "originFeat" &&
+      isOriginFeat(input.unitLibrary, input.repeatableChoice.featUnitId)
+    );
+  }
+
+  return (
+    input.repeatableChoice.kind === "knownWarlockCantrip" &&
+    knownWarlockCantripSatisfiesEldritchInvocationRule({
+      unitLibrary: input.unitLibrary,
+      cantripId: input.repeatableChoice.cantripId,
+      cantrip: input.choiceRule.cantrip,
+      ...(input.choiceRule.minimumRangeFeet === undefined
+        ? {}
+        : { minimumRangeFeet: input.choiceRule.minimumRangeFeet }),
+    })
+  );
+}
+
+export function knownWarlockCantripSatisfiesEldritchInvocationRule(input: {
+  readonly unitLibrary: UnitCatalog;
+  readonly cantripId: UnitRecord["id"];
+  readonly cantrip: Extract<
+    EldritchInvocationPrerequisite,
+    { readonly kind: "knownWarlockCantrip" }
+  >["cantrip"];
+  readonly minimumRangeFeet?: number;
+}): boolean {
+  const unit = input.unitLibrary.getUnit(input.cantripId);
+  if (Option.isNone(unit) || unit.value.kind !== "spell") {
+    return false;
+  }
+
+  if (
+    input.minimumRangeFeet !== undefined &&
+    !spellRangeIsAtLeast(unit.value, input.minimumRangeFeet)
+  ) {
+    return false;
+  }
+
+  return input.cantrip === "attack_roll_damage"
+    ? isAttackRollDamageCantrip(unit.value)
+    : isDamageCantrip(unit.value);
+}
+
 export function selectedEldritchInvocationFeatures(input: {
   readonly selectedFromUnitId: UnitRecord["id"];
   readonly optionIds: readonly CreationChoiceOptionId[];
 }): readonly {
   readonly kind: "selectedEldritchInvocation";
   readonly selectedFromUnitId: UnitRecord["id"];
-  readonly invocationId: EldritchInvocationId;
+  readonly selection: Extract<
+    CharacterBuildEldritchInvocationSelection,
+    { readonly kind: "nonRepeatable" }
+  >;
 }[] {
   return input.optionIds.flatMap((optionId) => {
     const invocationId = eldritchInvocationIdForOptionId(optionId);
@@ -257,8 +389,94 @@ export function selectedEldritchInvocationFeatures(input: {
           {
             kind: "selectedEldritchInvocation",
             selectedFromUnitId: input.selectedFromUnitId,
-            invocationId,
+            selection: { kind: "nonRepeatable", invocationId },
           },
-      ];
+        ];
   });
+}
+
+function isOriginFeat(
+  unitLibrary: UnitCatalog,
+  featUnitId: UnitRecord["id"],
+): boolean {
+  const unit = unitLibrary.getUnit(featUnitId);
+  return (
+    Option.isSome(unit) &&
+    unit.value.kind === "feat" &&
+    unit.value.category === ORIGIN_FEAT_CATEGORY
+  );
+}
+
+function spellRangeIsAtLeast(spell: SpellRecord, minimumFeet: number): boolean {
+  return (
+    spell.mechanics.family === "activation" &&
+    spell.mechanics.range.kind === "point" &&
+    typeof spell.mechanics.range.feet === "number" &&
+    spell.mechanics.range.feet >= minimumFeet
+  );
+}
+
+function isDamageCantrip(spell: SpellRecord): boolean {
+  return (
+    spell.mechanics.family === "activation" &&
+    spell.mechanics.level === 0 &&
+    spell.mechanics.phases.some((phase) => phaseDealsDamage(phase))
+  );
+}
+
+function isAttackRollDamageCantrip(spell: SpellRecord): boolean {
+  return (
+    spell.mechanics.family === "activation" &&
+    spell.mechanics.level === 0 &&
+    spell.mechanics.phases.some(phaseDealsDamageViaAttackRoll)
+  );
+}
+
+function phaseDealsDamage(phase: SpellActivationPhase): boolean {
+  if (phase.kind === "attack_roll") {
+    return phase.onHit.some(effectDealsDamage);
+  }
+
+  if (phase.kind === "save_gate") {
+    return (
+      effectDealsDamage(phase.onFail) ||
+      saveGateSuccessOutcomeDealsDamage(phase.onSuccess)
+    );
+  }
+
+  if (phase.kind === "direct") {
+    return phase.effects?.some(directPhaseEffectDealsDamage) ?? false;
+  }
+
+  return false;
+}
+
+function phaseDealsDamageViaAttackRoll(phase: SpellActivationPhase): boolean {
+  if (phase.kind === "attack_roll") {
+    return phase.onHit.some(effectDealsDamage);
+  }
+
+  if (phase.kind === "direct") {
+    return phase.effects?.some(directPhaseEffectIsWeaponAttack) ?? false;
+  }
+
+  return false;
+}
+
+function saveGateSuccessOutcomeDealsDamage(
+  outcome: SaveGatePhase["onSuccess"],
+): boolean {
+  return outcome.kind === "half_damage" || effectDealsDamage(outcome);
+}
+
+function directPhaseEffectDealsDamage(effect: DirectPhaseEffect): boolean {
+  return effect.kind === "damage" || directPhaseEffectIsWeaponAttack(effect);
+}
+
+function directPhaseEffectIsWeaponAttack(effect: DirectPhaseEffect): boolean {
+  return effect.kind === "make_weapon_attack";
+}
+
+function effectDealsDamage(effect: EffectAtom): boolean {
+  return effect.kind === "damage";
 }

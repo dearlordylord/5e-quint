@@ -53,6 +53,8 @@ export {
   type CharacterBuildAbilityScores,
   type CharacterBuildBookOfShadowsSpellAccess,
   type CharacterBuildEquipment,
+  type CharacterBuildEldritchInvocationRepeatableChoice,
+  type CharacterBuildEldritchInvocationSelection,
   type CharacterBuildFeature,
   type CharacterBuildHitDiePool,
   type CharacterBuildHitPoints,
@@ -140,9 +142,21 @@ export {
   type UnitCatalog,
   type UnitRef,
 } from "./types.ts";
+
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.class-feature-feat-choice
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.weapon-mastery-choice
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.eldritch-invocation-choice
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.class-feature-option-projection
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.skill-expertise-choice
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.class-feature-advancement-replacement
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.warlock-pact-magic-advancement
+
 export {
   LEVEL_ONE_ELDRITCH_INVOCATION_OPTIONS,
   SRD_ELDRITCH_INVOCATION_OPTIONS,
+  eldritchInvocationOptionForInvocationId,
+  eldritchInvocationRepeatableChoiceSatisfiesRule,
+  knownWarlockCantripSatisfiesEldritchInvocationRule,
   levelOneEldritchInvocationChoiceOptions,
   type EldritchInvocationOption,
   type EldritchInvocationPrerequisite,
@@ -165,6 +179,12 @@ export {
   characterBuildUnitRefs,
 } from "./finalization.ts";
 export {
+  isWeaponMasteryChoiceFeature,
+  weaponMasteryChoiceProfileForFeature,
+  type WeaponMasteryChoiceFeature,
+  type WeaponMasteryChoiceProfile,
+} from "./weapon-mastery.ts";
+export {
   classNameFromClassUnit,
   classUnitIdFromClassUnit,
   classUnitIdFromUnitId,
@@ -177,6 +197,7 @@ export {
   classLevelForUnit,
   classUnitId,
   computeTotalLevel,
+  characterProgressionWithClassLevelGain,
   characterTotalLevelHitPointRule,
   hitPointRuleLabel,
   hitPointRuleOptionSuffix,
@@ -193,6 +214,24 @@ export {
   type ClassHitPointRule,
   type LevelOneClassHitPointRule,
 } from "./character-progression-types.ts";
+export {
+  advanceCharacterBuildClassLevel,
+  fighterClassUnitId,
+  fighterLevelGainWithFightingStyleReplacement,
+  fightingStyleFeatUnitId,
+  warlockClassUnitId,
+  warlockLevelGain,
+  type CharacterBuildAdvancementIssue,
+  type CharacterBuildClassLevelGain,
+  type CharacterBuildFighterFightingStyleReplacementLevelGain,
+  type CharacterBuildPlainClassLevelGain,
+  type CharacterBuildWarlockEldritchInvocationSelectionInput,
+  type CharacterBuildWarlockLevelGain,
+  type CharacterBuildWarlockPactMagicLevelGain,
+  type FighterClassUnitId,
+  type FightingStyleFeatUnitId,
+  type WarlockClassUnitId,
+} from "./character-build-advancement.ts";
 export {
   BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY,
   BACKGROUND_EQUIPMENT_CHOICE_KEY,
@@ -213,6 +252,7 @@ export {
   PHASE1_BACKGROUND_TOOL_OPTION_ID,
   PHASE1_CLASS_EQUIPMENT_OPTION_ID,
   PHASE1_CLASS_FIGHTER_UNIT_ID,
+  PHASE1_FIGHTING_STYLE_ARCHERY_UNIT_ID,
   PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
   PHASE1_LOADOUT_ARMOR_OPTION_ID,
   PHASE1_LOADOUT_SHIELD_OPTION_ID,

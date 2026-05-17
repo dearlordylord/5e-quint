@@ -12,13 +12,17 @@ import {
   classUnitIdToClassName,
   CHARACTER_CLASS_LEVELS,
   characterEquipmentItemSourceFromId,
+  eldritchInvocationOptionForInvocationId,
+  eldritchInvocationRepeatableChoiceSatisfiesRule,
   eldritchInvocationId,
   parseCharacterEquipmentItemId,
   progressionClassUnitIds,
   STANDARD_LANGUAGES,
+  weaponMasteryChoiceProfileForFeature,
   type CharacterBuild,
   type CharacterBuildBookOfShadowsSpellAccess,
   type CharacterBuildEquipment,
+  type CharacterBuildEldritchInvocationRepeatableChoice,
   type CharacterBuildFeature,
   type CharacterBuildHitDiePool,
   type CharacterBuildPactMagicSlotPool,
@@ -33,7 +37,9 @@ import {
   ABILITIES,
   CONDITIONS,
   SKILLS,
+  SURFACE_SKILLS,
   type Ability,
+  type SurfaceSkill,
 } from "@dnd/shared/game-facts";
 import {
   DieRollResult,
@@ -93,6 +99,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import {
   allCantripsFromAnyClassSpellList,
+  allCantripsFromClassSpellList,
   allLeveledSpellsFromAnyClassSpellList,
 } from "@dnd/surface/surface/schema";
 import { favoredEnemyHuntersMarkFreeCastGrantsForUnit } from "@dnd/surface/surface/types";
@@ -100,7 +107,9 @@ import { Brand, Either, Option } from "effect";
 
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.armor-class-base-formula
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.healing-resource-action
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.short-rest-spell-slot-recovery
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.spellbook-ritual-invocation
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.weapon-mastery-reselection
 
 const WEAPON_PROFICIENCY_CATEGORY_VALUES = ["simple", "martial"] as const;
 const ARMOR_TRAINING_CATEGORY_VALUES = [
@@ -252,9 +261,22 @@ export type CharacterSheetShortRestInput = {
   };
 };
 
-export type CharacterSheetLongRestInput = {
-  readonly sheet: CharacterSheet;
+export type CharacterSheetWeaponMasteryReselection = {
+  readonly featureUnitId: UnitRecord["id"];
+  readonly selectedWeaponUnitIds: ReadonlyNonEmptyArray<UnitRecord["id"]>;
 };
+
+export type CharacterSheetLongRestInput =
+  | {
+      readonly sheet: CharacterSheet;
+      readonly unitLibrary?: never;
+      readonly weaponMasteryReselections?: never;
+    }
+  | {
+      readonly sheet: CharacterSheet;
+      readonly unitLibrary: UnitCatalog;
+      readonly weaponMasteryReselections: ReadonlyNonEmptyArray<CharacterSheetWeaponMasteryReselection>;
+    };
 
 export type CharacterSheetLayOnHandsInput = {
   readonly source: CharacterSheet;
@@ -899,8 +921,11 @@ export function completeLongRest(
   });
   if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
   if (isCharacterSheetWithSpellSlots(input.sheet)) {
+    const build = characterSheetLongRestBuild(input, input.sheet.build);
+    if (Either.isLeft(build)) return Either.left(build.left);
     return Either.right({
       ...input.sheet,
+      build: build.right,
       hitPoints: hitPoints.right,
       spentHitDice: [],
       restFeatureUses: [],
@@ -917,13 +942,214 @@ export function completeLongRest(
           : { ...input.sheet.pactSlotExpenditure, expended: resourceCount(0) },
     });
   }
+  const build = characterSheetLongRestBuild(input, input.sheet.build);
+  if (Either.isLeft(build)) return Either.left(build.left);
   return Either.right({
     ...input.sheet,
+    build: build.right,
     hitPoints: hitPoints.right,
     spentHitDice: [],
     restFeatureUses: [],
     resourceExpenditures: [],
   });
+}
+
+function characterSheetLongRestBuild<TBuild extends CharacterBuild>(
+  input: CharacterSheetLongRestInput,
+  build: TBuild,
+): Either.Either<TBuild, CharacterSheetIssue> {
+  if (input.weaponMasteryReselections === undefined) {
+    return Either.right(build);
+  }
+  return characterBuildWithWeaponMasteryReselections({
+    build,
+    unitLibrary: input.unitLibrary,
+    reselections: input.weaponMasteryReselections,
+  });
+}
+
+function characterBuildWithWeaponMasteryReselections<
+  TBuild extends CharacterBuild,
+>(input: {
+  readonly build: TBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly reselections: ReadonlyNonEmptyArray<CharacterSheetWeaponMasteryReselection>;
+}): Either.Either<TBuild, CharacterSheetIssue> {
+  if (input.reselections.length === 0) {
+    return characterSheetIssue(
+      "Weapon Mastery Long Rest reselection input must be nonempty.",
+    );
+  }
+  const ownedFeatureUnitIds = new Set(
+    characterBuildFeatureUnitIds(input.build, input.unitLibrary),
+  );
+  const reselectedWeaponUnitIdsByFeature = new Map<
+    UnitRecord["id"],
+    readonly UnitRecord["id"][]
+  >();
+
+  for (const reselection of input.reselections) {
+    if (reselectedWeaponUnitIdsByFeature.has(reselection.featureUnitId)) {
+      return characterSheetIssue(
+        "Weapon Mastery Long Rest reselection must not duplicate feature sources.",
+      );
+    }
+    if (!ownedFeatureUnitIds.has(reselection.featureUnitId)) {
+      return characterSheetIssue(
+        "Weapon Mastery Long Rest reselection requires the Character Build to own the feature.",
+      );
+    }
+    const selectedWeaponUnitIds = selectedWeaponMasteryUnitIdsForLongRest({
+      build: input.build,
+      unitLibrary: input.unitLibrary,
+      reselection,
+    });
+    if (Either.isLeft(selectedWeaponUnitIds)) {
+      return Either.left(selectedWeaponUnitIds.left);
+    }
+    reselectedWeaponUnitIdsByFeature.set(
+      reselection.featureUnitId,
+      selectedWeaponUnitIds.right,
+    );
+  }
+
+  return Either.right({
+    ...input.build,
+    features: characterBuildFeaturesWithWeaponMasteryReselections(
+      input.build.features,
+      reselectedWeaponUnitIdsByFeature,
+    ),
+  });
+}
+
+function selectedWeaponMasteryUnitIdsForLongRest(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly reselection: CharacterSheetWeaponMasteryReselection;
+}): Either.Either<readonly UnitRecord["id"][], CharacterSheetIssue> {
+  const profile = weaponMasteryChoiceProfileForFeature({
+    featureUnitId: input.reselection.featureUnitId,
+    unitLibrary: input.unitLibrary,
+  });
+  if (profile === undefined) {
+    return characterSheetIssue(
+      "Weapon Mastery Long Rest reselection requires a Weapon Mastery class-feature Unit.",
+    );
+  }
+  if (profile.longRestChangeCount < 1) {
+    return characterSheetIssue(
+      "Weapon Mastery class-feature Unit does not support Long Rest reselection.",
+    );
+  }
+
+  const currentWeaponUnitIds = selectedWeaponMasteryUnitIds(
+    input.build,
+    input.reselection.featureUnitId,
+  );
+  if (
+    currentWeaponUnitIds.length !== profile.choiceCount ||
+    new Set(currentWeaponUnitIds).size !== currentWeaponUnitIds.length
+  ) {
+    return characterSheetIssue(
+      "Existing Weapon Mastery selections must match the feature choice count.",
+    );
+  }
+
+  const selectedWeaponUnitIds = input.reselection.selectedWeaponUnitIds;
+  if (selectedWeaponUnitIds.length !== profile.choiceCount) {
+    return characterSheetIssue(
+      "Weapon Mastery Long Rest reselection must match the feature choice count.",
+    );
+  }
+  if (new Set(selectedWeaponUnitIds).size !== selectedWeaponUnitIds.length) {
+    return characterSheetIssue(
+      "Weapon Mastery Long Rest reselection must not duplicate weapon choices.",
+    );
+  }
+
+  const eligibleWeaponUnitIds = new Set(
+    profile.eligibleWeapons.map((weapon) => weapon.id),
+  );
+  if (
+    selectedWeaponUnitIds.some((unitId) => !eligibleWeaponUnitIds.has(unitId))
+  ) {
+    return characterSheetIssue(
+      "Weapon Mastery Long Rest reselection must choose eligible proficient weapons.",
+    );
+  }
+
+  const currentWeaponUnitIdSet = new Set(currentWeaponUnitIds);
+  const changedChoiceCount = selectedWeaponUnitIds.filter(
+    (unitId) => !currentWeaponUnitIdSet.has(unitId),
+  ).length;
+  if (changedChoiceCount > profile.longRestChangeCount) {
+    return characterSheetIssue(
+      "Weapon Mastery Long Rest reselection changes too many weapon choices.",
+    );
+  }
+
+  return Either.right([...selectedWeaponUnitIds]);
+}
+
+function selectedWeaponMasteryUnitIds(
+  build: CharacterBuild,
+  featureUnitId: UnitRecord["id"],
+): readonly UnitRecord["id"][] {
+  return build.features.flatMap((feature) =>
+    feature.kind === "selectedClassChoice" &&
+    feature.selectedFromUnitId === featureUnitId
+      ? [feature.unitId]
+      : [],
+  );
+}
+
+function characterBuildFeaturesWithWeaponMasteryReselections(
+  features: readonly CharacterBuildFeature[],
+  selectedWeaponUnitIdsByFeature: ReadonlyMap<
+    UnitRecord["id"],
+    readonly UnitRecord["id"][]
+  >,
+): readonly CharacterBuildFeature[] {
+  const insertedFeatureUnitIds = new Set<UnitRecord["id"]>();
+  const nextFeatures: CharacterBuildFeature[] = [];
+
+  for (const feature of features) {
+    const selectedWeaponUnitIds =
+      feature.kind === "selectedClassChoice"
+        ? selectedWeaponUnitIdsByFeature.get(feature.selectedFromUnitId)
+        : undefined;
+    if (selectedWeaponUnitIds === undefined) {
+      nextFeatures.push(feature);
+      continue;
+    }
+
+    if (!insertedFeatureUnitIds.has(feature.selectedFromUnitId)) {
+      nextFeatures.push(
+        ...selectedWeaponUnitIds.map((unitId) => ({
+          kind: "selectedClassChoice" as const,
+          unitId,
+          selectedFromUnitId: feature.selectedFromUnitId,
+        })),
+      );
+      insertedFeatureUnitIds.add(feature.selectedFromUnitId);
+    }
+  }
+
+  for (const [
+    featureUnitId,
+    selectedWeaponUnitIds,
+  ] of selectedWeaponUnitIdsByFeature) {
+    if (insertedFeatureUnitIds.has(featureUnitId)) continue;
+    nextFeatures.push(
+      ...selectedWeaponUnitIds.map((unitId) => ({
+        kind: "selectedClassChoice" as const,
+        unitId,
+        selectedFromUnitId: featureUnitId,
+      })),
+    );
+  }
+
+  return nextFeatures;
 }
 
 export function applyLayOnHands(
@@ -2983,7 +3209,7 @@ function parseCharacterBuild(
   if (Either.isLeft(proficiencyChoices)) {
     return Either.left(proficiencyChoices.left);
   }
-  const features = parseStoredFeatures(value.features);
+  const features = parseStoredFeatures(value.features, unitLibrary);
   if (Either.isLeft(features)) return Either.left(features.left);
   const spellcasting =
     value.spellcasting === undefined
@@ -3011,9 +3237,63 @@ function parseCharacterBuild(
     build,
     unitLibrary,
   );
-  return Either.isLeft(bookOfShadowsIssue)
-    ? Either.left(bookOfShadowsIssue.left)
+  if (Either.isLeft(bookOfShadowsIssue)) {
+    return Either.left(bookOfShadowsIssue.left);
+  }
+  const eldritchInvocationIssue =
+    storedEldritchInvocationKnownCantripSelectionIssue(build, unitLibrary);
+  return Either.isLeft(eldritchInvocationIssue)
+    ? Either.left(eldritchInvocationIssue.left)
     : Either.right(build);
+}
+
+function storedEldritchInvocationKnownCantripSelectionIssue(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): Either.Either<void, CharacterSheetIssue> {
+  const knownWarlockCantrips = knownWarlockCantripIdsForStoredBuild(
+    build,
+    unitLibrary,
+  );
+  for (const feature of build.features) {
+    if (
+      feature.kind !== "selectedEldritchInvocation" ||
+      feature.selection.kind !== "repeatable" ||
+      feature.selection.repeatableChoice.kind !== "knownWarlockCantrip"
+    ) {
+      continue;
+    }
+    if (
+      !knownWarlockCantrips.has(feature.selection.repeatableChoice.cantripId)
+    ) {
+      return characterSheetIssue(
+        "Character Build Eldritch Invocation repeatable known cantrip choice must be a known Warlock cantrip.",
+      );
+    }
+  }
+  return Either.right(undefined);
+}
+
+function knownWarlockCantripIdsForStoredBuild(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): ReadonlySet<UnitRecord["id"]> {
+  const cantripIds = new Set<UnitRecord["id"]>();
+  for (const source of build.spellcasting?.sources ?? []) {
+    const sourceClassName = classUnitIdToClassName({
+      unitLibrary,
+      classUnitId: source.sourceUnitId,
+    });
+    if (Either.isLeft(sourceClassName) || sourceClassName.right !== "warlock") {
+      continue;
+    }
+    for (const cantripId of source.cantrips) {
+      if (allCantripsFromClassSpellList("warlock", [cantripId])) {
+        cantripIds.add(cantripId);
+      }
+    }
+  }
+  return cantripIds;
 }
 
 function parseStoredProgression(
@@ -3159,7 +3439,8 @@ function hasSelectedWarlockEldritchInvocation(
   return build.features.some((feature) => {
     if (
       feature.kind !== "selectedEldritchInvocation" ||
-      feature.invocationId !== eldritchInvocationId("pact_of_the_tome")
+      feature.selection.invocationId !==
+        eldritchInvocationId("pact_of_the_tome")
     ) {
       return false;
     }
@@ -3313,6 +3594,7 @@ function parseStoredProficiencyChoices(
 
 function parseStoredFeatures(
   value: unknown,
+  unitLibrary: UnitCatalog,
 ): Either.Either<readonly CharacterBuildFeature[], CharacterSheetIssue> {
   if (!Array.isArray(value)) {
     return characterSheetIssue("Character Build requires features.");
@@ -3333,18 +3615,152 @@ function parseStoredFeatures(
       });
     } else if (
       feature.kind === "selectedEldritchInvocation" &&
-      typeof feature.invocationId === "string"
+      isRecord(feature.selection)
     ) {
+      const selection = parseStoredEldritchInvocationSelection(
+        feature.selection,
+        unitLibrary,
+      );
+      if (Either.isLeft(selection)) {
+        return Either.left(selection.left);
+      }
       features.push({
         kind: "selectedEldritchInvocation" as const,
-        invocationId: eldritchInvocationId(feature.invocationId),
+        selection: selection.right,
         selectedFromUnitId: feature.selectedFromUnitId,
       });
+    } else if (feature.kind === "abilityCheckBonus") {
+      const abilityCheckBonus = parseStoredAbilityCheckBonusFeature({
+        feature,
+        selectedFromUnitId: feature.selectedFromUnitId,
+      });
+      if (Either.isLeft(abilityCheckBonus)) {
+        return Either.left(abilityCheckBonus.left);
+      }
+      features.push(abilityCheckBonus.right);
     } else {
       return characterSheetIssue("Character Build feature is invalid.");
     }
   }
   return Either.right(features);
+}
+
+function parseStoredEldritchInvocationSelection(
+  value: Readonly<Record<string, unknown>>,
+  unitLibrary: UnitCatalog,
+): Either.Either<
+  Extract<
+    CharacterBuildFeature,
+    { readonly kind: "selectedEldritchInvocation" }
+  >["selection"],
+  CharacterSheetIssue
+> {
+  if (typeof value.invocationId !== "string") {
+    return characterSheetIssue(
+      "Character Build Eldritch Invocation selection is invalid.",
+    );
+  }
+  const invocationId = eldritchInvocationId(value.invocationId);
+  const option = eldritchInvocationOptionForInvocationId(invocationId);
+  if (option === undefined) {
+    return characterSheetIssue(
+      "Character Build Eldritch Invocation selection is invalid.",
+    );
+  }
+  if (option.repeatability.kind === "once") {
+    return value.kind === "nonRepeatable"
+      ? Either.right({ kind: "nonRepeatable", invocationId })
+      : characterSheetIssue(
+          "Character Build Eldritch Invocation selection is invalid.",
+        );
+  }
+
+  if (value.kind !== "repeatable") {
+    return characterSheetIssue(
+      "Character Build Eldritch Invocation selection is invalid.",
+    );
+  }
+  const repeatableChoiceInput = value.repeatableChoice;
+  const repeatableChoice =
+    parseStoredEldritchInvocationRepeatableChoice(repeatableChoiceInput);
+  if (Either.isLeft(repeatableChoice)) {
+    return Either.left(repeatableChoice.left);
+  }
+
+  return eldritchInvocationRepeatableChoiceSatisfiesRule({
+    unitLibrary,
+    choiceRule: option.repeatability.choice,
+    repeatableChoice: repeatableChoice.right,
+  })
+    ? Either.right({
+        kind: "repeatable",
+        invocationId,
+        repeatableChoice: repeatableChoice.right,
+      })
+    : characterSheetIssue(
+        "Character Build Eldritch Invocation repeatable choice is invalid.",
+      );
+}
+
+function parseStoredEldritchInvocationRepeatableChoice(
+  value: unknown,
+): Either.Either<
+  CharacterBuildEldritchInvocationRepeatableChoice,
+  CharacterSheetIssue
+> {
+  if (!isRecord(value) || typeof value.kind !== "string") {
+    return characterSheetIssue(
+      "Character Build Eldritch Invocation repeatable choice is invalid.",
+    );
+  }
+  if (
+    value.kind === "knownWarlockCantrip" &&
+    typeof value.cantripId === "string"
+  ) {
+    return Either.right({
+      kind: "knownWarlockCantrip",
+      cantripId: value.cantripId,
+    });
+  }
+  if (value.kind === "originFeat" && typeof value.featUnitId === "string") {
+    return Either.right({
+      kind: "originFeat",
+      featUnitId: value.featUnitId,
+    });
+  }
+  return characterSheetIssue(
+    "Character Build Eldritch Invocation repeatable choice is invalid.",
+  );
+}
+
+function parseStoredAbilityCheckBonusFeature(input: {
+  readonly feature: Readonly<Record<string, unknown>>;
+  readonly selectedFromUnitId: string;
+}): Either.Either<CharacterBuildFeature, CharacterSheetIssue> {
+  const { feature } = input;
+  if (
+    !Array.isArray(feature.skills) ||
+    !feature.skills.every(isSurfaceSkill) ||
+    !isAbility(feature.ability) ||
+    !isRecord(feature.bonus) ||
+    feature.bonus.kind !== "abilityModifier" ||
+    !isAbility(feature.bonus.ability) ||
+    typeof feature.bonus.minimum !== "number"
+  ) {
+    return characterSheetIssue("Character Build feature is invalid.");
+  }
+
+  return Either.right({
+    kind: "abilityCheckBonus" as const,
+    ability: feature.ability,
+    skills: feature.skills,
+    bonus: {
+      kind: "abilityModifier" as const,
+      ability: feature.bonus.ability,
+      minimum: feature.bonus.minimum,
+    },
+    selectedFromUnitId: input.selectedFromUnitId,
+  });
 }
 
 function parseStoredSpellcasting(
@@ -3723,6 +4139,10 @@ function parseOptionalEquipmentItemId(
 
 function isAbility(value: unknown): value is Ability {
   return ABILITIES.some((ability) => ability === value);
+}
+
+function isSurfaceSkill(value: unknown): value is SurfaceSkill {
+  return SURFACE_SKILLS.some((skill) => skill === value);
 }
 
 function isStandardLanguage(value: unknown): value is string {

@@ -991,18 +991,53 @@ export type CharacterBuildProficiencyChoiceSubject =
     }
   | { readonly kind: "tool"; readonly toolId: ToolProficiencyId };
 
-export type CharacterBuildFeature = {
+type CharacterBuildSelectedFeatureSource = {
   readonly selectedFromUnitId: UnitRecord["id"];
-} & (
-  | {
+};
+
+export type CharacterBuildFeature =
+  | (CharacterBuildSelectedFeatureSource & {
       readonly kind: "selectedClassChoice";
       readonly unitId: UnitRecord["id"];
-    }
-  | {
+    })
+  | (CharacterBuildSelectedFeatureSource & {
       readonly kind: "selectedEldritchInvocation";
+      readonly selection: CharacterBuildEldritchInvocationSelection;
+    })
+  | CharacterBuildAbilityCheckBonusFeature;
+
+export type CharacterBuildEldritchInvocationSelection =
+  | {
+      readonly kind: "nonRepeatable";
       readonly invocationId: EldritchInvocationId;
     }
-);
+  | {
+      readonly kind: "repeatable";
+      readonly invocationId: EldritchInvocationId;
+      readonly repeatableChoice: CharacterBuildEldritchInvocationRepeatableChoice;
+    };
+
+export type CharacterBuildEldritchInvocationRepeatableChoice =
+  | {
+      readonly kind: "knownWarlockCantrip";
+      readonly cantripId: UnitRecord["id"];
+    }
+  | {
+      readonly kind: "originFeat";
+      readonly featUnitId: UnitRecord["id"];
+    };
+
+type CharacterBuildAbilityCheckBonusFeature =
+  CharacterBuildSelectedFeatureSource & {
+    readonly kind: "abilityCheckBonus";
+    readonly ability: Ability;
+    readonly skills: readonly Skill[];
+    readonly bonus: {
+      readonly kind: "abilityModifier";
+      readonly ability: Ability;
+      readonly minimum: number;
+    };
+  };
 
 export type CharacterBuildResource = {
   readonly unitId: UnitRecord["id"];
@@ -1057,6 +1092,10 @@ export type CharacterBuildSpellcastingFocus =
   | Extract<
       ClassSpellcastingCreation,
       { readonly kind: "list_prepared_spellcasting_creation" }
+    >["spellcastingFocus"]
+  | Extract<
+      ClassSpellcastingCreation,
+      { readonly kind: "pact_magic_spellcasting_creation" }
     >["spellcastingFocus"];
 export type CharacterBuildSpellLevel =
   WizardSpellcastingCreation["spellbookAccess"]["spells"][number]["spellLevel"];
