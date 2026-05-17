@@ -4,6 +4,7 @@ import {
   STANDARD_LANGUAGES,
   alignmentLabel,
   alignmentOptionId,
+  type Language,
   type SelectableStandardLanguage,
 } from "@dnd/shared/game-facts";
 import { SUPPORTED_ABILITY_SCORE_METHODS } from "@dnd/shared-algebras/ability-score-algebra";
@@ -37,6 +38,7 @@ import {
   BACKGROUND_TOOL_CHOICE_KEY,
   CLASS_FEATURE_FEAT_CHOICE_KEY,
   CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
+  CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
   CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
   DIVINE_ORDER_CHOICE_KEY,
   CLASS_SUBCLASS_CHOICE_KEY,
@@ -58,6 +60,11 @@ import {
   PRIMAL_ORDER_CHOICE_KEY,
 } from "./phase1-manifest.ts";
 import { levelOneEldritchInvocationChoiceOptions } from "./eldritch-invocations.ts";
+import {
+  characterCreationLanguageTableOptions,
+  languageFromCreationChoiceOptionId,
+  languageFromSurfaceLanguageId,
+} from "./language-codecs.ts";
 import {
   backgroundAbilityScoreIncreaseOptionId,
   backgroundAbilityScoreIncreaseOptions,
@@ -1182,6 +1189,7 @@ export function discoverClassFeatureGrantHoles(
   return classFeatureGrantChoiceHoles(featureUnitId, unitLibrary, {
     classLevel,
     ownedSkillProficiencies: draftOwnedSkillProficiencies(draft, unitLibrary),
+    knownLanguages: draftKnownLanguages(draft, featureUnitId, unitLibrary),
   }).flatMap((hole) => unselectedUnitChoiceHole(draft, hole));
 }
 
@@ -1191,6 +1199,7 @@ export function classFeatureGrantChoiceHoles(
   input: {
     readonly classLevel?: number;
     readonly ownedSkillProficiencies?: readonly Skill[];
+    readonly knownLanguages?: readonly Language[];
   } = {},
 ): readonly ChoiceCreationHole[] {
   const feature = requireClassFeature(unitLibrary, featureUnitId);
@@ -1200,8 +1209,15 @@ export function classFeatureGrantChoiceHoles(
   const mechanics = feature.mechanics;
 
   if (mechanics.family === "passive") {
+    const knownLanguages = uniqueLanguages([
+      ...(input.knownLanguages ?? []),
+      ...fixedPassiveGrantLanguages(mechanics.grants),
+    ]);
     const passiveGrantHoles = mechanics.grants.flatMap((grant) =>
-      passiveGrantChoiceHoles(featureUnitId, grant, unitLibrary, input),
+      passiveGrantChoiceHoles(featureUnitId, grant, unitLibrary, {
+        ...input,
+        knownLanguages,
+      }),
     );
     if (passiveGrantHoles.length > 0) {
       return passiveGrantHoles;
@@ -1277,6 +1293,7 @@ function passiveGrantChoiceHoles(
   input: {
     readonly classLevel?: number;
     readonly ownedSkillProficiencies?: readonly Skill[];
+    readonly knownLanguages?: readonly Language[];
   },
 ): readonly ChoiceCreationHole[] {
   if (grant.kind === "grant_feat") {
@@ -1293,8 +1310,166 @@ function passiveGrantChoiceHoles(
       input.ownedSkillProficiencies ?? [],
     );
   }
+  if (grant.kind === "grant_language_choice") {
+    return languageGrantChoiceHole(
+      featureUnitId,
+      grant,
+      input.knownLanguages ?? [],
+    );
+  }
 
   return [];
+}
+
+function languageGrantChoiceHole(
+  sourceUnitId: UnitRecord["id"],
+  grant: Extract<EffectAtom, { readonly kind: "grant_language_choice" }>,
+  knownLanguages: readonly Language[],
+): readonly ChoiceCreationHole[] {
+  const cardinality = exactChoiceCardinality(grant.count);
+  const options = languageChoiceOptionsForSource(grant.source, knownLanguages);
+  if (
+    cardinality === undefined ||
+    choiceCardinalityMax(cardinality) > options.length
+  ) {
+    return [];
+  }
+
+  const hole = requireChoiceCreationHole(
+    choiceHole({
+      source: unitSource(sourceUnitId, CLASS_FEATURE_LANGUAGE_CHOICE_KEY),
+      cardinality,
+      options,
+    }),
+  );
+  return hole === undefined ? [] : [hole];
+}
+
+function languageChoiceOptionsForSource(
+  source: Extract<EffectAtom, { readonly kind: "grant_language_choice" }>[
+    "source"
+  ],
+  knownLanguages: readonly Language[],
+): readonly CreationChoiceOption[] {
+  return Match.value(source).pipe(
+    Match.when("character_creation_language_tables", () =>
+      characterCreationLanguageTableOptions({
+        knownLanguages: new Set(knownLanguages),
+      }),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function fixedPassiveGrantLanguages(
+  grants: readonly EffectAtom[],
+): readonly Language[] {
+  return uniqueLanguages(
+    grants.flatMap((grant) => {
+      if (grant.kind !== "grant_language") {
+        return [];
+      }
+      const language = languageFromSurfaceLanguageId(grant.languageId);
+      return Either.isRight(language) ? [language.right] : [];
+    }),
+  );
+}
+
+function draftKnownLanguages(
+  draft: CharacterDraft,
+  languageChoiceSourceUnitId: UnitRecord["id"],
+  unitLibrary: UnitCatalog,
+): readonly Language[] {
+  const originLanguages =
+    draft.selections.languages ?? (["Common"] as const satisfies readonly [
+      Language,
+    ]);
+  return uniqueLanguages([
+    ...originLanguages,
+    ...selectedClassFeatureLanguageChoices(
+      draft.selections.choices,
+      languageChoiceSourceUnitId,
+    ),
+    ...draftOwnedFixedClassFeatureLanguages(
+      draft,
+      languageChoiceSourceUnitId,
+      unitLibrary,
+    ),
+  ]);
+}
+
+function draftOwnedFixedClassFeatureLanguages(
+  draft: CharacterDraft,
+  languageChoiceSourceUnitId: UnitRecord["id"],
+  unitLibrary: UnitCatalog,
+): readonly Language[] {
+  const progression = draft.selections.progression;
+  if (progression == null) {
+    return [];
+  }
+
+  return uniqueLanguages(
+    progressionClassUnitIds(progression).flatMap((classUnitId) => {
+      const unit = unitLibrary.getUnit(classUnitId);
+      if (Option.isNone(unit)) {
+        return [];
+      }
+      const facts = readClassCreationFacts(unit.value);
+      if (facts.tag !== "readable") {
+        return [];
+      }
+
+      return facts.value.featureGrants
+        .filter(
+          (grant) =>
+            grant.level <= classLevelForUnit(progression, classUnitId) &&
+            grant.unitId !== languageChoiceSourceUnitId,
+        )
+        .flatMap((grant) =>
+          fixedClassFeatureLanguages(grant.unitId, unitLibrary),
+        );
+    }),
+  );
+}
+
+function fixedClassFeatureLanguages(
+  featureUnitId: UnitRecord["id"],
+  unitLibrary: UnitCatalog,
+): readonly Language[] {
+  const unit = unitLibrary.getUnit(featureUnitId);
+  if (
+    Option.isNone(unit) ||
+    unit.value.kind !== "class_feature" ||
+    unit.value.mechanics.family !== "passive"
+  ) {
+    return [];
+  }
+
+  return fixedPassiveGrantLanguages(unit.value.mechanics.grants);
+}
+
+function selectedClassFeatureLanguageChoices(
+  choices: readonly CharacterChoiceSelection[],
+  languageChoiceSourceUnitId: UnitRecord["id"],
+): readonly Language[] {
+  return uniqueLanguages(
+    choices.flatMap((selection) => {
+      if (
+        selection.kind !== "unitChoice" ||
+        selection.source.choiceKey !== CLASS_FEATURE_LANGUAGE_CHOICE_KEY
+      ) {
+        return [];
+      }
+      if (selection.source.unitId === languageChoiceSourceUnitId) {
+        return [];
+      }
+
+      return selection.options.flatMap((option) => {
+        const language = languageFromCreationChoiceOptionId(option.optionId);
+        return Either.isRight(language) ? [language.right] : [];
+      });
+    }),
+  );
 }
 
 function expertiseGrantChoiceHole(
@@ -1376,6 +1551,10 @@ function backgroundSkillProficiencies(
 
 function uniqueSkills(skills: readonly Skill[]): readonly Skill[] {
   return skills.filter((skill, index) => skills.indexOf(skill) === index);
+}
+
+function uniqueLanguages(languages: readonly Language[]): readonly Language[] {
+  return [...new Set(languages)];
 }
 
 export function classLevelChoiceCountAtLevel(

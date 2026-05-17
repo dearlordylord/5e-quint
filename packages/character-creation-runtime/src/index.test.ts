@@ -102,6 +102,7 @@ import {
 } from "./support-gates.ts";
 import {
   CLASS_CANTRIP_CHOICE_KEY,
+  CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
   CLASS_PREPARED_SPELL_CHOICE_KEY,
   abilityScoreIncreaseChoiceOptions,
   ELDRITCH_INVOCATIONS_CHOICE_KEY,
@@ -893,6 +894,40 @@ describe("character creation hole discovery", () => {
         ),
       ),
     ).toEqual(["option_a", "option_b", "option_c"]);
+  });
+
+  test("opens Rogue Thieves' Cant extra language choice from Character Creation language tables", () => {
+    const holes = discoverCreationHoles({
+      draft: draftWithSelections({
+        progression: testProgression("class_rogue", 1),
+        languages: ["Common", "Dwarvish", "Goblin"],
+      }),
+      unitLibrary,
+    });
+    const languageHole = holeById(
+      holes,
+      testUnitHoleId(
+        "rogue_thieves_cant",
+        CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
+      ),
+    );
+
+    expect(languageHole).toMatchObject({
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 1 },
+    });
+    expect(optionIds(languageHole)).toEqual(
+      expect.arrayContaining([
+        "Common Sign Language",
+        "Draconic",
+        "Elvish",
+        "Druidic",
+      ]),
+    );
+    expect(optionIds(languageHole)).not.toContain("Common");
+    expect(optionIds(languageHole)).not.toContain("Dwarvish");
+    expect(optionIds(languageHole)).not.toContain("Goblin");
+    expect(optionIds(languageHole)).not.toContain("Thieves' Cant");
   });
 
   test("reads non-Fighter Weapon Mastery holes from class proficiencies", () => {
@@ -1725,6 +1760,43 @@ describe("character creation batch fill", () => {
     expect(result.finalization).toMatchObject({ tag: "incomplete" });
   });
 
+  test("rejects Rogue Thieves' Cant extra language choices that duplicate known languages", () => {
+    const draft = requireAcceptedBatch(
+      fillCreationHoles({
+        draft: createTestDraft("draft:rogue-language-duplicate-fill"),
+        unitLibrary,
+        expectedRevision: draftRevision(0),
+        fills: initialManifestFills(
+          progressionOptionId(testProgression("class_rogue", 1)),
+        ),
+      }),
+    );
+    const languageChoiceHoleId = testUnitHoleId(
+      "rogue_thieves_cant",
+      CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
+    );
+
+    for (const invalidLanguage of ["Dwarvish", "Thieves' Cant"] as const) {
+      expect(
+        fillCreationHoles({
+          draft,
+          unitLibrary,
+          expectedRevision: draft.revision,
+          fills: [choiceFill(languageChoiceHoleId, invalidLanguage)],
+        }),
+      ).toMatchObject({
+        tag: "rejected",
+        issues: [
+          {
+            tag: "illegalFill",
+            code: "invalidChoice",
+            message: `Invalid choice ${invalidLanguage} for character creation hole: ${languageChoiceHoleId}`,
+          },
+        ],
+      });
+    }
+  });
+
   test("records accepted choice options without inferring Units from option ids", () => {
     const draft = createTestDraft("draft:batch-choice-option-metadata");
     const afterInitial = requireAcceptedBatch(
@@ -2520,14 +2592,58 @@ describe("character creation finalization", () => {
         "Dwarvish",
         "Goblin",
       ]);
-      expect(result.build.classFeatureLanguages).toEqual([
-        {
-          kind: "classFeatureLanguageGrant",
-          sourceUnitId: testCase.sourceUnitId,
-          language: testCase.language,
-        },
-      ]);
+      expect(result.build.classFeatureLanguages).toEqual(
+        expect.arrayContaining([
+          {
+            kind: "classFeatureLanguageGrant",
+            sourceUnitId: testCase.sourceUnitId,
+            language: testCase.language,
+          },
+        ]),
+      );
     }
+  });
+
+  test("finalizes Rogue Thieves' Cant extra language choice without changing origin languages", () => {
+    const draft = completeSupportedProgressionDraft({
+      draftId: "draft:rogue-thieves-cant-extra-language-choice",
+      progression: testProgression("class_rogue", 1),
+      preferredOptionIdsBySource: {
+        [testUnitChoiceSourceKey(
+          "rogue_thieves_cant",
+          CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
+        )]: [creationChoiceOptionId("Elvish")],
+      },
+    });
+    const result = finalizeCharacterDraft({ draft, unitLibrary });
+
+    expect(
+      selectedChoiceOptionIds(
+        draft,
+        "rogue_thieves_cant",
+        CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
+      ),
+    ).toEqual(["Elvish"]);
+    expect(result.tag).toBe("ready");
+    if (result.tag !== "ready") return;
+
+    expect(result.build.originLanguages).toEqual([
+      "Common",
+      "Dwarvish",
+      "Goblin",
+    ]);
+    expect(result.build.classFeatureLanguages).toEqual([
+      {
+        kind: "classFeatureLanguageGrant",
+        sourceUnitId: "rogue_thieves_cant",
+        language: "Thieves' Cant",
+      },
+      {
+        kind: "classFeatureLanguageChoice",
+        sourceUnitId: "rogue_thieves_cant",
+        language: "Elvish",
+      },
+    ]);
   });
 
   test("rejects unsupported authored class-feature language grants during finalization", () => {

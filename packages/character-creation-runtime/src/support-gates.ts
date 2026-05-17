@@ -7,6 +7,7 @@ import {
   BARD_MULTICLASS_SKILL_PROFICIENCY_CHOICE_KEY,
   CLASS_FEATURE_FEAT_CHOICE_KEY,
   CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
+  CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
   CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
   DIVINE_ORDER_CHOICE_KEY,
   CLASS_CANTRIP_CHOICE_KEY,
@@ -86,7 +87,11 @@ import {
   startingClassUnitId,
   type CharacterProgression,
 } from "./character-progression-types.ts";
-import { characterClassLevel, SURFACE_SKILLS } from "@dnd/shared/game-facts";
+import {
+  characterClassLevel,
+  LANGUAGES,
+  SURFACE_SKILLS,
+} from "@dnd/shared/game-facts";
 import {
   ARMOR_TRAINING_CATEGORIES,
   WEAPON_PROFICIENCY_CATEGORIES,
@@ -289,6 +294,7 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
       SUPPORTED_ABILITY_SCORE_INCREASE_OPTION_IDS,
     [CLASS_FEATURE_PROFICIENCY_CHOICE_KEY]:
       SUPPORTED_PROFICIENCY_GRANT_OPTION_IDS,
+    [CLASS_FEATURE_LANGUAGE_CHOICE_KEY]: LANGUAGES.map(creationChoiceOptionId),
     [DIVINE_ORDER_CHOICE_KEY]: [
       creationChoiceOptionId("protector"),
       creationChoiceOptionId("thaumaturge"),

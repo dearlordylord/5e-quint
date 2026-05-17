@@ -113,6 +113,7 @@ export const UNIT_CHOICE_KEYS = [
   "class_feature_feat_choice",
   "class_feature_ability_score_increase_choice",
   "class_feature_proficiency_choice",
+  "class_feature_language_choice",
   "divine_order",
   "primal_order",
   "bard_multiclass_skill_proficiency",
