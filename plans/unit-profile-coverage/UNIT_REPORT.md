@@ -23,7 +23,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Runtime mapping coverage | 62/62 | 100% |
 | Runtime parity coverage | 62/62 | 100% |
 | Deterministic admission/projection coverage | 94/94 | 100% |
-| Selected identity MBT coverage | 73/94 | 77.7% |
+| Selected identity MBT coverage | 74/94 | 78.7% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -898,6 +898,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `fighter_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | extra-attack-count-scaling | `packages/battle-runtime/src/battle-runtime.mbt.test.ts` |
 | `fighter_improved_critical` | `unit-feature.weapon-critical-range-19` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `barbarian_rage` | `unit-feature.bonus-action-ongoing-rage` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `barbarian_unarmored_defense` | `character-sheet.armor-class-base-formula` | armor-class-base-formula | `packages/character-sheet-runtime/src/armor-class-base-selected-identity.mbt.test.ts` |
 | `barbarian_reckless_attack` | `unit-feature.first-attack-roll-reckless-advantage` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `barbarian_fast_movement` | `unit-feature.passive-speed-bonus` | movement-forced-movement | `packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts` |
 | `bard_cutting_words` | `unit-feature.reaction-roll-or-damage-reduction` | reaction-interruption | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
