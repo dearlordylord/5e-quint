@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L1I-EPIC-BOON-CONTAINERS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Epic Boon Class Feature Container Closure"
     },
     {
@@ -140,7 +140,7 @@ Every task runs:
 | ---: | --- | --- | --- | --- |
 | 1 | L1I-PRECHECK - Non-D Class Species Pressure Precheck | done | none | refreshed list of class/species authored pressure that excludes D-owned Units |
 | 2 | L1I-ABILITY-SCORE-IMPROVEMENT - Ability Score Improvement Authored Feature Closure | done | 1 | ASI class-feature closure artifact and unsupported-profile claims |
-| 3 | L1I-EPIC-BOON-CONTAINERS - Epic Boon Class Feature Container Closure | ready-for-research | 1 | closure or profile plan for Epic Boon container records |
+| 3 | L1I-EPIC-BOON-CONTAINERS - Epic Boon Class Feature Container Closure | done | 1 | closure artifact and unsupported-profile claims for Epic Boon container records |
 | 4 | L1I-BARD-KNOWLEDGE-FEATURES - Bard Knowledge Feature Catalog Pressure | ready-for-research | 1 | Bard feature disposition for non-D authored records |
 | 5 | L1I-BARBARIAN-LATER-FEATURES - Barbarian Later Feature Catalog Pressure | ready-for-research | 1 | Barbarian feature disposition for non-D authored records |
 | 6 | L1I-PALADIN-SMITE-STYLE-SURFACE - Paladin Smite And Fighting Style Surface Pressure | ready-for-research | 1 | Paladin feature disposition without stealing D container work |
@@ -190,13 +190,19 @@ creation/advancement ability-score projection own downstream behavior.
 
 ### Task 3 - L1I-EPIC-BOON-CONTAINERS - Epic Boon Class Feature Container Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Units: `bard_epic_boon`, `cleric_epic_boon`, `druid_epic_boon`,
 `fighter_epic_boon`, `monk_epic_boon`, `paladin_epic_boon`.
 
 Classify Epic Boon authored records as later-level selection containers or
 route the selected boon execution to existing/future selected Unit profiles.
+
+Result:
+`plans/unit-profile-coverage/L1I_CLASS_SPECIES_EPIC_BOON_CLOSURE.md`.
+The six class-feature records are closed as later-level feat-selection
+containers with no standalone promoted battle Unit profile; selected feat
+Units and level-19 character advancement own downstream behavior.
 
 ### Task 4 - L1I-BARD-KNOWLEDGE-FEATURES - Bard Knowledge Feature Catalog Pressure
 

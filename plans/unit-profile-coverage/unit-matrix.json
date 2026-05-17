@@ -13395,6 +13395,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "selected feat Unit profiles and level-19 character advancement owner",
+          "reason": "The class feature opens a level-19 feat choice. Selected feat Units own executable behavior; the existing Boon of Combat Prowess feat Unit owns its supported miss-to-hit replacement profile, and other selected Epic Boon, General, Fighting Style, or Origin feat choices require their own Unit profile support. Level-19 class progression admission is outside this promoted battle-profile claim."
+        },
+        "reason": "Level 19 Epic Boon is a later-level feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -13675,6 +13685,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "selected feat Unit profiles and level-19 character advancement owner",
+          "reason": "The class feature opens a level-19 feat choice. Selected feat Units own executable behavior; the existing Boon of Combat Prowess feat Unit owns its supported miss-to-hit replacement profile, and other selected Epic Boon, General, Fighting Style, or Origin feat choices require their own Unit profile support. Level-19 class progression admission is outside this promoted battle-profile claim."
+        },
+        "reason": "Level 19 Epic Boon is a later-level feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -14091,6 +14111,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "selected feat Unit profiles and level-19 character advancement owner",
+          "reason": "The class feature opens a level-19 feat choice. Selected feat Units own executable behavior; the existing Boon of Combat Prowess feat Unit owns its supported miss-to-hit replacement profile, and other selected Epic Boon, General, Fighting Style, or Origin feat choices require their own Unit profile support. Level-19 class progression admission is outside this promoted battle-profile claim."
+        },
+        "reason": "Level 19 Epic Boon is a later-level feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -14199,6 +14229,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "selected feat Unit profiles and level-19 character advancement owner",
+          "reason": "The class feature opens a level-19 feat choice. Selected feat Units own executable behavior; the existing Boon of Combat Prowess feat Unit owns its supported miss-to-hit replacement profile, and other selected Epic Boon, General, Fighting Style, or Origin feat choices require their own Unit profile support. Level-19 class progression admission is outside this promoted battle-profile claim."
+        },
+        "reason": "Level 19 Epic Boon is a later-level feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -16307,6 +16347,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "selected feat Unit profiles and level-19 character advancement owner",
+          "reason": "The class feature opens a level-19 feat choice. Selected feat Units own executable behavior; the existing Boon of Combat Prowess feat Unit owns its supported miss-to-hit replacement profile, and other selected Epic Boon, General, Fighting Style, or Origin feat choices require their own Unit profile support. Level-19 class progression admission is outside this promoted battle-profile claim."
+        },
+        "reason": "Level 19 Epic Boon is a later-level feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -16343,6 +16393,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "selected feat Unit profiles and level-19 character advancement owner",
+          "reason": "The class feature opens a level-19 feat choice. Selected feat Units own executable behavior; the existing Boon of Combat Prowess feat Unit owns its supported miss-to-hit replacement profile, and other selected Epic Boon, General, Fighting Style, or Origin feat choices require their own Unit profile support. Level-19 class progression admission is outside this promoted battle-profile claim."
+        },
+        "reason": "Level 19 Epic Boon is a later-level feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
