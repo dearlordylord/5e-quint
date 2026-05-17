@@ -93,8 +93,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 94,
-      "numerator": 56,
-      "percent": "59.6%"
+      "numerator": 63,
+      "percent": "67%"
     },
     "supportedProfileCoverage": {
       "denominator": 118,
@@ -8230,6 +8230,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV31A"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1E-DIVINE-FAVOR"
         }
       ],
       "executableMechanics": true,
@@ -8288,6 +8293,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV31C"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1E-DIVINE-SMITE"
         }
       ],
       "executableMechanics": true,
@@ -8342,6 +8352,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV31D"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1E-ENSNARING-STRIKE"
         }
       ],
       "executableMechanics": true,
@@ -8678,6 +8693,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV30A"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1E-FALSE-LIFE"
         }
       ],
       "executableMechanics": true,
@@ -9247,6 +9267,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV30D"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1E-HEROISM"
         }
       ],
       "executableMechanics": true,
@@ -9310,6 +9335,11 @@
           "ownerPath": "packages/battle-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV84D"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1E-HEX"
         }
       ],
       "executableMechanics": true,
@@ -9395,6 +9425,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV31B"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1E-HUNTERS-MARK"
         }
       ],
       "executableMechanics": true,
@@ -9819,6 +9854,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV30A"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1E-LONGSTRIDER"
         }
       ],
       "executableMechanics": true,

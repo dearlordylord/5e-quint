@@ -23,7 +23,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Runtime mapping coverage | 62/62 | 100% |
 | Runtime parity coverage | 62/62 | 100% |
 | Deterministic admission/projection coverage | 94/94 | 100% |
-| Selected identity MBT coverage | 56/94 | 59.6% |
+| Selected identity MBT coverage | 63/94 | 67% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -925,13 +925,20 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `command` | `spell.invocation-command-halt-grovel`, `spell.invocation-command-drop-held-object`, `spell.invocation-command-approach-route`, `spell.invocation-command-flee-route` | movement-forced-movement | `packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts` |
 | `cure_wounds` | `spell.hit-point-restoration` | healing-stabilization | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
 | `dissonant_whispers` | `spell.invocation-damage-save-or-attack`, `spell.invocation-forced-reaction-movement` | movement-forced-movement | `packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts` |
+| `divine_favor` | `spell.invocation-weapon-damage-rider` | L1E-DIVINE-FAVOR | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
+| `divine_smite` | `spell.invocation-after-hit-damage` | L1E-DIVINE-SMITE | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
+| `ensnaring_strike` | `spell.invocation-after-hit-restraint-turn-start-damage` | L1E-ENSNARING-STRIKE | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
 | `entangle` | `spell.invocation-condition-save` | condition-saving-throw-lifecycle | `packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts` |
 | `expeditious_retreat` | `spell.invocation-expeditious-retreat-dash` | movement-forced-movement | `packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts` |
+| `false_life` | `spell.scalar-buff` | L1E-FALSE-LIFE | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
 | `fire_bolt` | `spell.invocation-damage-save-or-attack` | attack-spell-shape | `packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts` |
 | `guidance` | `spell.invocation-roll-modifier` | roll-modifier-buff | `packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts` |
 | `guiding_bolt` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | attack-spell-shape | `packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts` |
+| `heroism` | `spell.invocation-condition-immunity-turn-start-temporary-hit-points` | L1E-HEROISM | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
+| `hex` | `spell.invocation-marked-damage-rider` | L1E-HEX | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
 | `ice_knife` | `spell.invocation-damage-save-or-attack` | level1-damage-spell-selected-identity | `packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts` |
 | `inflict_wounds` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | attack-spell-shape | `packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts` |
+| `longstrider` | `spell.scalar-buff` | L1E-LONGSTRIDER | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
 | `poison_spray` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | level1-damage-spell-selected-identity | `packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts` |
 | `ray_of_frost` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | spell-procedure-core | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
 | `ray_of_sickness` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | level1-damage-spell-selected-identity | `packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts` |

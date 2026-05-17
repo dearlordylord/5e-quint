@@ -7,55 +7,55 @@
     {
       "number": 1,
       "id": "L1E-BUFF-PRECHECK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Post-C Buff Mark Smite Identity Reconciliation"
     },
     {
       "number": 2,
       "id": "L1E-DIVINE-FAVOR",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Divine Favor Selected Identity Replay"
     },
     {
       "number": 3,
       "id": "L1E-DIVINE-SMITE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Divine Smite Selected Identity Replay"
     },
     {
       "number": 4,
       "id": "L1E-ENSNARING-STRIKE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Ensnaring Strike Selected Identity Replay"
     },
     {
       "number": 5,
       "id": "L1E-FALSE-LIFE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "False Life Selected Identity Replay"
     },
     {
       "number": 6,
       "id": "L1E-HEROISM",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Heroism Selected Identity Replay"
     },
     {
       "number": 7,
       "id": "L1E-HEX",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Hex Selected Identity Replay"
     },
     {
       "number": 8,
       "id": "L1E-HUNTERS-MARK",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Hunter's Mark Selected Identity Replay"
     },
     {
       "number": 9,
       "id": "L1E-LONGSTRIDER",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Longstrider Selected Identity Replay"
     },
     {
@@ -145,7 +145,7 @@ Every task runs:
 
 ### Task 1 - L1E-BUFF-PRECHECK - Post-C Buff Mark Smite Identity Reconciliation
 
-Status: `ready-for-research`
+Status: `done`
 
 After Loop C lands, reconcile this loop's Unit list against the refreshed strict
 report and selected identity frontier. Remove any Unit already covered, and
@@ -153,7 +153,7 @@ record moved Units in this plan. No behavior changes.
 
 ### Task 2 - L1E-DIVINE-FAVOR - Divine Favor Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `divine_favor`, binding the spell Unit
 through the supported weapon damage rider projection.
@@ -162,7 +162,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-A-D.md` Divine Favor.
 
 ### Task 3 - L1E-DIVINE-SMITE - Divine Smite Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `divine_smite`, proving after-hit damage
 resolution uses the authored Unit identity and existing supported profile.
@@ -171,7 +171,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-A-D.md` Divine Smite.
 
 ### Task 4 - L1E-ENSNARING-STRIKE - Ensnaring Strike Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `ensnaring_strike`, including after-hit
 restraint and supported turn-start damage/save lifecycle.
@@ -180,7 +180,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-E-L.md` Ensnaring Strike.
 
 ### Task 5 - L1E-FALSE-LIFE - False Life Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `false_life`, asserting the supported scalar
 temporary hit point buff.
@@ -189,7 +189,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-E-L.md` False Life.
 
 ### Task 6 - L1E-HEROISM - Heroism Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `heroism`, including Frightened immunity and
 turn-start Temporary Hit Point projection if already supported.
@@ -198,7 +198,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-E-L.md` Heroism.
 
 ### Task 7 - L1E-HEX - Hex Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `hex`, binding the authored Unit through the
 supported marked damage rider and supported transfer/lifecycle boundary.
@@ -207,7 +207,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-E-L.md` Hex.
 
 ### Task 8 - L1E-HUNTERS-MARK - Hunter's Mark Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `hunters_mark`. Only assert runtime-owned
 mark, transfer, Concentration, and damage-rider behavior; do not model finding
@@ -218,7 +218,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-E-L.md` Hunter's Mark.
 
 ### Task 9 - L1E-LONGSTRIDER - Longstrider Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `longstrider`, proving the supported scalar
 speed buff binds the authored Unit identity.
