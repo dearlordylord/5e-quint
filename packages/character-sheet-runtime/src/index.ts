@@ -15,6 +15,7 @@ import {
   eldritchInvocationOptionForInvocationId,
   eldritchInvocationRepeatableChoiceSatisfiesRule,
   eldritchInvocationId,
+  languageFromSurfaceLanguageId,
   parseCharacterEquipmentItemId,
   progressionClassUnitIds,
   STANDARD_LANGUAGES,
@@ -36,6 +37,7 @@ import {
 import {
   ABILITIES,
   CONDITIONS,
+  LANGUAGES,
   SKILLS,
   SURFACE_SKILLS,
   type Ability,
@@ -3199,6 +3201,14 @@ function parseCharacterBuild(
   }
   const originLanguages = parseStoredOriginLanguages(value.originLanguages);
   if (Either.isLeft(originLanguages)) return Either.left(originLanguages.left);
+  const classFeatureLanguages = parseStoredClassFeatureLanguages(
+    value.classFeatureLanguages,
+    originLanguages.right,
+    unitLibrary,
+  );
+  if (Either.isLeft(classFeatureLanguages)) {
+    return Either.left(classFeatureLanguages.left);
+  }
   const alignment = parseStoredAlignment(value.alignment);
   if (Either.isLeft(alignment)) return Either.left(alignment.left);
   const abilityScores = parseStoredAbilityScores(value.abilityScores);
@@ -3226,6 +3236,7 @@ function parseCharacterBuild(
     background: value.background,
     species: value.species,
     originLanguages: originLanguages.right,
+    classFeatureLanguages: classFeatureLanguages.right,
     alignment: alignment.right,
     abilityScores: abilityScores.right,
     proficiencyChoices: proficiencyChoices.right,
@@ -3514,6 +3525,98 @@ function parseStoredOriginLanguages(
     return characterSheetIssue("Character Build requires origin languages.");
   }
   return Either.right(value as unknown as CharacterBuild["originLanguages"]);
+}
+
+function parseStoredClassFeatureLanguages(
+  value: unknown,
+  originLanguages: CharacterBuild["originLanguages"],
+  unitLibrary: UnitCatalog,
+): Either.Either<CharacterBuild["classFeatureLanguages"], CharacterSheetIssue> {
+  if (!Array.isArray(value)) {
+    return characterSheetIssue(
+      "Character Build requires class-feature languages.",
+    );
+  }
+
+  const knownLanguages = new Set<
+    CharacterBuild["classFeatureLanguages"][number]["language"]
+  >(originLanguages);
+  const classFeatureLanguages: CharacterBuild["classFeatureLanguages"][number][] =
+    [];
+  for (const item of value) {
+    if (
+      !isRecord(item) ||
+      (item.kind !== "classFeatureLanguageGrant" &&
+        item.kind !== "classFeatureLanguageChoice") ||
+      typeof item.sourceUnitId !== "string" ||
+      !isLanguage(item.language)
+    ) {
+      return characterSheetIssue(
+        "Character Build requires class-feature language facts.",
+      );
+    }
+    const languageFact: CharacterBuild["classFeatureLanguages"][number] = {
+      kind: item.kind,
+      sourceUnitId: item.sourceUnitId,
+      language: item.language,
+    };
+
+    if (knownLanguages.has(languageFact.language)) {
+      return characterSheetIssue(
+        `Duplicate Character Build language ${languageFact.language}.`,
+      );
+    }
+    if (
+      !storedClassFeatureLanguageMatchesSourceUnit({
+        languageFact,
+        unitLibrary,
+      })
+    ) {
+      return characterSheetIssue(
+        `Character Build class-feature language does not match source Unit ${languageFact.sourceUnitId}.`,
+      );
+    }
+
+    knownLanguages.add(languageFact.language);
+    classFeatureLanguages.push(languageFact);
+  }
+
+  return Either.right(classFeatureLanguages);
+}
+
+function storedClassFeatureLanguageMatchesSourceUnit(input: {
+  readonly languageFact: CharacterBuild["classFeatureLanguages"][number];
+  readonly unitLibrary: UnitCatalog;
+}): boolean {
+  const sourceUnit = input.unitLibrary.getUnit(input.languageFact.sourceUnitId);
+  if (
+    Option.isNone(sourceUnit) ||
+    sourceUnit.value.kind !== "class_feature" ||
+    sourceUnit.value.mechanics.family !== "passive"
+  ) {
+    return false;
+  }
+
+  return sourceUnit.value.mechanics.grants.some((grant) => {
+    if (
+      input.languageFact.kind === "classFeatureLanguageChoice" &&
+      grant.kind === "grant_language_choice"
+    ) {
+      return true;
+    }
+    if (
+      input.languageFact.kind !== "classFeatureLanguageGrant" ||
+      grant.kind !== "grant_language"
+    ) {
+      return false;
+    }
+
+    const language = languageFromSurfaceLanguageId(grant.languageId);
+    return (
+      Either.isRight(language) &&
+      language.right === input.languageFact.language
+    );
+  });
 }
 
 function parseStoredAlignment(
@@ -4147,6 +4250,12 @@ function isSurfaceSkill(value: unknown): value is SurfaceSkill {
 
 function isStandardLanguage(value: unknown): value is string {
   return STANDARD_LANGUAGES.some((language) => language === value);
+}
+
+function isLanguage(
+  value: unknown,
+): value is CharacterBuild["classFeatureLanguages"][number]["language"] {
+  return LANGUAGES.some((language) => language === value);
 }
 
 function isStringArray(value: unknown): value is readonly string[] {

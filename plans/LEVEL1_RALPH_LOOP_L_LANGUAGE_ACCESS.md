@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L1L-CHARACTER-BUILD-LANGUAGE-FACTS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "CharacterBuild Class Granted Language Facts"
     },
     {
@@ -148,7 +148,7 @@ finalization or stored-build parsing consumes authored grants.
 | Order | Task | Status | Blocks On | Output |
 | ---: | --- | --- | --- | --- |
 | 1 | L1L-LANGUAGE-ACCESS-PRECHECK - Druidic And Thieves Cant Language Access Precheck | done | none | `plans/unit-profile-coverage/L1L_LANGUAGE_ACCESS_PRECHECK.md` records the exact implementation shape and gap list for class-granted languages, extra language choice, Druidic Spell Access, and runtime-detached residuals |
-| 2 | L1L-CHARACTER-BUILD-LANGUAGE-FACTS - CharacterBuild Class Granted Language Facts | ready-for-research | 1 | class-granted language facts represented separately from origin languages and derived from authored feature grants |
+| 2 | L1L-CHARACTER-BUILD-LANGUAGE-FACTS - CharacterBuild Class Granted Language Facts | done | 1 | class-granted language facts represented separately from origin languages and derived from authored feature grants |
 | 3 | L1L-ROGUE-EXTRA-LANGUAGE-CHOICE - Rogue Thieves Cant Extra Language Choice | ready-for-research | 1-2 | one additional language choice from Character Creation language tables, without duplicating fixed or origin languages |
 | 4 | L1L-CHARACTER-SHEET-LANGUAGE-PERSISTENCE - Character Sheet Language Persistence | ready-for-research | 2-3 | stored CharacterBuild parser/sheet creation preserves origin and class-granted language facts distinctly |
 | 5 | L1L-DRUIDIC-SPELL-ACCESS-EVIDENCE - Druidic Speak With Animals Spell Access Evidence | ready-for-research | 2,4 | Druidic always-prepared Speak with Animals Spell Access has focused character-sheet evidence or a precise missing-owner fix |
@@ -196,7 +196,7 @@ Result:
 
 ### Task 2 - L1L-CHARACTER-BUILD-LANGUAGE-FACTS - CharacterBuild Class Granted Language Facts
 
-Status: `ready-for-research`
+Status: `done`
 
 Add durable class-granted language facts to finalized CharacterBuild output
 without changing `originLanguages`. The implementation should derive fixed
@@ -237,6 +237,11 @@ Task 1 shape to consume:
 - keep `sourceUnitId` and canonical shared `Language` values;
 - centralize Surface `languageId` parsing so unsupported ids become typed
   issues rather than silently skipped facts.
+
+Result:
+
+- Finalized CharacterBuild output now includes fixed class-feature language
+  grants separately from `originLanguages`.
 
 ### Task 3 - L1L-ROGUE-EXTRA-LANGUAGE-CHOICE - Rogue Thieves Cant Extra Language Choice
 
@@ -281,6 +286,9 @@ Status: `ready-for-research`
 
 Teach the Character Sheet stored-build parser and sheet creation path to retain
 the new CharacterBuild language facts distinctly from `originLanguages`.
+The parser shape now requires `classFeatureLanguages` as part of CharacterBuild;
+this task owns focused sheet-runtime evidence and any additional validation or
+persistence work after the Rogue feature-choice language is available.
 
 Inputs:
 
@@ -289,8 +297,10 @@ Inputs:
 
 Outputs:
 
-- stored CharacterBuild parsing accepts valid class-granted language facts;
-- invalid class-granted language facts fail with typed Character Sheet issues;
+- focused tests prove stored CharacterBuild parsing accepts valid
+  class-granted language facts;
+- focused tests prove invalid class-granted language facts fail with typed
+  Character Sheet issues;
 - sheet creation preserves origin and class-granted language facts separately;
 - focused character-sheet tests cover Druid and Rogue examples.
 

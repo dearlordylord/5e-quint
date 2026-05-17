@@ -2174,6 +2174,7 @@ describe("character creation finalization", () => {
       "Dwarvish",
       "Goblin",
     ]);
+    expect(result.build.classFeatureLanguages).toEqual([]);
     expect(result.build.alignment).toEqual({
       order: "lawful",
       morality: "good",
@@ -2488,6 +2489,72 @@ describe("character creation finalization", () => {
         draft.selections.equipment?.selectedUnitIds,
       );
     }
+  });
+
+  test("finalizes fixed class-feature language grants without changing origin languages", () => {
+    const cases = [
+      {
+        classUnitId: "class_druid",
+        sourceUnitId: "druid_druidic",
+        language: "Druidic",
+      },
+      {
+        classUnitId: "class_rogue",
+        sourceUnitId: "rogue_thieves_cant",
+        language: "Thieves' Cant",
+      },
+    ] as const;
+
+    for (const testCase of cases) {
+      const draft = completeSupportedProgressionDraft({
+        draftId: `draft:${testCase.classUnitId}-language-grant`,
+        progression: testProgression(testCase.classUnitId, 1),
+      });
+      const result = finalizeCharacterDraft({ draft, unitLibrary });
+
+      expect(result.tag, testCase.classUnitId).toBe("ready");
+      if (result.tag !== "ready") continue;
+
+      expect(result.build.originLanguages).toEqual([
+        "Common",
+        "Dwarvish",
+        "Goblin",
+      ]);
+      expect(result.build.classFeatureLanguages).toEqual([
+        {
+          kind: "classFeatureLanguageGrant",
+          sourceUnitId: testCase.sourceUnitId,
+          language: testCase.language,
+        },
+      ]);
+    }
+  });
+
+  test("rejects unsupported authored class-feature language grants during finalization", () => {
+    const draft = completeSupportedProgressionDraft({
+      draftId: "draft:druid-unsupported-language-grant",
+      progression: testProgression("class_druid", 1),
+    });
+    const brokenUnitLibrary = unitCatalogWithUnsupportedLanguageGrant({
+      unitId: "druid_druidic",
+      languageId: "secret_tree_talk",
+    });
+    const result = finalizeCharacterDraft({
+      draft,
+      unitLibrary: brokenUnitLibrary,
+    });
+
+    expect(result).toMatchObject({
+      tag: "invalid",
+      issues: [
+        {
+          tag: "illegalFinalization",
+          code: "illegalFinalization",
+          message:
+            "Unsupported class-feature language id secret_tree_talk on Unit druid_druidic.",
+        },
+      ],
+    });
   });
 
   test("finalizes supported level-1 class-feature acquisition choices", () => {
@@ -5491,6 +5558,44 @@ function readableClassFacts(classUnitId: UnitRecord["id"]) {
   }
 
   return facts.value;
+}
+
+function unitCatalogWithUnsupportedLanguageGrant(input: {
+  readonly unitId: UnitRecord["id"];
+  readonly languageId: string;
+}): UnitCatalog {
+  const sourceUnit = unitLibrary.requireUnit(input.unitId);
+  if (
+    sourceUnit.kind !== "class_feature" ||
+    sourceUnit.mechanics.family !== "passive"
+  ) {
+    throw new Error(`Expected passive class feature Unit: ${input.unitId}.`);
+  }
+
+  const replacementUnit: UnitRecord = {
+    ...sourceUnit,
+    mechanics: {
+      ...sourceUnit.mechanics,
+      grants: sourceUnit.mechanics.grants.map((grant) =>
+        grant.kind === "grant_language"
+          ? { ...grant, languageId: input.languageId }
+          : grant,
+      ),
+    },
+  };
+
+  return {
+    getUnit: (id) =>
+      id === input.unitId
+        ? Option.some(replacementUnit)
+        : unitLibrary.getUnit(id),
+    listUnits: () =>
+      unitLibrary
+        .listUnits()
+        .map((unit) => (unit.id === input.unitId ? replacementUnit : unit)),
+    requireUnit: (id) =>
+      id === input.unitId ? replacementUnit : unitLibrary.requireUnit(id),
+  };
 }
 
 function supportedMulticlassProgressionForClass(

@@ -86,6 +86,7 @@ import {
   ELDRITCH_INVOCATIONS_CHOICE_KEY,
 } from "./phase1-manifest.ts";
 import { selectedEldritchInvocationFeatures } from "./eldritch-invocations.ts";
+import { languageFromSurfaceLanguageId } from "./language-codecs.ts";
 import {
   CHARACTER_CREATION_SUPPORT_PROFILE,
   isSupportedProgression,
@@ -114,6 +115,7 @@ import {
   type CharacterBuild,
   type CharacterBuildEquipment,
   type CharacterEquipmentItemSlot,
+  type CharacterBuildClassFeatureLanguage,
   type CharacterBuildFeature,
   type CharacterBuildHitPoints,
   type CharacterBuildLoadout,
@@ -710,6 +712,15 @@ export function buildCharacterBuild(input: {
     ),
     ...abilityCheckBonusFeatures.right,
   ];
+  const classFeatureLanguages = finalizedClassFeatureLanguages({
+    progression,
+    originLanguages: selections.languages,
+    features: buildFeatures,
+    unitLibrary: input.unitLibrary,
+  });
+  if (Either.isLeft(classFeatureLanguages)) {
+    return Either.left(classFeatureLanguages.left);
+  }
   const buildEquipment = finalizedBuildEquipmentForSupportedLoadoutChoices(
     selections,
     input.supportedSelections.loadoutChoices,
@@ -727,6 +738,7 @@ export function buildCharacterBuild(input: {
       ? {}
       : { speciesSize: selections.speciesSize }),
     originLanguages: selections.languages,
+    classFeatureLanguages: classFeatureLanguages.right,
     alignment: selections.alignment,
     abilityScores: finalAbilityScores,
     proficiencyChoices: proficiencyChoices.right,
@@ -965,6 +977,70 @@ export function characterBuildFeatureUnitIds(
       feature.kind === "selectedClassChoice" ? [feature.unitId] : [],
     ),
   ]);
+}
+
+function finalizedClassFeatureLanguages(
+  input: Pick<
+    CharacterBuild,
+    "progression" | "originLanguages" | "features"
+  > & {
+    readonly unitLibrary: UnitCatalog;
+  },
+): Either.Either<
+  readonly CharacterBuildClassFeatureLanguage[],
+  FinalizationIssues
+> {
+  const issues: CreationFinalizationIssue[] = [];
+  const classFeatureLanguages: CharacterBuildClassFeatureLanguage[] = [];
+  const knownLanguages = new Set<
+    CharacterBuildClassFeatureLanguage["language"]
+  >(input.originLanguages);
+
+  for (const unitId of characterBuildFeatureUnitIds(input, input.unitLibrary)) {
+    const unit = input.unitLibrary.getUnit(unitId);
+    if (
+      Option.isNone(unit) ||
+      unit.value.kind !== "class_feature" ||
+      unit.value.mechanics.family !== "passive"
+    ) {
+      continue;
+    }
+
+    for (const grant of unit.value.mechanics.grants) {
+      if (grant.kind !== "grant_language") continue;
+
+      const language = languageFromSurfaceLanguageId(grant.languageId);
+      if (Either.isLeft(language)) {
+        issues.push(
+          illegalFinalizationIssue(
+            `Unsupported class-feature language id ${grant.languageId} on Unit ${unitId}.`,
+          ),
+        );
+        continue;
+      }
+
+      if (knownLanguages.has(language.right)) {
+        issues.push(
+          illegalFinalizationIssue(
+            `Duplicate Character Build language ${language.right} from class feature Unit ${unitId}.`,
+          ),
+        );
+        continue;
+      }
+
+      knownLanguages.add(language.right);
+      classFeatureLanguages.push({
+        kind: "classFeatureLanguageGrant",
+        sourceUnitId: unitId,
+        language: language.right,
+      });
+    }
+  }
+
+  const nonEmptyIssues = nonEmptyReadonlyArray(issues);
+  return nonEmptyIssues === undefined
+    ? Either.right(classFeatureLanguages)
+    : Either.left(nonEmptyIssues);
 }
 
 export function characterBuildResources(
