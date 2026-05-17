@@ -180,7 +180,7 @@ Additional candidate RAW checked:
 - `pnpm unit-profile-coverage:check`.
 - Relevant package typecheck/tests.
 - `pnpm quality` for the production behavior change.
-- `/simplify` convergence, minimum two rounds.
+- reviewer loop convergence, minimum two rounds.
 
 ## Task 136 Verification
 
@@ -191,10 +191,10 @@ Additional candidate RAW checked:
 - Active-plan consistency updated in the Ralph task index, DAG row, and task
   detail for QMBT41 so each marks the task done and links this decision
   artifact.
-- `/simplify` round 1: kept the selected slice to Roving's passive speed-kind
+- reviewer loop round 1: kept the selected slice to Roving's passive speed-kind
   grants and explicitly required reuse of Fast Movement's Speed-bonus
   projection so there is no duplicate walk-Speed state.
-- `/simplify` round 2: no important changes found; the plan still selects one
+- reviewer loop round 2: no important changes found; the plan still selects one
   feature profile and does not mix AC base calculation, healing pools,
   Temporary Hit Points, attack replacement, resistance, mastery, spell, or
   magic-item scope.

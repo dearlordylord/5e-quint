@@ -207,7 +207,7 @@ unless the matrix lane is explicitly declared complete.
 - `pnpm unit-profile-coverage:check`.
 - Relevant package typecheck/tests.
 - `pnpm quality` for the production behavior change.
-- `/simplify` convergence, minimum two rounds.
+- reviewer loop convergence, minimum two rounds.
 
 ## Task 155 Verification
 
@@ -219,11 +219,11 @@ unless the matrix lane is explicitly declared complete.
   detail for QMBT60 so the task is done and links this decision artifact.
   QMBT61 is unblocked for recursive planning review, and QMBT62 is recorded as
   the blocked Tactical Mind implementation task.
-- `/simplify` round 1: selected the installed `fighter_tactical_mind`
+- reviewer loop round 1: selected the installed `fighter_tactical_mind`
   `needs-surface-widening` row before broader authored-not-catalog feature and
   species groups; kept the implementation boundary to one ability-check
   augmentation and the existing Second Wind pool.
-- `/simplify` round 2: no important changes found; the plan still avoids a
+- reviewer loop round 2: no important changes found; the plan still avoids a
   generic D20 Test framework, avoids duplicate Second Wind state, and leaves
   Cutting Words, Lay On Hands, Tireless, AC formulas, Resistance, Breath
   Weapon, Weapon Mastery, spells, and magic items in their own lanes.

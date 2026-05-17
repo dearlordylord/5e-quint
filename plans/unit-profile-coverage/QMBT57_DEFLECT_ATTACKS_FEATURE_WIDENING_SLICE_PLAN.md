@@ -216,7 +216,7 @@ Additional candidate RAW checked:
 - `pnpm unit-profile-coverage:check`.
 - Relevant package typecheck/tests.
 - `pnpm quality` for the production behavior change.
-- `/simplify` convergence, minimum two rounds.
+- reviewer loop convergence, minimum two rounds.
 
 ## Task 152 Verification
 
@@ -227,12 +227,12 @@ Additional candidate RAW checked:
 - Active-plan consistency updated in the Ralph task index, DAG row, and task
   detail for QMBT57 so each marks the task done and links this decision
   artifact. QMBT58 remains unblocked for recursive planning review.
-- `/simplify` round 1: selected the installed SRD redirect-on-zero pressure
+- reviewer loop round 1: selected the installed SRD redirect-on-zero pressure
   rather than ability-check, healing-pool, Temporary Hit Point, AC-formula,
   resistance, Breath Weapon, Weapon Mastery, spell, or magic-item pressure;
   kept the boundary tied to the already promoted attack-damage Reaction
   reduction.
-- `/simplify` round 2: no important changes found; the plan still selects one
+- reviewer loop round 2: no important changes found; the plan still selects one
   feature profile and avoids duplicate damage state by requiring the existing
   damage Reaction path as the executable boundary.
 - MBT not run: Task 152 is research-only and makes no promoted battle-runtime

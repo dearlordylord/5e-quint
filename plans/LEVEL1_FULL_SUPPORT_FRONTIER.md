@@ -1039,7 +1039,7 @@ Universal verification for every task below:
   `UBIQUITOUS_LANGUAGE.md` entries before changing claim/profile text.
 - Coverage check: run `pnpm unit-profile-coverage:check --write`, then
   `pnpm unit-profile-coverage:check`.
-- `/simplify` convergence: after implementation, run at least two rounds and
+- reviewer loop convergence: after implementation, run at least two rounds and
   continue until no important issues remain.
 - MBT: do not run battle MBT for these accounting/profile tasks unless the task
   unexpectedly changes promoted battle behavior.
@@ -1470,7 +1470,7 @@ Final merge gate:
 - `pnpm unit-profile-coverage:check --write`
 - `pnpm unit-profile-coverage:check`
 - Package-local tests from any branch that touched runtime/test files.
-- `/simplify` convergence, minimum two rounds.
+- reviewer loop convergence, minimum two rounds.
 
 ## Next Step
 
@@ -1524,7 +1524,7 @@ Verification:
 - `pnpm unit-profile-coverage:check`
 - `pnpm --filter @dnd/battle-runtime test` if runtime/test marker files are
   touched beyond comments
-- `/simplify` convergence, minimum two rounds
+- reviewer loop convergence, minimum two rounds
 
 Do not run MBT unless promoted battle behavior unexpectedly changes.
 
@@ -1585,7 +1585,7 @@ Verification:
 
 - `pnpm unit-profile-coverage:check --write`
 - `pnpm unit-profile-coverage:check`
-- `/simplify` convergence, minimum two rounds
+- reviewer loop convergence, minimum two rounds
 
 Do not add battle-runtime profiles, holes/fills, reducers, QNT, or MBT.
 
@@ -1638,7 +1638,7 @@ Verification:
   files are touched beyond comments
 - `pnpm unit-profile-coverage:check --write`
 - `pnpm unit-profile-coverage:check`
-- `/simplify` convergence, minimum two rounds
+- reviewer loop convergence, minimum two rounds
 
 Do not add battle-runtime reducer work or duplicate selected-option state.
 
@@ -1669,7 +1669,7 @@ Verification:
   files are touched beyond comments
 - `pnpm unit-profile-coverage:check --write`
 - `pnpm unit-profile-coverage:check`
-- `/simplify` convergence, minimum two rounds
+- reviewer loop convergence, minimum two rounds
 
 Do not add battle-runtime behavior or Pact Slot recovery under Arcane Recovery.
 
@@ -1717,7 +1717,7 @@ Verification:
 
 - `pnpm unit-profile-coverage:check --write`
 - `pnpm unit-profile-coverage:check`
-- `/simplify` convergence, minimum two rounds
+- reviewer loop convergence, minimum two rounds
 
 Do not add geometry, pathfinding, line-of-sight, object-inventory, or sound
 propagation reducers. Do not run MBT for claim promotion.
@@ -1751,7 +1751,7 @@ Verification:
 - `pnpm unit-profile-coverage:check --write`
 - `pnpm unit-profile-coverage:check`
 - targeted checker self-test if added
-- `/simplify` convergence, minimum two rounds
+- reviewer loop convergence, minimum two rounds
 
 Do not change Unit claims or runtime behavior.
 
@@ -1789,7 +1789,7 @@ Verification:
 
 - `pnpm unit-profile-coverage:check --write`
 - `pnpm unit-profile-coverage:check`
-- `/simplify` convergence, minimum two rounds
+- reviewer loop convergence, minimum two rounds
 
 Do not implement later-level Bardic Inspiration, Martial Arts, or Favored Enemy
 scaling.
@@ -1835,7 +1835,7 @@ Universal verification for every atomic task:
   strict support Markdown.
 - Run package-local tests only when touching runtime/test marker files beyond
   comments.
-- Run `/simplify` to convergence, minimum two rounds.
+- Run reviewer loop to convergence, minimum two rounds.
 - Do not run MBT unless promoted battle behavior unexpectedly changes.
 
 | Atomic task | Inputs | Outputs | Primary files | Dependencies |
@@ -2405,7 +2405,7 @@ Universal verification:
 
 - Do not run MBT.
 - Run `pnpm unit-profile-coverage:check` if coverage files are edited.
-- Run `/simplify` only if the task changes generated code or claim/profile
+- Run reviewer loop only if the task changes generated code or claim/profile
   structure; pure research notes do not need it.
 
 | Research task | Unit id | RAW source | RAW mechanics summary | Pre-researched owner classification | Expected output |

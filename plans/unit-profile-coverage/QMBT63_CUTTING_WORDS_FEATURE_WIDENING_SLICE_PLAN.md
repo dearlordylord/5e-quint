@@ -178,7 +178,7 @@ The active Ralph plan now records:
 - `pnpm unit-profile-coverage:check`.
 - Relevant package typecheck/tests.
 - `pnpm quality` for the production behavior change.
-- `/simplify` convergence, minimum two rounds.
+- reviewer loop convergence, minimum two rounds.
 
 ## Task 158 Verification
 
@@ -188,10 +188,10 @@ The active Ralph plan now records:
   Check`.
 - Active-plan consistency was reviewed across the Ralph task index, DAG row,
   and task details for QMBT63-QMBT64.
-- `/simplify` round 1: kept the selected slice to the missing Ability Check
+- reviewer loop round 1: kept the selected slice to the missing Ability Check
   branch of an existing reaction profile and avoided a new Cutting Words-only
   profile or duplicate Bardic Inspiration state.
-- `/simplify` round 2: no important changes found; the plan still keeps
+- reviewer loop round 2: no important changes found; the plan still keeps
   ability-check reaction reduction separate from healing pools, Temporary Hit
   Points, AC formulas, Resistance, Breath Weapon, Weapon Mastery, spells,
   magic items, content cleanup, and checker metrics.

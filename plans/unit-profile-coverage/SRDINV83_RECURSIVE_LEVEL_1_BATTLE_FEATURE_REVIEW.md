@@ -152,7 +152,7 @@ closure:
   boundary; do not smuggle companion state into generic spell access.
 - `SRDINV85`: recursive review after this batch lands.
 
-## /simplify Convergence
+## reviewer loop Convergence
 
 - Round 1: rejected final closure because the generated default readiness
   metric is still 286/367 and 16 installed spell-list rows still require

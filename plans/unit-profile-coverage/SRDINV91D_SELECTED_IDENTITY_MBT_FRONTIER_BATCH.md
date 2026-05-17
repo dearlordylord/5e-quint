@@ -63,7 +63,7 @@ than counting the existing runtime-test owner as selected MBT.
 `packages/mcp/src/battle-tools.ts` (`max-lines`, 432 > 420), outside this
 task's touched surface.
 
-`/simplify` convergence notes:
+reviewer loop convergence notes:
 
 - Round 1: kept the batch to existing focused MBT owners and avoided adding a
   parallel selected-identity registry.

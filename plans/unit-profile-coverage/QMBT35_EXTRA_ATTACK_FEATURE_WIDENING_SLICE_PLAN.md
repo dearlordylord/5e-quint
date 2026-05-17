@@ -169,7 +169,7 @@ Additional candidate RAW checked:
 - `pnpm unit-profile-coverage:check`.
 - Relevant package typecheck/tests.
 - `pnpm quality` for the production behavior change.
-- `/simplify` convergence, minimum two rounds.
+- reviewer loop convergence, minimum two rounds.
 
 ## Task 130 Verification
 
@@ -177,11 +177,11 @@ Additional candidate RAW checked:
   `Source Check`.
 - `UBIQUITOUS_LANGUAGE.md` checked for the domain terms listed in `Source
   Check`.
-- `/simplify` round 1: kept the selected slice bounded to level-5
+- reviewer loop round 1: kept the selected slice bounded to level-5
   `additional: 1` Extra Attack Units and excluded Fighter higher-tier attacks,
   Warlock invocation variants, Breath Weapon attack replacement, Weapon
   Mastery properties, and Stat Block Multiattack.
-- `/simplify` round 2: no important changes found; the plan still selects one
+- reviewer loop round 2: no important changes found; the plan still selects one
   feature procedure profile and does not mix speed projection, AC base
   selection, healing/temp-HP resources, resistance, mastery, spell, or magic
   item scope.

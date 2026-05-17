@@ -154,7 +154,7 @@ closure:
   map pathfinding or color rendering.
 - `SRDINV89D`: recursive review after SRDINV89A-SRDINV89C land.
 
-## /simplify Convergence
+## reviewer loop Convergence
 
 - Round 1: rejected final closure with `Blocks: none`. The 41
   profile-subset-supported rows do not all satisfy the task's stricter

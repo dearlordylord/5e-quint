@@ -147,7 +147,7 @@ Research for the 12 revision items listed in PLAN.md "5.2.1 Revision Needed for 
 | # | Item | Delta? | Notes |
 |---|------|--------|-------|
 | 1 | Exhaustion (core) | None | Already -2x/-5x/death@6 |
-| 1b | Dehydration/Malnutrition | **Yes** | Simplify dehydration, rewrite starvation threshold |
+| 1b | Dehydration/Malnutrition | **Yes** | Revise dehydration, rewrite starvation threshold |
 | 2 | Stunned | None | Already aligned |
 | 3 | Grappled | None | Already has disadv vs non-grappler |
 | 4 | Grapple/Shove | None | Already save-DC model |

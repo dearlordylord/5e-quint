@@ -170,7 +170,7 @@ Additional candidate RAW checked:
 - `pnpm unit-profile-coverage:check`.
 - Relevant package typecheck/tests.
 - `pnpm quality` for the production behavior change.
-- `/simplify` convergence, minimum two rounds.
+- reviewer loop convergence, minimum two rounds.
 
 ## Task 133 Verification
 
@@ -186,10 +186,10 @@ Additional candidate RAW checked:
   Unarmored Defense, Armor Class, Hit Points, Temporary Hit Points, Pool,
   Quota, Spend, Resistance, Damage Type, Weapon Mastery, Mastery Property,
   Cleave, and Topple terminology.
-- `/simplify` round 1: kept the selected slice to Fast Movement's one passive
+- reviewer loop round 1: kept the selected slice to Fast Movement's one passive
   Speed bonus and made the special-speed relationship explicit so Roving's
   Climb and Swim Speed grants are not silently admitted.
-- `/simplify` round 2: no important changes found; the plan still selects one
+- reviewer loop round 2: no important changes found; the plan still selects one
   feature procedure profile and does not mix AC base calculation, healing or
   Temporary Hit Point resources, attack replacement, resistance, mastery,
   spell, or magic-item scope.

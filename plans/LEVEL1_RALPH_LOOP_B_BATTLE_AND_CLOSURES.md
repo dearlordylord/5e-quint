@@ -191,7 +191,7 @@ For `AT-L1-09` through `AT-L1-12`:
 - Run `pnpm unit-profile-coverage:check`.
 - Run `pnpm --filter @dnd/battle-runtime test` only if runtime/test marker files
   are touched beyond comments.
-- Run `/simplify` to convergence, minimum two rounds.
+- Run reviewer loop to convergence, minimum two rounds.
 
 ## DAG / Queue Order
 
@@ -246,7 +246,7 @@ Verification:
 - `pnpm unit-profile-coverage:check`
 - `pnpm --filter @dnd/battle-runtime test` only if runtime/test marker files are
   touched beyond comments
-- `/simplify` convergence, minimum two rounds
+- reviewer loop convergence, minimum two rounds
 
 Plan Impact:
 
@@ -286,7 +286,7 @@ Verification:
 
 - `pnpm unit-profile-coverage:check --write`
 - `pnpm unit-profile-coverage:check`
-- `/simplify` convergence, minimum two rounds
+- reviewer loop convergence, minimum two rounds
 
 Plan Impact:
 
@@ -315,7 +315,7 @@ Verification:
 
 - `pnpm unit-profile-coverage:check --write`
 - `pnpm unit-profile-coverage:check`
-- `/simplify` convergence, minimum two rounds
+- reviewer loop convergence, minimum two rounds
 
 Plan Impact:
 
@@ -508,7 +508,7 @@ Verification:
 
 - `pnpm unit-profile-coverage:check --write`
 - `pnpm unit-profile-coverage:check`
-- `/simplify` convergence, minimum two rounds
+- reviewer loop convergence, minimum two rounds
 
 Plan Impact:
 
@@ -537,7 +537,7 @@ Verification:
 
 - `pnpm unit-profile-coverage:check --write`
 - `pnpm unit-profile-coverage:check`
-- `/simplify` convergence, minimum two rounds
+- reviewer loop convergence, minimum two rounds
 
 Plan Impact:
 
@@ -565,7 +565,7 @@ Verification:
 
 - `pnpm unit-profile-coverage:check --write`
 - `pnpm unit-profile-coverage:check`
-- `/simplify` convergence, minimum two rounds
+- reviewer loop convergence, minimum two rounds
 
 Plan Impact:
 

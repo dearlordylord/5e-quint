@@ -485,7 +485,7 @@ parallel data structures.
 
 Every implementation phase must include these checks:
 
-- [ ] RAW agent check: before modeling or classifying a rule, read the relevant
+- [ ] RAW/ubiquitous-language reviewer check: before modeling or classifying a rule, read the relevant
       local SRD passage in `.references/srd-5.2.1/` and check
       `UBIQUITOUS_LANGUAGE.md`; record the cited SRD file and heading in the
       matrix artifact or plan closeout.
@@ -501,6 +501,6 @@ Every implementation phase must include these checks:
 - [ ] Runtime parity gate: only run promoted battle-runtime MBT after completed
       behavior changes that need integrated validation; do not run MBT for
       matrix-only classification work.
-- [ ] `/simplify` convergence: after implementation, run `/simplify` immediately
+- [ ] reviewer loop convergence: after implementation, run reviewer loop immediately
       for at least two rounds and continue until no important fixes remain.
       Record the convergence result in closeout.

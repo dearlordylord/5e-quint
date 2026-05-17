@@ -137,7 +137,7 @@ Preferred owner file if a new file is cleaner:
   `AGENTS.md`.
 - Always run `pnpm unit-profile-coverage:check --write`,
   `pnpm unit-profile-coverage:check`, and `git diff --check`.
-- Run `/simplify` to convergence, minimum two rounds.
+- Run reviewer loop to convergence, minimum two rounds.
 
 ## Task Details
 
