@@ -9,12 +9,18 @@ const { percent, stable } = require("./unit-profile-coverage-report.cjs");
 const strictLevelBands = ["level-1", "spell-level-0", "spell-level-1"];
 const companionWorktreeExcludedUnitIds = ["find_familiar"];
 const adoptedNoMatrixSrdPressureDecisionUnitIds = new Set([
+  "create_or_destroy_water",
   "disguise_self",
   "druidcraft",
   "elementalism",
+  "floating_disk",
+  "goodberry",
   "illusory_script",
+  "mage_hand",
+  "mending",
   "message",
   "prestidigitation",
+  "purify_food_and_drink",
   "unseen_servant",
 ]);
 const strictStatusDefinitions = [

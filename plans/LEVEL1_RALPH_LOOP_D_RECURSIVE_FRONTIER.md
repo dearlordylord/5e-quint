@@ -157,8 +157,92 @@
     {
       "number": 26,
       "id": "L1D2-REPLENISH-002",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Recursive Frontier Replenishment 002"
+    },
+    {
+      "number": 27,
+      "id": "L1D2-COUNTERSPELL-SELECTED-IDENTITY",
+      "status": "ready-for-research",
+      "title": "Counterspell Selected Identity Replay"
+    },
+    {
+      "number": 28,
+      "id": "L1D2-ALARM-CLOSURE-ARTIFACT",
+      "status": "ready-for-research",
+      "title": "Alarm Runtime-Detached Closure Artifact"
+    },
+    {
+      "number": 29,
+      "id": "L1D2-COMPREHEND-LANGUAGES-CLOSURE-ARTIFACT",
+      "status": "ready-for-research",
+      "title": "Comprehend Languages Runtime-Detached Closure Artifact"
+    },
+    {
+      "number": 30,
+      "id": "L1D2-DETECT-EVIL-GOOD-CLOSURE-ARTIFACT",
+      "status": "ready-for-research",
+      "title": "Detect Evil and Good Runtime-Detached Closure Artifact"
+    },
+    {
+      "number": 31,
+      "id": "L1D2-DETECT-MAGIC-CLOSURE-ARTIFACT",
+      "status": "ready-for-research",
+      "title": "Detect Magic Runtime-Detached Closure Artifact"
+    },
+    {
+      "number": 32,
+      "id": "L1D2-DETECT-POISON-DISEASE-CLOSURE-ARTIFACT",
+      "status": "ready-for-research",
+      "title": "Detect Poison and Disease Runtime-Detached Closure Artifact"
+    },
+    {
+      "number": 33,
+      "id": "L1D2-IDENTIFY-CLOSURE-ARTIFACT",
+      "status": "ready-for-research",
+      "title": "Identify Runtime-Detached Closure Artifact"
+    },
+    {
+      "number": 34,
+      "id": "L1D2-MINOR-ILLUSION-CLOSURE-ARTIFACT",
+      "status": "ready-for-research",
+      "title": "Minor Illusion Runtime-Detached Closure Artifact"
+    },
+    {
+      "number": 35,
+      "id": "L1D2-SILENT-IMAGE-CLOSURE-ARTIFACT",
+      "status": "ready-for-research",
+      "title": "Silent Image Runtime-Detached Closure Artifact"
+    },
+    {
+      "number": 36,
+      "id": "L1D2-SPEAK-WITH-ANIMALS-CLOSURE-ARTIFACT",
+      "status": "ready-for-research",
+      "title": "Speak with Animals Runtime-Detached Closure Artifact"
+    },
+    {
+      "number": 37,
+      "id": "L1D2-FIGHTER-WEAPON-MASTERY-LATER-COUNT",
+      "status": "ready-for-research",
+      "title": "Fighter Weapon Mastery Later-Level Count Support"
+    },
+    {
+      "number": 38,
+      "id": "L1D2-BARBARIAN-WEAPON-MASTERY-LATER-COUNT",
+      "status": "ready-for-research",
+      "title": "Barbarian Weapon Mastery Later-Level Count Support"
+    },
+    {
+      "number": 39,
+      "id": "L1D2-RANGER-FAVORED-ENEMY-LATER-SCALING",
+      "status": "ready-for-research",
+      "title": "Ranger Favored Enemy Later-Level Scaling Support"
+    },
+    {
+      "number": 40,
+      "id": "L1D2-REPLENISH-003",
+      "status": "ready-for-research",
+      "title": "Recursive Frontier Replenishment 003"
     }
   ]
 }
@@ -440,7 +524,21 @@ task was appended; `find_familiar` stays excluded.
 | 23 | L1D2-PRESTIDIGITATION-DECISION-INTEGRATION - Prestidigitation Frontier Decision Integration | done | Task 14 or explicit deferral | Consume the existing decision artifact; do not reclassify the row. |
 | 24 | L1D2-THAUMATURGY-BOOMING-VOICE - Thaumaturgy Booming Voice Ability Check Support | done | Task 14 or explicit deferral | Booming Voice support promoted; other minor wonders remain runtime-detached. |
 | 25 | L1D2-UNSEEN-SERVANT-NO-MATRIX - Unseen Servant No-Matrix Decision | done | Task 14 or explicit deferral | Remaining no-matrix strict SRD pressure row without an existing frontier decision artifact. |
-| 26 | L1D2-REPLENISH-002 - Recursive Frontier Replenishment 002 | ready-for-research | Tasks 14-25 done or intentionally deferred | Refresh the frontier again and append the next concrete batch. |
+| 26 | L1D2-REPLENISH-002 - Recursive Frontier Replenishment 002 | done | Tasks 14-25 done or intentionally deferred | Refreshed coverage, adopted six existing no-matrix decision artifacts in generated reports, and appended Tasks 27-39 plus `L1D2-REPLENISH-003`. |
+| 27 | L1D2-COUNTERSPELL-SELECTED-IDENTITY - Counterspell Selected Identity Replay | ready-for-research | Task 26 | Close the only remaining supported-profile selected-identity gap. |
+| 28 | L1D2-ALARM-CLOSURE-ARTIFACT - Alarm Runtime-Detached Closure Artifact | ready-for-research | Task 26 | Add a durable runtime-detached closure artifact for Alarm. |
+| 29 | L1D2-COMPREHEND-LANGUAGES-CLOSURE-ARTIFACT - Comprehend Languages Runtime-Detached Closure Artifact | ready-for-research | Task 26 | Add a durable language/communication closure artifact. |
+| 30 | L1D2-DETECT-EVIL-GOOD-CLOSURE-ARTIFACT - Detect Evil and Good Runtime-Detached Closure Artifact | ready-for-research | Task 26 | Add a durable detection/occlusion closure artifact. |
+| 31 | L1D2-DETECT-MAGIC-CLOSURE-ARTIFACT - Detect Magic Runtime-Detached Closure Artifact | ready-for-research | Task 26 | Add a durable magic-detection closure artifact. |
+| 32 | L1D2-DETECT-POISON-DISEASE-CLOSURE-ARTIFACT - Detect Poison and Disease Runtime-Detached Closure Artifact | ready-for-research | Task 26 | Add a durable poison/disease detection closure artifact. |
+| 33 | L1D2-IDENTIFY-CLOSURE-ARTIFACT - Identify Runtime-Detached Closure Artifact | ready-for-research | Task 26 | Add a durable item/spell identification closure artifact. |
+| 34 | L1D2-MINOR-ILLUSION-CLOSURE-ARTIFACT - Minor Illusion Runtime-Detached Closure Artifact | ready-for-research | Task 26 | Add a durable illusion/exploration closure artifact. |
+| 35 | L1D2-SILENT-IMAGE-CLOSURE-ARTIFACT - Silent Image Runtime-Detached Closure Artifact | ready-for-research | Task 26 | Add a durable illusion/exploration closure artifact. |
+| 36 | L1D2-SPEAK-WITH-ANIMALS-CLOSURE-ARTIFACT - Speak with Animals Runtime-Detached Closure Artifact | ready-for-research | Task 26 | Add a durable beast communication closure artifact. |
+| 37 | L1D2-FIGHTER-WEAPON-MASTERY-LATER-COUNT - Fighter Weapon Mastery Later-Level Count Support | ready-for-research | Task 26 | Promote or explicitly retain the later-level selected-weapon count deferral. |
+| 38 | L1D2-BARBARIAN-WEAPON-MASTERY-LATER-COUNT - Barbarian Weapon Mastery Later-Level Count Support | ready-for-research | Task 26 | Promote or explicitly retain the later-level melee selected-weapon count deferral. |
+| 39 | L1D2-RANGER-FAVORED-ENEMY-LATER-SCALING - Ranger Favored Enemy Later-Level Scaling Support | ready-for-research | Task 26 | Promote or explicitly retain the later-level Favored Enemy free-cast scaling deferral. |
+| 40 | L1D2-REPLENISH-003 - Recursive Frontier Replenishment 003 | ready-for-research | Tasks 27-39 done or intentionally deferred | Refresh the frontier again and append the next concrete batch. |
 
 ## Task Details
 
@@ -1160,11 +1258,25 @@ Verification:
 
 ### Task 26 - L1D2-REPLENISH-002 - Recursive Frontier Replenishment 002
 
-Status: `ready-for-research`
+Status: `done`
 
 Append the next concrete D tasks and a successor replenishment task. This task
 must follow the Recursive Replenishment Contract above after Tasks 14-25 are
 done or intentionally deferred.
+
+Result:
+
+- `pnpm unit-profile-coverage:check --write` passed and refreshed generated
+  strict-support artifacts.
+- Existing no-matrix frontier decisions for `create_or_destroy_water`,
+  `floating_disk`, `goodberry`, `mage_hand`, `mending`, and
+  `purify_food_and_drink` are now adopted by the generated strict report.
+- The refreshed strict level-1 open frontier remains empty.
+- The only supported-profile selected-identity gap is `counterspell`.
+- Active Loop L language-access ownership was checked; appended D tasks avoid
+  Loop L-owned language surfaces, and no companion/familiar task was added.
+- Tasks 27-39 and successor Task 40 were appended in the task index, DAG table,
+  and task details.
 
 Acceptance:
 
@@ -1173,6 +1285,562 @@ Acceptance:
   meaningful task if fewer than twelve exist;
 - this plan has a final successor replenishment task such as
   `L1D2-REPLENISH-003`;
+- the new tasks do not duplicate active sibling-lane ownership;
+- no companion/familiar task is added;
+- the current task is marked `done` only after the new tasks and successor
+  replenishment task are present in the task index, DAG table, and task details.
+
+### Task 27 - L1D2-COUNTERSPELL-SELECTED-IDENTITY - Counterspell Selected Identity Replay
+
+Status: `ready-for-research`
+
+Add selected identity MBT evidence for `counterspell`, the only current
+supported-profile Unit without selected-identity evidence after Task 26.
+
+Inputs:
+
+- `plans/unit-profile-coverage/UNIT_REPORT.md`
+- `plans/unit-profile-coverage/unit-matrix.json`
+- `packages/surface/content/counterspell.json`
+
+Outputs:
+
+- selected identity MBT evidence for Counterspell's spell-cast interruption
+  profile;
+- updated evidence and generated coverage reports if the evidence files change.
+
+Primary files:
+
+- `packages/battle-runtime/src/*counterspell*.mbt.test.ts` or an existing
+  reaction selected-identity MBT owner;
+- `plans/unit-profile-coverage/unit-evidence.jsonl`;
+- generated reports under `plans/unit-profile-coverage/`.
+
+RAW:
+
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md` Counterspell
+- `.references/srd-5.2.1/Spells/Gaining-and-Casting.md` Reaction casting,
+  components, Spell Slot, and casting-time rules
+
+Verification:
+
+- focused selected-identity MBT for the changed owner;
+- `pnpm unit-profile-coverage:check --write`;
+- `pnpm unit-profile-coverage:check`;
+- `git diff --check`;
+- RAW/ubiquitous-language check for Reaction, Saving Throw, Spell Invocation,
+  Spell Effect, and Spell Slot;
+- reviewer-loop convergence with RAW, ubiquitous-language, architecture/domain,
+  and code-review passes.
+
+### Task 28 - L1D2-ALARM-CLOSURE-ARTIFACT - Alarm Runtime-Detached Closure Artifact
+
+Status: `ready-for-research`
+
+Create or adopt a durable runtime-detached closure artifact for `alarm` so the
+existing unsupported-profile claim has task-local RAW and owner-boundary
+evidence.
+
+Inputs:
+
+- `plans/unit-profile-coverage/UNIT_REPORT.md`
+- `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`
+- `plans/unit-profile-coverage/unit-matrix.json`
+- `packages/surface/content/alarm.json`
+
+Outputs:
+
+- `plans/unit-profile-coverage/frontier-decisions/alarm.md`;
+- generated coverage reports if claim or checker-visible closure text changes.
+
+Primary files:
+
+- `plans/unit-profile-coverage/frontier-decisions/alarm.md`;
+- `plans/unit-profile-coverage/unit-claims.jsonl` only if claim wording must be
+  aligned;
+- generated reports under `plans/unit-profile-coverage/`.
+
+RAW: `.references/srd-5.2.1/Spells/Descriptions-A-D.md` Alarm.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`;
+- `pnpm unit-profile-coverage:check`;
+- `git diff --check`;
+- RAW/ubiquitous-language check for Spell Definition, Ritual, Duration,
+  detection, notification, and runtime-detached exploration ownership;
+- reviewer-loop convergence with RAW, ubiquitous-language, architecture/domain,
+  and code-review passes.
+
+### Task 29 - L1D2-COMPREHEND-LANGUAGES-CLOSURE-ARTIFACT - Comprehend Languages Runtime-Detached Closure Artifact
+
+Status: `ready-for-research`
+
+Create or adopt a durable runtime-detached closure artifact for
+`comprehend_languages`, preserving language comprehension and secret-message
+limits as table/communication adjudication.
+
+Inputs:
+
+- `plans/unit-profile-coverage/UNIT_REPORT.md`
+- `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`
+- `plans/unit-profile-coverage/unit-matrix.json`
+- `packages/surface/content/comprehend_languages.json`
+
+Outputs:
+
+- `plans/unit-profile-coverage/frontier-decisions/comprehend_languages.md`;
+- generated coverage reports if claim or checker-visible closure text changes.
+
+Primary files:
+
+- `plans/unit-profile-coverage/frontier-decisions/comprehend_languages.md`;
+- `plans/unit-profile-coverage/unit-claims.jsonl` only if claim wording must be
+  aligned;
+- generated reports under `plans/unit-profile-coverage/`.
+
+RAW: `.references/srd-5.2.1/Spells/Descriptions-A-D.md` Comprehend Languages.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`;
+- `pnpm unit-profile-coverage:check`;
+- `git diff --check`;
+- RAW/ubiquitous-language check for Spell Definition, Ritual, language,
+  communication, and runtime-detached table ownership;
+- reviewer-loop convergence with RAW, ubiquitous-language, architecture/domain,
+  and code-review passes.
+
+### Task 30 - L1D2-DETECT-EVIL-GOOD-CLOSURE-ARTIFACT - Detect Evil and Good Runtime-Detached Closure Artifact
+
+Status: `ready-for-research`
+
+Create or adopt a durable runtime-detached closure artifact for
+`detect_evil_and_good`, preserving creature/object sensing, occlusion, and
+Hallow discovery as table-owned detection state.
+
+Inputs:
+
+- `plans/unit-profile-coverage/UNIT_REPORT.md`
+- `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`
+- `plans/unit-profile-coverage/unit-matrix.json`
+- `packages/surface/content/detect_evil_and_good.json`
+
+Outputs:
+
+- `plans/unit-profile-coverage/frontier-decisions/detect_evil_and_good.md`;
+- generated coverage reports if claim or checker-visible closure text changes.
+
+Primary files:
+
+- `plans/unit-profile-coverage/frontier-decisions/detect_evil_and_good.md`;
+- `plans/unit-profile-coverage/unit-claims.jsonl` only if claim wording must be
+  aligned;
+- generated reports under `plans/unit-profile-coverage/`.
+
+RAW: `.references/srd-5.2.1/Spells/Descriptions-A-D.md` Detect Evil and Good.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`;
+- `pnpm unit-profile-coverage:check`;
+- `git diff --check`;
+- RAW/ubiquitous-language check for Spell Effect, Concentration, detection,
+  occlusion, and runtime-detached table ownership;
+- reviewer-loop convergence with RAW, ubiquitous-language, architecture/domain,
+  and code-review passes.
+
+### Task 31 - L1D2-DETECT-MAGIC-CLOSURE-ARTIFACT - Detect Magic Runtime-Detached Closure Artifact
+
+Status: `ready-for-research`
+
+Create or adopt a durable runtime-detached closure artifact for `detect_magic`,
+preserving magic sensing, aura viewing, and school identification as
+exploration/detection adjudication.
+
+Inputs:
+
+- `plans/unit-profile-coverage/UNIT_REPORT.md`
+- `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`
+- `plans/unit-profile-coverage/unit-matrix.json`
+- `packages/surface/content/detect_magic.json`
+
+Outputs:
+
+- `plans/unit-profile-coverage/frontier-decisions/detect_magic.md`;
+- generated coverage reports if claim or checker-visible closure text changes.
+
+Primary files:
+
+- `plans/unit-profile-coverage/frontier-decisions/detect_magic.md`;
+- `plans/unit-profile-coverage/unit-claims.jsonl` only if claim wording must be
+  aligned;
+- generated reports under `plans/unit-profile-coverage/`.
+
+RAW: `.references/srd-5.2.1/Spells/Descriptions-A-D.md` Detect Magic.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`;
+- `pnpm unit-profile-coverage:check`;
+- `git diff --check`;
+- RAW/ubiquitous-language check for Spell Effect, Concentration, detection,
+  aura/school facts, and runtime-detached table ownership;
+- reviewer-loop convergence with RAW, ubiquitous-language, architecture/domain,
+  and code-review passes.
+
+### Task 32 - L1D2-DETECT-POISON-DISEASE-CLOSURE-ARTIFACT - Detect Poison and Disease Runtime-Detached Closure Artifact
+
+Status: `ready-for-research`
+
+Create or adopt a durable runtime-detached closure artifact for
+`detect_poison_and_disease`, preserving poison/disease sensing, creature-kind
+sensing, occlusion, and identification as table-owned detection state.
+
+Inputs:
+
+- `plans/unit-profile-coverage/UNIT_REPORT.md`
+- `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`
+- `plans/unit-profile-coverage/unit-matrix.json`
+- `packages/surface/content/detect_poison_and_disease.json`
+
+Outputs:
+
+- `plans/unit-profile-coverage/frontier-decisions/detect_poison_and_disease.md`;
+- generated coverage reports if claim or checker-visible closure text changes.
+
+Primary files:
+
+- `plans/unit-profile-coverage/frontier-decisions/detect_poison_and_disease.md`;
+- `plans/unit-profile-coverage/unit-claims.jsonl` only if claim wording must be
+  aligned;
+- generated reports under `plans/unit-profile-coverage/`.
+
+RAW: `.references/srd-5.2.1/Spells/Descriptions-A-D.md` Detect Poison and Disease.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`;
+- `pnpm unit-profile-coverage:check`;
+- `git diff --check`;
+- RAW/ubiquitous-language check for Spell Effect, Concentration, Poison as a
+  substance versus Poison damage/Poisoned condition, detection, and
+  runtime-detached table ownership;
+- reviewer-loop convergence with RAW, ubiquitous-language, architecture/domain,
+  and code-review passes.
+
+### Task 33 - L1D2-IDENTIFY-CLOSURE-ARTIFACT - Identify Runtime-Detached Closure Artifact
+
+Status: `ready-for-research`
+
+Create or adopt a durable runtime-detached closure artifact for `identify`,
+preserving magic item, attunement, and spell-effect identification as
+table/item/knowledge adjudication.
+
+Inputs:
+
+- `plans/unit-profile-coverage/UNIT_REPORT.md`
+- `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`
+- `plans/unit-profile-coverage/unit-matrix.json`
+- `packages/surface/content/identify.json`
+
+Outputs:
+
+- `plans/unit-profile-coverage/frontier-decisions/identify.md`;
+- generated coverage reports if claim or checker-visible closure text changes.
+
+Primary files:
+
+- `plans/unit-profile-coverage/frontier-decisions/identify.md`;
+- `plans/unit-profile-coverage/unit-claims.jsonl` only if claim wording must be
+  aligned;
+- generated reports under `plans/unit-profile-coverage/`.
+
+RAW: `.references/srd-5.2.1/Spells/Descriptions-E-L.md` Identify.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`;
+- `pnpm unit-profile-coverage:check`;
+- `git diff --check`;
+- RAW/ubiquitous-language check for Spell Definition, Ritual, Magic Item,
+  Spell Effect, knowledge facts, and runtime-detached table ownership;
+- reviewer-loop convergence with RAW, ubiquitous-language, architecture/domain,
+  and code-review passes.
+
+### Task 34 - L1D2-MINOR-ILLUSION-CLOSURE-ARTIFACT - Minor Illusion Runtime-Detached Closure Artifact
+
+Status: `ready-for-research`
+
+Create or adopt a durable runtime-detached closure artifact for
+`minor_illusion`, preserving sound/image creation, Study adjudication, physical
+interaction, faint rendering, and recast expiry as illusion/exploration state.
+
+Inputs:
+
+- `plans/unit-profile-coverage/UNIT_REPORT.md`
+- `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`
+- `plans/unit-profile-coverage/unit-matrix.json`
+- `packages/surface/content/minor_illusion.json`
+
+Outputs:
+
+- `plans/unit-profile-coverage/frontier-decisions/minor_illusion.md`;
+- generated coverage reports if claim or checker-visible closure text changes.
+
+Primary files:
+
+- `plans/unit-profile-coverage/frontier-decisions/minor_illusion.md`;
+- `plans/unit-profile-coverage/unit-claims.jsonl` only if claim wording must be
+  aligned;
+- generated reports under `plans/unit-profile-coverage/`.
+
+RAW: `.references/srd-5.2.1/Spells/Descriptions-M-P.md` Minor Illusion.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`;
+- `pnpm unit-profile-coverage:check`;
+- `git diff --check`;
+- RAW/ubiquitous-language check for Cantrip, Study, illusion presentation,
+  object/image/sound facts, and runtime-detached table ownership;
+- reviewer-loop convergence with RAW, ubiquitous-language, architecture/domain,
+  and code-review passes.
+
+### Task 35 - L1D2-SILENT-IMAGE-CLOSURE-ARTIFACT - Silent Image Runtime-Detached Closure Artifact
+
+Status: `ready-for-research`
+
+Create or adopt a durable runtime-detached closure artifact for `silent_image`,
+preserving image placement, Investigation/Study adjudication, physical
+interaction, and presentation state as illusion/exploration adjudication.
+
+Inputs:
+
+- `plans/unit-profile-coverage/UNIT_REPORT.md`
+- `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`
+- `plans/unit-profile-coverage/unit-matrix.json`
+- `packages/surface/content/silent_image.json`
+
+Outputs:
+
+- `plans/unit-profile-coverage/frontier-decisions/silent_image.md`;
+- generated coverage reports if claim or checker-visible closure text changes.
+
+Primary files:
+
+- `plans/unit-profile-coverage/frontier-decisions/silent_image.md`;
+- `plans/unit-profile-coverage/unit-claims.jsonl` only if claim wording must be
+  aligned;
+- generated reports under `plans/unit-profile-coverage/`.
+
+RAW: `.references/srd-5.2.1/Spells/Descriptions-S-Z.md` Silent Image.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`;
+- `pnpm unit-profile-coverage:check`;
+- `git diff --check`;
+- RAW/ubiquitous-language check for Spell Effect, Concentration, Study,
+  illusion presentation, and runtime-detached table ownership;
+- reviewer-loop convergence with RAW, ubiquitous-language, architecture/domain,
+  and code-review passes.
+
+### Task 36 - L1D2-SPEAK-WITH-ANIMALS-CLOSURE-ARTIFACT - Speak with Animals Runtime-Detached Closure Artifact
+
+Status: `ready-for-research`
+
+Create or adopt a durable runtime-detached closure artifact for
+`speak_with_animals`, preserving Beast communication and table-mediated social
+outcomes outside promoted battle runtime.
+
+Inputs:
+
+- `plans/unit-profile-coverage/UNIT_REPORT.md`
+- `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`
+- `plans/unit-profile-coverage/unit-matrix.json`
+- `packages/surface/content/speak_with_animals.json`
+
+Outputs:
+
+- `plans/unit-profile-coverage/frontier-decisions/speak_with_animals.md`;
+- generated coverage reports if claim or checker-visible closure text changes.
+
+Primary files:
+
+- `plans/unit-profile-coverage/frontier-decisions/speak_with_animals.md`;
+- `plans/unit-profile-coverage/unit-claims.jsonl` only if claim wording must be
+  aligned;
+- generated reports under `plans/unit-profile-coverage/`.
+
+RAW: `.references/srd-5.2.1/Spells/Descriptions-S-Z.md` Speak with Animals.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`;
+- `pnpm unit-profile-coverage:check`;
+- `git diff --check`;
+- RAW/ubiquitous-language check for Spell Definition, Ritual, Beast
+  communication, social/exploration adjudication, and runtime-detached table
+  ownership;
+- reviewer-loop convergence with RAW, ubiquitous-language, architecture/domain,
+  and code-review passes.
+
+### Task 37 - L1D2-FIGHTER-WEAPON-MASTERY-LATER-COUNT - Fighter Weapon Mastery Later-Level Count Support
+
+Status: `ready-for-research`
+
+Promote `fighter_weapon_mastery` beyond the current level-1 selected-weapon
+count subset, or explicitly retain the later-level count as a closed deferral
+with precise generated-report wording.
+
+Inputs:
+
+- `plans/unit-profile-coverage/UNIT_REPORT.md`
+- `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`
+- `plans/unit-profile-coverage/unit-matrix.json`
+- `packages/surface/content/fighter_weapon_mastery.json`
+
+Outputs:
+
+- all-level Fighter selected-weapon count support in Character Creation and
+  Character Sheet if promoted;
+- selected identity evidence if the Unit becomes fully `supported-profile`;
+- generated coverage reports.
+
+Primary files:
+
+- `packages/character-creation-runtime/src/*weapon-mastery*.ts`;
+- `packages/character-sheet-runtime/src/*weapon-mastery*.ts`;
+- `plans/unit-profile-coverage/unit-evidence.jsonl`;
+- generated reports under `plans/unit-profile-coverage/`.
+
+RAW: `.references/srd-5.2.1/Classes/Fighter.md` Weapon Mastery.
+
+Verification:
+
+- focused character-creation and character-sheet tests for later-level count
+  projection if behavior changes;
+- selected-identity MBT only if the support claim changes to full
+  `supported-profile`;
+- `pnpm unit-profile-coverage:check --write`;
+- `pnpm unit-profile-coverage:check`;
+- `git diff --check`;
+- RAW/ubiquitous-language check for Weapon Mastery, Mastery Property, Long Rest,
+  selected weapon refs, and no duplicate selected-option state;
+- reviewer-loop convergence with RAW, ubiquitous-language, architecture/domain,
+  and code-review passes.
+
+### Task 38 - L1D2-BARBARIAN-WEAPON-MASTERY-LATER-COUNT - Barbarian Weapon Mastery Later-Level Count Support
+
+Status: `ready-for-research`
+
+Promote `barbarian_weapon_mastery` beyond the current level-1 selected melee
+weapon count subset, or explicitly retain the later-level count as a closed
+deferral with precise generated-report wording.
+
+Inputs:
+
+- `plans/unit-profile-coverage/UNIT_REPORT.md`
+- `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`
+- `plans/unit-profile-coverage/unit-matrix.json`
+- `packages/surface/content/barbarian_weapon_mastery.json`
+
+Outputs:
+
+- all-level Barbarian selected melee weapon count support in Character Creation
+  and Character Sheet if promoted;
+- selected identity evidence if the Unit becomes fully `supported-profile`;
+- generated coverage reports.
+
+Primary files:
+
+- `packages/character-creation-runtime/src/*weapon-mastery*.ts`;
+- `packages/character-sheet-runtime/src/*weapon-mastery*.ts`;
+- `plans/unit-profile-coverage/unit-evidence.jsonl`;
+- generated reports under `plans/unit-profile-coverage/`.
+
+RAW: `.references/srd-5.2.1/Classes/Barbarian.md` Weapon Mastery.
+
+Verification:
+
+- focused character-creation and character-sheet tests for later-level count
+  projection if behavior changes;
+- selected-identity MBT only if the support claim changes to full
+  `supported-profile`;
+- `pnpm unit-profile-coverage:check --write`;
+- `pnpm unit-profile-coverage:check`;
+- `git diff --check`;
+- RAW/ubiquitous-language check for Weapon Mastery, Mastery Property, melee
+  weapon eligibility, Long Rest, selected weapon refs, and no duplicate
+  selected-option state;
+- reviewer-loop convergence with RAW, ubiquitous-language, architecture/domain,
+  and code-review passes.
+
+### Task 39 - L1D2-RANGER-FAVORED-ENEMY-LATER-SCALING - Ranger Favored Enemy Later-Level Scaling Support
+
+Status: `ready-for-research`
+
+Promote `ranger_favored_enemy` beyond the current level-1 two-use free-cast
+subset, or explicitly retain the later-level free-cast count as a closed
+deferral with precise generated-report wording.
+
+Inputs:
+
+- `plans/unit-profile-coverage/UNIT_REPORT.md`
+- `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`
+- `plans/unit-profile-coverage/unit-matrix.json`
+- `packages/surface/content/ranger_favored_enemy.json`
+- `packages/surface/content/hunters_mark.json`
+
+Outputs:
+
+- Favored Enemy free-cast count scaling across Ranger levels if promoted;
+- selected identity evidence if the Unit becomes fully `supported-profile`;
+- generated coverage reports.
+
+Primary files:
+
+- `packages/battle-runtime/src/*favored-enemy*`;
+- `packages/battle-runtime/battle-runtime*.qnt` only if promoted behavior
+  changes;
+- `plans/unit-profile-coverage/unit-evidence.jsonl`;
+- generated reports under `plans/unit-profile-coverage/`.
+
+RAW:
+
+- `.references/srd-5.2.1/Classes/Ranger.md` Favored Enemy
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md` Hunter's Mark
+
+Verification:
+
+- focused deterministic runtime tests for later-level free-cast count if
+  behavior changes;
+- package-local MBT only if promoted battle-runtime behavior changes require
+  integrated parity;
+- `pnpm unit-profile-coverage:check --write`;
+- `pnpm unit-profile-coverage:check`;
+- `git diff --check`;
+- RAW/ubiquitous-language check for Spell Access, Spell Invocation, Spell Slot,
+  Long Rest pool, Concentration, and no duplicate Hunter's Mark rider state;
+- reviewer-loop convergence with RAW, ubiquitous-language, architecture/domain,
+  and code-review passes.
+
+### Task 40 - L1D2-REPLENISH-003 - Recursive Frontier Replenishment 003
+
+Status: `ready-for-research`
+
+Append the next concrete D tasks and a successor replenishment task. This task
+must follow the Recursive Replenishment Contract above after Tasks 27-39 are
+done or intentionally deferred.
+
+Acceptance:
+
+- refreshed coverage artifacts are committed if changed;
+- this plan has at least twelve newly appended atomic tasks, or every remaining
+  meaningful task if fewer than twelve exist;
+- this plan has a final successor replenishment task such as
+  `L1D2-REPLENISH-004`;
 - the new tasks do not duplicate active sibling-lane ownership;
 - no companion/familiar task is added;
 - the current task is marked `done` only after the new tasks and successor
