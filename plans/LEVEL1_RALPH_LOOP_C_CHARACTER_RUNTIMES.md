@@ -109,7 +109,7 @@
     {
       "number": 15,
       "id": "L1C-L1X-12",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Purify Food And Drink No-Matrix Decision"
     }
   ]
@@ -287,7 +287,7 @@ For `AT-L1-08`:
 | 12 | L1C-L1X-06 - Goodberry No-Matrix Decision | done | none | Decision keeps catalog-only/no-runtime-profile; no consumable inventory owner selected and no Unit claim without admitted UnitRecord. |
 | 13 | L1C-L1X-08 - Mage Hand No-Matrix Decision | done | none | Decide object-control owner. |
 | 14 | L1C-L1X-09 - Mending No-Matrix Decision | done | none | Decision keeps catalog-only/no-runtime-profile; no equipment/object owner selected and no Unit claim without admitted UnitRecord. |
-| 15 | L1C-L1X-12 - Purify Food And Drink No-Matrix Decision | ready-for-research | none | Decide item/inventory purification owner. |
+| 15 | L1C-L1X-12 - Purify Food And Drink No-Matrix Decision | done | none | Decision keeps catalog-only/no-runtime-profile; no item/inventory owner selected and no Unit claim without admitted UnitRecord. |
 
 ## Task Details
 
@@ -837,7 +837,7 @@ Plan Impact:
 
 ### Task 15 - L1C-L1X-12 - Purify Food And Drink No-Matrix Decision
 
-Status: `ready-for-research`
+Status: `done`
 
 Research `AT-L1X-12` from `plans/LEVEL1_FULL_SUPPORT_FRONTIER.md`.
 
