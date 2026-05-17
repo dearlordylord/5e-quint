@@ -58,6 +58,7 @@
 {"unitId":"orc_relentless_endurance","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT47","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"orc_relentless_endurance","evidence":{"tag":"selected-identity-mbt","taskId":"passive-and-zero-hp-features","ownerPath":"packages/battle-runtime/src/rule-core-features.mbt.test.ts"}}
 {"unitId":"orc_adrenaline_rush","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT53","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
+{"unitId":"orc_adrenaline_rush","evidence":{"tag":"selected-identity-mbt","taskId":"L1H-ORC-ADRENALINE-RUSH","ownerPath":"packages/battle-runtime/src/battle-runtime.mbt.test.ts"}}
 {"unitId":"shield","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT22","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"shield","evidence":{"tag":"selected-identity-mbt","taskId":"reaction-interruption","ownerPath":"packages/battle-runtime/src/reaction-spell-selected-identity.mbt.test.ts"}}
 {"unitId":"healing_word","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT25","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}

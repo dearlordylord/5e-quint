@@ -67,7 +67,7 @@
     {
       "number": 11,
       "id": "L1H-ORC-ADRENALINE-RUSH",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Orc Adrenaline Rush Selected Identity Replay"
     },
     {
@@ -264,7 +264,7 @@ RAW: `.references/srd-5.2.1/Feats.md` Boon of Combat Prowess.
 
 ### Task 11 - L1H-ORC-ADRENALINE-RUSH - Orc Adrenaline Rush Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `orc_adrenaline_rush` if it remains in the
 supported selected identity denominator after the precheck.
