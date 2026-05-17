@@ -9,42 +9,48 @@
 import { describe, expect, test } from "vitest";
 import {
   acidSplashUnitId,
-  battleObjectId,
   burningHandsUnitId,
-  cantripSpellInvocationRef,
   chillTouchUnitId,
-  combatantId,
-  damageRollFillWithGroups,
   fireballUnitId,
   guidingBoltUnitId,
-  Hp,
   inflictWoundsUnitId,
   magicMissileUnitId,
-  maybeSpellAct,
   poisonSprayUnitId,
   rayOfFrostUnitId,
   rayOfSicknessUnitId,
+  sacredFlameUnitId,
+  shockingGraspUnitId,
+  shatterUnitId,
+  spellCasterId,
+  spellTargetId,
+  viciousMockeryUnitId,
+} from "./unit-profile-admission-catalog-support.ts";
+import {
+  damageRollFillWithGroups,
   requireCombatant,
   requireHole,
   requireResultHole,
-  resolveBattleSubject,
-  sacredFlameUnitId,
+  statBlockWithCreatureType,
+} from "./unit-profile-admission-creature-fixture-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import {
+  maybeSpellAct,
   savingThrowOutcomeFill,
-  shockingGraspUnitId,
-  shatterUnitId,
-  snapshotBattle,
   spellAct,
   spellActInvocation,
-  spellBattle,
-  spellCasterId,
   spellHoleInvocation,
-  spellId,
-  spellRecord,
-  spellSlotInvocationRef,
   spellTargetFill,
-  spellTargetId,
-  statBlockWithCreatureType,
-  viciousMockeryUnitId,
+} from "./unit-profile-admission-spell-fill-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import {
+  battleObjectId,
+  cantripSpellInvocationRef,
+  combatantId,
+  Hp,
+  resolveBattleSubject,
+  snapshotBattle,
+  spellId,
+  spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
 import type {
   ActivationPhase,

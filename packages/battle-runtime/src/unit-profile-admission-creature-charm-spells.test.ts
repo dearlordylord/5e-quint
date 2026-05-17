@@ -4,31 +4,39 @@
 import { describe, expect, test } from "vitest";
 import {
   animalFriendshipUnitId,
-  applyPreparedSlotSpellDamage,
   charmPersonUnitId,
-  combatantId,
-  damageRollFillWithGroups,
-  elapsedTimeTicks,
-  endTurn,
   oppositionSide,
   partySide,
+  sacredFlameUnitId,
+  spellCasterId,
+  spellTargetId,
+} from "./unit-profile-admission-catalog-support.ts";
+import {
+  damageRollFillWithGroups,
   requireCombatant,
   requireHole,
   requireResultHole,
-  resolveBattleSubject,
   resolveWeaponAttack,
-  resolvedAnimalFriendshipState,
-  sacredFlameUnitId,
-  savingThrowOutcomeFill,
-  spellAct,
-  spellBattle,
-  spellCasterId,
-  spellRecord,
-  spellTargetFill,
-  spellTargetId,
-  spellTargetListFill,
   statBlockWithCreatureType,
   zeroAbilityWeaponAttack,
+} from "./unit-profile-admission-creature-fixture-support.ts";
+import {
+  resolvedAnimalFriendshipState,
+  spellBattle,
+} from "./unit-profile-admission-spell-battle-support.ts";
+import {
+  savingThrowOutcomeFill,
+  spellAct,
+  spellTargetFill,
+  spellTargetListFill,
+} from "./unit-profile-admission-spell-fill-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import {
+  applyPreparedSlotSpellDamage,
+  combatantId,
+  elapsedTimeTicks,
+  endTurn,
+  resolveBattleSubject,
 } from "./unit-profile-admission-test-support.ts";
 
 describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {

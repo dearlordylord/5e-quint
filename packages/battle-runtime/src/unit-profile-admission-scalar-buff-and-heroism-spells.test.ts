@@ -3,31 +3,37 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.scalar-buff spell.invocation-condition-immunity-turn-start-temporary-hit-points
 import { describe, expect, test } from "vitest";
 import {
-  DieRollResult,
-  applyCondition,
-  bonusSpellAct,
-  combatantId,
-  damageRollFillWithGroups,
-  elapsedTimeTicks,
-  endTurn,
   falseLifeUnitId,
   heroismUnitId,
-  holeId,
   longstriderUnitId,
-  movementDeltaFeet,
-  requireHole,
-  resolveBattleSubject,
   shieldOfFaithUnitId,
-  snapshotBattle,
-  spellAct,
-  spellBattle,
   spellCasterId,
-  spellHoleInvocation,
-  spellRecord,
-  spellSlotInvocationRef,
-  spellTargetFill,
   spellTargetId,
+} from "./unit-profile-admission-catalog-support.ts";
+import {
+  damageRollFillWithGroups,
+  requireHole,
+} from "./unit-profile-admission-creature-fixture-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import {
+  bonusSpellAct,
+  spellAct,
+  spellHoleInvocation,
+  spellTargetFill,
   spellTargetListFill,
+} from "./unit-profile-admission-spell-fill-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import {
+  applyCondition,
+  combatantId,
+  DieRollResult,
+  elapsedTimeTicks,
+  endTurn,
+  holeId,
+  movementDeltaFeet,
+  resolveBattleSubject,
+  snapshotBattle,
+  spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
 import type { BattleState } from "./unit-profile-admission-test-support.ts";
 

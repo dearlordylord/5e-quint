@@ -2,34 +2,40 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-held-light-emitter
 import { describe, expect, test } from "vitest";
 import {
-  Hp,
+  produceFlameUnitId,
+  shieldUnitId,
+  spellCasterId,
+  spellTargetId,
+} from "./unit-profile-admission-catalog-support.ts";
+import {
   attackRollFill,
-  battleObjectId,
+  damageRollFillWithGroups,
+  reactionDecisionFill,
+  requireHole,
+  requireResultHole,
+} from "./unit-profile-admission-creature-fixture-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import {
   bonusSpellAct,
+  maybeSpellAct,
+  spellAct,
+  spellHoleInvocation,
+  spellObjectTargetFill,
+  spellTargetFill,
+} from "./unit-profile-admission-spell-fill-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import {
+  battleObjectId,
   canSpendAction,
   cantripSpellInvocationRef,
   classLevel,
   combatantId,
   damageAmount,
-  damageRollFillWithGroups,
   elapsedTimeTicks,
-  maybeSpellAct,
+  Hp,
   movementFeet,
-  produceFlameUnitId,
-  reactionDecisionFill,
-  requireHole,
-  requireResultHole,
   resolveBattleReaction,
   resolveBattleSubject,
-  shieldUnitId,
-  spellAct,
-  spellBattle,
-  spellCasterId,
-  spellHoleInvocation,
-  spellObjectTargetFill,
-  spellRecord,
-  spellTargetFill,
-  spellTargetId,
 } from "./unit-profile-admission-test-support.ts";
 import type { BattleState } from "./unit-profile-admission-test-support.ts";
 

@@ -3,31 +3,37 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-expeditious-retreat-dash spell.invocation-jump-movement-replacement
 import { describe, expect, test } from "vitest";
 import {
+  expeditiousRetreatUnitId,
+  jumpUnitId,
+  spellCasterId,
+  spellTargetId,
+} from "./unit-profile-admission-catalog-support.ts";
+import {
+  movementFill,
+  requireCombatant,
+  requireHole,
+} from "./unit-profile-admission-creature-fixture-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import {
   bonusActionDashSpellAct,
   bonusSpellAct,
+  jumpMovementReplacementAct,
+  jumpSpellTargetListFill,
+  maybeJumpMovementReplacementAct,
+  spellTargetListFill,
+} from "./unit-profile-admission-spell-fill-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import {
   breakBattleConcentration,
   combatantId,
   discoverBattleActs,
   elapsedTimeTicks,
   endTurn,
-  expeditiousRetreatUnitId,
-  jumpMovementReplacementAct,
-  jumpSpellTargetListFill,
-  jumpUnitId,
-  maybeJumpMovementReplacementAct,
   movementFeet,
-  movementFill,
-  requireCombatant,
-  requireHole,
   resolveBattleSubject,
-  spellBattle,
-  spellCasterId,
-  spellRecord,
   spellSlotInvocationRef,
-  spellTargetId,
-  spellTargetListFill,
 } from "./unit-profile-admission-test-support.ts";
-import type { BonusActionSpellAct } from "./unit-profile-admission-test-support.ts";
+import type { BonusActionSpellAct } from "./unit-profile-admission-catalog-support.ts";
 
 describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
   test("expeditious_retreat casts as a Bonus Action Dash spell", () => {

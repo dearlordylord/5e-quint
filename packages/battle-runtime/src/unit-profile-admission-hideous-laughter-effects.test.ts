@@ -1,33 +1,39 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84F hideous_laughter
 import { describe, expect, test } from "vitest";
 import {
-  applyBattleHitPointDamage,
-  applyCondition,
-  attackRollFill,
-  battleCreatureStateWithKnockOutPreservedConditions,
-  damageRollFillWithGroups,
-  discoverBattleActs,
-  elapsedTimeTicks,
-  endTurn,
   fireBoltUnitId,
-  hasCondition,
   heroismUnitId,
   hideousLaughterDurationTicks,
-  hideousLaughterRepeatSavingThrowOutcomeHole,
   hideousLaughterUnitId,
+  spellCasterId,
+  spellTargetId,
+} from "./unit-profile-admission-catalog-support.ts";
+import {
+  attackRollFill,
+  damageRollFillWithGroups,
   requireCombatant,
   requireHole,
   requireResultHole,
-  resolveBattleSubject,
+} from "./unit-profile-admission-creature-fixture-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import {
   savingThrowOutcomeFill,
   spellAct,
-  spellBattle,
-  spellCasterId,
-  spellRecord,
-  spellSlotInvocationRef,
   spellTargetFill,
-  spellTargetId,
   spellTargetListFill,
+} from "./unit-profile-admission-spell-fill-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import {
+  applyBattleHitPointDamage,
+  applyCondition,
+  battleCreatureStateWithKnockOutPreservedConditions,
+  discoverBattleActs,
+  elapsedTimeTicks,
+  endTurn,
+  hasCondition,
+  hideousLaughterRepeatSavingThrowOutcomeHole,
+  resolveBattleSubject,
+  spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
 import type {
   BattleActiveEffect,

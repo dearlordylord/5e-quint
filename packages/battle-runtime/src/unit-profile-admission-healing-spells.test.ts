@@ -3,24 +3,28 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT34 mass_cure_wounds
 import { describe, expect, test } from "vitest";
 import {
-  bonusSpellAct,
   cureWoundsUnitId,
   healingWordUnitId,
   massCureWoundsUnitId,
   massHealingTargetIds,
   massHealingWordUnitId,
-  movementFeet,
-  requireHole,
-  resolveBattleSubject,
-  spellAct,
-  spellBattle,
   spellCasterId,
-  spellHoleInvocation,
-  spellRecord,
-  spellSlotInvocationRef,
-  spellTargetFill,
   spellTargetId,
+} from "./unit-profile-admission-catalog-support.ts";
+import { requireHole } from "./unit-profile-admission-creature-fixture-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import {
+  bonusSpellAct,
+  spellAct,
+  spellHoleInvocation,
+  spellTargetFill,
   spellTargetListFill,
+} from "./unit-profile-admission-spell-fill-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import {
+  movementFeet,
+  resolveBattleSubject,
+  spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
 
 describe("QMBT25 deterministic Spell Unit admission re-triage", () => {

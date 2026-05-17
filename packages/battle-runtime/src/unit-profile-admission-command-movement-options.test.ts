@@ -1,24 +1,30 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-command-approach-route spell.invocation-command-flee-route
 import { describe, expect, test } from "vitest";
 import {
+  commandUnitId,
+  spellCasterId,
+  spellTargetId,
+} from "./unit-profile-admission-catalog-support.ts";
+import {
+  requireCombatant,
+  requireHole,
+  requireResultHole,
+} from "./unit-profile-admission-creature-fixture-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import {
   commandApproachMovementFill,
   commandFleeMovementFill,
-  commandUnitId,
+  savingThrowOutcomeFill,
+  spellAct,
+  spellTargetListFill,
+} from "./unit-profile-admission-spell-fill-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import {
   difficultyClass,
   discoverBattleActs,
   endTurn,
   movementFeet,
-  requireCombatant,
-  requireHole,
-  requireResultHole,
   resolveBattleSubject,
-  savingThrowOutcomeFill,
-  spellAct,
-  spellBattle,
-  spellCasterId,
-  spellRecord,
-  spellTargetId,
-  spellTargetListFill,
 } from "./unit-profile-admission-test-support.ts";
 import type {
   BattleFill,

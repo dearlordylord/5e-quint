@@ -2,33 +2,39 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-dancing-lights-movable-dim-light
 import { describe, expect, test } from "vitest";
 import {
+  dancingLightsUnitId,
+  rayOfFrostUnitId,
+  spellCasterId,
+  spellTargetId,
+} from "./unit-profile-admission-catalog-support.ts";
+import {
+  reactionDecisionFill,
+  requireHole,
+} from "./unit-profile-admission-creature-fixture-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import {
+  bonusSpellAct,
+  spellAct,
+} from "./unit-profile-admission-spell-fill-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import {
   abilityModifier,
   battleTablePositionId,
-  bonusSpellAct,
   breakBattleConcentration,
   canSpendAction,
   cantripSpellInvocationRef,
-  dancingLightsUnitId,
   discoverBattleActs,
   elapsedTimeTicks,
   endTurn,
   holeId,
   movementFeet,
   proficiencyBonus,
-  rayOfFrostUnitId,
-  reactionDecisionFill,
-  requireHole,
   resolveBattleReaction,
   resolveBattleSubject,
   snapshotBattle,
-  spellAct,
-  spellBattle,
-  spellCasterId,
-  spellRecord,
-  spellTargetId,
 } from "./unit-profile-admission-test-support.ts";
+import type { ActionSpellAct } from "./unit-profile-admission-catalog-support.ts";
 import type {
-  ActionSpellAct,
   BattleFill,
   BattleState,
 } from "./unit-profile-admission-test-support.ts";

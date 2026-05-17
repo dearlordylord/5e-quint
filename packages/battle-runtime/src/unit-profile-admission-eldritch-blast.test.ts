@@ -2,23 +2,29 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-beam-sequence
 import { describe, expect, test } from "vitest";
 import {
+  eldritchBlastUnitId,
+  spellCasterId,
+  spellTargetId,
+} from "./unit-profile-admission-catalog-support.ts";
+import { requireResultHole } from "./unit-profile-admission-creature-fixture-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import {
+  maybeSpellAct,
+  spellAct,
+  spellHoleInvocation,
+  spellTargetFill,
+} from "./unit-profile-admission-spell-fill-support.ts";
+import {
+  eldritchBlastWithTargetCount,
+  spellRecord,
+} from "./unit-profile-admission-spell-record-support.ts";
+import {
   attackBonus,
   cantripSpellInvocationRef,
   classLevel,
   decodeUnitRecordSync,
   eldritchBlastInput,
-  eldritchBlastUnitId,
-  eldritchBlastWithTargetCount,
-  maybeSpellAct,
-  requireResultHole,
   resolveBattleSubject,
-  spellAct,
-  spellBattle,
-  spellCasterId,
-  spellHoleInvocation,
-  spellRecord,
-  spellTargetFill,
-  spellTargetId,
 } from "./unit-profile-admission-test-support.ts";
 import type {
   BattleHole,

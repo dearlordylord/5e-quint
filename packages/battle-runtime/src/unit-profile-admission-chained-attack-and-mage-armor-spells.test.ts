@@ -5,27 +5,33 @@
 import { describe, expect, test } from "vitest";
 import {
   acidSplashUnitId,
-  cantripSpellInvocationRef,
   chromaticOrbUnitId,
-  discoverBattleActs,
   iceKnifeUnitId,
   mageArmorUnitId,
-  movementDeltaFeet,
   rayOfFrostUnitId,
+  spellCasterId,
+  spellTargetId,
+} from "./unit-profile-admission-catalog-support.ts";
+import {
   requireHole,
   requireResultHole,
-  resolveBattleSubject,
+} from "./unit-profile-admission-creature-fixture-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import {
   spellAct,
   spellActInvocation,
-  spellBattle,
-  spellCasterId,
   spellHoleInvocation,
-  spellRecord,
-  spellSlotInvocationRef,
   spellTargetFill,
-  spellTargetId,
+} from "./unit-profile-admission-spell-fill-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import {
+  cantripSpellInvocationRef,
+  discoverBattleActs,
+  movementDeltaFeet,
+  resolveBattleSubject,
+  spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
-import type { ActionSpellAct } from "./unit-profile-admission-test-support.ts";
+import type { ActionSpellAct } from "./unit-profile-admission-catalog-support.ts";
 
 describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
   test("ice_knife is admitted as a mixed spell attack plus primary-target burst save", () => {

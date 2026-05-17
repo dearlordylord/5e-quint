@@ -3,38 +3,44 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-roll-modifier spell.invocation-damage-reduction
 import { describe, expect, test } from "vitest";
 import {
-  Hp,
+  baneUnitId,
+  blessUnitId,
+  guidanceUnitId,
+  rayOfFrostUnitId,
+  resistanceUnitId,
+  spellCasterId,
+  spellTargetId,
+} from "./unit-profile-admission-catalog-support.ts";
+import {
   attackDamageDispositionFill,
   attackRollFill,
   attackTargetFill,
-  baneUnitId,
-  blessUnitId,
-  cantripSpellInvocationRef,
-  combatantId,
   completedWeaponDamageInput,
   damageRollFillWithGroups,
-  endTurn,
-  guidanceUnitId,
-  rayOfFrostUnitId,
   requireCombatant,
   requireHole,
   requireResultHole,
+  weaponAttackSubject,
+  zeroAbilityWeaponAttack,
+} from "./unit-profile-admission-creature-fixture-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import {
   requireSpellDamageReductionHole,
-  resistanceUnitId,
-  resolveBattleSubject,
   savingThrowOutcomeFill,
   skillChoiceFill,
   spellAct,
-  spellBattle,
-  spellCasterId,
-  spellRecord,
-  spellSlotInvocationRef,
   spellTargetFill,
-  spellTargetId,
   spellTargetListFill,
-  weaponAttackSubject,
   withResistanceEffect,
-  zeroAbilityWeaponAttack,
+} from "./unit-profile-admission-spell-fill-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import {
+  cantripSpellInvocationRef,
+  combatantId,
+  endTurn,
+  Hp,
+  resolveBattleSubject,
+  spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
 import type {
   BattleState,
