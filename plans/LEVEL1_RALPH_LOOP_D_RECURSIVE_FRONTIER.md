@@ -97,7 +97,7 @@
     {
       "number": 16,
       "id": "L1D2-MONK-MARTIAL-ARTS-SCALING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Monk Martial Arts Die Scaling Support"
     },
     {
@@ -425,7 +425,7 @@ task was appended; `find_familiar` stays excluded.
 | 13 | L1D2-REPLENISH-001 - Recursive Frontier Replenishment 001 | done | none | Appended Tasks 14-25 plus `L1D2-REPLENISH-002`; refreshed coverage artifacts were unchanged. |
 | 14 | L1D2-HUNTERS-MARK-FAVORED-ENEMY-ACCOUNTING - Hunter's Mark And Ranger Favored Enemy Profile Accounting Closure | done | none | Close the two D-owned strict open-profile-accounting items not owned by execution frontiers A/B. |
 | 15 | L1D2-BARDIC-INSPIRATION-SCALING - Bardic Inspiration Die Scaling Support | done | Task 14 or explicit deferral | Bardic Inspiration all-level die scaling is promoted to supported-profile with selected identity evidence. |
-| 16 | L1D2-MONK-MARTIAL-ARTS-SCALING - Monk Martial Arts Die Scaling Support | ready-for-research | Task 14 or explicit deferral | Adjacent profile-expansion task after the strict frontier is D-closed or active-lane-blocked. |
+| 16 | L1D2-MONK-MARTIAL-ARTS-SCALING - Monk Martial Arts Die Scaling Support | done | Task 14 or explicit deferral | Adjacent profile-expansion task after the strict frontier is D-closed or active-lane-blocked. |
 | 17 | L1D2-CHARM-PERSON-CLOSURE - Charm Person Social Boundary Closure | ready-for-research | Task 14 or explicit deferral | Clarify supported battle subset versus runtime-detached social knowledge closure. |
 | 18 | L1D2-DISGUISE-SELF-DECISION-INTEGRATION - Disguise Self Frontier Decision Integration | ready-for-research | Task 14 or explicit deferral | Consume the existing decision artifact; do not reclassify the row. |
 | 19 | L1D2-DRUIDCRAFT-DECISION-INTEGRATION - Druidcraft Frontier Decision Integration | ready-for-research | Task 14 or explicit deferral | Consume the existing decision artifact; do not reclassify the row. |
@@ -721,7 +721,7 @@ Verification:
 
 ### Task 16 - L1D2-MONK-MARTIAL-ARTS-SCALING - Monk Martial Arts Die Scaling Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Promote `monk_martial_arts` beyond its current level-1-only subset by owning
 the SRD Martial Arts die-size scaling boundary, or record why that all-level
