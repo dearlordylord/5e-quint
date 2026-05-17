@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "L1K-WEAPON-ITEM-HOSTED-CANDIDATES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Weapon Item Hosted Spell Candidate Intake"
     },
     {
@@ -142,7 +142,7 @@ Every task runs:
 | 6 | L1K-ZONE-WALL-CANDIDATES - Zone Wall Emanation Spell Candidate Intake | done | 1 | candidate split for zones/walls/emanations outside D |
 | 7 | L1K-DETECTION-COMMUNICATION-CANDIDATES - Detection Communication Spell Candidate Intake | done | 1 | runtime-detached versus runtime-witness split for detection/communication spells |
 | 8 | L1K-COUNTER-DISPEL-CANDIDATES - Counter Dispel Spell Candidate Intake | done | 1 | candidate split for counter/dispel/anti-magic spells |
-| 9 | L1K-WEAPON-ITEM-HOSTED-CANDIDATES - Weapon Item Hosted Spell Candidate Intake | ready-for-research | 1 | candidate split for weapon/item hosted spells |
+| 9 | L1K-WEAPON-ITEM-HOSTED-CANDIDATES - Weapon Item Hosted Spell Candidate Intake | done | 1 | candidate split for weapon/item hosted spells |
 | 10 | L1K-COMPANION-EXCLUSION-CANDIDATES - Companion Summon Exclusion Candidate Intake | ready-for-research | 1 | explicit companion/summon exclusions or handoff targets |
 
 ### Task 1 - L1K-PRECHECK - Non-D Spell Candidate Precheck
@@ -337,13 +337,30 @@ reducer behavior, or MBT evidence.
 
 ### Task 9 - L1K-WEAPON-ITEM-HOSTED-CANDIDATES - Weapon Item Hosted Spell Candidate Intake
 
-Status: `ready-for-research`
+Status: `done`
 
 Initial candidates: `magic_weapon`, `flame_blade`, `spiritual_weapon`,
 `fire_shield`, and `warding_bond`.
 
 Keep weapon/item hosted spell profiles separate from authored weapon data and
 from D's selected identity work.
+
+Decision artifact:
+`plans/unit-profile-coverage/L1K_WEAPON_ITEM_HOSTED_SPELL_CANDIDATE_INTAKE.md`.
+
+Final split:
+
+- weapon item enhancement need: `magic_weapon`;
+- held spell-created weapon lifecycle need: `flame_blade`;
+- positioned spectral force repeat-attack need: `spiritual_weapon`;
+- self-hosted resistance and retaliation need: `fire_shield`;
+- item-mediated protective bond and damage-sharing need: `warding_bond`.
+
+No candidate is an exact existing-profile fit. The decision artifact records
+the item identity, held spell-created object, positioned spectral force,
+mode-linked resistance/retaliation, and paired-creature bond boundaries; this
+intake task does not add Unit claims, catalog admission, QNT behavior, battle
+reducer behavior, or MBT evidence.
 
 ### Task 10 - L1K-COMPANION-EXCLUSION-CANDIDATES - Companion Summon Exclusion Candidate Intake
 
