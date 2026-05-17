@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "L1XB-STRICT-CLOSURE-AUDIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Movement Light Strict Closure Audit"
     }
   ]
@@ -101,7 +101,7 @@ Every task runs:
 | 2 | L1XB-FEATHER-FALL-CLOSURE - Feather Fall Runtime Boundary Closure | done | 1 | `feather_fall` removed from strict open-profile-accounting or blocked with exact missing runtime mechanic |
 | 3 | L1XB-JUMP-CLOSURE - Jump Runtime Boundary Closure | done | 1 | `jump` removed from strict open-profile-accounting or blocked with exact missing runtime mechanic |
 | 4 | L1XB-LIGHT-CLOSURE - Light Runtime Boundary Closure | done | 1 | `light` removed from strict open-profile-accounting or blocked with exact missing runtime mechanic |
-| 5 | L1XB-STRICT-CLOSURE-AUDIT - Movement Light Strict Closure Audit | ready-for-research | 2-4 | generated strict report proves the three B-owned rows are no longer open |
+| 5 | L1XB-STRICT-CLOSURE-AUDIT - Movement Light Strict Closure Audit | done | 2-4 | generated strict report proves the three B-owned rows are no longer open |
 
 ### Task 1 - L1XB-PRECHECK - Movement Light Frontier Precheck
 
@@ -198,7 +198,7 @@ Outputs:
 
 ### Task 5 - L1XB-STRICT-CLOSURE-AUDIT - Movement Light Strict Closure Audit
 
-Status: `ready-for-research`
+Status: `done`
 
 Inputs:
 
