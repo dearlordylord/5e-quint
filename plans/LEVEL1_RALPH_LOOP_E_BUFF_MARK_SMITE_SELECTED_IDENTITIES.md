@@ -211,7 +211,8 @@ Status: `ready-for-implementation-after-light-research`
 
 Add selected identity evidence for `hunters_mark`. Only assert runtime-owned
 mark, transfer, Concentration, and damage-rider behavior; do not model finding
-or Wisdom roll-mode table facts here.
+Advantage table-supplied runtime witnesses or Ability Check roll-mode
+boundaries here.
 
 RAW: `.references/srd-5.2.1/Spells/Descriptions-E-L.md` Hunter's Mark.
 

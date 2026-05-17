@@ -61,6 +61,8 @@ const runtimeDetachedClosureKinds = new Set([
 const durableSocialKnowledgeClosureKind =
   battleReadinessClosureKind.socialKnowledgeEffect;
 const laterLevelOnlyClosureKind = battleReadinessClosureKind.laterLevelOnly;
+const characterFactRuntimeDetachedSplitClosureKind =
+  battleReadinessClosureKind.characterFactRuntimeDetachedSplit;
 const d20RollModeResidualTerms = [
   "ability-check roll-mode",
   "finding advantage",
@@ -165,6 +167,9 @@ function acceptedRuntimeDetachedClosure(entry) {
   const closureKind = entry.battleReadinessClosure?.kind;
   if (closureKind === undefined) return false;
   if (runtimeDetachedClosureKinds.has(closureKind)) return true;
+  if (closureKind === characterFactRuntimeDetachedSplitClosureKind) {
+    return true;
+  }
   return (
     closureKind === durableSocialKnowledgeClosureKind &&
     !hasD20RollModeResidual(entry)
@@ -195,6 +200,20 @@ function hasOnlyLaterLevelResiduals(claim) {
   );
 }
 
+function hasCharacterFactRuntimeDetachedSplit(claim) {
+  if (claim?.tag === "profile-subset-supported") {
+    return claim.deferredMechanics.some(
+      (entry) =>
+        entry.battleReadinessClosure?.kind ===
+        characterFactRuntimeDetachedSplitClosureKind,
+    );
+  }
+  return (
+    claim?.battleReadinessClosure?.kind ===
+    characterFactRuntimeDetachedSplitClosureKind
+  );
+}
+
 function strictStatusDescription(status) {
   const description = strictStatusDescriptions.get(status);
   if (description === undefined) {
@@ -217,6 +236,18 @@ function strictStatusForUnit(unit) {
       reason:
         closureReasonForClaim(claim) ||
         "The remaining profile subset residuals occur only after level 1.",
+    };
+  }
+  if (
+    (claim?.tag === "unsupported-profile" ||
+      claim?.tag === "profile-subset-supported") &&
+    hasCharacterFactRuntimeDetachedSplit(claim)
+  ) {
+    return {
+      status: "closed-character-fact-and-runtime-detached-split",
+      reason:
+        closureReasonForClaim(claim) ||
+        "Durable character facts are owned while adjudication stays runtime-detached.",
     };
   }
   if (
