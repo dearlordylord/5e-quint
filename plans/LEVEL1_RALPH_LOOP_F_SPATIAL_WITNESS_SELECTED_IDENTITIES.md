@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "L1F-GREASE-MOVEMENT",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Grease Movement And Turn Trigger Selected Identity Replay"
     },
     {
@@ -238,7 +238,7 @@ movement cost, enter-area, and end-turn trigger replay.
 
 ### Task 7 - L1F-GREASE-MOVEMENT - Grease Movement And Turn Trigger Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity replay coverage for `grease` movement cost, enter-area,
 and end-turn trigger support. Use the same `selected-identity-mbt` evidence row
@@ -246,6 +246,15 @@ as Task 6 if both tasks share one owner file; do not create duplicate evidence
 rows for the same owner path.
 
 RAW: `.references/srd-5.2.1/Spells/Descriptions-E-L.md` Grease.
+
+Result: `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts`
+and
+`packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt`
+extend the Grease selected-identity replay with caller-supplied Difficult
+Terrain Movement cost witnesses, active hazard identity validation,
+enter-area and end-turn Saving Throw trigger commands, failed-save Prone
+application, mismatched trigger target rejection, and reuse the Task 6
+`selected-identity-mbt` evidence row.
 
 ### Task 8 - L1F-JUMP - Jump Selected Identity Replay
 

@@ -3,7 +3,7 @@
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness faerie_fire doFaerieFireOutlineAdvantageInvisibleDimLight
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness feather_fall doFeatherFallReactionMitigationLanding
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness fog_cloud doFogCloudAreaIdentityObscurementStrongWindCleanup
-// UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness grease doGreaseCastGroundHazardSavingThrows
+// UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness grease doGreaseCastGroundHazardSavingThrows doGreaseMovementAndTurnTriggers
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -32,6 +32,7 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
   Hp,
+  type MovementFeet,
   abilityModifier,
   attackBonus,
   movementFeet,
@@ -89,6 +90,7 @@ const level1SpatialWitnessSelectedIdentityDriverSchema = {
   doFeatherFallReactionMitigationLanding: {},
   doFogCloudAreaIdentityObscurementStrongWindCleanup: {},
   doGreaseCastGroundHazardSavingThrows: {},
+  doGreaseMovementAndTurnTriggers: {},
   step: {},
 } as const;
 type Level1SpatialWitnessSelectedIdentityDriverAction = Exclude<
@@ -133,6 +135,16 @@ type Level1SpatialWitnessSelectedIdentityProjection = {
   readonly greaseFailedTargetProne: boolean;
   readonly greaseSucceededTargetProne: boolean;
   readonly greaseMismatchedAffectedTargetRejected: boolean;
+  readonly greaseDifficultTerrainMovementCostFeet: number;
+  readonly greaseMovementSpentFeet: number;
+  readonly greaseMismatchedMovementAreaRejected: boolean;
+  readonly greaseEntrySaveOffered: boolean;
+  readonly greaseEntryFailedTargetProne: boolean;
+  readonly greaseEntryMismatchedTargetRejected: boolean;
+  readonly greaseEndTurnSaveOffered: boolean;
+  readonly greaseEndTurnFailedTargetProne: boolean;
+  readonly greaseEndTurnAdvancedToCaster: boolean;
+  readonly greaseEndTurnMismatchedTargetRejected: boolean;
   readonly greaseSlotExpended: boolean;
   readonly projectedIllumination: BattleIllumination;
   readonly ordinarySightObscurement: BattleSightObscurement;
@@ -148,7 +160,8 @@ type Level1SpatialWitnessSelectedIdentityProjection = {
     | "faerieFireOutlineAdvantageInvisibleDimLight"
     | "featherFallReactionMitigationLanding"
     | "fogCloudAreaIdentityObscurementStrongWindCleanup"
-    | "greaseCastGroundHazardSavingThrows";
+    | "greaseCastGroundHazardSavingThrows"
+    | "greaseMovementAndTurnTriggers";
 };
 type ProjectedAttackRollMode = AttackRollMode;
 const dancingLightsUnitId = "dancing_lights";
@@ -197,6 +210,21 @@ type FogCloudStrongWindDispersalAct = AvailableBattleAct & {
   readonly subject: Extract<
     BattleSubject,
     { readonly tag: "runtimeCommand"; readonly command: "disperseFogCloud" }
+  >;
+};
+type MovementAct = AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "runtimeCommand"; readonly command: "move" }
+  >;
+};
+type GreaseGroundHazardSaveAct = AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "greaseGroundHazardSave";
+    }
   >;
 };
 type FogCloudObscurementEffect = Extract<
@@ -253,6 +281,16 @@ type GreaseProjection = {
   readonly failedTargetProne: boolean;
   readonly succeededTargetProne: boolean;
   readonly mismatchedAffectedTargetRejected: boolean;
+  readonly difficultTerrainMovementCostFeet: number;
+  readonly movementSpentFeet: number;
+  readonly mismatchedMovementAreaRejected: boolean;
+  readonly entrySaveOffered: boolean;
+  readonly entryFailedTargetProne: boolean;
+  readonly entryMismatchedTargetRejected: boolean;
+  readonly endTurnSaveOffered: boolean;
+  readonly endTurnFailedTargetProne: boolean;
+  readonly endTurnAdvancedToCaster: boolean;
+  readonly endTurnMismatchedTargetRejected: boolean;
   readonly slotExpended: boolean;
 };
 type GreaseSavingThrowOutcome = {
@@ -292,7 +330,14 @@ const fogCloudAreaId = "level1-fog-cloud-area";
 const fogCloudLevelOneRadiusFeet = movementFeet(20);
 const fogCloudOneHourDurationTicks = requireElapsedHours(1);
 const greaseAreaId = "level1-grease-ground-area";
+const staleGreaseAreaId = "level1-stale-grease-ground-area";
 const greaseOneMinuteDurationTicks = requireElapsedMinutes(1);
+const greaseTotalMovementDistanceFeet = movementFeet(10);
+const greaseDifficultTerrainDistanceFeet = movementFeet(5);
+const greaseDifficultTerrainMovementCostFeet = movementFeet(
+  Number(greaseTotalMovementDistanceFeet) +
+    Number(greaseDifficultTerrainDistanceFeet),
+);
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -412,7 +457,10 @@ const selectedUnitIdentityReplays = [
   {
     taskId: "level1-spatial-witness",
     unitId: "grease",
-    actions: ["doGreaseCastGroundHazardSavingThrows"],
+    actions: [
+      "doGreaseCastGroundHazardSavingThrows",
+      "doGreaseMovementAndTurnTriggers",
+    ],
     sequences: [
       {
         name: "table-supplied-ground-area-on-cast-dexterity-saving-throws",
@@ -429,6 +477,37 @@ const selectedUnitIdentityReplays = [
           magicActionAvailable: false,
           bonusActionAvailable: true,
           lastResult: "greaseCastGroundHazardSavingThrows",
+        }),
+      },
+      {
+        name: "active-hazard-movement-entry-and-end-turn-trigger-witnesses",
+        actions: ["doGreaseMovementAndTurnTriggers"],
+        expected: expectedProjection({
+          greaseAreaIdentityRetained: true,
+          greaseActiveHazardCount: 1,
+          greaseDurationTicks: Number(greaseOneMinuteDurationTicks),
+          greaseAffectedTargetOutcomeCount: 2,
+          greaseFailedTargetProne: true,
+          greaseSucceededTargetProne: false,
+          greaseMismatchedAffectedTargetRejected: true,
+          greaseDifficultTerrainMovementCostFeet: Number(
+            greaseDifficultTerrainMovementCostFeet,
+          ),
+          greaseMovementSpentFeet: Number(
+            greaseDifficultTerrainMovementCostFeet,
+          ),
+          greaseMismatchedMovementAreaRejected: true,
+          greaseEntrySaveOffered: true,
+          greaseEntryFailedTargetProne: true,
+          greaseEntryMismatchedTargetRejected: true,
+          greaseEndTurnSaveOffered: true,
+          greaseEndTurnFailedTargetProne: true,
+          greaseEndTurnAdvancedToCaster: true,
+          greaseEndTurnMismatchedTargetRejected: true,
+          greaseSlotExpended: true,
+          magicActionAvailable: true,
+          bonusActionAvailable: true,
+          lastResult: "greaseMovementAndTurnTriggers",
         }),
       },
     ],
@@ -769,6 +848,184 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
         state = cast.state;
         lastResult = "greaseCastGroundHazardSavingThrows";
       },
+      doGreaseMovementAndTurnTriggers: () => {
+        state = greaseBattle();
+        retainedLightIdentityCount = 0;
+        const act = greaseAct(state);
+        const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+        const savingThrowOutcomes = greaseCastSavingThrowOutcomes();
+        const mismatched = resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [
+            greaseSavingThrowOutcomeFill(
+              savingThrow,
+              greaseAffectedTargetIds,
+              [
+                { targetId: greaseFailedTargetId, succeeded: false },
+                { targetId: casterId, succeeded: true },
+              ],
+            ),
+          ],
+        });
+        const mismatchedAffectedTargetRejected =
+          mismatched.tag === "invalid" &&
+          mismatched.message ===
+            "Grease Saving Throw outcomes must match the table-supplied ground-area affected targets.";
+
+        const cast = resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [
+            greaseSavingThrowOutcomeFill(
+              savingThrow,
+              greaseAffectedTargetIds,
+              savingThrowOutcomes,
+            ),
+          ],
+        });
+        if (cast.tag !== "resolved") {
+          throw new Error(
+            `Expected Grease cast to resolve, got ${cast.tag}.`,
+          );
+        }
+
+        const movementAct = greaseMovementAct(cast.state);
+        const movement = requireHole(movementAct.initialHoles, "movement");
+        const staleMovement = resolveBattleSubject({
+          state: cast.state,
+          subject: movementAct.subject,
+          fills: [
+            greaseMovementFill(movement, {
+              areaId: staleGreaseAreaId,
+              movementCostFeet: greaseDifficultTerrainMovementCostFeet,
+            }),
+          ],
+        });
+        const mismatchedMovementAreaRejected =
+          staleMovement.tag === "invalid" &&
+          staleMovement.message ===
+            "Grease Difficult Terrain movement fact does not match an active Grease ground hazard.";
+        const moved = resolveBattleSubject({
+          state: cast.state,
+          subject: movementAct.subject,
+          fills: [
+            greaseMovementFill(movement, {
+              areaId: greaseAreaId,
+              movementCostFeet: greaseDifficultTerrainMovementCostFeet,
+            }),
+          ],
+        });
+        if (moved.tag !== "resolved") {
+          throw new Error(
+            `Expected Grease Difficult Terrain movement to resolve, got ${moved.tag}.`,
+          );
+        }
+
+        const entryAct = greaseGroundHazardSaveAct(
+          moved.state,
+          casterId,
+          "entersArea",
+        );
+        const entrySave = requireHole(
+          entryAct.initialHoles,
+          "savingThrowOutcome",
+        );
+        const mismatchedEntry = resolveBattleSubject({
+          state: moved.state,
+          subject: entryAct.subject,
+          fills: [
+            greaseGroundHazardSavingThrowOutcomeFill(entrySave, {
+              targetId: greaseSuccessfulTargetId,
+              succeeded: true,
+            }),
+          ],
+        });
+        const entryMismatchedTargetRejected =
+          mismatchedEntry.tag === "invalid" &&
+          mismatchedEntry.message ===
+            "Grease ground-hazard Saving Throw outcome must match the triggering target.";
+        const entryFailed = resolveBattleSubject({
+          state: moved.state,
+          subject: entryAct.subject,
+          fills: [
+            greaseGroundHazardSavingThrowOutcomeFill(entrySave, {
+              targetId: casterId,
+              succeeded: false,
+            }),
+          ],
+        });
+        if (entryFailed.tag !== "resolved") {
+          throw new Error(
+            `Expected Grease entry Saving Throw to resolve, got ${entryFailed.tag}.`,
+          );
+        }
+
+        const failedTargetTurn = resolveEndTurn(
+          entryFailed.state,
+          casterId,
+          "Grease caster after entry",
+        );
+        const successfulTargetTurn = resolveEndTurn(
+          failedTargetTurn,
+          greaseFailedTargetId,
+          "Grease failed target",
+        );
+        const endTurnAct = greaseGroundHazardSaveAct(
+          successfulTargetTurn,
+          greaseSuccessfulTargetId,
+          "endsTurnInArea",
+        );
+        const endTurnSave = requireHole(
+          endTurnAct.initialHoles,
+          "savingThrowOutcome",
+        );
+        const mismatchedEndTurn = resolveBattleSubject({
+          state: successfulTargetTurn,
+          subject: endTurnAct.subject,
+          fills: [
+            greaseGroundHazardSavingThrowOutcomeFill(endTurnSave, {
+              targetId: casterId,
+              succeeded: true,
+            }),
+          ],
+        });
+        const endTurnMismatchedTargetRejected =
+          mismatchedEndTurn.tag === "invalid" &&
+          mismatchedEndTurn.message ===
+            "Grease ground-hazard Saving Throw outcome must match the triggering target.";
+        const endTurnFailed = resolveBattleSubject({
+          state: successfulTargetTurn,
+          subject: endTurnAct.subject,
+          fills: [
+            greaseGroundHazardSavingThrowOutcomeFill(endTurnSave, {
+              targetId: greaseSuccessfulTargetId,
+              succeeded: false,
+            }),
+          ],
+        });
+        if (endTurnFailed.tag !== "resolved") {
+          throw new Error(
+            `Expected Grease end-turn Saving Throw to resolve, got ${endTurnFailed.tag}.`,
+          );
+        }
+
+        greaseProjection = projectGreaseMovementAndTurnTriggerReplay({
+          castState: cast.state,
+          movedState: moved.state,
+          entryState: entryFailed.state,
+          endTurnState: endTurnFailed.state,
+          affectedTargetOutcomeCount: savingThrowOutcomes.length,
+          mismatchedAffectedTargetRejected,
+          mismatchedMovementAreaRejected,
+          entrySaveOffered: true,
+          entryMismatchedTargetRejected,
+          endTurnSaveOffered: true,
+          endTurnMismatchedTargetRejected,
+        });
+        state = endTurnFailed.state;
+        lastResult = "greaseMovementAndTurnTriggers";
+      },
       step: () => {},
       getState: () =>
         projectLevel1SpatialWitnessSelectedIdentityState(
@@ -842,6 +1099,16 @@ function expectedProjection(
     greaseFailedTargetProne: false,
     greaseSucceededTargetProne: false,
     greaseMismatchedAffectedTargetRejected: false,
+    greaseDifficultTerrainMovementCostFeet: 0,
+    greaseMovementSpentFeet: 0,
+    greaseMismatchedMovementAreaRejected: false,
+    greaseEntrySaveOffered: false,
+    greaseEntryFailedTargetProne: false,
+    greaseEntryMismatchedTargetRejected: false,
+    greaseEndTurnSaveOffered: false,
+    greaseEndTurnFailedTargetProne: false,
+    greaseEndTurnAdvancedToCaster: false,
+    greaseEndTurnMismatchedTargetRejected: false,
     greaseSlotExpended: false,
     projectedIllumination: "darkness",
     ordinarySightObscurement: "heavilyObscured",
@@ -894,6 +1161,16 @@ function emptyGreaseProjection(): GreaseProjection {
     failedTargetProne: false,
     succeededTargetProne: false,
     mismatchedAffectedTargetRejected: false,
+    difficultTerrainMovementCostFeet: 0,
+    movementSpentFeet: 0,
+    mismatchedMovementAreaRejected: false,
+    entrySaveOffered: false,
+    entryFailedTargetProne: false,
+    entryMismatchedTargetRejected: false,
+    endTurnSaveOffered: false,
+    endTurnFailedTargetProne: false,
+    endTurnAdvancedToCaster: false,
+    endTurnMismatchedTargetRejected: false,
     slotExpended: false,
   };
 }
@@ -1222,6 +1499,40 @@ function greaseAct(state: BattleState): ActionSpellAct {
   return act;
 }
 
+function greaseMovementAct(state: BattleState): MovementAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is MovementAct =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "move" &&
+      candidate.subject.actorId === casterId,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Grease caster Movement command.");
+  }
+  return act;
+}
+
+function greaseGroundHazardSaveAct(
+  state: BattleState,
+  actorId: CombatantId,
+  trigger: GreaseGroundHazardSaveAct["subject"]["trigger"],
+): GreaseGroundHazardSaveAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is GreaseGroundHazardSaveAct =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "greaseGroundHazardSave" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.sourceCombatantId === casterId &&
+      candidate.subject.sourceSpellId === greaseUnitId &&
+      candidate.subject.areaId === greaseAreaId &&
+      candidate.subject.trigger === trigger,
+  );
+  if (act === undefined) {
+    throw new Error(`Expected Grease ground-hazard ${trigger} save command.`);
+  }
+  return act;
+}
+
 function separateCastPlacement(
   hole: Extract<BattleHole, { readonly kind: "dancingLightsPlacement" }>,
 ): Extract<BattleFill, { readonly kind: "dancingLightsPlacement" }> {
@@ -1329,6 +1640,43 @@ function greaseCastSavingThrowOutcomes(): readonly GreaseSavingThrowOutcome[] {
     { targetId: greaseFailedTargetId, succeeded: false },
     { targetId: greaseSuccessfulTargetId, succeeded: true },
   ];
+}
+
+function greaseMovementFill(
+  hole: Extract<BattleHole, { readonly kind: "movement" }>,
+  input: {
+    readonly areaId: string;
+    readonly movementCostFeet: MovementFeet;
+  },
+): Extract<BattleFill, { readonly kind: "movement" }> {
+  return {
+    kind: "movement",
+    holeId: hole.holeId,
+    value: {
+      speedKind: "walk",
+      movementCostFeet: input.movementCostFeet,
+      provokedOpportunityAttacks: [],
+      greaseGroundDifficultTerrain: {
+        kind: "greaseGroundDifficultTerrain",
+        sourceCombatantId: casterId,
+        sourceSpellId: spellRecord(greaseUnitId).id,
+        areaId: input.areaId,
+        totalDistanceFeet: greaseTotalMovementDistanceFeet,
+        greaseDistanceFeet: greaseDifficultTerrainDistanceFeet,
+      },
+    },
+  };
+}
+
+function greaseGroundHazardSavingThrowOutcomeFill(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+  outcome: GreaseSavingThrowOutcome,
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    value: { outcomes: [outcome] },
+  };
 }
 
 function openFeatherFallWindow(
@@ -1716,7 +2064,60 @@ function projectGreaseReplay(
     ),
     mismatchedAffectedTargetRejected:
       input.mismatchedAffectedTargetRejected,
+    difficultTerrainMovementCostFeet: 0,
+    movementSpentFeet: 0,
+    mismatchedMovementAreaRejected: false,
+    entrySaveOffered: false,
+    entryFailedTargetProne: false,
+    entryMismatchedTargetRejected: false,
+    endTurnSaveOffered: false,
+    endTurnFailedTargetProne: false,
+    endTurnAdvancedToCaster: false,
+    endTurnMismatchedTargetRejected: false,
     slotExpended: greaseCasterSlotExpended(activeState),
+  };
+}
+
+function projectGreaseMovementAndTurnTriggerReplay(input: {
+  readonly castState: BattleState;
+  readonly movedState: BattleState;
+  readonly entryState: BattleState;
+  readonly endTurnState: BattleState;
+  readonly affectedTargetOutcomeCount: number;
+  readonly mismatchedAffectedTargetRejected: boolean;
+  readonly mismatchedMovementAreaRejected: boolean;
+  readonly entrySaveOffered: boolean;
+  readonly entryMismatchedTargetRejected: boolean;
+  readonly endTurnSaveOffered: boolean;
+  readonly endTurnMismatchedTargetRejected: boolean;
+}): GreaseProjection {
+  const castProjection = projectGreaseReplay(input.castState, {
+    affectedTargetOutcomeCount: input.affectedTargetOutcomeCount,
+    mismatchedAffectedTargetRejected: input.mismatchedAffectedTargetRejected,
+  });
+  const movementSpentFeet = greaseCombatant(
+    input.movedState,
+    casterId,
+  ).movementSpentFeet;
+  return {
+    ...castProjection,
+    difficultTerrainMovementCostFeet: Number(
+      greaseDifficultTerrainMovementCostFeet,
+    ),
+    movementSpentFeet: Number(movementSpentFeet),
+    mismatchedMovementAreaRejected: input.mismatchedMovementAreaRejected,
+    entrySaveOffered: input.entrySaveOffered,
+    entryFailedTargetProne: greaseTargetProne(input.entryState, casterId),
+    entryMismatchedTargetRejected: input.entryMismatchedTargetRejected,
+    endTurnSaveOffered: input.endTurnSaveOffered,
+    endTurnFailedTargetProne: greaseTargetProne(
+      input.endTurnState,
+      greaseSuccessfulTargetId,
+    ),
+    endTurnAdvancedToCaster:
+      snapshotBattle(input.endTurnState).currentActorId === casterId,
+    endTurnMismatchedTargetRejected:
+      input.endTurnMismatchedTargetRejected,
   };
 }
 
@@ -1831,6 +2232,22 @@ function projectLevel1SpatialWitnessSelectedIdentityState(
     greaseSucceededTargetProne: greaseProjection.succeededTargetProne,
     greaseMismatchedAffectedTargetRejected:
       greaseProjection.mismatchedAffectedTargetRejected,
+    greaseDifficultTerrainMovementCostFeet:
+      greaseProjection.difficultTerrainMovementCostFeet,
+    greaseMovementSpentFeet: greaseProjection.movementSpentFeet,
+    greaseMismatchedMovementAreaRejected:
+      greaseProjection.mismatchedMovementAreaRejected,
+    greaseEntrySaveOffered: greaseProjection.entrySaveOffered,
+    greaseEntryFailedTargetProne: greaseProjection.entryFailedTargetProne,
+    greaseEntryMismatchedTargetRejected:
+      greaseProjection.entryMismatchedTargetRejected,
+    greaseEndTurnSaveOffered: greaseProjection.endTurnSaveOffered,
+    greaseEndTurnFailedTargetProne:
+      greaseProjection.endTurnFailedTargetProne,
+    greaseEndTurnAdvancedToCaster:
+      greaseProjection.endTurnAdvancedToCaster,
+    greaseEndTurnMismatchedTargetRejected:
+      greaseProjection.endTurnMismatchedTargetRejected,
     greaseSlotExpended: greaseProjection.slotExpended,
     projectedIllumination,
     ordinarySightObscurement: battleSightObscurement(projectedIllumination),
@@ -1879,7 +2296,8 @@ function casterConcentratingOnSelectedUnit(
   if (
     lastResult === "featherFallReactionMitigationLanding" ||
     lastResult === "fogCloudAreaIdentityObscurementStrongWindCleanup" ||
-    lastResult === "greaseCastGroundHazardSavingThrows"
+    lastResult === "greaseCastGroundHazardSavingThrows" ||
+    lastResult === "greaseMovementAndTurnTriggers"
   ) {
     return false;
   }
@@ -2241,6 +2659,46 @@ function normalizeLevel1SpatialWitnessSelectedIdentityQuintState(
       state,
       "qGreaseMismatchedAffectedTargetRejected",
     ),
+    greaseDifficultTerrainMovementCostFeet: numberFromQuintInt(
+      state["qGreaseDifficultTerrainMovementCostFeet"],
+      "qGreaseDifficultTerrainMovementCostFeet",
+    ),
+    greaseMovementSpentFeet: numberFromQuintInt(
+      state["qGreaseMovementSpentFeet"],
+      "qGreaseMovementSpentFeet",
+    ),
+    greaseMismatchedMovementAreaRejected: booleanField(
+      state,
+      "qGreaseMismatchedMovementAreaRejected",
+    ),
+    greaseEntrySaveOffered: booleanField(
+      state,
+      "qGreaseEntrySaveOffered",
+    ),
+    greaseEntryFailedTargetProne: booleanField(
+      state,
+      "qGreaseEntryFailedTargetProne",
+    ),
+    greaseEntryMismatchedTargetRejected: booleanField(
+      state,
+      "qGreaseEntryMismatchedTargetRejected",
+    ),
+    greaseEndTurnSaveOffered: booleanField(
+      state,
+      "qGreaseEndTurnSaveOffered",
+    ),
+    greaseEndTurnFailedTargetProne: booleanField(
+      state,
+      "qGreaseEndTurnFailedTargetProne",
+    ),
+    greaseEndTurnAdvancedToCaster: booleanField(
+      state,
+      "qGreaseEndTurnAdvancedToCaster",
+    ),
+    greaseEndTurnMismatchedTargetRejected: booleanField(
+      state,
+      "qGreaseEndTurnMismatchedTargetRejected",
+    ),
     greaseSlotExpended: booleanField(state, "qGreaseSlotExpended"),
     projectedIllumination: mbtIllumination(state["qProjectedIllumination"]),
     ordinarySightObscurement: mbtSightObscurement(
@@ -2325,7 +2783,8 @@ function mbtLastResult(
     raw === "faerieFireOutlineAdvantageInvisibleDimLight" ||
     raw === "featherFallReactionMitigationLanding" ||
     raw === "fogCloudAreaIdentityObscurementStrongWindCleanup" ||
-    raw === "greaseCastGroundHazardSavingThrows"
+    raw === "greaseCastGroundHazardSavingThrows" ||
+    raw === "greaseMovementAndTurnTriggers"
   ) {
     return raw;
   }
