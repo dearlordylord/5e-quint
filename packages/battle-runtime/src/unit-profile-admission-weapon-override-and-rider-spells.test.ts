@@ -3,36 +3,42 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider
 import { describe, expect, test } from "vitest";
 import {
-  abilityModifier,
-  attackBonus,
-  attackRollFill,
-  attackTargetFill,
-  bonusSpellAct,
-  bonusSpellActForItem,
-  cantripSpellInvocationRef,
-  damageRollFillWithGroups,
-  discoverBattleActs,
   divineFavorDurationTicks,
   divineFavorUnitId,
-  elapsedTimeTicks,
-  endTurn,
   rayOfFrostUnitId,
+  shillelaghUnitId,
+  spellCasterId,
+  spellTargetId,
+} from "./unit-profile-admission-catalog-support.ts";
+import {
+  attackRollFill,
+  attackTargetFill,
+  damageRollFillWithGroups,
   requireCombatant,
   requireHole,
   requireResultHole,
-  resolveBattleSubject,
-  shillelaghUnitId,
-  spellAct,
-  spellBattle,
-  spellCasterId,
-  spellRecord,
-  spellSlotInvocationRef,
-  spellTargetFill,
-  spellTargetId,
   statBlockAttackAct,
   weaponAttackSubject,
   withSameClubMainAndOffHand,
   zeroAbilityWeaponAttack,
+} from "./unit-profile-admission-creature-fixture-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import {
+  bonusSpellAct,
+  bonusSpellActForItem,
+  spellAct,
+  spellTargetFill,
+} from "./unit-profile-admission-spell-fill-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import {
+  abilityModifier,
+  attackBonus,
+  cantripSpellInvocationRef,
+  discoverBattleActs,
+  elapsedTimeTicks,
+  endTurn,
+  resolveBattleSubject,
+  spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
 import type { BattleState } from "./unit-profile-admission-test-support.ts";
 

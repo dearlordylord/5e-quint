@@ -3,40 +3,44 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage spell.invocation-spell-hosted-weapon-attack
 import { describe, expect, test } from "vitest";
 import {
-  DieRollResult,
-  Hp,
-  abilityModifier,
-  attackBonus,
+  divineSmiteUnitId,
+  rayOfFrostUnitId,
+  spellCasterId,
+  spellTargetId,
+  statBlockCatalog,
+  trueStrikeUnitId,
+} from "./unit-profile-admission-catalog-support.ts";
+import {
   attackRollFill,
   attackTargetFill,
-  cantripSpellInvocationRef,
-  classLevel,
-  combatantId,
   damageRollFillWithGroups,
-  decodeUnitRecordSync,
-  discoverBattleActs,
-  divineSmiteUnitId,
-  endTurn,
-  proficiencyBonus,
-  rayOfFrostUnitId,
   reactionDecisionFill,
   requireCombatant,
   requireHole,
   requireResultHole,
-  resolveBattleReaction,
-  resolveBattleSubject,
-  spellAct,
-  spellBattle,
-  spellCasterId,
-  spellRecord,
-  spellSlotInvocationRef,
-  spellTargetId,
-  statBlockCatalog,
   statBlockWithCreatureType,
-  trueStrikeInput,
-  trueStrikeUnitId,
   weaponAttackSubject,
   zeroAbilityWeaponAttack,
+} from "./unit-profile-admission-creature-fixture-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import { spellAct } from "./unit-profile-admission-spell-fill-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import {
+  abilityModifier,
+  attackBonus,
+  cantripSpellInvocationRef,
+  classLevel,
+  combatantId,
+  decodeUnitRecordSync,
+  DieRollResult,
+  discoverBattleActs,
+  endTurn,
+  Hp,
+  proficiencyBonus,
+  resolveBattleReaction,
+  resolveBattleSubject,
+  spellSlotInvocationRef,
+  trueStrikeInput,
 } from "./unit-profile-admission-test-support.ts";
 import type {
   BattleFill,

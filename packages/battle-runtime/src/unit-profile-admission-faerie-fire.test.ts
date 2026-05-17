@@ -2,28 +2,34 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-attack-roll-advantage-save
 import { describe, expect, test } from "vitest";
 import {
-  applyCondition,
+  faerieFireUnitId,
+  spellCasterId,
+  spellTargetId,
+  starryWispUnitId,
+} from "./unit-profile-admission-catalog-support.ts";
+import {
   attackTargetFill,
+  requireHole,
+  requireResultHole,
+} from "./unit-profile-admission-creature-fixture-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import {
+  faerieFireObjectOutlineFill,
+  savingThrowOutcomeFill,
+  spellAct,
+  spellHoleInvocation,
+  spellObjectTargetFill,
+} from "./unit-profile-admission-spell-fill-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import {
+  applyCondition,
   battleIlluminationFromLightEmitters,
   battleObjectId,
   breakBattleConcentration,
-  faerieFireObjectOutlineFill,
-  faerieFireUnitId,
   movementFeet,
-  requireHole,
-  requireResultHole,
   resolveBattleSubject,
-  savingThrowOutcomeFill,
   snapshotBattle,
-  spellAct,
-  spellBattle,
-  spellCasterId,
-  spellHoleInvocation,
-  spellObjectTargetFill,
-  spellRecord,
   spellSlotInvocationRef,
-  spellTargetId,
-  starryWispUnitId,
   validateSavingThrowOutcomes,
 } from "./unit-profile-admission-test-support.ts";
 import type {

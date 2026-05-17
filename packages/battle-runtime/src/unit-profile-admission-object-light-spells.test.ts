@@ -2,6 +2,18 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-object-light
 import { describe, expect, test } from "vitest";
 import {
+  lightUnitId,
+  spellCasterId,
+  spellTargetId,
+} from "./unit-profile-admission-catalog-support.ts";
+import { requireHole } from "./unit-profile-admission-creature-fixture-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import {
+  spellAct,
+  spellObjectLightTargetFill,
+} from "./unit-profile-admission-spell-fill-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import {
   battleIlluminationFromLightEmitters,
   battleLightEmitterProjection,
   battleObjectId,
@@ -10,16 +22,8 @@ import {
   canSpendAction,
   cantripSpellInvocationRef,
   elapsedTimeTicks,
-  lightUnitId,
   movementFeet,
-  requireHole,
   resolveBattleSubject,
-  spellAct,
-  spellBattle,
-  spellCasterId,
-  spellObjectLightTargetFill,
-  spellRecord,
-  spellTargetId,
 } from "./unit-profile-admission-test-support.ts";
 import type { BattleState } from "./unit-profile-admission-test-support.ts";
 

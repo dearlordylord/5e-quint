@@ -6,14 +6,18 @@ import { describe, expect, test } from "vitest";
 import {
   colorSprayUnitId,
   entangleUnitId,
-  requireHole,
-  resourceCount,
   sleepUnitId,
-  spellAct,
-  spellBattle,
   spellCasterId,
+} from "./unit-profile-admission-catalog-support.ts";
+import { requireHole } from "./unit-profile-admission-creature-fixture-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import {
+  spellAct,
   spellHoleInvocation,
-  spellRecord,
+} from "./unit-profile-admission-spell-fill-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import {
+  resourceCount,
   spellSlotInvocationRef,
   spellSlotLevel,
   supportedPreparedSaveGateConditionProfile,

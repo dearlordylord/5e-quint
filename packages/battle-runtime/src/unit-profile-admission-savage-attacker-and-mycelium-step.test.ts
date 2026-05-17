@@ -2,30 +2,36 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT21 mycelium_step
 import { describe, expect, test } from "vitest";
 import {
-  DieRollResult,
-  Either,
-  WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
-  attackDamageRiderBattleUnitRef,
-  attackRollFill,
-  attackTargetFill,
-  battleUnitRefWithSupportProfiles,
-  classLevel,
-  damageRollFillWithGroups,
-  mechanicsOnlyMyceliumStepUnit,
-  myceliumStepInput,
-  myceliumStepUnitId,
-  parseSupportedUnitFeatureProfile,
-  requireResultHole,
-  resolveBattleSubject,
   rogueSneakAttackUnitId,
-  savageAttackerBattle,
-  savageAttackerBattleUnitRef,
   savageAttackerUnitId,
   spellCasterId,
   spellTargetId,
   unitLibrary,
+} from "./unit-profile-admission-catalog-support.ts";
+import {
+  attackRollFill,
+  attackTargetFill,
+  damageRollFillWithGroups,
+  requireResultHole,
   weaponAttackSubject,
   zeroAbilityWeaponAttack,
+} from "./unit-profile-admission-creature-fixture-support.ts";
+import {
+  attackDamageRiderBattleUnitRef,
+  savageAttackerBattle,
+  savageAttackerBattleUnitRef,
+} from "./unit-profile-admission-feature-fixture-support.ts";
+import {
+  battleUnitRefWithSupportProfiles,
+  classLevel,
+  DieRollResult,
+  Either,
+  mechanicsOnlyMyceliumStepUnit,
+  myceliumStepInput,
+  myceliumStepUnitId,
+  parseSupportedUnitFeatureProfile,
+  resolveBattleSubject,
+  WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
 } from "./unit-profile-admission-test-support.ts";
 import type {
   BattleState,

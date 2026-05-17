@@ -8,30 +8,36 @@ import { describe, expect, test } from "vitest";
 import {
   acidSplashUnitId,
   burningHandsUnitId,
-  cantripSpellInvocationRef,
   chillTouchUnitId,
   guidingBoltUnitId,
   inflictWoundsUnitId,
   magicMissileUnitId,
-  maybeSpellAct,
   poisonSprayUnitId,
   rayOfFrostUnitId,
   rayOfSicknessUnitId,
-  requireHole,
-  requireResultHole,
-  resolveBattleSubject,
   sacredFlameUnitId,
   shockingGraspUnitId,
-  spellAct,
-  spellActInvocation,
-  spellBattle,
   spellCasterId,
-  spellHoleInvocation,
-  spellRecord,
-  spellSlotInvocationRef,
-  spellTargetFill,
   spellTargetId,
   viciousMockeryUnitId,
+} from "./unit-profile-admission-catalog-support.ts";
+import {
+  requireHole,
+  requireResultHole,
+} from "./unit-profile-admission-creature-fixture-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import {
+  maybeSpellAct,
+  spellAct,
+  spellActInvocation,
+  spellHoleInvocation,
+  spellTargetFill,
+} from "./unit-profile-admission-spell-fill-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import {
+  cantripSpellInvocationRef,
+  resolveBattleSubject,
+  spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
 import type {
   ActivationPhase,

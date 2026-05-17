@@ -2,27 +2,33 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-grease-ground-hazard
 import { describe, expect, test } from "vitest";
 import {
-  Hp,
-  elapsedTimeTicks,
-  endTurn,
   greaseAreaId,
+  greaseUnitId,
+  spellCasterId,
+  spellTargetId,
+} from "./unit-profile-admission-catalog-support.ts";
+import {
+  requireCombatant,
+  requireHole,
+} from "./unit-profile-admission-creature-fixture-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import {
   greaseGroundHazardEndTurnAct,
   greaseGroundHazardSaveAct,
   greaseSavingThrowOutcomeFill,
-  greaseUnitId,
-  requireCombatant,
-  requireHole,
-  resolveBattleSubject,
-  sameBattleSubject,
   singleTargetSavingThrowOutcomeFill,
   spellAct,
-  spellBattle,
-  spellCasterId,
   spellHoleInvocation,
+} from "./unit-profile-admission-spell-fill-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import {
+  elapsedTimeTicks,
+  endTurn,
+  Hp,
+  resolveBattleSubject,
+  sameBattleSubject,
   spellId,
-  spellRecord,
   spellSlotInvocationRef,
-  spellTargetId,
 } from "./unit-profile-admission-test-support.ts";
 
 describe("QMBT14 deterministic Grease ground hazard admission", () => {
