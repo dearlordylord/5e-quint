@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "L1J-POLEARM-REACH-WEAPON-DATA",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Polearm Reach Weapon Non Runtime Data Closure"
     },
     {
@@ -124,7 +124,7 @@ Every task runs:
 | 3 | L1J-HEAVY-ARMOR-DATA - Heavy Armor Non Runtime Data Closure | done | 1 | explicit closure for heavy armor authored records |
 | 4 | L1J-SIMPLE-MELEE-WEAPON-DATA - Simple Melee Weapon Non Runtime Data Closure | done | 1 | explicit closure for simple melee authored records |
 | 5 | L1J-MARTIAL-MELEE-WEAPON-DATA - Martial Melee Weapon Non Runtime Data Closure | done | 1 | explicit closure for martial melee authored records |
-| 6 | L1J-POLEARM-REACH-WEAPON-DATA - Polearm Reach Weapon Non Runtime Data Closure | ready-for-research | 1 | explicit closure for polearm/reach authored records |
+| 6 | L1J-POLEARM-REACH-WEAPON-DATA - Polearm Reach Weapon Non Runtime Data Closure | done | 1 | explicit closure for polearm/reach authored records |
 | 7 | L1J-RANGED-WEAPON-DATA - Ranged Weapon Non Runtime Data Closure | ready-for-research | 1 | explicit closure for ranged authored records |
 | 8 | L1J-THROWN-FINESSE-WEAPON-DATA - Thrown Finesse Weapon Non Runtime Data Closure | ready-for-research | 1 | explicit closure for thrown/finesse authored records |
 | 9 | L1J-FIREARM-EXOTIC-WEAPON-DATA - Firearm Exotic Weapon Non Runtime Data Closure | ready-for-research | 1 | explicit closure for firearm/exotic authored records |
@@ -184,7 +184,7 @@ and `weapon_warhammer`.
 
 ### Task 6 - L1J-POLEARM-REACH-WEAPON-DATA - Polearm Reach Weapon Non Runtime Data Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Units include `weapon_glaive`, `weapon_halberd`, `weapon_lance`,
 `weapon_pike`, `weapon_trident`, and `weapon_whip`.
