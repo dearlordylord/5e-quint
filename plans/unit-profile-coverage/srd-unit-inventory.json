@@ -7340,9 +7340,9 @@
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
-        "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached hidden-message/language adjudication owner",
-        "reason": "Druidic hidden-message spotting, Investigation adjudication, and deciphering are runtime-detached table adjudication outside promoted battle runtime; Druidic language and always-prepared Speak with Animals Spell Access remain character-owned source facts."
+        "kind": "character-fact-and-runtime-detached-split",
+        "owner": "character-creation-runtime and runtime-detached hidden-message/language adjudication owner",
+        "reason": "Druidic hidden-message spotting, Investigation adjudication, and deciphering are runtime-detached table adjudication outside promoted battle runtime; Druidic language and always-prepared Speak with Animals Spell Access remain character-owned CharacterBuild facts derived from authored Surface content."
       },
       "ownerEvidence": [
         {
@@ -12812,9 +12812,9 @@
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
         "source": "unit-claim",
-        "kind": "outside-runtime-presentation-exploration",
-        "owner": "runtime-detached language/communication adjudication owner",
-        "reason": "Thieves' Cant communication adjudication is runtime-detached table adjudication outside promoted battle runtime; Thieves' Cant and the additional Character Creation language choice remain character-owned source facts."
+        "kind": "character-fact-and-runtime-detached-split",
+        "owner": "character-creation-runtime and runtime-detached language/communication adjudication owner",
+        "reason": "Thieves' Cant communication adjudication is runtime-detached table adjudication outside promoted battle runtime; Thieves' Cant and the additional Character Creation language choice remain character-owned CharacterBuild facts derived from authored Surface content."
       },
       "ownerEvidence": [
         {

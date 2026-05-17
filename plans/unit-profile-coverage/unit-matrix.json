@@ -4700,11 +4700,11 @@
       },
       "claim": {
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached hidden-message/language adjudication owner",
-          "reason": "Druidic hidden-message spotting, Investigation adjudication, and deciphering are runtime-detached table adjudication outside promoted battle runtime; Druidic language and always-prepared Speak with Animals Spell Access remain character-owned source facts."
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "character-creation-runtime and runtime-detached hidden-message/language adjudication owner",
+          "reason": "Druidic hidden-message spotting, Investigation adjudication, and deciphering are runtime-detached table adjudication outside promoted battle runtime; Druidic language and always-prepared Speak with Animals Spell Access remain character-owned CharacterBuild facts derived from authored Surface content."
         },
-        "reason": "Druidic known-language and always-prepared Speak with Animals Spell Access source facts are authored as character-owned facts; hidden-message discovery and deciphering are runtime-detached table adjudication, so no battle Unit profile is promoted.",
+        "reason": "Druidic known-language and always-prepared Speak with Animals Spell Access are character-owned CharacterBuild facts derived from authored Surface content; hidden-message discovery and deciphering are runtime-detached table adjudication, so no battle Unit profile is promoted.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
@@ -5311,11 +5311,11 @@
       },
       "claim": {
         "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached language/communication adjudication owner",
-          "reason": "Thieves' Cant communication adjudication is runtime-detached table adjudication outside promoted battle runtime; Thieves' Cant and the additional Character Creation language choice remain character-owned source facts."
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "character-creation-runtime and runtime-detached language/communication adjudication owner",
+          "reason": "Thieves' Cant communication adjudication is runtime-detached table adjudication outside promoted battle runtime; Thieves' Cant and the additional Character Creation language choice remain character-owned CharacterBuild facts derived from authored Surface content."
         },
-        "reason": "Thieves' Cant and the additional language-choice source fact are authored as character-owned facts; communication adjudication is runtime-detached table adjudication, so no battle Unit profile is promoted.",
+        "reason": "Thieves' Cant and the additional language choice are character-owned CharacterBuild facts derived from authored Surface content; communication adjudication is runtime-detached table adjudication, so no battle Unit profile is promoted.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
