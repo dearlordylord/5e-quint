@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L12G-OWNER-FIGHTER-ACTION-SURGE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Fighter Action Surge Owner Evidence"
     },
     {
@@ -656,7 +656,7 @@ Acceptance:
 
 ### Task 2 - L12G-OWNER-FIGHTER-ACTION-SURGE - Fighter Action Surge Owner Evidence
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `fighter_action_surge`. Gate task: 2 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 

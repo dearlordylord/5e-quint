@@ -2769,13 +2769,13 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 467,
-      "percent": "84%",
+      "numerator": 468,
+      "percent": "84.2%",
       "rowsByStatus": {
-        "accepted": 283,
+        "accepted": 284,
         "accepted-no-battle-effect": 184,
         "battle-runtime-required": 74,
-        "owner-evidence-required": 15
+        "owner-evidence-required": 14
       }
     },
     "strictRuntimeProfileSupport": {

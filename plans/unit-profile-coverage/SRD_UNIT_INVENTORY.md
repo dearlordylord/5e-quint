@@ -27,14 +27,14 @@ This is the default `%` for level-1 readiness questions. A row counts only when 
 
 This is the default `%` for level-1 plus level-2 readiness questions. It uses the same acceptance rules as the level-1 metric, but includes level-2 class-feature rows and level-2 spell-list pressure.
 
-- Accepted: 467/556 (84%)
+- Accepted: 468/556 (84.2%)
 
 #### Level 1-2 Battle Readiness by Status
 
-- accepted: 283
+- accepted: 284
 - accepted-no-battle-effect: 184
 - battle-runtime-required: 74
-- owner-evidence-required: 15
+- owner-evidence-required: 14
 
 ### Level-1 Rows by Disposition
 
@@ -43,8 +43,8 @@ This is the default `%` for level-1 plus level-2 readiness questions. It uses th
 
 ### Level-2 Rows by Disposition
 
-- catalog-installed-needs-owner-evidence: 3
-- catalog-installed-owner-evidence-present: 1
+- catalog-installed-needs-owner-evidence: 2
+- catalog-installed-owner-evidence-present: 2
 - catalog-only/dead-for-now: 5
 - missing-authored-record: 12
 - non-runtime: 12
@@ -330,7 +330,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Druid Wild Companion|class feature||current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|owner-evidence-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Druid.md:124|
 |Druid Wild Shape|class feature||current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|owner-evidence-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Druid.md:95|
 |Druid level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Druid.md:33|
-|Fighter Action Surge|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-needs-owner-evidence|owner-evidence-required||Unit catalog/admission: catalog-only evidence; operational owner evidence still required|Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only.|.references/srd-5.2.1/Classes/Fighter.md:76|
+|Fighter Action Surge|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Fighter.md:76|
 |Fighter Tactical Mind|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-needs-owner-evidence|owner-evidence-required||Unit catalog/admission: catalog-only evidence; operational owner evidence still required|Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only.|.references/srd-5.2.1/Classes/Fighter.md:82|
 |Fighter level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Fighter.md:32|
 |Monk Monk's Focus|class feature||current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|owner-evidence-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Monk.md:76|
