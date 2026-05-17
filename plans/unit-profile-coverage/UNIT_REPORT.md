@@ -754,113 +754,113 @@ This raw inventory lists authored Surface records that are absent from the insta
 | Unit | Profiles | Task | Owner |
 | --- | --- | --- | --- |
 | `fighter_fighting_style` | `character-creation.class-feature-feat-choice`, `character-creation.class-feature-advancement-replacement` | AT-L1-03 | `packages/character-creation-runtime/src/index.test.ts` |
-| `fighter_second_wind` | `unit-feature.self-bonus-action-healing` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `fighter_action_surge` | `unit-feature.action-surge-resource` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `fighter_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | QMBT37 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `fighter_tactical_mind` | `unit-feature.failed-ability-check-resource-boost` | QMBT62 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `fighter_improved_critical` | `unit-feature.weapon-critical-range-19` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `barbarian_rage` | `unit-feature.bonus-action-ongoing-rage` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `fighter_second_wind` | `unit-feature.self-bonus-action-healing` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission-character-features.test.ts` |
+| `fighter_action_surge` | `unit-feature.action-surge-resource` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission-character-features.test.ts` |
+| `fighter_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | QMBT37 | `packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts` |
+| `fighter_tactical_mind` | `unit-feature.failed-ability-check-resource-boost` | QMBT62 | `packages/battle-runtime/src/unit-profile-admission-character-features.test.ts` |
+| `fighter_improved_critical` | `unit-feature.weapon-critical-range-19` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission-character-features.test.ts` |
+| `barbarian_rage` | `unit-feature.bonus-action-ongoing-rage` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission-character-features.test.ts` |
 | `barbarian_unarmored_defense` | `character-sheet.armor-class-base-formula` | SRDINV91B | `packages/character-sheet-runtime/src/index.test.ts` |
-| `barbarian_reckless_attack` | `unit-feature.first-attack-roll-reckless-advantage` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `barbarian_fast_movement` | `unit-feature.passive-speed-bonus` | QMBT40 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `bard_bardic_inspiration` | `unit-feature.bardic-inspiration-grant`, `unit-feature.bardic-inspiration-failed-d20-test` | SRDINV72A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `barbarian_reckless_attack` | `unit-feature.first-attack-roll-reckless-advantage` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission-character-features.test.ts` |
+| `barbarian_fast_movement` | `unit-feature.passive-speed-bonus` | QMBT40 | `packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts` |
+| `bard_bardic_inspiration` | `unit-feature.bardic-inspiration-grant`, `unit-feature.bardic-inspiration-failed-d20-test` | SRDINV72A | `packages/battle-runtime/src/unit-profile-admission-character-features.test.ts` |
 | `bard_bardic_inspiration` | `unit-feature.bardic-inspiration-grant`, `unit-feature.bardic-inspiration-failed-d20-test` | SRDINV72B | `packages/battle-runtime/src/battle-runtime-test-support.ts` |
-| `bard_cutting_words` | `unit-feature.reaction-roll-or-damage-reduction` | QMBT65 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `bard_cutting_words` | `unit-feature.reaction-roll-or-damage-reduction` | QMBT65 | `packages/battle-runtime/src/unit-profile-admission-character-features.test.ts` |
 | `cleric_divine_order` | `character-creation.class-feature-option-projection` | AT-L1-06 | `packages/character-creation-runtime/src/index.test.ts` |
 | `druid_primal_order` | `character-creation.class-feature-option-projection` | AT-L1-06 | `packages/character-creation-runtime/src/index.test.ts` |
-| `monk_martial_arts` | `unit-feature.martial-arts-attack-projection` | SRDINV73A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `monk_martial_arts` | `unit-feature.martial-arts-attack-projection` | SRDINV73A | `packages/battle-runtime/src/unit-profile-admission-character-features.test.ts` |
 | `monk_unarmored_defense` | `character-sheet.armor-class-base-formula` | SRDINV91B | `packages/character-sheet-runtime/src/index.test.ts` |
-| `monk_deflect_attacks` | `unit-feature.attack-damage-reduction-zero-damage-redirect` | QMBT59 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `rogue_cunning_action` | `unit-feature.alternate-action-cost` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `rogue_evasion` | `unit-feature.save-damage-replacement` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `rogue_uncanny_dodge` | `unit-feature.reaction-roll-or-damage-reduction` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `monk_deflect_attacks` | `unit-feature.attack-damage-reduction-zero-damage-redirect` | QMBT59 | `packages/battle-runtime/src/unit-profile-admission-character-features.test.ts` |
+| `rogue_cunning_action` | `unit-feature.alternate-action-cost` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission-character-features.test.ts` |
+| `rogue_evasion` | `unit-feature.save-damage-replacement` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission-character-features.test.ts` |
+| `rogue_uncanny_dodge` | `unit-feature.reaction-roll-or-damage-reduction` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission-character-features.test.ts` |
 | `rogue_expertise` | `character-creation.skill-expertise-choice` | AT-L1-07 | `packages/character-creation-runtime/src/index.test.ts` |
 | `rogue_expertise` | `character-creation.skill-expertise-choice` | L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT | `packages/character-creation-runtime/src/rogue-expertise-level6.test.ts` |
-| `rogue_sneak_attack` | `unit-feature.attack-damage-rider` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `sorcerer_innate_sorcery` | `unit-feature.innate-sorcery-activation` | SRDINV75A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `rogue_sneak_attack` | `unit-feature.attack-damage-rider` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission-character-features.test.ts` |
+| `sorcerer_innate_sorcery` | `unit-feature.innate-sorcery-activation` | SRDINV75A | `packages/battle-runtime/src/unit-profile-admission-character-features.test.ts` |
 | `sorcerer_innate_sorcery` | `unit-feature.innate-sorcery-activation` | SRDINV75B | `packages/battle-runtime/src/battle-runtime-test-support.ts` |
 | `warlock_eldritch_invocations` | `character-creation.eldritch-invocation-choice`, `character-creation.class-feature-advancement-replacement`, `character-creation.warlock-pact-magic-advancement` | L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE | `packages/character-creation-runtime/src/index.test.ts` |
 | `wizard_ritual_adept` | `character-sheet.spellbook-ritual-invocation` | SRDINV91B | `packages/character-sheet-runtime/src/index.test.ts` |
 | `wizard_arcane_recovery` | `character-sheet.short-rest-spell-slot-recovery` | SRDINV91B | `packages/character-sheet-runtime/src/index.test.ts` |
-| `feat_archery` | `unit-feature.passive-ranged-attack-roll-bonus` | QMBT27 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `feat_boon_of_combat_prowess` | `unit-feature.attack-roll-miss-to-hit-replacement` | QMBT56 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `defense` | `unit-feature.passive-armor-class-bonus` | QMBT18 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `feat_savage_attacker` | `unit-feature.weapon-damage-dice-roll-choice` | QMBT31 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `feat_archery` | `unit-feature.passive-ranged-attack-roll-bonus` | QMBT27 | `packages/battle-runtime/src/unit-profile-admission-passive-defense-and-archery.test.ts` |
+| `feat_boon_of_combat_prowess` | `unit-feature.attack-roll-miss-to-hit-replacement` | QMBT56 | `packages/battle-runtime/src/unit-profile-admission-combat-prowess.test.ts` |
+| `defense` | `unit-feature.passive-armor-class-bonus` | QMBT18 | `packages/battle-runtime/src/unit-profile-admission-passive-defense-and-archery.test.ts` |
+| `feat_savage_attacker` | `unit-feature.weapon-damage-dice-roll-choice` | QMBT31 | `packages/battle-runtime/src/unit-profile-admission-savage-attacker-and-mycelium-step.test.ts` |
 | `paladin_lay_on_hands` | `character-sheet.healing-resource-action` | SRDINV91B | `packages/character-sheet-runtime/src/index.test.ts` |
-| `paladin_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | QMBT37 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `paladin_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | QMBT37 | `packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts` |
 | `paladin_weapon_mastery` | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` | AT-L1-04 | `packages/character-sheet-runtime/src/index.test.ts` |
-| `ranger_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | QMBT37 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `ranger_roving` | `unit-feature.passive-speed-kind-grants` | QMBT44 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `ranger_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | QMBT37 | `packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts` |
+| `ranger_roving` | `unit-feature.passive-speed-kind-grants` | QMBT44 | `packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts` |
 | `ranger_weapon_mastery` | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` | AT-L1-04 | `packages/character-sheet-runtime/src/index.test.ts` |
 | `rogue_weapon_mastery` | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` | AT-L1-04 | `packages/character-sheet-runtime/src/index.test.ts` |
 | `mastery_cleave` | `unit-feature.weapon-mastery-cleave` | SRDINV91B | `packages/character-battle-runtime/src/index.test.ts` |
 | `mastery_sap` | `unit-feature.weapon-mastery-sap` | SRDINV91B | `packages/character-battle-runtime/src/index.test.ts` |
 | `mastery_topple` | `unit-feature.weapon-mastery-topple` | SRDINV91B | `packages/character-battle-runtime/src/index.test.ts` |
-| `orc_adrenaline_rush` | `unit-feature.bonus-action-dash-temporary-hit-points` | QMBT53 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `orc_relentless_endurance` | `unit-feature.zero-hit-point-replacement` | QMBT47 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `acid_splash` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `animal_friendship` | `spell.creature-type-protection-and-charm` | SRDINV30C | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `bane` | `spell.invocation-roll-modifier` | SRDINV30B | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `bless` | `spell.invocation-roll-modifier` | SRDINV30B | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `burning_hands` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV29A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `chill_touch` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV89A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `chromatic_orb` | `spell.invocation-chained-attack-damage`, `spell.readied-action-time-spell` | SRDINV29F3 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `color_spray` | `spell.invocation-condition-save` | SRDINV29B | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `command` | `spell.invocation-command-halt-grovel`, `spell.invocation-command-drop-held-object`, `spell.invocation-command-approach-route`, `spell.invocation-command-flee-route` | SRDINV50D2 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `counterspell` | `spell.reaction-counterspell` | QMBT22 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `cure_wounds` | `spell.hit-point-restoration` | QMBT32 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `dancing_lights` | `spell.invocation-dancing-lights-movable-dim-light` | SRDINV88A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `dissonant_whispers` | `spell.invocation-damage-save-or-attack`, `spell.invocation-forced-reaction-movement` | SRDINV52 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `divine_favor` | `spell.invocation-weapon-damage-rider` | SRDINV31A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `divine_smite` | `spell.invocation-after-hit-damage` | SRDINV31C | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `ensnaring_strike` | `spell.invocation-after-hit-restraint-turn-start-damage` | SRDINV31D | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `entangle` | `spell.invocation-condition-save` | SRDINV29C | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `expeditious_retreat` | `spell.invocation-expeditious-retreat-dash` | SRDINV49 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `faerie_fire` | `spell.invocation-attack-roll-advantage-save` | SRDINV58C | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `orc_adrenaline_rush` | `unit-feature.bonus-action-dash-temporary-hit-points` | QMBT53 | `packages/battle-runtime/src/unit-profile-admission-orc-endurance-and-adrenaline-rush.test.ts` |
+| `orc_relentless_endurance` | `unit-feature.zero-hit-point-replacement` | QMBT47 | `packages/battle-runtime/src/unit-profile-admission-orc-endurance-and-adrenaline-rush.test.ts` |
+| `acid_splash` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts` |
+| `animal_friendship` | `spell.creature-type-protection-and-charm` | SRDINV30C | `packages/battle-runtime/src/unit-profile-admission-creature-charm-spells.test.ts` |
+| `bane` | `spell.invocation-roll-modifier` | SRDINV30B | `packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts` |
+| `bless` | `spell.invocation-roll-modifier` | SRDINV30B | `packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts` |
+| `burning_hands` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV29A | `packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts` |
+| `chill_touch` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV89A | `packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts` |
+| `chromatic_orb` | `spell.invocation-chained-attack-damage`, `spell.readied-action-time-spell` | SRDINV29F3 | `packages/battle-runtime/src/unit-profile-admission-chained-attack-and-mage-armor-spells.test.ts` |
+| `color_spray` | `spell.invocation-condition-save` | SRDINV29B | `packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts` |
+| `command` | `spell.invocation-command-halt-grovel`, `spell.invocation-command-drop-held-object`, `spell.invocation-command-approach-route`, `spell.invocation-command-flee-route` | SRDINV50D2 | `packages/battle-runtime/src/unit-profile-admission-command-control-options.test.ts` |
+| `counterspell` | `spell.reaction-counterspell` | QMBT22 | `packages/battle-runtime/src/unit-profile-admission-candidate-narrowing-spells.test.ts` |
+| `cure_wounds` | `spell.hit-point-restoration` | QMBT32 | `packages/battle-runtime/src/unit-profile-admission-healing-spells.test.ts` |
+| `dancing_lights` | `spell.invocation-dancing-lights-movable-dim-light` | SRDINV88A | `packages/battle-runtime/src/unit-profile-admission-dancing-lights.test.ts` |
+| `dissonant_whispers` | `spell.invocation-damage-save-or-attack`, `spell.invocation-forced-reaction-movement` | SRDINV52 | `packages/battle-runtime/src/unit-profile-admission-forced-movement-spells.test.ts` |
+| `divine_favor` | `spell.invocation-weapon-damage-rider` | SRDINV31A | `packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts` |
+| `divine_smite` | `spell.invocation-after-hit-damage` | SRDINV31C | `packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts` |
+| `ensnaring_strike` | `spell.invocation-after-hit-restraint-turn-start-damage` | SRDINV31D | `packages/battle-runtime/src/unit-profile-admission-ensnaring-and-searing-smite.test.ts` |
+| `entangle` | `spell.invocation-condition-save` | SRDINV29C | `packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts` |
+| `expeditious_retreat` | `spell.invocation-expeditious-retreat-dash` | SRDINV49 | `packages/battle-runtime/src/unit-profile-admission-movement-buff-spells.test.ts` |
+| `faerie_fire` | `spell.invocation-attack-roll-advantage-save` | SRDINV58C | `packages/battle-runtime/src/unit-profile-admission-faerie-fire.test.ts` |
 | `feather_fall` | `spell.invocation-feather-fall-mitigation` | SRDINV56A | `packages/battle-runtime/src/feather-fall-reaction-spell.test.ts` |
-| `false_life` | `spell.scalar-buff` | SRDINV30A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `fire_bolt` | `spell.invocation-damage-save-or-attack` | SRDINV84A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `false_life` | `spell.scalar-buff` | SRDINV30A | `packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts` |
+| `fire_bolt` | `spell.invocation-damage-save-or-attack` | SRDINV84A | `packages/battle-runtime/src/unit-profile-admission-candidate-narrowing-spells.test.ts` |
 | `fog_cloud` | `spell.invocation-fog-cloud-obscurement` | SRDINV84E | `packages/battle-runtime/src/battle-runtime-test-support.ts` |
-| `guidance` | `spell.invocation-roll-modifier` | SRDINV30B | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `grease` | `spell.invocation-grease-ground-hazard` | SRDINV40 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `guiding_bolt` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28D | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `heroism` | `spell.invocation-condition-immunity-turn-start-temporary-hit-points` | SRDINV30D | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `guidance` | `spell.invocation-roll-modifier` | SRDINV30B | `packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts` |
+| `grease` | `spell.invocation-grease-ground-hazard` | SRDINV40 | `packages/battle-runtime/src/unit-profile-admission-grease-ground-hazard.test.ts` |
+| `guiding_bolt` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28D | `packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts` |
+| `heroism` | `spell.invocation-condition-immunity-turn-start-temporary-hit-points` | SRDINV30D | `packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts` |
 | `hex` | `spell.invocation-marked-damage-rider` | SRDINV84D | `packages/battle-runtime/src/battle-runtime-test-support.ts` |
-| `hunters_mark` | `spell.invocation-marked-damage-rider` | SRDINV31B | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `ice_knife` | `spell.invocation-damage-save-or-attack` | SRDINV29E | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `inflict_wounds` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28B | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `jump` | `spell.invocation-jump-movement-replacement` | SRDINV53 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `light` | `spell.invocation-object-light` | SRDINV70B | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `longstrider` | `spell.scalar-buff` | SRDINV30A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `poison_spray` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28B | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `protection_from_evil_and_good` | `spell.creature-type-protection-and-charm` | SRDINV60A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `produce_flame` | `spell.invocation-damage-save-or-attack`, `spell.invocation-held-light-emitter` | SRDINV87A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `ray_of_frost` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `ray_of_sickness` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28D | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `resistance` | `spell.invocation-damage-reduction` | SRDINV30F | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `sacred_flame` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28B | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `hunters_mark` | `spell.invocation-marked-damage-rider` | SRDINV31B | `packages/battle-runtime/src/unit-profile-admission-candidate-narrowing-spells.test.ts` |
+| `ice_knife` | `spell.invocation-damage-save-or-attack` | SRDINV29E | `packages/battle-runtime/src/unit-profile-admission-chained-attack-and-mage-armor-spells.test.ts` |
+| `inflict_wounds` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28B | `packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts` |
+| `jump` | `spell.invocation-jump-movement-replacement` | SRDINV53 | `packages/battle-runtime/src/unit-profile-admission-movement-buff-spells.test.ts` |
+| `light` | `spell.invocation-object-light` | SRDINV70B | `packages/battle-runtime/src/unit-profile-admission-object-light-spells.test.ts` |
+| `longstrider` | `spell.scalar-buff` | SRDINV30A | `packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts` |
+| `poison_spray` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28B | `packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts` |
+| `protection_from_evil_and_good` | `spell.creature-type-protection-and-charm` | SRDINV60A | `packages/battle-runtime/src/unit-profile-admission-protection-from-evil-and-good.test.ts` |
+| `produce_flame` | `spell.invocation-damage-save-or-attack`, `spell.invocation-held-light-emitter` | SRDINV87A | `packages/battle-runtime/src/unit-profile-admission-produce-flame.test.ts` |
+| `ray_of_frost` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts` |
+| `ray_of_sickness` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28D | `packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts` |
+| `resistance` | `spell.invocation-damage-reduction` | SRDINV30F | `packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts` |
+| `sacred_flame` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28B | `packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts` |
 | `sanctuary` | `spell.invocation-sanctuary-targeting-interdiction` | SRDINV84G | `packages/battle-runtime/src/sanctuary-targeting-interdiction.test.ts` |
-| `searing_smite` | `spell.invocation-after-hit-timed-damage-save` | SRDINV31E | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `shocking_grasp` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28D | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `sorcerous_burst` | `spell.invocation-damage-save-or-attack` | SRDINV84B | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `searing_smite` | `spell.invocation-after-hit-timed-damage-save` | SRDINV31E | `packages/battle-runtime/src/unit-profile-admission-ensnaring-and-searing-smite.test.ts` |
+| `shocking_grasp` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28D | `packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts` |
+| `sorcerous_burst` | `spell.invocation-damage-save-or-attack` | SRDINV84B | `packages/battle-runtime/src/unit-profile-admission-candidate-narrowing-spells.test.ts` |
 | `spare_the_dying` | `spell.invocation-make-stable` | SRDINV84C | `packages/battle-runtime/src/battle-runtime-test-support.ts` |
-| `starry_wisp` | `spell.invocation-damage-save-or-attack` | SRDINV59B | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `vicious_mockery` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28D | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `mage_armor` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `magic_missile` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `mass_cure_wounds` | `spell.hit-point-restoration` | QMBT34 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `mass_healing_word` | `spell.hit-point-restoration` | QMBT32 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `healing_word` | `spell.hit-point-restoration` | QMBT25 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `shield` | `spell.reaction-shield` | QMBT22 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `shield_of_faith` | `spell.scalar-buff` | SRDINV30A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `shillelagh` | `spell.invocation-weapon-attack-override` | SRDINV84H | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `sleep` | `spell.invocation-sleep-target-admission`, `spell.invocation-sleep-repeat-save-lifecycle` | SRDINV38A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `thunderwave` | `spell.invocation-damage-save-or-attack` | SRDINV51 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `true_strike` | `spell.invocation-spell-hosted-weapon-attack` | SRDINV31F | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `eldritch_blast` | `spell.invocation-beam-sequence` | SRDINV39 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `starry_wisp` | `spell.invocation-damage-save-or-attack` | SRDINV59B | `packages/battle-runtime/src/unit-profile-admission-candidate-narrowing-spells.test.ts` |
+| `vicious_mockery` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28D | `packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts` |
+| `mage_armor` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission-chained-attack-and-mage-armor-spells.test.ts` |
+| `magic_missile` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts` |
+| `mass_cure_wounds` | `spell.hit-point-restoration` | QMBT34 | `packages/battle-runtime/src/unit-profile-admission-healing-spells.test.ts` |
+| `mass_healing_word` | `spell.hit-point-restoration` | QMBT32 | `packages/battle-runtime/src/unit-profile-admission-healing-spells.test.ts` |
+| `healing_word` | `spell.hit-point-restoration` | QMBT25 | `packages/battle-runtime/src/unit-profile-admission-healing-spells.test.ts` |
+| `shield` | `spell.reaction-shield` | QMBT22 | `packages/battle-runtime/src/unit-profile-admission-candidate-narrowing-spells.test.ts` |
+| `shield_of_faith` | `spell.scalar-buff` | SRDINV30A | `packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts` |
+| `shillelagh` | `spell.invocation-weapon-attack-override` | SRDINV84H | `packages/battle-runtime/src/unit-profile-admission-weapon-override-and-rider-spells.test.ts` |
+| `sleep` | `spell.invocation-sleep-target-admission`, `spell.invocation-sleep-repeat-save-lifecycle` | SRDINV38A | `packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts` |
+| `thunderwave` | `spell.invocation-damage-save-or-attack` | SRDINV51 | `packages/battle-runtime/src/unit-profile-admission-forced-movement-spells.test.ts` |
+| `true_strike` | `spell.invocation-spell-hosted-weapon-attack` | SRDINV31F | `packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts` |
+| `eldritch_blast` | `spell.invocation-beam-sequence` | SRDINV39 | `packages/battle-runtime/src/unit-profile-admission-eldritch-blast.test.ts` |
 | `hellish_rebuke` | `spell.reaction-hellish-rebuke`, `spell.invocation-damage-save-or-attack` | SRDINV69B | `packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts` |
-| `hideous_laughter` | `spell.invocation-hideous-laughter-repeat-save-lifecycle` | SRDINV84F | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `mycelium_step` | `unit-feature.alternate-action-cost` | QMBT21 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `hideous_laughter` | `spell.invocation-hideous-laughter-repeat-save-lifecycle` | SRDINV84F | `packages/battle-runtime/src/unit-profile-admission-hideous-laughter-effects.test.ts` |
+| `mycelium_step` | `unit-feature.alternate-action-cost` | QMBT21 | `packages/battle-runtime/src/unit-profile-admission-savage-attacker-and-mycelium-step.test.ts` |
 
 ## Profile Subset Deterministic Admission/Projection Evidence
 
@@ -870,7 +870,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `barbarian_weapon_mastery` | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` | AT-L1-04 | `packages/character-sheet-runtime/src/index.test.ts` | later-level Barbarian Weapon Mastery selected-weapon count increases beyond the two level-1 selections (SRDINV78) |
 | `ranger_favored_enemy` | `spell.invocation-marked-damage-rider` | SRDINV87C | `packages/battle-runtime/src/battle-runtime-test-support.ts` | later-level Favored Enemy free-cast count scaling beyond two uses (SRDINV78) |
 | `find_familiar` | `spell.find-familiar-lifecycle` | SRDINV84I5 | `packages/battle-runtime/src/find-familiar-lifecycle.test.ts` | unsupported familiar form attacks and generic command AI (SRDINV86) |
-| `charm_person` | `spell.creature-type-protection-and-charm` | SRDINV37 | `packages/battle-runtime/src/unit-profile-admission.test.ts` | Friendly disposition, the Charmed condition's Social Advantage, social interaction adjudication, and target knowledge when the spell ends remain runtime-detached social/knowledge state (SRDINV41) |
+| `charm_person` | `spell.creature-type-protection-and-charm` | SRDINV37 | `packages/battle-runtime/src/unit-profile-admission-creature-charm-spells.test.ts` | Friendly disposition, the Charmed condition's Social Advantage, social interaction adjudication, and target knowledge when the spell ends remain runtime-detached social/knowledge state (SRDINV41) |
 
 ## Selected Identity MBT Evidence
 
