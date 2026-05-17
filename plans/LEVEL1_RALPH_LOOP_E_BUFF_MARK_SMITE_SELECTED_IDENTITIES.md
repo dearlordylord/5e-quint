@@ -67,13 +67,13 @@
     {
       "number": 11,
       "id": "L1E-SHILLELAGH",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Shillelagh Selected Identity Replay"
     },
     {
       "number": 12,
       "id": "L1E-TRUE-STRIKE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "True Strike Selected Identity Replay"
     }
   ]
@@ -236,7 +236,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-S-Z.md` Searing Smite.
 
 ### Task 11 - L1E-SHILLELAGH - Shillelagh Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `shillelagh`, binding the spell Unit through
 the supported weapon attack override projection.
@@ -245,7 +245,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-S-Z.md` Shillelagh.
 
 ### Task 12 - L1E-TRUE-STRIKE - True Strike Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `true_strike`, proving spell-hosted weapon
 attack support without duplicating weapon state.

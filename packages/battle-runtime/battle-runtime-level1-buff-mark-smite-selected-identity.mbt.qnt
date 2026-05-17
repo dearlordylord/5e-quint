@@ -69,6 +69,27 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
   var qSearingSmiteTurnStartSaveAbility: str
   var qSearingSmiteTurnStartSaveSuccessEnds: str
   var qSearingSmiteActiveAfterSuccessfulSave: bool
+  var qShillelaghOverrideSourceSpellId: str
+  var qShillelaghOverrideWeaponUnitId: str
+  var qShillelaghSpellcastingAbilityModifier: int
+  var qShillelaghOverrideAttackBonus: int
+  var qShillelaghOverrideDamageDice: int
+  var qShillelaghOverrideDamageDieSize: int
+  var qShillelaghForceAttackName: str
+  var qShillelaghForceAttackBonus: int
+  var qShillelaghForceDamageType: str
+  var qShillelaghForceDamageDice: int
+  var qShillelaghForceDamageDieSize: int
+  var qShillelaghForceDamageModifier: int
+  var qTrueStrikeSourceSpellId: str
+  var qTrueStrikeComponentWeaponItemId: str
+  var qTrueStrikeWeaponUnitId: str
+  var qTrueStrikeAttackName: str
+  var qTrueStrikeAttackBonus: int
+  var qTrueStrikeDamageType: str
+  var qTrueStrikeDamageDice: int
+  var qTrueStrikeDamageDieSize: int
+  var qTrueStrikeDamageModifier: int
   var qLastResult: str
 
   action recordProjection(
@@ -382,6 +403,67 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
       "none", "none", "none", false,
     )
 
+  action recordShillelaghWeaponAttackOverrideProjection(
+    overrideSourceSpellId: str,
+    overrideWeaponUnitId: str,
+    spellcastingAbilityModifier: int,
+    overrideAttackBonus: int,
+    overrideDamageDice: int,
+    overrideDamageDieSize: int,
+    forceAttackName: str,
+    forceAttackBonus: int,
+    forceDamageType: str,
+    forceDamageDice: int,
+    forceDamageDieSize: int,
+    forceDamageModifier: int,
+  ): bool = all {
+    qShillelaghOverrideSourceSpellId' = overrideSourceSpellId,
+    qShillelaghOverrideWeaponUnitId' = overrideWeaponUnitId,
+    qShillelaghSpellcastingAbilityModifier' = spellcastingAbilityModifier,
+    qShillelaghOverrideAttackBonus' = overrideAttackBonus,
+    qShillelaghOverrideDamageDice' = overrideDamageDice,
+    qShillelaghOverrideDamageDieSize' = overrideDamageDieSize,
+    qShillelaghForceAttackName' = forceAttackName,
+    qShillelaghForceAttackBonus' = forceAttackBonus,
+    qShillelaghForceDamageType' = forceDamageType,
+    qShillelaghForceDamageDice' = forceDamageDice,
+    qShillelaghForceDamageDieSize' = forceDamageDieSize,
+    qShillelaghForceDamageModifier' = forceDamageModifier,
+  }
+
+  action clearShillelaghWeaponAttackOverrideProjection =
+    recordShillelaghWeaponAttackOverrideProjection(
+      "none", "none", 0, 0, 0, 0,
+      "none", 0, "none", 0, 0, 0,
+    )
+
+  action recordTrueStrikeSpellHostedWeaponAttackProjection(
+    sourceSpellId: str,
+    componentWeaponItemId: str,
+    weaponUnitId: str,
+    attackName: str,
+    attackBonus: int,
+    damageType: str,
+    damageDice: int,
+    damageDieSize: int,
+    damageModifier: int,
+  ): bool = all {
+    qTrueStrikeSourceSpellId' = sourceSpellId,
+    qTrueStrikeComponentWeaponItemId' = componentWeaponItemId,
+    qTrueStrikeWeaponUnitId' = weaponUnitId,
+    qTrueStrikeAttackName' = attackName,
+    qTrueStrikeAttackBonus' = attackBonus,
+    qTrueStrikeDamageType' = damageType,
+    qTrueStrikeDamageDice' = damageDice,
+    qTrueStrikeDamageDieSize' = damageDieSize,
+    qTrueStrikeDamageModifier' = damageModifier,
+  }
+
+  action clearTrueStrikeSpellHostedWeaponAttackProjection =
+    recordTrueStrikeSpellHostedWeaponAttackProjection(
+      "none", "none", "none", "none", 0, "none", 0, 0, 0,
+    )
+
   action init = all {
     recordWithoutMarkedDamageProjection(
       0, 12, 0, false, false, 2, "none", "none", 0, 0,
@@ -391,6 +473,8 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
       "init",
     ),
     clearSearingSmiteLifecycleProjection,
+    clearShillelaghWeaponAttackOverrideProjection,
+    clearTrueStrikeSpellHostedWeaponAttackProjection,
   }
 
   action doDivineFavorWeaponDamageRider = all {
@@ -403,6 +487,8 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
       "divineFavor",
     ),
     clearSearingSmiteLifecycleProjection,
+    clearShillelaghWeaponAttackOverrideProjection,
+    clearTrueStrikeSpellHostedWeaponAttackProjection,
   }
 
   action doDivineSmiteAfterHitDamage = all {
@@ -415,6 +501,8 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
       "divineSmite",
     ),
     clearSearingSmiteLifecycleProjection,
+    clearShillelaghWeaponAttackOverrideProjection,
+    clearTrueStrikeSpellHostedWeaponAttackProjection,
   }
 
   action doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape = all {
@@ -430,6 +518,8 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
       "ensnaringStrike",
     ),
     clearSearingSmiteLifecycleProjection,
+    clearShillelaghWeaponAttackOverrideProjection,
+    clearTrueStrikeSpellHostedWeaponAttackProjection,
   }
 
   action doFalseLifeTemporaryHitPoints = all {
@@ -442,6 +532,8 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
       "falseLife",
     ),
     clearSearingSmiteLifecycleProjection,
+    clearShillelaghWeaponAttackOverrideProjection,
+    clearTrueStrikeSpellHostedWeaponAttackProjection,
   }
 
   action doHeroismFrightenedImmunityTurnStartTemporaryHitPoints = all {
@@ -454,6 +546,8 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
       "heroism",
     ),
     clearSearingSmiteLifecycleProjection,
+    clearShillelaghWeaponAttackOverrideProjection,
+    clearTrueStrikeSpellHostedWeaponAttackProjection,
   }
 
   action doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer = all {
@@ -472,6 +566,8 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
       "huntersMark",
     ),
     clearSearingSmiteLifecycleProjection,
+    clearShillelaghWeaponAttackOverrideProjection,
+    clearTrueStrikeSpellHostedWeaponAttackProjection,
   }
 
   action doHexMarkedDamageRiderAndLaterTurnTransfer = all {
@@ -490,6 +586,8 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
       "hex",
     ),
     clearSearingSmiteLifecycleProjection,
+    clearShillelaghWeaponAttackOverrideProjection,
+    clearTrueStrikeSpellHostedWeaponAttackProjection,
   }
 
   action doLongstriderSpeedIncrease = all {
@@ -505,6 +603,8 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
       "longstrider",
     ),
     clearSearingSmiteLifecycleProjection,
+    clearShillelaghWeaponAttackOverrideProjection,
+    clearTrueStrikeSpellHostedWeaponAttackProjection,
   }
 
   action doSearingSmiteAfterHitTimedDamageAndSaveCleanup = all {
@@ -521,6 +621,42 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
       "searing_smite", "fire", 1, 6,
       "searing_smite", "con", "spell", false,
     ),
+    clearShillelaghWeaponAttackOverrideProjection,
+    clearTrueStrikeSpellHostedWeaponAttackProjection,
+  }
+
+  action doShillelaghWeaponAttackOverride = all {
+    qLastResult == "init",
+    recordWithoutMarkedDamageProjection(
+      0, 5, 0, false, false, 2, "none", "none", 0, 0,
+      "none", 0, 0, 0,
+      "none", "none", "none", 0,
+      false, false, false, "none", "none", "none", "none", 0, 0, "none", "none",
+      "shillelagh",
+    ),
+    clearSearingSmiteLifecycleProjection,
+    recordShillelaghWeaponAttackOverrideProjection(
+      "shillelagh", "weapon_quarterstaff", 3, 5, 1, 8,
+      "Quarterstaff (force)", 5, "force", 1, 8, 3,
+    ),
+    clearTrueStrikeSpellHostedWeaponAttackProjection,
+  }
+
+  action doTrueStrikeSpellHostedWeaponAttack = all {
+    qLastResult == "init",
+    recordWithoutMarkedDamageProjection(
+      0, 5, 0, false, false, 2, "none", "none", 0, 0,
+      "none", 0, 0, 0,
+      "none", "none", "none", 0,
+      false, false, false, "none", "none", "none", "none", 0, 0, "none", "none",
+      "trueStrike",
+    ),
+    clearSearingSmiteLifecycleProjection,
+    clearShillelaghWeaponAttackOverrideProjection,
+    recordTrueStrikeSpellHostedWeaponAttackProjection(
+      "true_strike", "main:weapon_dagger", "weapon_dagger", "Dagger",
+      5, "radiant", 1, 4, 3,
+    ),
   }
 
   action step = any {
@@ -533,5 +669,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     doHexMarkedDamageRiderAndLaterTurnTransfer,
     doLongstriderSpeedIncrease,
     doSearingSmiteAfterHitTimedDamageAndSaveCleanup,
+    doShillelaghWeaponAttackOverride,
+    doTrueStrikeSpellHostedWeaponAttack,
   }
 }

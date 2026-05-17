@@ -7,6 +7,8 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-HEX hex
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-LONGSTRIDER longstrider
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-SEARING-SMITE searing_smite
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-SHILLELAGH shillelagh
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-TRUE-STRIKE true_strike
 // UNIT-IDENTITY-MBT-REPLAY: L1E-DIVINE-FAVOR divine_favor doDivineFavorWeaponDamageRider
 // UNIT-IDENTITY-MBT-REPLAY: L1E-DIVINE-SMITE divine_smite doDivineSmiteAfterHitDamage
 // UNIT-IDENTITY-MBT-REPLAY: L1E-ENSNARING-STRIKE ensnaring_strike doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape
@@ -16,6 +18,8 @@
 // UNIT-IDENTITY-MBT-REPLAY: L1E-HEX hex doHexMarkedDamageRiderAndLaterTurnTransfer
 // UNIT-IDENTITY-MBT-REPLAY: L1E-LONGSTRIDER longstrider doLongstriderSpeedIncrease
 // UNIT-IDENTITY-MBT-REPLAY: L1E-SEARING-SMITE searing_smite doSearingSmiteAfterHitTimedDamageAndSaveCleanup
+// UNIT-IDENTITY-MBT-REPLAY: L1E-SHILLELAGH shillelagh doShillelaghWeaponAttackOverride
+// UNIT-IDENTITY-MBT-REPLAY: L1E-TRUE-STRIKE true_strike doTrueStrikeSpellHostedWeaponAttack
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -41,7 +45,11 @@ import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
 } from "@dnd/surface/surface/stat-block-catalog";
-import type { SpellRecord, StatBlockRecord } from "@dnd/surface/surface/types";
+import type {
+  SpellRecord,
+  StatBlockRecord,
+  WeaponProficiency,
+} from "@dnd/surface/surface/types";
 
 import {
   battleCombatantSide,
@@ -56,6 +64,7 @@ import {
   snapshotBattle,
   startBattle,
   type AvailableBattleAct,
+  type BattleAttackRollHole,
   type BattleCreatureInit,
   type BattleDamageRollHole,
   type BattleFill,
@@ -87,6 +96,8 @@ const level1BuffMarkSmiteSelectedIdentityDriverSchema = {
   doHexMarkedDamageRiderAndLaterTurnTransfer: {},
   doLongstriderSpeedIncrease: {},
   doSearingSmiteAfterHitTimedDamageAndSaveCleanup: {},
+  doShillelaghWeaponAttackOverride: {},
+  doTrueStrikeSpellHostedWeaponAttack: {},
   step: {},
 } as const;
 type Level1BuffMarkSmiteSelectedIdentityDriverAction = Exclude<
@@ -103,6 +114,8 @@ const huntersMarkUnitId = "hunters_mark";
 const hexUnitId = "hex";
 const longstriderUnitId = "longstrider";
 const searingSmiteUnitId = "searing_smite";
+const shillelaghUnitId = "shillelagh";
+const trueStrikeUnitId = "true_strike";
 const level1BuffMarkSmiteSpellIds = [
   divineFavorUnitId,
   divineSmiteUnitId,
@@ -113,6 +126,8 @@ const level1BuffMarkSmiteSpellIds = [
   hexUnitId,
   longstriderUnitId,
   searingSmiteUnitId,
+  shillelaghUnitId,
+  trueStrikeUnitId,
 ] as const;
 type Level1BuffMarkSmiteSpellId = (typeof level1BuffMarkSmiteSpellIds)[number];
 const spellWeaponDamageRiderSourceSpellIds = [
@@ -144,7 +159,8 @@ type EnsnaringStrikeSourceSpellId = typeof ensnaringStrikeUnitId | "none";
 type BonusActionCastSpellId =
   | typeof divineFavorUnitId
   | typeof huntersMarkUnitId
-  | typeof hexUnitId;
+  | typeof hexUnitId
+  | typeof shillelaghUnitId;
 type AttackHitBonusActionSpellId =
   | typeof divineSmiteUnitId
   | typeof ensnaringStrikeUnitId
@@ -152,11 +168,26 @@ type AttackHitBonusActionSpellId =
 type ActionCastSpellId =
   | typeof falseLifeUnitId
   | typeof heroismUnitId
-  | typeof longstriderUnitId;
+  | typeof longstriderUnitId
+  | typeof trueStrikeUnitId;
 type TemporaryHitPointsSourceSpellId = typeof falseLifeUnitId | "none";
 type HeroismSourceSpellId = typeof heroismUnitId | "none";
 type LongstriderSourceSpellId = typeof longstriderUnitId | "none";
 type LongstriderSpeedEffectTarget = "target" | "none";
+type ShillelaghSourceSpellId = typeof shillelaghUnitId | "none";
+const shillelaghQuarterstaffUnitId = "weapon_quarterstaff";
+type ShillelaghQuarterstaffUnitId = typeof shillelaghQuarterstaffUnitId;
+const shillelaghQuarterstaffForceAttackName = "Quarterstaff (force)";
+type ShillelaghForceAttackName =
+  | typeof shillelaghQuarterstaffForceAttackName
+  | "none";
+type TrueStrikeSourceSpellId = typeof trueStrikeUnitId | "none";
+const trueStrikeDaggerUnitId = "weapon_dagger";
+type TrueStrikeDaggerUnitId = typeof trueStrikeDaggerUnitId;
+const trueStrikeDaggerItemId = `main:${trueStrikeDaggerUnitId}`;
+type TrueStrikeDaggerItemId = typeof trueStrikeDaggerItemId;
+const trueStrikeDaggerAttackName = "Dagger";
+type TrueStrikeDaggerAttackName = typeof trueStrikeDaggerAttackName | "none";
 type HeroismFrightenedImmunityEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "conditionImmunity" }
@@ -172,6 +203,10 @@ type LongstriderSpeedDeltaEffect = Extract<
 type SearingSmiteTurnStartDamageAndSaveEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "spellTurnStartDamageAndSave" }
+>;
+type ShillelaghWeaponAttackOverrideEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "spellWeaponAttackOverride" }
 >;
 type HexMarkedTarget = "target" | "transferTarget" | "none";
 type HexTransferKind = "awaitingTargetDrop" | "availableAfterTurn" | "none";
@@ -250,6 +285,8 @@ type Level1BuffMarkSmiteSelectedIdentityProjection = {
   readonly hexActiveMarkRetargetTiming: HexRetargetTiming;
   readonly hexTransferVisibleOnDropTurn: boolean;
   readonly searingSmiteLifecycle: SearingSmiteLifecycleProjection;
+  readonly shillelaghWeaponAttackOverride: ShillelaghWeaponAttackOverrideProjection;
+  readonly trueStrikeSpellHostedWeaponAttack: TrueStrikeSpellHostedWeaponAttackProjection;
   readonly lastResult:
     | "init"
     | "divineFavor"
@@ -260,7 +297,9 @@ type Level1BuffMarkSmiteSelectedIdentityProjection = {
     | "huntersMark"
     | "hex"
     | "longstrider"
-    | "searingSmite";
+    | "searingSmite"
+    | "shillelagh"
+    | "trueStrike";
 };
 type EnsnaringStrikeLifecycleProjection = Pick<
   Level1BuffMarkSmiteSelectedIdentityProjection,
@@ -339,6 +378,37 @@ type SearingSmiteLifecycleProjection =
       readonly turnStartSave: SearingSmiteTurnStartSaveProjection;
       readonly activeAfterSuccessfulSave: false;
     };
+type ShillelaghWeaponAttackOverrideProjection =
+  | { readonly tag: "none" }
+  | {
+      readonly tag: "quarterstaffForceAttack";
+      readonly sourceSpellId: Exclude<ShillelaghSourceSpellId, "none">;
+      readonly weaponUnitId: ShillelaghQuarterstaffUnitId;
+      readonly spellcastingAbilityModifier: number;
+      readonly effectAttackBonus: number;
+      readonly effectDamageDice: number;
+      readonly effectDamageDieSize: number;
+      readonly attackName: Exclude<ShillelaghForceAttackName, "none">;
+      readonly attackBonus: number;
+      readonly damageType: "force";
+      readonly damageDice: number;
+      readonly damageDieSize: number;
+      readonly damageModifier: number;
+    };
+type TrueStrikeSpellHostedWeaponAttackProjection =
+  | { readonly tag: "none" }
+  | {
+      readonly tag: "materialDaggerRadiantAttack";
+      readonly sourceSpellId: Exclude<TrueStrikeSourceSpellId, "none">;
+      readonly componentWeaponItemId: TrueStrikeDaggerItemId;
+      readonly weaponUnitId: TrueStrikeDaggerUnitId;
+      readonly attackName: Exclude<TrueStrikeDaggerAttackName, "none">;
+      readonly attackBonus: number;
+      readonly damageType: "radiant";
+      readonly damageDice: number;
+      readonly damageDieSize: number;
+      readonly damageModifier: number;
+    };
 type SelectedUnitIdentityReplaySequence = {
   readonly name: string;
   readonly actions: readonly Level1BuffMarkSmiteSelectedIdentityDriverAction[];
@@ -354,7 +424,9 @@ type SelectedUnitIdentityReplay = {
     | "L1E-HUNTERS-MARK"
     | "L1E-HEX"
     | "L1E-LONGSTRIDER"
-    | "L1E-SEARING-SMITE";
+    | "L1E-SEARING-SMITE"
+    | "L1E-SHILLELAGH"
+    | "L1E-TRUE-STRIKE";
   readonly unitId: Level1BuffMarkSmiteSpellId;
   readonly actions: readonly Level1BuffMarkSmiteSelectedIdentityDriverAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
@@ -645,6 +717,67 @@ const selectedUnitIdentityReplays = [
       },
     ],
   },
+  {
+    taskId: "L1E-SHILLELAGH",
+    unitId: "shillelagh",
+    actions: ["doShillelaghWeaponAttackOverride"],
+    sequences: [
+      {
+        name: "held-quarterstaff-force-attack-override",
+        actions: ["doShillelaghWeaponAttackOverride"],
+        expected: expectedProjection({
+          targetHp: 5,
+          spellSlotSpentThisTurn: false,
+          level1SlotsRemaining: 2,
+          shillelaghWeaponAttackOverride: {
+            tag: "quarterstaffForceAttack",
+            sourceSpellId: shillelaghUnitId,
+            weaponUnitId: shillelaghQuarterstaffUnitId,
+            spellcastingAbilityModifier: 3,
+            effectAttackBonus: 5,
+            effectDamageDice: 1,
+            effectDamageDieSize: 8,
+            attackName: shillelaghQuarterstaffForceAttackName,
+            attackBonus: 5,
+            damageType: "force",
+            damageDice: 1,
+            damageDieSize: 8,
+            damageModifier: 3,
+          },
+          lastResult: "shillelagh",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "L1E-TRUE-STRIKE",
+    unitId: "true_strike",
+    actions: ["doTrueStrikeSpellHostedWeaponAttack"],
+    sequences: [
+      {
+        name: "material-dagger-radiant-spell-hosted-weapon-attack",
+        actions: ["doTrueStrikeSpellHostedWeaponAttack"],
+        expected: expectedProjection({
+          targetHp: 5,
+          spellSlotSpentThisTurn: false,
+          level1SlotsRemaining: 2,
+          trueStrikeSpellHostedWeaponAttack: {
+            tag: "materialDaggerRadiantAttack",
+            sourceSpellId: trueStrikeUnitId,
+            componentWeaponItemId: trueStrikeDaggerItemId,
+            weaponUnitId: trueStrikeDaggerUnitId,
+            attackName: trueStrikeDaggerAttackName,
+            attackBonus: 5,
+            damageType: "radiant",
+            damageDice: 1,
+            damageDieSize: 4,
+            damageModifier: 3,
+          },
+          lastResult: "trueStrike",
+        }),
+      },
+    ],
+  },
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
 describe("Level 1 buff mark smite selected identity MBT", () => {
@@ -720,6 +853,10 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
       defaultFalseLifeTemporaryHitPointsProjection();
     let heroismEffects = defaultHeroismEffectsProjection();
     let searingSmiteLifecycle = defaultSearingSmiteLifecycleProjection();
+    let shillelaghWeaponAttackOverride =
+      defaultShillelaghWeaponAttackOverrideProjection();
+    let trueStrikeSpellHostedWeaponAttack =
+      defaultTrueStrikeSpellHostedWeaponAttackProjection();
     let lastResult: Level1BuffMarkSmiteSelectedIdentityProjection["lastResult"] =
       "init";
 
@@ -736,6 +873,10 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
         defaultFalseLifeTemporaryHitPointsProjection();
       heroismEffects = defaultHeroismEffectsProjection();
       searingSmiteLifecycle = defaultSearingSmiteLifecycleProjection();
+      shillelaghWeaponAttackOverride =
+        defaultShillelaghWeaponAttackOverrideProjection();
+      trueStrikeSpellHostedWeaponAttack =
+        defaultTrueStrikeSpellHostedWeaponAttackProjection();
     }
 
     function reset(): void {
@@ -1283,6 +1424,110 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
           stateAfterSuccessfulSave: state,
         });
       },
+      doShillelaghWeaponAttackOverride: () => {
+        state = level1BuffMarkSmiteBattle({
+          cantrips: [spellRecord(shillelaghUnitId)],
+          sourceClassName: "druid",
+          attack: zeroAbilityWeaponAttack(shillelaghQuarterstaffUnitId),
+        });
+        resetProcedureProjections();
+
+        const cast = resolveBattleSubject({
+          state,
+          subject: bonusActionSpellAct(state, shillelaghUnitId).subject,
+          fills: [],
+        });
+        if (cast.tag !== "resolved") {
+          throw new Error(`Expected Shillelagh to resolve, got ${cast.tag}.`);
+        }
+        state = cast.state;
+
+        const hit = resolveWeaponHitWithAttackRoll({
+          state,
+          attackName: shillelaghQuarterstaffForceAttackName,
+        });
+        const damage = requireDamageRollHole(
+          requireNeedsHoles(hit.afterAttackRoll),
+        );
+        shillelaghWeaponAttackOverride =
+          shillelaghWeaponAttackOverrideProjection({
+            state,
+            attackRoll: hit.attackRoll,
+            damage,
+          });
+        recordResolvedResult(
+          resolveBattleSubject({
+            state,
+            subject: hit.subject,
+            fills: [
+              hit.targetFill,
+              hit.attackFill,
+              damageRollFillWithGroups(damage, [[4]]),
+            ],
+          }),
+          "shillelagh",
+        );
+      },
+      doTrueStrikeSpellHostedWeaponAttack: () => {
+        state = level1BuffMarkSmiteBattle({
+          cantrips: [spellRecord(trueStrikeUnitId)],
+          sourceClassName: "wizard",
+          attack: zeroAbilityWeaponAttack(trueStrikeDaggerUnitId),
+          weaponProficiencies: [
+            { kind: "weapon_category", category: "simple" },
+          ],
+        });
+        resetProcedureProjections();
+
+        const act = actionSpellAct(state, trueStrikeUnitId);
+        const damageType = requireHole(act.initialHoles, "damageTypeChoice");
+        const target = requireHole(act.initialHoles, "targetChoice");
+        const damageTypeFill = damageTypeChoiceFill(damageType, "radiant");
+        const targetFill = attackTargetFill(target, trueStrikeDaggerAttackName);
+        const attackRoll = requireBattleAttackRollHole(
+          requireResultHole(
+            resolveBattleSubject({
+              state,
+              subject: act.subject,
+              fills: [damageTypeFill, targetFill],
+            }),
+            "attackRoll",
+          ),
+        );
+        const attackFill = attackRollFill(attackRoll, {
+          total: 15,
+          naturalD20: 10,
+        });
+        const damage = requireDamageRollHole(
+          requireNeedsHoles(
+            resolveBattleSubject({
+              state,
+              subject: act.subject,
+              fills: [damageTypeFill, targetFill, attackFill],
+            }),
+          ),
+        );
+        trueStrikeSpellHostedWeaponAttack =
+          trueStrikeSpellHostedWeaponAttackProjection({
+            state,
+            act,
+            attackRoll,
+            damage,
+          });
+        recordResolvedResult(
+          resolveBattleSubject({
+            state,
+            subject: act.subject,
+            fills: [
+              damageTypeFill,
+              targetFill,
+              attackFill,
+              damageRollFillWithGroups(damage, [[4]]),
+            ],
+          }),
+          "trueStrike",
+        );
+      },
       step: () => {},
       getState: () =>
         projectLevel1BuffMarkSmiteSelectedIdentityState(
@@ -1298,6 +1543,8 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
           falseLifeTemporaryHitPoints,
           heroismEffects,
           searingSmiteLifecycle,
+          shillelaghWeaponAttackOverride,
+          trueStrikeSpellHostedWeaponAttack,
           lastResult,
         ),
     };
@@ -1364,6 +1611,10 @@ function expectedProjection(
     hexActiveMarkRetargetTiming: "none",
     hexTransferVisibleOnDropTurn: false,
     searingSmiteLifecycle: defaultSearingSmiteLifecycleProjection(),
+    shillelaghWeaponAttackOverride:
+      defaultShillelaghWeaponAttackOverrideProjection(),
+    trueStrikeSpellHostedWeaponAttack:
+      defaultTrueStrikeSpellHostedWeaponAttackProjection(),
     lastResult: "init",
     ...overrides,
   };
@@ -1405,10 +1656,26 @@ function defaultSearingSmiteLifecycleProjection(): SearingSmiteLifecycleProjecti
   return { tag: "none" };
 }
 
+function defaultShillelaghWeaponAttackOverrideProjection(): ShillelaghWeaponAttackOverrideProjection {
+  return { tag: "none" };
+}
+
+function defaultTrueStrikeSpellHostedWeaponAttackProjection(): TrueStrikeSpellHostedWeaponAttackProjection {
+  return { tag: "none" };
+}
+
 function level1BuffMarkSmiteBattle(
   input: {
+    readonly cantrips?: readonly SpellRecord[];
     readonly preparedSpells?: readonly SpellRecord[];
     readonly sourceClassName?: CharacterClassName;
+    readonly weaponProficiencies?: readonly WeaponProficiency[];
+    readonly attack?: NonNullable<
+      Extract<
+        BattleCreatureInit["creatureInit"],
+        { readonly kind: "character" }
+      >["attack"]
+    >;
     readonly targetKind?: "character" | "statBlock";
     readonly includeMarkedDamageTransferTarget?: boolean;
   } = {},
@@ -1437,14 +1704,17 @@ function level1BuffMarkSmiteBattle(
         displayName: "Level 1 buff caster",
         initiative: 20,
         side: partySide,
-        attack: zeroAbilityLongswordAttack(),
+        attack: input.attack ?? zeroAbilityLongswordAttack(),
         className: sourceClassName,
+        ...(input.weaponProficiencies === undefined
+          ? {}
+          : { weaponProficiencies: input.weaponProficiencies }),
         spellcasting: {
           sourceClassName,
           spellcastingAbilityModifier: abilityModifier(3),
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
-          cantrips: [],
+          cantrips: input.cantrips ?? [],
           preparedSpells: input.preparedSpells ?? [],
           featurePreparedSpells: [],
           invocationSpellAccesses: [],
@@ -1477,6 +1747,7 @@ function level1BuffMarkSmiteCreature(input: {
   readonly initiative: number;
   readonly side: typeof partySide | typeof oppositionSide;
   readonly className?: CharacterClassName;
+  readonly weaponProficiencies?: readonly WeaponProficiency[];
   readonly attack?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -1498,6 +1769,9 @@ function level1BuffMarkSmiteCreature(input: {
       characterId: characterId(`${input.combatantId}-character`),
       characterUnitRefs: [],
       classLevels: [{ className, level: 1 }],
+      ...(input.weaponProficiencies === undefined
+        ? {}
+        : { weaponProficiencies: input.weaponProficiencies }),
       armorClass:
         attack === null
           ? defaultArmorClassState()
@@ -1635,25 +1909,43 @@ function resolveLongswordHit(input: { readonly state: BattleState }): {
 
 function resolveLongswordHitWithAttackRoll(input: {
   readonly state: BattleState;
+}): ReturnType<typeof resolveWeaponHitWithAttackRoll> {
+  return resolveWeaponHitWithAttackRoll({
+    state: input.state,
+    attackName: "Longsword",
+  });
+}
+
+type Level1WeaponAttackName =
+  | "Longsword"
+  | typeof trueStrikeDaggerAttackName
+  | typeof shillelaghQuarterstaffForceAttackName;
+
+function resolveWeaponHitWithAttackRoll(input: {
+  readonly state: BattleState;
+  readonly attackName: Level1WeaponAttackName;
 }): {
   readonly subject: Extract<BattleSubject, { readonly tag: "action" }>;
   readonly targetFill: Extract<BattleFill, { readonly kind: "targetChoice" }>;
   readonly attackFill: Extract<BattleFill, { readonly kind: "attackRoll" }>;
+  readonly attackRoll: BattleAttackRollHole;
   readonly afterAttackRoll: BattleResolutionResult;
 } {
-  const subject = weaponAttackSubject("Longsword");
+  const subject = weaponAttackSubject(input.attackName);
   const target = requireResultHole(
     resolveBattleSubject({ state: input.state, subject, fills: [] }),
     "targetChoice",
   );
-  const targetFill = attackTargetFill(target, "Longsword");
-  const attack = requireResultHole(
-    resolveBattleSubject({
-      state: input.state,
-      subject,
-      fills: [targetFill],
-    }),
-    "attackRoll",
+  const targetFill = attackTargetFill(target, input.attackName);
+  const attack = requireBattleAttackRollHole(
+    requireResultHole(
+      resolveBattleSubject({
+        state: input.state,
+        subject,
+        fills: [targetFill],
+      }),
+      "attackRoll",
+    ),
   );
   const attackFill = attackRollFill(attack, {
     total: 15,
@@ -1663,6 +1955,7 @@ function resolveLongswordHitWithAttackRoll(input: {
     subject,
     targetFill,
     attackFill,
+    attackRoll: attack,
     afterAttackRoll: resolveBattleSubject({
       state: input.state,
       subject,
@@ -1677,9 +1970,23 @@ function zeroAbilityLongswordAttack(): NonNullable<
     { readonly kind: "character" }
   >["attack"]
 > {
-  const weapon = unitLibrary.requireUnit("weapon_longsword");
+  return zeroAbilityWeaponAttack("weapon_longsword");
+}
+
+function zeroAbilityWeaponAttack(
+  unitId:
+    | "weapon_longsword"
+    | ShillelaghQuarterstaffUnitId
+    | TrueStrikeDaggerUnitId,
+): NonNullable<
+  Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["attack"]
+> {
+  const weapon = unitLibrary.requireUnit(unitId);
   if (weapon.kind !== "weapon") {
-    throw new Error("Expected weapon_longsword Unit to be a weapon.");
+    throw new Error(`Expected ${unitId} Unit to be a weapon.`);
   }
   return {
     kind: "weapon",
@@ -1690,7 +1997,7 @@ function zeroAbilityLongswordAttack(): NonNullable<
 }
 
 function weaponAttackSubject(
-  attackName: "Longsword",
+  attackName: Level1WeaponAttackName,
 ): Extract<BattleSubject, { readonly tag: "action" }> {
   return {
     tag: "action",
@@ -1702,7 +2009,7 @@ function weaponAttackSubject(
 
 function attackTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
-  attackName: "Longsword",
+  attackName: Level1WeaponAttackName,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   return {
     kind: "targetChoice",
@@ -1752,6 +2059,13 @@ function attackRollFill(
       naturalD20: DieRollResult(value.naturalD20),
     },
   };
+}
+
+function damageTypeChoiceFill(
+  hole: Extract<BattleHole, { readonly kind: "damageTypeChoice" }>,
+  value: Extract<BattleFill, { readonly kind: "damageTypeChoice" }>["value"],
+): Extract<BattleFill, { readonly kind: "damageTypeChoice" }> {
+  return { kind: "damageTypeChoice", holeId: hole.holeId, value };
 }
 
 function damageRollFillWithGroups(
@@ -1891,6 +2205,15 @@ function requireNeedsHoles(
     throw new Error(`Expected needsHoles result, got ${result.tag}.`);
   }
   return result;
+}
+
+function requireBattleAttackRollHole(
+  hole: Extract<BattleHole, { readonly kind: "attackRoll" }>,
+): BattleAttackRollHole {
+  if (!("attack" in hole)) {
+    throw new Error("Expected weapon attack roll hole.");
+  }
+  return hole;
 }
 
 function requireDamageRollHole(
@@ -2215,6 +2538,244 @@ function searingSmiteTurnStartSaveProjection(
   };
 }
 
+function shillelaghWeaponAttackOverrideProjection(input: {
+  readonly state: BattleState;
+  readonly attackRoll: BattleAttackRollHole;
+  readonly damage: BattleDamageRollHole;
+}): ShillelaghWeaponAttackOverrideProjection {
+  const effect = shillelaghWeaponAttackOverrideEffect(input.state);
+  if (effect === undefined) {
+    throw new Error("Expected Shillelagh weapon attack override effect.");
+  }
+  return {
+    tag: "quarterstaffForceAttack",
+    sourceSpellId: shillelaghRequiredSourceSpellId(effect),
+    weaponUnitId: shillelaghEffectWeaponUnitId(input.state, effect),
+    spellcastingAbilityModifier: Number(effect.spellcastingAbilityModifier),
+    effectAttackBonus: Number(effect.attackBonus),
+    effectDamageDice: effect.damage.expr.dice,
+    effectDamageDieSize: effect.damage.expr.dieSize,
+    ...shillelaghForceAttackProjection(input.attackRoll, input.damage),
+  };
+}
+
+function shillelaghWeaponAttackOverrideEffect(
+  state: BattleState,
+): ShillelaghWeaponAttackOverrideEffect | undefined {
+  const caster = state.combatants.get(casterId);
+  if (caster === undefined) {
+    throw new Error("Expected Shillelagh caster.");
+  }
+  return caster.activeEffects.find(
+    (effect): effect is ShillelaghWeaponAttackOverrideEffect =>
+      effect.kind === "spellWeaponAttackOverride" &&
+      effect.sourceSpellId === shillelaghUnitId &&
+      effect.sourceCombatantId === casterId,
+  );
+}
+
+function shillelaghRequiredSourceSpellId(
+  effect: ShillelaghWeaponAttackOverrideEffect,
+): typeof shillelaghUnitId {
+  if (effect.sourceSpellId === shillelaghUnitId) {
+    return shillelaghUnitId;
+  }
+  throw new Error(
+    `Unexpected Shillelagh source spell id ${effect.sourceSpellId}.`,
+  );
+}
+
+function shillelaghEffectWeaponUnitId(
+  state: BattleState,
+  effect: ShillelaghWeaponAttackOverrideEffect,
+): ShillelaghQuarterstaffUnitId {
+  const selectedWeaponUnitId = selectedLoadoutWeaponUnitIdForItem({
+    state,
+    itemId: effect.weaponItemId,
+    sourceName: "Shillelagh",
+  });
+  if (selectedWeaponUnitId === shillelaghQuarterstaffUnitId) {
+    return shillelaghQuarterstaffUnitId;
+  }
+  throw new Error(
+    `Unexpected Shillelagh weapon Unit id ${selectedWeaponUnitId}.`,
+  );
+}
+
+function shillelaghForceAttackProjection(
+  attackRoll: BattleAttackRollHole,
+  damage: BattleDamageRollHole,
+): Pick<
+  Extract<
+    ShillelaghWeaponAttackOverrideProjection,
+    { readonly tag: "quarterstaffForceAttack" }
+  >,
+  | "attackName"
+  | "attackBonus"
+  | "damageType"
+  | "damageDice"
+  | "damageDieSize"
+  | "damageModifier"
+> {
+  if (attackRoll.attack.kind !== "weapon" || damage.attack.kind !== "weapon") {
+    throw new Error("Expected Shillelagh weapon attack projection.");
+  }
+  const attackName = attackRoll.attack.weapon.name;
+  if (attackName !== shillelaghQuarterstaffForceAttackName) {
+    throw new Error(`Unexpected Shillelagh attack name ${attackName}.`);
+  }
+  if (damage.attack.weapon.name !== attackName) {
+    throw new Error(
+      `Expected Shillelagh damage attack ${damage.attack.weapon.name} to match ${attackName}.`,
+    );
+  }
+  const weaponDamage = damage.attack.weapon.damage;
+  if (weaponDamage.kind !== "dice") {
+    throw new Error("Expected Shillelagh dice weapon damage.");
+  }
+  if (weaponDamage.damageType !== "force") {
+    throw new Error(
+      `Unexpected Shillelagh damage type ${weaponDamage.damageType}.`,
+    );
+  }
+  return {
+    attackName,
+    attackBonus: Number(attackRoll.attackBonus),
+    damageType: "force",
+    damageDice: weaponDamage.dice,
+    damageDieSize: weaponDamage.dieSize,
+    damageModifier: Number(
+      damage.attack.damageAbilityModifier ?? damage.attack.abilityModifier,
+    ),
+  };
+}
+
+function trueStrikeSpellHostedWeaponAttackProjection(input: {
+  readonly state: BattleState;
+  readonly act: ActionSpellAct;
+  readonly attackRoll: BattleAttackRollHole;
+  readonly damage: BattleDamageRollHole;
+}): TrueStrikeSpellHostedWeaponAttackProjection {
+  return {
+    tag: "materialDaggerRadiantAttack",
+    sourceSpellId: trueStrikeRequiredSourceSpellId(input.act),
+    componentWeaponItemId: trueStrikeComponentWeaponItemId(input.act),
+    weaponUnitId: trueStrikeWeaponUnitId(input.state, input.act),
+    ...trueStrikeRadiantAttackProjection(input.attackRoll, input.damage),
+  };
+}
+
+function trueStrikeRequiredSourceSpellId(
+  act: ActionSpellAct,
+): typeof trueStrikeUnitId {
+  if (
+    act.subject.invocation.spellId === trueStrikeUnitId &&
+    act.subject.invocation.procedure === "spellHostedWeaponAttack"
+  ) {
+    return trueStrikeUnitId;
+  }
+  throw new Error(
+    `Unexpected True Strike invocation ${act.subject.invocation.spellId}.`,
+  );
+}
+
+function trueStrikeComponentWeaponItemId(
+  act: ActionSpellAct,
+): TrueStrikeDaggerItemId {
+  if (act.subject.componentWeaponItemId === trueStrikeDaggerItemId) {
+    return trueStrikeDaggerItemId;
+  }
+  throw new Error(
+    `Unexpected True Strike component weapon item ${act.subject.componentWeaponItemId}.`,
+  );
+}
+
+function trueStrikeWeaponUnitId(
+  state: BattleState,
+  act: ActionSpellAct,
+): TrueStrikeDaggerUnitId {
+  const selectedWeaponUnitId = selectedLoadoutWeaponUnitIdForItem({
+    state,
+    itemId: trueStrikeComponentWeaponItemId(act),
+    sourceName: "True Strike",
+  });
+  if (selectedWeaponUnitId === trueStrikeDaggerUnitId) {
+    return trueStrikeDaggerUnitId;
+  }
+  throw new Error(
+    `Unexpected True Strike weapon Unit id ${selectedWeaponUnitId}.`,
+  );
+}
+
+function trueStrikeRadiantAttackProjection(
+  attackRoll: BattleAttackRollHole,
+  damage: BattleDamageRollHole,
+): Pick<
+  Extract<
+    TrueStrikeSpellHostedWeaponAttackProjection,
+    { readonly tag: "materialDaggerRadiantAttack" }
+  >,
+  | "attackName"
+  | "attackBonus"
+  | "damageType"
+  | "damageDice"
+  | "damageDieSize"
+  | "damageModifier"
+> {
+  if (attackRoll.attack.kind !== "weapon" || damage.attack.kind !== "weapon") {
+    throw new Error("Expected True Strike weapon attack projection.");
+  }
+  const attackName = attackRoll.attack.weapon.name;
+  if (attackName !== trueStrikeDaggerAttackName) {
+    throw new Error(`Unexpected True Strike attack name ${attackName}.`);
+  }
+  if (damage.attack.weapon.name !== attackName) {
+    throw new Error(
+      `Expected True Strike damage attack ${damage.attack.weapon.name} to match ${attackName}.`,
+    );
+  }
+  const weaponDamage = damage.attack.weapon.damage;
+  if (weaponDamage.kind !== "dice") {
+    throw new Error("Expected True Strike dice weapon damage.");
+  }
+  if (weaponDamage.damageType !== "radiant") {
+    throw new Error(
+      `Unexpected True Strike damage type ${weaponDamage.damageType}.`,
+    );
+  }
+  return {
+    attackName,
+    attackBonus: Number(attackRoll.attackBonus),
+    damageType: "radiant",
+    damageDice: weaponDamage.dice,
+    damageDieSize: weaponDamage.dieSize,
+    damageModifier: Number(
+      damage.attack.damageAbilityModifier ?? damage.attack.abilityModifier,
+    ),
+  };
+}
+
+function selectedLoadoutWeaponUnitIdForItem(input: {
+  readonly state: BattleState;
+  readonly itemId: string;
+  readonly sourceName: "Shillelagh" | "True Strike";
+}): string {
+  const caster = input.state.combatants.get(casterId);
+  if (caster?.origin.kind !== "character") {
+    throw new Error(`Expected ${input.sourceName} character caster.`);
+  }
+  const selectedWeapon = [
+    caster.origin.selectedLoadout.weapon,
+    caster.origin.selectedLoadout.offHandWeapon,
+  ].find((candidate) => candidate?.itemId === input.itemId);
+  if (selectedWeapon === undefined) {
+    throw new Error(
+      `Expected ${input.sourceName} selected weapon item ${input.itemId}.`,
+    );
+  }
+  return selectedWeapon.unitId;
+}
+
 function projectLevel1BuffMarkSmiteSelectedIdentityState(
   state: BattleState,
   damageRider:
@@ -2234,6 +2795,8 @@ function projectLevel1BuffMarkSmiteSelectedIdentityState(
   falseLifeTemporaryHitPoints: FalseLifeTemporaryHitPointsProjection,
   heroismEffects: HeroismEffectsProjection,
   searingSmiteLifecycle: SearingSmiteLifecycleProjection,
+  shillelaghWeaponAttackOverride: ShillelaghWeaponAttackOverrideProjection,
+  trueStrikeSpellHostedWeaponAttack: TrueStrikeSpellHostedWeaponAttackProjection,
   lastResult: Level1BuffMarkSmiteSelectedIdentityProjection["lastResult"],
 ): Level1BuffMarkSmiteSelectedIdentityProjection {
   const snapshot = snapshotBattle(state);
@@ -2278,6 +2841,8 @@ function projectLevel1BuffMarkSmiteSelectedIdentityState(
     hexTransferKindOnDropTurn,
     hexTransferVisibleOnDropTurn,
     searingSmiteLifecycle,
+    shillelaghWeaponAttackOverride,
+    trueStrikeSpellHostedWeaponAttack,
     lastResult,
   };
 }
@@ -2886,6 +3451,10 @@ function normalizeLevel1BuffMarkSmiteSelectedIdentityQuintState(
       "qHexTransferVisibleOnDropTurn",
     ),
     searingSmiteLifecycle: searingSmiteLifecycleFromQuint(state),
+    shillelaghWeaponAttackOverride:
+      shillelaghWeaponAttackOverrideFromQuint(state),
+    trueStrikeSpellHostedWeaponAttack:
+      trueStrikeSpellHostedWeaponAttackFromQuint(state),
     lastResult: mbtLastResult(state["qLastResult"]),
   };
 }
@@ -3302,6 +3871,233 @@ function assertQuintField(
   }
 }
 
+function shillelaghWeaponAttackOverrideFromQuint(
+  state: Readonly<Record<string, unknown>>,
+): ShillelaghWeaponAttackOverrideProjection {
+  const source = state["qShillelaghOverrideSourceSpellId"];
+  if (source === "none") {
+    assertShillelaghNoWeaponAttackOverrideFromQuint(state);
+    return { tag: "none" };
+  }
+  return {
+    tag: "quarterstaffForceAttack",
+    sourceSpellId: shillelaghRequiredSourceSpellIdFromQuint(source),
+    weaponUnitId: shillelaghWeaponUnitIdFromQuint(
+      state["qShillelaghOverrideWeaponUnitId"],
+    ),
+    spellcastingAbilityModifier: numberFromQuintInt(
+      state["qShillelaghSpellcastingAbilityModifier"],
+      "qShillelaghSpellcastingAbilityModifier",
+    ),
+    effectAttackBonus: numberFromQuintInt(
+      state["qShillelaghOverrideAttackBonus"],
+      "qShillelaghOverrideAttackBonus",
+    ),
+    effectDamageDice: numberFromQuintInt(
+      state["qShillelaghOverrideDamageDice"],
+      "qShillelaghOverrideDamageDice",
+    ),
+    effectDamageDieSize: numberFromQuintInt(
+      state["qShillelaghOverrideDamageDieSize"],
+      "qShillelaghOverrideDamageDieSize",
+    ),
+    attackName: shillelaghForceAttackNameFromQuint(
+      state["qShillelaghForceAttackName"],
+    ),
+    attackBonus: numberFromQuintInt(
+      state["qShillelaghForceAttackBonus"],
+      "qShillelaghForceAttackBonus",
+    ),
+    damageType: shillelaghForceDamageTypeFromQuint(
+      state["qShillelaghForceDamageType"],
+    ),
+    damageDice: numberFromQuintInt(
+      state["qShillelaghForceDamageDice"],
+      "qShillelaghForceDamageDice",
+    ),
+    damageDieSize: numberFromQuintInt(
+      state["qShillelaghForceDamageDieSize"],
+      "qShillelaghForceDamageDieSize",
+    ),
+    damageModifier: numberFromQuintInt(
+      state["qShillelaghForceDamageModifier"],
+      "qShillelaghForceDamageModifier",
+    ),
+  };
+}
+
+function assertShillelaghNoWeaponAttackOverrideFromQuint(
+  state: Readonly<Record<string, unknown>>,
+): void {
+  assertQuintField(
+    state["qShillelaghOverrideWeaponUnitId"],
+    "none",
+    "qShillelaghOverrideWeaponUnitId",
+  );
+  assertQuintIntField(state, "qShillelaghSpellcastingAbilityModifier", 0);
+  assertQuintIntField(state, "qShillelaghOverrideAttackBonus", 0);
+  assertQuintIntField(state, "qShillelaghOverrideDamageDice", 0);
+  assertQuintIntField(state, "qShillelaghOverrideDamageDieSize", 0);
+  assertQuintField(
+    state["qShillelaghForceAttackName"],
+    "none",
+    "qShillelaghForceAttackName",
+  );
+  assertQuintIntField(state, "qShillelaghForceAttackBonus", 0);
+  assertQuintField(
+    state["qShillelaghForceDamageType"],
+    "none",
+    "qShillelaghForceDamageType",
+  );
+  assertQuintIntField(state, "qShillelaghForceDamageDice", 0);
+  assertQuintIntField(state, "qShillelaghForceDamageDieSize", 0);
+  assertQuintIntField(state, "qShillelaghForceDamageModifier", 0);
+}
+
+function shillelaghRequiredSourceSpellIdFromQuint(
+  raw: unknown,
+): typeof shillelaghUnitId {
+  if (raw === shillelaghUnitId) {
+    return raw;
+  }
+  throw new Error(`Unexpected Shillelagh source spell id ${String(raw)}.`);
+}
+
+function shillelaghWeaponUnitIdFromQuint(
+  raw: unknown,
+): ShillelaghQuarterstaffUnitId {
+  if (raw === shillelaghQuarterstaffUnitId) {
+    return shillelaghQuarterstaffUnitId;
+  }
+  throw new Error(`Unexpected Shillelagh weapon Unit id ${String(raw)}.`);
+}
+
+function shillelaghForceAttackNameFromQuint(
+  raw: unknown,
+): Exclude<ShillelaghForceAttackName, "none"> {
+  if (raw === shillelaghQuarterstaffForceAttackName) {
+    return raw;
+  }
+  throw new Error(`Unexpected Shillelagh force attack ${String(raw)}.`);
+}
+
+function shillelaghForceDamageTypeFromQuint(raw: unknown): "force" {
+  if (raw === "force") {
+    return raw;
+  }
+  throw new Error(`Unexpected Shillelagh damage type ${String(raw)}.`);
+}
+
+function trueStrikeSpellHostedWeaponAttackFromQuint(
+  state: Readonly<Record<string, unknown>>,
+): TrueStrikeSpellHostedWeaponAttackProjection {
+  const source = state["qTrueStrikeSourceSpellId"];
+  if (source === "none") {
+    assertTrueStrikeNoSpellHostedWeaponAttackFromQuint(state);
+    return { tag: "none" };
+  }
+  return {
+    tag: "materialDaggerRadiantAttack",
+    sourceSpellId: trueStrikeRequiredSourceSpellIdFromQuint(source),
+    componentWeaponItemId: trueStrikeComponentWeaponItemIdFromQuint(
+      state["qTrueStrikeComponentWeaponItemId"],
+    ),
+    weaponUnitId: trueStrikeWeaponUnitIdFromQuint(
+      state["qTrueStrikeWeaponUnitId"],
+    ),
+    attackName: trueStrikeAttackNameFromQuint(state["qTrueStrikeAttackName"]),
+    attackBonus: numberFromQuintInt(
+      state["qTrueStrikeAttackBonus"],
+      "qTrueStrikeAttackBonus",
+    ),
+    damageType: trueStrikeDamageTypeFromQuint(state["qTrueStrikeDamageType"]),
+    damageDice: numberFromQuintInt(
+      state["qTrueStrikeDamageDice"],
+      "qTrueStrikeDamageDice",
+    ),
+    damageDieSize: numberFromQuintInt(
+      state["qTrueStrikeDamageDieSize"],
+      "qTrueStrikeDamageDieSize",
+    ),
+    damageModifier: numberFromQuintInt(
+      state["qTrueStrikeDamageModifier"],
+      "qTrueStrikeDamageModifier",
+    ),
+  };
+}
+
+function assertTrueStrikeNoSpellHostedWeaponAttackFromQuint(
+  state: Readonly<Record<string, unknown>>,
+): void {
+  assertQuintField(
+    state["qTrueStrikeComponentWeaponItemId"],
+    "none",
+    "qTrueStrikeComponentWeaponItemId",
+  );
+  assertQuintField(
+    state["qTrueStrikeWeaponUnitId"],
+    "none",
+    "qTrueStrikeWeaponUnitId",
+  );
+  assertQuintField(
+    state["qTrueStrikeAttackName"],
+    "none",
+    "qTrueStrikeAttackName",
+  );
+  assertQuintIntField(state, "qTrueStrikeAttackBonus", 0);
+  assertQuintField(
+    state["qTrueStrikeDamageType"],
+    "none",
+    "qTrueStrikeDamageType",
+  );
+  assertQuintIntField(state, "qTrueStrikeDamageDice", 0);
+  assertQuintIntField(state, "qTrueStrikeDamageDieSize", 0);
+  assertQuintIntField(state, "qTrueStrikeDamageModifier", 0);
+}
+
+function trueStrikeRequiredSourceSpellIdFromQuint(
+  raw: unknown,
+): typeof trueStrikeUnitId {
+  if (raw === trueStrikeUnitId) {
+    return raw;
+  }
+  throw new Error(`Unexpected True Strike source spell id ${String(raw)}.`);
+}
+
+function trueStrikeComponentWeaponItemIdFromQuint(
+  raw: unknown,
+): TrueStrikeDaggerItemId {
+  if (raw === trueStrikeDaggerItemId) {
+    return trueStrikeDaggerItemId;
+  }
+  throw new Error(
+    `Unexpected True Strike component weapon item ${String(raw)}.`,
+  );
+}
+
+function trueStrikeWeaponUnitIdFromQuint(raw: unknown): TrueStrikeDaggerUnitId {
+  if (raw === trueStrikeDaggerUnitId) {
+    return trueStrikeDaggerUnitId;
+  }
+  throw new Error(`Unexpected True Strike weapon Unit id ${String(raw)}.`);
+}
+
+function trueStrikeAttackNameFromQuint(
+  raw: unknown,
+): Exclude<TrueStrikeDaggerAttackName, "none"> {
+  if (raw === trueStrikeDaggerAttackName) {
+    return raw;
+  }
+  throw new Error(`Unexpected True Strike attack name ${String(raw)}.`);
+}
+
+function trueStrikeDamageTypeFromQuint(raw: unknown): "radiant" {
+  if (raw === "radiant") {
+    return raw;
+  }
+  throw new Error(`Unexpected True Strike damage type ${String(raw)}.`);
+}
+
 function mbtLastResult(
   raw: unknown,
 ): Level1BuffMarkSmiteSelectedIdentityProjection["lastResult"] {
@@ -3315,7 +4111,9 @@ function mbtLastResult(
     raw === "huntersMark" ||
     raw === "hex" ||
     raw === "longstrider" ||
-    raw === "searingSmite"
+    raw === "searingSmite" ||
+    raw === "shillelagh" ||
+    raw === "trueStrike"
   ) {
     return raw;
   }
