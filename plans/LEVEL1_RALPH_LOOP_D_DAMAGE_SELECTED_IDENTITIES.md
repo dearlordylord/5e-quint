@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "L1D-RAY-OF-SICKNESS",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Ray Of Sickness Selected Identity Replay"
     },
     {
@@ -189,10 +189,10 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-M-P.md` Poison Spray.
 
 ### Task 5 - L1D-RAY-OF-SICKNESS - Ray Of Sickness Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `ray_of_sickness`, including poison damage
-and the save-gated Poisoned condition branch currently supported by runtime.
+and the on-hit Poisoned condition rider already supported by runtime.
 
 RAW: `.references/srd-5.2.1/Spells/Descriptions-Q-R.md` Ray of Sickness.
 

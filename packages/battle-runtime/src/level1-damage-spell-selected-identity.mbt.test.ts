@@ -1,7 +1,8 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt level1-damage-spell-selected-identity burning_hands ice_knife poison_spray
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt level1-damage-spell-selected-identity burning_hands ice_knife poison_spray ray_of_sickness
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity burning_hands doResolveBurningHandsMixedConeSavingThrows
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity ice_knife doResolveIceKnifeHitAttackDamageAndBurstSavingThrows doResolveIceKnifeMissBurstSavingThrows
 // UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity poison_spray doResolvePoisonSpraySpellAttackDamage
+// UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity ray_of_sickness doResolveRayOfSicknessSpellAttackDamageAndPoisoned
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -50,6 +51,7 @@ const level1DamageSpellSelectedIdentityDriverSchema = {
   doResolveIceKnifeHitAttackDamageAndBurstSavingThrows: {},
   doResolveIceKnifeMissBurstSavingThrows: {},
   doResolvePoisonSpraySpellAttackDamage: {},
+  doResolveRayOfSicknessSpellAttackDamageAndPoisoned: {},
   step: {},
 } as const;
 type Level1DamageSpellSelectedIdentityDriverAction = Exclude<
@@ -61,6 +63,7 @@ const level1DamageSpellUnitIds = [
   "burning_hands",
   "ice_knife",
   "poison_spray",
+  "ray_of_sickness",
 ] as const;
 type Level1DamageSpellUnitId = (typeof level1DamageSpellUnitIds)[number];
 const level1DamageSpellSelectedIdentityResults = [
@@ -69,6 +72,7 @@ const level1DamageSpellSelectedIdentityResults = [
   "iceKnifeHitAttackDamageAndBurstSavingThrows",
   "iceKnifeMissBurstSavingThrows",
   "poisonSpraySpellAttackDamage",
+  "rayOfSicknessSpellAttackDamageAndPoisoned",
 ] as const;
 type Level1DamageSpellSelectedIdentityResult =
   (typeof level1DamageSpellSelectedIdentityResults)[number];
@@ -78,6 +82,7 @@ type Level1DamageSpellSelectedIdentityProjection = {
   readonly spellSlotSpentThisTurn: boolean;
   readonly level1SlotsRemaining: number;
   readonly primaryTargetHp: number;
+  readonly primaryTargetPoisoned: boolean;
   readonly secondaryTargetHp: number;
   readonly lastResult: Level1DamageSpellSelectedIdentityResult;
 };
@@ -123,7 +128,10 @@ type Level1DamageSpellInvocationProfile =
   | {
       readonly tag: "spellSlot";
       readonly slotLevel: 1;
-      readonly procedure: "attackBurstSaveDamage" | "saveGatedDamage";
+      readonly procedure:
+        | "attackBurstSaveDamage"
+        | "saveGatedDamage"
+        | "spellAttackDamage";
     };
 
 const level1DamageSpellInvocationProfiles = {
@@ -139,6 +147,11 @@ const level1DamageSpellInvocationProfiles = {
   },
   poison_spray: {
     tag: "cantrip",
+    procedure: "spellAttackDamage",
+  },
+  ray_of_sickness: {
+    tag: "spellSlot",
+    slotLevel: 1,
     procedure: "spellAttackDamage",
   },
 } as const satisfies Record<
@@ -231,6 +244,26 @@ const selectedUnitIdentityReplays = [
           primaryTargetHp: 5,
           secondaryTargetHp: 12,
           lastResult: "poisonSpraySpellAttackDamage",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "level1-damage-spell-selected-identity",
+    unitId: "ray_of_sickness",
+    actions: ["doResolveRayOfSicknessSpellAttackDamageAndPoisoned"],
+    sequences: [
+      {
+        name: "ranged-spell-attack-poison-damage-and-poisoned-rider",
+        actions: ["doResolveRayOfSicknessSpellAttackDamageAndPoisoned"],
+        expected: expectedProjection({
+          actionAvailable: false,
+          spellSlotSpentThisTurn: true,
+          level1SlotsRemaining: 0,
+          primaryTargetHp: 5,
+          primaryTargetPoisoned: true,
+          secondaryTargetHp: 12,
+          lastResult: "rayOfSicknessSpellAttackDamageAndPoisoned",
         }),
       },
     ],
@@ -346,6 +379,13 @@ function createLevel1DamageSpellSelectedIdentityDriver() {
           "poisonSpraySpellAttackDamage",
         );
       },
+      doResolveRayOfSicknessSpellAttackDamageAndPoisoned: () => {
+        state = level1DamageSpellBattle(srdSpellRecord("ray_of_sickness"));
+        recordResolvedResult(
+          resolveRayOfSicknessSpellAttackDamageAndPoisoned(state),
+          "rayOfSicknessSpellAttackDamageAndPoisoned",
+        );
+      },
       step: () => {},
       getState: () =>
         projectLevel1DamageSpellSelectedIdentityState(state, lastResult),
@@ -361,6 +401,7 @@ function expectedProjection(
     spellSlotSpentThisTurn: false,
     level1SlotsRemaining: 1,
     primaryTargetHp: 12,
+    primaryTargetPoisoned: false,
     secondaryTargetHp: 12,
     lastResult: "init",
     ...overrides,
@@ -419,7 +460,7 @@ function resolvePoisonSpraySpellAttackDamage(
 ): BattleResolutionResult {
   const act = actionSpellAct(state, "poison_spray");
   const target = requireHole(act.initialHoles, "targetChoice");
-  assertPoisonSprayTargetProfile(target);
+  assertSinglePrimaryTargetChoiceProfile(target, "Poison Spray");
   const targetChoice = spellTargetFill(target, "poison_spray", primaryTargetId);
   const attack = requireResultHole(
     resolveBattleSubject({
@@ -450,13 +491,53 @@ function resolvePoisonSpraySpellAttackDamage(
   });
 }
 
+function resolveRayOfSicknessSpellAttackDamageAndPoisoned(
+  state: BattleState,
+): BattleResolutionResult {
+  const act = actionSpellAct(state, "ray_of_sickness");
+  const target = requireHole(act.initialHoles, "targetChoice");
+  assertSinglePrimaryTargetChoiceProfile(target, "Ray of Sickness");
+  const targetChoice = spellTargetFill(
+    target,
+    "ray_of_sickness",
+    primaryTargetId,
+  );
+  const attack = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetChoice],
+    }),
+    "attackRoll",
+  );
+  assertRayOfSicknessAttackRollProfile(attack);
+  const attackRoll = attackRollFill(attack, {
+    total: 15,
+    naturalD20: 10,
+  });
+  const damage = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetChoice, attackRoll],
+    }),
+    "rolledDice",
+  );
+  assertRayOfSicknessDamageProfile(damage);
+  return resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [targetChoice, attackRoll, damageRollFill(damage, [3, 4])],
+  });
+}
+
 function resolveIceKnifeAttackAndBurstSavingThrows(
   state: BattleState,
   attackOutcome: IceKnifeAttackOutcome,
 ): BattleResolutionResult {
   const act = actionSpellAct(state, "ice_knife");
   const target = requireHole(act.initialHoles, "targetChoice");
-  assertIceKnifeTargetProfile(target);
+  assertSinglePrimaryTargetChoiceProfile(target, "Ice Knife");
   const targetChoice = spellTargetFill(target, "ice_knife", primaryTargetId);
   const attack = requireResultHole(
     resolveBattleSubject({
@@ -824,17 +905,6 @@ function assertBurningHandsDamageProfile(
   }
 }
 
-function assertIceKnifeTargetProfile(
-  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
-): void {
-  if (
-    !hole.choices.includes(primaryTargetId) ||
-    hole.requiresTableSpatialFact !== true
-  ) {
-    throw new Error("Ice Knife target profile drifted.");
-  }
-}
-
 function assertIceKnifeAttackRollProfile(
   hole: Extract<BattleHole, { readonly kind: "attackRoll" }>,
 ): void {
@@ -915,17 +985,6 @@ function assertIceKnifeBurstDamageProfile(
   }
 }
 
-function assertPoisonSprayTargetProfile(
-  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
-): void {
-  if (
-    !hole.choices.includes(primaryTargetId) ||
-    hole.requiresTableSpatialFact !== true
-  ) {
-    throw new Error("Poison Spray target profile drifted.");
-  }
-}
-
 function assertPoisonSprayAttackRollProfile(
   hole: Extract<BattleHole, { readonly kind: "attackRoll" }>,
 ): void {
@@ -967,6 +1026,70 @@ function assertPoisonSprayDamageProfile(
   }
 }
 
+function assertSinglePrimaryTargetChoiceProfile(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  spellName: string,
+): void {
+  if (
+    !hole.choices.includes(primaryTargetId) ||
+    hole.requiresTableSpatialFact !== true
+  ) {
+    throw new Error(`${spellName} target profile drifted.`);
+  }
+}
+
+function assertRayOfSicknessAttackRollProfile(
+  hole: Extract<BattleHole, { readonly kind: "attackRoll" }>,
+): void {
+  if (!("spell" in hole)) {
+    throw new Error("Expected Ray of Sickness spell Attack Roll hole.");
+  }
+  const invocation = hole.spell;
+  if (
+    invocation.procedure !== "spellAttackDamage" ||
+    invocation.spell.id !== "ray_of_sickness" ||
+    invocation.resource.tag !== "spellSlot" ||
+    Number(invocation.resource.slotLevel) !== 1 ||
+    invocation.targeting.kind !== "singleCombatant" ||
+    invocation.attackKind !== "ranged_spell_attack" ||
+    Number(invocation.rangeFeet) !== 60
+  ) {
+    throw new Error("Ray of Sickness Attack Roll profile drifted.");
+  }
+}
+
+function assertRayOfSicknessDamageProfile(
+  hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
+): void {
+  if (!("spell" in hole) || !("critical" in hole)) {
+    throw new Error("Expected Ray of Sickness damage roll hole.");
+  }
+  const invocation = hole.spell;
+  if (
+    invocation.procedure !== "spellAttackDamage" ||
+    invocation.spell.id !== "ray_of_sickness" ||
+    invocation.resource.tag !== "spellSlot" ||
+    Number(invocation.resource.slotLevel) !== 1 ||
+    invocation.damage.kind !== "fixedSpellAttackDamage" ||
+    invocation.damage.expr.dice !== 2 ||
+    invocation.damage.expr.dieSize !== 8 ||
+    invocation.damage.damageType !== "poison" ||
+    hole.critical
+  ) {
+    throw new Error("Ray of Sickness damage profile drifted.");
+  }
+  const [postDamageRider] = invocation.postDamageRiders;
+  if (
+    invocation.postDamageRiders.length !== 1 ||
+    postDamageRider === undefined ||
+    postDamageRider.kind !== "condition" ||
+    postDamageRider.condition !== "poisoned" ||
+    postDamageRider.expiresAt !== "endOfCasterNextTurn"
+  ) {
+    throw new Error("Ray of Sickness post-damage rider profile drifted.");
+  }
+}
+
 function projectLevel1DamageSpellSelectedIdentityState(
   state: BattleState,
   lastResult: Level1DamageSpellSelectedIdentityProjection["lastResult"],
@@ -989,6 +1112,7 @@ function projectLevel1DamageSpellSelectedIdentityState(
       state.currentTurnResources.spellSlotExpendedThisTurn,
     level1SlotsRemaining: level1SlotsRemaining(state, casterId),
     primaryTargetHp: primaryTarget.hp,
+    primaryTargetPoisoned: primaryTarget.conditions.includes("poisoned"),
     secondaryTargetHp: secondaryTarget.hp,
     lastResult,
   };
@@ -1023,6 +1147,7 @@ function normalizeLevel1DamageSpellSelectedIdentityQuintState(
       state["qPrimaryTargetHp"],
       "qPrimaryTargetHp",
     ),
+    primaryTargetPoisoned: booleanField(state, "qPrimaryTargetPoisoned"),
     secondaryTargetHp: numberFromQuintInt(
       state["qSecondaryTargetHp"],
       "qSecondaryTargetHp",
