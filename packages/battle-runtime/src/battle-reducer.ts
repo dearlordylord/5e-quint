@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-dancing-lights-movable-dim-light spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-object-light spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-dancing-lights-movable-dim-light spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-object-light spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 import type {
   ActionEconomyState,
   RuntimeActionResource,
@@ -389,7 +389,6 @@ export {
   spendReactionModifierResource,
 } from "./battle-reducer/reaction-modifiers.ts";
 export {
-  currentActorHasPendingSlottedSpellCast,
   shieldReactionSpellMatchesTrigger,
   triggeredReactionSpellChoices,
   triggeredReactionSpellTurnResourceAvailable,
@@ -1310,12 +1309,17 @@ export type BattleReactionFrame =
       readonly trigger: "attackDamage";
       readonly continuation: BattleAttackDamageContinuationWithoutConcentration;
     })
-  | (BattleReactionFrameWithContinuationBase & {
-      readonly trigger: "spellCast";
-      readonly casterId: CombatantId;
-      readonly spellId: SpellRecord["id"];
-      readonly targetIds: readonly CombatantId[];
-    })
+	  | (BattleReactionFrameWithContinuationBase & {
+	      readonly trigger: "spellCast";
+	      readonly casterId: CombatantId;
+	      readonly spellId: SpellRecord["id"];
+	      readonly castLevel: number;
+	      readonly components: readonly SpellComponent[];
+	      readonly castingResource: BattleSpellCastingTimeResource;
+	      readonly spellSlotCommitment: BattleSpellCastSlotCommitment;
+	      readonly targetIds: readonly CombatantId[];
+	      readonly reactionSpellTargetFacts: readonly BattleSpellCastReactionFact[];
+	    })
   | (BattleReactionFrameWithContinuationBase & {
       readonly trigger: "saveFailed";
       readonly targetId: CombatantId;
@@ -1346,6 +1350,15 @@ export type BattleReactionInterruptFrame = Extract<
   BattleInterruptFrame,
   { readonly kind: "reaction" }
 >;
+export type SpellComponent = "V" | "S" | "M";
+export type BattleSpellCastingTimeResource =
+  | { readonly kind: "magicAction" }
+  | { readonly kind: "bonusAction" }
+  | { readonly kind: "reaction" }
+  | { readonly kind: "alreadySpent" };
+export type BattleSpellCastSlotCommitment =
+  | { readonly kind: "none" }
+  | { readonly kind: "pendingCasterSpellSlot" };
 export type BattleReplayContinuationFrame = {
   readonly kind: "replayContinuation";
   readonly continuation: Extract<
@@ -1601,6 +1614,13 @@ export type BattleTargetSpatialFact =
       readonly spellId: SpellRecord["id"];
       readonly rangeFeet: MovementFeet;
     }
+	  | {
+	      readonly kind: "counterspellTriggerCasterVisibleWithinRange";
+	      readonly reactorId: CombatantId;
+	      readonly casterId: CombatantId;
+	      readonly spellId: SpellRecord["id"];
+	      readonly rangeFeet: MovementFeet;
+	    }
   | {
       readonly kind: "grappleTargetWithinReach";
       readonly grapplerId: CombatantId;
@@ -1621,12 +1641,16 @@ export type BattleTargetSpatialFact =
       readonly actorId: CombatantId;
       readonly targetId: CombatantId;
     }
-  | {
-      readonly kind: "sneakAttackAllyWithin5FeetOfTarget";
-      readonly attackerId: CombatantId;
-      readonly targetId: CombatantId;
-      readonly allyId: CombatantId;
-    };
+	  | {
+	      readonly kind: "sneakAttackAllyWithin5FeetOfTarget";
+	      readonly attackerId: CombatantId;
+	      readonly targetId: CombatantId;
+	      readonly allyId: CombatantId;
+	    };
+export type BattleSpellCastReactionFact = Extract<
+  BattleTargetSpatialFact,
+  { readonly kind: "counterspellTriggerCasterVisibleWithinRange" }
+>;
 export type BattleThunderwavePushDisposition =
   | {
       readonly kind: "pushed";
@@ -2137,7 +2161,10 @@ export type ObjectLightSpellInvocation = {
   readonly procedure: "objectLight";
   readonly spell: SpellRecord;
   readonly actionCost: "magicAction";
-  readonly targeting: { readonly kind: "singleObject" };
+  readonly targeting: {
+    readonly kind: "singleObject";
+    readonly maxSize: Size;
+  };
   readonly light: Extract<
     BattleLightEmission,
     { readonly kind: "brightAndDim" }
@@ -2569,6 +2596,16 @@ export type SupportedSpellInvocation =
   | {
       readonly access: PreparedSpellAccess;
       readonly resource: SpellSlotInvocationResource;
+      readonly procedure: "counterspell";
+      readonly spell: SpellRecord;
+      readonly ability: Extract<Ability, "con">;
+      readonly dc: DcSource;
+      readonly targeting: Extract<SpellTargeting, { readonly kind: "singleCombatant" }>;
+      readonly rangeFeet: MovementFeet;
+    }
+  | {
+      readonly access: PreparedSpellAccess;
+      readonly resource: SpellSlotInvocationResource;
       readonly procedure: "directHitPointRestoration";
       readonly spell: SpellRecord;
       readonly actionCost: HealingSpellActionCost;
@@ -2621,10 +2658,11 @@ type AnySupportedDamageSpellInvocation = Exclude<
       | "heldLight"
       | "objectLight"
       | "dancingLightsSeparateCast"
-      | "dancingLightsCombinedCast"
-      | "dancingLightsReposition"
-      | "shieldReaction"
-      | "saveGatedCondition"
+	      | "dancingLightsCombinedCast"
+	      | "dancingLightsReposition"
+	      | "shieldReaction"
+	      | "counterspell"
+	      | "saveGatedCondition"
       | "saveGatedAttackRollAdvantage"
       | "sleepTargetAdmission"
       | "hideousLaughter"
@@ -2686,7 +2724,7 @@ export type BattleTurnResources = ActionEconomyState & {
   readonly actionResources: readonly RuntimeActionResource[];
   readonly currentHasBonusAction: boolean;
   readonly commandHalt: BattleCommandHaltTurnSuppression | null;
-  readonly spellSlotExpendedThisTurn: boolean;
+  readonly spellSlotUsesThisTurn: readonly BattleTurnSpellSlotUse[];
   readonly attackRollMadeThisTurn: boolean;
   readonly attackDamageRidersUsedThisTurn: readonly AttackDamageRiderUsage[];
   readonly weaponDamageDiceRollChoicesUsedThisTurn: readonly WeaponDamageDiceRollChoiceUsage[];
@@ -2698,6 +2736,16 @@ export type BattleTurnResources = ActionEconomyState & {
   readonly dashMovementBonusFeet: MovementFeet;
   readonly disengaged: boolean;
 };
+
+export type BattleTurnSpellSlotUse =
+  | {
+      readonly kind: "pending";
+      readonly combatantId: CombatantId;
+    }
+  | {
+      readonly kind: "committed";
+      readonly combatantId: CombatantId;
+    };
 
 export type OngoingFeatureExpiration =
   | {
@@ -3081,6 +3129,19 @@ export type BattleObjectTargetChoiceHole = {
   readonly holeId: BattleHoleId;
   readonly kind: "objectTargetChoice";
   readonly label: string;
+  readonly requiresTableSpatialFact: true;
+};
+export type BattleSpellCastReactionFactsHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "targetSpatialFacts";
+  readonly label: string;
+  readonly spellBeingCast: {
+    readonly casterId: CombatantId;
+    readonly spellId: SpellId;
+    readonly castLevel: number;
+    readonly components: readonly SpellComponent[];
+  };
   readonly requiresTableSpatialFact: true;
 };
 export type BattleSpellAreaChoiceHole = {
@@ -3589,6 +3650,7 @@ export type BattleSpellSavingThrowOutcomeHole = {
         | "saveGatedCondition"
         | "afterHitSaveGatedCondition"
         | "saveGatedAttackRollAdvantage"
+        | "counterspell"
         | "sleepTargetAdmission"
         | "hideousLaughter"
         | "command"
@@ -3771,6 +3833,7 @@ export type BattleAttackDamageDispositionHole = {
 };
 export type BattleHole =
   | BattleTargetChoiceHole
+  | BattleSpellCastReactionFactsHole
   | BattleObjectTargetChoiceHole
   | BattleSpellAreaChoiceHole
   | BattleHeldObjectFactsHole
@@ -4232,7 +4295,7 @@ export type BattleCreatureSnapshot = {
 export type BattleTurnSnapshot = {
   readonly actionResources: readonly RuntimeActionResource[];
   readonly bonusActionAvailable: boolean;
-  readonly spellSlotExpendedThisTurn: boolean;
+  readonly spellSlotUsesThisTurn: readonly BattleTurnSpellSlotUse[];
   readonly attackRollMadeThisTurn: boolean;
   readonly attackDamageRidersUsedThisTurn: readonly AttackDamageRiderUsage[];
   readonly weaponDamageDiceRollChoicesUsedThisTurn: readonly WeaponDamageDiceRollChoiceUsage[];
@@ -4350,6 +4413,7 @@ export {
   SHOVE_TARGET_HOLE_INSTANCE,
   SLEEP_SHAKE_AWAKE_TARGET_HOLE_ID,
   SLEEP_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
+  SPELL_CAST_REACTION_FACTS_HOLE_ID,
   STAT_BLOCK_RECHARGE_ROLL_HOLE_ID,
   STAT_BLOCK_RECHARGE_ROLL_HOLE_INSTANCE,
   SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS,

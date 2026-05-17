@@ -15,6 +15,7 @@ module battleRuntimeInterruptBridge {
 
   type BattleRuntimeReactionProcedure =
     | BattleRuntimeShieldReactionProcedure
+    | BattleRuntimeCounterspellReactionProcedure
     | BattleRuntimeOpportunityAttackProcedure
     | BattleRuntimeReadiedSpellReleaseProcedure
     | BattleRuntimeDamageInterruptionProcedure
@@ -51,6 +52,7 @@ module battleRuntimeInterruptBridge {
       | BattleRuntimeDamageInterruptionProcedure => TakeDamageInterruptionReaction
       | BattleRuntimeReadiedSpellReleaseProcedure => TakeReadiedSpellReaction
       | BattleRuntimeShieldReactionProcedure => TakeReadiedSpellReaction
+      | BattleRuntimeCounterspellReactionProcedure => TakeReadiedSpellReaction
       | BattleRuntimeNoReactionProcedure => DeclineReaction
     }
 
@@ -137,6 +139,19 @@ module battleRuntimeInterruptBridge {
     val decision = battleRuntimeTakeReactionDecision(
       BattleRuntimeAfterDamage,
       BattleRuntimeDamageInterruptionProcedure,
+      true,
+      false,
+      true,
+      true,
+      true,
+    )
+    assert(decision == BattleRuntimeTookReaction({ frameComplete: true, reactionAvailableAfterChoice: false }))
+  }
+
+  run test_counterspell_reaction_uses_spell_cast_reaction_contract = {
+    val decision = battleRuntimeTakeReactionDecision(
+      BattleRuntimeSpellCast,
+      BattleRuntimeCounterspellReactionProcedure,
       true,
       false,
       true,

@@ -45,6 +45,7 @@ import { invalidResult } from "./result-helpers.ts";
 import { applyBattleMovement } from "./readied-release.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import { sanctuaryTargetingInterdictionCheck } from "./sanctuary-targeting-interdiction.ts";
+import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
 import {
   applyCommandPendingEffects,
   applyFailedSaveAttackRollAdvantageEffects,
@@ -589,6 +590,25 @@ export function resolveSaveGateDamageSpellAct(input: {
       "invalidFill",
       "Save-gate damage spells do not use an attack roll.",
     );
+  }
+  const spellCastReactionWindow = maybeOpenReactionWindow(
+    input.input.state,
+    spellCastReactionFrame({
+      casterId: input.actorId,
+      invocation: input.invocation,
+      targetIds: saveGatedDamageSpellCastTargetIds(input.fillSet),
+      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+      castingResource: { kind: "magicAction" },
+      continuation: {
+        kind: "replay",
+        subject: input.input.subject,
+        fills: input.input.fills,
+      },
+    }),
+    input.input.suppressedReactionTrigger,
+  );
+  if (spellCastReactionWindow !== null) {
+    return spellCastReactionWindow;
   }
   if (input.fillSet.savingThrowOutcomes === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
@@ -1643,6 +1663,23 @@ export function validateSavingThrowOutcomes(
     return "Save-gate spell Saving Throw outcomes must cover every table-supplied area affected target.";
   }
   return null;
+}
+
+function saveGatedDamageSpellCastTargetIds(
+  fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>,
+): readonly CombatantId[] {
+  if (fillSet.targetId !== undefined) {
+    return [fillSet.targetId];
+  }
+  if (fillSet.targetList !== undefined) {
+    return fillSet.targetList.targetIds;
+  }
+  if (fillSet.savingThrowOutcomes !== undefined) {
+    return "area" in fillSet.savingThrowOutcomes
+      ? fillSet.savingThrowOutcomes.area.affectedTargetIds
+      : fillSet.savingThrowOutcomes.outcomes.map((outcome) => outcome.targetId);
+  }
+  return [];
 }
 
 function validatePostSaveAreaEffect(input: {

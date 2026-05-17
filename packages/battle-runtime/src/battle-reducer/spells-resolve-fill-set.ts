@@ -6,6 +6,7 @@ import type { Ability, Skill } from "@dnd/surface/surface/types";
 import {
   ATTACK_ROLL_HOLE_ID,
   ATTACK_TARGET_HOLE_ID,
+  SPELL_CAST_REACTION_FACTS_HOLE_ID,
   isScalarBuffTargetListInvocation,
   isTargetListSpellInvocation,
   type BattleAttackRollResult,
@@ -17,6 +18,7 @@ import {
   type BattleSpellTargetAllocation,
   type BattleSpellTargetAllocationSpatialFact,
   type BattleSpellTargetListSpatialFact,
+  type BattleSpellCastReactionFact,
   type BattleTargetSpatialFact,
   type SpellTargeting,
   type SupportedSpellInvocation,
@@ -76,6 +78,7 @@ type SpellObjectTargetFact = Extract<
       | "spellObjectTargetSight";
   }
 >;
+export type SpellCastReactionFact = BattleSpellCastReactionFact;
 
 export type SpellFillSet =
   | {
@@ -97,6 +100,7 @@ export type SpellFillSet =
           }
         | undefined;
       readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
+      readonly reactionSpellTargetFacts: readonly SpellCastReactionFact[];
       readonly targetAllocation:
         | {
             readonly allocations: readonly BattleSpellTargetAllocation[];
@@ -176,6 +180,8 @@ export function spellFillSet(
       }
     | undefined;
   let targetSpatialFacts: readonly BattleTargetSpatialFact[] = [];
+  let reactionSpellTargetFacts: readonly SpellCastReactionFact[] = [];
+  let reactionSpellTargetFactsFilled = false;
   let targetAllocation:
     | {
         readonly allocations: readonly BattleSpellTargetAllocation[];
@@ -247,6 +253,31 @@ export function spellFillSet(
       targetSpatialFacts = fill.spatialFacts ?? [];
       const sightFactValidation = attackSightFactValidation(targetSpatialFacts);
       if (sightFactValidation !== null) return sightFactValidation;
+      continue;
+    }
+
+    if (
+      fill.kind === "targetSpatialFacts" &&
+      fill.holeId === SPELL_CAST_REACTION_FACTS_HOLE_ID
+    ) {
+      if (reactionSpellTargetFactsFilled) {
+        return {
+          tag: "invalid",
+          message: "Spell-cast Reaction trigger facts were filled twice.",
+        };
+      }
+      const reactionFactValidation = parseSpellCastReactionFactsFill(fill);
+      if (reactionFactValidation.tag === "invalid") {
+        return { tag: "invalid", message: reactionFactValidation.message };
+      }
+      if (reactionFactValidation.tag === "notSpellCastReactionFactsFill") {
+        return {
+          tag: "invalid",
+          message: "Spell-cast Reaction trigger facts must use the spell-cast Reaction facts hole.",
+        };
+      }
+      reactionSpellTargetFacts = reactionFactValidation.facts;
+      reactionSpellTargetFactsFilled = true;
       continue;
     }
 
@@ -567,6 +598,7 @@ export function spellFillSet(
         invocation.procedure !== "saveGatedCondition" &&
         invocation.procedure !== "afterHitSaveGatedCondition" &&
         invocation.procedure !== "saveGatedAttackRollAdvantage" &&
+        invocation.procedure !== "counterspell" &&
         invocation.procedure !== "sleepTargetAdmission" &&
         invocation.procedure !== "hideousLaughter" &&
         invocation.procedure !== "command" &&
@@ -891,6 +923,7 @@ export function spellFillSet(
     targetId,
     objectTarget,
     targetSpatialFacts,
+    reactionSpellTargetFacts,
     targetAllocation,
     targetList,
     beamFills,
@@ -913,6 +946,69 @@ export function spellFillSet(
   };
 }
 
+export function spellFillSetContainsOnlySpellCastReactionFacts(
+  fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>,
+  options: { readonly allowSavingThrowOutcomes?: boolean },
+): boolean {
+  return (
+    fillSet.targetId === undefined &&
+    fillSet.objectTarget === undefined &&
+    fillSet.targetSpatialFacts.length === 0 &&
+    fillSet.targetAllocation === undefined &&
+    fillSet.targetList === undefined &&
+    fillSet.beamFills.every(
+      (beamFill) =>
+        beamFill.target === undefined &&
+        beamFill.attackRoll === undefined &&
+        beamFill.damageRoll === undefined,
+    ) &&
+    fillSet.attackRoll === undefined &&
+    (options.allowSavingThrowOutcomes === true ||
+      fillSet.savingThrowOutcomes === undefined) &&
+    fillSet.skillChoice === undefined &&
+    fillSet.abilityChoice === undefined &&
+    fillSet.commandOptionChoice === undefined &&
+    fillSet.areaChoice === undefined &&
+    fillSet.dancingLightsPlacement === undefined &&
+    fillSet.damageTypeChoice === undefined &&
+    fillSet.concentrationSavingThrows.length === 0 &&
+    fillSet.hideousLaughterDamageRepeatSaves.length === 0 &&
+    fillSet.damageDispositions.length === 0 &&
+    fillSet.damageRoll === undefined &&
+    fillSet.movement === undefined &&
+    fillSet.spellDamageReductionRolls.length === 0 &&
+    fillSet.attackBurstDamageRoll === undefined &&
+    fillSet.healingRoll === undefined
+  );
+}
+
+export function parseSpellCastReactionFactsFill(
+  fill: BattleFill,
+):
+  | { readonly tag: "notSpellCastReactionFactsFill" }
+  | { readonly tag: "ok"; readonly facts: readonly SpellCastReactionFact[] }
+  | { readonly tag: "invalid"; readonly message: string } {
+  if (
+    fill.kind !== "targetSpatialFacts" ||
+    fill.holeId !== SPELL_CAST_REACTION_FACTS_HOLE_ID
+  ) {
+    return { tag: "notSpellCastReactionFactsFill" };
+  }
+  return fill.spatialFacts.every(isSpellCastReactionFact)
+    ? { tag: "ok", facts: fill.spatialFacts }
+    : {
+        tag: "invalid",
+        message:
+          "Spell-cast Reaction trigger facts must describe Counterspell caster visibility.",
+      };
+}
+
+function isSpellCastReactionFact(
+  fact: BattleTargetSpatialFact,
+): fact is SpellCastReactionFact {
+  return fact.kind === "counterspellTriggerCasterVisibleWithinRange";
+}
+
 function attackSightFactValidation(
   facts: readonly BattleTargetSpatialFact[],
 ): Extract<SpellFillSet, { readonly tag: "invalid" }> | null {
@@ -929,6 +1025,7 @@ export function spellFillSetSavingThrowTargeting(
         invocation.procedure === "saveGatedCondition" ||
         invocation.procedure === "afterHitSaveGatedCondition" ||
         invocation.procedure === "saveGatedAttackRollAdvantage" ||
+        invocation.procedure === "counterspell" ||
         invocation.procedure === "sleepTargetAdmission" ||
         invocation.procedure === "hideousLaughter" ||
         invocation.procedure === "command" ||

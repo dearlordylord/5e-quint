@@ -186,20 +186,31 @@ export function readSpeciesCreationFacts(
 
   return {
     tag: "readable",
-    value: readOrcSpeciesRecord(unit),
+    value: readSpeciesRecord(unit),
   };
 }
 
 export function readOrcSpeciesCreationFacts(
   unit: UnitRecord,
 ): UnitReaderResult<OrcSpeciesCreationFacts> {
-  if (unit.kind !== "species") {
+  if (unit.kind !== "species" || unit.species !== "orc") {
     return unsupportedKind(unit, "species");
   }
 
   return {
     tag: "readable",
     value: readOrcSpeciesRecord(unit),
+  };
+}
+
+function readSpeciesRecord(unit: SpeciesRecord): SpeciesCreationFacts {
+  return {
+    recordId: unit.id,
+    species: unit.species,
+    creatureType: unit.creatureType,
+    size: unit.size,
+    speed: unit.speed,
+    traits: unit.traits,
   };
 }
 

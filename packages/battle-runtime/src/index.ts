@@ -209,6 +209,7 @@ export {
   resolveBardicInspirationFailedD20Test,
   scoreModifier,
   snapshotBattle,
+  SPELL_CAST_REACTION_FACTS_HOLE_ID,
   spellSaveDcForCaster,
   startBattle,
   type ActiveOngoingFeatureOccurrence,

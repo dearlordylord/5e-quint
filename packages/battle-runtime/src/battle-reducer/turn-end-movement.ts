@@ -2255,7 +2255,7 @@ export function resetBattleTurnResources(
   return {
     ...base,
     commandHalt: null,
-    spellSlotExpendedThisTurn: false,
+    spellSlotUsesThisTurn: [],
     attackRollMadeThisTurn: false,
     attackDamageRidersUsedThisTurn: [],
     weaponDamageDiceRollChoicesUsedThisTurn: [],

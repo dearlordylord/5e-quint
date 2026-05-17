@@ -85,7 +85,10 @@ export function spendSpellCastResources(input: {
       "Class feature free spell casts require procedure-specific resource spending.",
     );
   }
-  const slotTurnResources = markSpellSlotExpendedThisTurn(spent.right);
+  const slotTurnResources = markSpellSlotExpendedThisTurn(
+    spent.right,
+    input.actorId,
+  );
   if (Either.isLeft(slotTurnResources)) {
     return invalidResult(
       input.errorState,

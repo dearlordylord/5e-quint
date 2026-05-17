@@ -2082,7 +2082,7 @@ function projectLevel1DamageSpellSelectedIdentityState(
       (resource) => resource.source === "turn",
     ),
     spellSlotSpentThisTurn:
-      state.currentTurnResources.spellSlotExpendedThisTurn,
+      state.currentTurnResources.spellSlotUsesThisTurn.some((use) => use.kind === "committed"),
     level1SlotsRemaining: level1SlotsRemaining(state, casterId),
     primaryTargetHp: primaryTarget.hp,
     primaryTargetPoisoned: primaryTarget.conditions.includes("poisoned"),

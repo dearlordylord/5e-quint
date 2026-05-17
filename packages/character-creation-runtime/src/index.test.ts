@@ -723,7 +723,18 @@ describe("character creation hole discovery", () => {
         ],
       ],
       ["choice", "cc:draft:draft.background", ["background_soldier"]],
-      ["choice", "cc:draft:draft.species", ["species_orc"]],
+      [
+        "choice",
+        "cc:draft:draft.species",
+        [
+          "species_dragonborn",
+          "species_dwarf",
+          "species_elf",
+          "species_goliath",
+          "species_orc",
+          "species_tiefling",
+        ],
+      ],
       [
         "abilityScores",
         "cc:draft:draft.abilityScoreGeneration",
@@ -1440,6 +1451,28 @@ describe("character creation hole discovery", () => {
           hole.source.unitId === "species_orc",
       ),
     ).toBe(false);
+  });
+
+  test("discovers selected species size source fact only for choice-sized species", () => {
+    const fixedSpeciesHoles = discoverCreationHoles({
+      draft: draftWithSelections({
+        species: "species_dwarf",
+      }),
+      unitLibrary,
+    });
+    const choiceSpeciesHoles = discoverCreationHoles({
+      draft: draftWithSelections({
+        species: "species_tiefling",
+      }),
+      unitLibrary,
+    });
+
+    expect(
+      holeById(fixedSpeciesHoles, "cc:draft:draft.speciesSize"),
+    ).toBeUndefined();
+    expect(
+      optionIds(holeById(choiceSpeciesHoles, "cc:draft:draft.speciesSize")),
+    ).toEqual(["medium", "small"]);
   });
 });
 
@@ -2243,6 +2276,93 @@ describe("character creation finalization", () => {
       "armor_chain_mail",
       "equipment_shield",
     ]);
+  });
+
+  test("finalizes non-Orc species admission with retained trait Unit refs", () => {
+    const cases = [
+      {
+        speciesUnitId: "species_dragonborn",
+        expectedTraitUnitIds: [
+          "species_dragonborn_breath_weapon",
+          "species_dragonborn_damage_resistance",
+          "species_dragonborn_darkvision",
+        ],
+      },
+      {
+        speciesUnitId: "species_dwarf",
+        expectedTraitUnitIds: ["dwarf_darkvision", "dwarf_dwarven_resilience"],
+      },
+      {
+        speciesUnitId: "species_elf",
+        expectedTraitUnitIds: ["elf_darkvision"],
+      },
+      {
+        speciesUnitId: "species_goliath",
+        expectedTraitUnitIds: ["species_goliath_powerful_build"],
+      },
+      {
+        speciesUnitId: "species_tiefling",
+        speciesSize: "medium",
+        expectedTraitUnitIds: ["species_tiefling_darkvision"],
+      },
+    ] as const;
+
+    for (const testCase of cases) {
+      const draft = completeManifestDraftForSpecies(testCase);
+      const result = finalizeCharacterDraft({ draft, unitLibrary });
+
+      expect(result.tag, testCase.speciesUnitId).toBe("ready");
+      if (result.tag !== "ready") continue;
+
+      expect(result.build.species).toBe(testCase.speciesUnitId);
+      if (testCase.speciesUnitId === "species_tiefling") {
+        expect(result.build.speciesSize).toBe("medium");
+      } else {
+        expect(result.build.speciesSize).toBeUndefined();
+      }
+      const unitRefIds = characterBuildUnitRefs(result.build, unitLibrary).map(
+        (ref) => ref.unitId,
+      );
+      expect(unitRefIds, testCase.speciesUnitId).toContain(
+        testCase.speciesUnitId,
+      );
+      for (const traitUnitId of testCase.expectedTraitUnitIds) {
+        expect(unitRefIds, testCase.speciesUnitId).toContain(traitUnitId);
+      }
+    }
+  });
+
+  test("requires species size selection exactly for choice-sized species", () => {
+    const tieflingWithoutSize = finalizeCharacterDraft({
+      draft: completeManifestDraftForSpecies("species_tiefling"),
+      unitLibrary,
+    });
+    expect(tieflingWithoutSize).toMatchObject({ tag: "incomplete" });
+
+    const dwarf = completeManifestDraftForSpecies("species_dwarf");
+    const dwarfWithStaleSize: CharacterDraft = {
+      ...dwarf,
+      selections: {
+        ...dwarf.selections,
+        speciesSize: "medium",
+      },
+    };
+    const staleSize = finalizeCharacterDraft({
+      draft: dwarfWithStaleSize,
+      unitLibrary,
+    });
+
+    expect(staleSize).toMatchObject({
+      tag: "invalid",
+      issues: [
+        {
+          tag: "unsupportedFinalization",
+          code: "unsupportedFinalization",
+          message:
+            "Finalized build species size selection must match the selected species Surface facts.",
+        },
+      ],
+    });
   });
 
   test("finalizes supported Monk 1 class-container source facts from Surface class records", () => {
@@ -5687,11 +5807,12 @@ function unitLibraryReplacingUnits(
 
 function initialManifestFills(
   progressionOptionId = "13:class_fighter:level_1:maximum_hit_die",
+  speciesUnitId: UnitRecord["id"] = "species_orc",
 ): readonly CreationFill[] {
   return [
     choiceFill("cc:draft:draft.progression.initial", progressionOptionId),
     choiceFill("cc:draft:draft.background", "background_soldier"),
-    choiceFill("cc:draft:draft.species", "species_orc"),
+    choiceFill("cc:draft:draft.species", speciesUnitId),
     {
       kind: "abilityScores",
       holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
@@ -5718,17 +5839,51 @@ function initialManifestFills(
 }
 
 function completeManifestDraft(): CharacterDraft {
+  return completeManifestDraftForSpecies("species_orc");
+}
+
+function completeManifestDraftForSpecies(input: {
+  readonly speciesUnitId: UnitRecord["id"];
+  readonly speciesSize?: "medium" | "small";
+}): CharacterDraft;
+function completeManifestDraftForSpecies(
+  speciesUnitId: UnitRecord["id"],
+): CharacterDraft;
+function completeManifestDraftForSpecies(
+  input:
+    | UnitRecord["id"]
+    | {
+        readonly speciesUnitId: UnitRecord["id"];
+        readonly speciesSize?: "medium" | "small";
+      },
+): CharacterDraft {
+  const speciesUnitId = typeof input === "string" ? input : input.speciesUnitId;
+  const speciesSize = typeof input === "string" ? undefined : input.speciesSize;
   const draft = createTestDraft("draft:complete-manifest");
   const afterInitial = requireAcceptedBatch(
     fillCreationHoles({
       draft,
       unitLibrary,
       expectedRevision: draft.revision,
-      fills: initialManifestFills(),
+      fills: initialManifestFills(
+        "13:class_fighter:level_1:maximum_hit_die",
+        speciesUnitId,
+      ),
     }),
   );
+  const afterSpeciesSize =
+    speciesSize === undefined
+      ? afterInitial
+      : requireAcceptedBatch(
+          fillCreationHoles({
+            draft: afterInitial,
+            unitLibrary,
+            expectedRevision: afterInitial.revision,
+            fills: [choiceFill("cc:draft:draft.speciesSize", speciesSize)],
+          }),
+        );
 
-  return completeManifestDraftAfterProgression(afterInitial);
+  return completeManifestDraftAfterProgression(afterSpeciesSize);
 }
 
 function completeFighterTwoDraft(): CharacterDraft {

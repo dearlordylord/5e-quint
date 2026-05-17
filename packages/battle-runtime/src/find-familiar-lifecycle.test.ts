@@ -1782,7 +1782,7 @@ describe("Find Familiar lifecycle", () => {
       false,
     );
     expect(Number(delivered.state.combatants.get(enemyId)?.hp)).toBe(12);
-    expect(delivered.state.currentTurnResources.spellSlotExpendedThisTurn).toBe(
+    expect(delivered.state.currentTurnResources.spellSlotUsesThisTurn.some((use) => use.kind === "committed")).toBe(
       true,
     );
   });
@@ -1822,7 +1822,7 @@ describe("Find Familiar lifecycle", () => {
 
     expect(bypass.tag).toBe("invalid");
     expect(cast.state.combatants.get(familiarId)?.reactionAvailable).toBe(true);
-    expect(cast.state.currentTurnResources.spellSlotExpendedThisTurn).toBe(
+    expect(cast.state.currentTurnResources.spellSlotUsesThisTurn.some((use) => use.kind === "committed")).toBe(
       false,
     );
   });
@@ -1850,7 +1850,7 @@ describe("Find Familiar lifecycle", () => {
       },
     });
     expect(nonTouch.tag).toBe("invalid");
-    expect(cast.state.currentTurnResources.spellSlotExpendedThisTurn).toBe(
+    expect(cast.state.currentTurnResources.spellSlotUsesThisTurn.some((use) => use.kind === "committed")).toBe(
       false,
     );
     expect(cast.state.combatants.get(familiarId)?.reactionAvailable).toBe(true);
@@ -1880,7 +1880,7 @@ describe("Find Familiar lifecycle", () => {
       },
     });
     expect(blocked.tag).toBe("invalid");
-    expect(withoutReaction.currentTurnResources.spellSlotExpendedThisTurn).toBe(
+    expect(withoutReaction.currentTurnResources.spellSlotUsesThisTurn.some((use) => use.kind === "committed")).toBe(
       false,
     );
   });

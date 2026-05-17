@@ -4,6 +4,7 @@ import {
   holeId,
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
+import { SIZES } from "@dnd/shared/types";
 import type { CombatantId } from "../identity.ts";
 import { battleCreatureType } from "./domain-helpers.ts";
 import {
@@ -70,13 +71,6 @@ type ObjectIgnitionFact = Extract<
   { readonly kind: "spellObjectIgnition" }
 >;
 type ObjectLightTargetSize = ObjectLightTargetFact["size"];
-
-const OBJECT_LIGHT_ALLOWED_SIZES = [
-  "tiny",
-  "small",
-  "medium",
-  "large",
-] as const satisfies readonly ObjectLightTargetSize[];
 
 export function spellTargetHole(
   state: BattleState,
@@ -483,16 +477,17 @@ export function spellObjectLightTargetFact(
         fact.casterId === actorId &&
         fact.objectId === objectId &&
         fact.spellId === invocation.spell.id &&
-        objectSizeIsLargeOrSmaller(fact.size) &&
+        objectSizeIsAtMost(fact.size, invocation.targeting.maxSize) &&
         fact.wornOrCarried.kind !== "someoneElse",
     ) ?? null
   );
 }
 
-function objectSizeIsLargeOrSmaller(
+function objectSizeIsAtMost(
   objectSize: ObjectLightTargetSize,
+  maxSize: ObjectLightTargetSize,
 ): boolean {
-  return OBJECT_LIGHT_ALLOWED_SIZES.some((allowed) => allowed === objectSize);
+  return SIZES.indexOf(objectSize) <= SIZES.indexOf(maxSize);
 }
 
 export function spellTargetHasNonSpatialPrerequisites(

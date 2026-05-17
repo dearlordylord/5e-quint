@@ -620,7 +620,7 @@ function createBattleRuntimeDriver() {
     }
 
     function submit(nextFills: readonly BattleFill[]): void {
-      fills = nextFills;
+      fills = fillsWithMbtSpellCastReactionFacts(holes, nextFills);
       const result = resolveBattleSubject({ state, subject, fills });
       recordResult(result);
     }
@@ -861,7 +861,7 @@ function createMagicMissileDriver() {
     }
 
     function submit(nextFills: readonly BattleFill[]): void {
-      fills = nextFills;
+      fills = fillsWithMbtSpellCastReactionFacts(holes, nextFills);
       const result = resolveBattleSubject({ state, subject, fills });
       lastResult = result.tag;
       if (result.tag === "resolved") {
@@ -1001,7 +1001,7 @@ function createStarryWispObjectDriver() {
     }
 
     function submit(nextFills: readonly BattleFill[]): void {
-      fills = nextFills;
+      fills = fillsWithMbtSpellCastReactionFacts(holes, nextFills);
       recordResult(resolveBattleSubject({ state, subject, fills }));
     }
 
@@ -1093,7 +1093,7 @@ function createEldritchBlastDriver() {
     }
 
     function submit(nextFills: readonly BattleFill[]): void {
-      fills = nextFills;
+      fills = fillsWithMbtSpellCastReactionFacts(holes, nextFills);
       recordResult(resolveBattleSubject({ state, subject, fills }));
     }
 
@@ -1199,7 +1199,7 @@ function createSleepRepeatSaveDriver() {
     }
 
     function submit(nextFills: readonly BattleFill[]): void {
-      fills = nextFills;
+      fills = fillsWithMbtSpellCastReactionFacts(holes, nextFills);
       recordResult(resolveBattleSubject({ state, subject, fills }));
     }
 
@@ -1332,7 +1332,7 @@ function createDeathSavingThrowDriver() {
     }
 
     function submit(nextFills: readonly BattleFill[]): void {
-      fills = nextFills;
+      fills = fillsWithMbtSpellCastReactionFacts(holes, nextFills);
       const result = resolveBattleSubject({ state, subject, fills });
       recordResult(result);
     }
@@ -1806,7 +1806,7 @@ function projectMbtState(input: {
       (usage) =>
         usage.attackerId === fighterId && usage.unitId === "rogue_sneak_attack",
     ),
-    holes: input.holes.map(projectHole).sort(),
+    holes: projectHoles(input.holes),
     lastResult: input.lastResult,
     lastInvalidReason: input.lastInvalidReason,
   };
@@ -1838,7 +1838,7 @@ function projectDeathSavingThrowMbtState(input: {
     targetDead: target.zeroHpLifecycle.dead,
     targetDeathSuccesses: target.zeroHpLifecycle.deathSaves.successes,
     targetDeathFailures: target.zeroHpLifecycle.deathSaves.failures,
-    holes: input.holes.map(projectHole).sort(),
+    holes: projectHoles(input.holes),
     lastResult: input.lastResult,
     lastInvalidReason: input.lastInvalidReason,
   };
@@ -1938,7 +1938,7 @@ function projectScalarBuffMbtState(input: {
     actionAvailable: snapshot.turn.actionResources.some(
       (resource) => resource.source === "turn",
     ),
-    holes: input.holes.map(projectHole).sort(),
+    holes: projectHoles(input.holes),
     lastResult: input.lastResult,
     lastInvalidReason: input.lastInvalidReason,
   };
@@ -1956,7 +1956,7 @@ function projectStarryWispObjectMbtState(input: {
     actionAvailable: snapshot.turn.actionResources.some(
       (resource) => resource.source === "turn",
     ),
-    holes: input.holes.map(projectHole).sort(),
+    holes: projectHoles(input.holes),
     objectDamage: input.objectDamage,
     lightEmitters: snapshot.lightEmitters
       .map(projectLightEmitter)
@@ -1988,7 +1988,7 @@ function projectEldritchBlastMbtState(
       (resource) => resource.source === "turn",
     ),
     targetHp: target.hp,
-    holes: [...new Set(holes.map(projectHole))].sort(),
+    holes: projectUniqueHoles(holes),
     lastResult,
     lastInvalidReason,
   };
@@ -2020,7 +2020,7 @@ function projectSleepRepeatSaveMbtState(input: {
     actionAvailable: snapshot.turn.actionResources.some(
       (resource) => resource.source === "turn",
     ),
-    holes: input.holes.map(projectHole).sort(),
+    holes: projectHoles(input.holes),
     lastResult: input.lastResult,
     lastInvalidReason: input.lastInvalidReason,
   };
@@ -2866,6 +2866,28 @@ function requireHole(
   return hole;
 }
 
+function fillsWithMbtSpellCastReactionFacts(
+  holes: readonly BattleHole[],
+  fills: readonly BattleFill[],
+): readonly BattleFill[] {
+  const filledHoleIds = new Set(
+    fills
+      .filter((fill) => fill.kind === "targetSpatialFacts")
+      .map((fill) => fill.holeId),
+  );
+  const spellCastReactionFactFills = holes.flatMap(
+    (
+      hole,
+    ): readonly Extract<BattleFill, { readonly kind: "targetSpatialFacts" }>[] =>
+      hole.kind === "targetSpatialFacts" && !filledHoleIds.has(hole.holeId)
+        ? [{ kind: "targetSpatialFacts", holeId: hole.holeId, spatialFacts: [] }]
+        : [],
+  );
+  return spellCastReactionFactFills.length === 0
+    ? fills
+    : [...fills, ...spellCastReactionFactFills];
+}
+
 function targetFill(
   hole: BattleHole,
   targetId: CombatantId,
@@ -3477,7 +3499,15 @@ function compareJsonStable(left: unknown, right: unknown): number {
   return JSON.stringify(left).localeCompare(JSON.stringify(right));
 }
 
-function projectHole(hole: BattleHole): MbtHole {
+function projectHoles(holes: readonly BattleHole[]): readonly MbtHole[] {
+  return holes.flatMap(projectHole).sort();
+}
+
+function projectUniqueHoles(holes: readonly BattleHole[]): readonly MbtHole[] {
+  return [...new Set(holes.flatMap(projectHole))].sort();
+}
+
+function projectHole(hole: BattleHole): readonly MbtHole[] {
   if (hole.kind === "shoveOutcome") {
     throw new Error("Battle runtime MBT does not model Shove holes.");
   }
@@ -3500,7 +3530,13 @@ function projectHole(hole: BattleHole): MbtHole {
       "Battle runtime MBT does not model Dancing Lights placement holes.",
     );
   }
-  return Match.value(hole).pipe(
+  if (hole.kind === "targetSpatialFacts") {
+    // The active MBT suites do not branch on Counterspell table facts; they
+    // prefill this projection-only hole with an empty fact set before submit.
+    return [];
+  }
+  return [
+    Match.value(hole).pipe(
     Match.when({ kind: "targetChoice" }, () => "TargetChoice" as const),
     Match.when(
       { kind: "objectTargetChoice" },
@@ -3571,8 +3607,9 @@ function projectHole(hole: BattleHole): MbtHole {
         "Battle runtime MBT does not model attack damage disposition holes.",
       );
     }),
-    Match.exhaustive,
-  );
+      Match.exhaustive,
+    ),
+  ];
 }
 
 function holeName(raw: unknown): MbtHole {

@@ -8,22 +8,22 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Metric | Value |
 | --- | ---: |
-| Installed collection inventory count | 145 Units |
+| Installed collection inventory count | 159 Units |
 
 ## Coverage Metrics
 
 | Metric | Covered | Percent |
 | --- | ---: | ---: |
-| Authored Surface Unit catalog admission | 144/429 | 33.6% |
-| Authored Surface executable catalog admission | 117/362 | 32.3% |
-| Installed Unit profile classification coverage | 145/145 | 100% |
-| Supported executable Unit coverage | 97/118 | 82.2% |
-| QNT profile modeling coverage | 62/62 | 100% |
-| QNT proof coverage | 62/62 | 100% |
-| Runtime mapping coverage | 62/62 | 100% |
-| Runtime parity coverage | 62/62 | 100% |
-| Deterministic admission/projection coverage | 97/97 | 100% |
-| Selected identity MBT coverage | 97/97 | 100% |
+| Authored Surface Unit catalog admission | 158/434 | 36.4% |
+| Authored Surface executable catalog admission | 126/362 | 34.8% |
+| Installed Unit profile classification coverage | 159/159 | 100% |
+| Supported executable Unit coverage | 105/127 | 82.7% |
+| QNT profile modeling coverage | 63/63 | 100% |
+| QNT proof coverage | 63/63 | 100% |
+| Runtime mapping coverage | 63/63 | 100% |
+| Runtime parity coverage | 63/63 | 100% |
+| Deterministic admission/projection coverage | 105/105 | 100% |
+| Selected identity MBT coverage | 104/105 | 99% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -98,6 +98,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `chromatic_orb` | srd-5.2.1 | `spell.invocation-chained-attack-damage`, `spell.readied-action-time-spell` |
 | `color_spray` | srd-5.2.1 | `spell.invocation-condition-save` |
 | `command` | srd-5.2.1 | `spell.invocation-command-halt-grovel`, `spell.invocation-command-drop-held-object`, `spell.invocation-command-approach-route`, `spell.invocation-command-flee-route` |
+| `counterspell` | srd-5.2.1 | `spell.reaction-counterspell` |
 | `cure_wounds` | srd-5.2.1 | `spell.hit-point-restoration` |
 | `dancing_lights` | srd-5.2.1 | `spell.invocation-dancing-lights-movable-dim-light` |
 | `dissonant_whispers` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.invocation-forced-reaction-movement` |
@@ -106,15 +107,21 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `ensnaring_strike` | srd-5.2.1 | `spell.invocation-after-hit-restraint-turn-start-damage` |
 | `entangle` | srd-5.2.1 | `spell.invocation-condition-save` |
 | `expeditious_retreat` | srd-5.2.1 | `spell.invocation-expeditious-retreat-dash` |
+| `faerie_fire` | srd-5.2.1 | `spell.invocation-attack-roll-advantage-save` |
+| `feather_fall` | srd-5.2.1 | `spell.invocation-feather-fall-mitigation` |
 | `false_life` | srd-5.2.1 | `spell.scalar-buff` |
 | `fire_bolt` | srd-5.2.1 | `spell.invocation-damage-save-or-attack` |
+| `fog_cloud` | srd-5.2.1 | `spell.invocation-fog-cloud-obscurement` |
 | `guidance` | srd-5.2.1 | `spell.invocation-roll-modifier` |
+| `grease` | srd-5.2.1 | `spell.invocation-grease-ground-hazard` |
 | `guiding_bolt` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
 | `heroism` | srd-5.2.1 | `spell.invocation-condition-immunity-turn-start-temporary-hit-points` |
 | `hex` | srd-5.2.1 | `spell.invocation-marked-damage-rider` |
 | `hunters_mark` | srd-5.2.1 | `spell.invocation-marked-damage-rider` |
 | `ice_knife` | srd-5.2.1 | `spell.invocation-damage-save-or-attack` |
 | `inflict_wounds` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
+| `jump` | srd-5.2.1 | `spell.invocation-jump-movement-replacement` |
+| `light` | srd-5.2.1 | `spell.invocation-object-light` |
 | `longstrider` | srd-5.2.1 | `spell.scalar-buff` |
 | `poison_spray` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
 | `protection_from_evil_and_good` | srd-5.2.1 | `spell.creature-type-protection-and-charm` |
@@ -139,6 +146,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `shield_of_faith` | srd-5.2.1 | `spell.scalar-buff` |
 | `shillelagh` | srd-5.2.1 | `spell.invocation-weapon-attack-override` |
 | `sleep` | srd-5.2.1 | `spell.invocation-sleep-target-admission`, `spell.invocation-sleep-repeat-save-lifecycle` |
+| `thunderwave` | srd-5.2.1 | `spell.invocation-damage-save-or-attack` |
 | `true_strike` | srd-5.2.1 | `spell.invocation-spell-hosted-weapon-attack` |
 | `eldritch_blast` | srd-5.2.1 | `spell.invocation-beam-sequence` |
 | `hellish_rebuke` | srd-5.2.1 | `spell.reaction-hellish-rebuke`, `spell.invocation-damage-save-or-attack` |
@@ -152,14 +160,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `fighter_weapon_mastery` | srd-5.2.1 | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` | Level 1 Fighter character creation discovers and finalizes three selected Weapon Mastery weapon refs from the Surface class-feature record; Character Sheet Long Rest reselection reads the Surface feature's one-choice Long Rest change count and eligible Simple or Martial weapon facts, then replaces the selected CharacterBuild class-choice refs without parallel state; Selected mastery-property execution remains owned by selected Mastery Property Unit profiles | later-level Fighter Weapon Mastery selected-weapon count increases beyond the three level-1 selections (SRDINV78) |
 | `barbarian_weapon_mastery` | srd-5.2.1 | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` | Level 1 Barbarian character creation discovers and finalizes two selected melee Weapon Mastery weapon refs from the Surface class-feature record; Character Sheet Long Rest reselection reads the Surface feature's one-choice Long Rest change count and eligible Simple or Martial Melee weapon facts, then replaces the selected CharacterBuild class-choice refs without parallel state; Selected mastery-property execution remains owned by selected Mastery Property Unit profiles | later-level Barbarian Weapon Mastery selected-weapon count increases beyond the two level-1 selections (SRDINV78) |
 | `ranger_favored_enemy` | srd-5.2.1 | `spell.invocation-marked-damage-rider` | always-prepared Hunter's Mark access through retained prepared Spell Access; two-use Favored Enemy Long Rest free-cast resource at Ranger level 1; free-cast Hunter's Mark uses the existing marked damage rider, target gate, Concentration ownership, and Bonus Action cost; normal Spell Slot Hunter's Mark casting remains available when the free-cast resource is exhausted | later-level Favored Enemy free-cast count scaling beyond two uses (SRDINV78) |
-| `faerie_fire` | srd-5.2.1 | `spell.invocation-attack-roll-advantage-save` | 20-foot point-origin Cube affected-creature boundary with table-supplied area membership; Dexterity save-gated affected creatures; Concentration-owned outline effect that grants attack-roll Advantage against failed-save affected creatures when the attacker can see them and denies benefits from the Invisible condition; caller-supplied object ids for objects in the Cube create concentration-owned object outline projections; object-target spell attacks consume caller-supplied object sight facts to grant attack-roll Advantage against outlined objects; affected creatures and objects shed concentration-owned Dim Light emitter facts in a 10-foot radius attached to their outline effects; caller-supplied emitter projection facts derive Dim Light illumination from Faerie Fire object and creature emitters; derived Dim Light illumination projects Lightly Obscured sight consequences and Darkvision-adjusted sight consequences without duplicating emitter state | color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the runtime boundary (SRDINV89D) |
-| `feather_fall` | srd-5.2.1 | `spell.invocation-feather-fall-mitigation` | caller-supplied falling Reaction trigger for the caster or a visible creature within 60 feet; up-to-five falling creature target admission using caller-supplied falling and range facts; Reaction and level-1 Spell Slot spend; one-minute per-target Feather Fall mitigation effect; active 60-foot-per-round descent-rate cap projection; caller-supplied landing cleanup that ends the landed target's mitigation, emits no-fall-damage outcome, and suppresses Falling-Prone when Feather Fall prevents damage | fall-distance derivation, map elevation, and landing geometry simulation remain outside the runtime boundary (SRDINV55) |
 | `find_familiar` | srd-5.2.1 | `spell.find-familiar-lifecycle` | present familiar combatant insertion with its own Initiative turn, action, Reaction, and Movement resources; chosen named form and CR 0 Beast Stat Block resolution from the SRD form catalog; caster-chosen Celestial, Fey, or Fiend creature type override projection; one-familiar-per-caster lifecycle and atomic recast replacement; caller-supplied Initiative and unoccupied-space placement facts; ordinary Find Familiar attack and Opportunity Attack rejection while allowing supported non-attack actions; Magic-action temporary dismissal and reappearance, permanent dismissal, 0-HP disappearance, and held-item drop boundary events for 0-HP disappearance and pocket-dimension entry; 100-foot telepathic connection projection without shared-language requirement; Bonus Action shared sight, hearing, and special-sense benefits until the start of the caster's next turn; Touch-range spell delivery through a present familiar within 100 feet, atomically spending the familiar's Reaction with the spell invocation; Pact of the Chain selected-invocation exception that atomically forgoes one owner Attack-action attack, spends the present owned familiar's Reaction, and resolves a supported familiar Stat Block action attack | unsupported familiar form attacks and generic command AI (SRDINV86) |
-| `fog_cloud` | srd-5.2.1 | `spell.invocation-fog-cloud-obscurement` | caller-supplied point-origin fog area identity; Concentration-owned Heavily Obscured area projection; 20-foot radius at level 1 with +20 feet per slot above 1; one-hour Concentration duration cleanup; table-supplied strong-wind dispersal cleanup | automatic area membership, line of sight, map illumination, pathfinding, and wind derivation (SRDINV66) |
-| `grease` | srd-5.2.1 | `spell.invocation-grease-ground-hazard` | one-minute Grease ground hazard lifecycle keyed by caller-supplied ground-area id; on-cast Dexterity Saving Throw for caller-supplied affected creatures; Prone application on failed Grease saves; table-triggered enter-area and end-turn-in-area Dexterity save procedures; caller-supplied Grease Difficult Terrain movement facts that validate active hazard identity and spend total Movement distance plus one extra foot per foot moved through Grease | automatic area membership, pathfinding, and grid geometry derivation for Grease movement (SRDINV66) |
-| `jump` | srd-5.2.1 | `spell.invocation-jump-movement-replacement` | Bonus Action Spell Slot casting; touched willing creature targets; slot-scaled target count; one-minute spell-owned duration; once on each target turn use marker; 10-foot Movement spend for up to 30 feet of jump movement; caller-supplied legal landing facts; Prone outcome for caller-supplied failed Difficult Terrain landing Acrobatics facts | runtime-owned jump arc, pathfinding, collision, and final-position derivation (SRDINV55); runtime-owned Difficult Terrain landing Acrobatics check derivation (SRDINV55) |
-| `light` | srd-5.2.1 | `spell.invocation-object-light` | Magic Action cantrip cast with no Spell Slot spend; caller-supplied touched object identity, size, and worn/carried facts; Large-or-smaller object admission; rejection when the object is worn or carried by someone else; source-owned object-attached Bright Light 20-foot radius plus Dim Light for an additional 20 feet; one-hour duration cleanup; same-caster recast replacement of the prior Light emitter; caller-supplied emitter projection facts derive Bright Light, Dim Light, and opaque-cover suppression from the existing Light object emitter; derived Dim Light illumination projects Lightly Obscured sight consequences and Darkvision-adjusted sight consequences without duplicating emitter state | colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the object-emitter runtime boundary (SRDINV89D) |
-| `thunderwave` | srd-5.2.1 | `spell.invocation-damage-save-or-attack` | self-origin 15-foot Cube Constitution Saving Throw boundary with table-supplied affected creatures; slot-scaled Thunder damage with half damage on successful saves; failed-save creature push consumed from caller-supplied legal destination or blocked-push facts; unsecured-object push disposition consumed from caller-supplied object facts; audible thunderous boom evidence within 300 feet | runtime-owned push geometry, collision/pathfinding, and final-position derivation (SRDINV55); broad object inventory simulation and sound propagation simulation (SRDINV55) |
 | `charm_person` | srd-5.2.1 | `spell.creature-type-protection-and-charm` | Humanoid creature-type target filter; Wisdom save-gated battle-visible Charmed condition application and cleanup; hostile-target Wisdom save Advantage; 1-hour spell-owned condition duration; spell ends if caster or one of the caster's allies deals damage to the target; slot-scaled target count | Friendly disposition, the Charmed condition's Social Advantage, social interaction adjudication, and target knowledge when the spell ends remain runtime-detached social/knowledge state (SRDINV41) |
 
 ## Authored Surface Units Not In Unit Catalog
@@ -168,12 +169,11 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Kind | Count | Units |
 | --- | ---: | --- |
-| spell | 127 | `acid_arrow`, `aid`, `alarm`, `alter_self`, `animal_shapes`, `animate_dead`, `animate_objects`, `antilife_shell`, `antimagic_field`, `arcane_eye`, `arcane_lock`, `arcane_sword`, `aura_of_life`, `banishment`, `barkskin`, `beacon_of_hope`, `blade_barrier`, `blight`, `blindness_deafness`, `blur`, `call_lightning`, `chain_lightning`, `charm_monster`, `circle_of_death`, `clairvoyance`, `cloudkill`, `comprehend_languages`, `compulsion`, `cone_of_cold`, `conjure_minor_elementals`, `conjure_woodland_beings`, `continual_flame`, `counterspell`, `create_food_and_water`, `create_undead`, `daylight`, `death_ward`, `dimension_door`, `disintegrate`, `dispel_magic`, `dominate_beast`, `dominate_monster`, `dominate_person`, `earthquake`, `fabricate`, `fear`, `find_steed`, `finger_of_death`, `fire_shield`, `fire_storm`, `flame_blade`, `flame_strike`, `flesh_to_stone`, `fly`, `forcecage`, `freedom_of_movement`, `geas`, `gentle_repose`, `greater_invisibility`, `harm`, `heal`, `heat_metal`, `hold_monster`, `hold_person`, `holy_aura`, `hypnotic_pattern`, `ice_storm`, `identify`, `incendiary_cloud`, `insect_plague`, `invisibility`, `lesser_restoration`, `lightning_bolt`, `magic_weapon`, `major_image`, `mass_suggestion`, `maze`, `meteor_swarm`, `mind_blank`, `mind_spike`, `misty_step`, `moonbeam`, `pass_without_trace`, `polymorph`, `power_word_heal`, `power_word_kill`, `power_word_stun`, `prayer_of_healing`, `prismatic_wall`, `protection_from_energy`, `protection_from_poison`, `ray_of_enfeeblement`, `reverse_gravity`, `scorching_ray`, `see_invisibility`, `sequester`, `shatter`, `shining_smite`, `silent_image`, `speak_with_animals`, `spider_climb`, `spike_growth`, `spirit_guardians`, `spiritual_weapon`, `stinking_cloud`, `stoneskin`, `storm_of_vengeance`, `summon_dragon`, `sunbeam`, `sunburst`, `telekinesis`, `tongues`, `true_polymorph`, `true_seeing`, `tsunami`, `vampiric_touch`, `wall_of_fire`, `wall_of_force`, `wall_of_ice`, `wall_of_stone`, `wall_of_thorns`, `warding_bond`, `water_breathing`, `web`, `weird`, `wind_walk`, `wind_wall` |
+| spell | 126 | `acid_arrow`, `aid`, `alarm`, `alter_self`, `animal_shapes`, `animate_dead`, `animate_objects`, `antilife_shell`, `antimagic_field`, `arcane_eye`, `arcane_lock`, `arcane_sword`, `aura_of_life`, `banishment`, `barkskin`, `beacon_of_hope`, `blade_barrier`, `blight`, `blindness_deafness`, `blur`, `call_lightning`, `chain_lightning`, `charm_monster`, `circle_of_death`, `clairvoyance`, `cloudkill`, `comprehend_languages`, `compulsion`, `cone_of_cold`, `conjure_minor_elementals`, `conjure_woodland_beings`, `continual_flame`, `create_food_and_water`, `create_undead`, `daylight`, `death_ward`, `dimension_door`, `disintegrate`, `dispel_magic`, `dominate_beast`, `dominate_monster`, `dominate_person`, `earthquake`, `fabricate`, `fear`, `find_steed`, `finger_of_death`, `fire_shield`, `fire_storm`, `flame_blade`, `flame_strike`, `flesh_to_stone`, `fly`, `forcecage`, `freedom_of_movement`, `geas`, `gentle_repose`, `greater_invisibility`, `harm`, `heal`, `heat_metal`, `hold_monster`, `hold_person`, `holy_aura`, `hypnotic_pattern`, `ice_storm`, `identify`, `incendiary_cloud`, `insect_plague`, `invisibility`, `lesser_restoration`, `lightning_bolt`, `magic_weapon`, `major_image`, `mass_suggestion`, `maze`, `meteor_swarm`, `mind_blank`, `mind_spike`, `misty_step`, `moonbeam`, `pass_without_trace`, `polymorph`, `power_word_heal`, `power_word_kill`, `power_word_stun`, `prayer_of_healing`, `prismatic_wall`, `protection_from_energy`, `protection_from_poison`, `ray_of_enfeeblement`, `reverse_gravity`, `scorching_ray`, `see_invisibility`, `sequester`, `shatter`, `shining_smite`, `silent_image`, `speak_with_animals`, `spider_climb`, `spike_growth`, `spirit_guardians`, `spiritual_weapon`, `stinking_cloud`, `stoneskin`, `storm_of_vengeance`, `summon_dragon`, `sunbeam`, `sunburst`, `telekinesis`, `tongues`, `true_polymorph`, `true_seeing`, `tsunami`, `vampiric_touch`, `wall_of_fire`, `wall_of_force`, `wall_of_ice`, `wall_of_stone`, `wall_of_thorns`, `warding_bond`, `water_breathing`, `web`, `weird`, `wind_walk`, `wind_wall` |
 | magic_item | 71 | `cloak_of_protection`, `magic_item_amulet_of_health`, `magic_item_bag_of_holding`, `magic_item_bracers_of_defense`, `magic_item_brazier_of_commanding_fire_elementals`, `magic_item_brooch_of_shielding`, `magic_item_censer_of_controlling_air_elementals`, `magic_item_chime_of_opening`, `magic_item_cloak_of_arachnida`, `magic_item_cloak_of_protection`, `magic_item_crystal_ball_of_mind_reading`, `magic_item_cube_of_force`, `magic_item_eyes_of_minute_seeing`, `magic_item_folding_boat`, `magic_item_gauntlets_of_ogre_power`, `magic_item_gem_of_seeing`, `magic_item_goggles_of_night`, `magic_item_hat_of_disguise`, `magic_item_headband_of_intellect`, `magic_item_helm_of_comprehending_languages`, `magic_item_helm_of_teleportation`, `magic_item_instant_fortress`, `magic_item_javelin_of_lightning`, `magic_item_manual_of_gainful_exercise`, `magic_item_manual_of_quickness_of_action`, `magic_item_medallion_of_thoughts`, `magic_item_necklace_of_fireballs`, `magic_item_periapt_of_proof_against_poison`, `magic_item_potion_of_animal_friendship`, `magic_item_potion_of_clairvoyance`, `magic_item_potion_of_climbing`, `magic_item_potion_of_flying`, `magic_item_potion_of_giant_strength`, `magic_item_potion_of_heroism`, `magic_item_potion_of_invisibility`, `magic_item_potion_of_invulnerability`, `magic_item_potion_of_water_breathing`, `potion_of_healing`, `magic_item_quarterstaff_of_the_acrobat`, `magic_item_ring_of_invisibility`, `magic_item_ring_of_jumping`, `magic_item_ring_of_protection`, `magic_item_ring_of_resistance`, `ring_of_swimming`, `ring_of_telekinesis`, `ring_of_three_wishes`, `magic_item_ring_of_warmth`, `magic_item_ring_of_water_walking`, `magic_item_robe_of_the_archmagi`, `magic_item_rod_of_alertness`, `magic_item_rod_of_resurrection`, `magic_item_rod_of_rulership`, `magic_item_slippers_of_spider_climbing`, `magic_item_sovereign_glue`, `magic_item_staff_of_charming`, `magic_item_staff_of_fire`, `magic_item_staff_of_healing`, `magic_item_staff_of_power`, `magic_item_staff_of_the_woodlands`, `magic_item_stone_of_controlling_earth_elementals`, `magic_item_stone_of_good_luck_luckstone`, `magic_item_tome_of_clear_thought`, `magic_item_tome_of_leadership_and_influence`, `magic_item_tome_of_understanding`, `magic_item_wand_of_fear`, `magic_item_wand_of_fireballs`, `magic_item_wand_of_lightning_bolts`, `magic_item_wand_of_magic_detection`, `magic_item_wand_of_magic_missiles`, `magic_item_wand_of_paralysis`, `magic_item_wand_of_polymorph` |
 | class_feature | 29 | `barbarian_ability_score_improvement_l4`, `barbarian_danger_sense`, `barbarian_primal_champion`, `bard_ability_score_improvement_l4`, `bard_bonus_proficiencies`, `bard_epic_boon`, `bard_jack_of_all_trades`, `bard_words_of_creation`, `cleric_ability_score_improvement_l4`, `cleric_epic_boon`, `druid_ability_score_improvement_l4`, `druid_epic_boon`, `druid_natures_ward`, `fighter_epic_boon`, `monk_ability_score_improvement_l4`, `monk_body_and_mind`, `monk_epic_boon`, `paladin_epic_boon`, `paladin_fighting_style`, `paladin_paladins_smite`, `ranger_ability_score_improvement_l4`, `ranger_feral_senses`, `ranger_tireless`, `rogue_ability_score_improvement_l4`, `sorcerer_ability_score_improvement_l4`, `warlock_contact_patron`, `warlock_fiend_spells`, `wizard_ability_score_improvement_l4`, `wizard_scholar` |
 | weapon | 29 | `weapon_battleaxe`, `weapon_blowgun`, `weapon_dart`, `weapon_glaive`, `weapon_greatclub`, `weapon_greatsword`, `weapon_halberd`, `weapon_hand_crossbow`, `weapon_handaxe`, `weapon_heavy_crossbow`, `weapon_javelin`, `weapon_lance`, `weapon_light_crossbow`, `weapon_light_hammer`, `weapon_longbow`, `weapon_mace`, `weapon_maul`, `weapon_morningstar`, `weapon_musket`, `weapon_pike`, `weapon_pistol`, `weapon_rapier`, `weapon_scimitar`, `weapon_sickle`, `weapon_sling`, `weapon_trident`, `weapon_war_pick`, `weapon_warhammer`, `weapon_whip` |
 | armor | 11 | `armor_breastplate`, `armor_chain_shirt`, `armor_half_plate_armor`, `armor_hide_armor`, `armor_leather`, `armor_padded_armor`, `armor_plate`, `armor_ring_mail`, `armor_scale_mail`, `armor_splint_armor`, `armor_studded_leather_armor` |
-| species_trait | 8 | `elf_darkvision`, `species_dragonborn_breath_weapon`, `species_dragonborn_damage_resistance`, `species_dragonborn_darkvision`, `dwarf_darkvision`, `dwarf_dwarven_resilience`, `species_goliath_powerful_build`, `species_tiefling_darkvision` |
 | armor_template | 3 | `magic_item_adamantine_armor`, `magic_item_armor_1_2_or_3`, `magic_item_mithral_armor` |
 | weapon_template | 3 | `magic_item_ammunition_1_2_or_3`, `magic_item_defender`, `magic_item_weapon_1_2_or_3` |
 | feat | 2 | `alert`, `alert` |
@@ -183,10 +183,10 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Disposition | Planning lane | Count | Kind counts | Reason |
 | --- | --- | ---: | --- | --- |
-| srd-candidate | QMBT14-QMBT16 | 127 | spell: 127 | SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane. |
+| srd-candidate | QMBT14-QMBT16 | 126 | spell: 126 | SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane. |
 | intentional-backlog | future magic item profile intake | 79 | magic_item: 71, armor_template: 3, weapon_template: 3, shield_template: 2 | SRD magic item mechanics are authored, but this QMBT lane is focused on Unit feature and spell admission. |
 | non-runtime-authored-data | no promoted runtime lane | 40 | weapon: 29, armor: 11 | Authored SRD data has no mechanics payload, so catalog absence is not promoted runtime execution pressure. |
-| unsupported-widening-pressure | QMBT18 | 37 | class_feature: 29, species_trait: 8 | Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice. |
+| unsupported-widening-pressure | QMBT18 | 29 | class_feature: 29 | Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice. |
 | duplicate-content-issue | content cleanup | 2 | feat: 2 | More than one authored Surface record declares this Unit id; clean up the duplicate before treating it as catalog pressure. |
 
 | Unit | Disposition | Planning lane | Kind | Mechanics | Source |
@@ -246,10 +246,8 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `conjure_minor_elementals` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/conjure_minor_elementals.json` |
 | `conjure_woodland_beings` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/conjure_woodland_beings.json` |
 | `continual_flame` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/continual_flame.json` |
-| `counterspell` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/counterspell.json` |
 | `create_food_and_water` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/create_food_and_water.json` |
 | `create_undead` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/create_undead.json` |
-| `elf_darkvision` | unsupported-widening-pressure | QMBT18 | species_trait | yes | `packages/surface/content/darkvision_elf.json` |
 | `daylight` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/daylight.json` |
 | `death_ward` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/death_ward.json` |
 | `dimension_door` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/dimension_door.json` |
@@ -409,13 +407,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `silent_image` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/silent_image.json` |
 | `sorcerer_ability_score_improvement_l4` | unsupported-widening-pressure | QMBT18 | class_feature | yes | `packages/surface/content/sorcerer_ability_score_improvement_l4.json` |
 | `speak_with_animals` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/speak_with_animals.json` |
-| `species_dragonborn_breath_weapon` | unsupported-widening-pressure | QMBT18 | species_trait | yes | `packages/surface/content/species_dragonborn_breath_weapon.json` |
-| `species_dragonborn_damage_resistance` | unsupported-widening-pressure | QMBT18 | species_trait | yes | `packages/surface/content/species_dragonborn_damage_resistance.json` |
-| `species_dragonborn_darkvision` | unsupported-widening-pressure | QMBT18 | species_trait | yes | `packages/surface/content/species_dragonborn_darkvision.json` |
-| `dwarf_darkvision` | unsupported-widening-pressure | QMBT18 | species_trait | yes | `packages/surface/content/species_dwarf_darkvision.json` |
-| `dwarf_dwarven_resilience` | unsupported-widening-pressure | QMBT18 | species_trait | yes | `packages/surface/content/species_dwarf_dwarven_resilience.json` |
-| `species_goliath_powerful_build` | unsupported-widening-pressure | QMBT18 | species_trait | yes | `packages/surface/content/species_goliath_powerful_build.json` |
-| `species_tiefling_darkvision` | unsupported-widening-pressure | QMBT18 | species_trait | yes | `packages/surface/content/species_tiefling_darkvision.json` |
 | `spider_climb` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/spider_climb.json` |
 | `spike_growth` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/spike_growth.json` |
 | `spirit_guardians` | srd-candidate | QMBT14-QMBT16 | spell | yes | `packages/surface/content/spirit_guardians.json` |
@@ -536,10 +527,8 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `conjure_minor_elementals` | spell | yes | `packages/surface/content/conjure_minor_elementals.json` |
 | `conjure_woodland_beings` | spell | yes | `packages/surface/content/conjure_woodland_beings.json` |
 | `continual_flame` | spell | yes | `packages/surface/content/continual_flame.json` |
-| `counterspell` | spell | yes | `packages/surface/content/counterspell.json` |
 | `create_food_and_water` | spell | yes | `packages/surface/content/create_food_and_water.json` |
 | `create_undead` | spell | yes | `packages/surface/content/create_undead.json` |
-| `elf_darkvision` | species_trait | yes | `packages/surface/content/darkvision_elf.json` |
 | `daylight` | spell | yes | `packages/surface/content/daylight.json` |
 | `death_ward` | spell | yes | `packages/surface/content/death_ward.json` |
 | `dimension_door` | spell | yes | `packages/surface/content/dimension_door.json` |
@@ -699,13 +688,6 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `silent_image` | spell | yes | `packages/surface/content/silent_image.json` |
 | `sorcerer_ability_score_improvement_l4` | class_feature | yes | `packages/surface/content/sorcerer_ability_score_improvement_l4.json` |
 | `speak_with_animals` | spell | yes | `packages/surface/content/speak_with_animals.json` |
-| `species_dragonborn_breath_weapon` | species_trait | yes | `packages/surface/content/species_dragonborn_breath_weapon.json` |
-| `species_dragonborn_damage_resistance` | species_trait | yes | `packages/surface/content/species_dragonborn_damage_resistance.json` |
-| `species_dragonborn_darkvision` | species_trait | yes | `packages/surface/content/species_dragonborn_darkvision.json` |
-| `dwarf_darkvision` | species_trait | yes | `packages/surface/content/species_dwarf_darkvision.json` |
-| `dwarf_dwarven_resilience` | species_trait | yes | `packages/surface/content/species_dwarf_dwarven_resilience.json` |
-| `species_goliath_powerful_build` | species_trait | yes | `packages/surface/content/species_goliath_powerful_build.json` |
-| `species_tiefling_darkvision` | species_trait | yes | `packages/surface/content/species_tiefling_darkvision.json` |
 | `spider_climb` | spell | yes | `packages/surface/content/spider_climb.json` |
 | `spike_growth` | spell | yes | `packages/surface/content/spike_growth.json` |
 | `spirit_guardians` | spell | yes | `packages/surface/content/spirit_guardians.json` |
@@ -782,7 +764,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `barbarian_reckless_attack` | `unit-feature.first-attack-roll-reckless-advantage` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `barbarian_fast_movement` | `unit-feature.passive-speed-bonus` | QMBT40 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `bard_bardic_inspiration` | `unit-feature.bardic-inspiration-grant`, `unit-feature.bardic-inspiration-failed-d20-test` | SRDINV72A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `bard_bardic_inspiration` | `unit-feature.bardic-inspiration-grant`, `unit-feature.bardic-inspiration-failed-d20-test` | SRDINV72B | `packages/battle-runtime/src/index.test.ts` |
+| `bard_bardic_inspiration` | `unit-feature.bardic-inspiration-grant`, `unit-feature.bardic-inspiration-failed-d20-test` | SRDINV72B | `packages/battle-runtime/src/battle-runtime-test-support.ts` |
 | `bard_cutting_words` | `unit-feature.reaction-roll-or-damage-reduction` | QMBT65 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `cleric_divine_order` | `character-creation.class-feature-option-projection` | AT-L1-06 | `packages/character-creation-runtime/src/index.test.ts` |
 | `druid_primal_order` | `character-creation.class-feature-option-projection` | AT-L1-06 | `packages/character-creation-runtime/src/index.test.ts` |
@@ -796,7 +778,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `rogue_expertise` | `character-creation.skill-expertise-choice` | L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT | `packages/character-creation-runtime/src/rogue-expertise-level6.test.ts` |
 | `rogue_sneak_attack` | `unit-feature.attack-damage-rider` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `sorcerer_innate_sorcery` | `unit-feature.innate-sorcery-activation` | SRDINV75A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `sorcerer_innate_sorcery` | `unit-feature.innate-sorcery-activation` | SRDINV75B | `packages/battle-runtime/src/index.test.ts` |
+| `sorcerer_innate_sorcery` | `unit-feature.innate-sorcery-activation` | SRDINV75B | `packages/battle-runtime/src/battle-runtime-test-support.ts` |
 | `warlock_eldritch_invocations` | `character-creation.eldritch-invocation-choice`, `character-creation.class-feature-advancement-replacement`, `character-creation.warlock-pact-magic-advancement` | L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE | `packages/character-creation-runtime/src/index.test.ts` |
 | `wizard_ritual_adept` | `character-sheet.spellbook-ritual-invocation` | SRDINV91B | `packages/character-sheet-runtime/src/index.test.ts` |
 | `wizard_arcane_recovery` | `character-sheet.short-rest-spell-slot-recovery` | SRDINV91B | `packages/character-sheet-runtime/src/index.test.ts` |
@@ -825,6 +807,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `chromatic_orb` | `spell.invocation-chained-attack-damage`, `spell.readied-action-time-spell` | SRDINV29F3 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `color_spray` | `spell.invocation-condition-save` | SRDINV29B | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `command` | `spell.invocation-command-halt-grovel`, `spell.invocation-command-drop-held-object`, `spell.invocation-command-approach-route`, `spell.invocation-command-flee-route` | SRDINV50D2 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `counterspell` | `spell.reaction-counterspell` | QMBT22 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `cure_wounds` | `spell.hit-point-restoration` | QMBT32 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `dancing_lights` | `spell.invocation-dancing-lights-movable-dim-light` | SRDINV88A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `dissonant_whispers` | `spell.invocation-damage-save-or-attack`, `spell.invocation-forced-reaction-movement` | SRDINV52 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
@@ -833,15 +816,21 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `ensnaring_strike` | `spell.invocation-after-hit-restraint-turn-start-damage` | SRDINV31D | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `entangle` | `spell.invocation-condition-save` | SRDINV29C | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `expeditious_retreat` | `spell.invocation-expeditious-retreat-dash` | SRDINV49 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `faerie_fire` | `spell.invocation-attack-roll-advantage-save` | SRDINV58C | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `feather_fall` | `spell.invocation-feather-fall-mitigation` | SRDINV56A | `packages/battle-runtime/src/feather-fall-reaction-spell.test.ts` |
 | `false_life` | `spell.scalar-buff` | SRDINV30A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `fire_bolt` | `spell.invocation-damage-save-or-attack` | SRDINV84A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `fog_cloud` | `spell.invocation-fog-cloud-obscurement` | SRDINV84E | `packages/battle-runtime/src/battle-runtime-test-support.ts` |
 | `guidance` | `spell.invocation-roll-modifier` | SRDINV30B | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `grease` | `spell.invocation-grease-ground-hazard` | SRDINV40 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `guiding_bolt` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28D | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `heroism` | `spell.invocation-condition-immunity-turn-start-temporary-hit-points` | SRDINV30D | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `hex` | `spell.invocation-marked-damage-rider` | SRDINV84D | `packages/battle-runtime/src/index.test.ts` |
+| `hex` | `spell.invocation-marked-damage-rider` | SRDINV84D | `packages/battle-runtime/src/battle-runtime-test-support.ts` |
 | `hunters_mark` | `spell.invocation-marked-damage-rider` | SRDINV31B | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `ice_knife` | `spell.invocation-damage-save-or-attack` | SRDINV29E | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `inflict_wounds` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28B | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `jump` | `spell.invocation-jump-movement-replacement` | SRDINV53 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `light` | `spell.invocation-object-light` | SRDINV70B | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `longstrider` | `spell.scalar-buff` | SRDINV30A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `poison_spray` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28B | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `protection_from_evil_and_good` | `spell.creature-type-protection-and-charm` | SRDINV60A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
@@ -854,7 +843,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `searing_smite` | `spell.invocation-after-hit-timed-damage-save` | SRDINV31E | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `shocking_grasp` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28D | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `sorcerous_burst` | `spell.invocation-damage-save-or-attack` | SRDINV84B | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
-| `spare_the_dying` | `spell.invocation-make-stable` | SRDINV84C | `packages/battle-runtime/src/index.test.ts` |
+| `spare_the_dying` | `spell.invocation-make-stable` | SRDINV84C | `packages/battle-runtime/src/battle-runtime-test-support.ts` |
 | `starry_wisp` | `spell.invocation-damage-save-or-attack` | SRDINV59B | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `vicious_mockery` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28D | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `mage_armor` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
@@ -866,6 +855,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `shield_of_faith` | `spell.scalar-buff` | SRDINV30A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `shillelagh` | `spell.invocation-weapon-attack-override` | SRDINV84H | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `sleep` | `spell.invocation-sleep-target-admission`, `spell.invocation-sleep-repeat-save-lifecycle` | SRDINV38A | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
+| `thunderwave` | `spell.invocation-damage-save-or-attack` | SRDINV51 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `true_strike` | `spell.invocation-spell-hosted-weapon-attack` | SRDINV31F | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `eldritch_blast` | `spell.invocation-beam-sequence` | SRDINV39 | `packages/battle-runtime/src/unit-profile-admission.test.ts` |
 | `hellish_rebuke` | `spell.reaction-hellish-rebuke`, `spell.invocation-damage-save-or-attack` | SRDINV69B | `packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts` |
@@ -878,15 +868,8 @@ This raw inventory lists authored Surface records that are absent from the insta
 | --- | --- | --- | --- | --- |
 | `fighter_weapon_mastery` | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` | AT-L1-04 | `packages/character-sheet-runtime/src/index.test.ts` | later-level Fighter Weapon Mastery selected-weapon count increases beyond the three level-1 selections (SRDINV78) |
 | `barbarian_weapon_mastery` | `character-creation.weapon-mastery-choice`, `character-sheet.weapon-mastery-reselection` | AT-L1-04 | `packages/character-sheet-runtime/src/index.test.ts` | later-level Barbarian Weapon Mastery selected-weapon count increases beyond the two level-1 selections (SRDINV78) |
-| `ranger_favored_enemy` | `spell.invocation-marked-damage-rider` | SRDINV87C | `packages/battle-runtime/src/index.test.ts` | later-level Favored Enemy free-cast count scaling beyond two uses (SRDINV78) |
-| `faerie_fire` | `spell.invocation-attack-roll-advantage-save` | SRDINV58C | `packages/battle-runtime/src/unit-profile-admission.test.ts` | color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the runtime boundary (SRDINV89D) |
-| `feather_fall` | `spell.invocation-feather-fall-mitigation` | SRDINV56A | `packages/battle-runtime/src/feather-fall-reaction-spell.test.ts` | fall-distance derivation, map elevation, and landing geometry simulation remain outside the runtime boundary (SRDINV55) |
+| `ranger_favored_enemy` | `spell.invocation-marked-damage-rider` | SRDINV87C | `packages/battle-runtime/src/battle-runtime-test-support.ts` | later-level Favored Enemy free-cast count scaling beyond two uses (SRDINV78) |
 | `find_familiar` | `spell.find-familiar-lifecycle` | SRDINV84I5 | `packages/battle-runtime/src/find-familiar-lifecycle.test.ts` | unsupported familiar form attacks and generic command AI (SRDINV86) |
-| `fog_cloud` | `spell.invocation-fog-cloud-obscurement` | SRDINV84E | `packages/battle-runtime/src/index.test.ts` | automatic area membership, line of sight, map illumination, pathfinding, and wind derivation (SRDINV66) |
-| `grease` | `spell.invocation-grease-ground-hazard` | SRDINV40 | `packages/battle-runtime/src/unit-profile-admission.test.ts` | automatic area membership, pathfinding, and grid geometry derivation for Grease movement (SRDINV66) |
-| `jump` | `spell.invocation-jump-movement-replacement` | SRDINV53 | `packages/battle-runtime/src/unit-profile-admission.test.ts` | runtime-owned jump arc, pathfinding, collision, and final-position derivation (SRDINV55); runtime-owned Difficult Terrain landing Acrobatics check derivation (SRDINV55) |
-| `light` | `spell.invocation-object-light` | SRDINV70B | `packages/battle-runtime/src/unit-profile-admission.test.ts` | colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the object-emitter runtime boundary (SRDINV89D) |
-| `thunderwave` | `spell.invocation-damage-save-or-attack` | SRDINV51 | `packages/battle-runtime/src/unit-profile-admission.test.ts` | runtime-owned push geometry, collision/pathfinding, and final-position derivation (SRDINV55); broad object inventory simulation and sound propagation simulation (SRDINV55) |
 | `charm_person` | `spell.creature-type-protection-and-charm` | SRDINV37 | `packages/battle-runtime/src/unit-profile-admission.test.ts` | Friendly disposition, the Charmed condition's Social Advantage, social interaction adjudication, and target knowledge when the spell ends remain runtime-detached social/knowledge state (SRDINV41) |
 
 ## Selected Identity MBT Evidence
@@ -955,15 +938,21 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `ensnaring_strike` | `spell.invocation-after-hit-restraint-turn-start-damage` | L1E-ENSNARING-STRIKE | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
 | `entangle` | `spell.invocation-condition-save` | condition-saving-throw-lifecycle | `packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts` |
 | `expeditious_retreat` | `spell.invocation-expeditious-retreat-dash` | movement-forced-movement | `packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts` |
+| `faerie_fire` | `spell.invocation-attack-roll-advantage-save` | level1-spatial-witness | `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts` |
+| `feather_fall` | `spell.invocation-feather-fall-mitigation` | level1-spatial-witness | `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts` |
 | `false_life` | `spell.scalar-buff` | L1E-FALSE-LIFE | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
 | `fire_bolt` | `spell.invocation-damage-save-or-attack` | attack-spell-shape | `packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts` |
+| `fog_cloud` | `spell.invocation-fog-cloud-obscurement` | level1-spatial-witness | `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts` |
 | `guidance` | `spell.invocation-roll-modifier` | roll-modifier-buff | `packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts` |
+| `grease` | `spell.invocation-grease-ground-hazard` | level1-spatial-witness | `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts` |
 | `guiding_bolt` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | attack-spell-shape | `packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts` |
 | `heroism` | `spell.invocation-condition-immunity-turn-start-temporary-hit-points` | L1E-HEROISM | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
 | `hex` | `spell.invocation-marked-damage-rider` | L1E-HEX | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
 | `hunters_mark` | `spell.invocation-marked-damage-rider` | L1E-HUNTERS-MARK | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
 | `ice_knife` | `spell.invocation-damage-save-or-attack` | level1-damage-spell-selected-identity | `packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts` |
 | `inflict_wounds` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | attack-spell-shape | `packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts` |
+| `jump` | `spell.invocation-jump-movement-replacement` | level1-spatial-witness | `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts` |
+| `light` | `spell.invocation-object-light` | level1-spatial-witness | `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts` |
 | `longstrider` | `spell.scalar-buff` | L1E-LONGSTRIDER | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
 | `poison_spray` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | level1-damage-spell-selected-identity | `packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts` |
 | `protection_from_evil_and_good` | `spell.creature-type-protection-and-charm` | L1H-PROTECTION-EVIL-GOOD | `packages/battle-runtime/src/creature-type-protection-and-charm-selected-identity.mbt.test.ts` |
@@ -988,6 +977,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `shield_of_faith` | `spell.scalar-buff` | roll-modifier-buff | `packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts` |
 | `shillelagh` | `spell.invocation-weapon-attack-override` | L1E-SHILLELAGH | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
 | `sleep` | `spell.invocation-sleep-target-admission`, `spell.invocation-sleep-repeat-save-lifecycle` | condition-saving-throw-lifecycle | `packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts` |
+| `thunderwave` | `spell.invocation-damage-save-or-attack` | level1-spatial-witness | `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts` |
 | `true_strike` | `spell.invocation-spell-hosted-weapon-attack` | L1E-TRUE-STRIKE | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
 | `eldritch_blast` | `spell.invocation-beam-sequence` | L1H-ELDRITCH-BLAST | `packages/battle-runtime/src/beam-sequence-selected-identity.mbt.test.ts` |
 | `hellish_rebuke` | `spell.reaction-hellish-rebuke`, `spell.invocation-damage-save-or-attack` | reaction-interruption | `packages/battle-runtime/src/reaction-spell-selected-identity.mbt.test.ts` |
@@ -1012,7 +1002,12 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `class_warlock` | unsupported-profile | Class container record; battle/runtime executable mechanics live on granted feature Units. |
 | `class_wizard` | unsupported-profile | Class container and spell access record; executable pressure is carried by spell Units and class features. |
 | `background_soldier` | unsupported-profile | Character-creation authored data only; no promoted execution profile yet. |
+| `species_dragonborn` | unsupported-profile | Species admission container record; character creation retains the selected species source fact and authored trait Unit refs, while executable battle pressure lives on species trait Units. |
+| `species_dwarf` | unsupported-profile | Species admission container record; character creation retains the selected species source fact and authored trait Unit refs, while executable battle pressure lives on species trait Units. |
+| `species_elf` | unsupported-profile | Species admission container record; character creation retains the selected species source fact and authored trait Unit refs, while executable battle pressure lives on species trait Units. |
+| `species_goliath` | unsupported-profile | Species admission container record; character creation retains the selected species source fact and authored trait Unit refs, while executable battle pressure lives on species trait Units. |
 | `species_orc` | unsupported-profile | Species container record; executable pressure lives on species trait Units. |
+| `species_tiefling` | unsupported-profile | Species admission container record; character creation retains the selected species source fact and authored trait Unit refs, while executable battle pressure lives on species trait Units. |
 | `subclass_fighter_champion` | unsupported-profile | Subclass container record; executable pressure lives on granted feature Units. |
 | `subclass_wizard_evoker` | unsupported-profile | Subclass container record; no promoted execution profile yet. |
 | `fighter_weapon_mastery` | profile-subset-supported | supported subset: Level 1 Fighter character creation discovers and finalizes three selected Weapon Mastery weapon refs from the Surface class-feature record; Character Sheet Long Rest reselection reads the Surface feature's one-choice Long Rest change count and eligible Simple or Martial weapon facts, then replaces the selected CharacterBuild class-choice refs without parallel state; Selected mastery-property execution remains owned by selected Mastery Property Unit profiles; deferred: later-level Fighter Weapon Mastery selected-weapon count increases beyond the three level-1 selections (SRDINV78) |
@@ -1022,18 +1017,19 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `rogue_thieves_cant` | unsupported-profile | Thieves' Cant and the additional language choice are character-owned CharacterBuild facts derived from authored Surface content; communication adjudication is runtime-detached table adjudication, so no battle Unit profile is promoted. |
 | `feat_ability_score_improvement` | unsupported-profile | Character-creation ability score mutation is outside promoted battle Unit profile scope. |
 | `orc_darkvision` | unsupported-profile | Sense grant is authored data with no promoted execution profile. |
-| `faerie_fire` | profile-subset-supported | supported subset: 20-foot point-origin Cube affected-creature boundary with table-supplied area membership; Dexterity save-gated affected creatures; Concentration-owned outline effect that grants attack-roll Advantage against failed-save affected creatures when the attacker can see them and denies benefits from the Invisible condition; caller-supplied object ids for objects in the Cube create concentration-owned object outline projections; object-target spell attacks consume caller-supplied object sight facts to grant attack-roll Advantage against outlined objects; affected creatures and objects shed concentration-owned Dim Light emitter facts in a 10-foot radius attached to their outline effects; caller-supplied emitter projection facts derive Dim Light illumination from Faerie Fire object and creature emitters; derived Dim Light illumination projects Lightly Obscured sight consequences and Darkvision-adjusted sight consequences without duplicating emitter state; deferred: color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the runtime boundary (SRDINV89D) |
-| `feather_fall` | profile-subset-supported | supported subset: caller-supplied falling Reaction trigger for the caster or a visible creature within 60 feet; up-to-five falling creature target admission using caller-supplied falling and range facts; Reaction and level-1 Spell Slot spend; one-minute per-target Feather Fall mitigation effect; active 60-foot-per-round descent-rate cap projection; caller-supplied landing cleanup that ends the landed target's mitigation, emits no-fall-damage outcome, and suppresses Falling-Prone when Feather Fall prevents damage; deferred: fall-distance derivation, map elevation, and landing geometry simulation remain outside the runtime boundary (SRDINV55) |
+| `elf_darkvision` | unsupported-profile | Darkvision is an authored species sense fact with no standalone promoted Unit profile. |
+| `species_dragonborn_breath_weapon` | unsupported-profile | Breath Weapon is a level-1 species attack replacement with area save-gated damage, Draconic Ancestry damage type, shape choice, character-level dice scaling, and a Proficiency Bonus Long Rest use pool; no broad species runtime profile is promoted in this task. |
+| `species_dragonborn_damage_resistance` | unsupported-profile | Dragonborn Damage Resistance is a passive target-side Resistance trait keyed to Draconic Ancestry; no promoted species trait resistance profile is claimed. |
+| `species_dragonborn_darkvision` | unsupported-profile | Darkvision is an authored species sense fact with no standalone promoted Unit profile. |
+| `dwarf_darkvision` | unsupported-profile | Darkvision is an authored species sense fact with no standalone promoted Unit profile. |
+| `dwarf_dwarven_resilience` | unsupported-profile | Dwarven Resilience combines Poison Resistance with Advantage on saving throws to avoid or end the Poisoned condition; no promoted species trait resistance or save roll-mode profile is claimed. |
+| `species_goliath_powerful_build` | unsupported-profile | Powerful Build splits into a durable carrying-capacity character fact and an Ability Check Advantage fact for ending the Grappled condition; no standalone promoted battle Unit profile is claimed. |
+| `species_tiefling_darkvision` | unsupported-profile | Darkvision is an authored species sense fact with no standalone promoted Unit profile. |
 | `fireball` | unsupported-profile | Fireball is installed as SRD spell catalog data for the non-level-1 spell expansion lane, but no promoted battle-runtime Fireball invocation profile is claimed yet. |
 | `find_familiar` | profile-subset-supported | supported subset: present familiar combatant insertion with its own Initiative turn, action, Reaction, and Movement resources; chosen named form and CR 0 Beast Stat Block resolution from the SRD form catalog; caster-chosen Celestial, Fey, or Fiend creature type override projection; one-familiar-per-caster lifecycle and atomic recast replacement; caller-supplied Initiative and unoccupied-space placement facts; ordinary Find Familiar attack and Opportunity Attack rejection while allowing supported non-attack actions; Magic-action temporary dismissal and reappearance, permanent dismissal, 0-HP disappearance, and held-item drop boundary events for 0-HP disappearance and pocket-dimension entry; 100-foot telepathic connection projection without shared-language requirement; Bonus Action shared sight, hearing, and special-sense benefits until the start of the caster's next turn; Touch-range spell delivery through a present familiar within 100 feet, atomically spending the familiar's Reaction with the spell invocation; Pact of the Chain selected-invocation exception that atomically forgoes one owner Attack-action attack, spends the present owned familiar's Reaction, and resolves a supported familiar Stat Block action attack; deferred: unsupported familiar form attacks and generic command AI (SRDINV86) |
-| `fog_cloud` | profile-subset-supported | supported subset: caller-supplied point-origin fog area identity; Concentration-owned Heavily Obscured area projection; 20-foot radius at level 1 with +20 feet per slot above 1; one-hour Concentration duration cleanup; table-supplied strong-wind dispersal cleanup; deferred: automatic area membership, line of sight, map illumination, pathfinding, and wind derivation (SRDINV66) |
-| `grease` | profile-subset-supported | supported subset: one-minute Grease ground hazard lifecycle keyed by caller-supplied ground-area id; on-cast Dexterity Saving Throw for caller-supplied affected creatures; Prone application on failed Grease saves; table-triggered enter-area and end-turn-in-area Dexterity save procedures; caller-supplied Grease Difficult Terrain movement facts that validate active hazard identity and spend total Movement distance plus one extra foot per foot moved through Grease; deferred: automatic area membership, pathfinding, and grid geometry derivation for Grease movement (SRDINV66) |
-| `jump` | profile-subset-supported | supported subset: Bonus Action Spell Slot casting; touched willing creature targets; slot-scaled target count; one-minute spell-owned duration; once on each target turn use marker; 10-foot Movement spend for up to 30 feet of jump movement; caller-supplied legal landing facts; Prone outcome for caller-supplied failed Difficult Terrain landing Acrobatics facts; deferred: runtime-owned jump arc, pathfinding, collision, and final-position derivation (SRDINV55); runtime-owned Difficult Terrain landing Acrobatics check derivation (SRDINV55) |
-| `light` | profile-subset-supported | supported subset: Magic Action cantrip cast with no Spell Slot spend; caller-supplied touched object identity, size, and worn/carried facts; Large-or-smaller object admission; rejection when the object is worn or carried by someone else; source-owned object-attached Bright Light 20-foot radius plus Dim Light for an additional 20 feet; one-hour duration cleanup; same-caster recast replacement of the prior Light emitter; caller-supplied emitter projection facts derive Bright Light, Dim Light, and opaque-cover suppression from the existing Light object emitter; derived Dim Light illumination projects Lightly Obscured sight consequences and Darkvision-adjusted sight consequences without duplicating emitter state; deferred: colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the object-emitter runtime boundary (SRDINV89D) |
 | `detect_evil_and_good` | unsupported-profile | Detection/occlusion search semantics and Hallow discovery are not promoted as battle Unit profiles. |
 | `detect_magic` | unsupported-profile | Detection/concentration search semantics are not promoted as a battle Unit profile. |
 | `detect_poison_and_disease` | unsupported-profile | Detection/occlusion search semantics and poison/disease identification are not promoted as battle Unit profiles. |
-| `thunderwave` | profile-subset-supported | supported subset: self-origin 15-foot Cube Constitution Saving Throw boundary with table-supplied affected creatures; slot-scaled Thunder damage with half damage on successful saves; failed-save creature push consumed from caller-supplied legal destination or blocked-push facts; unsecured-object push disposition consumed from caller-supplied object facts; audible thunderous boom evidence within 300 feet; deferred: runtime-owned push geometry, collision/pathfinding, and final-position derivation (SRDINV55); broad object inventory simulation and sound propagation simulation (SRDINV55) |
 | `minor_illusion` | unsupported-profile | Sound/image illusion creation, physical-interaction reveal, faint rendering after Study, and recast expiry are illusion/exploration state outside promoted runtime owners. |
 | `charm_person` | profile-subset-supported | supported subset: Humanoid creature-type target filter; Wisdom save-gated battle-visible Charmed condition application and cleanup; hostile-target Wisdom save Advantage; 1-hour spell-owned condition duration; spell ends if caster or one of the caster's allies deals damage to the target; slot-scaled target count; deferred: Friendly disposition, the Charmed condition's Social Advantage, social interaction adjudication, and target knowledge when the spell ends remain runtime-detached social/knowledge state (SRDINV41) |
 | `armor_chain_mail` | unsupported-profile | Equipment AC data is authored but not represented as an executable Unit profile row. |
@@ -1048,17 +1044,47 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `weapon_shortsword` | unsupported-profile | Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix. |
 | `weapon_quarterstaff` | unsupported-profile | Weapon data is runtime input to attacks, not a standalone Unit execution profile in this matrix. |
 | `alarm` | unsupported-profile | Alarm setup, warded-area monitoring, creature-size/travel adjudication, audible or mental notification, and sleep-wake handling are runtime-detached table/exploration state outside promoted battle Unit profiles. |
+| `barbarian_ability_score_improvement_l4` | unsupported-profile | Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `barbarian_danger_sense` | unsupported-profile | Danger Sense is a level-2 passive Dexterity Saving Throw Advantage feature; no promoted Unit profile is claimed until a passive Saving Throw roll-mode profile can execute the Dexterity ability filter and Incapacitated suppression gate together. |
+| `barbarian_primal_champion` | unsupported-profile | Primal Champion is a level-20 permanent Strength and Constitution Ability Score increase; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `bard_ability_score_improvement_l4` | unsupported-profile | Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `bard_bonus_proficiencies` | unsupported-profile | College of Lore Bonus Proficiencies is a level-3 subclass skill-proficiency choice; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `bard_epic_boon` | unsupported-profile | Level 19 Epic Boon is a later-level feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `bard_jack_of_all_trades` | unsupported-profile | Jack of All Trades is a level-2 passive Ability Check proficiency supplement; no promoted Unit profile is claimed until a Character Sheet Ability Check Proficiency Bonus projection can execute the skill-proficiency and no-other-Proficiency-Bonus gates. |
+| `bard_words_of_creation` | unsupported-profile | Words of Creation is a level-20 always-prepared spell-access grant plus a Power Word casting rider; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `cleric_ability_score_improvement_l4` | unsupported-profile | Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `cleric_epic_boon` | unsupported-profile | Level 19 Epic Boon is a later-level feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
 | `comprehend_languages` | unsupported-profile | Language comprehension, text interpretation, and secret-message limitations are runtime-detached table/communication adjudication outside promoted battle Unit profiles. |
+| `druid_ability_score_improvement_l4` | unsupported-profile | Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `druid_epic_boon` | unsupported-profile | Level 19 Epic Boon is a later-level feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `druid_natures_ward` | unsupported-profile | Nature's Ward is a level-10 Circle of the Land subclass feature with Poisoned condition immunity plus land-choice-derived Resistance; no standalone promoted Unit profile is claimed until the selected-land source fact and passive target-side projection are modeled together. |
+| `fighter_epic_boon` | unsupported-profile | Level 19 Epic Boon is a later-level feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
 | `identify` | unsupported-profile | Magic-item identification, attunement/property discovery, and spell-affecting-object or spell-affecting-creature identification are runtime-detached table adjudication outside promoted battle Unit profiles. |
+| `monk_ability_score_improvement_l4` | unsupported-profile | Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `monk_body_and_mind` | unsupported-profile | Body and Mind is a level-20 permanent Dexterity and Wisdom Ability Score increase; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `monk_epic_boon` | unsupported-profile | Level 19 Epic Boon is a later-level feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `paladin_epic_boon` | unsupported-profile | Level 19 Epic Boon is a later-level feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `paladin_fighting_style` | unsupported-profile | Paladin Fighting Style is a level-2 Fighting Style feat or Blessed Warrior cantrip-selection grant; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `paladin_paladins_smite` | unsupported-profile | Paladin's Smite is a level-2 Divine Smite Spell Access and once-per-Long-Rest free-cast grant; no standalone promoted battle Unit profile is claimed for the authored class-feature record until class-feature free-cast support is widened beyond Favored Enemy. |
+| `ranger_ability_score_improvement_l4` | unsupported-profile | Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `ranger_feral_senses` | unsupported-profile | Feral Senses is a level-18 Blindsight sense grant; no standalone promoted battle Unit profile is claimed for the authored class-feature record until class-feature sense grants have a sight projection owner. |
+| `ranger_tireless` | unsupported-profile | Tireless is a level-10 two-part feature: a Magic action Wisdom-derived Temporary Hit Points use pool plus Short Rest Exhaustion reduction; no standalone promoted battle Unit profile is claimed for the partial authored action shape. |
+| `rogue_ability_score_improvement_l4` | unsupported-profile | Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
 | `silent_image` | unsupported-profile | Illusory image placement, investigation, physical-interaction reveal, and presentation are runtime-detached illusion/exploration adjudication outside promoted battle Unit profiles. |
+| `sorcerer_ability_score_improvement_l4` | unsupported-profile | Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
 | `speak_with_animals` | unsupported-profile | Beast communication, information exchange, and table-mediated social outcomes are runtime-detached exploration/social adjudication outside promoted battle Unit profiles. |
+| `warlock_contact_patron` | unsupported-profile | Contact Patron is a level-9 always-prepared Contact Other Plane Spell Access and once-per-Long-Rest patron-contact no-slot cast with a feature-scoped automatic Intelligence Saving Throw success; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `warlock_fiend_spells` | unsupported-profile | Fiend Spells is a level-3 subclass always-prepared Spell Access progression across Warlock levels 3, 5, 7, and 9; no standalone promoted battle Unit profile is claimed for the partial authored class-feature record. |
+| `wizard_ability_score_improvement_l4` | unsupported-profile | Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record. |
+| `wizard_scholar` | unsupported-profile | Scholar is a level-2 build-time Expertise choice constrained to one of six skills in which the character already has proficiency; no standalone promoted battle Unit profile is claimed until the constrained Character Creation Expertise choice is modeled. |
 
 ## Unsupported Pressure Summary
 
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
-| srd-5.2.1 | unassigned | unsupported-profile | 41 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_orc`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `druid_druidic`, `rogue_thieves_cant`, `feat_ability_score_improvement`, `orc_darkvision`, `fireball`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `minor_illusion`, `armor_chain_mail`, `equipment_shield`, `weapon_club`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff`, `alarm`, `comprehend_languages`, `identify`, `silent_image`, `speak_with_animals` |
-| srd-5.2.1 | unassigned | profile-subset-supported | 12 | `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `ranger_favored_enemy`, `faerie_fire`, `feather_fall`, `find_familiar`, `fog_cloud`, `grease`, `jump`, `light`, `thunderwave`, `charm_person` |
+| srd-5.2.1 | unassigned | unsupported-profile | 72 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_dragonborn`, `species_dwarf`, `species_elf`, `species_goliath`, `species_orc`, `species_tiefling`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `druid_druidic`, `rogue_thieves_cant`, `feat_ability_score_improvement`, `orc_darkvision`, `elf_darkvision`, `species_dragonborn_breath_weapon`, `species_dragonborn_damage_resistance`, `species_dragonborn_darkvision`, `dwarf_darkvision`, `dwarf_dwarven_resilience`, `species_goliath_powerful_build`, `species_tiefling_darkvision`, `fireball`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `minor_illusion`, `alarm`, `barbarian_ability_score_improvement_l4`, `barbarian_danger_sense`, `barbarian_primal_champion`, `bard_ability_score_improvement_l4`, `bard_bonus_proficiencies`, `bard_epic_boon`, `bard_jack_of_all_trades`, `bard_words_of_creation`, `cleric_ability_score_improvement_l4`, `cleric_epic_boon`, `comprehend_languages`, `druid_ability_score_improvement_l4`, `druid_epic_boon`, `druid_natures_ward`, `fighter_epic_boon`, `identify`, `monk_ability_score_improvement_l4`, `monk_body_and_mind`, `monk_epic_boon`, `paladin_epic_boon`, `paladin_fighting_style`, `paladin_paladins_smite`, `ranger_ability_score_improvement_l4`, `ranger_feral_senses`, `ranger_tireless`, `rogue_ability_score_improvement_l4`, `silent_image`, `sorcerer_ability_score_improvement_l4`, `speak_with_animals`, `warlock_contact_patron`, `warlock_fiend_spells`, `wizard_ability_score_improvement_l4`, `wizard_scholar` |
+| srd-5.2.1 | no promoted runtime lane | non-runtime-authored-data | 11 | `armor_chain_mail`, `equipment_shield`, `weapon_club`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff` |
+| srd-5.2.1 | unassigned | profile-subset-supported | 5 | `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `ranger_favored_enemy`, `find_familiar`, `charm_person` |
 
 ## Profile Claims By Task
 
@@ -1108,6 +1134,8 @@ This raw inventory lists authored Surface records that are absent from the insta
 | SRDINV26 | completed-runtime-parity | `character-sheet.spellbook-ritual-invocation` |
 | SRDINV29B | completed-runtime-parity | `spell.invocation-condition-save` |
 | SRDINV91C | qnt-proof | `spell.invocation-condition-save` |
+| SRDINV91A | qnt-proof | `spell.reaction-counterspell` |
+| SRDINV91A | completed-runtime-parity | `spell.reaction-counterspell` |
 | SRDINV38A | completed-runtime-parity | `spell.invocation-sleep-target-admission` |
 | SRDINV87D | qnt-proof | `spell.invocation-sleep-target-admission` |
 | SRDINV87D | completed-runtime-parity | `spell.invocation-sleep-target-admission` |

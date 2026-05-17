@@ -216,8 +216,13 @@ import {
   combatantWithSanctuaryWard,
   sanctuaryTargetingInterdictionCheck,
 } from "./sanctuary-targeting-interdiction.ts";
+import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
 
-import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
+import {
+  spellFillSet,
+  spellFillSetContainsOnlySpellCastReactionFacts,
+  type SpellFillSet,
+} from "./spells-resolve-fill-set.ts";
 
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import {
@@ -404,7 +409,11 @@ export function resolveSpellAct(
     );
   }
   if (
-    !spellActTurnResourceAvailable(input.state.currentTurnResources, invocation)
+    !spellActTurnResourceAvailable(
+      input.state.currentTurnResources,
+      input.subject.actorId,
+      invocation,
+    )
   ) {
     return invalidResult(
       input.state,
@@ -811,17 +820,18 @@ export function resolveSpellAct(
 
   const spellCastReactionWindow = maybeOpenReactionWindow(
     castingState,
-    {
-      trigger: "spellCast",
+    spellCastReactionFrame({
       casterId: subject.actorId,
-      spellId: invocationForResolution.spell.id,
+      invocation: invocationForResolution,
       targetIds: [target.combatantId],
+      reactionSpellTargetFacts: fillSet.reactionSpellTargetFacts,
+      castingResource: { kind: "magicAction" },
       continuation: {
         kind: "replay",
         subject: input.subject,
         fills: input.fills,
       },
-    },
+    }),
     input.suppressedReactionTrigger,
   );
   if (spellCastReactionWindow !== null) {
@@ -1350,17 +1360,18 @@ function resolveSpellAttackDamageObjectTarget(input: {
 
   const spellCastReactionWindow = maybeOpenReactionWindow(
     input.input.state,
-    {
-      trigger: "spellCast",
+    spellCastReactionFrame({
       casterId: input.actorId,
-      spellId: input.invocation.spell.id,
+      invocation: input.invocation,
       targetIds: [],
+      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+      castingResource: { kind: "magicAction" },
       continuation: {
         kind: "replay",
         subject: input.input.subject,
         fills: input.input.fills,
       },
-    },
+    }),
     input.input.suppressedReactionTrigger,
   );
   if (spellCastReactionWindow !== null) {
@@ -1607,7 +1618,11 @@ export function resolveBonusActionSpellAct(
     );
   }
   if (
-    !spellActTurnResourceAvailable(input.state.currentTurnResources, invocation)
+    !spellActTurnResourceAvailable(
+      input.state.currentTurnResources,
+      input.subject.actorId,
+      invocation,
+    )
   ) {
     return invalidResult(
       input.state,
@@ -1732,11 +1747,15 @@ export function resolveBonusActionDashSpellAct(
       "Bonus Action Dash spell act requires a supported Expeditious Retreat spell.",
     );
   }
-  if (input.fills.length > 0) {
+  const fillSet = spellFillSet(input.fills, invocation);
+  if (fillSet.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", fillSet.message);
+  }
+  if (!spellFillSetContainsOnlySpellCastReactionFacts(fillSet, {})) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Expeditious Retreat accepts no fills.",
+      "Expeditious Retreat accepts only spell-cast Reaction trigger facts.",
     );
   }
   if (!spellHasAvailableSpend(actor, invocation)) {
@@ -1747,7 +1766,11 @@ export function resolveBonusActionDashSpellAct(
     );
   }
   if (
-    !spellActTurnResourceAvailable(input.state.currentTurnResources, invocation)
+    !spellActTurnResourceAvailable(
+      input.state.currentTurnResources,
+      input.subject.actorId,
+      invocation,
+    )
   ) {
     return invalidResult(
       input.state,
@@ -1775,17 +1798,18 @@ export function resolveBonusActionDashSpellAct(
     : input.state;
   const spellCastReactionWindow = maybeOpenReactionWindow(
     castingState,
-    {
-      trigger: "spellCast",
+    spellCastReactionFrame({
       casterId: subject.actorId,
-      spellId: invocation.spell.id,
+      invocation,
       targetIds: [subject.actorId],
+      reactionSpellTargetFacts: fillSet.reactionSpellTargetFacts,
+      castingResource: { kind: "bonusAction" },
       continuation: {
         kind: "replay",
         subject: input.subject,
         fills: input.fills,
       },
-    },
+    }),
     input.suppressedReactionTrigger,
   );
   if (spellCastReactionWindow !== null) {
@@ -1806,7 +1830,10 @@ export function resolveBonusActionDashSpellAct(
       "Expeditious Retreat Bonus Action is no longer available for the current actor.",
     );
   }
-  const slotTurnResources = markSpellSlotExpendedThisTurn(spent.right);
+  const slotTurnResources = markSpellSlotExpendedThisTurn(
+    spent.right,
+    input.subject.actorId,
+  );
   if (Either.isLeft(slotTurnResources)) {
     return invalidResult(
       input.state,

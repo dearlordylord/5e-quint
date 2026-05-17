@@ -125,6 +125,14 @@ export function supportedSpellInvocationRef(
       procedure: "featherFallMitigation",
     };
   }
+  if (invocation.procedure === "counterspell") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "counterspell",
+    };
+  }
   if (invocation.procedure === "sanctuaryTargetingInterdiction") {
     return {
       tag: "spellSlot",

@@ -2819,7 +2819,7 @@ function projectLevel1BuffMarkSmiteSelectedIdentityState(
     casterTempHp: caster.tempHp,
     casterFrightened: snapshotHasCondition(caster.conditions, "frightened"),
     spellSlotSpentThisTurn:
-      state.currentTurnResources.spellSlotExpendedThisTurn,
+      state.currentTurnResources.spellSlotUsesThisTurn.some((use) => use.kind === "committed"),
     level1SlotsRemaining: level1SlotsRemaining(state),
     divineFavorActiveRiderCount: divineFavorActiveRiderCount(state),
     damageRiderSourceSpellId: damageRiderSourceSpellId(damageRider),

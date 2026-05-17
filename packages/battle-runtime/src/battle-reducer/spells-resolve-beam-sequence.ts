@@ -56,6 +56,7 @@ import {
 } from "./hideous-laughter-repeat-save.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
+import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
 import {
   recordAttackRollMissToHitReplacementUsed,
   selectedAttackRollMissToHitReplacement,
@@ -132,17 +133,18 @@ export function resolveSpellAttackBeamSequenceAct(input: {
   );
   const spellCastReactionWindow = maybeOpenReactionWindow(
     input.input.state,
-    {
-      trigger: "spellCast",
+    spellCastReactionFrame({
       casterId: input.actorId,
-      spellId: input.invocation.spell.id,
+      invocation: input.invocation,
       targetIds: [...new Set(targetIds)],
+      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+      castingResource: { kind: "magicAction" },
       continuation: {
         kind: "replay",
         subject: input.input.subject,
         fills: input.input.fills,
       },
-    },
+    }),
     input.input.suppressedReactionTrigger,
   );
   if (spellCastReactionWindow !== null) {

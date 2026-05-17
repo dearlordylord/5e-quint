@@ -39,7 +39,7 @@ export const INITIAL_TURN_RESOURCES = resetTurnActionEconomy({
   actionResources: [],
   currentHasBonusAction: false,
   commandHalt: null,
-  spellSlotExpendedThisTurn: false,
+  spellSlotUsesThisTurn: [],
   attackRollMadeThisTurn: false,
   attackDamageRidersUsedThisTurn: [],
   weaponDamageDiceRollChoicesUsedThisTurn: [],
@@ -49,6 +49,12 @@ export const INITIAL_TURN_RESOURCES = resetTurnActionEconomy({
 });
 export const ATTACK_TARGET_HOLE_ID = holeId("battle:attack:target");
 export const ATTACK_ROLL_HOLE_ID = holeId("battle:attack:roll");
+export const SPELL_CAST_REACTION_FACTS_HOLE_ID = holeId(
+  "battle:spell-cast:reaction-facts",
+);
+export const SPELL_CAST_REACTION_FACTS_HOLE_INSTANCE = holeInstanceKey(
+  "battle:spell-cast:reaction-facts",
+);
 export const ATTACK_DAMAGE_DISPOSITION_HOLE_ID = holeId(
   "battle:attack:damage-disposition",
 );

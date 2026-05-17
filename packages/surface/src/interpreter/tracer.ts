@@ -5845,7 +5845,7 @@ function traceSpeciesUnit(unit: SpeciesRecord): Trace {
     id: rootId,
     category: "source",
     atomKind: "species_root",
-    label: `species_root\n${unit.name}\n${unit.creatureType}, ${unit.size.size}, ${unit.speed.walkFeet} ft.`,
+    label: `species_root\n${unit.name}\n${unit.creatureType}, ${speciesSizeLabel(unit.size)}, ${unit.speed.walkFeet} ft.`,
   });
 
   for (const traitId of Object.values(unit.traits)) {
@@ -5860,6 +5860,10 @@ function traceSpeciesUnit(unit: SpeciesRecord): Trace {
   }
 
   return traceFromNodes(unit, nodes, edges);
+}
+
+function speciesSizeLabel(size: SpeciesRecord["size"]): string {
+  return size.kind === "fixed" ? size.size : size.options.join("/");
 }
 
 function traceStartingEquipment(

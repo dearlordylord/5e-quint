@@ -1,0 +1,17 @@
+let elf =
+      { creatureType = "humanoid"
+      , description = "Elf species source facts for character creation admission."
+      , id = "species_elf"
+      , kind = "species"
+      , name = "Elf"
+      , provenance =
+        { kind = "srd-5.2.1"
+        , section = "Character-Creation.md:87-91; Character-Origins.md:147-175"
+        }
+      , size = { kind = "fixed", size = "medium" }
+      , species = "elf"
+      , speed.walkFeet = 30
+      , traits = { darkvision = "elf_darkvision" }
+      }
+
+in  elf

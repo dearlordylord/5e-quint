@@ -1988,7 +1988,7 @@ function projectRuleCoreSpellState(input: {
         ? target.zeroHpLifecycle.deathSaves.failures
         : 0,
     spellSlotSpentThisTurn:
-      input.state.currentTurnResources.spellSlotExpendedThisTurn,
+      input.state.currentTurnResources.spellSlotUsesThisTurn.some((use) => use.kind === "committed"),
     level1SlotsRemaining: level1SlotsRemaining(input.state, casterId),
     activeEffectKind: activeEffectKind(input.state),
     readiedHeld: snapshot.readiedResponses.spells.some(

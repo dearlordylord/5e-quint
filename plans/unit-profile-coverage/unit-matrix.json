@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 362,
-      "numerator": 117,
-      "percent": "32.3%"
+      "numerator": 126,
+      "percent": "34.8%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 429,
-      "numerator": 144,
-      "percent": "33.6%"
+      "denominator": 434,
+      "numerator": 158,
+      "percent": "36.4%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,47 +59,47 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 145
+      "value": 159
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 97,
-      "numerator": 97,
+      "denominator": 105,
+      "numerator": 105,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 145,
-      "numerator": 145,
+      "denominator": 159,
+      "numerator": 159,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 62,
-      "numerator": 62,
+      "denominator": 63,
+      "numerator": 63,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 62,
-      "numerator": 62,
+      "denominator": 63,
+      "numerator": 63,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 62,
-      "numerator": 62,
+      "denominator": 63,
+      "numerator": 63,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 62,
-      "numerator": 62,
+      "denominator": 63,
+      "numerator": 63,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 97,
-      "numerator": 97,
-      "percent": "100%"
+      "denominator": 105,
+      "numerator": 104,
+      "percent": "99%"
     },
     "supportedProfileCoverage": {
-      "denominator": 118,
-      "numerator": 97,
-      "percent": "82.2%"
+      "denominator": 127,
+      "numerator": 105,
+      "percent": "82.7%"
     }
   },
   "metricSemantics": [
@@ -313,7 +313,7 @@
         },
         {
           "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/index.test.ts"
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
         },
         {
           "kind": "runtime-test",
@@ -426,7 +426,7 @@
         },
         {
           "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/index.test.ts"
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
         }
       ]
     },
@@ -514,7 +514,7 @@
         },
         {
           "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/index.test.ts"
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
         }
       ]
     },
@@ -745,7 +745,7 @@
         },
         {
           "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/index.test.ts"
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
         }
       ]
     },
@@ -771,7 +771,7 @@
         },
         {
           "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/index.test.ts"
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
         },
         {
           "kind": "runtime-test",
@@ -801,7 +801,7 @@
         },
         {
           "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/index.test.ts"
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
         },
         {
           "kind": "runtime-test",
@@ -1125,7 +1125,7 @@
         },
         {
           "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/index.test.ts"
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
         },
         {
           "kind": "runtime-test",
@@ -1155,7 +1155,7 @@
         },
         {
           "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/index.test.ts"
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
         },
         {
           "kind": "runtime-test",
@@ -1185,7 +1185,7 @@
         },
         {
           "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/index.test.ts"
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
         },
         {
           "kind": "focused-mbt",
@@ -1221,7 +1221,7 @@
         },
         {
           "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/index.test.ts"
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
         }
       ]
     },
@@ -1248,7 +1248,7 @@
         },
         {
           "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/index.test.ts"
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
         }
       ]
     },
@@ -1525,6 +1525,33 @@
       ]
     },
     {
+      "id": "spell.reaction-counterspell",
+      "profileKind": "reaction",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/reaction-triggered-spells.ts"
+      ],
+      "sourceBoundary": "The runtime consumes typed table-supplied spell-cast Reaction facts establishing that a reactor can see a spell caster within 60 feet, requires Counterspell spell access, an available Reaction, an available Spell Slot, and the SRD same-turn spell-slot ledger, opens a spell-cast Reaction frame before the triggering spell resolves, resolves automatic or Constitution-save-gated interruption, releases the triggering pending slot when the spell is countered, and exposes nested spell-cast Reaction facts so Counterspell can itself be countered. Spell visibility, range geometry, and component witnesses remain table-supplied facts.",
+      "taskRefs": [
+        "SRDINV91A"
+      ],
+      "title": "Reaction spell interrupts a visible spell cast through Counterspell",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/counterspell-reaction-spell.test.ts"
+        }
+      ]
+    },
+    {
       "id": "spell.invocation-jump-movement-replacement",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -1621,7 +1648,7 @@
         },
         {
           "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/index.test.ts"
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
         }
       ]
     },
@@ -1645,7 +1672,7 @@
         },
         {
           "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/index.test.ts"
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
         },
         {
           "kind": "runtime-test",
@@ -1794,7 +1821,7 @@
         },
         {
           "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/index.test.ts"
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
         },
         {
           "kind": "runtime-test",
@@ -1830,7 +1857,7 @@
         },
         {
           "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/index.test.ts"
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
         },
         {
           "kind": "runtime-test",
@@ -2704,6 +2731,22 @@
       "taskId": "SRDINV91C"
     },
     {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Counterspell's spell-cast Reaction frame, per-combatant same-turn Spell Slot ledger, automatic and Constitution-save-gated interruption, triggering slot release on a countered spell, and recursive Counterspell interruption before the first Counterspell slot commits.",
+      "profileIds": [
+        "spell.reaction-counterspell"
+      ],
+      "taskId": "SRDINV91A"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime reducer tests cover Counterspell discovery from spell-cast Reaction facts, automatic and save-gated interruption, triggering slot release, stale reactor closure, no-target spell facts, Shield and save-gated spell interruption, recursive Counterspell, and same-turn Spell Slot rejection.",
+      "profileIds": [
+        "spell.reaction-counterspell"
+      ],
+      "taskId": "SRDINV91A"
+    },
+    {
       "claimKind": "completed-runtime-parity",
       "note": "Focused battle-runtime Sleep tests for point-origin 5-foot Sphere target admission, Wisdom Saving Throw holes, Exhaustion-immunity automatic success, resource spend, and ready-mode rejection.",
       "profileIds": [
@@ -2889,7 +2932,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime admission and reducer tests for Faerie Fire point-origin Cube targeting, Dexterity save outcomes, concentration cleanup, and one concentration-owned outline effect that grants sight-gated attack-roll Advantage and denies Invisible benefits for failed-save creatures. Dim Light remains deferred.",
+      "note": "Focused battle-runtime admission and reducer tests for Faerie Fire point-origin Cube targeting, Dexterity save outcomes, concentration cleanup, and one concentration-owned outline effect that grants sight-gated attack-roll Advantage and denies Invisible benefits for failed-save creatures.",
       "profileIds": [
         "spell.invocation-attack-roll-advantage-save"
       ],
@@ -4108,6 +4151,78 @@
         "status": "installed"
       },
       "claim": {
+        "reason": "Species admission container record; character creation retains the selected species source fact and authored trait Unit refs, while executable battle pressure lives on species trait Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "species",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_dragonborn.json",
+      "unitId": "species_dragonborn"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Species admission container record; character creation retains the selected species source fact and authored trait Unit refs, while executable battle pressure lives on species trait Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "species",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_dwarf.json",
+      "unitId": "species_dwarf"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Species admission container record; character creation retains the selected species source fact and authored trait Unit refs, while executable battle pressure lives on species trait Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "species",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_elf.json",
+      "unitId": "species_elf"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Species admission container record; character creation retains the selected species source fact and authored trait Unit refs, while executable battle pressure lives on species trait Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "species",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_goliath.json",
+      "unitId": "species_goliath"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "reason": "Species container record; executable pressure lives on species trait Units.",
         "tag": "unsupported-profile"
       },
@@ -4118,6 +4233,24 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/species_orc.json",
       "unitId": "species_orc"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "reason": "Species admission container record; character creation retains the selected species source fact and authored trait Unit refs, while executable battle pressure lives on species trait Units.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": false,
+      "kind": "species",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_tiefling.json",
+      "unitId": "species_tiefling"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -4976,7 +5109,7 @@
           "taskId": "SRDINV72A"
         },
         {
-          "ownerPath": "packages/battle-runtime/src/index.test.ts",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV72B"
         },
@@ -5038,7 +5171,7 @@
             },
             {
               "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
             }
           ]
         }
@@ -5330,7 +5463,7 @@
             },
             {
               "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
             },
             {
               "kind": "runtime-test",
@@ -5495,7 +5628,7 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
-          "ownerPath": "packages/battle-runtime/src/index.test.ts",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV87C"
         }
@@ -5527,7 +5660,7 @@
             },
             {
               "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
             },
             {
               "kind": "runtime-test",
@@ -5909,7 +6042,7 @@
           "taskId": "SRDINV75A"
         },
         {
-          "ownerPath": "packages/battle-runtime/src/index.test.ts",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV75B"
         },
@@ -5949,7 +6082,7 @@
             },
             {
               "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
             }
           ]
         }
@@ -6989,7 +7122,7 @@
             },
             {
               "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
             },
             {
               "kind": "runtime-test",
@@ -7054,7 +7187,7 @@
             },
             {
               "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
             }
           ]
         }
@@ -7115,7 +7248,7 @@
             },
             {
               "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
             },
             {
               "kind": "runtime-test",
@@ -7276,6 +7409,190 @@
       ],
       "sourceRecordPath": "packages/surface/content/orc_relentless_endurance.json",
       "unitId": "orc_relentless_endurance"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "sight/illumination projection owner",
+          "reason": "Darkvision sense grants provide observer sense and range facts; promoted battle execution consumes derived sight and illumination projections plus table-supplied distance and visibility facts rather than executing species trait Units directly."
+        },
+        "reason": "Darkvision is an authored species sense fact with no standalone promoted Unit profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/darkvision_elf.json",
+      "unitId": "elf_darkvision"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future species attack-replacement feature profile owner",
+          "reason": "Breath Weapon needs an explicit species feature profile that composes Attack-action attack replacement, area membership, Dexterity save-for-half damage, Draconic Ancestry damage-type selection, character-level dice scaling, and Proficiency Bonus Long Rest resource tracking."
+        },
+        "reason": "Breath Weapon is a level-1 species attack replacement with area save-gated damage, Draconic Ancestry damage type, shape choice, character-level dice scaling, and a Proficiency Bonus Long Rest use pool; no broad species runtime profile is promoted in this task.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_dragonborn_breath_weapon.json",
+      "unitId": "species_dragonborn_breath_weapon"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future target-side resistance and Draconic Ancestry character fact owner",
+          "reason": "Dragonborn Damage Resistance requires one Draconic Ancestry source fact shared with Breath Weapon and a passive target-side damage adjustment profile; current promoted damage modifiers consume Stat Block or active-effect resistances rather than absent species trait Units."
+        },
+        "reason": "Dragonborn Damage Resistance is a passive target-side Resistance trait keyed to Draconic Ancestry; no promoted species trait resistance profile is claimed.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_dragonborn_damage_resistance.json",
+      "unitId": "species_dragonborn_damage_resistance"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "sight/illumination projection owner",
+          "reason": "Darkvision sense grants provide observer sense and range facts; promoted battle execution consumes derived sight and illumination projections plus table-supplied distance and visibility facts rather than executing species trait Units directly."
+        },
+        "reason": "Darkvision is an authored species sense fact with no standalone promoted Unit profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_dragonborn_darkvision.json",
+      "unitId": "species_dragonborn_darkvision"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "sight/illumination projection owner",
+          "reason": "Darkvision sense grants provide observer sense and range facts; promoted battle execution consumes derived sight and illumination projections plus table-supplied distance and visibility facts rather than executing species trait Units directly."
+        },
+        "reason": "Darkvision is an authored species sense fact with no standalone promoted Unit profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_dwarf_darkvision.json",
+      "unitId": "dwarf_darkvision"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future target-side resistance and poison saving-throw roll-mode owner",
+          "reason": "Dwarven Resilience should be modeled at a target-side damage adjustment and condition-scoped Saving Throw roll-mode boundary, preserving its single species trait identity without claiming a generic grant_resistance profile."
+        },
+        "reason": "Dwarven Resilience combines Poison Resistance with Advantage on saving throws to avoid or end the Poisoned condition; no promoted species trait resistance or save roll-mode profile is claimed.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_dwarf_dwarven_resilience.json",
+      "unitId": "dwarf_dwarven_resilience"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "character-sheet carrying-capacity projection and future grapple-escape ability-check roll-mode owner",
+          "reason": "Powerful Build needs a split owner: its one-size-larger carrying capacity is durable Character Sheet or inventory projection, while its Advantage on ability checks to end Grappled remains future condition-scoped Ability Check roll-mode support outside current promoted battle Unit profiles."
+        },
+        "reason": "Powerful Build splits into a durable carrying-capacity character fact and an Ability Check Advantage fact for ending the Grappled condition; no standalone promoted battle Unit profile is claimed.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_goliath_powerful_build.json",
+      "unitId": "species_goliath_powerful_build"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "sight/illumination projection owner",
+          "reason": "Darkvision sense grants provide observer sense and range facts; promoted battle execution consumes derived sight and illumination projections plus table-supplied distance and visibility facts rather than executing species trait Units directly."
+        },
+        "reason": "Darkvision is an authored species sense fact with no standalone promoted Unit profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/species_tiefling_darkvision.json",
+      "unitId": "species_tiefling_darkvision"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -7940,7 +8257,7 @@
             },
             {
               "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
             },
             {
               "kind": "runtime-test",
@@ -8104,6 +8421,64 @@
       ],
       "sourceRecordPath": "packages/surface/content/command.json",
       "unitId": "command"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "spell.reaction-counterspell"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001",
+          "RAW-PTG-REACTIONS-002"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "QMBT22"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.reaction-counterspell",
+          "profileKind": "reaction",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+            "packages/battle-runtime/src/battle-reducer/reaction-triggered-spells.ts"
+          ],
+          "sourceBoundary": "The runtime consumes typed table-supplied spell-cast Reaction facts establishing that a reactor can see a spell caster within 60 feet, requires Counterspell spell access, an available Reaction, an available Spell Slot, and the SRD same-turn spell-slot ledger, opens a spell-cast Reaction frame before the triggering spell resolves, resolves automatic or Constitution-save-gated interruption, releases the triggering pending slot when the spell is countered, and exposes nested spell-cast Reaction facts so Counterspell can itself be countered. Spell visibility, range geometry, and component witnesses remain table-supplied facts.",
+          "taskRefs": [
+            "SRDINV91A"
+          ],
+          "title": "Reaction spell interrupts a visible spell cast through Counterspell",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/counterspell-reaction-spell.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/counterspell.json",
+      "unitId": "counterspell"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -8391,7 +8766,7 @@
             },
             {
               "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
             },
             {
               "kind": "runtime-test",
@@ -8573,7 +8948,7 @@
             },
             {
               "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
             },
             {
               "kind": "runtime-test",
@@ -8652,17 +9027,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "table/spatial and presentation owners",
-              "reason": "Color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the runtime boundary."
-            },
-            "followUpTaskId": "SRDINV89D",
-            "mechanic": "color rendering, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the runtime boundary"
-          }
-        ],
         "profileIds": [
           "spell.invocation-attack-roll-advantage-save"
         ],
@@ -8679,7 +9043,7 @@
           "caller-supplied emitter projection facts derive Dim Light illumination from Faerie Fire object and creature emitters",
           "derived Dim Light illumination projects Lightly Obscured sight consequences and Darkvision-adjusted sight consequences without duplicating emitter state"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -8737,17 +9101,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "SRDINV55 table/spatial owner",
-              "reason": "Fall-distance derivation, map elevation, and landing geometry simulation remain table/spatial derivations."
-            },
-            "followUpTaskId": "SRDINV55",
-            "mechanic": "fall-distance derivation, map elevation, and landing geometry simulation remain outside the runtime boundary"
-          }
-        ],
         "profileIds": [
           "spell.invocation-feather-fall-mitigation"
         ],
@@ -8761,9 +9114,10 @@
           "Reaction and level-1 Spell Slot spend",
           "one-minute per-target Feather Fall mitigation effect",
           "active 60-foot-per-round descent-rate cap projection",
-          "caller-supplied landing cleanup that ends the landed target's mitigation, emits no-fall-damage outcome, and suppresses Falling-Prone when Feather Fall prevents damage"
+          "caller-supplied landing cleanup that ends the landed target's mitigation, emits no-fall-damage outcome, and suppresses Falling-Prone when Feather Fall prevents damage",
+          "fall-distance derivation, map elevation, and landing geometry remain runtime-detached table adjudication outside the Feather Fall profile; the runtime consumes only typed falling-trigger, falling-target, range, and landing witnesses"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -9070,17 +9424,11 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "SRDINV66 table/spatial owner",
-              "reason": "Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain table/spatial derivations."
-            },
-            "followUpTaskId": "SRDINV66",
-            "mechanic": "automatic area membership, line of sight, map illumination, pathfinding, and wind derivation"
-          }
-        ],
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "table/spatial owner",
+          "reason": "Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain runtime-detached table/spatial derivations outside the Fog Cloud runtime profile."
+        },
         "profileIds": [
           "spell.invocation-fog-cloud-obscurement"
         ],
@@ -9094,12 +9442,12 @@
           "one-hour Concentration duration cleanup",
           "table-supplied strong-wind dispersal cleanup"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
-          "ownerPath": "packages/battle-runtime/src/index.test.ts",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV84E"
         },
@@ -9135,7 +9483,7 @@
             },
             {
               "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
             }
           ]
         }
@@ -9209,17 +9557,11 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "SRDINV66 table/spatial owner",
-              "reason": "Automatic area membership, pathfinding, and grid geometry derivation remain table/spatial derivations."
-            },
-            "followUpTaskId": "SRDINV66",
-            "mechanic": "automatic area membership, pathfinding, and grid geometry derivation for Grease movement"
-          }
-        ],
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "table/spatial owner",
+          "reason": "Automatic area membership, pathfinding, and grid geometry derivation remain runtime-detached table/spatial derivations outside the Grease runtime profile."
+        },
         "profileIds": [
           "spell.invocation-grease-ground-hazard"
         ],
@@ -9233,7 +9575,7 @@
           "table-triggered enter-area and end-turn-in-area Dexterity save procedures",
           "caller-supplied Grease Difficult Terrain movement facts that validate active hazard identity and spend total Movement distance plus one extra foot per foot moved through Grease"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -9279,7 +9621,7 @@
             },
             {
               "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
             }
           ]
         }
@@ -9483,7 +9825,7 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
-          "ownerPath": "packages/battle-runtime/src/index.test.ts",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV84D"
         },
@@ -9520,7 +9862,7 @@
             },
             {
               "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
             },
             {
               "kind": "runtime-test",
@@ -9600,7 +9942,7 @@
             },
             {
               "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
             },
             {
               "kind": "runtime-test",
@@ -9815,26 +10157,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "SRDINV55 table/spatial owner",
-              "reason": "Runtime-owned jump arc, pathfinding, collision, and final-position derivation remain table/spatial derivations."
-            },
-            "followUpTaskId": "SRDINV55",
-            "mechanic": "runtime-owned jump arc, pathfinding, collision, and final-position derivation"
-          },
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "SRDINV55 table/spatial owner",
-              "reason": "Runtime-owned Difficult Terrain landing Acrobatics check derivation remains a table/spatial derivation."
-            },
-            "followUpTaskId": "SRDINV55",
-            "mechanic": "runtime-owned Difficult Terrain landing Acrobatics check derivation"
-          }
-        ],
         "profileIds": [
           "spell.invocation-jump-movement-replacement"
         ],
@@ -9849,10 +10171,11 @@
           "one-minute spell-owned duration",
           "once on each target turn use marker",
           "10-foot Movement spend for up to 30 feet of jump movement",
-          "caller-supplied legal landing facts",
-          "Prone outcome for caller-supplied failed Difficult Terrain landing Acrobatics facts"
+          "caller-supplied legal landing witness facts",
+          "Prone outcome for caller-supplied failed Difficult Terrain landing Acrobatics facts",
+          "jump arc, pathfinding, collision, final-position derivation, legal-destination derivation, and Difficult Terrain landing Dexterity (Acrobatics) check derivation remain runtime-detached table adjudication outside the Jump profile; the runtime consumes only typed jump distance, legal landing, and Acrobatics-result witnesses"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -9908,17 +10231,6 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "table/spatial and presentation owners",
-              "reason": "Colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the object-emitter runtime boundary."
-            },
-            "followUpTaskId": "SRDINV89D",
-            "mechanic": "colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the object-emitter runtime boundary"
-          }
-        ],
         "profileIds": [
           "spell.invocation-object-light"
         ],
@@ -9934,9 +10246,10 @@
           "one-hour duration cleanup",
           "same-caster recast replacement of the prior Light emitter",
           "caller-supplied emitter projection facts derive Bright Light, Dim Light, and opaque-cover suppression from the existing Light object emitter",
-          "derived Dim Light illumination projects Lightly Obscured sight consequences and Darkvision-adjusted sight consequences without duplicating emitter state"
+          "derived Dim Light illumination projects Lightly Obscured sight consequences and Darkvision-adjusted sight consequences without duplicating emitter state",
+          "colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation remain outside the object-emitter runtime boundary"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -11081,7 +11394,7 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
-          "ownerPath": "packages/battle-runtime/src/index.test.ts",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV84C"
         },
@@ -11115,7 +11428,7 @@
             },
             {
               "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
             }
           ]
         }
@@ -12042,7 +12355,7 @@
             },
             {
               "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
             },
             {
               "kind": "runtime-test",
@@ -12072,7 +12385,7 @@
             },
             {
               "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
             },
             {
               "kind": "focused-mbt",
@@ -12091,26 +12404,11 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "SRDINV55 table/spatial owner",
-              "reason": "Runtime-owned push geometry, collision/pathfinding, and final-position derivation remain table/spatial derivations."
-            },
-            "followUpTaskId": "SRDINV55",
-            "mechanic": "runtime-owned push geometry, collision/pathfinding, and final-position derivation"
-          },
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "SRDINV55 table/spatial owner",
-              "reason": "Broad object inventory simulation and sound propagation simulation remain table/spatial derivations."
-            },
-            "followUpTaskId": "SRDINV55",
-            "mechanic": "broad object inventory simulation and sound propagation simulation"
-          }
-        ],
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "table/spatial owner",
+          "reason": "Push geometry, collision/pathfinding, final-position derivation, broad object inventory simulation, and sound propagation simulation remain runtime-detached table/spatial derivations outside the Thunderwave runtime profile."
+        },
         "profileIds": [
           "spell.invocation-damage-save-or-attack"
         ],
@@ -12124,7 +12422,7 @@
           "unsecured-object push disposition consumed from caller-supplied object facts",
           "audible thunderous boom evidence within 300 feet"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -12303,7 +12601,7 @@
             },
             {
               "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/index.test.ts"
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
             },
             {
               "kind": "runtime-test",
@@ -13351,6 +13649,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
+          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+        },
+        "reason": "Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -13369,6 +13677,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "later-level-only",
+          "owner": "future unit-feature.passive-saving-throw-roll-mode owner",
+          "reason": "The feature is acquired after level 1 and grants Advantage on Dexterity Saving Throws unless the creature has the Incapacitated condition. Current promoted Unit profiles do not consume class-feature passive Saving Throw roll-mode grants or make both the saveAbilityFilter and passive condition suppressor executable at admission."
+        },
+        "reason": "Danger Sense is a level-2 passive Dexterity Saving Throw Advantage feature; no promoted Unit profile is claimed until a passive Saving Throw roll-mode profile can execute the Dexterity ability filter and Incapacitated suppression gate together.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -13387,6 +13705,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "later-level-only",
+          "owner": "future level-20 Character Sheet ability-score projection owner",
+          "reason": "The feature mutates durable Character Sheet Ability Scores at level 20, capping Strength and Constitution at 25. Battle runtime should consume derived creature statistics rather than duplicate this class-feature ability-score state."
+        },
+        "reason": "Primal Champion is a level-20 permanent Strength and Constitution Ability Score increase; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -13405,6 +13733,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
+          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+        },
+        "reason": "Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -13423,6 +13761,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "character-creation-runtime proficiency-choice projection and future subclass progression admission",
+          "reason": "The feature grants durable skill proficiency choices on the Character Sheet. Character creation already owns generic class-feature proficiency-choice discovery and finalization, while this absent subclass feature is not a promoted battle-runtime Unit profile."
+        },
+        "reason": "College of Lore Bonus Proficiencies is a level-3 subclass skill-proficiency choice; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -13441,6 +13789,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "selected feat Unit profiles and level-19 character advancement owner",
+          "reason": "The class feature opens a level-19 feat choice. Selected feat Units own executable behavior; the existing Boon of Combat Prowess feat Unit owns its supported miss-to-hit replacement profile, and other selected Epic Boon, General, Fighting Style, or Origin feat choices require their own Unit profile support. Level-19 class progression admission is outside this promoted battle-profile claim."
+        },
+        "reason": "Level 19 Epic Boon is a later-level feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -13459,6 +13817,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "later-level-only",
+          "owner": "future character-sheet.ability-check-proficiency-bonus profile",
+          "reason": "The feature is acquired after level 1 and depends on a concrete Ability Check witness with a skill, the existing CharacterBuild skill and Expertise proficiency facts, and whether another rule already contributes Proficiency Bonus. Current promoted Unit profiles do not model that passive half-proficiency computation, and generic modify_roll_numeric cannot make the RAW gate executable."
+        },
+        "reason": "Jack of All Trades is a level-2 passive Ability Check proficiency supplement; no promoted Unit profile is claimed until a Character Sheet Ability Check Proficiency Bonus projection can execute the skill-proficiency and no-other-Proficiency-Bonus gates.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -13477,6 +13845,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "later-level-only",
+          "owner": "future level-20 spell-access and Power Word spell invocation profile owners",
+          "reason": "The always-prepared Power Word Heal and Power Word Kill facts are later-level Character Sheet spell access, and the second-target casting rider can be promoted only with future supported Power Word spell invocation profiles."
+        },
+        "reason": "Words of Creation is a level-20 always-prepared spell-access grant plus a Power Word casting rider; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -13693,6 +14071,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
+          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+        },
+        "reason": "Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -13711,6 +14099,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "selected feat Unit profiles and level-19 character advancement owner",
+          "reason": "The class feature opens a level-19 feat choice. Selected feat Units own executable behavior; the existing Boon of Combat Prowess feat Unit owns its supported miss-to-hit replacement profile, and other selected Epic Boon, General, Fighting Style, or Origin feat choices require their own Unit profile support. Level-19 class progression admission is outside this promoted battle-profile claim."
+        },
+        "reason": "Level 19 Epic Boon is a later-level feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -13887,24 +14285,6 @@
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [],
-      "sourceRecordPath": "packages/surface/content/counterspell.json",
-      "unitId": "counterspell"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
       "sourceRecordPath": "packages/surface/content/create_food_and_water.json",
       "unitId": "create_food_and_water"
     },
@@ -13925,24 +14305,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/create_undead.json",
       "unitId": "create_undead"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "species_trait",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/darkvision_elf.json",
-      "unitId": "elf_darkvision"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -14099,6 +14461,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
+          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+        },
+        "reason": "Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -14117,6 +14489,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "selected feat Unit profiles and level-19 character advancement owner",
+          "reason": "The class feature opens a level-19 feat choice. Selected feat Units own executable behavior; the existing Boon of Combat Prowess feat Unit owns its supported miss-to-hit replacement profile, and other selected Epic Boon, General, Fighting Style, or Origin feat choices require their own Unit profile support. Level-19 class progression admission is outside this promoted battle-profile claim."
+        },
+        "reason": "Level 19 Epic Boon is a later-level feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -14135,6 +14517,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "later-level-only",
+          "owner": "future Circle of the Land selected-land and passive target-side resistance/condition-immunity owner",
+          "reason": "The feature is acquired after level 1 and its Resistance damage type is determined by the Druid's Circle Spells land choice. Promoted Unit profiles in this branch do not install the subclass feature, store the Long Rest selected-land source fact, or project a passive condition immunity plus derived Resistance from authored class-feature Units."
+        },
+        "reason": "Nature's Ward is a level-10 Circle of the Land subclass feature with Poisoned condition immunity plus land-choice-derived Resistance; no standalone promoted Unit profile is claimed until the selected-land source fact and passive target-side projection are modeled together.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -14225,6 +14617,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "selected feat Unit profiles and level-19 character advancement owner",
+          "reason": "The class feature opens a level-19 feat choice. Selected feat Units own executable behavior; the existing Boon of Combat Prowess feat Unit owns its supported miss-to-hit replacement profile, and other selected Epic Boon, General, Fighting Style, or Origin feat choices require their own Unit profile support. Level-19 class progression admission is outside this promoted battle-profile claim."
+        },
+        "reason": "Level 19 Epic Boon is a later-level feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -16287,6 +16689,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
+          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+        },
+        "reason": "Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -16305,6 +16717,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "later-level-only",
+          "owner": "future level-20 Character Sheet ability-score projection owner",
+          "reason": "The feature mutates durable Character Sheet Ability Scores at level 20, capping Dexterity and Wisdom at 25. Battle runtime should consume derived creature statistics rather than duplicate this class-feature ability-score state."
+        },
+        "reason": "Body and Mind is a level-20 permanent Dexterity and Wisdom Ability Score increase; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -16323,6 +16745,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "selected feat Unit profiles and level-19 character advancement owner",
+          "reason": "The class feature opens a level-19 feat choice. Selected feat Units own executable behavior; the existing Boon of Combat Prowess feat Unit owns its supported miss-to-hit replacement profile, and other selected Epic Boon, General, Fighting Style, or Origin feat choices require their own Unit profile support. Level-19 class progression admission is outside this promoted battle-profile claim."
+        },
+        "reason": "Level 19 Epic Boon is a later-level feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -16359,6 +16791,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "selected feat Unit profiles and level-19 character advancement owner",
+          "reason": "The class feature opens a level-19 feat choice. Selected feat Units own executable behavior; the existing Boon of Combat Prowess feat Unit owns its supported miss-to-hit replacement profile, and other selected Epic Boon, General, Fighting Style, or Origin feat choices require their own Unit profile support. Level-19 class progression admission is outside this promoted battle-profile claim."
+        },
+        "reason": "Level 19 Epic Boon is a later-level feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -16377,6 +16819,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "selected Fighting Style feat Unit profiles and future Blessed Warrior Spell Access character owner",
+          "reason": "The class feature opens a level-2 choice between a Fighting Style feat and Blessed Warrior's Cleric cantrip Spell Access. Selected Fighting Style feat Units own executable battle behavior, and Blessed Warrior cantrip access and replacement belong to Character Sheet Spell Access rather than duplicate battle Unit state."
+        },
+        "reason": "Paladin Fighting Style is a level-2 Fighting Style feat or Blessed Warrior cantrip-selection grant; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -16395,6 +16847,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "later-level-only",
+          "owner": "future Paladin's Smite Spell Access and class-feature free-cast resource owner",
+          "reason": "The feature is acquired after level 1, makes Divine Smite always prepared, and grants one Long Rest no-slot Divine Smite cast. The Divine Smite spell Unit already owns after-hit damage invocation behavior; a future Paladin feature owner should retain this source Unit for Spell Access and free-cast resource projection without duplicating the spell procedure."
+        },
+        "reason": "Paladin's Smite is a level-2 Divine Smite Spell Access and once-per-Long-Rest free-cast grant; no standalone promoted battle Unit profile is claimed for the authored class-feature record until class-feature free-cast support is widened beyond Favored Enemy.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -16575,6 +17037,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
+          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+        },
+        "reason": "Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -16593,6 +17065,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "later-level-only",
+          "owner": "future sight and sense projection owner",
+          "reason": "The feature is acquired after level 1 and grants Blindsight with a range of 30 feet. Current promoted Unit profiles do not install class-feature sense grants or project Blindsight from authored feature Units into battle sight state."
+        },
+        "reason": "Feral Senses is a level-18 Blindsight sense grant; no standalone promoted battle Unit profile is claimed for the authored class-feature record until class-feature sense grants have a sight projection owner.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -16611,6 +17093,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "later-level-only",
+          "owner": "future Tireless feature owner spanning Temporary Hit Points actions and Short Rest Exhaustion recovery",
+          "reason": "The feature is acquired after level 1 and combines a Magic action Temporary Hit Points resource with a separate Short Rest Exhaustion reduction benefit. Current promoted Unit profiles do not support this ability-modifier Magic action resource or the rest-triggered Exhaustion recovery clause."
+        },
+        "reason": "Tireless is a level-10 two-part feature: a Magic action Wisdom-derived Temporary Hit Points use pool plus Short Rest Exhaustion reduction; no standalone promoted battle Unit profile is claimed for the partial authored action shape.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -16665,6 +17157,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
+          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+        },
+        "reason": "Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -16801,6 +17303,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
+          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+        },
+        "reason": "Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -16835,132 +17347,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/speak_with_animals.json",
       "unitId": "speak_with_animals"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "species_trait",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/species_dragonborn_breath_weapon.json",
-      "unitId": "species_dragonborn_breath_weapon"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "species_trait",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/species_dragonborn_damage_resistance.json",
-      "unitId": "species_dragonborn_damage_resistance"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "species_trait",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/species_dragonborn_darkvision.json",
-      "unitId": "species_dragonborn_darkvision"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "species_trait",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/species_dwarf_darkvision.json",
-      "unitId": "dwarf_darkvision"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "species_trait",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/species_dwarf_dwarven_resilience.json",
-      "unitId": "dwarf_dwarven_resilience"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "species_trait",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/species_goliath_powerful_build.json",
-      "unitId": "species_goliath_powerful_build"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "species_trait",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/species_tiefling_darkvision.json",
-      "unitId": "species_tiefling_darkvision"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -17369,6 +17755,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "later-level-only",
+          "owner": "future Contact Patron Spell Access and feature-scoped spell-invocation override owner",
+          "reason": "The feature is acquired after level 1, adds Contact Other Plane Spell Access, and changes only the Contact Patron no-slot Spell Invocation used to contact the patron by auto-succeeding on Contact Other Plane's Intelligence Saving Throw. Current promoted owners handle Favored Enemy's narrower Hunter's Mark free-cast resource and selected invocation Spell Access, not this level-9 feature-scoped save override or its table-mediated divination answers."
+        },
+        "reason": "Contact Patron is a level-9 always-prepared Contact Other Plane Spell Access and once-per-Long-Rest patron-contact no-slot cast with a feature-scoped automatic Intelligence Saving Throw success; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -17387,6 +17783,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "later-level-only",
+          "owner": "future subclass Spell Access progression owner",
+          "reason": "The feature is acquired after level 1 and grants progressively level-gated prepared Spell Access. The authored Surface record contains the level-3 grants but lacks the level-5, level-7, and level-9 threshold grants, so promoting the record now would overstate RAW support for the full Fiend Spells table."
+        },
+        "reason": "Fiend Spells is a level-3 subclass always-prepared Spell Access progression across Warlock levels 3, 5, 7, and 9; no standalone promoted battle Unit profile is claimed for the partial authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -18017,6 +18423,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "character-creation-runtime ability-score projection and selected feat Unit profiles",
+          "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim."
+        },
+        "reason": "Level 4 Ability Score Improvement is a character-advancement feat-selection container; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -18035,6 +18451,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "later-level-only",
+          "owner": "future constrained Character Creation skill Expertise choice owner",
+          "reason": "The feature is acquired after level 1 and belongs to durable Character Sheet proficiency projection. Existing Rogue Expertise support admits owned skill proficiencies without Expertise, but Scholar additionally intersects that owned-skill set with a fixed six-skill list; the current authored modify-roll shape cannot represent that acquisition-time prerequisite without semantic leakage."
+        },
+        "reason": "Scholar is a level-2 build-time Expertise choice constrained to one of six skills in which the character already has proficiency; no standalone promoted battle Unit profile is claimed until the constrained Character Creation Expertise choice is modeled.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",

@@ -25,12 +25,13 @@ import {
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either, Match } from "effect";
 import {
-  type BattleCreatureState,
-  type BattleState,
-  type BattleTurnResources,
-  type PersistentArmorSpellInvocation,
-  type SupportedSpellInvocation,
-} from "../battle-reducer.ts";
+	  type BattleCreatureState,
+	  type BattleState,
+	  type BattleTurnResources,
+	  type BattleTurnSpellSlotUse,
+	  type PersistentArmorSpellInvocation,
+	  type SupportedSpellInvocation,
+	} from "../battle-reducer.ts";
 import type {
   CharacterBattleInvocationSpellAccessState,
   CharacterBattleSpellcastingState,
@@ -118,6 +119,30 @@ export {
   supportedSpellAttackKind,
   supportedSpellPostDamageRiders,
 } from "./spells-profiles-save-gates.ts";
+
+const LIGHT_OBJECT_MAX_SIZE = "large" as const;
+
+type ActivationPhase = Extract<
+  SpellRecord["mechanics"],
+  { readonly family: "activation" }
+>["phases"][number];
+type ObjectLightDirectPhase = Extract<
+  ActivationPhase,
+  { readonly kind: "direct" }
+> & {
+  readonly attachment: {
+    readonly kind: "hole";
+    readonly value: {
+      readonly kind: "object";
+      readonly count: 1;
+      readonly filter: {
+        readonly heldOrWorn: "forbidden";
+        readonly maxSize: typeof LIGHT_OBJECT_MAX_SIZE;
+      };
+    };
+  };
+};
+
 export function supportedSpellActs(
   actor: BattleCreatureState,
   state?: BattleState,
@@ -305,15 +330,21 @@ export function supportedSpellActs(
         spellcasting.spellcastingAbilityModifier,
       ),
     ),
-    ...preparedSpells.flatMap((spell) =>
-      supportedPreparedShieldReactionSpellProfile(
-        spell,
-        spellcasting.spellSlots,
-      ),
-    ),
-    ...preparedSpells.flatMap((spell) =>
-      supportedPreparedHellishRebukeReactionSpellProfile(
-        spell,
+	    ...preparedSpells.flatMap((spell) =>
+	      supportedPreparedShieldReactionSpellProfile(
+	        spell,
+	        spellcasting.spellSlots,
+	      ),
+	    ),
+	    ...preparedSpells.flatMap((spell) =>
+	      supportedPreparedCounterspellReactionSpellProfile(
+	        spell,
+	        spellcasting.spellSlots,
+	      ),
+	    ),
+	    ...preparedSpells.flatMap((spell) =>
+	      supportedPreparedHellishRebukeReactionSpellProfile(
+	        spell,
         spellcasting.spellSlots,
       ),
     ),
@@ -517,15 +548,8 @@ export function supportedCantripObjectLightSpellProfile(
   if (!isLightObjectSpell(spell)) {
     return [];
   }
-  const lightPhase = spell.mechanics.phases.find(
-    (phase) =>
-      phase.kind === "direct" &&
-      phase.attachment.kind === "hole" &&
-      phase.attachment.value.kind === "object" &&
-      phase.attachment.value.count === 1 &&
-      phase.attachment.value.filter?.heldOrWorn === "forbidden" &&
-      phase.effects?.some((effect) => effect.kind === "emit_light"),
-  );
+  const lightPhase = spell.mechanics.phases.find(isObjectLightDirectPhase);
+  const maxObjectSize = lightPhase?.attachment.value.filter?.maxSize;
   const lightEffects =
     lightPhase === undefined || !("effects" in lightPhase)
       ? undefined
@@ -536,6 +560,7 @@ export function supportedCantripObjectLightSpellProfile(
   if (
     lightEffect === undefined ||
     lightEffect.kind !== "emit_light" ||
+    maxObjectSize === undefined ||
     lightEffect.brightRadiusFeet !== 20 ||
     lightEffect.dimAdditionalFeet !== 20
   ) {
@@ -555,7 +580,7 @@ export function supportedCantripObjectLightSpellProfile(
           procedure: "objectLight",
           spell,
           actionCost: "magicAction",
-          targeting: { kind: "singleObject" },
+          targeting: { kind: "singleObject", maxSize: maxObjectSize },
           light: {
             kind: "brightAndDim",
             brightRadiusFeet: movementFeet(lightEffect.brightRadiusFeet),
@@ -564,6 +589,20 @@ export function supportedCantripObjectLightSpellProfile(
           expiresAt: { kind: "duration", durationTicks: durationTicks.right },
         },
       ];
+}
+
+function isObjectLightDirectPhase(
+  phase: ActivationPhase,
+): phase is ObjectLightDirectPhase {
+  return (
+    phase.kind === "direct" &&
+    phase.attachment.kind === "hole" &&
+    phase.attachment.value.kind === "object" &&
+    phase.attachment.value.count === 1 &&
+    phase.attachment.value.filter?.heldOrWorn === "forbidden" &&
+    phase.attachment.value.filter?.maxSize === LIGHT_OBJECT_MAX_SIZE &&
+    phase.effects?.some((effect) => effect.kind === "emit_light") === true
+  );
 }
 
 export function supportedCantripMakeStableSpellProfile(
@@ -794,17 +833,23 @@ export function isLightObjectSpell(spell: SpellRecord): spell is SpellRecord & {
     { family: "activation" }
   >;
 } {
+  const earlyEnd =
+    spell.mechanics.duration.kind === "timed"
+      ? (spell.mechanics.duration.earlyEnd ?? [])
+      : [];
   return (
     spell.name === "Light" &&
     spell.provenance.kind === "srd-5.2.1" &&
-    spell.provenance.section === "Spells/Descriptions-L-P#Light" &&
+    spell.provenance.section === "Spells/Descriptions-E-L#Light" &&
     spell.mechanics.family === "activation" &&
     spell.mechanics.level === 0 &&
     spell.mechanics.castingTime.kind === "action" &&
     spell.mechanics.range.kind === "touch" &&
     spell.mechanics.duration.kind === "timed" &&
     spell.mechanics.duration.value.unit === "hour" &&
-    spell.mechanics.duration.value.amount === 1
+    spell.mechanics.duration.value.amount === 1 &&
+    earlyEnd.length === 1 &&
+    earlyEnd[0]?.kind === "caster_recasts_spell"
   );
 }
 
@@ -969,6 +1014,68 @@ export function supportedPreparedHellishRebukeReactionSpellProfile(
           },
         ];
   });
+}
+
+export function supportedPreparedCounterspellReactionSpellProfile(
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  if (
+    spell.name !== "Counterspell" ||
+    spell.provenance.kind !== "srd-5.2.1" ||
+    spell.provenance.section !== "Spells/Descriptions-A-D#Counterspell" ||
+    spell.mechanics.family !== "triggered_reaction" ||
+    spell.mechanics.level !== 3 ||
+    spell.mechanics.castingTime.kind !== "reaction" ||
+    spell.mechanics.castingTime.trigger.kind !== "creature_casts_spell" ||
+    !sameStringSet(spell.mechanics.castingTime.trigger.components ?? [], [
+      "V",
+      "S",
+      "M",
+    ]) ||
+    spell.mechanics.range.kind !== "point" ||
+    spell.mechanics.range.feet !== 60 ||
+    !spell.mechanics.components.s ||
+    spell.mechanics.components.v ||
+    spell.mechanics.components.m ||
+    spell.mechanics.duration.kind !== "instantaneous" ||
+    !spell.mechanics.interruptsTrigger ||
+    spell.mechanics.phases.length !== 1
+  ) {
+    return [];
+  }
+  const phase = spell.mechanics.phases[0];
+  if (
+    phase?.kind !== "save_gate" ||
+    hasSaveGateRepeatSaves(phase) ||
+    phase.ability !== "con" ||
+    phase.dc.kind !== "caster_spell_save_dc" ||
+    phase.attachment.kind !== "hole" ||
+    phase.attachment.value.kind !== "target" ||
+    phase.attachment.value.selection.mode !== "one" ||
+    phase.onFail.kind !== "negate_triggering_spell" ||
+    phase.onSuccess.kind !== "none" ||
+    phase.autoSuccessIfCasterSlotGte !== "triggering_spell_level"
+  ) {
+    return [];
+  }
+
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] =>
+    Number(slot.spellLevel) < spell.mechanics.level
+      ? []
+      : [
+          {
+            access: { tag: "prepared" },
+            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+            procedure: "counterspell",
+            spell,
+            ability: "con" as const,
+            dc: phase.dc,
+            targeting: { kind: "singleCombatant" as const },
+            rangeFeet: movementFeet(60),
+          },
+        ],
+  );
 }
 
 export function reactionTriggerIncludesHitByAttackRoll(
@@ -1139,11 +1246,12 @@ export function spellHasAvailableSpend(
 
 export function spellActTurnResourceAvailable(
   resources: BattleTurnResources,
+  actorId: CombatantId,
   invocation: SupportedSpellInvocation,
 ): boolean {
   if (
     invocation.resource.tag === "spellSlot" &&
-    resources.spellSlotExpendedThisTurn
+    combatantHasSpellSlotUseThisTurn(resources, actorId)
   ) {
     return false;
   }
@@ -1158,8 +1266,71 @@ export function spellActTurnResourceAvailable(
 
 export function markSpellSlotExpendedThisTurn(
   resources: BattleTurnResources,
+  combatantId: CombatantId,
 ): Either.Either<BattleTurnResources, "spell slot already expended this turn"> {
-  return resources.spellSlotExpendedThisTurn
+  if (combatantHasCommittedSpellSlotUseThisTurn(resources, combatantId)) {
+    return Either.left("spell slot already expended this turn" as const);
+  }
+  const pending = resources.spellSlotUsesThisTurn.some(
+    (use) => use.kind === "pending" && use.combatantId === combatantId,
+  );
+  const nextUse: BattleTurnSpellSlotUse = {
+    kind: "committed",
+    combatantId,
+  };
+  return Either.right({
+    ...resources,
+    spellSlotUsesThisTurn: pending
+      ? resources.spellSlotUsesThisTurn.map((use) =>
+          use.kind === "pending" && use.combatantId === combatantId
+            ? nextUse
+            : use,
+        )
+      : [...resources.spellSlotUsesThisTurn, nextUse],
+  });
+}
+
+export function claimPendingSpellSlotUseThisTurn(
+  resources: BattleTurnResources,
+  combatantId: CombatantId,
+): Either.Either<BattleTurnResources, "spell slot already expended this turn"> {
+  return combatantHasSpellSlotUseThisTurn(resources, combatantId)
     ? Either.left("spell slot already expended this turn" as const)
-    : Either.right({ ...resources, spellSlotExpendedThisTurn: true });
+    : Either.right({
+        ...resources,
+        spellSlotUsesThisTurn: [
+          ...resources.spellSlotUsesThisTurn,
+          { kind: "pending", combatantId },
+        ],
+      });
+}
+
+export function releasePendingSpellSlotUseThisTurn(
+  resources: BattleTurnResources,
+  combatantId: CombatantId,
+): BattleTurnResources {
+  return {
+    ...resources,
+    spellSlotUsesThisTurn: resources.spellSlotUsesThisTurn.filter(
+      (use) => !(use.kind === "pending" && use.combatantId === combatantId),
+    ),
+  };
+}
+
+export function combatantHasSpellSlotUseThisTurn(
+  resources: BattleTurnResources,
+  combatantId: CombatantId,
+): boolean {
+  return resources.spellSlotUsesThisTurn.some(
+    (use) => use.combatantId === combatantId,
+  );
+}
+
+export function combatantHasCommittedSpellSlotUseThisTurn(
+  resources: BattleTurnResources,
+  combatantId: CombatantId,
+): boolean {
+  return resources.spellSlotUsesThisTurn.some(
+    (use) => use.kind === "committed" && use.combatantId === combatantId,
+  );
 }

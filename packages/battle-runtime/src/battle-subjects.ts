@@ -111,6 +111,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "sanctuaryTargetingInterdiction",
   "persistentArmorEffect",
   "shieldReaction",
+  "counterspell",
   "featherFallMitigation",
 ] as const;
 export type SpellSlotProcedure = (typeof SPELL_SLOT_PROCEDURES)[number];

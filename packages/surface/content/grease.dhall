@@ -9,31 +9,22 @@
 --    A creature that enters the area or ends its turn there must also
 --    succeed on that save or fall Prone."
 --
--- PARTIAL AUTHOR, NOT A SUPPORTED RUNTIME PROFILE. The on-cast
--- save_gate (Dex → Prone, affects creatures standing in area at cast
--- time) is authored, but the Unit profile matrix keeps Grease
--- unsupported until battle-runtime has an active ground-area lifecycle
--- and executable later procedures for creatures that enter the area or
--- end turns there, with table-supplied area-membership facts.
+-- Runtime profile boundary:
+--   * the spell creates an active ground hazard keyed by caller-supplied
+--     ground-area identity;
+--   * on-cast, enter-area, and end-turn-in-area Dexterity Saving Throws
+--     consume caller-supplied affected/triggering creature facts;
+--   * failed Grease saves apply the Prone condition;
+--   * caller-supplied Difficult Terrain movement facts validate the
+--     active hazard identity and spend total Movement distance plus one
+--     extra foot per foot moved through Grease.
 --
--- Area is modeled with area shape "cube" (10-foot square —
--- sphere/cube is the closest RAW-matching shape for a 10ft ground
--- square; the surface has no 2-d square primitive, closed set per
--- AREA_SHAPES).
+-- Automatic area membership, pathfinding, and grid geometry derivation
+-- remain runtime-detached table/spatial derivations.
 --
--- Modeled as a 10-foot cube (sideFeet = 10) — the RAW "10-foot square"
--- is a 2-D footprint, but the surface's closed AREA_SHAPES list lacks
--- a square primitive. Cube is the minimal RAW-faithful container.
---
--- DEFERRED.
---   1. "Difficult Terrain for the duration" — difficult terrain /
---      movement-cost is §B spatial agenda (sibling to terrain rulings).
---   2. "A creature that enters the area or ends its turn there must
---      also succeed on that save or fall Prone" — recurring per-event
---      save (enter-area OR end-turn-in-area) requires promoted
---      battle-runtime active area state plus table-supplied
---      membership facts at those later event boundaries. Storing the
---      original spell area by itself is not support.
+-- Area is modeled with area shape "cube" (sideFeet = 10). The RAW
+-- "10-foot square" is a 2-D ground footprint, and the Surface area shape
+-- vocabulary has no square primitive.
 
 let grease =
       { kind = "spell"

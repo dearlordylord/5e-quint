@@ -45,6 +45,7 @@ import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import { sanctuaryTargetingInterdictionCheck } from "./sanctuary-targeting-interdiction.ts";
+import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
 import {
   applyPreparedSlotSpellDamage,
   applySpellDamage,
@@ -189,17 +190,18 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
 
   const spellCastReactionWindow = maybeOpenReactionWindow(
     input.input.state,
-    {
-      trigger: "spellCast",
+    spellCastReactionFrame({
       casterId: input.actorId,
-      spellId: input.invocation.spell.id,
+      invocation: input.invocation,
       targetIds: [target.combatantId],
+      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+      castingResource: { kind: "magicAction" },
       continuation: {
         kind: "replay",
         subject: input.input.subject,
         fills: input.input.fills,
       },
-    },
+    }),
     input.input.suppressedReactionTrigger,
   );
   if (spellCastReactionWindow !== null) {
