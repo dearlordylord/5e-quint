@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L1I-PRECHECK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Non-D Class Species Pressure Precheck"
     },
     {
@@ -63,6 +63,12 @@
       "id": "L1I-SPECIES-TRAIT-PRESSURE-SPLIT",
       "status": "ready-for-research",
       "title": "Species Trait Catalog Pressure Split"
+    },
+    {
+      "number": 11,
+      "id": "L1I-DRUID-NATURES-WARD",
+      "status": "ready-for-research",
+      "title": "Druid Nature's Ward Catalog Pressure"
     }
   ]
 }
@@ -132,7 +138,7 @@ Every task runs:
 
 | Order | Task | Status | Blocks On | Output |
 | ---: | --- | --- | --- | --- |
-| 1 | L1I-PRECHECK - Non-D Class Species Pressure Precheck | ready-for-research | none | refreshed list of class/species authored pressure that excludes D-owned Units |
+| 1 | L1I-PRECHECK - Non-D Class Species Pressure Precheck | done | none | refreshed list of class/species authored pressure that excludes D-owned Units |
 | 2 | L1I-ABILITY-SCORE-IMPROVEMENT - Ability Score Improvement Authored Feature Closure | ready-for-research | 1 | closure or profile plan for authored ASI feature records |
 | 3 | L1I-EPIC-BOON-CONTAINERS - Epic Boon Class Feature Container Closure | ready-for-research | 1 | closure or profile plan for Epic Boon container records |
 | 4 | L1I-BARD-KNOWLEDGE-FEATURES - Bard Knowledge Feature Catalog Pressure | ready-for-research | 1 | Bard feature disposition for non-D authored records |
@@ -142,10 +148,11 @@ Every task runs:
 | 8 | L1I-MONK-BODY-AND-MIND - Monk Body And Mind Catalog Pressure | ready-for-research | 1 | Monk feature disposition without stealing D Martial Arts scaling |
 | 9 | L1I-WARLOCK-WIZARD-KNOWLEDGE-FEATURES - Warlock Wizard Knowledge Feature Catalog Pressure | ready-for-research | 1 | Warlock/Wizard knowledge-feature disposition without stealing D invocation work |
 | 10 | L1I-SPECIES-TRAIT-PRESSURE-SPLIT - Species Trait Catalog Pressure Split | ready-for-research | 1 | split species traits into runtime-supported, runtime-detached, later-level, or follow-up lanes |
+| 11 | L1I-DRUID-NATURES-WARD - Druid Nature's Ward Catalog Pressure | ready-for-research | 1 | Druid later feature disposition without stealing D Primal Order work |
 
 ### Task 1 - L1I-PRECHECK - Non-D Class Species Pressure Precheck
 
-Status: `ready-for-research`
+Status: `done`
 
 Refresh the current class-feature/species-trait authored pressure from
 `UNIT_REPORT.md`, `srd-unit-inventory.json`, and `unit-claims.jsonl`. Produce a
@@ -157,6 +164,8 @@ Acceptance:
 - no D-owned Unit is assigned to this loop;
 - companion/familiar work is excluded;
 - outputs name the exact Surface content records read.
+
+Result: `plans/unit-profile-coverage/L1I_CLASS_SPECIES_CATALOG_PRESSURE_PRECHECK.md`.
 
 ### Task 2 - L1I-ABILITY-SCORE-IMPROVEMENT - Ability Score Improvement Authored Feature Closure
 
@@ -251,3 +260,15 @@ Units: `elf_darkvision`, `species_dragonborn_breath_weapon`,
 Split these into runtime-supported, character fact, runtime-detached sense, or
 future widening follow-up lanes. Do not implement a broad species runtime in
 this task.
+
+### Task 11 - L1I-DRUID-NATURES-WARD - Druid Nature's Ward Catalog Pressure
+
+Status: `ready-for-research`
+
+Unit: `druid_natures_ward`.
+
+Read Druid RAW and existing character/runtime owners. Classify Nature's Ward as
+a later-level character fact, no promoted Unit profile, or future supported
+profile. Do not touch `druid_primal_order`; D owns that selected identity work.
+If the land-choice resistance table needs runtime or Surface widening, record
+the smallest atomic follow-up rather than broadening this task.
