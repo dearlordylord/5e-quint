@@ -27,9 +27,7 @@ function battleReadinessClosureIssues(unitId, closure, context) {
     return [`${context} for ${unitId} must be an object.`];
   }
   if (!battleReadinessClosureKinds.has(closure.kind)) {
-    issues.push(
-      `${context} for ${unitId} has unknown kind ${closure.kind}.`,
-    );
+    issues.push(`${context} for ${unitId} has unknown kind ${closure.kind}.`);
   }
   if (typeof closure.owner !== "string" || closure.owner.length === 0) {
     issues.push(`${context} for ${unitId} requires owner.`);
@@ -273,14 +271,18 @@ function validateUnitClaims(claims, inventory, authoredSurfaceUnits, profiles) {
         );
       } else {
         for (const deferredMechanic of claim.claim.deferredMechanics) {
+          const hasFollowUpTaskId =
+            typeof deferredMechanic.followUpTaskId === "string" &&
+            deferredMechanic.followUpTaskId.length > 0;
+          const hasBattleReadinessClosure =
+            deferredMechanic.battleReadinessClosure !== undefined;
           if (
             typeof deferredMechanic.mechanic !== "string" ||
             deferredMechanic.mechanic.length === 0 ||
-            typeof deferredMechanic.followUpTaskId !== "string" ||
-            deferredMechanic.followUpTaskId.length === 0
+            (!hasFollowUpTaskId && !hasBattleReadinessClosure)
           ) {
             issues.push(
-              `Profile-subset Unit ${claim.unitId} deferredMechanics entries require mechanic and followUpTaskId.`,
+              `Profile-subset Unit ${claim.unitId} deferredMechanics entries require mechanic and either followUpTaskId or battleReadinessClosure.`,
             );
           }
           if (deferredMechanic.battleReadinessClosure !== undefined) {
@@ -870,7 +872,12 @@ function validateCoverageInputs({
   return [
     ...validateCollections(collections.collections, inventory),
     ...validateProfiles(profiles),
-    ...validateUnitClaims(unitClaims, inventory, authoredSurfaceUnits, profiles),
+    ...validateUnitClaims(
+      unitClaims,
+      inventory,
+      authoredSurfaceUnits,
+      profiles,
+    ),
     ...validateUnitEvidence(root, unitEvidence, unitClaims, scannedClaims),
     ...validateOwnerClaims(
       profiles,

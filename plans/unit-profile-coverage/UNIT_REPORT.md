@@ -8,20 +8,20 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Metric | Value |
 | --- | ---: |
-| Installed collection inventory count | 160 Units |
+| Installed collection inventory count | 161 Units |
 
 ## Coverage Metrics
 
 | Metric | Covered | Percent |
 | --- | ---: | ---: |
-| Authored Surface Unit catalog admission | 159/434 | 36.6% |
-| Authored Surface executable catalog admission | 127/362 | 35.1% |
-| Installed Unit profile classification coverage | 160/160 | 100% |
-| Supported executable Unit coverage | 105/128 | 82% |
-| QNT profile modeling coverage | 63/63 | 100% |
-| QNT proof coverage | 63/63 | 100% |
-| Runtime mapping coverage | 63/63 | 100% |
-| Runtime parity coverage | 63/63 | 100% |
+| Authored Surface Unit catalog admission | 160/435 | 36.8% |
+| Authored Surface executable catalog admission | 128/363 | 35.3% |
+| Installed Unit profile classification coverage | 161/161 | 100% |
+| Supported executable Unit coverage | 105/129 | 81.4% |
+| QNT profile modeling coverage | 64/64 | 100% |
+| QNT proof coverage | 64/64 | 100% |
+| Runtime mapping coverage | 64/64 | 100% |
+| Runtime parity coverage | 64/64 | 100% |
 | Deterministic admission/projection coverage | 105/105 | 100% |
 | Selected identity MBT coverage | 104/105 | 99% |
 | Classic non-SRD expression gate | 1/1 | 100% |
@@ -162,6 +162,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `ranger_favored_enemy` | srd-5.2.1 | `spell.invocation-marked-damage-rider` | always-prepared Hunter's Mark access through retained prepared Spell Access; two-use Favored Enemy Long Rest free-cast resource at Ranger level 1; free-cast Hunter's Mark uses the existing marked damage rider, target gate, Concentration ownership, and Bonus Action cost; normal Spell Slot Hunter's Mark casting remains available when the free-cast resource is exhausted | later-level Favored Enemy free-cast count scaling beyond two uses (SRDINV78) |
 | `fireball` | srd-5.2.1 | `spell.invocation-damage-save-or-attack` | Magic Action Spell Slot casting at level 3 or higher; caller-supplied 20-foot point-origin Sphere affected-creature boundary; Dexterity save-gated Fire damage with half damage on successful saves; slot-scaled Fire damage dice; caller-supplied unattended flammable-object ignition facts emit starts-burning outcomes | automatic area membership, line of effect, object inventory discovery, and grid geometry derivation (SRDINV66) |
 | `find_familiar` | srd-5.2.1 | `spell.find-familiar-lifecycle` | present familiar combatant insertion with its own Initiative turn, action, Reaction, and Movement resources; chosen named form and CR 0 Beast Stat Block resolution from the SRD form catalog; caster-chosen Celestial, Fey, or Fiend creature type override projection; one-familiar-per-caster lifecycle and atomic recast replacement; caller-supplied Initiative and unoccupied-space placement facts; ordinary Find Familiar attack and Opportunity Attack rejection while allowing supported non-attack actions; Magic-action temporary dismissal and reappearance, permanent dismissal, 0-HP disappearance, and held-item drop boundary events for 0-HP disappearance and pocket-dimension entry; 100-foot telepathic connection projection without shared-language requirement; Bonus Action shared sight, hearing, and special-sense benefits until the start of the caster's next turn; Touch-range spell delivery through a present familiar within 100 feet, atomically spending the familiar's Reaction with the spell invocation; Pact of the Chain selected-invocation exception that atomically forgoes one owner Attack-action attack, spends the present owned familiar's Reaction, and resolves a supported familiar Stat Block action attack | unsupported familiar form attacks and generic command AI (SRDINV86) |
+| `thaumaturgy` | srd-5.2.1 | `spell.invocation-self-ability-check-advantage` | Booming Voice Magic Action cantrip cast with no Spell Slot spend; caller-supplied total active Thaumaturgy 1-minute effect count enforcing the three-active-effects cap without persistent utility state; one-minute self Spell Effect for Booming Voice; Advantage projection for caller-supplied Charisma (Intimidation) Ability Check or Influence witnesses with normal Advantage/Disadvantage cancellation | Altered Eyes, Fire Play, Invisible Hand, Phantom Sound, Tremors, and non-Booming presentation/environment consequences remain runtime-detached table adjudication (closed: outside-runtime-presentation-exploration) |
 | `shatter` | srd-5.2.1 | `spell.invocation-damage-save-or-attack` | Magic Action Spell Slot casting at level 2 or higher; caller-supplied 10-foot point-origin Sphere affected-creature boundary; Constitution save-gated Thunder damage with half damage on successful saves; slot-scaled Thunder damage dice; Constructs have Disadvantage on the saving throw; caller-supplied nonmagical unattended object damage facts emit Thunder object damage outcomes | automatic area membership, line of effect, object inventory/material/magical/worn-carried discovery, and grid geometry derivation (SRDINV66) |
 | `charm_person` | srd-5.2.1 | `spell.creature-type-protection-and-charm` | Humanoid creature-type target filter; Wisdom save-gated battle-visible Charmed condition application and cleanup; hostile-target Wisdom save Advantage; 1-hour spell-owned condition duration; spell ends if caster or one of the caster's allies deals damage to the target; slot-scaled target count | Friendly disposition, the Charmed condition's Social Advantage, social interaction adjudication, and target knowledge when the spell ends remain runtime-detached social/knowledge state (SRDINV41) |
 
@@ -871,6 +872,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `ranger_favored_enemy` | `spell.invocation-marked-damage-rider` | SRDINV87C | `packages/battle-runtime/src/battle-runtime-test-support.ts` | later-level Favored Enemy free-cast count scaling beyond two uses (SRDINV78) |
 | `fireball` | `spell.invocation-damage-save-or-attack` | SRDINV54 | `packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts` | automatic area membership, line of effect, object inventory discovery, and grid geometry derivation (SRDINV66) |
 | `find_familiar` | `spell.find-familiar-lifecycle` | SRDINV84I5 | `packages/battle-runtime/src/find-familiar-lifecycle.test.ts` | unsupported familiar form attacks and generic command AI (SRDINV86) |
+| `thaumaturgy` | `spell.invocation-self-ability-check-advantage` | L1D2-THAUMATURGY-BOOMING-VOICE | `packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts` | Altered Eyes, Fire Play, Invisible Hand, Phantom Sound, Tremors, and non-Booming presentation/environment consequences remain runtime-detached table adjudication (closed: outside-runtime-presentation-exploration) |
 | `shatter` | `spell.invocation-damage-save-or-attack` | SRDINV55 | `packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts` | automatic area membership, line of effect, object inventory/material/magical/worn-carried discovery, and grid geometry derivation (SRDINV66) |
 | `charm_person` | `spell.creature-type-protection-and-charm` | SRDINV37 | `packages/battle-runtime/src/unit-profile-admission-creature-charm-spells.test.ts` | Friendly disposition, the Charmed condition's Social Advantage, social interaction adjudication, and target knowledge when the spell ends remain runtime-detached social/knowledge state (SRDINV41) |
 
@@ -1029,6 +1031,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `species_tiefling_darkvision` | unsupported-profile | Darkvision is an authored species sense fact with no standalone promoted Unit profile. |
 | `fireball` | profile-subset-supported | supported subset: Magic Action Spell Slot casting at level 3 or higher; caller-supplied 20-foot point-origin Sphere affected-creature boundary; Dexterity save-gated Fire damage with half damage on successful saves; slot-scaled Fire damage dice; caller-supplied unattended flammable-object ignition facts emit starts-burning outcomes; deferred: automatic area membership, line of effect, object inventory discovery, and grid geometry derivation (SRDINV66) |
 | `find_familiar` | profile-subset-supported | supported subset: present familiar combatant insertion with its own Initiative turn, action, Reaction, and Movement resources; chosen named form and CR 0 Beast Stat Block resolution from the SRD form catalog; caster-chosen Celestial, Fey, or Fiend creature type override projection; one-familiar-per-caster lifecycle and atomic recast replacement; caller-supplied Initiative and unoccupied-space placement facts; ordinary Find Familiar attack and Opportunity Attack rejection while allowing supported non-attack actions; Magic-action temporary dismissal and reappearance, permanent dismissal, 0-HP disappearance, and held-item drop boundary events for 0-HP disappearance and pocket-dimension entry; 100-foot telepathic connection projection without shared-language requirement; Bonus Action shared sight, hearing, and special-sense benefits until the start of the caster's next turn; Touch-range spell delivery through a present familiar within 100 feet, atomically spending the familiar's Reaction with the spell invocation; Pact of the Chain selected-invocation exception that atomically forgoes one owner Attack-action attack, spends the present owned familiar's Reaction, and resolves a supported familiar Stat Block action attack; deferred: unsupported familiar form attacks and generic command AI (SRDINV86) |
+| `thaumaturgy` | profile-subset-supported | supported subset: Booming Voice Magic Action cantrip cast with no Spell Slot spend; caller-supplied total active Thaumaturgy 1-minute effect count enforcing the three-active-effects cap without persistent utility state; one-minute self Spell Effect for Booming Voice; Advantage projection for caller-supplied Charisma (Intimidation) Ability Check or Influence witnesses with normal Advantage/Disadvantage cancellation; deferred: Altered Eyes, Fire Play, Invisible Hand, Phantom Sound, Tremors, and non-Booming presentation/environment consequences remain runtime-detached table adjudication (closed: outside-runtime-presentation-exploration) |
 | `detect_evil_and_good` | unsupported-profile | Detection/occlusion search semantics and Hallow discovery are not promoted as battle Unit profiles. |
 | `detect_magic` | unsupported-profile | Detection/concentration search semantics are not promoted as a battle Unit profile. |
 | `detect_poison_and_disease` | unsupported-profile | Detection/occlusion search semantics and poison/disease identification are not promoted as battle Unit profiles. |
@@ -1087,7 +1090,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | --- | --- | --- | ---: | --- |
 | srd-5.2.1 | unassigned | unsupported-profile | 71 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_dragonborn`, `species_dwarf`, `species_elf`, `species_goliath`, `species_orc`, `species_tiefling`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `druid_druidic`, `rogue_thieves_cant`, `feat_ability_score_improvement`, `orc_darkvision`, `elf_darkvision`, `species_dragonborn_breath_weapon`, `species_dragonborn_damage_resistance`, `species_dragonborn_darkvision`, `dwarf_darkvision`, `dwarf_dwarven_resilience`, `species_goliath_powerful_build`, `species_tiefling_darkvision`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `minor_illusion`, `alarm`, `barbarian_ability_score_improvement_l4`, `barbarian_danger_sense`, `barbarian_primal_champion`, `bard_ability_score_improvement_l4`, `bard_bonus_proficiencies`, `bard_epic_boon`, `bard_jack_of_all_trades`, `bard_words_of_creation`, `cleric_ability_score_improvement_l4`, `cleric_epic_boon`, `comprehend_languages`, `druid_ability_score_improvement_l4`, `druid_epic_boon`, `druid_natures_ward`, `fighter_epic_boon`, `identify`, `monk_ability_score_improvement_l4`, `monk_body_and_mind`, `monk_epic_boon`, `paladin_epic_boon`, `paladin_fighting_style`, `paladin_paladins_smite`, `ranger_ability_score_improvement_l4`, `ranger_feral_senses`, `ranger_tireless`, `rogue_ability_score_improvement_l4`, `silent_image`, `sorcerer_ability_score_improvement_l4`, `speak_with_animals`, `warlock_contact_patron`, `warlock_fiend_spells`, `wizard_ability_score_improvement_l4`, `wizard_scholar` |
 | srd-5.2.1 | no promoted runtime lane | non-runtime-authored-data | 11 | `armor_chain_mail`, `equipment_shield`, `weapon_club`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff` |
-| srd-5.2.1 | unassigned | profile-subset-supported | 7 | `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `ranger_favored_enemy`, `fireball`, `find_familiar`, `shatter`, `charm_person` |
+| srd-5.2.1 | unassigned | profile-subset-supported | 8 | `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `ranger_favored_enemy`, `fireball`, `find_familiar`, `thaumaturgy`, `shatter`, `charm_person` |
 
 ## Profile Claims By Task
 
@@ -1282,6 +1285,8 @@ This raw inventory lists authored Surface records that are absent from the insta
 | L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE | completed-runtime-parity | `character-creation.class-feature-advancement-replacement` |
 | L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE | completed-runtime-parity | `character-creation.eldritch-invocation-choice`, `character-creation.class-feature-advancement-replacement` |
 | L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT | completed-runtime-parity | `character-creation.warlock-pact-magic-advancement`, `character-creation.eldritch-invocation-choice`, `character-creation.class-feature-advancement-replacement` |
+| L1D2-THAUMATURGY-BOOMING-VOICE | qnt-proof | `spell.invocation-self-ability-check-advantage` |
+| L1D2-THAUMATURGY-BOOMING-VOICE | completed-runtime-parity | `spell.invocation-self-ability-check-advantage` |
 
 ## Supported Profiles Lacking Runtime Parity
 

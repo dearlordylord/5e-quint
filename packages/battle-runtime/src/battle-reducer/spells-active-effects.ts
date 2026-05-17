@@ -86,6 +86,26 @@ export type SaveGatedAttackRollAdvantageInvocation = Extract<
   { readonly procedure: "saveGatedAttackRollAdvantage" }
 >;
 
+export type ThaumaturgyBoomingVoiceInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "thaumaturgyBoomingVoice" }
+>;
+
+export function isThaumaturgyBoomingVoiceEffectForInvocation(
+  effect: BattleActiveEffect,
+  actorId: CombatantId,
+  invocation: ThaumaturgyBoomingVoiceInvocation,
+): effect is Extract<
+  BattleActiveEffect,
+  { readonly kind: "thaumaturgyBoomingVoice" }
+> {
+  return (
+    effect.kind === "thaumaturgyBoomingVoice" &&
+    effect.sourceSpellId === invocation.spell.id &&
+    effect.sourceCombatantId === actorId
+  );
+}
+
 export function saveGatedAttackRollAdvantageInvocationIsFaerieFire(
   invocation: SaveGatedAttackRollAdvantageInvocation,
 ): boolean {
@@ -1874,6 +1894,37 @@ export function applyRollModifierSpellEffect(
       }),
     };
   }, state);
+}
+
+export function applyThaumaturgyBoomingVoiceSpellEffect(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: ThaumaturgyBoomingVoiceInvocation,
+): BattleState {
+  const actor = state.combatants.get(actorId);
+  if (actor === undefined) {
+    return state;
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(actorId, {
+      ...actor,
+      activeEffects: [
+        ...actor.activeEffects.filter(
+          (effect) =>
+            !isThaumaturgyBoomingVoiceEffectForInvocation(
+              effect,
+              actorId,
+              invocation,
+            ),
+        ),
+        {
+          ...invocation.activeEffect,
+          sourceCombatantId: actorId,
+        },
+      ],
+    }),
+  };
 }
 
 export function applyCreatureTypeProtectionSpellEffect(

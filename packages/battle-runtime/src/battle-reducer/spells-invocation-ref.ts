@@ -176,6 +176,13 @@ export function supportedSpellInvocationRef(
       procedure: "makeStable",
     };
   }
+  if (invocation.procedure === "thaumaturgyBoomingVoice") {
+    return {
+      tag: "cantrip",
+      spellId: spellId(invocation.spell.id),
+      procedure: "thaumaturgyBoomingVoice",
+    };
+  }
   return Match.value(invocation).pipe(
     Match.when({ procedure: "heldLight" }, (cantrip) => ({
       tag: "cantrip" as const,

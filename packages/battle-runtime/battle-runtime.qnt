@@ -1,8 +1,9 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.creature-type-protection-and-charm spell.find-familiar-lifecycle spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-dancing-lights-movable-dim-light spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.creature-type-protection-and-charm spell.find-familiar-lifecycle spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-dancing-lights-movable-dim-light spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-self-ability-check-advantage spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-self-ability-check-advantage
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-condition-immunity-turn-start-temporary-hit-points
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-chained-attack-damage
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-damage spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider
@@ -344,7 +345,7 @@ module battleRuntime {
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
   type Ability = StrAbility | DexAbility | ConAbility | IntAbility | WisAbility | ChaAbility
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | FireBolt | EldritchBlast | SacredFlame | InflictWounds | BurningHands | Fireball | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | Counterspell | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | DivineFavor | DivineSmite | HuntersMark | Hex | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | DancingLightsSpell | Light | TrueStrike | Grease | FogCloud | Command | DissonantWhispers | FeatherFall | HellishRebuke | SorcerousBurst | SpareTheDying | HideousLaughter
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | FireBolt | EldritchBlast | SacredFlame | InflictWounds | BurningHands | Fireball | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | Counterspell | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | Thaumaturgy | DivineFavor | DivineSmite | HuntersMark | Hex | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | DancingLightsSpell | Light | TrueStrike | Grease | FogCloud | Command | DissonantWhispers | FeatherFall | HellishRebuke | SorcerousBurst | SpareTheDying | HideousLaughter
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | StarryWispSpellAttack | FireBoltSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack | SorcerousBurstSpellAttack({ damageTypeChoice: BattleRuntimeSorcerousBurstDamageTypeChoice, spellcastingAbilityModifier: int, characterLevel: int })
   type FixedSpellAttackDamageInvocation = RayOfFrostFixedSpellAttack | PoisonSprayFixedSpellAttack | ChillTouchFixedSpellAttack | StarryWispFixedSpellAttack | FireBoltFixedSpellAttack | ShockingGraspFixedSpellAttack | GuidingBoltFixedSpellAttack | RayOfSicknessFixedSpellAttack | ProduceFlameHurlFixedSpellAttack
   type SpellAttackBeamSequenceInvocation =
@@ -434,12 +435,12 @@ module battleRuntime {
     itemDropBoundaryEvents: Set[FindFamiliarItemDropBoundaryEvent],
     magicActionSpent: bool,
   }
-  type ActiveEffect = BardicInspirationDie({ source: Actor, dieSize: int, durationTicks: int }) | MageArmor({ durationTicks: int }) | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | HexDamageRider({ target: Actor, ability: Ability, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | RayOfSicknessPoisoned | ChillTouchHitPointRegainPrevented({ source: Actor, expiresAtRound: int }) | StarryWispInvisibleBenefitDenied({ source: Actor, expiresAtRound: int }) | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | WeaponMasterySapNextAttackDisadvantage({ source: Actor }) | ColorSprayBlinded({ source: Actor, expiresAtRound: int }) | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireOutline | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionRelevantCharmed({ source: Actor, durationTicks: int }) | ProtectionRelevantFrightened({ source: Actor, durationTicks: int }) | ProtectionRelevantPossession({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodCreatureTypeProtection | DancingLightsEffect({ combined: bool, lightCount: int, light1Position: int, light2Position: int, light3Position: int, light4Position: int, durationTicks: int }) | ProduceFlameHeldLight({ durationTicks: int }) | ShillelaghWeaponAttackOverride({ weapon: ShillelaghWeapon, damageDice: int, damageDieSize: int, spellcastingAbilityModifier: int, durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SanctuaryWard({ source: Actor, durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | HideousLaughterEffect({ source: Actor, target: Actor, hadProne: bool, hadIncapacitated: bool, durationTicks: int }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | FogCloudObscurement({ areaId: int, radiusFeet: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
+  type ActiveEffect = BardicInspirationDie({ source: Actor, dieSize: int, durationTicks: int }) | MageArmor({ durationTicks: int }) | RayOfFrostSpeedDelta | ShieldArmorClassBonus | LongstriderSpeedDelta | ShieldOfFaithArmorClassBonus | HeroismFrightenedImmunity | HeroismTurnStartTemporaryHitPoints({ amount: int }) | BaneD20RollPenalty | BlessD20RollBonus | GuidanceAbilityCheckBonus | ThaumaturgyBoomingVoice({ source: Actor, durationTicks: int }) | ResistanceDamageReduction({ damageType: DamageType, usedThisTurn: bool }) | DivineFavorWeaponDamageRider({ durationTicks: int }) | HuntersMarkDamageRider({ target: Actor, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | HexDamageRider({ target: Actor, ability: Ability, transfer: MarkedDamageRiderTransfer, durationTicks: int }) | RayOfSicknessPoisoned | ChillTouchHitPointRegainPrevented({ source: Actor, expiresAtRound: int }) | StarryWispInvisibleBenefitDenied({ source: Actor, expiresAtRound: int }) | ShockingGraspOpportunityAttackDenied | GuidingBoltNextAttackAdvantage | ViciousMockeryNextAttackDisadvantage | WeaponMasterySapNextAttackDisadvantage({ source: Actor }) | ColorSprayBlinded({ source: Actor, expiresAtRound: int }) | EntangleRestrained | EnsnaringStrikeRestrained({ damageDice: int }) | SearingSmiteBurning({ damageDice: int, durationTicks: int }) | FaerieFireOutline | AnimalFriendshipCharmed({ source: Actor, durationTicks: int }) | CharmPersonCharmed({ source: Actor, durationTicks: int }) | ProtectionRelevantCharmed({ source: Actor, durationTicks: int }) | ProtectionRelevantFrightened({ source: Actor, durationTicks: int }) | ProtectionRelevantPossession({ source: Actor, durationTicks: int }) | ProtectionFromEvilAndGoodCreatureTypeProtection | DancingLightsEffect({ combined: bool, lightCount: int, light1Position: int, light2Position: int, light3Position: int, light4Position: int, durationTicks: int }) | ProduceFlameHeldLight({ durationTicks: int }) | ShillelaghWeaponAttackOverride({ weapon: ShillelaghWeapon, damageDice: int, damageDieSize: int, spellcastingAbilityModifier: int, durationTicks: int }) | ExpeditiousRetreatDashBonusAction | JumpMovementReplacement({ durationTicks: int, usedThisTurn: bool }) | FeatherFallMitigation({ durationTicks: int }) | SanctuaryWard({ source: Actor, durationTicks: int }) | SleepPendingRepeatSave({ source: Actor, repeatAtActor: Actor, repeatAtRound: int, hadIncapacitated: bool }) | SleepUnconscious({ source: Actor, hadUnconscious: bool, hadIncapacitated: bool }) | HideousLaughterEffect({ source: Actor, target: Actor, hadProne: bool, hadIncapacitated: bool, durationTicks: int }) | GreaseGroundHazard({ areaId: int, durationTicks: int }) | FogCloudObscurement({ areaId: int, radiusFeet: int, durationTicks: int }) | CommandPending({ source: Actor, option: CommandOption, expiresAtActor: Actor, expiresAtRound: int })
   type PreventedProtectionCondition = PreventedCharmed | PreventedFrightened
   type PossessionAttemptDisposition = PossessionPreventedByCreatureTypeProtection | PossessionUnprevented
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
   type SavingThrowRollMode = NormalSavingThrow | AdvantageSavingThrow | DisadvantageSavingThrow
-  type AbilityCheckSkill = PerceptionSkill | SurvivalSkill | StealthSkill | AthleticsSkill
+  type AbilityCheckSkill = PerceptionSkill | SurvivalSkill | StealthSkill | AthleticsSkill | IntimidationSkill
   type AbilityCheckRollMode = NormalAbilityCheck | AdvantageAbilityCheck | DisadvantageAbilityCheck
   type SpellSourceClass = SorcererSpellSource | NonSorcererSpellSource
   type RuntimeCreatureType = HumanoidCreature | BeastCreature | AberrationCreature | CelestialCreature | ElementalCreature | FeyCreature | FiendCreature | UndeadCreature
@@ -1566,6 +1567,10 @@ module battleRuntime {
             transfer: data.transfer,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
+        | ThaumaturgyBoomingVoice(data) => ThaumaturgyBoomingVoice({
+            source: data.source,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
         | SearingSmiteBurning(data) => SearingSmiteBurning({
             damageDice: data.damageDice,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
@@ -1636,6 +1641,7 @@ module battleRuntime {
         | DivineFavorWeaponDamageRider(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | HuntersMarkDamageRider(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | HexDamageRider(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | ThaumaturgyBoomingVoice(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | SearingSmiteBurning(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | AnimalFriendshipCharmed(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | CharmPersonCharmed(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
@@ -1785,6 +1791,7 @@ module battleRuntime {
         | BaneD20RollPenalty => false
         | BlessD20RollBonus => false
         | GuidanceAbilityCheckBonus => false
+        | ThaumaturgyBoomingVoice(_) => false
         | ResistanceDamageReduction(_) => false
         | DivineFavorWeaponDamageRider(_) => false
         | HuntersMarkDamageRider(_) => false
@@ -5226,6 +5233,89 @@ module battleRuntime {
       })
     ) AdvantageAbilityCheck else NormalAbilityCheck
 
+  pure def thaumaturgyBoomingVoiceDurationTicks: int = 10
+
+  pure def thaumaturgyMaxActiveOneMinuteEffects: int = 3
+
+  pure def thaumaturgyBoomingVoiceActiveEffect(source: Actor): ActiveEffect =
+    ThaumaturgyBoomingVoice({
+      source: source,
+      durationTicks: thaumaturgyBoomingVoiceDurationTicks,
+    })
+
+  pure def activeEffectsWithoutThaumaturgyBoomingVoice(effects: Set[ActiveEffect], source: Actor): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | ThaumaturgyBoomingVoice(data) => data.source != source
+      | _ => true
+    })
+
+  pure def activeEffectsContainThaumaturgyBoomingVoice(effects: Set[ActiveEffect], source: Actor): bool =
+    effects.exists(effect => match effect {
+      | ThaumaturgyBoomingVoice(data) => data.source == source
+      | _ => false
+    })
+
+  pure def thaumaturgyActiveOneMinuteEffectCountAfterBoomingVoiceCast(
+    effects: Set[ActiveEffect],
+    source: Actor,
+    activeOneMinuteEffectCount: int,
+  ): int =
+    if (activeEffectsContainThaumaturgyBoomingVoice(effects, source))
+      activeOneMinuteEffectCount
+    else
+      activeOneMinuteEffectCount + 1
+
+  pure def thaumaturgyBoomingVoiceAbilityCheckRollMode(effects: Set[ActiveEffect], actor: Actor, ability: Ability, skill: AbilityCheckSkill): AbilityCheckRollMode =
+    if (
+      ability == ChaAbility and
+      skill == IntimidationSkill and
+      effects.exists(effect => match effect {
+        | ThaumaturgyBoomingVoice(data) => data.source == actor
+        | _ => false
+      })
+    ) AdvantageAbilityCheck else NormalAbilityCheck
+
+  pure def requiredAbilityCheckRollMode(
+    disadvantageMode: AbilityCheckRollMode,
+    advantageMode: AbilityCheckRollMode,
+  ): AbilityCheckRollMode =
+    if (
+      disadvantageMode == DisadvantageAbilityCheck and
+      advantageMode == AdvantageAbilityCheck
+    ) NormalAbilityCheck else if (disadvantageMode == DisadvantageAbilityCheck)
+      DisadvantageAbilityCheck
+    else if (advantageMode == AdvantageAbilityCheck)
+      AdvantageAbilityCheck
+    else
+      NormalAbilityCheck
+
+  pure def resolveThaumaturgyBoomingVoice(state: BattleState, activeOneMinuteEffectCount: int): BattleState =
+    if (
+      currentActor(state) == Fighter and
+      activeOneMinuteEffectCount >= 0 and
+      (
+        not(activeEffectsContainThaumaturgyBoomingVoice(state.fighter.activeEffects, Fighter)) or
+        activeOneMinuteEffectCount > 0
+      ) and
+      thaumaturgyActiveOneMinuteEffectCountAfterBoomingVoiceCast(state.fighter.activeEffects, Fighter, activeOneMinuteEffectCount) <= thaumaturgyMaxActiveOneMinuteEffects and
+      state.actionAvailable and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(fighterHasRage(state))
+    ) {
+      {
+        ...state,
+        fighter: {
+          ...state.fighter,
+          activeEffects: activeEffectsWithoutThaumaturgyBoomingVoice(state.fighter.activeEffects, Fighter)
+            .union(Set(thaumaturgyBoomingVoiceActiveEffect(Fighter))),
+        },
+        actionAvailable: false,
+      }
+    } else {
+      state
+    }
+
   pure def rollModifierMaximumTargets(invocation: RollModifierSpell, slotLevel: int): int =
     match invocation {
       | BaneRollModifier => 3 + (if (slotLevel > 1) slotLevel - 1 else 0)
@@ -6265,6 +6355,7 @@ module battleRuntime {
       | Bane => true
       | Bless => true
       | Guidance => false
+      | Thaumaturgy => false
       | DivineFavor => true
       | DivineSmite => true
       | HuntersMark => true
@@ -10100,6 +10191,17 @@ module battleRuntime {
       assert(fighterHexDamage(4, Set(HexDamageRider({ target: Fighter, ability: WisAbility, transfer: AwaitingTargetDrop, durationTicks: 600 })), Goblin) == 0),
       assert(hexAbilityCheckRollMode(Set(HexDamageRider({ target: Goblin, ability: WisAbility, transfer: AwaitingTargetDrop, durationTicks: 600 })), Goblin, WisAbility) == DisadvantageAbilityCheck),
       assert(hexAbilityCheckRollMode(Set(HexDamageRider({ target: Goblin, ability: WisAbility, transfer: AwaitingTargetDrop, durationTicks: 600 })), Goblin, StrAbility) == NormalAbilityCheck),
+      assert(thaumaturgyBoomingVoiceDurationTicks == 10),
+      assert(thaumaturgyMaxActiveOneMinuteEffects == 3),
+      assert(not(spellInvocationSpendsLevelOneSlot(Thaumaturgy))),
+      assert(thaumaturgyBoomingVoiceAbilityCheckRollMode(Set(thaumaturgyBoomingVoiceActiveEffect(Fighter)), Fighter, ChaAbility, IntimidationSkill) == AdvantageAbilityCheck),
+      assert(thaumaturgyBoomingVoiceAbilityCheckRollMode(Set(thaumaturgyBoomingVoiceActiveEffect(Fighter)), Fighter, WisAbility, IntimidationSkill) == NormalAbilityCheck),
+      assert(thaumaturgyBoomingVoiceAbilityCheckRollMode(Set(thaumaturgyBoomingVoiceActiveEffect(Fighter)), Fighter, ChaAbility, PerceptionSkill) == NormalAbilityCheck),
+      assert(requiredAbilityCheckRollMode(DisadvantageAbilityCheck, AdvantageAbilityCheck) == NormalAbilityCheck),
+      assert(resolveThaumaturgyBoomingVoice(initialState, 2).fighter.activeEffects.contains(thaumaturgyBoomingVoiceActiveEffect(Fighter))),
+      assert(not(resolveThaumaturgyBoomingVoice(initialState, 3).fighter.activeEffects.contains(thaumaturgyBoomingVoiceActiveEffect(Fighter)))),
+      assert(resolveThaumaturgyBoomingVoice({ ...initialState, fighter: { ...initialState.fighter, activeEffects: Set(thaumaturgyBoomingVoiceActiveEffect(Fighter)) } }, 3).fighter.activeEffects.contains(thaumaturgyBoomingVoiceActiveEffect(Fighter))),
+      assert(resolveThaumaturgyBoomingVoice({ ...initialState, fighter: { ...initialState.fighter, activeEffects: Set(thaumaturgyBoomingVoiceActiveEffect(Fighter)) } }, 0).actionAvailable),
       assert(hexDurationTicks(1) == 3600),
       assert(hexDurationTicks(2) == 14400),
       assert(hexDurationTicks(3) == 28800),

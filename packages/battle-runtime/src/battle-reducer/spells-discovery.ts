@@ -46,15 +46,14 @@ import {
   spellTargetAllocationHole,
   spellTargetHole,
   spellTargetListHole,
+  thaumaturgyActiveOneMinuteEffectCountHole,
   supportedSpellInvocationMatchesRef,
   supportedSpellInvocationRef,
 } from "./spells-holes-fills.ts";
 import { spellDancingLightsPlacementHole } from "./spells-targeting.ts";
 import { dancingLightsFromEffect } from "./spells-active-effects.ts";
 import { attackTargetHole } from "./hole-helpers.ts";
-import {
-  spellCastReactionFactsHole,
-} from "./spell-cast-reaction-frame.ts";
+import { spellCastReactionFactsHole } from "./spell-cast-reaction-frame.ts";
 import {
   counterspellCapableReactors,
   spellCastCanTriggerCounterspell,
@@ -227,6 +226,23 @@ export function discoverSupportedSpellInvocations(
                 },
               ];
         return castActs;
+      }
+      if (invocation.procedure === "thaumaturgyBoomingVoice") {
+        return [
+          {
+            subject: {
+              tag: "actionSpell" as const,
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
+            },
+            label: invocation.spell.name,
+            summary: spellInvocationCastSummary(invocation),
+            initialHoles: [
+              thaumaturgyActiveOneMinuteEffectCountHole(invocation),
+            ],
+          },
+        ];
       }
       if (invocation.procedure === "creatureTypeProtection") {
         const targetHole = spellTargetHole(state, actorId, invocation);
@@ -732,6 +748,9 @@ export function spellInvocationCastSummary(
       ? `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`
       : `Cast ${invocation.spell.name} as a cantrip.`;
   }
+  if (invocation.procedure === "thaumaturgyBoomingVoice") {
+    return `Cast ${invocation.spell.name} as a cantrip, using the Booming Voice effect.`;
+  }
   if (invocation.procedure === "creatureTypeProtection") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
@@ -815,6 +834,7 @@ export function spellActivationInvocationCastSummary(
         | "attackBurstSaveDamage"
         | "spellAttackDamage"
         | "rollModifier"
+        | "thaumaturgyBoomingVoice"
         | "creatureTypeProtection"
         | "saveGatedDamage"
         | "saveGatedCondition"
@@ -906,10 +926,10 @@ export function spellInvocationCasterPrerequisiteIsMet(
       )) &&
     (invocation.procedure !== "dancingLightsReposition" ||
       actor.activeEffects.some(
-      (effect) =>
-        effect.kind === "dancingLights" &&
-        effect.sourceSpellId === invocation.spell.id &&
-        effect.sourceCombatantId === actor.combatantId,
+        (effect) =>
+          effect.kind === "dancingLights" &&
+          effect.sourceSpellId === invocation.spell.id &&
+          effect.sourceCombatantId === actor.combatantId,
       ))
   );
 }

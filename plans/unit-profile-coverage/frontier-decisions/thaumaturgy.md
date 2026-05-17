@@ -1,5 +1,20 @@
 # Thaumaturgy Frontier Decision
 
+## Task 24 Implementation Update
+
+Task 24 supersedes the no-matrix decision for Booming Voice only.
+`thaumaturgy` is now an authored and catalog-admitted SRD 5.2.1 Spell
+Definition with a `profile-subset-supported` Unit claim for
+`spell.invocation-self-ability-check-advantage`. Promoted battle-runtime owns
+the Booming Voice cantrip invocation, a one-minute self Spell Effect, the
+caller-supplied total active Thaumaturgy 1-minute effect count witness that enforces
+the three-effect cap, and Charisma (Intimidation) Ability Check/Influence
+Advantage projection with normal Advantage/Disadvantage cancellation.
+
+Altered Eyes, Fire Play, Invisible Hand, Phantom Sound, Tremors, and their
+presentation/environment consequences remain runtime-detached table
+adjudication.
+
 ## RAW Sources
 
 - `.references/srd-5.2.1/Spells/Descriptions-S-Z.md:848` defines
@@ -45,7 +60,7 @@
   Effect ownership.
 - `UBIQUITOUS_LANGUAGE.md:270` defines Transmutation as transformation magic.
 
-## Current Generated State
+## Historical Generated State Before Task 24
 
 - Unit pressure id: `thaumaturgy`.
 - `plans/unit-profile-coverage/srd-unit-inventory.json` has one level-1 spell
@@ -113,7 +128,7 @@ boundary.
 | Tremors | Runtime-detached environment presentation | Harmless tremors persist for 1 minute but have no SRD damage, movement, Prone, concentration, terrain, or save consequence. |
 | Three active 1-minute effects | Owner-decision constraint for future support | The cap is meaningful over Altered Eyes, Booming Voice, Fire Play, and Tremors together. Do not add a standalone counter while the utility effects remain unowned; a future Booming Voice implementation must either own all counted Thaumaturgy effects or accept a table-supplied active-effect-count witness at invocation legality. |
 
-## Decision
+## Historical Decision
 
 Keep `thaumaturgy` as no-matrix spell pressure with no runtime profile in Task
 13. The existing Strict Level 1 report treatment is correct: the Cleric
@@ -157,7 +172,7 @@ Without those gates, adding a Unit claim, support profile, evidence row, or
 runtime behavior would treat a spell-list pressure row as a Unit that does not
 exist.
 
-## Follow-Up Tasks
+## Task 24 Follow-Up Task
 
 Add a future implementation atom if Level 1 support wants Booming Voice to be
 executable:

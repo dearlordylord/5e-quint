@@ -221,3 +221,4 @@
 {"unitId":"mastery_topple","evidence":{"tag":"selected-identity-mbt","taskId":"weapon-mastery-properties","ownerPath":"packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts"}}
 {"unitId":"mastery_cleave","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV91B","ownerPath":"packages/character-battle-runtime/src/index.test.ts"}}
 {"unitId":"mastery_cleave","evidence":{"tag":"selected-identity-mbt","taskId":"weapon-mastery-properties","ownerPath":"packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts"}}
+{"unitId":"thaumaturgy","evidence":{"tag":"deterministic-admission-projection","taskId":"L1D2-THAUMATURGY-BOOMING-VOICE","ownerPath":"packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts"}}

@@ -168,6 +168,7 @@ export {
   resolvePreparedHealingSpellAct,
   resolveRollModifierSpellAct,
   resolveScalarBuffSpellAct,
+  resolveThaumaturgyBoomingVoiceSpellAct,
 } from "./spells-resolve-support-effects.ts";
 export {
   conditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection,
@@ -195,6 +196,7 @@ import {
   resolvePreparedHealingSpellAct,
   resolveRollModifierSpellAct,
   resolveScalarBuffSpellAct,
+  resolveThaumaturgyBoomingVoiceSpellAct,
 } from "./spells-resolve-support-effects.ts";
 
 import { resolvePreparedSlotSpellAct } from "./spells-resolve-prepared-slot.ts";
@@ -360,6 +362,7 @@ export function resolveSpellAct(
       invocation.procedure === "damageReduction" ||
       invocation.procedure === "scalarBuff" ||
       invocation.procedure === "rollModifier" ||
+      invocation.procedure === "thaumaturgyBoomingVoice" ||
       invocation.procedure === "creatureTypeProtection" ||
       invocation.procedure ===
         "conditionImmunityAndTurnStartTemporaryHitPoints" ||
@@ -581,6 +584,14 @@ export function resolveSpellAct(
   }
   if (invocation.procedure === "rollModifier") {
     return resolveRollModifierSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "thaumaturgyBoomingVoice") {
+    return resolveThaumaturgyBoomingVoiceSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
@@ -1482,7 +1493,11 @@ function resolveSpellAttackDamageObjectTarget(input: {
     input.invocation,
   );
   const spentResources = spendSpellCastResources({
-    state: stateAfterResolvedHeldLightHurl(lit, input.actorId, input.invocation),
+    state: stateAfterResolvedHeldLightHurl(
+      lit,
+      input.actorId,
+      input.invocation,
+    ),
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,

@@ -33,6 +33,7 @@ export {
   type BattleTraceHoleKind,
 } from "./battle-trace-contract.ts";
 export { objectInvisibleBenefitDenied } from "./battle-reducer/attack-roll.ts";
+export { thaumaturgyBoomingVoiceInfluenceAbilityCheckHole } from "./battle-reducer/hole-helpers.ts";
 export type {
   CharacterBattleClassLevel,
   CharacterBattleClassLevelInit,
@@ -293,6 +294,7 @@ export {
   type BattleSuccessfulAbilityCheckFacts,
   type BattleTargetChoiceHole,
   type BattleTargetSpatialFact,
+  type BattleThaumaturgyActiveOneMinuteEffectCountHole,
   type BattleTurnResources,
   type BattleUnitFeatureRollHole,
   type BardicInspirationFailedD20TestResolutionInput,
@@ -304,6 +306,7 @@ export {
   type OngoingFeatureSource,
   type OngoingFeatureSourceKey,
   type SupportedSpellInvocation,
+  type ThaumaturgyBoomingVoiceSpellInvocation,
   type SuccessfulAbilityCheckReactionReductionResolutionInput,
   type SuccessfulAbilityCheckReactionReductionResolutionResult,
 } from "./battle-reducer.ts";

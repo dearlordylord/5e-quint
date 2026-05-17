@@ -45,6 +45,7 @@ import {
   spellTargetListHoleId,
 } from "./spells-holes-fills.ts";
 import { spellDancingLightsPlacementHoleId } from "./spells-targeting.ts";
+import { THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID } from "./domain-constants.ts";
 
 export type SpellBeamTargetFill =
   | {
@@ -120,6 +121,12 @@ export type SpellFillSet =
         | undefined;
       readonly skillChoice: Skill | undefined;
       readonly abilityChoice: Ability | undefined;
+      readonly thaumaturgyActiveOneMinuteEffectCount:
+        | Extract<
+            BattleFill,
+            { readonly kind: "thaumaturgyActiveOneMinuteEffectCount" }
+          >
+        | undefined;
       readonly commandOptionChoice: BattleCommandOption | undefined;
       readonly areaChoice: BattleFogCloudAreaChoice | undefined;
       readonly dancingLightsPlacement:
@@ -206,6 +213,12 @@ export function spellFillSet(
   let savingThrowOutcomes: BattleSpellSavingThrowOutcomeValue | undefined;
   let skillChoice: Skill | undefined;
   let abilityChoice: Ability | undefined;
+  let thaumaturgyActiveOneMinuteEffectCount:
+    | Extract<
+        BattleFill,
+        { readonly kind: "thaumaturgyActiveOneMinuteEffectCount" }
+      >
+    | undefined;
   let commandOptionChoice: BattleCommandOption | undefined;
   let areaChoice: BattleFogCloudAreaChoice | undefined;
   let dancingLightsPlacement:
@@ -273,7 +286,8 @@ export function spellFillSet(
       if (reactionFactValidation.tag === "notSpellCastReactionFactsFill") {
         return {
           tag: "invalid",
-          message: "Spell-cast Reaction trigger facts must use the spell-cast Reaction facts hole.",
+          message:
+            "Spell-cast Reaction trigger facts must use the spell-cast Reaction facts hole.",
         };
       }
       reactionSpellTargetFacts = reactionFactValidation.facts;
@@ -739,6 +753,31 @@ export function spellFillSet(
       continue;
     }
 
+    if (fill.kind === "thaumaturgyActiveOneMinuteEffectCount") {
+      if (invocation.procedure !== "thaumaturgyBoomingVoice") {
+        return {
+          tag: "invalid",
+          message:
+            "Thaumaturgy active-effect count does not match this spell act.",
+        };
+      }
+      if (fill.holeId !== THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID) {
+        return {
+          tag: "invalid",
+          message:
+            "Thaumaturgy active-effect count must use the selected spell act count hole.",
+        };
+      }
+      if (thaumaturgyActiveOneMinuteEffectCount !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Thaumaturgy active-effect count was filled twice.",
+        };
+      }
+      thaumaturgyActiveOneMinuteEffectCount = fill;
+      continue;
+    }
+
     if (fill.kind === "damageTypeChoice") {
       if (
         invocation.procedure !== "damageReduction" &&
@@ -931,6 +970,7 @@ export function spellFillSet(
     savingThrowOutcomes,
     skillChoice,
     abilityChoice,
+    thaumaturgyActiveOneMinuteEffectCount,
     commandOptionChoice,
     areaChoice,
     dancingLightsPlacement,
@@ -967,6 +1007,7 @@ export function spellFillSetContainsOnlySpellCastReactionFacts(
       fillSet.savingThrowOutcomes === undefined) &&
     fillSet.skillChoice === undefined &&
     fillSet.abilityChoice === undefined &&
+    fillSet.thaumaturgyActiveOneMinuteEffectCount === undefined &&
     fillSet.commandOptionChoice === undefined &&
     fillSet.areaChoice === undefined &&
     fillSet.dancingLightsPlacement === undefined &&

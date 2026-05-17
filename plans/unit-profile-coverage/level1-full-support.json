@@ -795,6 +795,35 @@
       "status": "closed-runtime-detached-table-adjudication",
       "strictTargetClosed": true,
       "unitId": "speak_with_animals"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Thaumaturgy's non-Booming minor wonders alter appearance, flames, doors/windows, sounds, and tremors; promoted battle runtime owns only Booming Voice's check Advantage and consumes total active-effect count witnesses for the shared cap.",
+      "sourceRecordPath": "packages/surface/content/thaumaturgy.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Cleric spell list Thaumaturgy",
+          "id": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_thaumaturgy",
+          "levelBand": "spell-level-0",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 156,
+            "lineStart": 156,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        }
+      ],
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
+      "unitId": "thaumaturgy"
     }
   ],
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
@@ -885,7 +914,7 @@
       ]
     },
     {
-      "count": 10,
+      "count": 11,
       "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
@@ -898,7 +927,8 @@
         "identify",
         "minor_illusion",
         "silent_image",
-        "speak_with_animals"
+        "speak_with_animals",
+        "thaumaturgy"
       ]
     },
     {
@@ -927,18 +957,18 @@
       "numerator": 367,
       "percent": "100%",
       "rowsByStatus": {
-        "accepted": 278,
-        "accepted-no-battle-effect": 89
+        "accepted": 279,
+        "accepted-no-battle-effect": 88
       }
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 93,
+      "denominator": 94,
       "numerator": 78,
-      "percent": "83.9%"
+      "percent": "83%"
     },
     "strictTargetClosure": {
-      "denominator": 93,
-      "numerator": 93,
+      "denominator": 94,
+      "numerator": 94,
       "percent": "100%"
     }
   },
@@ -966,7 +996,8 @@
     ],
     "noMatrixSrdPressure": [
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/create_or_destroy_water.md",
+        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -996,7 +1027,8 @@
         "unitId": "create_or_destroy_water"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/disguise_self.md",
+        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1038,7 +1070,8 @@
         "unitId": "disguise_self"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/druidcraft.md",
+        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1056,7 +1089,8 @@
         "unitId": "druidcraft"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/elementalism.md",
+        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1098,7 +1132,8 @@
         "unitId": "elementalism"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/floating_disk.md",
+        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1116,7 +1151,8 @@
         "unitId": "floating_disk"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/goodberry.md",
+        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1146,7 +1182,8 @@
         "unitId": "goodberry"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/illusory_script.md",
+        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1188,7 +1225,8 @@
         "unitId": "illusory_script"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/mage_hand.md",
+        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1242,7 +1280,8 @@
         "unitId": "mage_hand"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/mending.md",
+        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1308,7 +1347,8 @@
         "unitId": "mending"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/message.md",
+        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1362,7 +1402,8 @@
         "unitId": "message"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/prestidigitation.md",
+        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1416,7 +1457,8 @@
         "unitId": "prestidigitation"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/purify_food_and_drink.md",
+        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -1458,25 +1500,8 @@
         "unitId": "purify_food_and_drink"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "spell Unit pressure",
-            "concept": "Cleric spell list Thaumaturgy",
-            "id": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_thaumaturgy",
-            "levelBand": "spell-level-0",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 156,
-              "lineStart": 156,
-              "path": ".references/srd-5.2.1/Classes/Cleric.md"
-            }
-          }
-        ],
-        "unitId": "thaumaturgy"
-      },
-      {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/unseen_servant.md",
+        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3220,17 +3245,17 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 120,
     "groupsByClaimTag": {
-      "profile-subset-supported": 4,
+      "profile-subset-supported": 5,
       "supported-profile": 78,
       "unsupported-profile": 11
     },
     "groupsByStatus": {
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 3,
-      "closed-runtime-detached-table-adjudication": 10,
+      "closed-runtime-detached-table-adjudication": 11,
       "supported-profile": 78
     },
-    "nonSupportedFrontier": 15,
-    "strictDenominator": 93
+    "nonSupportedFrontier": 16,
+    "strictDenominator": 94
   }
 }

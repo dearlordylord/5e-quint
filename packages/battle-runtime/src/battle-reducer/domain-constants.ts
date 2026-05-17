@@ -53,6 +53,22 @@ export const HUNTERS_MARK_FINDING_SKILLS = [
   "perception",
   "survival",
 ] as const satisfies ReadonlyArray<Skill>;
+export const THAUMATURGY_BOOMING_VOICE_DURATION_TICKS = elapsedTimeTicks(10);
+export const THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL =
+  "intimidation" as const satisfies Skill;
+export const THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS = 3;
+export const THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID = holeId(
+  "battle:spell:thaumaturgy:active-one-minute-effect-count",
+);
+export const THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_INSTANCE =
+  holeInstanceKey("battle:spell:thaumaturgy:active-one-minute-effect-count");
+export const THAUMATURGY_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_ID = holeId(
+  "battle:spell:thaumaturgy:booming-voice:influence-ability-check",
+);
+export const THAUMATURGY_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_INSTANCE =
+  holeInstanceKey(
+    "battle:spell:thaumaturgy:booming-voice:influence-ability-check",
+  );
 export const ELDRITCH_BLAST_BEAM_COUNT_TIERS = [
   { atLevel: 5, value: 2 },
   { atLevel: 11, value: 3 },

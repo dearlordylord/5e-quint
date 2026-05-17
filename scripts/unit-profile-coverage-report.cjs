@@ -51,7 +51,8 @@ const metricDefinitions = [
       "How much authored Surface content with executable mechanics is admitted to an installed Unit collection?",
     numerator:
       "authored Surface executable records whose source path is installed",
-    denominator: "authored Surface Unit-shaped records with executable mechanics",
+    denominator:
+      "authored Surface Unit-shaped records with executable mechanics",
   },
   {
     key: "profileClassificationCoverage",
@@ -60,7 +61,8 @@ const metricDefinitions = [
     planningQuestion:
       "Does every installed Unit have exactly one supported, unsupported, widening, or assumption disposition?",
     numerator: "installed Unit records with a profile disposition claim",
-    denominator: "installed Unit records discovered from configured collections",
+    denominator:
+      "installed Unit records discovered from configured collections",
   },
   {
     key: "supportedProfileCoverage",
@@ -84,8 +86,7 @@ const metricDefinitions = [
     key: "qntProofCoverage",
     label: "QNT proof coverage",
     kind: "coverage",
-    planningQuestion:
-      "Do supported executable profiles have proof evidence?",
+    planningQuestion: "Do supported executable profiles have proof evidence?",
     numerator: "executable profile records with qnt-proof verification owners",
     denominator: "profile records whose kind requires executable evidence",
   },
@@ -327,19 +328,22 @@ function notInCatalogDisposition(unit, duplicateCount) {
   const srdCandidate = {
     category: catalogAdmissionDispositionCategory.srdCandidate,
     planningLane: "QMBT14-QMBT16",
-    reason: "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane.",
+    reason:
+      "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane.",
   };
   const magicItemBacklog = {
     category: catalogAdmissionDispositionCategory.intentionalBacklog,
     planningLane: "future magic item profile intake",
-    reason: "SRD magic item mechanics are authored, but this QMBT lane is focused on Unit feature and spell admission.",
+    reason:
+      "SRD magic item mechanics are authored, but this QMBT lane is focused on Unit feature and spell admission.",
   };
 
   if (duplicateCount > 1) {
     return {
       category: catalogAdmissionDispositionCategory.duplicateContentIssue,
       planningLane: "content cleanup",
-      reason: "More than one authored Surface record declares this Unit id; clean up the duplicate before treating it as catalog pressure.",
+      reason:
+        "More than one authored Surface record declares this Unit id; clean up the duplicate before treating it as catalog pressure.",
     };
   }
 
@@ -347,7 +351,8 @@ function notInCatalogDisposition(unit, duplicateCount) {
     return {
       category: catalogAdmissionDispositionCategory.classicPrivatePressure,
       planningLane: "QMBT17",
-      reason: "Non-SRD authored mechanics pressure must enter through the Classic non-SRD policy lane before catalog admission.",
+      reason:
+        "Non-SRD authored mechanics pressure must enter through the Classic non-SRD policy lane before catalog admission.",
     };
   }
 
@@ -355,7 +360,8 @@ function notInCatalogDisposition(unit, duplicateCount) {
     return {
       category: catalogAdmissionDispositionCategory.nonRuntimeAuthoredData,
       planningLane: "no promoted runtime lane",
-      reason: "Authored SRD data has no mechanics payload, so catalog absence is not promoted runtime execution pressure.",
+      reason:
+        "Authored SRD data has no mechanics payload, so catalog absence is not promoted runtime execution pressure.",
     };
   }
 
@@ -368,7 +374,8 @@ function notInCatalogDisposition(unit, duplicateCount) {
   return {
     category: catalogAdmissionDispositionCategory.unsupportedWideningPressure,
     planningLane: "QMBT18",
-    reason: "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice.",
+    reason:
+      "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice.",
   };
 }
 
@@ -554,7 +561,15 @@ function summarizeKindCounts(units) {
 
 function renderProfileSubsetDeferredMechanics(claim) {
   return claim.deferredMechanics
-    .map((entry) => `${entry.mechanic} (${entry.followUpTaskId})`)
+    .map((entry) => {
+      if (entry.followUpTaskId !== undefined) {
+        return `${entry.mechanic} (${entry.followUpTaskId})`;
+      }
+      if (entry.battleReadinessClosure !== undefined) {
+        return `${entry.mechanic} (closed: ${entry.battleReadinessClosure.kind})`;
+      }
+      return entry.mechanic;
+    })
     .join("; ");
 }
 

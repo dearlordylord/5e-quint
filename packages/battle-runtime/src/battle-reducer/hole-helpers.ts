@@ -65,6 +65,11 @@ import {
   representedMovementSpeedKinds,
   shoveForTarget,
 } from "./movement-speed.ts";
+import {
+  THAUMATURGY_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_ID,
+  THAUMATURGY_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_INSTANCE,
+  THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL,
+} from "./domain-constants.ts";
 import { combatantCanTakeActions } from "./creature-state.ts";
 import { sleepShakeAwakeTargetChoices } from "./spell-condition-effects-helpers.ts";
 
@@ -149,12 +154,33 @@ export function escapeSpellRestraintAbilityCheckHole(
   };
 }
 
+export function thaumaturgyBoomingVoiceInfluenceAbilityCheckHole(
+  state: BattleState,
+  actorId: CombatantId,
+  dc: DifficultyClass,
+): BattleAbilityCheckHole {
+  const rollMode = requiredAbilityCheckRollMode(state, actorId, "cha", {
+    skill: THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL,
+  });
+  return {
+    holeInstanceKey:
+      THAUMATURGY_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_INSTANCE,
+    holeId: THAUMATURGY_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_ID,
+    kind: "abilityCheck",
+    label: `Influence Charisma (Intimidation) check (DC ${dc})`,
+    ability: "cha",
+    skill: THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL,
+    dc,
+    ...(rollMode === undefined ? {} : { rollMode }),
+  };
+}
+
 export function requiredAbilityCheckRollMode(
   state: BattleState,
   actorId: CombatantId,
   ability: Ability,
-  findingMarkedTarget?: {
-    readonly skill: Skill;
+  context?: {
+    readonly skill?: Skill;
     readonly targetId?: CombatantId;
   },
 ): AttackRollMode | undefined {
@@ -168,18 +194,45 @@ export function requiredAbilityCheckRollMode(
     ),
   );
   const hasAdvantage =
-    findingMarkedTarget?.targetId !== undefined &&
-    activeMarkedDamageRiderFindingAdvantageMatches(
-      state,
-      actorId,
-      ability,
-      findingMarkedTarget.skill,
-      findingMarkedTarget.targetId,
-    );
+    (context?.skill !== undefined &&
+      activeThaumaturgyBoomingVoiceAdvantageMatches(
+        state,
+        actorId,
+        ability,
+        context.skill,
+      )) ||
+    (context?.skill !== undefined &&
+      context.targetId !== undefined &&
+      activeMarkedDamageRiderFindingAdvantageMatches(
+        state,
+        actorId,
+        ability,
+        context.skill,
+        context.targetId,
+      ));
   if (hasAdvantage === hasDisadvantage) {
     return undefined;
   }
   return hasAdvantage ? "advantage" : "disadvantage";
+}
+
+function activeThaumaturgyBoomingVoiceAdvantageMatches(
+  state: BattleState,
+  actorId: CombatantId,
+  ability: Ability,
+  skill: Skill,
+): boolean {
+  const actor = state.combatants.get(actorId);
+  return (
+    ability === "cha" &&
+    skill === THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL &&
+    (actor?.activeEffects.some(
+      (effect) =>
+        effect.kind === "thaumaturgyBoomingVoice" &&
+        effect.sourceCombatantId === actorId,
+    ) ??
+      false)
+  );
 }
 
 function activeMarkedDamageRiderFindingAdvantageMatches(

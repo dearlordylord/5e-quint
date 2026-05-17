@@ -2437,6 +2437,35 @@
       "unitId": "spiritual_weapon"
     },
     {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Thaumaturgy's non-Booming minor wonders alter appearance, flames, doors/windows, sounds, and tremors; promoted battle runtime owns only Booming Voice's check Advantage and consumes total active-effect count witnesses for the shared cap.",
+      "sourceRecordPath": "packages/surface/content/thaumaturgy.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Cleric spell list Thaumaturgy",
+          "id": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_thaumaturgy",
+          "levelBand": "spell-level-0",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 156,
+            "lineStart": 156,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        }
+      ],
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
+      "unitId": "thaumaturgy"
+    },
+    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -2687,7 +2716,7 @@
       ]
     },
     {
-      "count": 10,
+      "count": 11,
       "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
@@ -2700,7 +2729,8 @@
         "identify",
         "minor_illusion",
         "silent_image",
-        "speak_with_animals"
+        "speak_with_animals",
+        "thaumaturgy"
       ]
     },
     {
@@ -2742,21 +2772,21 @@
       "numerator": 466,
       "percent": "83.8%",
       "rowsByStatus": {
-        "accepted": 281,
-        "accepted-no-battle-effect": 185,
+        "accepted": 282,
+        "accepted-no-battle-effect": 184,
         "battle-runtime-required": 74,
         "owner-evidence-required": 16
       }
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 134,
+      "denominator": 135,
       "numerator": 82,
-      "percent": "61.2%"
+      "percent": "60.7%"
     },
     "strictTargetClosure": {
-      "denominator": 134,
-      "numerator": 97,
-      "percent": "72.4%"
+      "denominator": 135,
+      "numerator": 98,
+      "percent": "72.6%"
     }
   },
   "openFrontier": [
@@ -2835,7 +2865,7 @@
     ],
     "noMatrixSrdPressure": [
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -2877,7 +2907,7 @@
         "unitId": "animal_messenger"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -2895,7 +2925,7 @@
         "unitId": "arcanists_magic_aura"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -2937,7 +2967,7 @@
         "unitId": "augury"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "class feature",
@@ -2955,7 +2985,7 @@
         "unitId": "bard_expertise"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -2985,7 +3015,7 @@
         "unitId": "calm_emotions"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "class feature",
@@ -3003,7 +3033,8 @@
         "unitId": "cleric_channel_divinity"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/create_or_destroy_water.md",
+        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3033,7 +3064,7 @@
         "unitId": "create_or_destroy_water"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3075,7 +3106,7 @@
         "unitId": "darkness"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3129,7 +3160,7 @@
         "unitId": "darkvision"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3171,7 +3202,8 @@
         "unitId": "detect_thoughts"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/disguise_self.md",
+        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3213,7 +3245,7 @@
         "unitId": "disguise_self"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3243,7 +3275,7 @@
         "unitId": "dragons_breath"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "class feature",
@@ -3261,7 +3293,7 @@
         "unitId": "druid_wild_companion"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "class feature",
@@ -3279,7 +3311,8 @@
         "unitId": "druid_wild_shape"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/druidcraft.md",
+        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3297,7 +3330,8 @@
         "unitId": "druidcraft"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/elementalism.md",
+        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3339,7 +3373,7 @@
         "unitId": "elementalism"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3417,7 +3451,7 @@
         "unitId": "enhance_ability"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3471,7 +3505,7 @@
         "unitId": "enlarge_reduce"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3501,7 +3535,7 @@
         "unitId": "enthrall"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3543,7 +3577,7 @@
         "unitId": "find_traps"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3585,7 +3619,8 @@
         "unitId": "flaming_sphere"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/floating_disk.md",
+        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3603,7 +3638,8 @@
         "unitId": "floating_disk"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/goodberry.md",
+        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3633,7 +3669,7 @@
         "unitId": "goodberry"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3687,7 +3723,8 @@
         "unitId": "gust_of_wind"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/illusory_script.md",
+        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3729,7 +3766,7 @@
         "unitId": "illusory_script"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3771,7 +3808,7 @@
         "unitId": "knock"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3801,7 +3838,7 @@
         "unitId": "levitate"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3843,7 +3880,7 @@
         "unitId": "locate_animals_or_plants"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3921,7 +3958,8 @@
         "unitId": "locate_object"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/mage_hand.md",
+        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -3975,7 +4013,7 @@
         "unitId": "mage_hand"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -4005,7 +4043,8 @@
         "unitId": "magic_mouth"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/mending.md",
+        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -4071,7 +4110,8 @@
         "unitId": "mending"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/message.md",
+        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -4125,7 +4165,7 @@
         "unitId": "message"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -4179,7 +4219,7 @@
         "unitId": "mirror_image"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "class feature",
@@ -4197,7 +4237,7 @@
         "unitId": "monk_monks_focus"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "class feature",
@@ -4215,7 +4255,7 @@
         "unitId": "monk_unarmored_movement"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "class feature",
@@ -4233,7 +4273,8 @@
         "unitId": "monk_uncanny_metabolism"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/prestidigitation.md",
+        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -4287,7 +4328,8 @@
         "unitId": "prestidigitation"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/purify_food_and_drink.md",
+        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -4329,7 +4371,7 @@
         "unitId": "purify_food_and_drink"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "class feature",
@@ -4347,7 +4389,7 @@
         "unitId": "ranger_deft_explorer"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "class feature",
@@ -4365,7 +4407,7 @@
         "unitId": "ranger_fighting_style"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -4383,7 +4425,7 @@
         "unitId": "rope_trick"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -4425,7 +4467,7 @@
         "unitId": "silence"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "class feature",
@@ -4443,7 +4485,7 @@
         "unitId": "sorcerer_font_of_magic"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "class feature",
@@ -4461,7 +4503,7 @@
         "unitId": "sorcerer_metamagic"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -4515,25 +4557,8 @@
         "unitId": "suggestion"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "spell Unit pressure",
-            "concept": "Cleric spell list Thaumaturgy",
-            "id": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_thaumaturgy",
-            "levelBand": "spell-level-0",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 156,
-              "lineStart": 156,
-              "path": ".references/srd-5.2.1/Classes/Cleric.md"
-            }
-          }
-        ],
-        "unitId": "thaumaturgy"
-      },
-      {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/unseen_servant.md",
+        "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -4575,7 +4600,7 @@
         "unitId": "unseen_servant"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "class feature",
@@ -4593,7 +4618,7 @@
         "unitId": "warlock_magical_cunning"
       },
       {
-        "reason": "The SRD row is in this strict support scope, but no Unit matrix row exists yet.",
+        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
             "category": "spell Unit pressure",
@@ -6484,19 +6509,19 @@
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
       "missing": 31,
-      "profile-subset-supported": 5,
+      "profile-subset-supported": 6,
       "supported-profile": 82,
       "unsupported-profile": 16
     },
     "groupsByStatus": {
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 3,
-      "closed-runtime-detached-table-adjudication": 10,
+      "closed-runtime-detached-table-adjudication": 11,
       "open-profile-accounting": 6,
       "open-runtime-behavior": 31,
       "supported-profile": 82
     },
-    "nonSupportedFrontier": 52,
-    "strictDenominator": 134
+    "nonSupportedFrontier": 53,
+    "strictDenominator": 135
   }
 }

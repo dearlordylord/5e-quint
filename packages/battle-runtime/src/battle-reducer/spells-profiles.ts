@@ -83,6 +83,7 @@ import {
   supportedPreparedScalarBuffSpellProfile,
   supportedPreparedSlotSpellProfile,
   supportedPreparedWeaponDamageRiderSpellProfile,
+  supportedCantripThaumaturgyBoomingVoiceSpellProfile,
 } from "./spells-profiles-support.ts";
 export * from "./spells-profiles-support.ts";
 import { supportedPreparedSanctuaryTargetingInterdictionSpellProfile } from "./sanctuary-targeting-interdiction.ts";
@@ -396,6 +397,12 @@ export function supportedSpellActs(
     ),
     ...cantrips.flatMap((spell) =>
       supportedCantripRollModifierSpellProfile(actor.combatantId, spell),
+    ),
+    ...cantrips.flatMap((spell) =>
+      supportedCantripThaumaturgyBoomingVoiceSpellProfile(
+        actor.combatantId,
+        spell,
+      ),
     ),
     ...cantrips.flatMap((spell) =>
       supportedCantripDamageReductionSpellProfile(actor.combatantId, spell),

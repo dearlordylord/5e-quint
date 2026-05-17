@@ -8,8 +8,8 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 
 | Metric | Covered |
 | --- | ---: |
-| Strict runtime/profile support | 82/134 (61.2%) |
-| Strict target closure | 97/134 (72.4%) |
+| Strict runtime/profile support | 82/135 (60.7%) |
+| Strict target closure | 98/135 (72.6%) |
 | Product readiness | 466/556 (83.8%) |
 
 ## Scope
@@ -18,10 +18,10 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | --- | ---: |
 | Candidate Unit ids before exclusions | 197 |
 | Companion-worktree exclusions | 1 |
-| SRD pressure with no Unit matrix row | 50 |
+| SRD pressure with no Unit matrix row | 49 |
 | Non-executable class containers | 12 |
-| Strict executable denominator | 134 |
-| Non-supported frontier | 52 |
+| Strict executable denominator | 135 |
+| Non-supported frontier | 53 |
 
 ## Status Groups
 
@@ -29,7 +29,7 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | --- | ---: | --- |
 | supported-profile | 82 | `acid_splash`, `animal_friendship`, `bane`, `barbarian_rage`, `barbarian_reckless_attack`, `barbarian_unarmored_defense`, `bard_bardic_inspiration`, `bless`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_divine_order`, `color_spray`, `command`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `druid_primal_order`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feather_fall`, `fighter_action_surge`, `fighter_fighting_style`, `fighter_second_wind`, `fighter_tactical_mind`, `fire_bolt`, `fog_cloud`, `grease`, `guidance`, `guiding_bolt`, `healing_word`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hunters_mark`, `ice_knife`, `inflict_wounds`, `jump`, `light`, `longstrider`, `mage_armor`, `magic_missile`, `monk_martial_arts`, `monk_unarmored_defense`, `paladin_lay_on_hands`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `ranger_weapon_mastery`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_cunning_action`, `rogue_expertise`, `rogue_sneak_attack`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `searing_smite`, `shield`, `shield_of_faith`, `shillelagh`, `shocking_grasp`, `sleep`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `starry_wisp`, `thunderwave`, `true_strike`, `vicious_mockery`, `warlock_eldritch_invocations`, `wizard_arcane_recovery`, `wizard_ritual_adept` |
 | open-runtime-behavior | 31 | `acid_arrow`, `aid`, `alter_self`, `arcane_lock`, `barkskin`, `blindness_deafness`, `blur`, `continual_flame`, `find_steed`, `flame_blade`, `gentle_repose`, `heat_metal`, `hold_person`, `invisibility`, `lesser_restoration`, `magic_weapon`, `mind_spike`, `misty_step`, `moonbeam`, `pass_without_trace`, `prayer_of_healing`, `protection_from_poison`, `ray_of_enfeeblement`, `scorching_ray`, `see_invisibility`, `shining_smite`, `spider_climb`, `spike_growth`, `spiritual_weapon`, `warding_bond`, `web` |
-| closed-runtime-detached-table-adjudication | 10 | `alarm`, `charm_person`, `comprehend_languages`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `identify`, `minor_illusion`, `silent_image`, `speak_with_animals` |
+| closed-runtime-detached-table-adjudication | 11 | `alarm`, `charm_person`, `comprehend_languages`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `identify`, `minor_illusion`, `silent_image`, `speak_with_animals`, `thaumaturgy` |
 | open-profile-accounting | 6 | `barbarian_danger_sense`, `bard_jack_of_all_trades`, `paladin_fighting_style`, `paladin_paladins_smite`, `shatter`, `wizard_scholar` |
 | closed-later-level-only | 3 | `barbarian_weapon_mastery`, `fighter_weapon_mastery`, `ranger_favored_enemy` |
 | closed-character-fact-and-runtime-detached-split | 2 | `druid_druidic`, `rogue_thieves_cant` |
@@ -94,6 +94,7 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `spider_climb` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
 | `spike_growth` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
 | `spiritual_weapon` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
+| `thaumaturgy` | closed-runtime-detached-table-adjudication | profile-subset-supported | installed | outside-runtime-presentation-exploration | Thaumaturgy's non-Booming minor wonders alter appearance, flames, doors/windows, sounds, and tremors; promoted battle runtime owns only Booming Voice's check Advantage and consumes total active-effect count witnesses for the shared cap. |
 | `warding_bond` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
 | `web` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
 | `wizard_scholar` | open-profile-accounting | unsupported-profile | not-in-unit-catalog | later-level-only | The feature is acquired after level 1 and belongs to durable Character Sheet proficiency projection. Existing Rogue Expertise support admits owned skill proficiencies without Expertise, but Scholar additionally intersects that owned-skill set with a fixed six-skill list; the current authored modify-roll shape cannot represent that acquisition-time prerequisite without semantic leakage. |
@@ -125,55 +126,54 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 
 ### No Matrix SRD Pressure
 
-| Unit | Source rows | Reason | Concepts |
-| --- | ---: | --- | --- |
-| `animal_messenger` | 3 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Bard spell list Animal Messenger; Druid spell list Animal Messenger; Ranger spell list Animal Messenger |
-| `arcanists_magic_aura` | 1 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Wizard spell list Arcanist's Magic Aura |
-| `augury` | 3 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Cleric spell list Augury; Druid spell list Augury; Wizard spell list Augury |
-| `bard_expertise` | 1 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Bard Expertise |
-| `calm_emotions` | 2 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Bard spell list Calm Emotions; Cleric spell list Calm Emotions |
-| `cleric_channel_divinity` | 1 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Cleric Channel Divinity |
-| `create_or_destroy_water` | 2 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Cleric spell list Create or Destroy Water; Druid spell list Create or Destroy Water |
-| `darkness` | 3 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Sorcerer spell list Darkness; Warlock spell list Darkness; Wizard spell list Darkness |
-| `darkvision` | 4 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Druid spell list Darkvision; Ranger spell list Darkvision; Sorcerer spell list Darkvision; Wizard spell list Darkvision |
-| `detect_thoughts` | 3 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Bard spell list Detect Thoughts; Sorcerer spell list Detect Thoughts; Wizard spell list Detect Thoughts |
-| `disguise_self` | 3 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Bard spell list Disguise Self; Sorcerer spell list Disguise Self; Wizard spell list Disguise Self |
-| `dragons_breath` | 2 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Sorcerer spell list Dragon's Breath; Wizard spell list Dragon's Breath |
-| `druid_wild_companion` | 1 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Druid Wild Companion |
-| `druid_wild_shape` | 1 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Druid Wild Shape |
-| `druidcraft` | 1 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Druid spell list Druidcraft |
-| `elementalism` | 3 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Druid spell list Elementalism; Sorcerer spell list Elementalism; Wizard spell list Elementalism |
-| `enhance_ability` | 6 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Bard spell list Enhance Ability; Cleric spell list Enhance Ability; Druid spell list Enhance Ability; Ranger spell list Enhance Ability; Sorcerer spell list Enhance Ability; Wizard spell list Enhance Ability |
-| `enlarge_reduce` | 4 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Bard spell list Enlarge/Reduce; Druid spell list Enlarge/Reduce; Sorcerer spell list Enlarge/Reduce; Wizard spell list Enlarge/Reduce |
-| `enthrall` | 2 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Bard spell list Enthrall; Warlock spell list Enthrall |
-| `find_traps` | 3 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Cleric spell list Find Traps; Druid spell list Find Traps; Ranger spell list Find Traps |
-| `flaming_sphere` | 3 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Druid spell list Flaming Sphere; Sorcerer spell list Flaming Sphere; Wizard spell list Flaming Sphere |
-| `floating_disk` | 1 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Wizard spell list Floating Disk |
-| `goodberry` | 2 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Druid spell list Goodberry; Ranger spell list Goodberry |
-| `gust_of_wind` | 4 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Druid spell list Gust of Wind; Ranger spell list Gust of Wind; Sorcerer spell list Gust of Wind; Wizard spell list Gust of Wind |
-| `illusory_script` | 3 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Bard spell list Illusory Script; Warlock spell list Illusory Script; Wizard spell list Illusory Script |
-| `knock` | 3 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Bard spell list Knock; Sorcerer spell list Knock; Wizard spell list Knock |
-| `levitate` | 2 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Sorcerer spell list Levitate; Wizard spell list Levitate |
-| `locate_animals_or_plants` | 3 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Bard spell list Locate Animals or Plants; Druid spell list Locate Animals or Plants; Ranger spell list Locate Animals or Plants |
-| `locate_object` | 6 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Bard spell list Locate Object; Cleric spell list Locate Object; Druid spell list Locate Object; Paladin spell list Locate Object; Ranger spell list Locate Object; Wizard spell list Locate Object |
-| `mage_hand` | 4 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Bard spell list Mage Hand; Sorcerer spell list Mage Hand; Warlock spell list Mage Hand; Wizard spell list Mage Hand |
-| `magic_mouth` | 2 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Bard spell list Magic Mouth; Wizard spell list Magic Mouth |
-| `mending` | 5 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Bard spell list Mending; Cleric spell list Mending; Druid spell list Mending; Sorcerer spell list Mending; Wizard spell list Mending |
-| `message` | 4 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Bard spell list Message; Druid spell list Message; Sorcerer spell list Message; Wizard spell list Message |
-| `mirror_image` | 4 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Bard spell list Mirror Image; Sorcerer spell list Mirror Image; Warlock spell list Mirror Image; Wizard spell list Mirror Image |
-| `monk_monks_focus` | 1 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Monk Monk's Focus |
-| `monk_unarmored_movement` | 1 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Monk Unarmored Movement |
-| `monk_uncanny_metabolism` | 1 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Monk Uncanny Metabolism |
-| `prestidigitation` | 4 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Bard spell list Prestidigitation; Sorcerer spell list Prestidigitation; Warlock spell list Prestidigitation; Wizard spell list Prestidigitation |
-| `purify_food_and_drink` | 3 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Cleric spell list Purify Food and Drink; Druid spell list Purify Food and Drink; Paladin spell list Purify Food and Drink |
-| `ranger_deft_explorer` | 1 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Ranger Deft Explorer |
-| `ranger_fighting_style` | 1 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Ranger Fighting Style |
-| `rope_trick` | 1 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Wizard spell list Rope Trick |
-| `silence` | 3 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Bard spell list Silence; Cleric spell list Silence; Ranger spell list Silence |
-| `sorcerer_font_of_magic` | 1 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Sorcerer Font of Magic |
-| `sorcerer_metamagic` | 1 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Sorcerer Metamagic |
-| `suggestion` | 4 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Bard spell list Suggestion; Sorcerer spell list Suggestion; Warlock spell list Suggestion; Wizard spell list Suggestion |
-| `thaumaturgy` | 1 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Cleric spell list Thaumaturgy |
-| `unseen_servant` | 3 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Bard spell list Unseen Servant; Warlock spell list Unseen Servant; Wizard spell list Unseen Servant |
-| `warlock_magical_cunning` | 1 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Warlock Magical Cunning |
-| `zone_of_truth` | 3 | The SRD row is in this strict support scope, but no Unit matrix row exists yet. | Bard spell list Zone of Truth; Cleric spell list Zone of Truth; Paladin spell list Zone of Truth |
+| Unit | Source rows | Reason | Adopted decision artifact | Concepts |
+| --- | ---: | --- | --- | --- |
+| `animal_messenger` | 3 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Bard spell list Animal Messenger; Druid spell list Animal Messenger; Ranger spell list Animal Messenger |
+| `arcanists_magic_aura` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Wizard spell list Arcanist's Magic Aura |
+| `augury` | 3 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Cleric spell list Augury; Druid spell list Augury; Wizard spell list Augury |
+| `bard_expertise` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Bard Expertise |
+| `calm_emotions` | 2 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Bard spell list Calm Emotions; Cleric spell list Calm Emotions |
+| `cleric_channel_divinity` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Cleric Channel Divinity |
+| `create_or_destroy_water` | 2 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/create_or_destroy_water.md` | Cleric spell list Create or Destroy Water; Druid spell list Create or Destroy Water |
+| `darkness` | 3 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Sorcerer spell list Darkness; Warlock spell list Darkness; Wizard spell list Darkness |
+| `darkvision` | 4 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Druid spell list Darkvision; Ranger spell list Darkvision; Sorcerer spell list Darkvision; Wizard spell list Darkvision |
+| `detect_thoughts` | 3 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Bard spell list Detect Thoughts; Sorcerer spell list Detect Thoughts; Wizard spell list Detect Thoughts |
+| `disguise_self` | 3 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/disguise_self.md` | Bard spell list Disguise Self; Sorcerer spell list Disguise Self; Wizard spell list Disguise Self |
+| `dragons_breath` | 2 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Sorcerer spell list Dragon's Breath; Wizard spell list Dragon's Breath |
+| `druid_wild_companion` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Druid Wild Companion |
+| `druid_wild_shape` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Druid Wild Shape |
+| `druidcraft` | 1 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/druidcraft.md` | Druid spell list Druidcraft |
+| `elementalism` | 3 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/elementalism.md` | Druid spell list Elementalism; Sorcerer spell list Elementalism; Wizard spell list Elementalism |
+| `enhance_ability` | 6 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Bard spell list Enhance Ability; Cleric spell list Enhance Ability; Druid spell list Enhance Ability; Ranger spell list Enhance Ability; Sorcerer spell list Enhance Ability; Wizard spell list Enhance Ability |
+| `enlarge_reduce` | 4 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Bard spell list Enlarge/Reduce; Druid spell list Enlarge/Reduce; Sorcerer spell list Enlarge/Reduce; Wizard spell list Enlarge/Reduce |
+| `enthrall` | 2 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Bard spell list Enthrall; Warlock spell list Enthrall |
+| `find_traps` | 3 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Cleric spell list Find Traps; Druid spell list Find Traps; Ranger spell list Find Traps |
+| `flaming_sphere` | 3 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Druid spell list Flaming Sphere; Sorcerer spell list Flaming Sphere; Wizard spell list Flaming Sphere |
+| `floating_disk` | 1 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/floating_disk.md` | Wizard spell list Floating Disk |
+| `goodberry` | 2 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/goodberry.md` | Druid spell list Goodberry; Ranger spell list Goodberry |
+| `gust_of_wind` | 4 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Druid spell list Gust of Wind; Ranger spell list Gust of Wind; Sorcerer spell list Gust of Wind; Wizard spell list Gust of Wind |
+| `illusory_script` | 3 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/illusory_script.md` | Bard spell list Illusory Script; Warlock spell list Illusory Script; Wizard spell list Illusory Script |
+| `knock` | 3 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Bard spell list Knock; Sorcerer spell list Knock; Wizard spell list Knock |
+| `levitate` | 2 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Sorcerer spell list Levitate; Wizard spell list Levitate |
+| `locate_animals_or_plants` | 3 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Bard spell list Locate Animals or Plants; Druid spell list Locate Animals or Plants; Ranger spell list Locate Animals or Plants |
+| `locate_object` | 6 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Bard spell list Locate Object; Cleric spell list Locate Object; Druid spell list Locate Object; Paladin spell list Locate Object; Ranger spell list Locate Object; Wizard spell list Locate Object |
+| `mage_hand` | 4 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/mage_hand.md` | Bard spell list Mage Hand; Sorcerer spell list Mage Hand; Warlock spell list Mage Hand; Wizard spell list Mage Hand |
+| `magic_mouth` | 2 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Bard spell list Magic Mouth; Wizard spell list Magic Mouth |
+| `mending` | 5 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/mending.md` | Bard spell list Mending; Cleric spell list Mending; Druid spell list Mending; Sorcerer spell list Mending; Wizard spell list Mending |
+| `message` | 4 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/message.md` | Bard spell list Message; Druid spell list Message; Sorcerer spell list Message; Wizard spell list Message |
+| `mirror_image` | 4 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Bard spell list Mirror Image; Sorcerer spell list Mirror Image; Warlock spell list Mirror Image; Wizard spell list Mirror Image |
+| `monk_monks_focus` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Monk Monk's Focus |
+| `monk_unarmored_movement` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Monk Unarmored Movement |
+| `monk_uncanny_metabolism` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Monk Uncanny Metabolism |
+| `prestidigitation` | 4 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/prestidigitation.md` | Bard spell list Prestidigitation; Sorcerer spell list Prestidigitation; Warlock spell list Prestidigitation; Wizard spell list Prestidigitation |
+| `purify_food_and_drink` | 3 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/purify_food_and_drink.md` | Cleric spell list Purify Food and Drink; Druid spell list Purify Food and Drink; Paladin spell list Purify Food and Drink |
+| `ranger_deft_explorer` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Ranger Deft Explorer |
+| `ranger_fighting_style` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Ranger Fighting Style |
+| `rope_trick` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Wizard spell list Rope Trick |
+| `silence` | 3 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Bard spell list Silence; Cleric spell list Silence; Ranger spell list Silence |
+| `sorcerer_font_of_magic` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Sorcerer Font of Magic |
+| `sorcerer_metamagic` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Sorcerer Metamagic |
+| `suggestion` | 4 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Bard spell list Suggestion; Sorcerer spell list Suggestion; Warlock spell list Suggestion; Wizard spell list Suggestion |
+| `unseen_servant` | 3 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/unseen_servant.md` | Bard spell list Unseen Servant; Warlock spell list Unseen Servant; Wizard spell list Unseen Servant |
+| `warlock_magical_cunning` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Warlock Magical Cunning |
+| `zone_of_truth` | 3 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Bard spell list Zone of Truth; Cleric spell list Zone of Truth; Paladin spell list Zone of Truth |
