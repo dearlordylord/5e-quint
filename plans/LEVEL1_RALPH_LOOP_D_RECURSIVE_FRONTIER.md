@@ -121,7 +121,7 @@
     {
       "number": 20,
       "id": "L1D2-ELEMENTALISM-DECISION-INTEGRATION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Elementalism Frontier Decision Integration"
     },
     {
@@ -434,7 +434,7 @@ task was appended; `find_familiar` stays excluded.
 | 17 | L1D2-CHARM-PERSON-CLOSURE - Charm Person Social Boundary Closure | done | Task 14 or explicit deferral | Clarified supported battle subset versus runtime-detached social knowledge closure. |
 | 18 | L1D2-DISGUISE-SELF-DECISION-INTEGRATION - Disguise Self Frontier Decision Integration | done | Task 14 or explicit deferral | Consume the existing decision artifact; do not reclassify the row. |
 | 19 | L1D2-DRUIDCRAFT-DECISION-INTEGRATION - Druidcraft Frontier Decision Integration | done | Task 14 or explicit deferral | Consume the existing decision artifact; do not reclassify the row. |
-| 20 | L1D2-ELEMENTALISM-DECISION-INTEGRATION - Elementalism Frontier Decision Integration | ready-for-research | Task 14 or explicit deferral | Consume the existing decision artifact; do not reclassify the row. |
+| 20 | L1D2-ELEMENTALISM-DECISION-INTEGRATION - Elementalism Frontier Decision Integration | done | Task 14 or explicit deferral | Consume the existing decision artifact; do not reclassify the row. |
 | 21 | L1D2-ILLUSORY-SCRIPT-DECISION-INTEGRATION - Illusory Script Frontier Decision Integration | ready-for-research | Task 14 or explicit deferral | Consume the existing decision artifact; do not reclassify the row. |
 | 22 | L1D2-MESSAGE-DECISION-INTEGRATION - Message Frontier Decision Integration | ready-for-research | Task 14 or explicit deferral | Consume the existing decision artifact; do not reclassify the row. |
 | 23 | L1D2-PRESTIDIGITATION-DECISION-INTEGRATION - Prestidigitation Frontier Decision Integration | ready-for-research | Task 14 or explicit deferral | Consume the existing decision artifact; do not reclassify the row. |
@@ -894,7 +894,7 @@ Verification:
 
 ### Task 20 - L1D2-ELEMENTALISM-DECISION-INTEGRATION - Elementalism Frontier Decision Integration
 
-Status: `ready-for-research`
+Status: `done`
 
 Integrate the existing Elementalism frontier decision into generated coverage
 surfaces so future replenishment runs preserve the already-closed no-matrix
