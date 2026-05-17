@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "L1E-ENSNARING-STRIKE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Ensnaring Strike Selected Identity Replay"
     },
     {
@@ -171,7 +171,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-A-D.md` Divine Smite.
 
 ### Task 4 - L1E-ENSNARING-STRIKE - Ensnaring Strike Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `ensnaring_strike`, including after-hit
 restraint and supported turn-start damage/save lifecycle.

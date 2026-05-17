@@ -93,8 +93,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 93,
-      "numerator": 49,
-      "percent": "52.7%"
+      "numerator": 50,
+      "percent": "53.8%"
     },
     "supportedProfileCoverage": {
       "denominator": 117,
@@ -7562,6 +7562,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV31D"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1E-ENSNARING-STRIKE"
         }
       ],
       "executableMechanics": true,

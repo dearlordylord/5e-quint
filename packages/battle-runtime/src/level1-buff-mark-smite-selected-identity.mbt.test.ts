@@ -1,7 +1,9 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-DIVINE-FAVOR divine_favor
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-DIVINE-SMITE divine_smite
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-ENSNARING-STRIKE ensnaring_strike
 // UNIT-IDENTITY-MBT-REPLAY: L1E-DIVINE-FAVOR divine_favor doDivineFavorWeaponDamageRider
 // UNIT-IDENTITY-MBT-REPLAY: L1E-DIVINE-SMITE divine_smite doDivineSmiteAfterHitDamage
+// UNIT-IDENTITY-MBT-REPLAY: L1E-ENSNARING-STRIKE ensnaring_strike doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -16,6 +18,7 @@ import {
   attackBonus,
   movementFeet,
   proficiencyBonus,
+  type Condition,
 } from "@dnd/shared/types";
 import {
   buildUnitCatalog,
@@ -29,6 +32,7 @@ import {
   characterId,
   combatantId,
   discoverBattleActs,
+  endTurn,
   initiativeScore,
   resolveBattleReaction,
   resolveBattleSubject,
@@ -46,11 +50,13 @@ import {
   type BattleSubject,
   type CombatantId,
 } from "./index.ts";
+import type { BattleSpellTurnStartDamageRollHole } from "./battle-reducer.ts";
 
 const level1BuffMarkSmiteSelectedIdentityDriverSchema = {
   init: {},
   doDivineFavorWeaponDamageRider: {},
   doDivineSmiteAfterHitDamage: {},
+  doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape: {},
   step: {},
 } as const;
 type Level1BuffMarkSmiteSelectedIdentityDriverAction = Exclude<
@@ -60,30 +66,76 @@ type Level1BuffMarkSmiteSelectedIdentityDriverAction = Exclude<
 
 const divineFavorUnitId = "divine_favor";
 const divineSmiteUnitId = "divine_smite";
+const ensnaringStrikeUnitId = "ensnaring_strike";
 const level1BuffMarkSmiteSpellIds = [
   divineFavorUnitId,
   divineSmiteUnitId,
+  ensnaringStrikeUnitId,
 ] as const;
 type Level1BuffMarkSmiteSpellId = (typeof level1BuffMarkSmiteSpellIds)[number];
+const damageRiderSourceSpellIds = [
+  divineFavorUnitId,
+  divineSmiteUnitId,
+] as const satisfies ReadonlyArray<Level1BuffMarkSmiteSpellId>;
+type DamageRiderSourceSpellId =
+  | (typeof damageRiderSourceSpellIds)[number]
+  | "none";
+type EnsnaringStrikeSourceSpellId = typeof ensnaringStrikeUnitId | "none";
+type CharacterCreatureInit = Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>;
+type CharacterClassName =
+  CharacterCreatureInit["classLevels"][number]["className"];
 
 type Level1BuffMarkSmiteSelectedIdentityProjection = {
   readonly divineFavorActiveRiderCount: number;
   readonly targetHp: number;
   readonly spellSlotSpentThisTurn: boolean;
   readonly level1SlotsRemaining: number;
-  readonly damageRiderSourceSpellId: Level1BuffMarkSmiteSpellId | "none";
+  readonly damageRiderSourceSpellId: DamageRiderSourceSpellId;
   readonly damageRiderDamageType: "radiant" | "none";
   readonly damageRiderDice: number;
   readonly damageRiderDieSize: number;
-  readonly lastResult: "init" | "divineFavor" | "divineSmite";
+  readonly ensnaringStrikeRestrainedBeforeEscape: boolean;
+  readonly targetRestrained: boolean;
+  readonly casterConcentrating: boolean;
+  readonly ensnaringStrikeSaveSourceSpellId: EnsnaringStrikeSourceSpellId;
+  readonly ensnaringStrikeSaveAbility: "str" | "none";
+  readonly turnStartDamageSourceSpellId: EnsnaringStrikeSourceSpellId;
+  readonly turnStartDamageDamageType: "piercing" | "none";
+  readonly turnStartDamageDice: number;
+  readonly turnStartDamageDieSize: number;
+  readonly escapeCheckAbility: "str" | "none";
+  readonly escapeCheckSkill: "athletics" | "none";
+  readonly lastResult:
+    | "init"
+    | "divineFavor"
+    | "divineSmite"
+    | "ensnaringStrike";
 };
+type EnsnaringStrikeLifecycleProjection = Pick<
+  Level1BuffMarkSmiteSelectedIdentityProjection,
+  | "ensnaringStrikeRestrainedBeforeEscape"
+  | "ensnaringStrikeSaveSourceSpellId"
+  | "ensnaringStrikeSaveAbility"
+  | "turnStartDamageSourceSpellId"
+  | "turnStartDamageDamageType"
+  | "turnStartDamageDice"
+  | "turnStartDamageDieSize"
+  | "escapeCheckAbility"
+  | "escapeCheckSkill"
+>;
 type SelectedUnitIdentityReplaySequence = {
   readonly name: string;
   readonly actions: readonly Level1BuffMarkSmiteSelectedIdentityDriverAction[];
   readonly expected: Level1BuffMarkSmiteSelectedIdentityProjection;
 };
 type SelectedUnitIdentityReplay = {
-  readonly taskId: "L1E-DIVINE-FAVOR" | "L1E-DIVINE-SMITE";
+  readonly taskId:
+    | "L1E-DIVINE-FAVOR"
+    | "L1E-DIVINE-SMITE"
+    | "L1E-ENSNARING-STRIKE";
   readonly unitId: Level1BuffMarkSmiteSpellId;
   readonly actions: readonly Level1BuffMarkSmiteSelectedIdentityDriverAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
@@ -155,6 +207,34 @@ const selectedUnitIdentityReplays = [
       },
     ],
   },
+  {
+    taskId: "L1E-ENSNARING-STRIKE",
+    unitId: "ensnaring_strike",
+    actions: ["doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape"],
+    sequences: [
+      {
+        name: "after-hit-restraint-turn-start-damage-and-escape",
+        actions: ["doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape"],
+        expected: expectedProjection({
+          targetHp: 5,
+          spellSlotSpentThisTurn: false,
+          level1SlotsRemaining: 1,
+          ensnaringStrikeRestrainedBeforeEscape: true,
+          targetRestrained: false,
+          casterConcentrating: false,
+          ensnaringStrikeSaveSourceSpellId: "ensnaring_strike",
+          ensnaringStrikeSaveAbility: "str",
+          turnStartDamageSourceSpellId: "ensnaring_strike",
+          turnStartDamageDamageType: "piercing",
+          turnStartDamageDice: 1,
+          turnStartDamageDieSize: 6,
+          escapeCheckAbility: "str",
+          escapeCheckSkill: "athletics",
+          lastResult: "ensnaringStrike",
+        }),
+      },
+    ],
+  },
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
 describe("Level 1 buff mark smite selected identity MBT", () => {
@@ -215,12 +295,14 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
     let damageRider:
       | NonNullable<BattleDamageRollHole["spellWeaponDamageRiders"]>[number]
       | undefined;
+    let ensnaringStrikeLifecycle = defaultEnsnaringStrikeLifecycleProjection();
     let lastResult: Level1BuffMarkSmiteSelectedIdentityProjection["lastResult"] =
       "init";
 
     function reset(): void {
       state = level1BuffMarkSmiteBattle();
       damageRider = undefined;
+      ensnaringStrikeLifecycle = defaultEnsnaringStrikeLifecycleProjection();
       lastResult = "init";
     }
 
@@ -247,6 +329,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
           preparedSpells: [spellRecord(divineFavorUnitId)],
         });
         damageRider = undefined;
+        ensnaringStrikeLifecycle = defaultEnsnaringStrikeLifecycleProjection();
 
         const cast = resolveBattleSubject({
           state,
@@ -267,6 +350,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
           preparedSpells: [spellRecord(divineSmiteUnitId)],
         });
         damageRider = undefined;
+        ensnaringStrikeLifecycle = defaultEnsnaringStrikeLifecycleProjection();
 
         const hit = resolveLongswordHitWithAttackRoll({ state });
         const attackHitWindow = requireAttackHitWindow(hit.afterAttackRoll);
@@ -305,11 +389,121 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
           "divineSmite",
         );
       },
+      doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape: () => {
+        state = level1BuffMarkSmiteBattle({
+          preparedSpells: [spellRecord(ensnaringStrikeUnitId)],
+          sourceClassName: "ranger",
+        });
+        damageRider = undefined;
+        ensnaringStrikeLifecycle = defaultEnsnaringStrikeLifecycleProjection();
+
+        const hit = resolveLongswordHitWithAttackRoll({ state });
+        const attackHitWindow = requireAttackHitWindow(hit.afterAttackRoll);
+        const ensnaringChoice = attackHitBonusActionSpellChoice(
+          attackHitWindow,
+          ensnaringStrikeUnitId,
+        );
+        const save = requireHole(
+          ensnaringChoice.initialHoles,
+          "savingThrowOutcome",
+        );
+        const afterEnsnaring = resolveBattleReaction({
+          state: attackHitWindow.state,
+          fill: reactionDecisionFill(
+            requireHole(attackHitWindow.holes, "reactionDecision"),
+            {
+              kind: "resolve",
+              reactorId: casterId,
+              choice: {
+                kind: "castAttackHitBonusActionSpell",
+                invocation: ensnaringChoice.invocation,
+                fills: [
+                  savingThrowOutcomeFill(save, [
+                    { targetId, succeeded: false },
+                  ]),
+                ],
+              },
+            },
+          ),
+        });
+        const afterEnsnaringDamage = requireNeedsHoles(afterEnsnaring);
+        const weaponDamage = requireDamageRollHole(afterEnsnaringDamage);
+        const afterWeaponDamage = resolveBattleSubject({
+          state: afterEnsnaringDamage.state,
+          subject: hit.subject,
+          fills: [
+            hit.targetFill,
+            hit.attackFill,
+            damageRollFillWithGroups(weaponDamage, [[3]]),
+          ],
+        });
+        if (afterWeaponDamage.tag !== "resolved") {
+          throw new Error("Expected Ensnaring Strike host attack to resolve.");
+        }
+        const restrainedBeforeEscape = ensnaringStrikeRestrainsTarget(
+          afterWeaponDamage.state,
+        );
+        if (!restrainedBeforeEscape) {
+          throw new Error("Expected Ensnaring Strike to restrain the target.");
+        }
+
+        const awaitingTurnStartDamage = requireNeedsHoles(
+          endTurn({
+            state: afterWeaponDamage.state,
+            actorId: casterId,
+          }),
+        );
+        const turnStartDamage = requireSpellTurnStartDamageRollHole(
+          awaitingTurnStartDamage,
+        );
+        const targetTurn = endTurn({
+          state: afterWeaponDamage.state,
+          actorId: casterId,
+          fills: [damageRollFillWithGroups(turnStartDamage, [[4]])],
+        });
+        if (targetTurn.tag !== "resolved") {
+          throw new Error(
+            "Expected Ensnaring Strike turn-start damage to resolve.",
+          );
+        }
+
+        const escapeAct = spellRestraintEscapeAct(targetTurn.state);
+        const escapeCheck = requireHole(escapeAct.initialHoles, "abilityCheck");
+        recordResolvedResult(
+          resolveBattleSubject({
+            state: targetTurn.state,
+            subject: escapeAct.subject,
+            fills: [abilityCheckFill(escapeCheck, 13)],
+          }),
+          "ensnaringStrike",
+        );
+        ensnaringStrikeLifecycle = {
+          ensnaringStrikeRestrainedBeforeEscape: restrainedBeforeEscape,
+          ensnaringStrikeSaveSourceSpellId:
+            ensnaringStrikeSaveSourceSpellId(save),
+          ensnaringStrikeSaveAbility: save.ability === "str" ? "str" : "none",
+          turnStartDamageSourceSpellId:
+            ensnaringStrikeTurnStartDamageSourceSpellId(turnStartDamage),
+          turnStartDamageDamageType:
+            turnStartDamage.spellTurnStartDamage.damage.damageType ===
+            "piercing"
+              ? "piercing"
+              : "none",
+          turnStartDamageDice:
+            turnStartDamage.spellTurnStartDamage.damage.expr.dice,
+          turnStartDamageDieSize:
+            turnStartDamage.spellTurnStartDamage.damage.expr.dieSize,
+          escapeCheckAbility: escapeCheck.ability === "str" ? "str" : "none",
+          escapeCheckSkill:
+            escapeCheck.skill === "athletics" ? "athletics" : "none",
+        };
+      },
       step: () => {},
       getState: () =>
         projectLevel1BuffMarkSmiteSelectedIdentityState(
           state,
           damageRider,
+          ensnaringStrikeLifecycle,
           lastResult,
         ),
     };
@@ -328,16 +522,43 @@ function expectedProjection(
     damageRiderDamageType: "none",
     damageRiderDice: 0,
     damageRiderDieSize: 0,
+    ensnaringStrikeRestrainedBeforeEscape: false,
+    targetRestrained: false,
+    casterConcentrating: false,
+    ensnaringStrikeSaveSourceSpellId: "none",
+    ensnaringStrikeSaveAbility: "none",
+    turnStartDamageSourceSpellId: "none",
+    turnStartDamageDamageType: "none",
+    turnStartDamageDice: 0,
+    turnStartDamageDieSize: 0,
+    escapeCheckAbility: "none",
+    escapeCheckSkill: "none",
     lastResult: "init",
     ...overrides,
+  };
+}
+
+function defaultEnsnaringStrikeLifecycleProjection(): EnsnaringStrikeLifecycleProjection {
+  return {
+    ensnaringStrikeRestrainedBeforeEscape: false,
+    ensnaringStrikeSaveSourceSpellId: "none",
+    ensnaringStrikeSaveAbility: "none",
+    turnStartDamageSourceSpellId: "none",
+    turnStartDamageDamageType: "none",
+    turnStartDamageDice: 0,
+    turnStartDamageDieSize: 0,
+    escapeCheckAbility: "none",
+    escapeCheckSkill: "none",
   };
 }
 
 function level1BuffMarkSmiteBattle(
   input: {
     readonly preparedSpells?: readonly SpellRecord[];
+    readonly sourceClassName?: CharacterClassName;
   } = {},
 ): BattleState {
+  const sourceClassName = input.sourceClassName ?? "paladin";
   const result = startBattle({
     battleId: battleId("level1-buff-mark-smite-selected-identity"),
     combatants: [
@@ -347,8 +568,9 @@ function level1BuffMarkSmiteBattle(
         initiative: 20,
         side: partySide,
         attack: zeroAbilityLongswordAttack(),
+        className: sourceClassName,
         spellcasting: {
-          sourceClassName: "paladin",
+          sourceClassName,
           spellcastingAbilityModifier: abilityModifier(3),
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
@@ -365,6 +587,7 @@ function level1BuffMarkSmiteBattle(
         displayName: "Level 1 buff target",
         initiative: 10,
         side: oppositionSide,
+        className: "fighter",
       }),
     ],
   });
@@ -379,6 +602,7 @@ function level1BuffMarkSmiteCreature(input: {
   readonly displayName: string;
   readonly initiative: number;
   readonly side: typeof partySide | typeof oppositionSide;
+  readonly className?: CharacterClassName;
   readonly attack?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -389,6 +613,7 @@ function level1BuffMarkSmiteCreature(input: {
   >["spellcasting"];
 }): BattleCreatureInit {
   const attack = input.attack ?? null;
+  const className = input.className ?? "paladin";
   return {
     combatantId: input.combatantId,
     displayName: input.displayName,
@@ -398,7 +623,7 @@ function level1BuffMarkSmiteCreature(input: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),
       characterUnitRefs: [],
-      classLevels: [{ className: "paladin", level: 1 }],
+      classLevels: [{ className, level: 1 }],
       armorClass:
         attack === null
           ? defaultArmorClassState()
@@ -629,9 +854,34 @@ function reactionDecisionFill(
   return { kind: "reactionDecision", holeId: hole.holeId, value };
 }
 
+function savingThrowOutcomeFill(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+  outcomes: readonly {
+    readonly targetId: CombatantId;
+    readonly succeeded: boolean;
+  }[],
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    value: { outcomes },
+  };
+}
+
+function abilityCheckFill(
+  hole: Extract<BattleHole, { readonly kind: "abilityCheck" }>,
+  total: number,
+): Extract<BattleFill, { readonly kind: "abilityCheck" }> {
+  return {
+    kind: "abilityCheck",
+    holeId: hole.holeId,
+    value: { total },
+  };
+}
+
 function spellWeaponDamageRider(
   hole: BattleDamageRollHole,
-  spellId: Level1BuffMarkSmiteSpellId,
+  spellId: Exclude<Level1BuffMarkSmiteSpellId, typeof ensnaringStrikeUnitId>,
 ): NonNullable<BattleDamageRollHole["spellWeaponDamageRiders"]>[number] {
   const rider = hole.spellWeaponDamageRiders?.find(
     (candidate) => candidate.sourceSpellId === spellId,
@@ -664,6 +914,16 @@ function requireDamageRollHole(
   const hole = requireHole(result.holes, "rolledDice");
   if (!("attack" in hole)) {
     throw new Error("Expected attack damage roll hole.");
+  }
+  return hole;
+}
+
+function requireSpellTurnStartDamageRollHole(
+  result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
+): BattleSpellTurnStartDamageRollHole {
+  const hole = requireHole(result.holes, "rolledDice");
+  if (!("spellTurnStartDamage" in hole)) {
+    throw new Error("Expected spell turn-start damage roll hole.");
   }
   return hole;
 }
@@ -718,11 +978,77 @@ function attackHitBonusActionSpellChoice(
   return choice;
 }
 
+function spellRestraintEscapeAct(state: BattleState): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "escapeSpellRestraint" }
+  >;
+} {
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        BattleSubject,
+        { readonly tag: "action"; readonly action: "escapeSpellRestraint" }
+      >;
+    } =>
+      candidate.subject.tag === "action" &&
+      candidate.subject.action === "escapeSpellRestraint" &&
+      candidate.subject.actorId === targetId &&
+      candidate.subject.targetId === targetId,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Ensnaring Strike spell restraint escape act.");
+  }
+  return act;
+}
+
+function ensnaringStrikeRestrainsTarget(state: BattleState): boolean {
+  const target = state.combatants.get(targetId);
+  return (
+    target !== undefined &&
+    snapshotHasCondition(
+      snapshotBattle(state).combatants.find(
+        (combatant) => combatant.combatantId === targetId,
+      )?.conditions ?? [],
+      "restrained",
+    ) &&
+    target.activeEffects.some(
+      (effect) =>
+        effect.kind === "spellCondition" &&
+        effect.sourceSpellId === ensnaringStrikeUnitId &&
+        effect.sourceCombatantId === casterId &&
+        effect.condition === "restrained" &&
+        effect.turnStartDamage?.damageType === "piercing" &&
+        effect.turnStartDamage.expr.dice === 1 &&
+        effect.turnStartDamage.expr.dieSize === 6,
+    )
+  );
+}
+
+function ensnaringStrikeSaveSourceSpellId(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+): EnsnaringStrikeSourceSpellId {
+  return "spell" in hole && hole.spell.spell.id === ensnaringStrikeUnitId
+    ? ensnaringStrikeUnitId
+    : "none";
+}
+
+function ensnaringStrikeTurnStartDamageSourceSpellId(
+  hole: BattleSpellTurnStartDamageRollHole,
+): EnsnaringStrikeSourceSpellId {
+  return hole.spellTurnStartDamage.sourceSpellId === ensnaringStrikeUnitId
+    ? ensnaringStrikeUnitId
+    : "none";
+}
+
 function projectLevel1BuffMarkSmiteSelectedIdentityState(
   state: BattleState,
   damageRider:
     | NonNullable<BattleDamageRollHole["spellWeaponDamageRiders"]>[number]
     | undefined,
+  ensnaringStrikeLifecycle: EnsnaringStrikeLifecycleProjection,
   lastResult: Level1BuffMarkSmiteSelectedIdentityProjection["lastResult"],
 ): Level1BuffMarkSmiteSelectedIdentityProjection {
   const snapshot = snapshotBattle(state);
@@ -731,6 +1057,12 @@ function projectLevel1BuffMarkSmiteSelectedIdentityState(
   );
   if (target === undefined) {
     throw new Error("Expected Level 1 buff mark smite target.");
+  }
+  const caster = snapshot.combatants.find(
+    (combatant) => combatant.combatantId === casterId,
+  );
+  if (caster === undefined) {
+    throw new Error("Expected Level 1 buff mark smite caster.");
   }
   return {
     targetHp: target.hp,
@@ -743,6 +1075,9 @@ function projectLevel1BuffMarkSmiteSelectedIdentityState(
       damageRider?.damage.damageType === "radiant" ? "radiant" : "none",
     damageRiderDice: damageRider?.damage.expr.dice ?? 0,
     damageRiderDieSize: damageRider?.damage.expr.dieSize ?? 0,
+    targetRestrained: snapshotHasCondition(target.conditions, "restrained"),
+    casterConcentrating: caster.concentrating,
+    ...ensnaringStrikeLifecycle,
     lastResult,
   };
 }
@@ -755,7 +1090,7 @@ function damageRiderSourceSpellId(
   if (damageRider === undefined) {
     return "none";
   }
-  if (isLevel1BuffMarkSmiteSpellId(damageRider.sourceSpellId)) {
+  if (isDamageRiderSourceSpellId(damageRider.sourceSpellId)) {
     return damageRider.sourceSpellId;
   }
   throw new Error(
@@ -763,10 +1098,17 @@ function damageRiderSourceSpellId(
   );
 }
 
-function isLevel1BuffMarkSmiteSpellId(
+function isDamageRiderSourceSpellId(
   value: string,
-): value is Level1BuffMarkSmiteSpellId {
-  return level1BuffMarkSmiteSpellIds.some((spellId) => spellId === value);
+): value is Exclude<DamageRiderSourceSpellId, "none"> {
+  return damageRiderSourceSpellIds.some((spellId) => spellId === value);
+}
+
+function snapshotHasCondition(
+  conditions: readonly Condition[],
+  condition: Condition,
+): boolean {
+  return conditions.includes(condition);
 }
 
 function divineFavorActiveRiderCount(state: BattleState): number {
@@ -821,6 +1163,38 @@ function normalizeLevel1BuffMarkSmiteSelectedIdentityQuintState(
       state["qDamageRiderDieSize"],
       "qDamageRiderDieSize",
     ),
+    ensnaringStrikeRestrainedBeforeEscape: booleanField(
+      state,
+      "qEnsnaringStrikeRestrainedBeforeEscape",
+    ),
+    targetRestrained: booleanField(state, "qTargetRestrained"),
+    casterConcentrating: booleanField(state, "qCasterConcentrating"),
+    ensnaringStrikeSaveSourceSpellId: ensnaringStrikeSourceSpellIdFromQuint(
+      state["qEnsnaringStrikeSaveSourceSpellId"],
+    ),
+    ensnaringStrikeSaveAbility: strengthAbilityFromQuint(
+      state["qEnsnaringStrikeSaveAbility"],
+      "saving throw",
+    ),
+    turnStartDamageSourceSpellId: ensnaringStrikeSourceSpellIdFromQuint(
+      state["qTurnStartDamageSourceSpellId"],
+    ),
+    turnStartDamageDamageType: turnStartDamageDamageType(
+      state["qTurnStartDamageDamageType"],
+    ),
+    turnStartDamageDice: numberFromQuintInt(
+      state["qTurnStartDamageDice"],
+      "qTurnStartDamageDice",
+    ),
+    turnStartDamageDieSize: numberFromQuintInt(
+      state["qTurnStartDamageDieSize"],
+      "qTurnStartDamageDieSize",
+    ),
+    escapeCheckAbility: strengthAbilityFromQuint(
+      state["qEscapeCheckAbility"],
+      "escape check",
+    ),
+    escapeCheckSkill: athleticsSkillFromQuint(state["qEscapeCheckSkill"]),
     lastResult: mbtLastResult(state["qLastResult"]),
   };
 }
@@ -853,7 +1227,7 @@ function damageRiderSourceSpellIdFromQuint(
   if (raw === "none") {
     return raw;
   }
-  if (typeof raw === "string" && isLevel1BuffMarkSmiteSpellId(raw)) {
+  if (typeof raw === "string" && isDamageRiderSourceSpellId(raw)) {
     return raw;
   }
   throw new Error(`Unexpected damage rider source spell id ${String(raw)}.`);
@@ -868,10 +1242,51 @@ function damageRiderDamageType(
   throw new Error(`Unexpected damage rider damage type ${String(raw)}.`);
 }
 
+function ensnaringStrikeSourceSpellIdFromQuint(
+  raw: unknown,
+): EnsnaringStrikeSourceSpellId {
+  if (raw === "none" || raw === ensnaringStrikeUnitId) {
+    return raw;
+  }
+  throw new Error(
+    `Unexpected Ensnaring Strike source spell id ${String(raw)}.`,
+  );
+}
+
+function strengthAbilityFromQuint(raw: unknown, label: string): "str" | "none" {
+  if (raw === "str" || raw === "none") {
+    return raw;
+  }
+  throw new Error(
+    `Unexpected Ensnaring Strike ${label} ability ${String(raw)}.`,
+  );
+}
+
+function turnStartDamageDamageType(
+  raw: unknown,
+): Level1BuffMarkSmiteSelectedIdentityProjection["turnStartDamageDamageType"] {
+  if (raw === "piercing" || raw === "none") {
+    return raw;
+  }
+  throw new Error(`Unexpected turn-start damage type ${String(raw)}.`);
+}
+
+function athleticsSkillFromQuint(raw: unknown): "athletics" | "none" {
+  if (raw === "athletics" || raw === "none") {
+    return raw;
+  }
+  throw new Error(`Unexpected escape check skill ${String(raw)}.`);
+}
+
 function mbtLastResult(
   raw: unknown,
 ): Level1BuffMarkSmiteSelectedIdentityProjection["lastResult"] {
-  if (raw === "init" || raw === "divineFavor" || raw === "divineSmite") {
+  if (
+    raw === "init" ||
+    raw === "divineFavor" ||
+    raw === "divineSmite" ||
+    raw === "ensnaringStrike"
+  ) {
     return raw;
   }
   throw new Error(`Unexpected MBT result ${String(raw)}.`);
