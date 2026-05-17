@@ -178,13 +178,13 @@ to its separate worktree. Full support means:
 - active companion/familiar features are not pulled into this lane.
 
 This is the replacement D lane after the completed damage selected-identity
-batch. It deliberately does not steal active I/J/K work or the new execution
-frontiers A/B. It started with currently safe selected-identity tasks that were
-supported on `master`, kept character/container tasks visible while blocked, and
-uses recursive replenishment tasks to append the next concrete frontier. The
-replenishment task must add the next concrete batch before marking itself done,
-so this lane does not naturally terminate just because one fixed batch was
-exhausted.
+batch. It deliberately does not steal active non-D work, including the language
+access lane for `druid_druidic` and `rogue_thieves_cant`. It started with
+currently safe selected-identity tasks that were supported on `master`, kept
+character/container tasks visible while blocked, and uses recursive
+replenishment tasks to append the next concrete frontier. The replenishment
+task must add the next concrete batch before marking itself done, so this lane
+does not naturally terminate just because one fixed batch was exhausted.
 
 Do not edit `plans/ACTIVE_PLAN.md`.
 
@@ -232,18 +232,21 @@ When a `L1D2-REPLENISH-*` task runs, Ralph must:
    `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`, and
    `plans/unit-profile-coverage/unit-matrix.json` by running
    `pnpm unit-profile-coverage:check --write`.
-3. Read active I/J/K and execution-frontier A/B plan files plus
-   `.ralph/runs/*/events.tsv` logs if those worktrees exist, but do not edit
-   their task worktrees.
+3. Read active non-D plan files plus `.ralph/runs/*/events.tsv` logs if those
+   worktrees exist, but do not edit their task worktrees. Closed top-level
+   Ralph plan files may have been removed from `master`; use generated
+   coverage artifacts and git history for historical context instead.
 4. Recompute the frontier in this order:
-   - strict level-1 open-profile-accounting items not owned by execution
-     frontiers A/B or active I/J/K;
+   - strict level-1 open-profile-accounting items not owned by active non-D
+     lanes;
    - supported-profile Units missing selected-identity MBT evidence and not
-     owned by active execution frontiers A/B or active I/J/K;
+     owned by active non-D lanes;
    - runtime-detached or table-owned closure gaps if the generated strict view
      has reopened them;
    - next supported-profile expansion or admission tasks only after the strict
      level-1 frontier is closed or blocked on active lane merges.
+   `druid_druidic`, `rogue_thieves_cant`, class-granted language facts, and the
+   Rogue extra language choice are owned by Loop L, not by this D lane.
 5. Append at least twelve concrete atomic tasks, or every remaining meaningful
    task if fewer than twelve exist. Each task must have clear inputs, outputs,
    primary files, RAW anchors, and verification.
@@ -273,12 +276,14 @@ Primary write scope for the initial batch:
 - generated reports under `plans/unit-profile-coverage/`;
 - this plan file when a replenishment task appends new work.
 
-Avoid active I/J/K files and execution-frontier A/B files unless a
-replenishment task proves those lanes are merged and no longer active. In
-particular, D must not touch `faerie_fire`, `feather_fall`, `fog_cloud`,
-`grease`, `jump`, `light`, or `thunderwave`; those strict open rows are owned by
-Execution Frontiers A/B. D owns `hunters_mark` and `ranger_favored_enemy` among
-the remaining strict open rows.
+Avoid active non-D lane files unless a replenishment task proves those lanes are
+merged and no longer active. In particular, D must not touch `druid_druidic`,
+`rogue_thieves_cant`, class-granted language facts, the Rogue extra language
+choice, `faerie_fire`, `feather_fall`, `fog_cloud`, `grease`, `jump`, `light`,
+or `thunderwave`. Loop L owns Druidic/Thieves' Cant language access. The
+historical execution frontiers owned the listed spatial/movement/light rows.
+D owns `hunters_mark` and `ranger_favored_enemy` among the remaining strict
+open rows.
 
 ## MBT And Verification Protocol
 

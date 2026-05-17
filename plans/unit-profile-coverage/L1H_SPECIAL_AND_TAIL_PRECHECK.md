@@ -11,10 +11,8 @@ this precheck.
 - `plans/unit-profile-coverage/UNIT_REPORT.md`
 - `plans/unit-profile-coverage/unit-matrix.json`
 - `plans/unit-profile-coverage/unit-evidence.jsonl`
-- `plans/LEVEL1_RALPH_LOOP_D_DAMAGE_SELECTED_IDENTITIES.md`
-- `plans/LEVEL1_RALPH_LOOP_G_CHARACTER_SELECTED_IDENTITIES.md`
-- historical E/F/H loop run artifacts; the standalone E/F/H plan files have
-  since been removed from master
+- historical D/G/E/F/H loop run artifacts; the standalone top-level plan files
+  have since been removed from master
 
 ## Metrics
 
