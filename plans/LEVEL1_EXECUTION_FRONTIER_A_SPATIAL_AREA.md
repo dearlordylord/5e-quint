@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "L1XA-THUNDERWAVE-CLOSURE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Thunderwave Runtime Boundary Closure"
     },
     {
@@ -106,7 +106,7 @@ Every task runs:
 | 2 | L1XA-FAERIE-FIRE-CLOSURE - Faerie Fire Runtime Boundary Closure | done | 1 | `faerie_fire` removed from strict open-profile-accounting or blocked with exact missing runtime mechanic |
 | 3 | L1XA-FOG-CLOUD-CLOSURE - Fog Cloud Runtime Boundary Closure | done | 1 | `fog_cloud` removed from strict open-profile-accounting or blocked with exact missing runtime mechanic |
 | 4 | L1XA-GREASE-CLOSURE - Grease Runtime Boundary Closure | done | 1 | `grease` removed from strict open-profile-accounting or blocked with exact missing runtime mechanic |
-| 5 | L1XA-THUNDERWAVE-CLOSURE - Thunderwave Runtime Boundary Closure | ready-for-research | 1 | `thunderwave` removed from strict open-profile-accounting or blocked with exact missing runtime mechanic |
+| 5 | L1XA-THUNDERWAVE-CLOSURE - Thunderwave Runtime Boundary Closure | done | 1 | `thunderwave` removed from strict open-profile-accounting or blocked with exact missing runtime mechanic |
 | 6 | L1XA-STRICT-CLOSURE-AUDIT - Spatial Area Strict Closure Audit | ready-for-research | 2-5 | generated strict report proves the four A-owned rows are no longer open |
 
 ### Task 1 - L1XA-PRECHECK - Spatial Area Frontier Precheck
@@ -199,7 +199,7 @@ Outputs:
 
 ### Task 5 - L1XA-THUNDERWAVE-CLOSURE - Thunderwave Runtime Boundary Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Inputs:
 

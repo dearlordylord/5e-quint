@@ -1066,77 +1066,12 @@
       "status": "closed-runtime-detached-table-adjudication",
       "strictTargetClosed": true,
       "unitId": "speak_with_animals"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "table-spatial-derivation"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Runtime-owned push geometry, collision/pathfinding, and final-position derivation remain table/spatial derivations.; Broad object inventory simulation and sound propagation simulation remain table/spatial derivations.",
-      "sourceRecordPath": "packages/surface/content/thunderwave.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Bard spell list Thunderwave",
-          "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_thunderwave",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 183,
-            "lineStart": 183,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Druid spell list Thunderwave",
-          "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_thunderwave",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 221,
-            "lineStart": 221,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Thunderwave",
-          "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_thunderwave",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 264,
-            "lineStart": 264,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Thunderwave",
-          "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_thunderwave",
-          "levelBand": "spell-level-1",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 190,
-            "lineStart": 190,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "thunderwave"
     }
   ],
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 71,
+      "count": 72,
       "description": "Full support exists at the Unit profile boundary for strict level-1 accounting.",
       "status": "supported-profile",
       "unitIds": [
@@ -1206,6 +1141,7 @@
         "sorcerous_burst",
         "spare_the_dying",
         "starry_wisp",
+        "thunderwave",
         "true_strike",
         "vicious_mockery",
         "warlock_eldritch_invocations",
@@ -1231,7 +1167,7 @@
       ]
     },
     {
-      "count": 6,
+      "count": 5,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
@@ -1239,8 +1175,7 @@
         "hunters_mark",
         "jump",
         "light",
-        "ranger_favored_enemy",
-        "thunderwave"
+        "ranger_favored_enemy"
       ]
     },
     {
@@ -1276,18 +1211,18 @@
     },
     "strictRuntimeProfileSupport": {
       "denominator": 93,
-      "numerator": 71,
-      "percent": "76.3%"
+      "numerator": 72,
+      "percent": "77.4%"
     },
     "strictTargetClosure": {
       "denominator": 93,
-      "numerator": 87,
-      "percent": "93.5%"
+      "numerator": 88,
+      "percent": "94.6%"
     }
   },
   "openFrontier": [
     {
-      "count": 6,
+      "count": 5,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
@@ -1295,8 +1230,7 @@
         "hunters_mark",
         "jump",
         "light",
-        "ranger_favored_enemy",
-        "thunderwave"
+        "ranger_favored_enemy"
       ]
     }
   ],
@@ -3576,18 +3510,18 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 120,
     "groupsByClaimTag": {
-      "profile-subset-supported": 11,
-      "supported-profile": 71,
+      "profile-subset-supported": 10,
+      "supported-profile": 72,
       "unsupported-profile": 11
     },
     "groupsByStatus": {
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 4,
       "closed-runtime-detached-table-adjudication": 10,
-      "open-profile-accounting": 6,
-      "supported-profile": 71
+      "open-profile-accounting": 5,
+      "supported-profile": 72
     },
-    "nonSupportedFrontier": 22,
+    "nonSupportedFrontier": 21,
     "strictDenominator": 93
   }
 }
