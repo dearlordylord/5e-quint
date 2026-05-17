@@ -1170,6 +1170,10 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
   Uncanny Dodge projections through public battle-runtime reducer APIs.
 - `battle-runtime.qnt` - canonical package-local spec for the implemented
   subset.
+- `battle-runtime-model.qnt` - shared package-local QNT vocabulary and state
+  model used by the canonical spec and focused QNT verification lanes.
+- `battle-runtime-find-familiar.qnt` - Find Familiar lifecycle and permission
+  helpers imported by the canonical spec.
 - `battle-runtime.mbt.qnt` - package-local randomized model for the selected
   integrated promoted MBT path.
 

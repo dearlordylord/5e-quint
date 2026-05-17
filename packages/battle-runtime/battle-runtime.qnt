@@ -48,6 +48,7 @@ module battleRuntime {
   import battleRuntimeFeatureBridge.* from "./battle-runtime-feature-bridge"
   import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
+  import battleRuntimeFindFamiliar.* from "./battle-runtime-find-familiar"
 
   // SRD traceability for this canonical battle runtime spec:
   // - Playing-the-Game.md lines 479-495: combat proceeds in rounds and turns
