@@ -119,7 +119,7 @@ reducer slice:
   readiness metric. If readiness is still below 100%, select the next concrete
   executable owner from the rows that remain truly battle-runtime-required.
 
-## /simplify Convergence
+## reviewer loop Convergence
 
 - Round 1: rejected final closure because the generated product readiness
   metric remains 309/367 (84.2%) with 58 rows outside the accepted numerator.

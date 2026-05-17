@@ -72,7 +72,7 @@ The appended batch is grouped by spell-runtime invariant:
 - `SRDINV32`: Produce Flame held-light and hurled attack runtime.
 - `SRDINV33`: recursive review after the spell-runtime batch lands.
 
-## /simplify Convergence
+## reviewer loop Convergence
 
 - Round 1: fixed the stale Arcane Recovery manifest reference instead of adding
   duplicate inventory state; the generated evidence validator remains the

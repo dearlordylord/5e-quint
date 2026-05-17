@@ -83,9 +83,9 @@ append the next bounded batch rather than letting planning drift.
 
 - Active-plan consistency was checked across the Ralph task index, DAG rows,
   and task details for QMBT43-QMBT46.
-- `/simplify` round 1: kept the appended batch tied to the already selected
+- reviewer loop round 1: kept the appended batch tied to the already selected
   Roving implementation before any further feature selection.
-- `/simplify` round 2: no important changes found; the batch still has one
+- reviewer loop round 2: no important changes found; the batch still has one
   implementation task, one post-implementation feature selection task, and one
   recursive review.
 - MBT not run: QMBT43 is planning-only and makes no promoted battle-runtime

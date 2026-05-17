@@ -253,7 +253,7 @@ Out of scope:
   Access result and attach companion execution beneath Find Familiar
   invocation, not beneath Warlock invocation state.
 
-## /simplify Convergence
+## reviewer loop Convergence
 
 - Round 1: split the Find Familiar gap into form catalog, lifecycle,
   independent familiar turn/action ownership, telepathy/touch delivery, and

@@ -165,7 +165,7 @@ Additional candidate RAW checked:
 - `pnpm unit-profile-coverage:check`.
 - Relevant package typecheck/tests.
 - `pnpm quality` for the production behavior change.
-- `/simplify` convergence, minimum two rounds.
+- reviewer loop convergence, minimum two rounds.
 
 ## Task 140 Verification
 
@@ -176,11 +176,11 @@ Additional candidate RAW checked:
 - Active-plan consistency updated in the Ralph task index, DAG row, and task
   detail for QMBT45 so each marks the task done and links this decision
   artifact; QMBT46 is unblocked for recursive planning review.
-- `/simplify` round 1: selected the installed SRD zero-HP replacement pressure
+- reviewer loop round 1: selected the installed SRD zero-HP replacement pressure
   rather than continuing movement after Roving, and kept the implementation
   boundary tied to the existing zero-HP lifecycle so there is no duplicate
   Hit Point or death-save state.
-- `/simplify` round 2: no important changes found; the plan still selects one
+- reviewer loop round 2: no important changes found; the plan still selects one
   feature profile and does not mix AC base calculation, healing pools,
   Temporary Hit Points, attack replacement, resistance, mastery, spell, or
   magic-item scope.

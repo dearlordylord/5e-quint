@@ -99,10 +99,10 @@ clarifications:
   anchors listed in `Source Check`; QMBT64 did not model a new rule directly.
 - PRD status notes were refreshed to reflect QMBT62-QMBT64, current matrix
   metrics, and the appended QMBT65-QMBT66 batch.
-- `/simplify` round 1: removed the stale class catalog task from the appended
+- reviewer loop round 1: removed the stale class catalog task from the appended
   batch to preserve the current active-plan queue shape, keeping QMBT65 focused
   on the already selected Cutting Words implementation.
-- `/simplify` round 2: no important changes found; the batch still has one
+- reviewer loop round 2: no important changes found; the batch still has one
   selected implementation task and one recursive review task. This is accepted
   for QMBT64 only because QMBT63 had already selected exactly one next slice;
   QMBT66 has a stricter obligation to mine QMBT65 findings and append a

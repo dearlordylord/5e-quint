@@ -135,7 +135,7 @@ implementation is complete and should use the Tier 1 protocol from
 `pnpm unit-profile-coverage:check` is not required by this research note
 because no generated inventory evidence changed.
 
-## /simplify Convergence
+## reviewer loop Convergence
 
 - Round 1: split the apparent "save-gated condition spell" into separate
   target admission, pending repeat-save lifecycle, and wake-up cleanup tasks.

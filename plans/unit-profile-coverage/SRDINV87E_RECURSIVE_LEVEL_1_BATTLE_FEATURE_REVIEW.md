@@ -85,7 +85,7 @@ metric remains 298/367 (81.2%), while the generated supported executable Unit
 coverage remains 82/117 (70.1%). SRDINV88A is the next concrete runnable batch,
 followed by SRDINV88B review.
 
-## /simplify Convergence
+## reviewer loop Convergence
 
 - Round 1: identified the stale checker classification where `dancing_lights`
   was still listed as an authored not-installed catalog-only closure even though

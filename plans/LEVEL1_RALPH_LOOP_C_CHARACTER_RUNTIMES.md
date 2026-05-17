@@ -262,7 +262,7 @@ For `AT-L1-08`:
   runtime/test marker files are touched beyond comments.
 - Run `pnpm --filter @dnd/character-sheet-runtime test` if Character Sheet
   runtime/test marker files are touched beyond comments.
-- Run `/simplify` to convergence, minimum two rounds.
+- Run reviewer loop to convergence, minimum two rounds.
 - Do not run MBT unless promoted battle behavior unexpectedly changes; selected
   identity MBT work remains in the separate selected-MBT lane.
 
@@ -315,7 +315,7 @@ Verification:
   files are touched beyond comments
 - `pnpm unit-profile-coverage:check --write`
 - `pnpm unit-profile-coverage:check`
-- `/simplify` convergence, minimum two rounds
+- reviewer loop convergence, minimum two rounds
 
 Plan Impact:
 
@@ -345,7 +345,7 @@ Verification:
 - `pnpm unit-profile-coverage:check`
 - `pnpm --filter @dnd/character-creation-runtime test` if runtime/test marker
   files are touched beyond comments
-- `/simplify` convergence, minimum two rounds
+- reviewer loop convergence, minimum two rounds
 
 Plan Impact:
 
@@ -378,7 +378,7 @@ Verification:
 - `pnpm unit-profile-coverage:check`
 - `pnpm --filter @dnd/character-creation-runtime test` if Character Creation
   runtime/test marker files are touched beyond comments
-- `/simplify` convergence, minimum two rounds
+- reviewer loop convergence, minimum two rounds
 
 Plan Impact:
 
@@ -408,7 +408,7 @@ Verification:
 - `pnpm unit-profile-coverage:check`
 - `pnpm --filter @dnd/character-creation-runtime test` if runtime/test marker
   files are touched beyond comments
-- `/simplify` convergence, minimum two rounds
+- reviewer loop convergence, minimum two rounds
 
 Plan Impact:
 
@@ -434,7 +434,7 @@ Verification:
 - `pnpm unit-profile-coverage:check`
 - `pnpm --filter @dnd/character-creation-runtime test` if runtime/test marker
   files are touched beyond comments
-- `/simplify` convergence, minimum two rounds
+- reviewer loop convergence, minimum two rounds
 
 Plan Impact:
 
@@ -463,7 +463,7 @@ Verification:
 - `pnpm unit-profile-coverage:check`
 - `pnpm --filter @dnd/character-creation-runtime test` if runtime/test marker
   files are touched beyond comments
-- `/simplify` convergence, minimum two rounds
+- reviewer loop convergence, minimum two rounds
 
 Plan Impact:
 
@@ -494,7 +494,7 @@ Verification:
 - `pnpm unit-profile-coverage:check`
 - `pnpm --filter @dnd/character-creation-runtime test` if runtime/test marker
   files are touched beyond comments
-- `/simplify` convergence, minimum two rounds
+- reviewer loop convergence, minimum two rounds
 
 Plan Impact:
 
@@ -522,7 +522,7 @@ Verification:
 - `pnpm unit-profile-coverage:check`
 - `pnpm --filter @dnd/character-sheet-runtime test` if runtime/test marker files
   are touched beyond comments
-- `/simplify` convergence, minimum two rounds
+- reviewer loop convergence, minimum two rounds
 
 Plan Impact:
 
@@ -554,7 +554,7 @@ Verification:
 - `pnpm unit-profile-coverage:check`
 - `pnpm --filter @dnd/character-sheet-runtime test` if Character Sheet
   runtime/test marker files are touched beyond comments
-- `/simplify` convergence, minimum two rounds
+- reviewer loop convergence, minimum two rounds
 
 Plan Impact:
 
@@ -584,7 +584,7 @@ Verification:
 - `pnpm unit-profile-coverage:check`
 - `pnpm --filter @dnd/character-creation-runtime test` if runtime/test files are
   touched beyond comments
-- `/simplify` convergence, minimum two rounds
+- reviewer loop convergence, minimum two rounds
 
 Plan Impact:
 
@@ -623,7 +623,7 @@ Verification:
 - `pnpm unit-profile-coverage:check`
 - `pnpm --filter @dnd/character-creation-runtime test` if Character Creation
   runtime/test files are touched beyond comments
-- `/simplify` convergence, minimum two rounds
+- reviewer loop convergence, minimum two rounds
 
 Plan Impact:
 
@@ -662,7 +662,7 @@ Verification:
 - `pnpm unit-profile-coverage:check`
 - `pnpm --filter @dnd/character-creation-runtime test` if runtime/test marker
   files are touched beyond comments
-- `/simplify` convergence, minimum two rounds
+- reviewer loop convergence, minimum two rounds
 
 Result:
 
@@ -673,7 +673,7 @@ Result:
 - `warlock_eldritch_invocations` remains `profile-subset-supported` rather than
   all-level `supported-profile` because Pact Magic advancement facts are
   deliberately left to Task 18.
-- `/simplify` convergence was attempted repeatedly but is blocked by Claude Code
+- reviewer loop convergence was attempted repeatedly but is blocked by Claude Code
   org access in this environment; code review found no actionable code findings.
 
 Plan Impact:
@@ -710,7 +710,7 @@ Verification:
 - `pnpm unit-profile-coverage:check`
 - `pnpm --filter @dnd/character-creation-runtime test` if Character Creation
   runtime/test files are touched beyond comments
-- `/simplify` convergence, minimum two rounds
+- reviewer loop convergence, minimum two rounds
 
 Plan Impact:
 

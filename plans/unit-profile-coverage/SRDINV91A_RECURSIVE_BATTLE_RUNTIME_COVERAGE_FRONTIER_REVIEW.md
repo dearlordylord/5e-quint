@@ -91,7 +91,7 @@ the broader battle-runtime evidence frontier open.
 - The task did not run MBT because it made planning/documentation changes only
   and did not change promoted reducer semantics.
 
-## /simplify Convergence
+## reviewer loop Convergence
 
 - Round 1: rejected choosing selected identity MBT as the first follow-up
   because deterministic admission/projection and QNT proof have much smaller,
