@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "L1I-BARD-KNOWLEDGE-FEATURES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Bard Knowledge Feature Catalog Pressure"
     },
     {
@@ -69,6 +69,18 @@
       "id": "L1I-DRUID-NATURES-WARD",
       "status": "ready-for-research",
       "title": "Druid Nature's Ward Catalog Pressure"
+    },
+    {
+      "number": 12,
+      "id": "L1I-BARD-JACK-OF-ALL-TRADES-PROFILE",
+      "status": "ready-for-research",
+      "title": "Bard Jack Of All Trades Ability Check Profile"
+    },
+    {
+      "number": 13,
+      "id": "L1I-WORDS-OF-CREATION-POWER-WORD-RIDER",
+      "status": "blocked",
+      "title": "Words Of Creation Power Word Rider Profile"
     }
   ]
 }
@@ -141,7 +153,7 @@ Every task runs:
 | 1 | L1I-PRECHECK - Non-D Class Species Pressure Precheck | done | none | refreshed list of class/species authored pressure that excludes D-owned Units |
 | 2 | L1I-ABILITY-SCORE-IMPROVEMENT - Ability Score Improvement Authored Feature Closure | done | 1 | ASI class-feature closure artifact and unsupported-profile claims |
 | 3 | L1I-EPIC-BOON-CONTAINERS - Epic Boon Class Feature Container Closure | done | 1 | closure artifact and unsupported-profile claims for Epic Boon container records |
-| 4 | L1I-BARD-KNOWLEDGE-FEATURES - Bard Knowledge Feature Catalog Pressure | ready-for-research | 1 | Bard feature disposition for non-D authored records |
+| 4 | L1I-BARD-KNOWLEDGE-FEATURES - Bard Knowledge Feature Catalog Pressure | done | 1 | closure artifact and unsupported-profile claims for Bard knowledge-feature records |
 | 5 | L1I-BARBARIAN-LATER-FEATURES - Barbarian Later Feature Catalog Pressure | ready-for-research | 1 | Barbarian feature disposition for non-D authored records |
 | 6 | L1I-PALADIN-SMITE-STYLE-SURFACE - Paladin Smite And Fighting Style Surface Pressure | ready-for-research | 1 | Paladin feature disposition without stealing D container work |
 | 7 | L1I-RANGER-LATER-FEATURES - Ranger Later Feature Catalog Pressure | ready-for-research | 1 | Ranger feature disposition without stealing D Favored Enemy work |
@@ -149,6 +161,8 @@ Every task runs:
 | 9 | L1I-WARLOCK-WIZARD-KNOWLEDGE-FEATURES - Warlock Wizard Knowledge Feature Catalog Pressure | ready-for-research | 1 | Warlock/Wizard knowledge-feature disposition without stealing D invocation work |
 | 10 | L1I-SPECIES-TRAIT-PRESSURE-SPLIT - Species Trait Catalog Pressure Split | ready-for-research | 1 | split species traits into runtime-supported, runtime-detached, later-level, or follow-up lanes |
 | 11 | L1I-DRUID-NATURES-WARD - Druid Nature's Ward Catalog Pressure | ready-for-research | 1 | Druid later feature disposition without stealing D Primal Order work |
+| 12 | L1I-BARD-JACK-OF-ALL-TRADES-PROFILE - Bard Jack Of All Trades Ability Check Profile | ready-for-research | 4 | decide the smallest skill-proficiency-aware Ability Check half-Proficiency Bonus profile boundary |
+| 13 | L1I-WORDS-OF-CREATION-POWER-WORD-RIDER - Words Of Creation Power Word Rider Profile | blocked | supported `power_word_heal` and `power_word_kill` spell invocation profiles | second-target rider support after host Power Word spells are promoted |
 
 ### Task 1 - L1I-PRECHECK - Non-D Class Species Pressure Precheck
 
@@ -206,13 +220,22 @@ Units and level-19 character advancement own downstream behavior.
 
 ### Task 4 - L1I-BARD-KNOWLEDGE-FEATURES - Bard Knowledge Feature Catalog Pressure
 
-Status: `ready-for-research`
+Status: `done`
 
 Units: `bard_bonus_proficiencies`, `bard_jack_of_all_trades`,
 `bard_words_of_creation`.
 
 Read Bard RAW and existing character/runtime owners. Close table/character facts
 explicitly or create the smallest follow-up supported-profile task.
+
+Result:
+`plans/unit-profile-coverage/L1I_CLASS_SPECIES_BARD_KNOWLEDGE_FEATURES_CLOSURE.md`.
+The three Bard knowledge-feature records are closed as explicit
+`unsupported-profile` claims. `bard_bonus_proficiencies` is a College of Lore
+subclass skill-proficiency choice owned by character creation/subclass
+progression rather than a standalone promoted battle Unit profile.
+`bard_jack_of_all_trades` and `bard_words_of_creation` remain visible as
+future executable follow-ups in Tasks 12 and 13.
 
 ### Task 5 - L1I-BARBARIAN-LATER-FEATURES - Barbarian Later Feature Catalog Pressure
 
@@ -284,3 +307,28 @@ a later-level character fact, no promoted Unit profile, or future supported
 profile. Do not touch `druid_primal_order`; D owns that selected identity work.
 If the land-choice resistance table needs runtime or Surface widening, record
 the smallest atomic follow-up rather than broadening this task.
+
+### Task 12 - L1I-BARD-JACK-OF-ALL-TRADES-PROFILE - Bard Jack Of All Trades Ability Check Profile
+
+Status: `ready-for-research`
+
+Unit: `bard_jack_of_all_trades`.
+
+Follow-up from Task 4. Decide the smallest supported-profile owner for Jack of
+All Trades' skill-proficiency-aware Ability Check half-Proficiency Bonus. The
+profile must model the RAW gate that the Ability Check uses a skill proficiency
+the Bard lacks and does not otherwise use Proficiency Bonus; do not admit the
+existing generic `modify_roll_numeric` surface shape as a supported profile
+until that gate is executable at the owning boundary.
+
+### Task 13 - L1I-WORDS-OF-CREATION-POWER-WORD-RIDER - Words Of Creation Power Word Rider Profile
+
+Status: `blocked`
+
+Unit: `bard_words_of_creation`.
+
+Blocked on supported spell invocation profiles for `power_word_heal` and
+`power_word_kill`. Once those host spells are promoted, model Words of
+Creation's second-target rider as spell-casting behavior attached to those
+invocations. Do not duplicate the level-20 always-prepared spell access grant
+as Bard feature runtime state.

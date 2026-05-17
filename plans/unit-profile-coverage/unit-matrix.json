@@ -13377,6 +13377,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "character-creation-runtime proficiency-choice projection and future subclass progression admission",
+          "reason": "The feature grants durable skill proficiency choices on the Character Sheet. Character creation already owns generic class-feature proficiency-choice discovery and finalization, while this absent subclass feature is not a promoted battle-runtime Unit profile."
+        },
+        "reason": "College of Lore Bonus Proficiencies is a level-3 subclass skill-proficiency choice; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -13423,6 +13433,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "later-level-only",
+          "owner": "future Character Sheet or Ability Check roll-mode profile owner",
+          "reason": "The feature is acquired after level 1 and depends on whether the Ability Check uses a skill proficiency the character lacks and otherwise does not use Proficiency Bonus. Current promoted Unit profiles do not model that passive half-proficiency computation."
+        },
+        "reason": "Jack of All Trades is a level-2 passive Ability Check proficiency supplement; no promoted Unit profile is claimed until a skill-proficiency-aware Ability Check bonus profile is modeled.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -13441,6 +13461,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "later-level-only",
+          "owner": "future level-20 spell-access and Power Word spell invocation profile owners",
+          "reason": "The always-prepared Power Word Heal and Power Word Kill facts are later-level Character Sheet spell access, and the second-target casting rider can be promoted only with future supported Power Word spell invocation profiles."
+        },
+        "reason": "Words of Creation is a level-20 always-prepared spell-access grant plus a Power Word casting rider; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
