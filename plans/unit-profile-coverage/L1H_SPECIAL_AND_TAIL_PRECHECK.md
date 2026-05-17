@@ -121,7 +121,7 @@ and `plans/unit-profile-coverage/fixtures/classic-non-srd/mycelium_step.json`.
 
 - This task made documentation-only reconciliation changes.
 - No MBT was run because no reducer, QNT, or selected replay behavior changed.
-- `/simplify` round 1: keep Tasks 2-6 first because they are strict supported
+- reviewer loop round 1: keep Tasks 2-6 first because they are strict supported
   spell Units still missing selected identity evidence.
-- `/simplify` round 2: keep Tasks 7-13 as SRD tail denominator work and add
+- reviewer loop round 2: keep Tasks 7-13 as SRD tail denominator work and add
   Task 14 for the Classic non-SRD denominator gap.
