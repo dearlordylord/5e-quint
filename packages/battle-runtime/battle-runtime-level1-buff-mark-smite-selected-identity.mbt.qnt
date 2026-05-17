@@ -4,6 +4,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
   var qDivineFavorActiveRiderCount: int
   var qTargetHp: int
   var qCasterTempHp: int
+  var qCasterFrightened: bool
   var qSpellSlotSpentThisTurn: bool
   var qLevel1SlotsRemaining: int
   var qDamageRiderSourceSpellId: str
@@ -14,6 +15,10 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
   var qTemporaryHitPointsDice: int
   var qTemporaryHitPointsDieSize: int
   var qTemporaryHitPointsFlat: int
+  var qFrightenedImmunitySourceSpellId: str
+  var qFrightenedImmunityCondition: str
+  var qTurnStartTemporaryHitPointsSourceSpellId: str
+  var qTurnStartTemporaryHitPointsAmount: int
   var qEnsnaringStrikeRestrainedBeforeEscape: bool
   var qTargetRestrained: bool
   var qCasterConcentrating: bool
@@ -31,6 +36,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     divineFavorActiveRiderCount: int,
     targetHp: int,
     casterTempHp: int,
+    casterFrightened: bool,
     spellSlotSpentThisTurn: bool,
     level1SlotsRemaining: int,
     damageRiderSourceSpellId: str,
@@ -41,6 +47,10 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     temporaryHitPointsDice: int,
     temporaryHitPointsDieSize: int,
     temporaryHitPointsFlat: int,
+    frightenedImmunitySourceSpellId: str,
+    frightenedImmunityCondition: str,
+    turnStartTemporaryHitPointsSourceSpellId: str,
+    turnStartTemporaryHitPointsAmount: int,
     ensnaringStrikeRestrainedBeforeEscape: bool,
     targetRestrained: bool,
     casterConcentrating: bool,
@@ -57,6 +67,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     qDivineFavorActiveRiderCount' = divineFavorActiveRiderCount,
     qTargetHp' = targetHp,
     qCasterTempHp' = casterTempHp,
+    qCasterFrightened' = casterFrightened,
     qSpellSlotSpentThisTurn' = spellSlotSpentThisTurn,
     qLevel1SlotsRemaining' = level1SlotsRemaining,
     qDamageRiderSourceSpellId' = damageRiderSourceSpellId,
@@ -67,6 +78,10 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     qTemporaryHitPointsDice' = temporaryHitPointsDice,
     qTemporaryHitPointsDieSize' = temporaryHitPointsDieSize,
     qTemporaryHitPointsFlat' = temporaryHitPointsFlat,
+    qFrightenedImmunitySourceSpellId' = frightenedImmunitySourceSpellId,
+    qFrightenedImmunityCondition' = frightenedImmunityCondition,
+    qTurnStartTemporaryHitPointsSourceSpellId' = turnStartTemporaryHitPointsSourceSpellId,
+    qTurnStartTemporaryHitPointsAmount' = turnStartTemporaryHitPointsAmount,
     qEnsnaringStrikeRestrainedBeforeEscape' = ensnaringStrikeRestrainedBeforeEscape,
     qTargetRestrained' = targetRestrained,
     qCasterConcentrating' = casterConcentrating,
@@ -82,8 +97,9 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
   }
 
   action init = recordProjection(
-    0, 12, 0, false, 2, "none", "none", 0, 0,
+    0, 12, 0, false, false, 2, "none", "none", 0, 0,
     "none", 0, 0, 0,
+    "none", "none", "none", 0,
     false, false, false, "none", "none", "none", "none", 0, 0, "none", "none",
     "init",
   )
@@ -91,8 +107,9 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
   action doDivineFavorWeaponDamageRider = all {
     qLastResult == "init",
     recordProjection(
-      1, 5, 0, true, 1, "divine_favor", "radiant", 1, 4,
+      1, 5, 0, false, true, 1, "divine_favor", "radiant", 1, 4,
       "none", 0, 0, 0,
+      "none", "none", "none", 0,
       false, false, false, "none", "none", "none", "none", 0, 0, "none", "none",
       "divineFavor",
     ),
@@ -101,8 +118,9 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
   action doDivineSmiteAfterHitDamage = all {
     qLastResult == "init",
     recordProjection(
-      0, 1, 0, true, 1, "divine_smite", "radiant", 2, 8,
+      0, 1, 0, false, true, 1, "divine_smite", "radiant", 2, 8,
       "none", 0, 0, 0,
+      "none", "none", "none", 0,
       false, false, false, "none", "none", "none", "none", 0, 0, "none", "none",
       "divineSmite",
     ),
@@ -111,8 +129,9 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
   action doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape = all {
     qLastResult == "init",
     recordProjection(
-      0, 5, 0, false, 1, "none", "none", 0, 0,
+      0, 5, 0, false, false, 1, "none", "none", 0, 0,
       "none", 0, 0, 0,
+      "none", "none", "none", 0,
       true, false, false,
       "ensnaring_strike", "str",
       "ensnaring_strike", "piercing", 1, 6,
@@ -124,10 +143,22 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
   action doFalseLifeTemporaryHitPoints = all {
     qLastResult == "init",
     recordProjection(
-      0, 12, 11, true, 1, "none", "none", 0, 0,
+      0, 12, 11, false, true, 1, "none", "none", 0, 0,
       "false_life", 2, 4, 4,
+      "none", "none", "none", 0,
       false, false, false, "none", "none", "none", "none", 0, 0, "none", "none",
       "falseLife",
+    ),
+  }
+
+  action doHeroismFrightenedImmunityTurnStartTemporaryHitPoints = all {
+    qLastResult == "init",
+    recordProjection(
+      0, 12, 3, false, false, 1, "none", "none", 0, 0,
+      "none", 0, 0, 0,
+      "heroism", "frightened", "heroism", 3,
+      false, false, true, "none", "none", "none", "none", 0, 0, "none", "none",
+      "heroism",
     ),
   }
 
@@ -136,5 +167,6 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     doDivineSmiteAfterHitDamage,
     doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape,
     doFalseLifeTemporaryHitPoints,
+    doHeroismFrightenedImmunityTurnStartTemporaryHitPoints,
   }
 }

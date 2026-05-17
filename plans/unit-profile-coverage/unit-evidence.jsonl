@@ -91,6 +91,7 @@
 {"unitId":"false_life","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV30A","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"false_life","evidence":{"tag":"selected-identity-mbt","taskId":"L1E-FALSE-LIFE","ownerPath":"packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts"}}
 {"unitId":"heroism","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV30D","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
+{"unitId":"heroism","evidence":{"tag":"selected-identity-mbt","taskId":"L1E-HEROISM","ownerPath":"packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts"}}
 {"unitId":"longstrider","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV30A","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"shield_of_faith","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV30A","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"shield_of_faith","evidence":{"tag":"selected-identity-mbt","taskId":"roll-modifier-buff","ownerPath":"packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts"}}

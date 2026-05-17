@@ -2,10 +2,12 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-DIVINE-SMITE divine_smite
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-ENSNARING-STRIKE ensnaring_strike
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-FALSE-LIFE false_life
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-HEROISM heroism
 // UNIT-IDENTITY-MBT-REPLAY: L1E-DIVINE-FAVOR divine_favor doDivineFavorWeaponDamageRider
 // UNIT-IDENTITY-MBT-REPLAY: L1E-DIVINE-SMITE divine_smite doDivineSmiteAfterHitDamage
 // UNIT-IDENTITY-MBT-REPLAY: L1E-ENSNARING-STRIKE ensnaring_strike doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape
 // UNIT-IDENTITY-MBT-REPLAY: L1E-FALSE-LIFE false_life doFalseLifeTemporaryHitPoints
+// UNIT-IDENTITY-MBT-REPLAY: L1E-HEROISM heroism doHeroismFrightenedImmunityTurnStartTemporaryHitPoints
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -13,6 +15,7 @@ import { Either } from "effect";
 import { describe, expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
+import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import {
   DieRollResult,
   Hp,
@@ -61,6 +64,7 @@ const level1BuffMarkSmiteSelectedIdentityDriverSchema = {
   doDivineSmiteAfterHitDamage: {},
   doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape: {},
   doFalseLifeTemporaryHitPoints: {},
+  doHeroismFrightenedImmunityTurnStartTemporaryHitPoints: {},
   step: {},
 } as const;
 type Level1BuffMarkSmiteSelectedIdentityDriverAction = Exclude<
@@ -72,11 +76,13 @@ const divineFavorUnitId = "divine_favor";
 const divineSmiteUnitId = "divine_smite";
 const ensnaringStrikeUnitId = "ensnaring_strike";
 const falseLifeUnitId = "false_life";
+const heroismUnitId = "heroism";
 const level1BuffMarkSmiteSpellIds = [
   divineFavorUnitId,
   divineSmiteUnitId,
   ensnaringStrikeUnitId,
   falseLifeUnitId,
+  heroismUnitId,
 ] as const;
 type Level1BuffMarkSmiteSpellId = (typeof level1BuffMarkSmiteSpellIds)[number];
 const damageRiderSourceSpellIds = [
@@ -91,8 +97,9 @@ type BonusActionCastSpellId = typeof divineFavorUnitId;
 type AttackHitBonusActionSpellId =
   | typeof divineSmiteUnitId
   | typeof ensnaringStrikeUnitId;
-type ActionCastSpellId = typeof falseLifeUnitId;
+type ActionCastSpellId = typeof falseLifeUnitId | typeof heroismUnitId;
 type TemporaryHitPointsSourceSpellId = typeof falseLifeUnitId | "none";
+type HeroismSourceSpellId = typeof heroismUnitId | "none";
 type CharacterCreatureInit = Extract<
   BattleCreatureInit["creatureInit"],
   { readonly kind: "character" }
@@ -104,6 +111,7 @@ type Level1BuffMarkSmiteSelectedIdentityProjection = {
   readonly divineFavorActiveRiderCount: number;
   readonly targetHp: number;
   readonly casterTempHp: number;
+  readonly casterFrightened: boolean;
   readonly spellSlotSpentThisTurn: boolean;
   readonly level1SlotsRemaining: number;
   readonly damageRiderSourceSpellId: DamageRiderSourceSpellId;
@@ -114,6 +122,10 @@ type Level1BuffMarkSmiteSelectedIdentityProjection = {
   readonly temporaryHitPointsDice: number;
   readonly temporaryHitPointsDieSize: number;
   readonly temporaryHitPointsFlat: number;
+  readonly frightenedImmunitySourceSpellId: HeroismSourceSpellId;
+  readonly frightenedImmunityCondition: "frightened" | "none";
+  readonly turnStartTemporaryHitPointsSourceSpellId: HeroismSourceSpellId;
+  readonly turnStartTemporaryHitPointsAmount: number;
   readonly ensnaringStrikeRestrainedBeforeEscape: boolean;
   readonly targetRestrained: boolean;
   readonly casterConcentrating: boolean;
@@ -130,7 +142,8 @@ type Level1BuffMarkSmiteSelectedIdentityProjection = {
     | "divineFavor"
     | "divineSmite"
     | "ensnaringStrike"
-    | "falseLife";
+    | "falseLife"
+    | "heroism";
 };
 type EnsnaringStrikeLifecycleProjection = Pick<
   Level1BuffMarkSmiteSelectedIdentityProjection,
@@ -151,6 +164,13 @@ type FalseLifeTemporaryHitPointsProjection = Pick<
   | "temporaryHitPointsDieSize"
   | "temporaryHitPointsFlat"
 >;
+type HeroismEffectsProjection = Pick<
+  Level1BuffMarkSmiteSelectedIdentityProjection,
+  | "frightenedImmunitySourceSpellId"
+  | "frightenedImmunityCondition"
+  | "turnStartTemporaryHitPointsSourceSpellId"
+  | "turnStartTemporaryHitPointsAmount"
+>;
 type SelectedUnitIdentityReplaySequence = {
   readonly name: string;
   readonly actions: readonly Level1BuffMarkSmiteSelectedIdentityDriverAction[];
@@ -161,7 +181,8 @@ type SelectedUnitIdentityReplay = {
     | "L1E-DIVINE-FAVOR"
     | "L1E-DIVINE-SMITE"
     | "L1E-ENSNARING-STRIKE"
-    | "L1E-FALSE-LIFE";
+    | "L1E-FALSE-LIFE"
+    | "L1E-HEROISM";
   readonly unitId: Level1BuffMarkSmiteSpellId;
   readonly actions: readonly Level1BuffMarkSmiteSelectedIdentityDriverAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
@@ -299,6 +320,28 @@ const selectedUnitIdentityReplays = [
       },
     ],
   },
+  {
+    taskId: "L1E-HEROISM",
+    unitId: "heroism",
+    actions: ["doHeroismFrightenedImmunityTurnStartTemporaryHitPoints"],
+    sequences: [
+      {
+        name: "frightened-immunity-and-turn-start-temporary-hit-points",
+        actions: ["doHeroismFrightenedImmunityTurnStartTemporaryHitPoints"],
+        expected: expectedProjection({
+          casterTempHp: 3,
+          casterFrightened: false,
+          level1SlotsRemaining: 1,
+          casterConcentrating: true,
+          frightenedImmunitySourceSpellId: "heroism",
+          frightenedImmunityCondition: "frightened",
+          turnStartTemporaryHitPointsSourceSpellId: "heroism",
+          turnStartTemporaryHitPointsAmount: 3,
+          lastResult: "heroism",
+        }),
+      },
+    ],
+  },
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
 describe("Level 1 buff mark smite selected identity MBT", () => {
@@ -362,6 +405,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
     let ensnaringStrikeLifecycle = defaultEnsnaringStrikeLifecycleProjection();
     let falseLifeTemporaryHitPoints =
       defaultFalseLifeTemporaryHitPointsProjection();
+    let heroismEffects = defaultHeroismEffectsProjection();
     let lastResult: Level1BuffMarkSmiteSelectedIdentityProjection["lastResult"] =
       "init";
 
@@ -371,6 +415,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
       ensnaringStrikeLifecycle = defaultEnsnaringStrikeLifecycleProjection();
       falseLifeTemporaryHitPoints =
         defaultFalseLifeTemporaryHitPointsProjection();
+      heroismEffects = defaultHeroismEffectsProjection();
       lastResult = "init";
     }
 
@@ -400,6 +445,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
         ensnaringStrikeLifecycle = defaultEnsnaringStrikeLifecycleProjection();
         falseLifeTemporaryHitPoints =
           defaultFalseLifeTemporaryHitPointsProjection();
+        heroismEffects = defaultHeroismEffectsProjection();
 
         const cast = resolveBattleSubject({
           state,
@@ -423,6 +469,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
         ensnaringStrikeLifecycle = defaultEnsnaringStrikeLifecycleProjection();
         falseLifeTemporaryHitPoints =
           defaultFalseLifeTemporaryHitPointsProjection();
+        heroismEffects = defaultHeroismEffectsProjection();
 
         const hit = resolveLongswordHitWithAttackRoll({ state });
         const attackHitWindow = requireAttackHitWindow(hit.afterAttackRoll);
@@ -470,6 +517,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
         ensnaringStrikeLifecycle = defaultEnsnaringStrikeLifecycleProjection();
         falseLifeTemporaryHitPoints =
           defaultFalseLifeTemporaryHitPointsProjection();
+        heroismEffects = defaultHeroismEffectsProjection();
 
         const hit = resolveLongswordHitWithAttackRoll({ state });
         const attackHitWindow = requireAttackHitWindow(hit.afterAttackRoll);
@@ -579,14 +627,16 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
         });
         damageRider = undefined;
         ensnaringStrikeLifecycle = defaultEnsnaringStrikeLifecycleProjection();
+        heroismEffects = defaultHeroismEffectsProjection();
 
         const act = actionSpellAct(state, falseLifeUnitId);
         const temporaryHitPointsRoll =
           requireScalarBuffTemporaryHitPointsRollHole(
             requireHole(act.initialHoles, "rolledDice"),
           );
-        falseLifeTemporaryHitPoints =
-          falseLifeTemporaryHitPointsProjection(temporaryHitPointsRoll);
+        falseLifeTemporaryHitPoints = falseLifeTemporaryHitPointsProjection(
+          temporaryHitPointsRoll,
+        );
         recordResolvedResult(
           resolveBattleSubject({
             state,
@@ -596,6 +646,56 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
           "falseLife",
         );
       },
+      doHeroismFrightenedImmunityTurnStartTemporaryHitPoints: () => {
+        state = level1BuffMarkSmiteBattle({
+          preparedSpells: [spellRecord(heroismUnitId)],
+        });
+        const caster = state.combatants.get(casterId);
+        if (caster === undefined) {
+          throw new Error("Expected Heroism caster.");
+        }
+        state = {
+          ...state,
+          combatants: new Map(state.combatants).set(casterId, {
+            ...caster,
+            conditions: applyCondition(caster.conditions, "frightened"),
+          }),
+        };
+        damageRider = undefined;
+        ensnaringStrikeLifecycle = defaultEnsnaringStrikeLifecycleProjection();
+        falseLifeTemporaryHitPoints =
+          defaultFalseLifeTemporaryHitPointsProjection();
+        heroismEffects = defaultHeroismEffectsProjection();
+
+        const act = actionSpellAct(state, heroismUnitId);
+        const target = requireHole(act.initialHoles, "targetChoice");
+        const cast = resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [spellTargetFill(target, heroismUnitId, casterId, casterId)],
+        });
+        if (cast.tag !== "resolved") {
+          throw new Error(`Expected Heroism to resolve, got ${cast.tag}.`);
+        }
+
+        const targetTurn = endTurn({
+          state: cast.state,
+          actorId: casterId,
+        });
+        if (targetTurn.tag !== "resolved") {
+          throw new Error(
+            `Expected Heroism caster turn to end, got ${targetTurn.tag}.`,
+          );
+        }
+        recordResolvedResult(
+          endTurn({
+            state: targetTurn.state,
+            actorId: targetId,
+          }),
+          "heroism",
+        );
+        heroismEffects = heroismEffectsProjection(state);
+      },
       step: () => {},
       getState: () =>
         projectLevel1BuffMarkSmiteSelectedIdentityState(
@@ -603,6 +703,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
           damageRider,
           ensnaringStrikeLifecycle,
           falseLifeTemporaryHitPoints,
+          heroismEffects,
           lastResult,
         ),
     };
@@ -616,6 +717,7 @@ function expectedProjection(
     divineFavorActiveRiderCount: 0,
     targetHp: 12,
     casterTempHp: 0,
+    casterFrightened: false,
     spellSlotSpentThisTurn: false,
     level1SlotsRemaining: 2,
     damageRiderSourceSpellId: "none",
@@ -626,6 +728,10 @@ function expectedProjection(
     temporaryHitPointsDice: 0,
     temporaryHitPointsDieSize: 0,
     temporaryHitPointsFlat: 0,
+    frightenedImmunitySourceSpellId: "none",
+    frightenedImmunityCondition: "none",
+    turnStartTemporaryHitPointsSourceSpellId: "none",
+    turnStartTemporaryHitPointsAmount: 0,
     ensnaringStrikeRestrainedBeforeEscape: false,
     targetRestrained: false,
     casterConcentrating: false,
@@ -662,6 +768,15 @@ function defaultFalseLifeTemporaryHitPointsProjection(): FalseLifeTemporaryHitPo
     temporaryHitPointsDice: 0,
     temporaryHitPointsDieSize: 0,
     temporaryHitPointsFlat: 0,
+  };
+}
+
+function defaultHeroismEffectsProjection(): HeroismEffectsProjection {
+  return {
+    frightenedImmunitySourceSpellId: "none",
+    frightenedImmunityCondition: "none",
+    turnStartTemporaryHitPointsSourceSpellId: "none",
+    turnStartTemporaryHitPointsAmount: 0,
   };
 }
 
@@ -917,6 +1032,27 @@ function attackTargetFill(
         actorId: casterId,
         targetId,
         attackName,
+      },
+    ],
+  };
+}
+
+function spellTargetFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  spellId: Level1BuffMarkSmiteSpellId,
+  casterId: CombatantId,
+  targetId: CombatantId,
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  return {
+    kind: "targetChoice",
+    holeId: hole.holeId,
+    value: targetId,
+    spatialFacts: [
+      {
+        kind: "spellTarget",
+        casterId,
+        targetId,
+        spellId,
       },
     ],
   };
@@ -1197,6 +1333,7 @@ function projectLevel1BuffMarkSmiteSelectedIdentityState(
     | undefined,
   ensnaringStrikeLifecycle: EnsnaringStrikeLifecycleProjection,
   falseLifeTemporaryHitPoints: FalseLifeTemporaryHitPointsProjection,
+  heroismEffects: HeroismEffectsProjection,
   lastResult: Level1BuffMarkSmiteSelectedIdentityProjection["lastResult"],
 ): Level1BuffMarkSmiteSelectedIdentityProjection {
   const snapshot = snapshotBattle(state);
@@ -1215,6 +1352,7 @@ function projectLevel1BuffMarkSmiteSelectedIdentityState(
   return {
     targetHp: target.hp,
     casterTempHp: caster.tempHp,
+    casterFrightened: snapshotHasCondition(caster.conditions, "frightened"),
     spellSlotSpentThisTurn:
       state.currentTurnResources.spellSlotExpendedThisTurn,
     level1SlotsRemaining: level1SlotsRemaining(state),
@@ -1225,6 +1363,7 @@ function projectLevel1BuffMarkSmiteSelectedIdentityState(
     damageRiderDice: damageRider?.damage.expr.dice ?? 0,
     damageRiderDieSize: damageRider?.damage.expr.dieSize ?? 0,
     ...falseLifeTemporaryHitPoints,
+    ...heroismEffects,
     targetRestrained: snapshotHasCondition(target.conditions, "restrained"),
     casterConcentrating: caster.concentrating,
     ...ensnaringStrikeLifecycle,
@@ -1252,6 +1391,66 @@ function temporaryHitPointsSourceSpellId(
   }
   throw new Error(
     `Unexpected Temporary Hit Points spell id ${hole.spell.spell.id}.`,
+  );
+}
+
+function heroismEffectsProjection(
+  state: BattleState,
+): HeroismEffectsProjection {
+  const caster = state.combatants.get(casterId);
+  if (caster === undefined) {
+    throw new Error("Expected Heroism caster.");
+  }
+  const frightenedImmunity = caster.activeEffects.find(
+    (effect) =>
+      effect.kind === "conditionImmunity" &&
+      effect.sourceSpellId === heroismUnitId &&
+      effect.sourceCombatantId === casterId,
+  );
+  const turnStartTemporaryHitPoints = caster.activeEffects.find(
+    (effect) =>
+      effect.kind === "turnStartTemporaryHitPoints" &&
+      effect.sourceSpellId === heroismUnitId &&
+      effect.sourceCombatantId === casterId,
+  );
+  return {
+    frightenedImmunitySourceSpellId: heroismSourceSpellId(frightenedImmunity),
+    frightenedImmunityCondition:
+      heroismFrightenedImmunityCondition(frightenedImmunity),
+    turnStartTemporaryHitPointsSourceSpellId: heroismSourceSpellId(
+      turnStartTemporaryHitPoints,
+    ),
+    turnStartTemporaryHitPointsAmount: turnStartTemporaryHitPoints?.amount ?? 0,
+  };
+}
+
+function heroismFrightenedImmunityCondition(
+  effect:
+    | {
+        readonly condition: Condition;
+      }
+    | undefined,
+): Level1BuffMarkSmiteSelectedIdentityProjection["frightenedImmunityCondition"] {
+  if (effect === undefined) {
+    return "none";
+  }
+  if (effect.condition === "frightened") {
+    return "frightened";
+  }
+  throw new Error(`Unexpected Heroism immunity condition ${effect.condition}.`);
+}
+
+function heroismSourceSpellId(
+  effect: { readonly sourceSpellId: string } | undefined,
+): HeroismSourceSpellId {
+  if (effect === undefined) {
+    return "none";
+  }
+  if (effect.sourceSpellId === heroismUnitId) {
+    return heroismUnitId;
+  }
+  throw new Error(
+    `Unexpected Heroism source spell id ${effect.sourceSpellId}.`,
   );
 }
 
@@ -1318,6 +1517,7 @@ function normalizeLevel1BuffMarkSmiteSelectedIdentityQuintState(
     ),
     targetHp: numberFromQuintInt(state["qTargetHp"], "qTargetHp"),
     casterTempHp: numberFromQuintInt(state["qCasterTempHp"], "qCasterTempHp"),
+    casterFrightened: booleanField(state, "qCasterFrightened"),
     spellSlotSpentThisTurn: booleanField(state, "qSpellSlotSpentThisTurn"),
     level1SlotsRemaining: numberFromQuintInt(
       state["qLevel1SlotsRemaining"],
@@ -1351,6 +1551,19 @@ function normalizeLevel1BuffMarkSmiteSelectedIdentityQuintState(
     temporaryHitPointsFlat: numberFromQuintInt(
       state["qTemporaryHitPointsFlat"],
       "qTemporaryHitPointsFlat",
+    ),
+    frightenedImmunitySourceSpellId: heroismSourceSpellIdFromQuint(
+      state["qFrightenedImmunitySourceSpellId"],
+    ),
+    frightenedImmunityCondition: frightenedImmunityConditionFromQuint(
+      state["qFrightenedImmunityCondition"],
+    ),
+    turnStartTemporaryHitPointsSourceSpellId: heroismSourceSpellIdFromQuint(
+      state["qTurnStartTemporaryHitPointsSourceSpellId"],
+    ),
+    turnStartTemporaryHitPointsAmount: numberFromQuintInt(
+      state["qTurnStartTemporaryHitPointsAmount"],
+      "qTurnStartTemporaryHitPointsAmount",
     ),
     ensnaringStrikeRestrainedBeforeEscape: booleanField(
       state,
@@ -1442,6 +1655,22 @@ function temporaryHitPointsSourceSpellIdFromQuint(
   );
 }
 
+function heroismSourceSpellIdFromQuint(raw: unknown): HeroismSourceSpellId {
+  if (raw === "none" || raw === heroismUnitId) {
+    return raw;
+  }
+  throw new Error(`Unexpected Heroism source spell id ${String(raw)}.`);
+}
+
+function frightenedImmunityConditionFromQuint(
+  raw: unknown,
+): Level1BuffMarkSmiteSelectedIdentityProjection["frightenedImmunityCondition"] {
+  if (raw === "frightened" || raw === "none") {
+    return raw;
+  }
+  throw new Error(`Unexpected Frightened immunity condition ${String(raw)}.`);
+}
+
 function ensnaringStrikeSourceSpellIdFromQuint(
   raw: unknown,
 ): EnsnaringStrikeSourceSpellId {
@@ -1486,7 +1715,8 @@ function mbtLastResult(
     raw === "divineFavor" ||
     raw === "divineSmite" ||
     raw === "ensnaringStrike" ||
-    raw === "falseLife"
+    raw === "falseLife" ||
+    raw === "heroism"
   ) {
     return raw;
   }

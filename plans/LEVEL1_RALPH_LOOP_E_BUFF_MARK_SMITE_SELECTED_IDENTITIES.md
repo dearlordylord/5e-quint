@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "L1E-HEROISM",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Heroism Selected Identity Replay"
     },
     {
@@ -189,7 +189,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-E-L.md` False Life.
 
 ### Task 6 - L1E-HEROISM - Heroism Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `heroism`, including Frightened immunity and
 turn-start Temporary Hit Point projection if already supported.
