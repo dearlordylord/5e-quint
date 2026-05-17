@@ -588,6 +588,9 @@ type EffectAtom =
       readonly count?: number;
     }
   | {
+      readonly kind: "jack_of_all_trades_ability_check_bonus";
+    }
+  | {
       readonly kind: "modify_damage_numeric";
       readonly delta: DiceDelta;
       readonly weaponFilter?: WeaponFilter;
@@ -1990,6 +1993,9 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         ),
         abilityFilter: optionalExact(AbilityFilterSchema),
         count: optionalExact(Schema.Number),
+      }),
+      strictStruct({
+        kind: Schema.Literal("jack_of_all_trades_ability_check_bonus"),
       }),
       Schema.Struct({
         kind: Schema.Literal("modify_damage_numeric"),

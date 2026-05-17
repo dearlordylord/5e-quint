@@ -31,8 +31,8 @@ This is the default `%` for level-1 plus level-2 readiness questions. It uses th
 
 #### Level 1-2 Battle Readiness by Status
 
-- accepted: 287
-- accepted-no-battle-effect: 183
+- accepted: 288
+- accepted-no-battle-effect: 182
 - battle-runtime-required: 74
 - owner-evidence-required: 12
 
@@ -43,8 +43,8 @@ This is the default `%` for level-1 plus level-2 readiness questions. It uses th
 
 ### Level-2 Rows by Disposition
 
-- catalog-installed-owner-evidence-present: 5
-- catalog-only/dead-for-now: 4
+- catalog-installed-owner-evidence-present: 6
+- catalog-only/dead-for-now: 3
 - missing-authored-record: 12
 - non-runtime: 12
 
@@ -322,7 +322,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Barbarian Reckless Attack|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Barbarian.md:94|
 |Barbarian level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Barbarian.md:36|
 |Bard Expertise|class feature||current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|owner-evidence-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Bard.md:93|
-|Bard Jack of All Trades|class feature||current-surface-can-express-source-facts|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|later-level-only: future character-sheet.ability-check-proficiency-bonus profile||Decide whether to admit/support, or keep catalog-only closure counted.|.references/srd-5.2.1/Classes/Bard.md:99|
+|Bard Jack of All Trades|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-sheet-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Bard.md:99|
 |Bard level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Bard.md:37|
 |Cleric Channel Divinity|class feature||current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|owner-evidence-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Cleric.md:88|
 |Cleric level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Cleric.md:36|

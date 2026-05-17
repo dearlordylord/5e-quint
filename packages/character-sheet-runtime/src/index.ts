@@ -5,12 +5,14 @@ import {
   characterBuildArmorTraining,
   characterBuildFeatureUnitIds,
   characterBuildHitPoints,
+  characterBuildProficiencies,
   characterBuildResources,
   characterBuildSpellcastingSlotCapacity,
   classLevelForUnit,
   classUnitId,
   classUnitIdToClassName,
   CHARACTER_CLASS_LEVELS,
+  computeTotalLevel,
   characterEquipmentItemSourceFromId,
   eldritchInvocationOptionForInvocationId,
   eldritchInvocationRepeatableChoiceSatisfiesRule,
@@ -106,13 +108,14 @@ import {
 } from "@dnd/surface/surface/schema";
 import { readClassCreationFacts } from "@dnd/surface/surface/character-creation-readers";
 import { favoredEnemyHuntersMarkFreeCastGrantsForUnit } from "@dnd/surface/surface/types";
-import { Brand, Either, Option } from "effect";
+import { Brand, Either, Match, Option } from "effect";
 
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.armor-class-base-formula
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.healing-resource-action
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.short-rest-spell-slot-recovery
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.spellbook-ritual-invocation
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.weapon-mastery-reselection
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.ability-check-proficiency-bonus
 
 const WEAPON_PROFICIENCY_CATEGORY_VALUES = ["simple", "martial"] as const;
 const ARMOR_TRAINING_CATEGORY_VALUES = [
@@ -121,6 +124,9 @@ const ARMOR_TRAINING_CATEGORY_VALUES = [
   "heavy",
   "shield",
 ] as const;
+export const BARD_JACK_OF_ALL_TRADES_UNIT_ID =
+  "bard_jack_of_all_trades" as const satisfies UnitRecord["id"];
+const JACK_OF_ALL_TRADES_PROFICIENCY_BONUS_DIVISOR = 2;
 const LAY_ON_HANDS_POISONED_REMOVAL_COST = resourceCount(5);
 const RITUAL_ADDITIONAL_CASTING_TIME_MINUTES = 10;
 type StoredClassFeatureLanguageFact =
@@ -427,6 +433,47 @@ export type CharacterSheetArmorClassStateInput = {
   readonly baseChoice?: CharacterSheetArmorClassBaseChoice;
 };
 
+export type CharacterSheetAbilityCheckOtherProficiencyBonusState =
+  | { readonly tag: "noOtherProficiencyBonus" }
+  | { readonly tag: "otherProficiencyBonusApplies" };
+
+export const CHARACTER_SHEET_NO_OTHER_PROFICIENCY_BONUS = {
+  tag: "noOtherProficiencyBonus",
+} as const satisfies CharacterSheetAbilityCheckOtherProficiencyBonusState;
+
+export const CHARACTER_SHEET_OTHER_PROFICIENCY_BONUS_APPLIES = {
+  tag: "otherProficiencyBonusApplies",
+} as const satisfies CharacterSheetAbilityCheckOtherProficiencyBonusState;
+
+export type CharacterSheetAbilityCheckProficiencyBonusInput = {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly skill: SurfaceSkill;
+  readonly otherProficiencyBonus: CharacterSheetAbilityCheckOtherProficiencyBonusState;
+};
+
+export type CharacterSheetAbilityCheckProficiencyBonus =
+  | {
+      readonly tag: "none";
+      readonly bonus: 0;
+    }
+  | {
+      readonly tag: "skillProficiency";
+      readonly skill: SurfaceSkill;
+      readonly bonus: number;
+    }
+  | {
+      readonly tag: "expertise";
+      readonly skill: SurfaceSkill;
+      readonly bonus: number;
+    }
+  | {
+      readonly tag: "jackOfAllTrades";
+      readonly sourceUnitId: typeof BARD_JACK_OF_ALL_TRADES_UNIT_ID;
+      readonly skill: SurfaceSkill;
+      readonly bonus: number;
+    };
+
 export type CharacterSheetSpellInvocationInput = {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
@@ -484,6 +531,109 @@ export function characterSheetIssue(
   message: string,
 ): Either.Either<never, CharacterSheetIssue> {
   return Either.left({ tag: "characterSheetIssue", message });
+}
+
+export function characterSheetAbilityCheckProficiencyBonus(
+  input: CharacterSheetAbilityCheckProficiencyBonusInput,
+): Either.Either<
+  CharacterSheetAbilityCheckProficiencyBonus,
+  CharacterSheetIssue
+> {
+  const proficiencies = characterBuildProficiencies(
+    input.build,
+    input.unitLibrary,
+  );
+  if (Either.isLeft(proficiencies)) {
+    return characterSheetIssue(
+      proficiencies.left.map((issue) => issue.message).join("; "),
+    );
+  }
+
+  const proficiencyBonus = proficiencyBonusForCharacterLevel(
+    computeTotalLevel(input.build.progression),
+  );
+  if (proficiencies.right.expertise.includes(input.skill)) {
+    return Either.right({
+      tag: "expertise",
+      skill: input.skill,
+      bonus: proficiencyBonus * 2,
+    });
+  }
+  if (proficiencies.right.skills.includes(input.skill)) {
+    return Either.right({
+      tag: "skillProficiency",
+      skill: input.skill,
+      bonus: proficiencyBonus,
+    });
+  }
+  const ownsJackOfAllTrades = characterBuildOwnsJackOfAllTradesFeature(
+    input.build,
+    input.unitLibrary,
+  );
+  if (Either.isLeft(ownsJackOfAllTrades)) {
+    return Either.left(ownsJackOfAllTrades.left);
+  }
+  return Match.value(input.otherProficiencyBonus).pipe(
+    Match.when({ tag: "otherProficiencyBonusApplies" }, () =>
+      Either.right({
+        tag: "none" as const,
+        bonus: 0 as const,
+      }),
+    ),
+    Match.when({ tag: "noOtherProficiencyBonus" }, () =>
+      ownsJackOfAllTrades.right
+        ? Either.right({
+            tag: "jackOfAllTrades" as const,
+            sourceUnitId: BARD_JACK_OF_ALL_TRADES_UNIT_ID,
+            skill: input.skill,
+            bonus: Math.floor(
+              proficiencyBonus / JACK_OF_ALL_TRADES_PROFICIENCY_BONUS_DIVISOR,
+            ),
+          })
+        : Either.right({
+            tag: "none" as const,
+            bonus: 0 as const,
+          }),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function characterBuildOwnsJackOfAllTradesFeature(
+  build: Pick<CharacterBuild, "progression" | "features">,
+  unitLibrary: UnitCatalog,
+): Either.Either<boolean, CharacterSheetIssue> {
+  if (
+    !characterBuildOwnsFeatureUnit(
+      build,
+      unitLibrary,
+      BARD_JACK_OF_ALL_TRADES_UNIT_ID,
+    )
+  ) {
+    return Either.right(false);
+  }
+  const unit = getRequiredUnit(unitLibrary, BARD_JACK_OF_ALL_TRADES_UNIT_ID);
+  if (Either.isLeft(unit)) return Either.left(unit.left);
+  if (
+    unit.right.kind === "class_feature" &&
+    unit.right.mechanics.family === "passive" &&
+    unit.right.mechanics.grants.some(
+      (grant) => grant.kind === "jack_of_all_trades_ability_check_bonus",
+    )
+  ) {
+    return Either.right(true);
+  }
+  return characterSheetIssue(
+    "Jack of All Trades requires the installed Surface feature record.",
+  );
+}
+
+function characterBuildOwnsFeatureUnit(
+  build: Pick<CharacterBuild, "progression" | "features">,
+  unitLibrary: UnitCatalog,
+  unitId: UnitRecord["id"],
+): boolean {
+  return characterBuildFeatureUnitIds(build, unitLibrary).includes(unitId);
 }
 
 export function createFreshCharacterSheet(

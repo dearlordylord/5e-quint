@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 363,
-      "numerator": 129,
-      "percent": "35.5%"
+      "numerator": 130,
+      "percent": "35.8%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 435,
-      "numerator": 161,
-      "percent": "37%"
+      "numerator": 162,
+      "percent": "37.2%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 162
+      "value": 163
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 106,
-      "numerator": 106,
+      "denominator": 107,
+      "numerator": 107,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 162,
-      "numerator": 162,
+      "denominator": 163,
+      "numerator": 163,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 106,
+      "denominator": 107,
       "numerator": 104,
-      "percent": "98.1%"
+      "percent": "97.2%"
     },
     "supportedProfileCoverage": {
-      "denominator": 130,
-      "numerator": 106,
-      "percent": "81.5%"
+      "denominator": 131,
+      "numerator": 107,
+      "percent": "81.7%"
     }
   },
   "metricSemantics": [
@@ -2415,6 +2415,25 @@
           "ownerPath": "packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts"
         }
       ]
+    },
+    {
+      "id": "character-sheet.ability-check-proficiency-bonus",
+      "profileKind": "character-sheet",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "CharacterBuild class progression, Surface Bard level 2 feature grant, CharacterBuild skill and Expertise proficiency facts, caller-supplied Ability Check skill witness, and caller-supplied no-other-Proficiency-Bonus gate.",
+      "taskRefs": [
+        "L12G-CLASS-BARD-JACK-OF-ALL-TRADES"
+      ],
+      "title": "Character Sheet projects Ability Check Proficiency Bonus from skill proficiency, Expertise, and Jack of All Trades gates",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+        }
+      ]
     }
   ],
   "taskClaims": [
@@ -4001,6 +4020,14 @@
         "spell.invocation-self-ability-check-advantage"
       ],
       "taskId": "L1D2-THAUMATURGY-BOOMING-VOICE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Character Sheet runtime tests cover skill proficiency, Expertise, Jack of All Trades half Proficiency Bonus rounded down, the no-other-Proficiency-Bonus gate, and Bard level 2 feature ownership.",
+      "profileIds": [
+        "character-sheet.ability-check-proficiency-bonus"
+      ],
+      "taskId": "L12G-CLASS-BARD-JACK-OF-ALL-TRADES"
     }
   ],
   "units": [
@@ -5414,6 +5441,59 @@
       ],
       "sourceRecordPath": "packages/surface/content/bard_cutting_words.json",
       "unitId": "bard_cutting_words"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "character-sheet.ability-check-proficiency-bonus"
+        ],
+        "rawRequirementIds": [],
+        "supportedMechanics": [
+          "Character Sheet projects ordinary skill proficiency into the Proficiency Bonus for Ability Checks using an owned skill proficiency",
+          "Character Sheet projects Expertise into doubled Proficiency Bonus for Ability Checks using an owned Expertise skill",
+          "Character Sheet projects Jack of All Trades into half Proficiency Bonus rounded down for unproficient skill Ability Checks only when no other Proficiency Bonus applies",
+          "The projection derives feature ownership from Bard level 2 class feature grants and existing CharacterBuild skill and Expertise facts without storing parallel skill state"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-CLASS-BARD-JACK-OF-ALL-TRADES"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "character-sheet.ability-check-proficiency-bonus",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "CharacterBuild class progression, Surface Bard level 2 feature grant, CharacterBuild skill and Expertise proficiency facts, caller-supplied Ability Check skill witness, and caller-supplied no-other-Proficiency-Bonus gate.",
+          "taskRefs": [
+            "L12G-CLASS-BARD-JACK-OF-ALL-TRADES"
+          ],
+          "title": "Character Sheet projects Ability Check Proficiency Bonus from skill proficiency, Expertise, and Jack of All Trades gates",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/bard_jack_of_all_trades.json",
+      "unitId": "bard_jack_of_all_trades"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -14289,34 +14369,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/bard_epic_boon.json",
       "unitId": "bard_epic_boon"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "later-level-only",
-          "owner": "future character-sheet.ability-check-proficiency-bonus profile",
-          "reason": "The feature is acquired after level 1 and depends on a concrete Ability Check witness with a skill, the existing CharacterBuild skill and Expertise proficiency facts, and whether another rule already contributes Proficiency Bonus. Current promoted Unit profiles do not model that passive half-proficiency computation, and generic modify_roll_numeric cannot make the RAW gate executable."
-        },
-        "reason": "Jack of All Trades is a level-2 passive Ability Check proficiency supplement; no promoted Unit profile is claimed until a Character Sheet Ability Check Proficiency Bonus projection can execute the skill-proficiency and no-other-Proficiency-Bonus gates.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/bard_jack_of_all_trades.json",
-      "unitId": "bard_jack_of_all_trades"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

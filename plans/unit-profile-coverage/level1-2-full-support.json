@@ -261,40 +261,6 @@
     },
     {
       "catalogDisposition": {
-        "category": "unsupported-widening-pressure",
-        "planningLane": "QMBT18",
-        "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "later-level-only"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "The feature is acquired after level 1 and depends on a concrete Ability Check witness with a skill, the existing CharacterBuild skill and Expertise proficiency facts, and whether another rule already contributes Proficiency Bonus. Current promoted Unit profiles do not model that passive half-proficiency computation, and generic modify_roll_numeric cannot make the RAW gate executable.",
-      "sourceRecordPath": "packages/surface/content/bard_jack_of_all_trades.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Bard Jack of All Trades",
-          "id": "srd521:classes/bard:level-2:class-feature-grant:bard_jack_of_all_trades",
-          "levelBand": "level-2",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 104,
-            "lineStart": 99,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "bard_jack_of_all_trades"
-    },
-    {
-      "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
@@ -2555,7 +2521,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 83,
+      "count": 84,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2567,6 +2533,7 @@
         "barbarian_reckless_attack",
         "barbarian_unarmored_defense",
         "bard_bardic_inspiration",
+        "bard_jack_of_all_trades",
         "bless",
         "burning_hands",
         "chill_touch",
@@ -2701,11 +2668,10 @@
       ]
     },
     {
-      "count": 5,
+      "count": 4,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
-        "bard_jack_of_all_trades",
         "paladin_fighting_style",
         "paladin_paladins_smite",
         "shatter",
@@ -2738,21 +2704,21 @@
       "numerator": 470,
       "percent": "84.5%",
       "rowsByStatus": {
-        "accepted": 287,
-        "accepted-no-battle-effect": 183,
+        "accepted": 288,
+        "accepted-no-battle-effect": 182,
         "battle-runtime-required": 74,
         "owner-evidence-required": 12
       }
     },
     "strictRuntimeProfileSupport": {
       "denominator": 135,
-      "numerator": 83,
-      "percent": "61.5%"
+      "numerator": 84,
+      "percent": "62.2%"
     },
     "strictTargetClosure": {
       "denominator": 135,
-      "numerator": 99,
-      "percent": "73.3%"
+      "numerator": 100,
+      "percent": "74.1%"
     }
   },
   "openFrontier": [
@@ -2795,11 +2761,10 @@
       ]
     },
     {
-      "count": 5,
+      "count": 4,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
-        "bard_jack_of_all_trades",
         "paladin_fighting_style",
         "paladin_paladins_smite",
         "shatter",
@@ -6475,18 +6440,18 @@
     "groupsByClaimTag": {
       "missing": 31,
       "profile-subset-supported": 6,
-      "supported-profile": 83,
-      "unsupported-profile": 15
+      "supported-profile": 84,
+      "unsupported-profile": 14
     },
     "groupsByStatus": {
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 3,
       "closed-runtime-detached-table-adjudication": 11,
-      "open-profile-accounting": 5,
+      "open-profile-accounting": 4,
       "open-runtime-behavior": 31,
-      "supported-profile": 83
+      "supported-profile": 84
     },
-    "nonSupportedFrontier": 52,
+    "nonSupportedFrontier": 51,
     "strictDenominator": 135
   }
 }

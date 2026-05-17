@@ -50,6 +50,7 @@ const classContainerOwnedCreationRowKinds = new Set([
 const deterministicAdmissionProjectionEvidenceTag =
   "deterministic-admission-projection";
 const characterCreationProfileIdPrefix = "character-creation.";
+const characterSheetProfileIdPrefix = "character-sheet.";
 const characterCreationOwnerEvidenceSchema =
   "dnd.srd-character-creation-owner-evidence.v1";
 const characterSheetOwnerEvidenceSchema =
@@ -736,9 +737,35 @@ function installedLevelTwoClassFeatureOwnerClassification(
 ) {
   if (
     row.levelBand !== "level-2" ||
-    row.rowKind !== "class-feature-grant" ||
-    !levelTwoBattleRuntimeOwnerEvidenceUnitIds.has(row.candidateUnitId)
+    row.rowKind !== "class-feature-grant"
   ) {
+    return undefined;
+  }
+  const claim = row.candidateUnitId
+    ? ownerEvidenceSources.unitClaims.get(row.candidateUnitId)?.claim
+    : undefined;
+  const characterSheetEvidence = ownerEvidenceSources.characterSheet.get(
+    row.id,
+  );
+  if (
+    characterSheetEvidence &&
+    claimUsesOnlyProfilePrefix(claim, characterSheetProfileIdPrefix)
+  ) {
+    return {
+      kind: "evidence-present",
+      owner: "character-sheet-runtime",
+      evidence: characterSheetEvidence,
+    };
+  }
+  if (claimUsesOnlyProfilePrefix(claim, characterSheetProfileIdPrefix)) {
+    return {
+      kind: "evidence-required",
+      owner: "character-sheet-runtime",
+      requirement:
+        "Add checker-readable character-sheet owner evidence before treating this level-2 class feature as operationally supported.",
+    };
+  }
+  if (!levelTwoBattleRuntimeOwnerEvidenceUnitIds.has(row.candidateUnitId)) {
     return undefined;
   }
   const battleRuntimeEvidence = ownerEvidenceSources.battleRuntime.get(

@@ -764,7 +764,7 @@ Acceptance:
 
 ### Task 6 - L12G-CLASS-BARD-JACK-OF-ALL-TRADES - Bard Jack Of All Trades Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `bard_jack_of_all_trades`. Gate task: 6 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
