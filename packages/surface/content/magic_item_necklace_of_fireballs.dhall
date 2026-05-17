@@ -20,8 +20,11 @@
 --     destroyed or becomes nonmagical when emptied; the exhausted bead
 --     pool alone makes it inert
 --
--- The flammable-objects rider from Fireball remains omitted as DM-agenda,
--- matching the standalone fireball.dhall policy.
+-- The standalone Fireball record now authors object ignition. Magic-item
+-- Fireball aliases need a separate projection policy so Staff/Wand/Necklace
+-- casts do not duplicate or drift from spell-owned Fireball mechanics; this
+-- necklace record remains the pre-existing damage-only subset until that
+-- policy lands.
 
 let necklace =
       { kind = "magic_item"

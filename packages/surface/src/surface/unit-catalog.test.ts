@@ -83,6 +83,7 @@ const requiredFirstVerticalUnitIds = [
   "orc_darkvision",
   "orc_relentless_endurance",
   "fire_bolt",
+  "fireball",
   "light",
   "ray_of_frost",
   "detect_evil_and_good",
@@ -124,6 +125,70 @@ describe("SRD Unit catalog boundary", () => {
       for (const unitId of requiredFirstVerticalUnitIds) {
         expect(result.catalog.requireUnit(unitId).id).toBe(unitId);
       }
+    }
+  });
+
+  test("keeps Fireball's SRD object-ignition clause in the catalog projection", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const fireball = result.catalog.requireUnit("fireball");
+
+      expect(fireball.kind).toBe("spell");
+      if (
+        fireball.kind !== "spell" ||
+        fireball.mechanics.family !== "activation"
+      ) {
+        throw new Error("Expected Fireball to be an activation spell.");
+      }
+      expect(fireball.description).toContain(
+        "Flammable objects in the area that aren't being worn or carried start burning.",
+      );
+      expect(fireball.mechanics.phases).toMatchObject([
+        {
+          kind: "save_gate",
+          attachment: {
+            value: {
+              kind: "area",
+              origin: { kind: "point_within_range" },
+              shape: { kind: "sphere", radiusFeet: 20 },
+            },
+          },
+          ability: "dex",
+          onFail: {
+            kind: "damage",
+            damageType: "fire",
+            amount: {
+              kind: "linear_per_level",
+              axis: "slot",
+              base: { dice: 8, dieSize: 6 },
+              perLevel: { dice: 1 },
+              startingAtLevel: 3,
+            },
+          },
+          onSuccess: { kind: "half_damage" },
+        },
+        {
+          kind: "direct",
+          attachment: {
+            value: {
+              kind: "area",
+              origin: { kind: "point_within_range" },
+              shape: { kind: "sphere", radiusFeet: 20 },
+            },
+          },
+          effects: [
+            {
+              kind: "ignite_objects",
+              filter: {
+                material: "flammable",
+                heldOrWorn: "forbidden",
+              },
+            },
+          ],
+        },
+      ]);
     }
   });
 

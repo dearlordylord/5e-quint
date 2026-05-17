@@ -64,6 +64,7 @@ import detectPoisonAndDiseaseInput from "../../content/detect_poison_and_disease
 import dissonantWhispersInput from "../../content/dissonant_whispers.json";
 import falseLifeInput from "../../content/false_life.json";
 import fireBoltInput from "../../content/fire_bolt.json";
+import fireballInput from "../../content/fireball.json";
 import findFamiliarInput from "../../content/find_familiar.json";
 import fogCloudInput from "../../content/fog_cloud.json";
 import guidanceInput from "../../content/guidance.json";
@@ -335,6 +336,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     featherFallInput,
     falseLifeInput,
     fireBoltInput,
+    fireballInput,
     findFamiliarInput,
     fogCloudInput,
     guidanceInput,
