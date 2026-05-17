@@ -15,6 +15,7 @@ import {
   eldritchInvocationOptionForInvocationId,
   eldritchInvocationRepeatableChoiceSatisfiesRule,
   eldritchInvocationId,
+  languageFromSurfaceLanguageId,
   parseCharacterEquipmentItemId,
   progressionClassUnitIds,
   STANDARD_LANGUAGES,
@@ -36,6 +37,7 @@ import {
 import {
   ABILITIES,
   CONDITIONS,
+  LANGUAGES,
   SKILLS,
   SURFACE_SKILLS,
   type Ability,
@@ -102,6 +104,7 @@ import {
   allCantripsFromClassSpellList,
   allLeveledSpellsFromAnyClassSpellList,
 } from "@dnd/surface/surface/schema";
+import { readClassCreationFacts } from "@dnd/surface/surface/character-creation-readers";
 import { favoredEnemyHuntersMarkFreeCastGrantsForUnit } from "@dnd/surface/surface/types";
 import { Brand, Either, Option } from "effect";
 
@@ -120,6 +123,17 @@ const ARMOR_TRAINING_CATEGORY_VALUES = [
 ] as const;
 const LAY_ON_HANDS_POISONED_REMOVAL_COST = resourceCount(5);
 const RITUAL_ADDITIONAL_CASTING_TIME_MINUTES = 10;
+type StoredClassFeatureLanguageFact =
+  CharacterBuild["classFeatureLanguages"][number];
+type StoredClassFeatureLanguage = StoredClassFeatureLanguageFact["language"];
+type StoredClassFeatureLanguageProjection = {
+  readonly fixedLanguagesBySourceUnitId: ReadonlyMap<
+    UnitRecord["id"],
+    ReadonlySet<StoredClassFeatureLanguage>
+  >;
+  readonly fixedLanguages: ReadonlySet<StoredClassFeatureLanguage>;
+  readonly choiceCountsBySourceUnitId: ReadonlyMap<UnitRecord["id"], number>;
+};
 const CHARACTER_SHEET_CONDITIONS = CONDITIONS.filter(
   (condition): condition is CharacterSheetCondition =>
     condition !== "unconscious",
@@ -3211,6 +3225,15 @@ function parseCharacterBuild(
   }
   const features = parseStoredFeatures(value.features, unitLibrary);
   if (Either.isLeft(features)) return Either.left(features.left);
+  const classFeatureLanguages = parseStoredClassFeatureLanguages({
+    value: value.classFeatureLanguages,
+    originLanguages: originLanguages.right,
+    build: { progression: progression.right },
+    unitLibrary,
+  });
+  if (Either.isLeft(classFeatureLanguages)) {
+    return Either.left(classFeatureLanguages.left);
+  }
   const spellcasting =
     value.spellcasting === undefined
       ? undefined
@@ -3226,6 +3249,7 @@ function parseCharacterBuild(
     background: value.background,
     species: value.species,
     originLanguages: originLanguages.right,
+    classFeatureLanguages: classFeatureLanguages.right,
     alignment: alignment.right,
     abilityScores: abilityScores.right,
     proficiencyChoices: proficiencyChoices.right,
@@ -3514,6 +3538,255 @@ function parseStoredOriginLanguages(
     return characterSheetIssue("Character Build requires origin languages.");
   }
   return Either.right(value as unknown as CharacterBuild["originLanguages"]);
+}
+
+function parseStoredClassFeatureLanguages(input: {
+  readonly value: unknown;
+  readonly originLanguages: CharacterBuild["originLanguages"];
+  readonly build: Pick<CharacterBuild, "progression">;
+  readonly unitLibrary: UnitCatalog;
+}): Either.Either<CharacterBuild["classFeatureLanguages"], CharacterSheetIssue> {
+  const { value, originLanguages, build, unitLibrary } = input;
+  if (!Array.isArray(value)) {
+    return characterSheetIssue(
+      "Character Build requires class-feature languages.",
+    );
+  }
+
+  const knownLanguages = new Set<StoredClassFeatureLanguage>(originLanguages);
+  const ownedClassFeatureUnitIds = new Set(
+    storedClassFeatureLanguageSourceUnitIds(build, unitLibrary),
+  );
+  const expectedProjection = storedClassFeatureLanguageProjection({
+    ownedClassFeatureUnitIds,
+    unitLibrary,
+  });
+  if (Either.isLeft(expectedProjection)) {
+    return Either.left(expectedProjection.left);
+  }
+  const choiceCountsBySourceUnitId = new Map<UnitRecord["id"], number>();
+  const fixedLanguagesBySourceUnitId = new Map<
+    UnitRecord["id"],
+    Set<StoredClassFeatureLanguage>
+  >();
+  const classFeatureLanguages: StoredClassFeatureLanguageFact[] = [];
+  for (const item of value) {
+    if (
+      !isRecord(item) ||
+      (item.kind !== "classFeatureLanguageGrant" &&
+        item.kind !== "classFeatureLanguageChoice") ||
+      typeof item.sourceUnitId !== "string" ||
+      !isLanguage(item.language)
+    ) {
+      return characterSheetIssue(
+        "Character Build requires class-feature language facts.",
+      );
+    }
+    const languageFact: StoredClassFeatureLanguageFact = {
+      kind: item.kind,
+      sourceUnitId: item.sourceUnitId,
+      language: item.language,
+    };
+
+    if (!ownedClassFeatureUnitIds.has(languageFact.sourceUnitId)) {
+      return characterSheetIssue(
+        `Character Build class-feature language source Unit ${languageFact.sourceUnitId} is not owned by the build.`,
+      );
+    }
+    if (knownLanguages.has(languageFact.language)) {
+      return characterSheetIssue(
+        `Duplicate Character Build language ${languageFact.language}.`,
+      );
+    }
+    if (
+      languageFact.kind === "classFeatureLanguageChoice" &&
+      expectedProjection.right.fixedLanguages.has(languageFact.language)
+    ) {
+      return characterSheetIssue(
+        `Duplicate Character Build language ${languageFact.language}.`,
+      );
+    }
+    const sourceMatch = storedClassFeatureLanguageMatchesSourceUnit({
+      languageFact,
+      unitLibrary,
+    });
+    if (Either.isLeft(sourceMatch)) {
+      return Either.left(sourceMatch.left);
+    }
+    if (languageFact.kind === "classFeatureLanguageChoice") {
+      choiceCountsBySourceUnitId.set(
+        languageFact.sourceUnitId,
+        (choiceCountsBySourceUnitId.get(languageFact.sourceUnitId) ?? 0) + 1,
+      );
+    } else {
+      const sourceLanguages =
+        fixedLanguagesBySourceUnitId.get(languageFact.sourceUnitId) ??
+        new Set<StoredClassFeatureLanguage>();
+      sourceLanguages.add(languageFact.language);
+      fixedLanguagesBySourceUnitId.set(
+        languageFact.sourceUnitId,
+        sourceLanguages,
+      );
+    }
+
+    knownLanguages.add(languageFact.language);
+    classFeatureLanguages.push(languageFact);
+  }
+
+  for (const [
+    sourceUnitId,
+    expectedLanguages,
+  ] of expectedProjection.right.fixedLanguagesBySourceUnitId) {
+    const storedLanguages =
+      fixedLanguagesBySourceUnitId.get(sourceUnitId) ??
+      new Set<StoredClassFeatureLanguage>();
+    for (const expectedLanguage of expectedLanguages) {
+      if (!storedLanguages.has(expectedLanguage)) {
+        return characterSheetIssue(
+          `Character Build class-feature language projection is incomplete for source Unit ${sourceUnitId}.`,
+        );
+      }
+    }
+  }
+
+  for (const [
+    sourceUnitId,
+    expectedCount,
+  ] of expectedProjection.right.choiceCountsBySourceUnitId) {
+    const selectedCount = choiceCountsBySourceUnitId.get(sourceUnitId) ?? 0;
+    if (selectedCount !== expectedCount) {
+      return characterSheetIssue(
+        `Character Build class-feature language choices for source Unit ${sourceUnitId} must match the source choice count.`,
+      );
+    }
+  }
+
+  return Either.right(classFeatureLanguages);
+}
+
+function storedClassFeatureLanguageSourceUnitIds(
+  build: Pick<CharacterBuild, "progression">,
+  unitLibrary: UnitCatalog,
+): readonly UnitRecord["id"][] {
+  return progressionClassUnitIds(build.progression).flatMap((classUnitId) => {
+    const unit = unitLibrary.getUnit(classUnitId);
+    if (Option.isNone(unit)) return [];
+    const facts = readClassCreationFacts(unit.value);
+    if (facts.tag !== "readable") return [];
+    return facts.value.featureGrants
+      .filter(
+        (grant) =>
+          grant.level <= classLevelForUnit(build.progression, classUnitId),
+      )
+      .map((grant) => grant.unitId);
+  });
+}
+
+function storedClassFeatureLanguageMatchesSourceUnit(input: {
+  readonly languageFact: StoredClassFeatureLanguageFact;
+  readonly unitLibrary: UnitCatalog;
+}): Either.Either<void, CharacterSheetIssue> {
+  const sourceUnit = input.unitLibrary.getUnit(input.languageFact.sourceUnitId);
+  if (
+    Option.isNone(sourceUnit) ||
+    sourceUnit.value.kind !== "class_feature" ||
+    sourceUnit.value.mechanics.family !== "passive"
+  ) {
+    return characterSheetIssue(
+      `Character Build class-feature language does not match source Unit ${input.languageFact.sourceUnitId}.`,
+    );
+  }
+
+  if (input.languageFact.kind === "classFeatureLanguageChoice") {
+    return storedClassFeatureLanguageChoiceGrantCount(sourceUnit.value) ===
+      undefined
+      ? characterSheetIssue(
+          `Character Build class-feature language does not match source Unit ${input.languageFact.sourceUnitId}.`,
+        )
+      : Either.right(undefined);
+  }
+
+  const matches = sourceUnit.value.mechanics.grants.some((grant) => {
+    if (grant.kind !== "grant_language") return false;
+    const language = languageFromSurfaceLanguageId(grant.languageId);
+    return (
+      Either.isRight(language) &&
+      language.right === input.languageFact.language
+    );
+  });
+  return matches
+    ? Either.right(undefined)
+    : characterSheetIssue(
+        `Character Build class-feature language does not match source Unit ${input.languageFact.sourceUnitId}.`,
+      );
+}
+
+function storedClassFeatureLanguageProjection(input: {
+  readonly ownedClassFeatureUnitIds: ReadonlySet<UnitRecord["id"]>;
+  readonly unitLibrary: UnitCatalog;
+}): Either.Either<StoredClassFeatureLanguageProjection, CharacterSheetIssue> {
+  const fixedLanguagesBySourceUnitId = new Map<
+    UnitRecord["id"],
+    Set<StoredClassFeatureLanguage>
+  >();
+  const fixedLanguages = new Set<StoredClassFeatureLanguage>();
+  const choiceCountsBySourceUnitId = new Map<UnitRecord["id"], number>();
+  for (const sourceUnitId of input.ownedClassFeatureUnitIds) {
+    const sourceUnit = input.unitLibrary.getUnit(sourceUnitId);
+    if (
+      Option.isNone(sourceUnit) ||
+      sourceUnit.value.kind !== "class_feature" ||
+      sourceUnit.value.mechanics.family !== "passive"
+    ) {
+      continue;
+    }
+    const choiceCount = storedClassFeatureLanguageChoiceGrantCount(
+      sourceUnit.value,
+    );
+    if (choiceCount !== undefined) {
+      choiceCountsBySourceUnitId.set(sourceUnitId, choiceCount);
+    }
+    for (const grant of sourceUnit.value.mechanics.grants) {
+      if (grant.kind !== "grant_language") continue;
+      const language = languageFromSurfaceLanguageId(grant.languageId);
+      if (Either.isLeft(language)) {
+        return characterSheetIssue(
+          `Unsupported class-feature language id ${grant.languageId} on Unit ${sourceUnitId}.`,
+        );
+      }
+      const sourceLanguages =
+        fixedLanguagesBySourceUnitId.get(sourceUnitId) ??
+        new Set<StoredClassFeatureLanguage>();
+      sourceLanguages.add(language.right);
+      fixedLanguagesBySourceUnitId.set(sourceUnitId, sourceLanguages);
+      fixedLanguages.add(language.right);
+    }
+  }
+  return Either.right({
+    fixedLanguagesBySourceUnitId,
+    fixedLanguages,
+    choiceCountsBySourceUnitId,
+  });
+}
+
+function storedClassFeatureLanguageChoiceGrantCount(
+  sourceUnit: UnitRecord,
+): number | undefined {
+  if (
+    sourceUnit.kind !== "class_feature" ||
+    sourceUnit.mechanics.family !== "passive"
+  ) {
+    return undefined;
+  }
+  const choiceGrantCount = sourceUnit.mechanics.grants.reduce(
+    (count, grant) =>
+      grant.kind === "grant_language_choice" &&
+      grant.source === "character_creation_language_tables"
+        ? count + grant.count
+        : count,
+    0,
+  );
+  return choiceGrantCount === 0 ? undefined : choiceGrantCount;
 }
 
 function parseStoredAlignment(
@@ -4147,6 +4420,12 @@ function isSurfaceSkill(value: unknown): value is SurfaceSkill {
 
 function isStandardLanguage(value: unknown): value is string {
   return STANDARD_LANGUAGES.some((language) => language === value);
+}
+
+function isLanguage(
+  value: unknown,
+): value is CharacterBuild["classFeatureLanguages"][number]["language"] {
+  return LANGUAGES.some((language) => language === value);
 }
 
 function isStringArray(value: unknown): value is readonly string[] {

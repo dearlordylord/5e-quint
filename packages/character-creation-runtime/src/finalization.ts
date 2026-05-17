@@ -1,4 +1,4 @@
-import { Either, Option } from "effect";
+import { Either, Match, Option } from "effect";
 import { isValidAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
 import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
 import { zeroHitPointReplacementUnitProfile } from "@dnd/shared-algebras/zero-hit-point-replacement-algebra";
@@ -70,6 +70,7 @@ import {
   CLASS_CANTRIP_CHOICE_KEY,
   CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
   CLASS_FEATURE_FEAT_CHOICE_KEY,
+  CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
   CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
   CLASS_PREPARED_SPELL_CHOICE_KEY,
   DIVINE_ORDER_CHOICE_KEY,
@@ -86,6 +87,10 @@ import {
   ELDRITCH_INVOCATIONS_CHOICE_KEY,
 } from "./phase1-manifest.ts";
 import { selectedEldritchInvocationFeatures } from "./eldritch-invocations.ts";
+import {
+  languageFromCreationChoiceOptionId,
+  languageFromSurfaceLanguageId,
+} from "./language-codecs.ts";
 import {
   CHARACTER_CREATION_SUPPORT_PROFILE,
   isSupportedProgression,
@@ -114,6 +119,7 @@ import {
   type CharacterBuild,
   type CharacterBuildEquipment,
   type CharacterEquipmentItemSlot,
+  type CharacterBuildClassFeatureLanguage,
   type CharacterBuildFeature,
   type CharacterBuildHitPoints,
   type CharacterBuildLoadout,
@@ -126,6 +132,7 @@ import {
   type CharacterBuildSpellcastingSlotPool,
   type CharacterBuildSpellSlotCapacity,
   type CreationChoiceOption,
+  type CreationChoiceOptionId,
   type CharacterChoiceSelection,
   type ChoiceCreationHole,
   type CreationHole,
@@ -710,6 +717,16 @@ export function buildCharacterBuild(input: {
     ),
     ...abilityCheckBonusFeatures.right,
   ];
+  const classFeatureLanguages = finalizedClassFeatureLanguages({
+    progression,
+    originLanguages: selections.languages,
+    features: buildFeatures,
+    unitChoices: input.supportedSelections.unitChoices,
+    unitLibrary: input.unitLibrary,
+  });
+  if (Either.isLeft(classFeatureLanguages)) {
+    return Either.left(classFeatureLanguages.left);
+  }
   const buildEquipment = finalizedBuildEquipmentForSupportedLoadoutChoices(
     selections,
     input.supportedSelections.loadoutChoices,
@@ -727,6 +744,7 @@ export function buildCharacterBuild(input: {
       ? {}
       : { speciesSize: selections.speciesSize }),
     originLanguages: selections.languages,
+    classFeatureLanguages: classFeatureLanguages.right,
     alignment: selections.alignment,
     abilityScores: finalAbilityScores,
     proficiencyChoices: proficiencyChoices.right,
@@ -965,6 +983,160 @@ export function characterBuildFeatureUnitIds(
       feature.kind === "selectedClassChoice" ? [feature.unitId] : [],
     ),
   ]);
+}
+
+function finalizedClassFeatureLanguages(
+  input: Pick<
+    CharacterBuild,
+    "progression" | "originLanguages" | "features"
+  > & {
+    readonly unitChoices: readonly UnitChoiceSelection[];
+    readonly unitLibrary: UnitCatalog;
+  },
+): Either.Either<
+  readonly CharacterBuildClassFeatureLanguage[],
+  FinalizationIssues
+> {
+  const issues: CreationFinalizationIssue[] = [];
+  const classFeatureLanguages: CharacterBuildClassFeatureLanguage[] = [];
+  const knownLanguages = new Set<
+    CharacterBuildClassFeatureLanguage["language"]
+  >(input.originLanguages);
+
+  for (const unitId of characterBuildFeatureUnitIds(input, input.unitLibrary)) {
+    const unit = input.unitLibrary.getUnit(unitId);
+    if (
+      Option.isNone(unit) ||
+      unit.value.kind !== "class_feature" ||
+      unit.value.mechanics.family !== "passive"
+    ) {
+      continue;
+    }
+
+    for (const grant of unit.value.mechanics.grants) {
+      if (grant.kind === "grant_language") {
+        const language = languageFromSurfaceLanguageId(grant.languageId);
+        if (Either.isLeft(language)) {
+          issues.push(
+            illegalFinalizationIssue(
+              `Unsupported class-feature language id ${grant.languageId} on Unit ${unitId}.`,
+            ),
+          );
+          continue;
+        }
+
+        if (knownLanguages.has(language.right)) {
+          issues.push(
+            illegalFinalizationIssue(
+              `Duplicate Character Build language ${language.right} from class feature Unit ${unitId}.`,
+            ),
+          );
+          continue;
+        }
+
+        knownLanguages.add(language.right);
+        classFeatureLanguages.push({
+          kind: "classFeatureLanguageGrant",
+          sourceUnitId: unitId,
+          language: language.right,
+        });
+        continue;
+      }
+
+      if (grant.kind !== "grant_language_choice") {
+        continue;
+      }
+
+      const selection = classFeatureLanguageChoiceSelection(
+        input.unitChoices,
+        unitId,
+      );
+      if (selection === undefined) {
+        issues.push(
+          illegalFinalizationIssue(
+            `Missing class-feature language choice for Unit ${unitId}.`,
+          ),
+        );
+        continue;
+      }
+
+      if (selection.options.length !== grant.count) {
+        issues.push(
+          illegalFinalizationIssue(
+            `Class-feature language choice on Unit ${unitId} expected ${grant.count} selection(s), received ${selection.options.length}.`,
+          ),
+        );
+        continue;
+      }
+
+      for (const option of classFeatureLanguageChoiceOptions(
+        grant,
+        selection,
+      )) {
+        const language = option.language;
+        if (Either.isLeft(language)) {
+          issues.push(
+            illegalFinalizationIssue(
+              `Unsupported class-feature language choice option ${option.optionId} on Unit ${unitId}.`,
+            ),
+          );
+          continue;
+        }
+
+        if (knownLanguages.has(language.right)) {
+          issues.push(
+            illegalFinalizationIssue(
+              `Duplicate Character Build language ${language.right} from class feature choice Unit ${unitId}.`,
+            ),
+          );
+          continue;
+        }
+
+        knownLanguages.add(language.right);
+        classFeatureLanguages.push({
+          kind: "classFeatureLanguageChoice",
+          sourceUnitId: unitId,
+          language: language.right,
+        });
+      }
+    }
+  }
+
+  const nonEmptyIssues = nonEmptyReadonlyArray(issues);
+  return nonEmptyIssues === undefined
+    ? Either.right(classFeatureLanguages)
+    : Either.left(nonEmptyIssues);
+}
+
+function classFeatureLanguageChoiceSelection(
+  unitChoices: readonly UnitChoiceSelection[],
+  sourceUnitId: UnitRecord["id"],
+): UnitChoiceSelection | undefined {
+  return unitChoices.find(
+    (selection) =>
+      selection.source.unitId === sourceUnitId &&
+      selection.source.choiceKey === CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
+  );
+}
+
+type ParsedClassFeatureLanguageChoiceOption = {
+  readonly optionId: CreationChoiceOptionId;
+  readonly language: ReturnType<typeof languageFromCreationChoiceOptionId>;
+};
+
+function classFeatureLanguageChoiceOptions(
+  grant: Extract<EffectAtom, { readonly kind: "grant_language_choice" }>,
+  selection: UnitChoiceSelection,
+): readonly ParsedClassFeatureLanguageChoiceOption[] {
+  return Match.value(grant.source).pipe(
+    Match.when("character_creation_language_tables", () =>
+      selection.options.map((option) => ({
+        optionId: option.optionId,
+        language: languageFromCreationChoiceOptionId(option.optionId),
+      })),
+    ),
+    Match.exhaustive,
+  );
 }
 
 export function characterBuildResources(

@@ -377,6 +377,7 @@ function armorClassBuild(input: {
     background: "background_soldier",
     species: "species_orc",
     originLanguages: ["Common", "Dwarvish", "Goblin"],
+    classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
     abilityScores: requireRight(
       abilityScoreAssignment({

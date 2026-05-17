@@ -1851,6 +1851,7 @@ function monkBuild(input: {
     background: "background_soldier",
     species: "species_orc",
     originLanguages: ["Common", "Dwarvish", "Goblin"],
+    classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
     abilityScores: expectRight(
       abilityScoreAssignment({
@@ -1929,6 +1930,7 @@ function pactBladeInvocationBuild(
     background: "background_soldier",
     species: "species_orc",
     originLanguages: ["Common", "Dwarvish", "Goblin"],
+    classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
     abilityScores: expectRight(
       abilityScoreAssignment({
@@ -2068,6 +2070,7 @@ function multiclassUnarmoredDefenseBuild(): CharacterBuild {
     background: "background_soldier",
     species: "species_orc",
     originLanguages: ["Common", "Dwarvish", "Goblin"],
+    classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
     abilityScores: expectRight(
       abilityScoreAssignment({
@@ -2104,6 +2107,7 @@ function defenseBuild(input: {
     background: "background_soldier",
     species: "species_orc",
     originLanguages: ["Common", "Dwarvish", "Goblin"],
+    classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
     abilityScores: expectRight(
       abilityScoreAssignment({
@@ -2222,6 +2226,7 @@ function trueStrikeWizardBuild(): CharacterBuild {
     background: "background_soldier",
     species: "species_orc",
     originLanguages: ["Common", "Dwarvish", "Goblin"],
+    classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
     abilityScores: expectRight(
       abilityScoreAssignment({
@@ -2269,6 +2274,7 @@ function favoredEnemyRangerBuild(): CharacterBuild {
     background: "background_soldier",
     species: "species_orc",
     originLanguages: ["Common", "Dwarvish", "Goblin"],
+    classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
     abilityScores: expectRight(
       abilityScoreAssignment({
@@ -2316,6 +2322,7 @@ function favoredEnemyRangerResourceBuild(): CharacterBuild {
     background: "background_soldier",
     species: "species_orc",
     originLanguages: ["Common", "Dwarvish", "Goblin"],
+    classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
     abilityScores: expectRight(
       abilityScoreAssignment({
@@ -2361,6 +2368,7 @@ function armorOfShadowsWarlockBuild(
     background: "background_soldier",
     species: "species_orc",
     originLanguages: ["Common", "Dwarvish", "Goblin"],
+    classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
     abilityScores: expectRight(
       abilityScoreAssignment({
@@ -2514,6 +2522,7 @@ function druidDruidicBuild(): CharacterBuild {
     background: "background_soldier",
     species: "species_orc",
     originLanguages: ["Common", "Dwarvish", "Goblin"],
+    classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
     abilityScores: expectRight(
       abilityScoreAssignment({
@@ -2589,6 +2598,7 @@ function wizardWarlockBuild(): CharacterBuild {
     background: "background_soldier",
     species: "species_orc",
     originLanguages: ["Common", "Dwarvish", "Goblin"],
+    classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
     abilityScores: expectRight(
       abilityScoreAssignment({
@@ -2641,6 +2651,7 @@ function paladinBuild(): CharacterBuild {
     background: "background_soldier",
     species: "species_orc",
     originLanguages: ["Common", "Dwarvish", "Goblin"],
+    classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
     abilityScores: expectRight(
       abilityScoreAssignment({

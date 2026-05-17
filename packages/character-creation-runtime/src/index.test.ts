@@ -102,6 +102,7 @@ import {
 } from "./support-gates.ts";
 import {
   CLASS_CANTRIP_CHOICE_KEY,
+  CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
   CLASS_PREPARED_SPELL_CHOICE_KEY,
   abilityScoreIncreaseChoiceOptions,
   ELDRITCH_INVOCATIONS_CHOICE_KEY,
@@ -893,6 +894,40 @@ describe("character creation hole discovery", () => {
         ),
       ),
     ).toEqual(["option_a", "option_b", "option_c"]);
+  });
+
+  test("opens Rogue Thieves' Cant extra language choice from Character Creation language tables", () => {
+    const holes = discoverCreationHoles({
+      draft: draftWithSelections({
+        progression: testProgression("class_rogue", 1),
+        languages: ["Common", "Dwarvish", "Goblin"],
+      }),
+      unitLibrary,
+    });
+    const languageHole = holeById(
+      holes,
+      testUnitHoleId(
+        "rogue_thieves_cant",
+        CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
+      ),
+    );
+
+    expect(languageHole).toMatchObject({
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 1 },
+    });
+    expect(optionIds(languageHole)).toEqual(
+      expect.arrayContaining([
+        "Common Sign Language",
+        "Draconic",
+        "Elvish",
+        "Druidic",
+      ]),
+    );
+    expect(optionIds(languageHole)).not.toContain("Common");
+    expect(optionIds(languageHole)).not.toContain("Dwarvish");
+    expect(optionIds(languageHole)).not.toContain("Goblin");
+    expect(optionIds(languageHole)).not.toContain("Thieves' Cant");
   });
 
   test("reads non-Fighter Weapon Mastery holes from class proficiencies", () => {
@@ -1725,6 +1760,43 @@ describe("character creation batch fill", () => {
     expect(result.finalization).toMatchObject({ tag: "incomplete" });
   });
 
+  test("rejects Rogue Thieves' Cant extra language choices that duplicate known languages", () => {
+    const draft = requireAcceptedBatch(
+      fillCreationHoles({
+        draft: createTestDraft("draft:rogue-language-duplicate-fill"),
+        unitLibrary,
+        expectedRevision: draftRevision(0),
+        fills: initialManifestFills(
+          progressionOptionId(testProgression("class_rogue", 1)),
+        ),
+      }),
+    );
+    const languageChoiceHoleId = testUnitHoleId(
+      "rogue_thieves_cant",
+      CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
+    );
+
+    for (const invalidLanguage of ["Dwarvish", "Thieves' Cant"] as const) {
+      expect(
+        fillCreationHoles({
+          draft,
+          unitLibrary,
+          expectedRevision: draft.revision,
+          fills: [choiceFill(languageChoiceHoleId, invalidLanguage)],
+        }),
+      ).toMatchObject({
+        tag: "rejected",
+        issues: [
+          {
+            tag: "illegalFill",
+            code: "invalidChoice",
+            message: `Invalid choice ${invalidLanguage} for character creation hole: ${languageChoiceHoleId}`,
+          },
+        ],
+      });
+    }
+  });
+
   test("records accepted choice options without inferring Units from option ids", () => {
     const draft = createTestDraft("draft:batch-choice-option-metadata");
     const afterInitial = requireAcceptedBatch(
@@ -2174,6 +2246,7 @@ describe("character creation finalization", () => {
       "Dwarvish",
       "Goblin",
     ]);
+    expect(result.build.classFeatureLanguages).toEqual([]);
     expect(result.build.alignment).toEqual({
       order: "lawful",
       morality: "good",
@@ -2488,6 +2561,116 @@ describe("character creation finalization", () => {
         draft.selections.equipment?.selectedUnitIds,
       );
     }
+  });
+
+  test("finalizes fixed class-feature language grants without changing origin languages", () => {
+    const cases = [
+      {
+        classUnitId: "class_druid",
+        sourceUnitId: "druid_druidic",
+        language: "Druidic",
+      },
+      {
+        classUnitId: "class_rogue",
+        sourceUnitId: "rogue_thieves_cant",
+        language: "Thieves' Cant",
+      },
+    ] as const;
+
+    for (const testCase of cases) {
+      const draft = completeSupportedProgressionDraft({
+        draftId: `draft:${testCase.classUnitId}-language-grant`,
+        progression: testProgression(testCase.classUnitId, 1),
+      });
+      const result = finalizeCharacterDraft({ draft, unitLibrary });
+
+      expect(result.tag, testCase.classUnitId).toBe("ready");
+      if (result.tag !== "ready") continue;
+
+      expect(result.build.originLanguages).toEqual([
+        "Common",
+        "Dwarvish",
+        "Goblin",
+      ]);
+      expect(result.build.classFeatureLanguages).toEqual(
+        expect.arrayContaining([
+          {
+            kind: "classFeatureLanguageGrant",
+            sourceUnitId: testCase.sourceUnitId,
+            language: testCase.language,
+          },
+        ]),
+      );
+    }
+  });
+
+  test("finalizes Rogue Thieves' Cant extra language choice without changing origin languages", () => {
+    const draft = completeSupportedProgressionDraft({
+      draftId: "draft:rogue-thieves-cant-extra-language-choice",
+      progression: testProgression("class_rogue", 1),
+      preferredOptionIdsBySource: {
+        [testUnitChoiceSourceKey(
+          "rogue_thieves_cant",
+          CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
+        )]: [creationChoiceOptionId("Elvish")],
+      },
+    });
+    const result = finalizeCharacterDraft({ draft, unitLibrary });
+
+    expect(
+      selectedChoiceOptionIds(
+        draft,
+        "rogue_thieves_cant",
+        CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
+      ),
+    ).toEqual(["Elvish"]);
+    expect(result.tag).toBe("ready");
+    if (result.tag !== "ready") return;
+
+    expect(result.build.originLanguages).toEqual([
+      "Common",
+      "Dwarvish",
+      "Goblin",
+    ]);
+    expect(result.build.classFeatureLanguages).toEqual([
+      {
+        kind: "classFeatureLanguageGrant",
+        sourceUnitId: "rogue_thieves_cant",
+        language: "Thieves' Cant",
+      },
+      {
+        kind: "classFeatureLanguageChoice",
+        sourceUnitId: "rogue_thieves_cant",
+        language: "Elvish",
+      },
+    ]);
+  });
+
+  test("rejects unsupported authored class-feature language grants during finalization", () => {
+    const draft = completeSupportedProgressionDraft({
+      draftId: "draft:druid-unsupported-language-grant",
+      progression: testProgression("class_druid", 1),
+    });
+    const brokenUnitLibrary = unitCatalogWithUnsupportedLanguageGrant({
+      unitId: "druid_druidic",
+      languageId: "secret_tree_talk",
+    });
+    const result = finalizeCharacterDraft({
+      draft,
+      unitLibrary: brokenUnitLibrary,
+    });
+
+    expect(result).toMatchObject({
+      tag: "invalid",
+      issues: [
+        {
+          tag: "illegalFinalization",
+          code: "illegalFinalization",
+          message:
+            "Unsupported class-feature language id secret_tree_talk on Unit druid_druidic.",
+        },
+      ],
+    });
   });
 
   test("finalizes supported level-1 class-feature acquisition choices", () => {
@@ -5491,6 +5674,44 @@ function readableClassFacts(classUnitId: UnitRecord["id"]) {
   }
 
   return facts.value;
+}
+
+function unitCatalogWithUnsupportedLanguageGrant(input: {
+  readonly unitId: UnitRecord["id"];
+  readonly languageId: string;
+}): UnitCatalog {
+  const sourceUnit = unitLibrary.requireUnit(input.unitId);
+  if (
+    sourceUnit.kind !== "class_feature" ||
+    sourceUnit.mechanics.family !== "passive"
+  ) {
+    throw new Error(`Expected passive class feature Unit: ${input.unitId}.`);
+  }
+
+  const replacementUnit: UnitRecord = {
+    ...sourceUnit,
+    mechanics: {
+      ...sourceUnit.mechanics,
+      grants: sourceUnit.mechanics.grants.map((grant) =>
+        grant.kind === "grant_language"
+          ? { ...grant, languageId: input.languageId }
+          : grant,
+      ),
+    },
+  };
+
+  return {
+    getUnit: (id) =>
+      id === input.unitId
+        ? Option.some(replacementUnit)
+        : unitLibrary.getUnit(id),
+    listUnits: () =>
+      unitLibrary
+        .listUnits()
+        .map((unit) => (unit.id === input.unitId ? replacementUnit : unit)),
+    requireUnit: (id) =>
+      id === input.unitId ? replacementUnit : unitLibrary.requireUnit(id),
+  };
 }
 
 function supportedMulticlassProgressionForClass(

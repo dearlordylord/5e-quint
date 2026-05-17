@@ -52,6 +52,7 @@ export {
   type CharacterBuild,
   type CharacterBuildAbilityScores,
   type CharacterBuildBookOfShadowsSpellAccess,
+  type CharacterBuildClassFeatureLanguage,
   type CharacterBuildEquipment,
   type CharacterBuildEldritchInvocationRepeatableChoice,
   type CharacterBuildEldritchInvocationSelection,
@@ -142,6 +143,10 @@ export {
   type UnitCatalog,
   type UnitRef,
 } from "./types.ts";
+export {
+  languageFromSurfaceLanguageId,
+  type SurfaceLanguageIdIssue,
+} from "./language-codecs.ts";
 
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.class-feature-feat-choice
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.weapon-mastery-choice

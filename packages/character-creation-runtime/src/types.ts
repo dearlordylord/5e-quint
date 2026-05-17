@@ -9,6 +9,7 @@ import {
   type AlignmentOrder,
   type CharacterClassLevel,
   type CharacterStartingLanguages,
+  type Language,
   type SelectableStandardLanguage,
   type StandardLanguage,
   characterClassLevel,
@@ -112,6 +113,7 @@ export const UNIT_CHOICE_KEYS = [
   "class_feature_feat_choice",
   "class_feature_ability_score_increase_choice",
   "class_feature_proficiency_choice",
+  "class_feature_language_choice",
   "divine_order",
   "primal_order",
   "bard_multiclass_skill_proficiency",
@@ -1152,6 +1154,18 @@ export type CharacterBuildEquipment = {
   readonly loadout: CharacterBuildLoadout;
 };
 
+export type CharacterBuildClassFeatureLanguage =
+  | {
+      readonly kind: "classFeatureLanguageGrant";
+      readonly sourceUnitId: UnitRecord["id"];
+      readonly language: Language;
+    }
+  | {
+      readonly kind: "classFeatureLanguageChoice";
+      readonly sourceUnitId: UnitRecord["id"];
+      readonly language: Language;
+    };
+
 // CharacterBuild is the creation output: durable build and identity facts.
 // In-play CharacterSheet state such as current HP, Temporary Hit Points, and
 // Hit Dice remaining belongs to the adventuring/rest boundary, not this package.
@@ -1163,6 +1177,7 @@ export type CharacterBuild = {
   // Absence means the species has a fixed authored size.
   readonly speciesSize?: CharacterSpeciesSizeSelection;
   readonly originLanguages: CharacterStartingLanguages;
+  readonly classFeatureLanguages: readonly CharacterBuildClassFeatureLanguage[];
   readonly alignment: CharacterAlignment;
   readonly abilityScores: CharacterBuildAbilityScores;
   readonly proficiencyChoices: readonly CharacterBuildProficiencyChoiceSubject[];
