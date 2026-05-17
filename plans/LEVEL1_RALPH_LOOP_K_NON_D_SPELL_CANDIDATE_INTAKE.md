@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "L1K-COUNTER-DISPEL-CANDIDATES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Counter Dispel Spell Candidate Intake"
     },
     {
@@ -141,7 +141,7 @@ Every task runs:
 | 5 | L1K-MOBILITY-TRANSFORMATION-CANDIDATES - Mobility Transformation Spell Candidate Intake | done | 1 | candidate split for mobility/transformation spells outside D |
 | 6 | L1K-ZONE-WALL-CANDIDATES - Zone Wall Emanation Spell Candidate Intake | done | 1 | candidate split for zones/walls/emanations outside D |
 | 7 | L1K-DETECTION-COMMUNICATION-CANDIDATES - Detection Communication Spell Candidate Intake | done | 1 | runtime-detached versus runtime-witness split for detection/communication spells |
-| 8 | L1K-COUNTER-DISPEL-CANDIDATES - Counter Dispel Spell Candidate Intake | ready-for-research | 1 | candidate split for counter/dispel/anti-magic spells |
+| 8 | L1K-COUNTER-DISPEL-CANDIDATES - Counter Dispel Spell Candidate Intake | done | 1 | candidate split for counter/dispel/anti-magic spells |
 | 9 | L1K-WEAPON-ITEM-HOSTED-CANDIDATES - Weapon Item Hosted Spell Candidate Intake | ready-for-research | 1 | candidate split for weapon/item hosted spells |
 | 10 | L1K-COMPANION-EXCLUSION-CANDIDATES - Companion Summon Exclusion Candidate Intake | ready-for-research | 1 | explicit companion/summon exclusions or handoff targets |
 
@@ -312,12 +312,28 @@ catalog admission, QNT behavior, battle reducer behavior, or MBT evidence.
 
 ### Task 8 - L1K-COUNTER-DISPEL-CANDIDATES - Counter Dispel Spell Candidate Intake
 
-Status: `ready-for-research`
+Status: `done`
 
 Initial candidates: `counterspell`, `dispel_magic`, `antimagic_field`, and
 `sequester`.
 
 Classify interruption, ongoing effect removal, and exploration-only boundaries.
+
+Decision artifact:
+`plans/unit-profile-coverage/L1K_COUNTER_DISPEL_SPELL_CANDIDATE_INTAKE.md`.
+
+Final split:
+
+- spell-cast interruption need: `counterspell`;
+- targeted ongoing-spell removal need: `dispel_magic`;
+- antimagic suppression and prevention need: `antimagic_field`;
+- exploration stasis and anti-detection need: `sequester`.
+
+No candidate is an exact existing-profile fit. The decision artifact records
+the Spell Invocation interruption, ongoing Spell Effect removal, antimagic
+suppression/prevention, and long-duration exploration stasis boundaries; this
+intake task does not add Unit claims, catalog admission, QNT behavior, battle
+reducer behavior, or MBT evidence.
 
 ### Task 9 - L1K-WEAPON-ITEM-HOSTED-CANDIDATES - Weapon Item Hosted Spell Candidate Intake
 
