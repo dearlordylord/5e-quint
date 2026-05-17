@@ -754,30 +754,30 @@ This raw inventory lists authored Surface records that are absent from the insta
 | Unit | Profiles | Task | Owner |
 | --- | --- | --- | --- |
 | `fighter_fighting_style` | `character-creation.class-feature-feat-choice`, `character-creation.class-feature-advancement-replacement` | AT-L1-03 | `packages/character-creation-runtime/src/index.test.ts` |
-| `fighter_second_wind` | `unit-feature.self-bonus-action-healing` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission-character-features.test.ts` |
-| `fighter_action_surge` | `unit-feature.action-surge-resource` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission-character-features.test.ts` |
+| `fighter_second_wind` | `unit-feature.self-bonus-action-healing` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts` |
+| `fighter_action_surge` | `unit-feature.action-surge-resource` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts` |
 | `fighter_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | QMBT37 | `packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts` |
-| `fighter_tactical_mind` | `unit-feature.failed-ability-check-resource-boost` | QMBT62 | `packages/battle-runtime/src/unit-profile-admission-character-features.test.ts` |
-| `fighter_improved_critical` | `unit-feature.weapon-critical-range-19` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission-character-features.test.ts` |
-| `barbarian_rage` | `unit-feature.bonus-action-ongoing-rage` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission-character-features.test.ts` |
+| `fighter_tactical_mind` | `unit-feature.failed-ability-check-resource-boost` | QMBT62 | `packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts` |
+| `fighter_improved_critical` | `unit-feature.weapon-critical-range-19` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts` |
+| `barbarian_rage` | `unit-feature.bonus-action-ongoing-rage` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts` |
 | `barbarian_unarmored_defense` | `character-sheet.armor-class-base-formula` | SRDINV91B | `packages/character-sheet-runtime/src/index.test.ts` |
-| `barbarian_reckless_attack` | `unit-feature.first-attack-roll-reckless-advantage` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission-character-features.test.ts` |
+| `barbarian_reckless_attack` | `unit-feature.first-attack-roll-reckless-advantage` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts` |
 | `barbarian_fast_movement` | `unit-feature.passive-speed-bonus` | QMBT40 | `packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts` |
-| `bard_bardic_inspiration` | `unit-feature.bardic-inspiration-grant`, `unit-feature.bardic-inspiration-failed-d20-test` | SRDINV72A | `packages/battle-runtime/src/unit-profile-admission-character-features.test.ts` |
+| `bard_bardic_inspiration` | `unit-feature.bardic-inspiration-grant`, `unit-feature.bardic-inspiration-failed-d20-test` | SRDINV72A | `packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts` |
 | `bard_bardic_inspiration` | `unit-feature.bardic-inspiration-grant`, `unit-feature.bardic-inspiration-failed-d20-test` | SRDINV72B | `packages/battle-runtime/src/battle-runtime-test-support.ts` |
-| `bard_cutting_words` | `unit-feature.reaction-roll-or-damage-reduction` | QMBT65 | `packages/battle-runtime/src/unit-profile-admission-character-features.test.ts` |
+| `bard_cutting_words` | `unit-feature.reaction-roll-or-damage-reduction` | QMBT65 | `packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts` |
 | `cleric_divine_order` | `character-creation.class-feature-option-projection` | AT-L1-06 | `packages/character-creation-runtime/src/index.test.ts` |
 | `druid_primal_order` | `character-creation.class-feature-option-projection` | AT-L1-06 | `packages/character-creation-runtime/src/index.test.ts` |
-| `monk_martial_arts` | `unit-feature.martial-arts-attack-projection` | SRDINV73A | `packages/battle-runtime/src/unit-profile-admission-character-features.test.ts` |
+| `monk_martial_arts` | `unit-feature.martial-arts-attack-projection` | SRDINV73A | `packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts` |
 | `monk_unarmored_defense` | `character-sheet.armor-class-base-formula` | SRDINV91B | `packages/character-sheet-runtime/src/index.test.ts` |
-| `monk_deflect_attacks` | `unit-feature.attack-damage-reduction-zero-damage-redirect` | QMBT59 | `packages/battle-runtime/src/unit-profile-admission-character-features.test.ts` |
-| `rogue_cunning_action` | `unit-feature.alternate-action-cost` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission-character-features.test.ts` |
-| `rogue_evasion` | `unit-feature.save-damage-replacement` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission-character-features.test.ts` |
-| `rogue_uncanny_dodge` | `unit-feature.reaction-roll-or-damage-reduction` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission-character-features.test.ts` |
+| `monk_deflect_attacks` | `unit-feature.attack-damage-reduction-zero-damage-redirect` | QMBT59 | `packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts` |
+| `rogue_cunning_action` | `unit-feature.alternate-action-cost` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts` |
+| `rogue_evasion` | `unit-feature.save-damage-replacement` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts` |
+| `rogue_uncanny_dodge` | `unit-feature.reaction-roll-or-damage-reduction` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts` |
 | `rogue_expertise` | `character-creation.skill-expertise-choice` | AT-L1-07 | `packages/character-creation-runtime/src/index.test.ts` |
 | `rogue_expertise` | `character-creation.skill-expertise-choice` | L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT | `packages/character-creation-runtime/src/rogue-expertise-level6.test.ts` |
-| `rogue_sneak_attack` | `unit-feature.attack-damage-rider` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission-character-features.test.ts` |
-| `sorcerer_innate_sorcery` | `unit-feature.innate-sorcery-activation` | SRDINV75A | `packages/battle-runtime/src/unit-profile-admission-character-features.test.ts` |
+| `rogue_sneak_attack` | `unit-feature.attack-damage-rider` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts` |
+| `sorcerer_innate_sorcery` | `unit-feature.innate-sorcery-activation` | SRDINV75A | `packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts` |
 | `sorcerer_innate_sorcery` | `unit-feature.innate-sorcery-activation` | SRDINV75B | `packages/battle-runtime/src/battle-runtime-test-support.ts` |
 | `warlock_eldritch_invocations` | `character-creation.eldritch-invocation-choice`, `character-creation.class-feature-advancement-replacement`, `character-creation.warlock-pact-magic-advancement` | L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE | `packages/character-creation-runtime/src/index.test.ts` |
 | `wizard_ritual_adept` | `character-sheet.spellbook-ritual-invocation` | SRDINV91B | `packages/character-sheet-runtime/src/index.test.ts` |

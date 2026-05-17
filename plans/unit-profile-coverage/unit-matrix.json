@@ -309,7 +309,7 @@
         },
         {
           "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-character-features.test.ts"
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
         },
         {
           "kind": "runtime-test",
@@ -343,7 +343,7 @@
         },
         {
           "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-character-features.test.ts"
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
         },
         {
           "kind": "focused-mbt",
@@ -400,7 +400,7 @@
         },
         {
           "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-character-features.test.ts"
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts"
         }
       ]
     },
@@ -510,7 +510,7 @@
         },
         {
           "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-character-features.test.ts"
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts"
         },
         {
           "kind": "runtime-test",
@@ -539,7 +539,7 @@
         },
         {
           "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-character-features.test.ts"
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts"
         }
       ]
     },
@@ -863,7 +863,11 @@
         },
         {
           "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-character-features.test.ts"
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
         },
         {
           "kind": "focused-mbt",
@@ -4398,7 +4402,7 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-character-features.test.ts",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "QMBT7"
         },
@@ -4542,7 +4546,7 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-character-features.test.ts",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "QMBT8"
         },
@@ -4665,7 +4669,7 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-character-features.test.ts",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "QMBT62"
         },
@@ -4699,7 +4703,7 @@
             },
             {
               "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-character-features.test.ts"
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts"
             }
           ]
         }
@@ -4725,7 +4729,7 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-character-features.test.ts",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "QMBT8"
         },
@@ -4785,7 +4789,7 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-character-features.test.ts",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "QMBT8"
         },
@@ -4898,7 +4902,7 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-character-features.test.ts",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "QMBT7"
         },
@@ -5112,7 +5116,7 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-character-features.test.ts",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV72A"
         },
@@ -5153,7 +5157,7 @@
             },
             {
               "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-character-features.test.ts"
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts"
             }
           ]
         },
@@ -5206,7 +5210,7 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-character-features.test.ts",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "QMBT65"
         },
@@ -5247,7 +5251,11 @@
             },
             {
               "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-character-features.test.ts"
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
             },
             {
               "kind": "focused-mbt",
@@ -5424,7 +5432,7 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-character-features.test.ts",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV73A"
         },
@@ -5467,7 +5475,7 @@
             },
             {
               "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-character-features.test.ts"
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
             },
             {
               "kind": "runtime-test",
@@ -5554,7 +5562,7 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-character-features.test.ts",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "QMBT59"
         },
@@ -5589,7 +5597,7 @@
             },
             {
               "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-character-features.test.ts"
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
             },
             {
               "kind": "focused-mbt",
@@ -5702,7 +5710,7 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-character-features.test.ts",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "QMBT8"
         },
@@ -5762,7 +5770,7 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-character-features.test.ts",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "QMBT7"
         },
@@ -5824,7 +5832,7 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-character-features.test.ts",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "QMBT8"
         },
@@ -5865,7 +5873,11 @@
             },
             {
               "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-character-features.test.ts"
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
             },
             {
               "kind": "focused-mbt",
@@ -5961,7 +5973,7 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-character-features.test.ts",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "QMBT8"
         },
@@ -6045,7 +6057,7 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
-          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-character-features.test.ts",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV75A"
         },
@@ -6086,7 +6098,7 @@
             },
             {
               "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-character-features.test.ts"
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts"
             },
             {
               "kind": "runtime-test",
