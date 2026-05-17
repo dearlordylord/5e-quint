@@ -3,6 +3,10 @@
 module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
   var qDivineFavorActiveRiderCount: int
   var qTargetHp: int
+  var qLongstriderTargetSpeedFeet: int
+  var qLongstriderSpeedEffectSourceSpellId: str
+  var qLongstriderSpeedEffectTarget: str
+  var qLongstriderSpeedDeltaFeet: int
   var qCasterTempHp: int
   var qCasterFrightened: bool
   var qSpellSlotSpentThisTurn: bool
@@ -57,6 +61,10 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
   action recordProjection(
     divineFavorActiveRiderCount: int,
     targetHp: int,
+    longstriderTargetSpeedFeet: int,
+    longstriderSpeedEffectSourceSpellId: str,
+    longstriderSpeedEffectTarget: str,
+    longstriderSpeedDeltaFeet: int,
     casterTempHp: int,
     casterFrightened: bool,
     spellSlotSpentThisTurn: bool,
@@ -110,6 +118,10 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
   ): bool = all {
     qDivineFavorActiveRiderCount' = divineFavorActiveRiderCount,
     qTargetHp' = targetHp,
+    qLongstriderTargetSpeedFeet' = longstriderTargetSpeedFeet,
+    qLongstriderSpeedEffectSourceSpellId' = longstriderSpeedEffectSourceSpellId,
+    qLongstriderSpeedEffectTarget' = longstriderSpeedEffectTarget,
+    qLongstriderSpeedDeltaFeet' = longstriderSpeedDeltaFeet,
     qCasterTempHp' = casterTempHp,
     qCasterFrightened' = casterFrightened,
     qSpellSlotSpentThisTurn' = spellSlotSpentThisTurn,
@@ -196,6 +208,10 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
   ): bool = recordProjection(
     divineFavorActiveRiderCount,
     targetHp,
+    30,
+    "none",
+    "none",
+    0,
     casterTempHp,
     casterFrightened,
     spellSlotSpentThisTurn,
@@ -223,6 +239,74 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     turnStartDamageDieSize,
     escapeCheckAbility,
     escapeCheckSkill,
+    "none",
+    "none",
+    0,
+    0,
+    "none",
+    "none",
+    "none",
+    "none",
+    "none",
+    "none",
+    false,
+    "none",
+    "none",
+    0,
+    0,
+    "none",
+    "none",
+    "none",
+    "none",
+    "none",
+    "none",
+    false,
+    lastResult,
+  )
+
+  action recordLongstriderSpeedProjection(
+    targetHp: int,
+    longstriderTargetSpeedFeet: int,
+    longstriderSpeedEffectSourceSpellId: str,
+    longstriderSpeedEffectTarget: str,
+    longstriderSpeedDeltaFeet: int,
+    spellSlotSpentThisTurn: bool,
+    level1SlotsRemaining: int,
+    lastResult: str,
+  ): bool = recordProjection(
+    0,
+    targetHp,
+    longstriderTargetSpeedFeet,
+    longstriderSpeedEffectSourceSpellId,
+    longstriderSpeedEffectTarget,
+    longstriderSpeedDeltaFeet,
+    0,
+    false,
+    spellSlotSpentThisTurn,
+    level1SlotsRemaining,
+    "none",
+    "none",
+    0,
+    0,
+    "none",
+    0,
+    0,
+    0,
+    "none",
+    "none",
+    "none",
+    0,
+    false,
+    false,
+    false,
+    "none",
+    "none",
+    "none",
+    "none",
+    0,
+    0,
+    "none",
+    "none",
     "none",
     "none",
     0,
@@ -317,7 +401,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
   action doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer = all {
     qLastResult == "init",
     recordProjection(
-      0, 0, 0, false, false, 1, "none", "none", 0, 0,
+      0, 0, 30, "none", "none", 0, 0, false, false, 1, "none", "none", 0, 0,
       "none", 0, 0, 0,
       "none", "none", "none", 0,
       false, false, true, "none", "none", "none", "none", 0, 0, "none", "none",
@@ -334,7 +418,7 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
   action doHexMarkedDamageRiderAndLaterTurnTransfer = all {
     qLastResult == "init",
     recordProjection(
-      0, 0, 0, false, false, 1, "none", "none", 0, 0,
+      0, 0, 30, "none", "none", 0, 0, false, false, 1, "none", "none", 0, 0,
       "none", 0, 0, 0,
       "none", "none", "none", 0,
       false, false, true, "none", "none", "none", "none", 0, 0, "none", "none",
@@ -348,6 +432,20 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     ),
   }
 
+  action doLongstriderSpeedIncrease = all {
+    qLastResult == "init",
+    recordLongstriderSpeedProjection(
+      12,
+      40,
+      "longstrider",
+      "target",
+      10,
+      true,
+      1,
+      "longstrider",
+    ),
+  }
+
   action step = any {
     doDivineFavorWeaponDamageRider,
     doDivineSmiteAfterHitDamage,
@@ -356,5 +454,6 @@ module battleRuntimeLevel1BuffMarkSmiteSelectedIdentityMbt {
     doHeroismFrightenedImmunityTurnStartTemporaryHitPoints,
     doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer,
     doHexMarkedDamageRiderAndLaterTurnTransfer,
+    doLongstriderSpeedIncrease,
   }
 }

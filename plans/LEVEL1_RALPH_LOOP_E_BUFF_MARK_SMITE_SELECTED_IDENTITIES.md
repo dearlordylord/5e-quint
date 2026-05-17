@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "L1E-LONGSTRIDER",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Longstrider Selected Identity Replay"
     },
     {
@@ -218,7 +218,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-E-L.md` Hunter's Mark.
 
 ### Task 9 - L1E-LONGSTRIDER - Longstrider Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `longstrider`, proving the supported scalar
 speed buff binds the authored Unit identity.

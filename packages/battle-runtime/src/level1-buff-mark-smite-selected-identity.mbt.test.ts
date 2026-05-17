@@ -5,6 +5,7 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-HEROISM heroism
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-HUNTERS-MARK hunters_mark
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-HEX hex
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-LONGSTRIDER longstrider
 // UNIT-IDENTITY-MBT-REPLAY: L1E-DIVINE-FAVOR divine_favor doDivineFavorWeaponDamageRider
 // UNIT-IDENTITY-MBT-REPLAY: L1E-DIVINE-SMITE divine_smite doDivineSmiteAfterHitDamage
 // UNIT-IDENTITY-MBT-REPLAY: L1E-ENSNARING-STRIKE ensnaring_strike doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape
@@ -12,6 +13,7 @@
 // UNIT-IDENTITY-MBT-REPLAY: L1E-HEROISM heroism doHeroismFrightenedImmunityTurnStartTemporaryHitPoints
 // UNIT-IDENTITY-MBT-REPLAY: L1E-HUNTERS-MARK hunters_mark doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer
 // UNIT-IDENTITY-MBT-REPLAY: L1E-HEX hex doHexMarkedDamageRiderAndLaterTurnTransfer
+// UNIT-IDENTITY-MBT-REPLAY: L1E-LONGSTRIDER longstrider doLongstriderSpeedIncrease
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -80,6 +82,7 @@ const level1BuffMarkSmiteSelectedIdentityDriverSchema = {
   doHeroismFrightenedImmunityTurnStartTemporaryHitPoints: {},
   doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer: {},
   doHexMarkedDamageRiderAndLaterTurnTransfer: {},
+  doLongstriderSpeedIncrease: {},
   step: {},
 } as const;
 type Level1BuffMarkSmiteSelectedIdentityDriverAction = Exclude<
@@ -94,6 +97,7 @@ const falseLifeUnitId = "false_life";
 const heroismUnitId = "heroism";
 const huntersMarkUnitId = "hunters_mark";
 const hexUnitId = "hex";
+const longstriderUnitId = "longstrider";
 const level1BuffMarkSmiteSpellIds = [
   divineFavorUnitId,
   divineSmiteUnitId,
@@ -102,6 +106,7 @@ const level1BuffMarkSmiteSpellIds = [
   heroismUnitId,
   huntersMarkUnitId,
   hexUnitId,
+  longstriderUnitId,
 ] as const;
 type Level1BuffMarkSmiteSpellId = (typeof level1BuffMarkSmiteSpellIds)[number];
 const damageRiderSourceSpellIds = [
@@ -130,9 +135,14 @@ type BonusActionCastSpellId =
 type AttackHitBonusActionSpellId =
   | typeof divineSmiteUnitId
   | typeof ensnaringStrikeUnitId;
-type ActionCastSpellId = typeof falseLifeUnitId | typeof heroismUnitId;
+type ActionCastSpellId =
+  | typeof falseLifeUnitId
+  | typeof heroismUnitId
+  | typeof longstriderUnitId;
 type TemporaryHitPointsSourceSpellId = typeof falseLifeUnitId | "none";
 type HeroismSourceSpellId = typeof heroismUnitId | "none";
+type LongstriderSourceSpellId = typeof longstriderUnitId | "none";
+type LongstriderSpeedEffectTarget = "target" | "none";
 type HeroismFrightenedImmunityEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "conditionImmunity" }
@@ -140,6 +150,10 @@ type HeroismFrightenedImmunityEffect = Extract<
 type HeroismTurnStartTemporaryHitPointsEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "turnStartTemporaryHitPoints" }
+>;
+type LongstriderSpeedDeltaEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "speedDelta" }
 >;
 type HexMarkedTarget = "target" | "transferTarget" | "none";
 type HexTransferKind = "awaitingTargetDrop" | "availableAfterTurn" | "none";
@@ -164,6 +178,10 @@ type CharacterClassName =
 type Level1BuffMarkSmiteSelectedIdentityProjection = {
   readonly divineFavorActiveRiderCount: number;
   readonly targetHp: number;
+  readonly longstriderTargetSpeedFeet: number;
+  readonly longstriderSpeedEffectSourceSpellId: LongstriderSourceSpellId;
+  readonly longstriderSpeedEffectTarget: LongstriderSpeedEffectTarget;
+  readonly longstriderSpeedDeltaFeet: number;
   readonly casterTempHp: number;
   readonly casterFrightened: boolean;
   readonly spellSlotSpentThisTurn: boolean;
@@ -221,7 +239,8 @@ type Level1BuffMarkSmiteSelectedIdentityProjection = {
     | "falseLife"
     | "heroism"
     | "huntersMark"
-    | "hex";
+    | "hex"
+    | "longstrider";
 };
 type EnsnaringStrikeLifecycleProjection = Pick<
   Level1BuffMarkSmiteSelectedIdentityProjection,
@@ -292,7 +311,8 @@ type SelectedUnitIdentityReplay = {
     | "L1E-FALSE-LIFE"
     | "L1E-HEROISM"
     | "L1E-HUNTERS-MARK"
-    | "L1E-HEX";
+    | "L1E-HEX"
+    | "L1E-LONGSTRIDER";
   readonly unitId: Level1BuffMarkSmiteSpellId;
   readonly actions: readonly Level1BuffMarkSmiteSelectedIdentityDriverAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
@@ -520,6 +540,26 @@ const selectedUnitIdentityReplays = [
           huntersMarkActiveMarkRetargetTiming: "sameTurn",
           huntersMarkTransferVisibleOnDropTurn: true,
           lastResult: "huntersMark",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "L1E-LONGSTRIDER",
+    unitId: "longstrider",
+    actions: ["doLongstriderSpeedIncrease"],
+    sequences: [
+      {
+        name: "target-speed-increase-uses-selected-spell-identity",
+        actions: ["doLongstriderSpeedIncrease"],
+        expected: expectedProjection({
+          longstriderTargetSpeedFeet: 40,
+          longstriderSpeedEffectSourceSpellId: "longstrider",
+          longstriderSpeedEffectTarget: "target",
+          longstriderSpeedDeltaFeet: 10,
+          spellSlotSpentThisTurn: true,
+          level1SlotsRemaining: 1,
+          lastResult: "longstrider",
         }),
       },
     ],
@@ -1061,6 +1101,31 @@ function createLevel1BuffMarkSmiteSelectedIdentityDriver() {
           "hex",
         );
       },
+      doLongstriderSpeedIncrease: () => {
+        state = level1BuffMarkSmiteBattle({
+          preparedSpells: [spellRecord(longstriderUnitId)],
+          sourceClassName: "ranger",
+        });
+        resetProcedureProjections();
+
+        const act = actionSpellAct(state, longstriderUnitId);
+        const target = requireHole(act.initialHoles, "targetChoice");
+        recordResolvedResult(
+          resolveBattleSubject({
+            state,
+            subject: act.subject,
+            fills: [
+              spellTargetFill(
+                target,
+                longstriderUnitId,
+                casterId,
+                targetId,
+              ),
+            ],
+          }),
+          "longstrider",
+        );
+      },
       step: () => {},
       getState: () =>
         projectLevel1BuffMarkSmiteSelectedIdentityState(
@@ -1087,6 +1152,10 @@ function expectedProjection(
   return {
     divineFavorActiveRiderCount: 0,
     targetHp: 12,
+    longstriderTargetSpeedFeet: 30,
+    longstriderSpeedEffectSourceSpellId: "none",
+    longstriderSpeedEffectTarget: "none",
+    longstriderSpeedDeltaFeet: 0,
     casterTempHp: 0,
     casterFrightened: false,
     spellSlotSpentThisTurn: false,
@@ -1892,6 +1961,8 @@ function projectLevel1BuffMarkSmiteSelectedIdentityState(
   }
   return {
     targetHp: target.hp,
+    longstriderTargetSpeedFeet: Number(target.movement.speedFeet),
+    ...longstriderSpeedEffectProjection(state),
     casterTempHp: caster.tempHp,
     casterFrightened: snapshotHasCondition(caster.conditions, "frightened"),
     spellSlotSpentThisTurn:
@@ -2000,6 +2071,59 @@ function heroismSourceSpellId(
   }
   throw new Error(
     `Unexpected Heroism source spell id ${effect.sourceSpellId}.`,
+  );
+}
+
+function longstriderSpeedEffectProjection(
+  state: BattleState,
+): Pick<
+  Level1BuffMarkSmiteSelectedIdentityProjection,
+  | "longstriderSpeedEffectSourceSpellId"
+  | "longstriderSpeedEffectTarget"
+  | "longstriderSpeedDeltaFeet"
+> {
+  const trackedEffect = longstriderSpeedEffect(state);
+  return {
+    longstriderSpeedEffectSourceSpellId: longstriderSourceSpellId(
+      trackedEffect?.effect,
+    ),
+    longstriderSpeedEffectTarget: trackedEffect?.target ?? "none",
+    longstriderSpeedDeltaFeet: Number(trackedEffect?.effect.deltaFeet ?? 0),
+  };
+}
+
+function longstriderSpeedEffect(
+  state: BattleState,
+):
+  | {
+      readonly target: Exclude<LongstriderSpeedEffectTarget, "none">;
+      readonly effect: LongstriderSpeedDeltaEffect;
+    }
+  | undefined {
+  const target = state.combatants.get(targetId);
+  if (target === undefined) {
+    throw new Error("Expected Longstrider target.");
+  }
+  const effect = target.activeEffects.find(
+    (candidate): candidate is LongstriderSpeedDeltaEffect =>
+      candidate.kind === "speedDelta" &&
+      candidate.sourceSpellId === longstriderUnitId &&
+      candidate.sourceCombatantId === casterId,
+  );
+  return effect === undefined ? undefined : { target: "target", effect };
+}
+
+function longstriderSourceSpellId(
+  effect: { readonly sourceSpellId: string } | undefined,
+): LongstriderSourceSpellId {
+  if (effect === undefined) {
+    return "none";
+  }
+  if (effect.sourceSpellId === longstriderUnitId) {
+    return longstriderUnitId;
+  }
+  throw new Error(
+    `Unexpected Longstrider source spell id ${effect.sourceSpellId}.`,
   );
 }
 
@@ -2305,6 +2429,20 @@ function normalizeLevel1BuffMarkSmiteSelectedIdentityQuintState(
       "qDivineFavorActiveRiderCount",
     ),
     targetHp: numberFromQuintInt(state["qTargetHp"], "qTargetHp"),
+    longstriderTargetSpeedFeet: numberFromQuintInt(
+      state["qLongstriderTargetSpeedFeet"],
+      "qLongstriderTargetSpeedFeet",
+    ),
+    longstriderSpeedEffectSourceSpellId: longstriderSourceSpellIdFromQuint(
+      state["qLongstriderSpeedEffectSourceSpellId"],
+    ),
+    longstriderSpeedEffectTarget: longstriderSpeedEffectTargetFromQuint(
+      state["qLongstriderSpeedEffectTarget"],
+    ),
+    longstriderSpeedDeltaFeet: numberFromQuintInt(
+      state["qLongstriderSpeedDeltaFeet"],
+      "qLongstriderSpeedDeltaFeet",
+    ),
     casterTempHp: numberFromQuintInt(state["qCasterTempHp"], "qCasterTempHp"),
     casterFrightened: booleanField(state, "qCasterFrightened"),
     spellSlotSpentThisTurn: booleanField(state, "qSpellSlotSpentThisTurn"),
@@ -2523,6 +2661,24 @@ function heroismSourceSpellIdFromQuint(raw: unknown): HeroismSourceSpellId {
   throw new Error(`Unexpected Heroism source spell id ${String(raw)}.`);
 }
 
+function longstriderSourceSpellIdFromQuint(
+  raw: unknown,
+): LongstriderSourceSpellId {
+  if (raw === "none" || raw === longstriderUnitId) {
+    return raw;
+  }
+  throw new Error(`Unexpected Longstrider source spell id ${String(raw)}.`);
+}
+
+function longstriderSpeedEffectTargetFromQuint(
+  raw: unknown,
+): LongstriderSpeedEffectTarget {
+  if (raw === "target" || raw === "none") {
+    return raw;
+  }
+  throw new Error(`Unexpected Longstrider speed target ${String(raw)}.`);
+}
+
 function frightenedImmunityConditionFromQuint(
   raw: unknown,
 ): Level1BuffMarkSmiteSelectedIdentityProjection["frightenedImmunityCondition"] {
@@ -2672,7 +2828,8 @@ function mbtLastResult(
     raw === "falseLife" ||
     raw === "heroism" ||
     raw === "huntersMark" ||
-    raw === "hex"
+    raw === "hex" ||
+    raw === "longstrider"
   ) {
     return raw;
   }
