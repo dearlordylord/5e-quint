@@ -93,8 +93,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 94,
-      "numerator": 81,
-      "percent": "86.2%"
+      "numerator": 85,
+      "percent": "90.4%"
     },
     "supportedProfileCoverage": {
       "denominator": 118,
@@ -4667,6 +4667,11 @@
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV91B"
+        },
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/armor-class-base-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "armor-class-base-formula"
         }
       ],
       "executableMechanics": true,
@@ -5316,6 +5321,11 @@
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV91B"
+        },
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/armor-class-base-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "armor-class-base-formula"
         }
       ],
       "executableMechanics": true,
@@ -5866,6 +5876,11 @@
           "ownerPath": "packages/battle-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV75B"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1D2-SORCERER-INNATE-SORCERY"
         }
       ],
       "executableMechanics": true,
@@ -6033,6 +6048,11 @@
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV91B"
+        },
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/spellbook-ritual-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "spellbook-ritual-invocation"
         }
       ],
       "executableMechanics": true,
@@ -12736,6 +12756,11 @@
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
           "tag": "selected-identity-mbt",
           "taskId": "L1H-MYCELIUM-STEP"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/mycelium-step-feature-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "L1D2-MYCELIUM-STEP"
         }
       ],
       "executableMechanics": true,

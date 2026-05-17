@@ -42,6 +42,7 @@
 {"unitId":"vicious_mockery","evidence":{"tag":"selected-identity-mbt","taskId":"level1-damage-spell-selected-identity","ownerPath":"packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts"}}
 {"unitId":"mycelium_step","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT21","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"mycelium_step","evidence":{"tag":"selected-identity-mbt","taskId":"L1H-MYCELIUM-STEP","ownerPath":"packages/battle-runtime/src/rule-core-features.mbt.test.ts"}}
+{"unitId":"mycelium_step","evidence":{"tag":"selected-identity-mbt","taskId":"L1D2-MYCELIUM-STEP","ownerPath":"packages/battle-runtime/src/mycelium-step-feature-selected-identity.mbt.test.ts"}}
 {"unitId":"defense","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT18","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
 {"unitId":"defense","evidence":{"tag":"selected-identity-mbt","taskId":"passive-and-zero-hp-features","ownerPath":"packages/battle-runtime/src/rule-core-features.mbt.test.ts"}}
 {"unitId":"feat_archery","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT27","ownerPath":"packages/battle-runtime/src/unit-profile-admission.test.ts"}}
@@ -188,11 +189,15 @@
 {"unitId":"rogue_expertise","evidence":{"tag":"deterministic-admission-projection","taskId":"AT-L1-07","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"rogue_expertise","evidence":{"tag":"deterministic-admission-projection","taskId":"L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT","ownerPath":"packages/character-creation-runtime/src/rogue-expertise-level6.test.ts"}}
 {"unitId":"barbarian_unarmored_defense","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV91B","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
+{"unitId":"barbarian_unarmored_defense","evidence":{"tag":"selected-identity-mbt","taskId":"armor-class-base-formula","ownerPath":"packages/character-sheet-runtime/src/armor-class-base-selected-identity.mbt.test.ts"}}
 {"unitId":"monk_unarmored_defense","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV91B","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
+{"unitId":"monk_unarmored_defense","evidence":{"tag":"selected-identity-mbt","taskId":"armor-class-base-formula","ownerPath":"packages/character-sheet-runtime/src/armor-class-base-selected-identity.mbt.test.ts"}}
 {"unitId":"paladin_lay_on_hands","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV91B","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"paladin_lay_on_hands","evidence":{"tag":"selected-identity-mbt","taskId":"healing-stabilization","ownerPath":"packages/character-sheet-runtime/src/healing-resource-selected-identity.mbt.test.ts"}}
 {"unitId":"wizard_arcane_recovery","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV91B","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"wizard_ritual_adept","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV91B","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
+{"unitId":"wizard_ritual_adept","evidence":{"tag":"selected-identity-mbt","taskId":"spellbook-ritual-invocation","ownerPath":"packages/character-sheet-runtime/src/spellbook-ritual-selected-identity.mbt.test.ts"}}
+{"unitId":"sorcerer_innate_sorcery","evidence":{"tag":"selected-identity-mbt","taskId":"L1D2-SORCERER-INNATE-SORCERY","ownerPath":"packages/battle-runtime/src/feature-selected-identity.mbt.test.ts"}}
 {"unitId":"mastery_sap","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV91B","ownerPath":"packages/character-battle-runtime/src/index.test.ts"}}
 {"unitId":"mastery_sap","evidence":{"tag":"selected-identity-mbt","taskId":"weapon-mastery-properties","ownerPath":"packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts"}}
 {"unitId":"mastery_topple","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV91B","ownerPath":"packages/character-battle-runtime/src/index.test.ts"}}

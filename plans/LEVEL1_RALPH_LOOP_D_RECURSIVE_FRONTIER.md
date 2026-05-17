@@ -13,74 +13,152 @@
     {
       "number": 2,
       "id": "L1D2-BARBARIAN-UNARMORED-DEFENSE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Barbarian Unarmored Defense Selected Identity Replay"
     },
     {
       "number": 3,
       "id": "L1D2-MONK-UNARMORED-DEFENSE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Monk Unarmored Defense Selected Identity Replay"
     },
     {
       "number": 4,
       "id": "L1D2-WIZARD-RITUAL-ADEPT",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Wizard Ritual Adept Selected Identity Replay"
     },
     {
       "number": 5,
       "id": "L1D2-SORCERER-INNATE-SORCERY",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Sorcerer Innate Sorcery Selected Identity Replay"
     },
     {
       "number": 6,
       "id": "L1D2-MYCELIUM-STEP",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Mycelium Step Selected Identity Replay"
     },
     {
       "number": 7,
       "id": "L1D2-WIZARD-ARCANE-RECOVERY",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Wizard Arcane Recovery Selected Identity Replay"
     },
     {
       "number": 8,
       "id": "L1D2-FIGHTER-FIGHTING-STYLE",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Fighter Fighting Style Selected Identity Replay"
     },
     {
       "number": 9,
       "id": "L1D2-CLERIC-DRUID-ORDER",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Cleric And Druid Order Selected Identity Replay"
     },
     {
       "number": 10,
       "id": "L1D2-ROGUE-EXPERTISE",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Rogue Expertise Selected Identity Replay"
     },
     {
       "number": 11,
       "id": "L1D2-WARLOCK-ELDRITCH-INVOCATIONS",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Warlock Eldritch Invocations Selected Identity Replay"
     },
     {
       "number": 12,
       "id": "L1D2-WEAPON-MASTERY-CONTAINERS",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Weapon Mastery Container Selected Identity Replays"
     },
     {
       "number": 13,
       "id": "L1D2-REPLENISH-001",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Recursive Frontier Replenishment 001"
+    },
+    {
+      "number": 14,
+      "id": "L1D2-HUNTERS-MARK-FAVORED-ENEMY-ACCOUNTING",
+      "status": "ready-for-research",
+      "title": "Hunter's Mark And Ranger Favored Enemy Profile Accounting Closure"
+    },
+    {
+      "number": 15,
+      "id": "L1D2-BARDIC-INSPIRATION-SCALING",
+      "status": "ready-for-research",
+      "title": "Bardic Inspiration Die Scaling Support"
+    },
+    {
+      "number": 16,
+      "id": "L1D2-MONK-MARTIAL-ARTS-SCALING",
+      "status": "ready-for-research",
+      "title": "Monk Martial Arts Die Scaling Support"
+    },
+    {
+      "number": 17,
+      "id": "L1D2-CHARM-PERSON-CLOSURE",
+      "status": "ready-for-research",
+      "title": "Charm Person Social Boundary Closure"
+    },
+    {
+      "number": 18,
+      "id": "L1D2-DISGUISE-SELF-DECISION-INTEGRATION",
+      "status": "ready-for-research",
+      "title": "Disguise Self Frontier Decision Integration"
+    },
+    {
+      "number": 19,
+      "id": "L1D2-DRUIDCRAFT-DECISION-INTEGRATION",
+      "status": "ready-for-research",
+      "title": "Druidcraft Frontier Decision Integration"
+    },
+    {
+      "number": 20,
+      "id": "L1D2-ELEMENTALISM-DECISION-INTEGRATION",
+      "status": "ready-for-research",
+      "title": "Elementalism Frontier Decision Integration"
+    },
+    {
+      "number": 21,
+      "id": "L1D2-ILLUSORY-SCRIPT-DECISION-INTEGRATION",
+      "status": "ready-for-research",
+      "title": "Illusory Script Frontier Decision Integration"
+    },
+    {
+      "number": 22,
+      "id": "L1D2-MESSAGE-DECISION-INTEGRATION",
+      "status": "ready-for-research",
+      "title": "Message Frontier Decision Integration"
+    },
+    {
+      "number": 23,
+      "id": "L1D2-PRESTIDIGITATION-DECISION-INTEGRATION",
+      "status": "ready-for-research",
+      "title": "Prestidigitation Frontier Decision Integration"
+    },
+    {
+      "number": 24,
+      "id": "L1D2-THAUMATURGY-BOOMING-VOICE",
+      "status": "ready-for-research",
+      "title": "Thaumaturgy Booming Voice Ability Check Support"
+    },
+    {
+      "number": 25,
+      "id": "L1D2-UNSEEN-SERVANT-NO-MATRIX",
+      "status": "ready-for-research",
+      "title": "Unseen Servant No-Matrix Decision"
+    },
+    {
+      "number": 26,
+      "id": "L1D2-REPLENISH-002",
+      "status": "ready-for-research",
+      "title": "Recursive Frontier Replenishment 002"
     }
   ]
 }
@@ -100,12 +178,12 @@ to its separate worktree. Full support means:
 - active companion/familiar features are not pulled into this lane.
 
 This is the replacement D lane after the completed damage selected-identity
-batch. It deliberately does not steal active C/E/F/H work. It starts with
-currently safe selected-identity tasks that are supported on `master`, keeps
-C-dependent character/container tasks visible but blocked, and ends with a
-recursive replenishment task. The replenishment task must add the next concrete
-batch before marking itself done, so this lane does not naturally terminate just
-because one fixed batch was exhausted.
+batch. It deliberately does not steal active C/E/F/H work. It started with
+currently safe selected-identity tasks that were supported on `master`, kept
+C-dependent character/container tasks visible while blocked, and uses recursive
+replenishment tasks to append the next concrete frontier. The replenishment task
+must add the next concrete batch before marking itself done, so this lane does
+not naturally terminate just because one fixed batch was exhausted.
 
 Do not edit `plans/ACTIVE_PLAN.md`.
 
@@ -269,23 +347,85 @@ imports it. Do not treat the current coverage metrics as freshly verified
 until that classification gap is fixed or routed to the appropriate admission
 lane.
 
+## Task 13 Replenishment Result
+
+Task 13 refreshed the generated coverage artifacts with
+`pnpm unit-profile-coverage:check --write`; the checker passed and no generated
+coverage artifact changed. The current matrix records 145 installed Units, 94
+supported-profile Units, 78 selected-identity MBT Units, and a 68/93 strict
+runtime/profile support count in `LEVEL1_FULL_SUPPORT.md`.
+
+The earlier `fireball` hard failure is resolved by the current matrix:
+`fireball` is installed with an `unsupported-profile` disposition for the
+non-level-1 spell expansion lane. Do not promote Fireball in this D lane; the
+Fireball/Counterspell promotion remains a separate plan boundary.
+
+Loop C character-runtime support has landed in the current matrix for the
+selected-identity Units that Tasks 7-12 were waiting on:
+`wizard_arcane_recovery`, `fighter_fighting_style`, `cleric_divine_order`,
+`druid_primal_order`, `rogue_expertise`, `warlock_eldritch_invocations`,
+`paladin_weapon_mastery`, `ranger_weapon_mastery`, and
+`rogue_weapon_mastery` are `supported-profile` Units without
+selected-identity MBT evidence. Tasks 7-12 are therefore unblocked. Keep
+`barbarian_weapon_mastery` and `fighter_weapon_mastery` out of the
+selected-identity denominator until their all-level profile-subset support is
+promoted or the checker explicitly counts subset selected-identity evidence.
+
+Active non-D ownership remains excluded:
+
+- Loop E still owns `shillelagh` and `true_strike`; its `hunters_mark`
+  selected-identity task is already done, so Task 14 owns only the remaining
+  open-profile-accounting closure.
+- Loop F still owns `faerie_fire`, `feather_fall`, `fog_cloud`, `grease`,
+  `jump`, `light`, and `thunderwave`.
+- Loop H still owns `fighter_tactical_mind`,
+  `feat_boon_of_combat_prowess`, `orc_adrenaline_rush`,
+  `paladin_extra_attack`, and `ranger_extra_attack`.
+- Loop C no-matrix decisions still cover `create_or_destroy_water`,
+  `floating_disk`, `goodberry`, `mage_hand`, `mending`, and
+  `purify_food_and_drink`.
+
+The appended Task 14 closes the two refreshed strict open-profile-accounting
+items not still owned by an active E/F lane: `hunters_mark` and
+`ranger_favored_enemy`. Tasks 15-17 are adjacent profile-expansion or closure
+work from the refreshed matrix. Tasks 18-23 integrate existing frontier-decision
+artifacts into the generated coverage/reporting lane without re-deciding
+already closed rows. Task 24 is the concrete Thaumaturgy Booming Voice follow-up
+identified by the existing Thaumaturgy decision. Task 25 is the remaining
+no-matrix strict SRD pressure row in this batch that has no existing
+frontier-decision artifact and is not assigned to Loop C. No companion/familiar
+task was appended; `find_familiar` stays excluded.
+
 ## DAG / Queue Order
 
 | # | Task | Status | Depends on | Notes |
 | ---: | --- | --- | --- | --- |
-| 1 | L1D2-FRONTIER-PRECHECK - Active Lane And Metric Reconciliation | done | none | No C/E/F/H integration head is merged into `master`; D frontier remains Tasks 2-6 plus C-blocked Tasks 7-12. |
-| 2 | L1D2-BARBARIAN-UNARMORED-DEFENSE - Barbarian Unarmored Defense Selected Identity Replay | ready-for-implementation-after-light-research | none | Character Sheet AC formula selected identity. |
-| 3 | L1D2-MONK-UNARMORED-DEFENSE - Monk Unarmored Defense Selected Identity Replay | ready-for-implementation-after-light-research | none | Distinct Monk AC formula selected identity. |
-| 4 | L1D2-WIZARD-RITUAL-ADEPT - Wizard Ritual Adept Selected Identity Replay | ready-for-implementation-after-light-research | none | Spellbook ritual invocation selected identity. |
-| 5 | L1D2-SORCERER-INNATE-SORCERY - Sorcerer Innate Sorcery Selected Identity Replay | ready-for-implementation-after-light-research | none | Supported activation/profile identity. |
-| 6 | L1D2-MYCELIUM-STEP - Mycelium Step Selected Identity Replay | ready-for-implementation-after-light-research | none | Classic non-SRD mechanics gate identity; keep out of SRD provenance. |
-| 7 | L1D2-WIZARD-ARCANE-RECOVERY - Wizard Arcane Recovery Selected Identity Replay | blocked | Loop C merge evidence | Unblock only after `wizard_arcane_recovery` is supported-profile on master. |
-| 8 | L1D2-FIGHTER-FIGHTING-STYLE - Fighter Fighting Style Selected Identity Replay | blocked | Loop C merge evidence | Unblock only after Fighting Style replacement/lifecycle support lands on master. |
-| 9 | L1D2-CLERIC-DRUID-ORDER - Cleric And Druid Order Selected Identity Replay | blocked | Loop C merge evidence | Unblock only after Divine/Primal Order support lands on master. |
-| 10 | L1D2-ROGUE-EXPERTISE - Rogue Expertise Selected Identity Replay | blocked | Loop C merge evidence | Unblock only after Rogue Expertise support lands on master. |
-| 11 | L1D2-WARLOCK-ELDRITCH-INVOCATIONS - Warlock Eldritch Invocations Selected Identity Replay | blocked | Loop C merge evidence | Unblock only after invocation lifecycle support lands on master. |
-| 12 | L1D2-WEAPON-MASTERY-CONTAINERS - Weapon Mastery Container Selected Identity Replays | blocked | Loop C merge evidence | Unblock only after mastery container initial-choice and Long Rest reselection support lands on master. |
-| 13 | L1D2-REPLENISH-001 - Recursive Frontier Replenishment 001 | ready-for-research | none | Must append the next concrete batch plus `L1D2-REPLENISH-002` before marking done. |
+| 1 | L1D2-FRONTIER-PRECHECK - Active Lane And Metric Reconciliation | done | none | Historical precheck before Task 13; see the Task 13 replenishment result for current unblocked statuses. |
+| 2 | L1D2-BARBARIAN-UNARMORED-DEFENSE - Barbarian Unarmored Defense Selected Identity Replay | done | none | Character Sheet AC formula selected identity. |
+| 3 | L1D2-MONK-UNARMORED-DEFENSE - Monk Unarmored Defense Selected Identity Replay | done | none | Distinct Monk AC formula selected identity. |
+| 4 | L1D2-WIZARD-RITUAL-ADEPT - Wizard Ritual Adept Selected Identity Replay | done | none | Spellbook ritual invocation selected identity. |
+| 5 | L1D2-SORCERER-INNATE-SORCERY - Sorcerer Innate Sorcery Selected Identity Replay | done | none | Supported activation/profile identity. |
+| 6 | L1D2-MYCELIUM-STEP - Mycelium Step Selected Identity Replay | done | none | Classic non-SRD mechanics gate identity; keep out of SRD provenance. |
+| 7 | L1D2-WIZARD-ARCANE-RECOVERY - Wizard Arcane Recovery Selected Identity Replay | ready-for-implementation-after-light-research | none | Unblocked by Task 13 refreshed matrix evidence. |
+| 8 | L1D2-FIGHTER-FIGHTING-STYLE - Fighter Fighting Style Selected Identity Replay | ready-for-implementation-after-light-research | none | Unblocked by Task 13 refreshed matrix evidence. |
+| 9 | L1D2-CLERIC-DRUID-ORDER - Cleric And Druid Order Selected Identity Replay | ready-for-implementation-after-light-research | none | Unblocked by Task 13 refreshed matrix evidence. |
+| 10 | L1D2-ROGUE-EXPERTISE - Rogue Expertise Selected Identity Replay | ready-for-implementation-after-light-research | none | Unblocked by Task 13 refreshed matrix evidence. |
+| 11 | L1D2-WARLOCK-ELDRITCH-INVOCATIONS - Warlock Eldritch Invocations Selected Identity Replay | ready-for-implementation-after-light-research | none | Unblocked by Task 13 refreshed matrix evidence. |
+| 12 | L1D2-WEAPON-MASTERY-CONTAINERS - Weapon Mastery Container Selected Identity Replays | ready-for-implementation-after-light-research | none | Unblocked for supported-profile container Units by Task 13 refreshed matrix evidence. |
+| 13 | L1D2-REPLENISH-001 - Recursive Frontier Replenishment 001 | done | none | Appended Tasks 14-25 plus `L1D2-REPLENISH-002`; refreshed coverage artifacts were unchanged. |
+| 14 | L1D2-HUNTERS-MARK-FAVORED-ENEMY-ACCOUNTING - Hunter's Mark And Ranger Favored Enemy Profile Accounting Closure | ready-for-research | none | Close the two D-owned strict open-profile-accounting items not still owned by active E/F. |
+| 15 | L1D2-BARDIC-INSPIRATION-SCALING - Bardic Inspiration Die Scaling Support | ready-for-research | Task 14 or explicit deferral | Adjacent profile-expansion task after the strict frontier is D-closed or active-lane-blocked. |
+| 16 | L1D2-MONK-MARTIAL-ARTS-SCALING - Monk Martial Arts Die Scaling Support | ready-for-research | Task 14 or explicit deferral | Adjacent profile-expansion task after the strict frontier is D-closed or active-lane-blocked. |
+| 17 | L1D2-CHARM-PERSON-CLOSURE - Charm Person Social Boundary Closure | ready-for-research | Task 14 or explicit deferral | Clarify supported battle subset versus runtime-detached social knowledge closure. |
+| 18 | L1D2-DISGUISE-SELF-DECISION-INTEGRATION - Disguise Self Frontier Decision Integration | ready-for-research | Task 14 or explicit deferral | Consume the existing decision artifact; do not reclassify the row. |
+| 19 | L1D2-DRUIDCRAFT-DECISION-INTEGRATION - Druidcraft Frontier Decision Integration | ready-for-research | Task 14 or explicit deferral | Consume the existing decision artifact; do not reclassify the row. |
+| 20 | L1D2-ELEMENTALISM-DECISION-INTEGRATION - Elementalism Frontier Decision Integration | ready-for-research | Task 14 or explicit deferral | Consume the existing decision artifact; do not reclassify the row. |
+| 21 | L1D2-ILLUSORY-SCRIPT-DECISION-INTEGRATION - Illusory Script Frontier Decision Integration | ready-for-research | Task 14 or explicit deferral | Consume the existing decision artifact; do not reclassify the row. |
+| 22 | L1D2-MESSAGE-DECISION-INTEGRATION - Message Frontier Decision Integration | ready-for-research | Task 14 or explicit deferral | Consume the existing decision artifact; do not reclassify the row. |
+| 23 | L1D2-PRESTIDIGITATION-DECISION-INTEGRATION - Prestidigitation Frontier Decision Integration | ready-for-research | Task 14 or explicit deferral | Consume the existing decision artifact; do not reclassify the row. |
+| 24 | L1D2-THAUMATURGY-BOOMING-VOICE - Thaumaturgy Booming Voice Ability Check Support | ready-for-research | Task 14 or explicit deferral | Concrete follow-up from the Thaumaturgy decision artifact. |
+| 25 | L1D2-UNSEEN-SERVANT-NO-MATRIX - Unseen Servant No-Matrix Decision | ready-for-research | Task 14 or explicit deferral | Remaining no-matrix strict SRD pressure row without an existing frontier decision artifact. |
+| 26 | L1D2-REPLENISH-002 - Recursive Frontier Replenishment 002 | ready-for-research | Tasks 14-25 done or intentionally deferred | Refresh the frontier again and append the next concrete batch. |
 
 ## Task Details
 
@@ -322,7 +462,7 @@ Acceptance:
 
 ### Task 2 - L1D2-BARBARIAN-UNARMORED-DEFENSE - Barbarian Unarmored Defense Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `barbarian_unarmored_defense`, proving the
 Character Sheet Armor Class base formula is selected from the authored Unit and
@@ -332,7 +472,7 @@ RAW: `.references/srd-5.2.1/Classes/Barbarian.md` Unarmored Defense.
 
 ### Task 3 - L1D2-MONK-UNARMORED-DEFENSE - Monk Unarmored Defense Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `monk_unarmored_defense`, proving the Monk
 Armor Class base formula is selected from the authored Unit and remains
@@ -342,7 +482,7 @@ RAW: `.references/srd-5.2.1/Classes/Monk.md` Unarmored Defense.
 
 ### Task 4 - L1D2-WIZARD-RITUAL-ADEPT - Wizard Ritual Adept Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `wizard_ritual_adept`, proving spellbook
 ritual invocation ownership without treating prepared-only spells as eligible.
@@ -351,7 +491,7 @@ RAW: `.references/srd-5.2.1/Classes/Wizard.md` Ritual Adept.
 
 ### Task 5 - L1D2-SORCERER-INNATE-SORCERY - Sorcerer Innate Sorcery Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `sorcerer_innate_sorcery`, binding the
 authored class feature through the supported activation and spellcasting benefit
@@ -361,7 +501,7 @@ RAW: `.references/srd-5.2.1/Classes/Sorcerer.md` Innate Sorcery.
 
 ### Task 6 - L1D2-MYCELIUM-STEP - Mycelium Step Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `mycelium_step`, the Classic non-SRD
 mechanics fixture that is already installed and supported. Keep provenance
@@ -371,80 +511,76 @@ Source: `plans/unit-profile-coverage/fixtures/classic-non-srd/mycelium_step.json
 
 ### Task 7 - L1D2-WIZARD-ARCANE-RECOVERY - Wizard Arcane Recovery Selected Identity Replay
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
-Blocked until `wizard_arcane_recovery` is supported-profile on master. When
-unblocked, add selected identity evidence for Short Rest Spell Slot recovery and
-Long Rest reset through Character Sheet state. Do not apply Arcane Recovery to
-Pact Magic slots.
+Unblocked by Task 13 refreshed matrix evidence:
+`wizard_arcane_recovery` is supported-profile and lacks selected-identity MBT.
+Add selected identity evidence for Short Rest Spell Slot recovery and Long Rest
+reset through Character Sheet state. Do not apply Arcane Recovery to Pact Magic
+slots.
 
 RAW: `.references/srd-5.2.1/Classes/Wizard.md` Arcane Recovery.
 
-Blocker Type: dependency.
-
 ### Task 8 - L1D2-FIGHTER-FIGHTING-STYLE - Fighter Fighting Style Selected Identity Replay
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
-Blocked until Loop C's Fighting Style replacement/lifecycle support lands on
-master. When unblocked, add selected identity evidence for
-`fighter_fighting_style`, showing selection and Fighter-level replacement while
-retaining one selected CharacterBuild feature ref.
+Unblocked by Task 13 refreshed matrix evidence: `fighter_fighting_style` is
+supported-profile and lacks selected-identity MBT. Add selected identity
+evidence showing selection and Fighter-level replacement while retaining one
+selected CharacterBuild feature ref.
 
 RAW: `.references/srd-5.2.1/Classes/Fighter.md` Fighting Style and
 `.references/srd-5.2.1/Feats.md` Fighting Style feats.
 
-Blocker Type: dependency.
-
 ### Task 9 - L1D2-CLERIC-DRUID-ORDER - Cleric And Druid Order Selected Identity Replay
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
-Blocked until `cleric_divine_order` and `druid_primal_order` support lands on
-master. When unblocked, add selected identity evidence for both authored class
-feature option projections without duplicating child state.
+Unblocked by Task 13 refreshed matrix evidence: `cleric_divine_order` and
+`druid_primal_order` are supported-profile Units and lack selected-identity
+MBT. Add selected identity evidence for both authored class feature option
+projections without duplicating child state.
 
 RAW: `.references/srd-5.2.1/Classes/Cleric.md` Divine Order and
 `.references/srd-5.2.1/Classes/Druid.md` Primal Order.
 
-Blocker Type: dependency.
-
 ### Task 10 - L1D2-ROGUE-EXPERTISE - Rogue Expertise Selected Identity Replay
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
-Blocked until Rogue Expertise support lands on master. When unblocked, add
-selected identity evidence for `rogue_expertise`, proving level-1 and level-6
-Expertise selection over owned skills through the existing CharacterBuild
-proficiency projection.
+Unblocked by Task 13 refreshed matrix evidence: `rogue_expertise` is
+supported-profile and lacks selected-identity MBT. Add selected identity
+evidence proving level-1 and level-6 Expertise selection over owned skills
+through the existing CharacterBuild proficiency projection.
 
 RAW: `.references/srd-5.2.1/Classes/Rogue.md` Expertise.
 
-Blocker Type: dependency.
-
 ### Task 11 - L1D2-WARLOCK-ELDRITCH-INVOCATIONS - Warlock Eldritch Invocations Selected Identity Replay
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
-Blocked until Warlock Eldritch Invocation lifecycle support lands on master.
-When unblocked, add selected identity evidence for level-1 selection,
-later-level gains, replacement, prerequisite-retention lockout, and
-duplicate-selection rejection only to the extent master support owns them.
+Unblocked by Task 13 refreshed matrix evidence:
+`warlock_eldritch_invocations` is supported-profile and lacks selected-identity
+MBT. Add selected identity evidence for level-1 selection, later-level gains,
+replacement, prerequisite-retention lockout, and duplicate-selection rejection
+only to the extent current support owns them.
 
 RAW: `.references/srd-5.2.1/Classes/Warlock.md` Eldritch Invocations.
 
-Blocker Type: dependency.
-
 ### Task 12 - L1D2-WEAPON-MASTERY-CONTAINERS - Weapon Mastery Container Selected Identity Replays
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
-Blocked until weapon mastery container initial-choice and Long Rest reselection
-support lands on master. When unblocked, add selected identity evidence for
-`fighter_weapon_mastery`, `barbarian_weapon_mastery`,
-`paladin_weapon_mastery`, `ranger_weapon_mastery`, and
-`rogue_weapon_mastery`. Keep each container's choice count and eligible weapon
-facts distinct; selected mastery-property execution remains child Unit owned.
+Unblocked by Task 13 refreshed matrix evidence for the supported-profile
+container Units `paladin_weapon_mastery`, `ranger_weapon_mastery`, and
+`rogue_weapon_mastery`. Add selected identity evidence for those container
+choices and Long Rest reselection. Keep `fighter_weapon_mastery` and
+`barbarian_weapon_mastery` out of the selected-identity denominator unless this
+task first promotes their all-level profile-subset support or the checker
+explicitly counts subset selected-identity evidence. Keep each container's
+choice count and eligible weapon facts distinct; selected mastery-property
+execution remains child Unit owned.
 
 RAW:
 
@@ -454,14 +590,22 @@ RAW:
 - `.references/srd-5.2.1/Classes/Ranger.md` Weapon Mastery
 - `.references/srd-5.2.1/Classes/Rogue.md` Weapon Mastery
 
-Blocker Type: dependency.
-
 ### Task 13 - L1D2-REPLENISH-001 - Recursive Frontier Replenishment 001
 
-Status: `ready-for-research`
+Status: `done`
 
 Append the next concrete D tasks and a successor replenishment task. This task
 must follow the Recursive Replenishment Contract above.
+
+Result:
+
+- `pnpm unit-profile-coverage:check --write` passed with no generated coverage
+  artifact changes.
+- Tasks 7-12 were unblocked by refreshed supported-profile matrix evidence.
+- Tasks 14-25 and successor Task 26 were appended in the task index, DAG table,
+  and task details.
+- No active C/E/F/H ownership was duplicated, and no companion/familiar task was
+  added.
 
 Acceptance:
 
@@ -470,6 +614,550 @@ Acceptance:
   meaningful task if fewer than twelve exist;
 - this plan has a final successor replenishment task such as
   `L1D2-REPLENISH-002`;
+- the new tasks do not duplicate active C/E/F/H ownership;
+- no companion/familiar task is added;
+- the current task is marked `done` only after the new tasks and successor
+  replenishment task are present in the task index, DAG table, and task details.
+
+### Task 14 - L1D2-HUNTERS-MARK-FAVORED-ENEMY-ACCOUNTING - Hunter's Mark And Ranger Favored Enemy Profile Accounting Closure
+
+Status: `ready-for-research`
+
+Close the refreshed strict open-profile-accounting rows for `hunters_mark` and
+`ranger_favored_enemy`. Loop E has already completed selected-identity evidence
+for `hunters_mark`; this task owns only the remaining profile-accounting closure
+and must not duplicate Hunter's Mark damage-rider state.
+
+Inputs:
+
+- `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`
+- `plans/unit-profile-coverage/UNIT_REPORT.md`
+- `plans/unit-profile-coverage/unit-matrix.json`
+- `packages/surface/content/ranger_favored_enemy.json`
+- `packages/surface/content/hunters_mark.json`
+
+Outputs:
+
+- either promote the current level-1 supported subsets to closed
+  supported-profile claims with precise runtime-detached handling for the
+  Hunter's Mark finding Advantage, or preserve typed closure reasons that
+  remove `hunters_mark` and `ranger_favored_enemy` from
+  open-profile-accounting;
+- update `plans/unit-profile-coverage/unit-evidence.jsonl` and generated
+  reports if evidence or disposition changes.
+
+Primary files:
+
+- `packages/battle-runtime/src/*selected-identity*.mbt.test.ts` only if a
+  selected identity replay is needed;
+- `packages/battle-runtime/battle-runtime*.qnt` only if promoted behavior
+  changes;
+- `plans/unit-profile-coverage/unit-evidence.jsonl`;
+- generated reports under `plans/unit-profile-coverage/`.
+
+RAW:
+
+- `.references/srd-5.2.1/Classes/Ranger.md` Favored Enemy
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md` Hunter's Mark
+
+Verification:
+
+- focused runtime or MBT replay only if runtime/profile behavior changes;
+- `pnpm unit-profile-coverage:check --write`;
+- `pnpm unit-profile-coverage:check`;
+- `git diff --check`;
+- reviewer-loop convergence with RAW, ubiquitous-language, architecture, and
+  code-review passes.
+
+### Task 15 - L1D2-BARDIC-INSPIRATION-SCALING - Bardic Inspiration Die Scaling Support
+
+Status: `ready-for-research`
+
+Promote `bard_bardic_inspiration` beyond its current level-1-only subset by
+owning the SRD Bardic Inspiration die-size scaling boundary, or record why that
+all-level expansion remains intentionally out of scope.
+
+Inputs:
+
+- `plans/unit-profile-coverage/UNIT_REPORT.md`
+- `plans/unit-profile-coverage/unit-matrix.json`
+- `packages/surface/content/bard_bardic_inspiration.json`
+
+Outputs:
+
+- battle-runtime profile support for Bardic Inspiration die scaling across Bard
+  levels, if promoted;
+- selected identity evidence if `bard_bardic_inspiration` becomes
+  `supported-profile`;
+- generated coverage reports.
+
+Primary files:
+
+- `packages/battle-runtime/src/*selected-identity*.mbt.test.ts`;
+- `packages/battle-runtime/src/index.ts` and matching tests if behavior changes;
+- `plans/unit-profile-coverage/unit-evidence.jsonl`;
+- generated reports under `plans/unit-profile-coverage/`.
+
+RAW: `.references/srd-5.2.1/Classes/Bard.md` Bardic Inspiration.
+
+Verification:
+
+- focused deterministic runtime or MBT test for die scaling if behavior changes;
+- `pnpm unit-profile-coverage:check --write`;
+- `pnpm unit-profile-coverage:check`;
+- `git diff --check`;
+- reviewer-loop convergence with RAW, ubiquitous-language, architecture, and
+  code-review passes.
+
+### Task 16 - L1D2-MONK-MARTIAL-ARTS-SCALING - Monk Martial Arts Die Scaling Support
+
+Status: `ready-for-research`
+
+Promote `monk_martial_arts` beyond its current level-1-only subset by owning
+the SRD Martial Arts die-size scaling boundary, or record why that all-level
+expansion remains intentionally out of scope.
+
+Inputs:
+
+- `plans/unit-profile-coverage/UNIT_REPORT.md`
+- `plans/unit-profile-coverage/unit-matrix.json`
+- `packages/surface/content/monk_martial_arts.json`
+
+Outputs:
+
+- battle-runtime profile support for Martial Arts die scaling across Monk
+  levels, if promoted;
+- selected identity evidence if `monk_martial_arts` becomes
+  `supported-profile`;
+- generated coverage reports.
+
+Primary files:
+
+- `packages/battle-runtime/src/*selected-identity*.mbt.test.ts`;
+- `packages/battle-runtime/src/index.ts` and matching tests if behavior changes;
+- `plans/unit-profile-coverage/unit-evidence.jsonl`;
+- generated reports under `plans/unit-profile-coverage/`.
+
+RAW: `.references/srd-5.2.1/Classes/Monk.md` Martial Arts.
+
+Verification:
+
+- focused deterministic runtime or MBT test for die scaling if behavior changes;
+- `pnpm unit-profile-coverage:check --write`;
+- `pnpm unit-profile-coverage:check`;
+- `git diff --check`;
+- reviewer-loop convergence with RAW, ubiquitous-language, architecture, and
+  code-review passes.
+
+### Task 17 - L1D2-CHARM-PERSON-CLOSURE - Charm Person Social Boundary Closure
+
+Status: `ready-for-research`
+
+Clarify `charm_person` as a supported battle subset plus runtime-detached social
+knowledge closure, without turning friendly disposition, social interaction, or
+post-spell target knowledge into battle-runtime state.
+
+Inputs:
+
+- `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`
+- `plans/unit-profile-coverage/UNIT_REPORT.md`
+- `plans/unit-profile-coverage/unit-matrix.json`
+- `packages/surface/content/charm_person.json`
+
+Outputs:
+
+- precise profile disposition/evidence for the supported Charmed battle subset
+  and the runtime-detached social/knowledge remainder;
+- selected identity evidence only if the Unit becomes `supported-profile`;
+- generated coverage reports.
+
+Primary files:
+
+- `packages/battle-runtime/src/*selected-identity*.mbt.test.ts` only if selected
+  identity evidence is admitted;
+- `plans/unit-profile-coverage/unit-evidence.jsonl`;
+- generated reports under `plans/unit-profile-coverage/`.
+
+RAW: `.references/srd-5.2.1/Spells/Descriptions-A-D.md` Charm Person.
+
+Verification:
+
+- focused deterministic runtime or MBT test only if runtime behavior changes;
+- `pnpm unit-profile-coverage:check --write`;
+- `pnpm unit-profile-coverage:check`;
+- `git diff --check`;
+- reviewer-loop convergence with RAW, ubiquitous-language, architecture, and
+  code-review passes.
+
+### Task 18 - L1D2-DISGUISE-SELF-DECISION-INTEGRATION - Disguise Self Frontier Decision Integration
+
+Status: `ready-for-research`
+
+Integrate the existing Disguise Self frontier decision into generated coverage
+surfaces so future replenishment runs preserve the already-closed no-matrix
+decision instead of re-opening classification. Do not author/admit a
+`disguise_self` UnitRecord and do not add a Unit claim unless a new illusion UI
+owner is explicitly created first.
+
+Inputs:
+
+- `plans/unit-profile-coverage/frontier-decisions/disguise_self.md`
+- `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`
+- `plans/unit-profile-coverage/srd-unit-inventory.json`
+- `plans/unit-profile-coverage/unit-matrix.json`
+
+Outputs:
+
+- generated coverage/report text or checker metadata that points the
+  `disguise_self` no-matrix row to the existing frontier decision artifact;
+- no Surface UnitRecord, Unit claim, profile, or runtime behavior unless a new
+  owner boundary is added by a separate future plan.
+
+Primary files:
+
+- `scripts/unit-profile-coverage-check.cjs` if report integration requires
+  checker changes;
+- `plans/unit-profile-coverage/frontier-decisions/disguise_self.md`;
+- generated reports under `plans/unit-profile-coverage/`.
+
+RAW: `.references/srd-5.2.1/Spells/Descriptions-A-D.md` Disguise Self.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`;
+- `pnpm unit-profile-coverage:check`;
+- `git diff --check`;
+- RAW/UBIQUITOUS_LANGUAGE traceability check for the admission or closure
+  decision;
+- reviewer-loop convergence with RAW, ubiquitous-language, architecture/domain,
+  and code-review passes;
+- focused tests if runtime behavior is promoted.
+
+### Task 19 - L1D2-DRUIDCRAFT-DECISION-INTEGRATION - Druidcraft Frontier Decision Integration
+
+Status: `ready-for-research`
+
+Integrate the existing Druidcraft frontier decision into generated coverage
+surfaces so future replenishment runs preserve the already-closed no-matrix
+decision instead of re-opening classification. Do not author/admit a
+`druidcraft` UnitRecord and do not add a Unit claim unless a new
+environment/object owner is explicitly created first.
+
+Inputs:
+
+- `plans/unit-profile-coverage/frontier-decisions/druidcraft.md`
+- `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`
+- `plans/unit-profile-coverage/srd-unit-inventory.json`
+- `plans/unit-profile-coverage/unit-matrix.json`
+
+Outputs:
+
+- generated coverage/report text or checker metadata that points the
+  `druidcraft` no-matrix row to the existing frontier decision artifact;
+- no Surface UnitRecord, Unit claim, profile, or runtime behavior unless a new
+  owner boundary is added by a separate future plan.
+
+Primary files:
+
+- `scripts/unit-profile-coverage-check.cjs` if report integration requires
+  checker changes;
+- `plans/unit-profile-coverage/frontier-decisions/druidcraft.md`;
+- generated reports under `plans/unit-profile-coverage/`.
+
+RAW: `.references/srd-5.2.1/Spells/Descriptions-A-D.md` Druidcraft.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`;
+- `pnpm unit-profile-coverage:check`;
+- `git diff --check`;
+- RAW/UBIQUITOUS_LANGUAGE traceability check for the admission or closure
+  decision;
+- reviewer-loop convergence with RAW, ubiquitous-language, architecture/domain,
+  and code-review passes;
+- focused tests if runtime behavior is promoted.
+
+### Task 20 - L1D2-ELEMENTALISM-DECISION-INTEGRATION - Elementalism Frontier Decision Integration
+
+Status: `ready-for-research`
+
+Integrate the existing Elementalism frontier decision into generated coverage
+surfaces so future replenishment runs preserve the already-closed no-matrix
+decision instead of re-opening classification. Do not author/admit an
+`elementalism` UnitRecord and do not add a Unit claim unless a new
+environment/object owner is explicitly created first.
+
+Inputs:
+
+- `plans/unit-profile-coverage/frontier-decisions/elementalism.md`
+- `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`
+- `plans/unit-profile-coverage/srd-unit-inventory.json`
+- `plans/unit-profile-coverage/unit-matrix.json`
+
+Outputs:
+
+- generated coverage/report text or checker metadata that points the
+  `elementalism` no-matrix row to the existing frontier decision artifact;
+- no Surface UnitRecord, Unit claim, profile, or runtime behavior unless a new
+  owner boundary is added by a separate future plan.
+
+Primary files:
+
+- `scripts/unit-profile-coverage-check.cjs` if report integration requires
+  checker changes;
+- `plans/unit-profile-coverage/frontier-decisions/elementalism.md`;
+- generated reports under `plans/unit-profile-coverage/`.
+
+RAW: `.references/srd-5.2.1/Spells/Descriptions-E-L.md` Elementalism.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`;
+- `pnpm unit-profile-coverage:check`;
+- `git diff --check`;
+- RAW/UBIQUITOUS_LANGUAGE traceability check for the admission or closure
+  decision;
+- reviewer-loop convergence with RAW, ubiquitous-language, architecture/domain,
+  and code-review passes;
+- focused tests if runtime behavior is promoted.
+
+### Task 21 - L1D2-ILLUSORY-SCRIPT-DECISION-INTEGRATION - Illusory Script Frontier Decision Integration
+
+Status: `ready-for-research`
+
+Integrate the existing Illusory Script frontier decision into generated coverage
+surfaces so future replenishment runs preserve the already-closed no-matrix
+decision instead of re-opening classification. Do not author/admit an
+`illusory_script` UnitRecord and do not add a Unit claim unless a new
+document/illusion owner is explicitly created first.
+
+Inputs:
+
+- `plans/unit-profile-coverage/frontier-decisions/illusory_script.md`
+- `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`
+- `plans/unit-profile-coverage/srd-unit-inventory.json`
+- `plans/unit-profile-coverage/unit-matrix.json`
+
+Outputs:
+
+- generated coverage/report text or checker metadata that points the
+  `illusory_script` no-matrix row to the existing frontier decision artifact;
+- no Surface UnitRecord, Unit claim, profile, or runtime behavior unless a new
+  owner boundary is added by a separate future plan.
+
+Primary files:
+
+- `scripts/unit-profile-coverage-check.cjs` if report integration requires
+  checker changes;
+- `plans/unit-profile-coverage/frontier-decisions/illusory_script.md`;
+- generated reports under `plans/unit-profile-coverage/`.
+
+RAW: `.references/srd-5.2.1/Spells/Descriptions-E-L.md` Illusory Script.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`;
+- `pnpm unit-profile-coverage:check`;
+- `git diff --check`;
+- RAW/UBIQUITOUS_LANGUAGE traceability check for the admission or closure
+  decision;
+- reviewer-loop convergence with RAW, ubiquitous-language, architecture/domain,
+  and code-review passes;
+- focused tests if runtime behavior is promoted.
+
+### Task 22 - L1D2-MESSAGE-DECISION-INTEGRATION - Message Frontier Decision Integration
+
+Status: `ready-for-research`
+
+Integrate the existing Message frontier decision into generated coverage
+surfaces so future replenishment runs preserve the already-closed no-matrix
+decision instead of re-opening classification. Do not author/admit a `message`
+UnitRecord and do not add a Unit claim unless a new communication owner is
+explicitly created first.
+
+Inputs:
+
+- `plans/unit-profile-coverage/frontier-decisions/message.md`
+- `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`
+- `plans/unit-profile-coverage/srd-unit-inventory.json`
+- `plans/unit-profile-coverage/unit-matrix.json`
+
+Outputs:
+
+- generated coverage/report text or checker metadata that points the `message`
+  no-matrix row to the existing frontier decision artifact;
+- no Surface UnitRecord, Unit claim, profile, or runtime behavior unless a new
+  owner boundary is added by a separate future plan.
+
+Primary files:
+
+- `scripts/unit-profile-coverage-check.cjs` if report integration requires
+  checker changes;
+- `plans/unit-profile-coverage/frontier-decisions/message.md`;
+- generated reports under `plans/unit-profile-coverage/`.
+
+RAW: `.references/srd-5.2.1/Spells/Descriptions-M-P.md` Message.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`;
+- `pnpm unit-profile-coverage:check`;
+- `git diff --check`;
+- RAW/UBIQUITOUS_LANGUAGE traceability check for the admission or closure
+  decision;
+- reviewer-loop convergence with RAW, ubiquitous-language, architecture/domain,
+  and code-review passes;
+- focused tests if runtime behavior is promoted.
+
+### Task 23 - L1D2-PRESTIDIGITATION-DECISION-INTEGRATION - Prestidigitation Frontier Decision Integration
+
+Status: `ready-for-research`
+
+Integrate the existing Prestidigitation frontier decision into generated
+coverage surfaces so future replenishment runs preserve the already-closed
+no-matrix decision instead of re-opening classification. Do not author/admit a
+`prestidigitation` UnitRecord and do not add a Unit claim unless a new
+environment/object/presentation owner is explicitly created first.
+
+Inputs:
+
+- `plans/unit-profile-coverage/frontier-decisions/prestidigitation.md`
+- `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`
+- `plans/unit-profile-coverage/srd-unit-inventory.json`
+- `plans/unit-profile-coverage/unit-matrix.json`
+
+Outputs:
+
+- generated coverage/report text or checker metadata that points the
+  `prestidigitation` no-matrix row to the existing frontier decision artifact;
+- no Surface UnitRecord, Unit claim, profile, or runtime behavior unless a new
+  owner boundary is added by a separate future plan.
+
+Primary files:
+
+- `scripts/unit-profile-coverage-check.cjs` if report integration requires
+  checker changes;
+- `plans/unit-profile-coverage/frontier-decisions/prestidigitation.md`;
+- generated reports under `plans/unit-profile-coverage/`.
+
+RAW: `.references/srd-5.2.1/Spells/Descriptions-M-P.md` Prestidigitation.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`;
+- `pnpm unit-profile-coverage:check`;
+- `git diff --check`;
+- RAW/UBIQUITOUS_LANGUAGE traceability check for the admission or closure
+  decision;
+- reviewer-loop convergence with RAW, ubiquitous-language, architecture/domain,
+  and code-review passes;
+- focused tests if runtime behavior is promoted.
+
+### Task 24 - L1D2-THAUMATURGY-BOOMING-VOICE - Thaumaturgy Booming Voice Ability Check Support
+
+Status: `ready-for-research`
+
+Implement the concrete Thaumaturgy follow-up identified by the existing
+frontier decision: Booming Voice Advantage on Charisma (Intimidation) Ability
+Checks. Preserve the decision artifact's runtime-detached closure for the other
+minor-wonder effects; do not add generic appearance, flame, door/window, sound,
+tremor, or standalone counter state.
+
+Inputs:
+
+- `plans/unit-profile-coverage/frontier-decisions/thaumaturgy.md`
+- `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`
+- `plans/unit-profile-coverage/unit-matrix.json`
+- `plans/unit-profile-coverage/srd-unit-inventory.json`
+
+Outputs:
+
+- SRD-provenance `thaumaturgy` Surface UnitRecord admission if support is
+  promoted;
+- battle-runtime support for the Booming Voice self effect and caller-supplied
+  Charisma (Intimidation) Ability Check or Influence witness;
+- executable treatment of the three-active-1-minute-effects cap that does not
+  duplicate unowned utility state;
+- generated coverage reports and evidence rows.
+
+Primary files:
+
+- `packages/surface/content/thaumaturgy.json`;
+- `packages/surface/src/surface/unit-catalog.ts`;
+- `packages/battle-runtime/src/*`;
+- `packages/battle-runtime/battle-runtime*.qnt`;
+- `plans/unit-profile-coverage/unit-evidence.jsonl`;
+- generated reports under `plans/unit-profile-coverage/`.
+
+RAW: `.references/srd-5.2.1/Spells/Descriptions-S-Z.md` Thaumaturgy.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`;
+- `pnpm unit-profile-coverage:check`;
+- `git diff --check`;
+- RAW/UBIQUITOUS_LANGUAGE traceability check for Booming Voice, Ability Check,
+  Advantage, Spell Invocation, and Spell Effect terms;
+- reviewer-loop convergence with RAW, ubiquitous-language, architecture/domain,
+  and code-review passes;
+- focused deterministic runtime test and package typecheck;
+- package-local MBT only if promoted battle-runtime behavior changes require it.
+
+### Task 25 - L1D2-UNSEEN-SERVANT-NO-MATRIX - Unseen Servant No-Matrix Decision
+
+Status: `ready-for-research`
+
+Classify the strict SRD pressure row for `unseen_servant`, which currently has
+no Unit matrix row and is not owned by Loop C. Decide whether it should be an
+installed Unit with a runtime-detached closure or a promoted profile.
+
+Inputs:
+
+- `plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md`
+- `plans/unit-profile-coverage/srd-unit-inventory.json`
+- `plans/unit-profile-coverage/unit-matrix.json`
+
+Outputs:
+
+- a Unit catalog admission or explicit no-admission/closure decision for
+  `unseen_servant`;
+- generated coverage reports.
+
+Primary files:
+
+- `packages/surface/content/unseen_servant.json` if admitted;
+- `packages/surface/src/surface/unit-catalog.ts` if admitted;
+- `plans/unit-profile-coverage/unit-evidence.jsonl`;
+- generated reports under `plans/unit-profile-coverage/`.
+
+RAW: `.references/srd-5.2.1/Spells/Descriptions-S-Z.md` Unseen Servant.
+
+Verification:
+
+- `pnpm unit-profile-coverage:check --write`;
+- `pnpm unit-profile-coverage:check`;
+- `git diff --check`;
+- RAW/UBIQUITOUS_LANGUAGE traceability check for the admission or closure
+  decision;
+- reviewer-loop convergence with RAW, ubiquitous-language, architecture/domain,
+  and code-review passes;
+- focused tests if runtime behavior is promoted.
+
+### Task 26 - L1D2-REPLENISH-002 - Recursive Frontier Replenishment 002
+
+Status: `ready-for-research`
+
+Append the next concrete D tasks and a successor replenishment task. This task
+must follow the Recursive Replenishment Contract above after Tasks 14-25 are
+done or intentionally deferred.
+
+Acceptance:
+
+- refreshed coverage artifacts are committed if changed;
+- this plan has at least twelve newly appended atomic tasks, or every remaining
+  meaningful task if fewer than twelve exist;
+- this plan has a final successor replenishment task such as
+  `L1D2-REPLENISH-003`;
 - the new tasks do not duplicate active C/E/F/H ownership;
 - no companion/familiar task is added;
 - the current task is marked `done` only after the new tasks and successor
