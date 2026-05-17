@@ -96,8 +96,11 @@ Counterspell must interrupt before target/save/damage outcomes are committed.
 
 ### Phase 2: Counterspell Design
 
-Do this collaboratively before code changes. The design has to settle these
-domain questions before implementation:
+Do this collaboratively before code changes. The domain design lives in
+`plans/COUNTERSPELL_DOMAIN_DESIGN.md`; keep that document strict to SRD 5.2.1
+and update it before runtime implementation when the model changes.
+
+The design has to settle these domain questions before implementation:
 
 - What does "a creature that you can see within range casts a spell with
   components" mean as a battle fact? Candidate domain facts are triggering
