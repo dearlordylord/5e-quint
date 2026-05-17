@@ -93,8 +93,8 @@
     },
     "selectedIdentityMbtCoverage": {
       "denominator": 94,
-      "numerator": 63,
-      "percent": "67%"
+      "numerator": 65,
+      "percent": "69.1%"
     },
     "supportedProfileCoverage": {
       "denominator": 118,
@@ -8062,6 +8062,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV88A"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "level1-spatial-witness"
         }
       ],
       "executableMechanics": true,
@@ -8556,6 +8561,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV58C"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "level1-spatial-witness"
         }
       ],
       "executableMechanics": true,
@@ -8635,6 +8645,11 @@
           "ownerPath": "packages/battle-runtime/src/feather-fall-reaction-spell.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV56A"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "level1-spatial-witness"
         }
       ],
       "executableMechanics": true,
@@ -8961,6 +8976,11 @@
           "ownerPath": "packages/battle-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV84E"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "level1-spatial-witness"
         }
       ],
       "executableMechanics": true,
@@ -9095,6 +9115,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV40"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "level1-spatial-witness"
         }
       ],
       "executableMechanics": true,
@@ -9719,6 +9744,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV53"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "level1-spatial-witness"
         }
       ],
       "executableMechanics": true,
@@ -9798,6 +9828,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV70B"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "level1-spatial-witness"
         }
       ],
       "executableMechanics": true,
@@ -10101,6 +10136,11 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV87A"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "level1-spatial-witness"
         }
       ],
       "executableMechanics": true,

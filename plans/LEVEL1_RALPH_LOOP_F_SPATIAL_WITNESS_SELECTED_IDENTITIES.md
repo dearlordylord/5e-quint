@@ -7,61 +7,61 @@
     {
       "number": 1,
       "id": "L1F-SPATIAL-PRECHECK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Post-C Spatial Witness Identity Reconciliation"
     },
     {
       "number": 2,
       "id": "L1F-DANCING-LIGHTS",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Dancing Lights Selected Identity Replay"
     },
     {
       "number": 3,
       "id": "L1F-FAERIE-FIRE",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Faerie Fire Selected Identity Replay"
     },
     {
       "number": 4,
       "id": "L1F-FEATHER-FALL",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Feather Fall Selected Identity Replay"
     },
     {
       "number": 5,
       "id": "L1F-FOG-CLOUD",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Fog Cloud Selected Identity Replay"
     },
     {
       "number": 6,
       "id": "L1F-GREASE-CAST",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Grease Cast Hazard Selected Identity Replay"
     },
     {
       "number": 7,
       "id": "L1F-GREASE-MOVEMENT",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Grease Movement And Turn Trigger Selected Identity Replay"
     },
     {
       "number": 8,
       "id": "L1F-JUMP",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Jump Selected Identity Replay"
     },
     {
       "number": 9,
       "id": "L1F-LIGHT",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Light Selected Identity Replay"
     },
     {
       "number": 10,
       "id": "L1F-PRODUCE-FLAME",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Produce Flame Selected Identity Replay"
     },
     {
@@ -143,24 +143,37 @@ Every task runs:
 
 ### Task 1 - L1F-SPATIAL-PRECHECK - Post-C Spatial Witness Identity Reconciliation
 
-Status: `ready-for-research`
+Status: `done`
 
 After Loop C lands, reconcile this loop's Unit list against the refreshed strict
 report and selected identity frontier. Confirm which spatial/table-witness Units
 still lack selected identity MBT and record any moved Units. No behavior changes.
 
+Result: `plans/unit-profile-coverage/L1F_SPATIAL_WITNESS_PRECHECK.md` records
+that all planned Loop F Units remain installed `supported-profile` Units with
+deterministic admission/projection coverage and missing selected-identity MBT;
+no moved Units were found.
+
 ### Task 2 - L1F-DANCING-LIGHTS - Dancing Lights Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `dancing_lights`, proving the authored Unit
 binds through movable Dim Light support without runtime-owned map automation.
 
 RAW: `.references/srd-5.2.1/Spells/Descriptions-A-D.md` Dancing Lights.
 
+Result: `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts`
+and
+`packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt`
+record the selected-identity replay for Dancing Lights movable Dim Light,
+source-owned light identities, Bonus Action repositioning, table-supplied
+projection witnesses, sight-obscurement projection, and no runtime-owned map
+automation.
+
 ### Task 3 - L1F-FAERIE-FIRE - Faerie Fire Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `faerie_fire`, covering save-gated outline,
 attack-roll Advantage, Invisible benefit denial, and Dim Light emitter projection
@@ -168,9 +181,17 @@ within the existing table-witness boundary.
 
 RAW: `.references/srd-5.2.1/Spells/Descriptions-E-L.md` Faerie Fire.
 
+Result: `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts`
+and
+`packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt`
+record the selected-identity replay for Faerie Fire save-gated creature outline,
+object outline, attack-roll Advantage against visible outlined creatures and
+objects, Invisible benefit denial, Dim Light emitter projection, and
+table-supplied projection witnesses without runtime-owned map automation.
+
 ### Task 4 - L1F-FEATHER-FALL - Feather Fall Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `feather_fall`, covering the caller-supplied
 falling Reaction trigger, mitigation effect, and landing cleanup. Do not add
@@ -180,7 +201,7 @@ RAW: `.references/srd-5.2.1/Spells/Descriptions-E-L.md` Feather Fall.
 
 ### Task 5 - L1F-FOG-CLOUD - Fog Cloud Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `fog_cloud`, proving the supported
 caller-supplied fog area identity, Heavily Obscured projection, duration, and
@@ -188,18 +209,36 @@ strong-wind cleanup.
 
 RAW: `.references/srd-5.2.1/Spells/Descriptions-E-L.md` Fog Cloud.
 
+Result: `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts`
+and
+`packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt`
+record the selected-identity replay for Fog Cloud caller-supplied area identity,
+level-one 20-foot-radius Heavily Obscured projection, one-hour Concentration
+duration, level-one Spell Slot spend, and strong-wind cleanup without
+runtime-owned area membership, line-of-sight, or map automation.
+
 ### Task 6 - L1F-GREASE-CAST - Grease Cast Hazard Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `grease` cast-time ground hazard creation and
 on-cast saving throw outcomes over caller-supplied affected targets.
 
 RAW: `.references/srd-5.2.1/Spells/Descriptions-E-L.md` Grease.
 
+Result: `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts`
+and
+`packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt`
+record the selected-identity replay for Grease caller-supplied ground-area
+identity, one-minute ground-hazard duration, level-one Spell Slot spend, Magic
+Action spend, cast-time affected-target saving throw membership, failed-save
+Prone application, successful-save non-Prone outcome, and mismatched
+affected-target rejection. Task 7 remains the executable owner for Grease
+movement cost, enter-area, and end-turn trigger replay.
+
 ### Task 7 - L1F-GREASE-MOVEMENT - Grease Movement And Turn Trigger Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity replay coverage for `grease` movement cost, enter-area,
 and end-turn trigger support. Use the same `selected-identity-mbt` evidence row
@@ -208,9 +247,18 @@ rows for the same owner path.
 
 RAW: `.references/srd-5.2.1/Spells/Descriptions-E-L.md` Grease.
 
+Result: `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts`
+and
+`packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt`
+extend the Grease selected-identity replay with caller-supplied Difficult
+Terrain Movement cost witnesses, active hazard identity validation,
+enter-area and end-turn Saving Throw trigger commands, failed-save Prone
+application, mismatched trigger target rejection, and reuse the Task 6
+`selected-identity-mbt` evidence row.
+
 ### Task 8 - L1F-JUMP - Jump Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `jump`, proving the supported target effect,
 once-per-turn use marker, 10-foot Movement spend, and caller-supplied landing
@@ -218,23 +266,51 @@ facts without runtime-owned pathfinding.
 
 RAW: `.references/srd-5.2.1/Spells/Descriptions-E-L.md` Jump.
 
+Result: `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts`
+and
+`packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt`
+record the selected-identity replay for Jump's touched willing target effect,
+one-minute movement replacement, once-per-target-turn use marker, 10-foot
+Movement spend for a caller-supplied jump up to 30 feet, caller-supplied legal
+landing facts, failed Difficult Terrain landing Prone outcome, and Spell Slot
+expenditure without adding runtime-owned pathfinding or final-position
+derivation.
+
 ### Task 9 - L1F-LIGHT - Light Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `light`, proving object admission, emitter
 projection, recast replacement, duration cleanup, and opaque-cover witness use.
 
 RAW: `.references/srd-5.2.1/Spells/Descriptions-E-L.md` Light.
 
+Result: `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts`
+and
+`packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt`
+record the selected-identity replay for Light's touched Large-or-smaller object
+admission, someone-else worn/carried rejection, object-attached Bright and Dim
+Light emitter projection, opaque-cover suppression, same-caster recast
+replacement, one-hour duration, and duration cleanup without adding
+runtime-owned geometry, line-of-sight, or colored-light rendering.
+
 ### Task 10 - L1F-PRODUCE-FLAME - Produce Flame Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `produce_flame`, covering held-light emitter
 projection and hurl cleanup within existing runtime support.
 
 RAW: `.references/srd-5.2.1/Spells/Descriptions-M-P.md` Produce Flame.
+
+Result: `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts`
+and
+`packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt`
+record the selected-identity replay for Produce Flame's held caster-attached
+Bright and Dim Light emitter projection, ten-minute held-light duration,
+Magic Action hurl availability, ranged spell attack Fire damage, hurl cleanup,
+and duration cleanup without adding runtime-owned geometry or line-of-sight
+automation.
 
 ### Task 11 - L1F-THUNDERWAVE - Thunderwave Selected Identity Replay
 

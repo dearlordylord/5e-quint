@@ -23,7 +23,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Runtime mapping coverage | 62/62 | 100% |
 | Runtime parity coverage | 62/62 | 100% |
 | Deterministic admission/projection coverage | 94/94 | 100% |
-| Selected identity MBT coverage | 63/94 | 67% |
+| Selected identity MBT coverage | 65/94 | 69.1% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -924,6 +924,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `color_spray` | `spell.invocation-condition-save` | condition-saving-throw-lifecycle | `packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts` |
 | `command` | `spell.invocation-command-halt-grovel`, `spell.invocation-command-drop-held-object`, `spell.invocation-command-approach-route`, `spell.invocation-command-flee-route` | movement-forced-movement | `packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts` |
 | `cure_wounds` | `spell.hit-point-restoration` | healing-stabilization | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
+| `dancing_lights` | `spell.invocation-dancing-lights-movable-dim-light` | level1-spatial-witness | `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts` |
 | `dissonant_whispers` | `spell.invocation-damage-save-or-attack`, `spell.invocation-forced-reaction-movement` | movement-forced-movement | `packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts` |
 | `divine_favor` | `spell.invocation-weapon-damage-rider` | L1E-DIVINE-FAVOR | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
 | `divine_smite` | `spell.invocation-after-hit-damage` | L1E-DIVINE-SMITE | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
@@ -940,6 +941,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `inflict_wounds` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | attack-spell-shape | `packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts` |
 | `longstrider` | `spell.scalar-buff` | L1E-LONGSTRIDER | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
 | `poison_spray` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | level1-damage-spell-selected-identity | `packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts` |
+| `produce_flame` | `spell.invocation-damage-save-or-attack`, `spell.invocation-held-light-emitter` | level1-spatial-witness | `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts` |
 | `ray_of_frost` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | spell-procedure-core | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
 | `ray_of_sickness` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | level1-damage-spell-selected-identity | `packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts` |
 | `resistance` | `spell.invocation-damage-reduction` | roll-modifier-buff | `packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts` |
