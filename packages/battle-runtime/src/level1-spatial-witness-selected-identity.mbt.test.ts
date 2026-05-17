@@ -1,9 +1,10 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt level1-spatial-witness dancing_lights faerie_fire feather_fall fog_cloud grease
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt level1-spatial-witness dancing_lights faerie_fire feather_fall fog_cloud grease jump
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness dancing_lights doDancingLightsMovableDimLight
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness faerie_fire doFaerieFireOutlineAdvantageInvisibleDimLight
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness feather_fall doFeatherFallReactionMitigationLanding
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness fog_cloud doFogCloudAreaIdentityObscurementStrongWindCleanup
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness grease doGreaseCastGroundHazardSavingThrows doGreaseMovementAndTurnTriggers
+// UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness jump doJumpMovementReplacementLandingWitness
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -91,6 +92,7 @@ const level1SpatialWitnessSelectedIdentityDriverSchema = {
   doFogCloudAreaIdentityObscurementStrongWindCleanup: {},
   doGreaseCastGroundHazardSavingThrows: {},
   doGreaseMovementAndTurnTriggers: {},
+  doJumpMovementReplacementLandingWitness: {},
   step: {},
 } as const;
 type Level1SpatialWitnessSelectedIdentityDriverAction = Exclude<
@@ -146,6 +148,14 @@ type Level1SpatialWitnessSelectedIdentityProjection = {
   readonly greaseEndTurnAdvancedToCaster: boolean;
   readonly greaseEndTurnMismatchedTargetRejected: boolean;
   readonly greaseSlotExpended: boolean;
+  readonly jumpTargetEffectInstalled: boolean;
+  readonly jumpMovementSpentFeet: number;
+  readonly jumpUsedMarkerSet: boolean;
+  readonly jumpSameTurnUnavailable: boolean;
+  readonly jumpNextTargetTurnAvailable: boolean;
+  readonly jumpMissingLandingFactRejected: boolean;
+  readonly jumpFailedLandingProne: boolean;
+  readonly jumpSlotExpended: boolean;
   readonly projectedIllumination: BattleIllumination;
   readonly ordinarySightObscurement: BattleSightObscurement;
   readonly darkvisionSightObscurement: BattleSightObscurement;
@@ -161,7 +171,8 @@ type Level1SpatialWitnessSelectedIdentityProjection = {
     | "featherFallReactionMitigationLanding"
     | "fogCloudAreaIdentityObscurementStrongWindCleanup"
     | "greaseCastGroundHazardSavingThrows"
-    | "greaseMovementAndTurnTriggers";
+    | "greaseMovementAndTurnTriggers"
+    | "jumpMovementReplacementLandingWitness";
 };
 type ProjectedAttackRollMode = AttackRollMode;
 const dancingLightsUnitId = "dancing_lights";
@@ -169,6 +180,7 @@ const faerieFireUnitId = "faerie_fire";
 const featherFallUnitId = "feather_fall";
 const fogCloudUnitId = "fog_cloud";
 const greaseUnitId = "grease";
+const jumpUnitId = "jump";
 const starryWispUnitId = "starry_wisp";
 const level1SpatialWitnessSelectedUnitIds = [
   dancingLightsUnitId,
@@ -176,6 +188,7 @@ const level1SpatialWitnessSelectedUnitIds = [
   featherFallUnitId,
   fogCloudUnitId,
   greaseUnitId,
+  jumpUnitId,
 ] as const;
 type Level1SpatialWitnessSelectedUnitId =
   (typeof level1SpatialWitnessSelectedUnitIds)[number];
@@ -224,6 +237,15 @@ type GreaseGroundHazardSaveAct = AvailableBattleAct & {
     {
       readonly tag: "runtimeCommand";
       readonly command: "greaseGroundHazardSave";
+    }
+  >;
+};
+type JumpMovementReplacementAct = AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "jumpMovementReplacement";
     }
   >;
 };
@@ -297,6 +319,20 @@ type GreaseSavingThrowOutcome = {
   readonly targetId: CombatantId;
   readonly succeeded: boolean;
 };
+type JumpMovementReplacementEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "jumpMovementReplacement" }
+>;
+type JumpProjection = {
+  readonly targetEffectInstalled: boolean;
+  readonly movementSpentFeet: number;
+  readonly usedMarkerSet: boolean;
+  readonly sameTurnUnavailable: boolean;
+  readonly nextTargetTurnAvailable: boolean;
+  readonly missingLandingFactRejected: boolean;
+  readonly failedLandingProne: boolean;
+  readonly slotExpended: boolean;
+};
 
 const casterId = combatantId("level1-spatial-witness-caster");
 const observerId = combatantId("level1-spatial-witness-observer");
@@ -312,6 +348,7 @@ const greaseFailedTargetId = combatantId(
 const greaseSuccessfulTargetId = combatantId(
   "level1-spatial-witness-grease-successful-target",
 );
+const jumpTargetId = combatantId("level1-spatial-witness-jump-target");
 const greaseAffectedTargetIds = [
   greaseFailedTargetId,
   greaseSuccessfulTargetId,
@@ -332,12 +369,15 @@ const fogCloudOneHourDurationTicks = requireElapsedHours(1);
 const greaseAreaId = "level1-grease-ground-area";
 const staleGreaseAreaId = "level1-stale-grease-ground-area";
 const greaseOneMinuteDurationTicks = requireElapsedMinutes(1);
+const jumpOneMinuteDurationTicks = requireElapsedMinutes(1);
 const greaseTotalMovementDistanceFeet = movementFeet(10);
 const greaseDifficultTerrainDistanceFeet = movementFeet(5);
 const greaseDifficultTerrainMovementCostFeet = movementFeet(
   Number(greaseTotalMovementDistanceFeet) +
     Number(greaseDifficultTerrainDistanceFeet),
 );
+const jumpMovementCostFeet = movementFeet(10);
+const jumpMaxDistanceFeet = movementFeet(30);
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -512,6 +552,30 @@ const selectedUnitIdentityReplays = [
       },
     ],
   },
+  {
+    taskId: "level1-spatial-witness",
+    unitId: "jump",
+    actions: ["doJumpMovementReplacementLandingWitness"],
+    sequences: [
+      {
+        name: "target-effect-once-per-turn-movement-spend-and-landing-witness",
+        actions: ["doJumpMovementReplacementLandingWitness"],
+        expected: expectedProjection({
+          jumpTargetEffectInstalled: true,
+          jumpMovementSpentFeet: Number(jumpMovementCostFeet),
+          jumpUsedMarkerSet: true,
+          jumpSameTurnUnavailable: true,
+          jumpNextTargetTurnAvailable: true,
+          jumpMissingLandingFactRejected: true,
+          jumpFailedLandingProne: true,
+          jumpSlotExpended: true,
+          magicActionAvailable: true,
+          bonusActionAvailable: true,
+          lastResult: "jumpMovementReplacementLandingWitness",
+        }),
+      },
+    ],
+  },
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
 describe("Level 1 spatial witness selected identity MBT", () => {
@@ -577,6 +641,7 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
     let featherFallProjection = emptyFeatherFallProjection();
     let fogCloudProjection = emptyFogCloudProjection();
     let greaseProjection = emptyGreaseProjection();
+    let jumpProjection = emptyJumpProjection();
     let lastResult: Level1SpatialWitnessSelectedIdentityProjection["lastResult"] =
       "init";
 
@@ -589,6 +654,7 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
       featherFallProjection = emptyFeatherFallProjection();
       fogCloudProjection = emptyFogCloudProjection();
       greaseProjection = emptyGreaseProjection();
+      jumpProjection = emptyJumpProjection();
       lastResult = "init";
     }
 
@@ -1026,6 +1092,107 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
         state = endTurnFailed.state;
         lastResult = "greaseMovementAndTurnTriggers";
       },
+      doJumpMovementReplacementLandingWitness: () => {
+        state = jumpBattle();
+        retainedLightIdentityCount = 0;
+        const castAct = jumpCastAct(state);
+        const targetList = requireHole(castAct.initialHoles, "spellTargetList");
+        const cast = resolveBattleSubject({
+          state,
+          subject: castAct.subject,
+          fills: [jumpTargetListFill(targetList, [jumpTargetId])],
+        });
+        if (cast.tag !== "resolved") {
+          throw new Error(`Expected Jump cast to resolve, got ${cast.tag}.`);
+        }
+
+        const targetEffectInstalled = jumpTargetEffectInstalled(cast.state);
+        const targetTurn = resolveEndTurn(
+          cast.state,
+          casterId,
+          "Jump caster",
+        );
+        const jumpAct = jumpMovementReplacementAct(targetTurn, jumpTargetId);
+        const movement = requireHole(jumpAct.initialHoles, "movement");
+        const missingLandingFact = resolveBattleSubject({
+          state: targetTurn,
+          subject: jumpAct.subject,
+          fills: [ordinaryMovementFill(movement, jumpMovementCostFeet)],
+        });
+        const missingLandingFactRejected =
+          missingLandingFact.tag === "invalid" &&
+          missingLandingFact.message ===
+            "Jump movement replacement requires caller-supplied jump distance and landing facts.";
+        const jumped = resolveBattleSubject({
+          state: targetTurn,
+          subject: jumpAct.subject,
+          fills: [
+            jumpMovementReplacementFill(movement, {
+              difficultTerrainAcrobatics: "notRequired",
+            }),
+          ],
+        });
+        if (jumped.tag !== "resolved") {
+          throw new Error(
+            `Expected Jump movement replacement to resolve, got ${jumped.tag}.`,
+          );
+        }
+
+        const nextCasterTurn = resolveEndTurn(
+          jumped.state,
+          jumpTargetId,
+          "Jump target",
+        );
+        const nextTargetTurn = resolveEndTurn(
+          nextCasterTurn,
+          casterId,
+          "Jump caster after target",
+        );
+        const nextTargetTurnAvailable =
+          maybeJumpMovementReplacementAct(nextTargetTurn, jumpTargetId) !==
+          undefined;
+        const nextJumpAct = jumpMovementReplacementAct(
+          nextTargetTurn,
+          jumpTargetId,
+        );
+        const nextMovement = requireHole(nextJumpAct.initialHoles, "movement");
+        const failedLanding = resolveBattleSubject({
+          state: nextTargetTurn,
+          subject: nextJumpAct.subject,
+          fills: [
+            jumpMovementReplacementFill(nextMovement, {
+              difficultTerrainAcrobatics: "failed",
+            }),
+          ],
+        });
+        if (failedLanding.tag !== "resolved") {
+          throw new Error(
+            `Expected Jump failed landing witness to resolve, got ${failedLanding.tag}.`,
+          );
+        }
+
+        jumpProjection = {
+          targetEffectInstalled,
+          movementSpentFeet: Number(
+            jumpCombatant(jumped.state, jumpTargetId).movementSpentFeet,
+          ),
+          usedMarkerSet:
+            jumpMovementReplacementEffect(jumped.state, jumpTargetId)
+              ?.usedThisTurn === true,
+          sameTurnUnavailable:
+            maybeJumpMovementReplacementAct(jumped.state, jumpTargetId) ===
+            undefined,
+          nextTargetTurnAvailable,
+          missingLandingFactRejected,
+          failedLandingProne: hasCondition(
+            jumpCombatant(failedLanding.state, jumpTargetId).conditions,
+            "prone",
+          ),
+          slotExpended: jumpCasterSlotExpended(cast.state),
+        };
+        state = failedLanding.state;
+        lastResult = "jumpMovementReplacementLandingWitness";
+      },
       step: () => {},
       getState: () =>
         projectLevel1SpatialWitnessSelectedIdentityState(
@@ -1037,6 +1204,7 @@ function createLevel1SpatialWitnessSelectedIdentityDriver() {
           featherFallProjection,
           fogCloudProjection,
           greaseProjection,
+          jumpProjection,
           lastResult,
         ),
     };
@@ -1110,6 +1278,14 @@ function expectedProjection(
     greaseEndTurnAdvancedToCaster: false,
     greaseEndTurnMismatchedTargetRejected: false,
     greaseSlotExpended: false,
+    jumpTargetEffectInstalled: false,
+    jumpMovementSpentFeet: 0,
+    jumpUsedMarkerSet: false,
+    jumpSameTurnUnavailable: false,
+    jumpNextTargetTurnAvailable: false,
+    jumpMissingLandingFactRejected: false,
+    jumpFailedLandingProne: false,
+    jumpSlotExpended: false,
     projectedIllumination: "darkness",
     ordinarySightObscurement: "heavilyObscured",
     darkvisionSightObscurement: "lightlyObscured",
@@ -1171,6 +1347,19 @@ function emptyGreaseProjection(): GreaseProjection {
     endTurnFailedTargetProne: false,
     endTurnAdvancedToCaster: false,
     endTurnMismatchedTargetRejected: false,
+    slotExpended: false,
+  };
+}
+
+function emptyJumpProjection(): JumpProjection {
+  return {
+    targetEffectInstalled: false,
+    movementSpentFeet: 0,
+    usedMarkerSet: false,
+    sameTurnUnavailable: false,
+    nextTargetTurnAvailable: false,
+    missingLandingFactRejected: false,
+    failedLandingProne: false,
     slotExpended: false,
   };
 }
@@ -1373,6 +1562,43 @@ function greaseBattle(): BattleState {
   return result.right;
 }
 
+function jumpBattle(): BattleState {
+  const jump = spellRecord(jumpUnitId);
+  const result = startBattle({
+    battleId: battleId("level1-spatial-witness-selected-identity"),
+    combatants: [
+      spatialWitnessCreature({
+        combatantId: casterId,
+        displayName: "Jump caster",
+        initiative: 20,
+        side: partySide,
+        spellcasting: {
+          sourceClassName: "druid",
+          spellcastingAbilityModifier: abilityModifier(3),
+          proficiencyBonus: proficiencyBonus(2),
+          canCastSpells: true,
+          cantrips: [],
+          preparedSpells: [jump],
+          featurePreparedSpells: [],
+          invocationSpellAccesses: [],
+          spellbookRitualSpellAccesses: [],
+          spellSlots: [{ spellLevel: 1, count: 1 }],
+        },
+      }),
+      spatialWitnessCreature({
+        combatantId: jumpTargetId,
+        displayName: "Jump willing target",
+        initiative: 10,
+        side: partySide,
+      }),
+    ],
+  });
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
 function spatialWitnessCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
@@ -1533,6 +1759,44 @@ function greaseGroundHazardSaveAct(
   return act;
 }
 
+function jumpCastAct(state: BattleState): BonusActionSpellAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is BonusActionSpellAct =>
+      candidate.subject.tag === "bonusActionSpell" &&
+      candidate.subject.invocation.spellId === jumpUnitId &&
+      candidate.subject.invocation.procedure === "jumpMovementReplacement",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Jump movement replacement Bonus Action spell.");
+  }
+  return act;
+}
+
+function jumpMovementReplacementAct(
+  state: BattleState,
+  actorId: CombatantId,
+): JumpMovementReplacementAct {
+  const act = maybeJumpMovementReplacementAct(state, actorId);
+  if (act === undefined) {
+    throw new Error("Expected Jump movement replacement command.");
+  }
+  return act;
+}
+
+function maybeJumpMovementReplacementAct(
+  state: BattleState,
+  actorId: CombatantId,
+): JumpMovementReplacementAct | undefined {
+  return discoverBattleActs(state).find(
+    (candidate): candidate is JumpMovementReplacementAct =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "jumpMovementReplacement" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.sourceCombatantId === casterId &&
+      candidate.subject.sourceSpellId === jumpUnitId,
+  );
+}
+
 function separateCastPlacement(
   hole: Extract<BattleHole, { readonly kind: "dancingLightsPlacement" }>,
 ): Extract<BattleFill, { readonly kind: "dancingLightsPlacement" }> {
@@ -1663,6 +1927,76 @@ function greaseMovementFill(
         areaId: input.areaId,
         totalDistanceFeet: greaseTotalMovementDistanceFeet,
         greaseDistanceFeet: greaseDifficultTerrainDistanceFeet,
+      },
+    },
+  };
+}
+
+function jumpTargetListFill(
+  hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
+  targetIds: readonly CombatantId[],
+): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
+  return {
+    kind: "spellTargetList",
+    holeId: hole.holeId,
+    value: { targetIds },
+    spatialFacts: targetIds.flatMap((targetId) => [
+      {
+        kind: "spellTarget" as const,
+        casterId,
+        targetId,
+        spellId: jumpUnitId,
+      },
+      {
+        kind: "spellTargetKnownWilling" as const,
+        casterId,
+        targetId,
+        spellId: jumpUnitId,
+      },
+    ]),
+  };
+}
+
+function ordinaryMovementFill(
+  hole: Extract<BattleHole, { readonly kind: "movement" }>,
+  movementCostFeet: MovementFeet,
+): Extract<BattleFill, { readonly kind: "movement" }> {
+  return {
+    kind: "movement",
+    holeId: hole.holeId,
+    value: {
+      speedKind: "walk",
+      movementCostFeet,
+      provokedOpportunityAttacks: [],
+    },
+  };
+}
+
+function jumpMovementReplacementFill(
+  hole: Extract<BattleHole, { readonly kind: "movement" }>,
+  input: {
+    readonly difficultTerrainAcrobatics: NonNullable<
+      Extract<
+        BattleFill,
+        { readonly kind: "movement" }
+      >["value"]["jumpMovementReplacement"]
+    >["landing"]["difficultTerrainAcrobatics"];
+  },
+): Extract<BattleFill, { readonly kind: "movement" }> {
+  return {
+    kind: "movement",
+    holeId: hole.holeId,
+    value: {
+      speedKind: "walk",
+      movementCostFeet: jumpMovementCostFeet,
+      provokedOpportunityAttacks: [],
+      jumpMovementReplacement: {
+        kind: "jumpMovementReplacement",
+        distanceFeet: jumpMaxDistanceFeet,
+        landing: {
+          kind: "legalLanding",
+          difficultTerrainAcrobatics: input.difficultTerrainAcrobatics,
+        },
       },
     },
   };
@@ -2157,6 +2491,49 @@ function greaseCombatant(state: BattleState, id: CombatantId) {
   return combatant;
 }
 
+function jumpMovementReplacementEffect(
+  state: BattleState,
+  id: CombatantId,
+): JumpMovementReplacementEffect | undefined {
+  return jumpCombatant(state, id).activeEffects.find(
+    (effect): effect is JumpMovementReplacementEffect =>
+      effect.kind === "jumpMovementReplacement" &&
+      effect.sourceSpellId === jumpUnitId &&
+      effect.sourceCombatantId === casterId,
+  );
+}
+
+function jumpTargetEffectInstalled(state: BattleState): boolean {
+  const effect = jumpMovementReplacementEffect(state, jumpTargetId);
+  return (
+    effect !== undefined &&
+    effect.movementCostFeet === jumpMovementCostFeet &&
+    effect.maxJumpDistanceFeet === jumpMaxDistanceFeet &&
+    effect.expiresAt.durationTicks === jumpOneMinuteDurationTicks &&
+    effect.usedThisTurn === false
+  );
+}
+
+function jumpCasterSlotExpended(state: BattleState): boolean {
+  const caster = jumpCombatant(state, casterId);
+  if (caster.origin.kind !== "character") {
+    throw new Error("Expected Jump caster to be a character.");
+  }
+  return (
+    caster.origin.spellcasting?.spellSlots.some(
+      (slot) => slot.spellLevel === 1 && slot.expended === 1,
+    ) ?? false
+  );
+}
+
+function jumpCombatant(state: BattleState, id: CombatantId) {
+  const combatant = state.combatants.get(id);
+  if (combatant === undefined) {
+    throw new Error(`Expected Jump combatant ${id}.`);
+  }
+  return combatant;
+}
+
 function projectLevel1SpatialWitnessSelectedIdentityState(
   state: BattleState,
   retainedLightIdentityCount: number,
@@ -2166,6 +2543,7 @@ function projectLevel1SpatialWitnessSelectedIdentityState(
   featherFallProjection: FeatherFallProjection,
   fogCloudProjection: FogCloudProjection,
   greaseProjection: GreaseProjection,
+  jumpProjection: JumpProjection,
   lastResult: Level1SpatialWitnessSelectedIdentityProjection["lastResult"],
 ): Level1SpatialWitnessSelectedIdentityProjection {
   const snapshot = snapshotBattle(state);
@@ -2249,6 +2627,14 @@ function projectLevel1SpatialWitnessSelectedIdentityState(
     greaseEndTurnMismatchedTargetRejected:
       greaseProjection.endTurnMismatchedTargetRejected,
     greaseSlotExpended: greaseProjection.slotExpended,
+    jumpTargetEffectInstalled: jumpProjection.targetEffectInstalled,
+    jumpMovementSpentFeet: jumpProjection.movementSpentFeet,
+    jumpUsedMarkerSet: jumpProjection.usedMarkerSet,
+    jumpSameTurnUnavailable: jumpProjection.sameTurnUnavailable,
+    jumpNextTargetTurnAvailable: jumpProjection.nextTargetTurnAvailable,
+    jumpMissingLandingFactRejected: jumpProjection.missingLandingFactRejected,
+    jumpFailedLandingProne: jumpProjection.failedLandingProne,
+    jumpSlotExpended: jumpProjection.slotExpended,
     projectedIllumination,
     ordinarySightObscurement: battleSightObscurement(projectedIllumination),
     darkvisionSightObscurement: battleSightObscurement(projectedIllumination, {
@@ -2297,7 +2683,8 @@ function casterConcentratingOnSelectedUnit(
     lastResult === "featherFallReactionMitigationLanding" ||
     lastResult === "fogCloudAreaIdentityObscurementStrongWindCleanup" ||
     lastResult === "greaseCastGroundHazardSavingThrows" ||
-    lastResult === "greaseMovementAndTurnTriggers"
+    lastResult === "greaseMovementAndTurnTriggers" ||
+    lastResult === "jumpMovementReplacementLandingWitness"
   ) {
     return false;
   }
@@ -2700,6 +3087,29 @@ function normalizeLevel1SpatialWitnessSelectedIdentityQuintState(
       "qGreaseEndTurnMismatchedTargetRejected",
     ),
     greaseSlotExpended: booleanField(state, "qGreaseSlotExpended"),
+    jumpTargetEffectInstalled: booleanField(
+      state,
+      "qJumpTargetEffectInstalled",
+    ),
+    jumpMovementSpentFeet: numberFromQuintInt(
+      state["qJumpMovementSpentFeet"],
+      "qJumpMovementSpentFeet",
+    ),
+    jumpUsedMarkerSet: booleanField(state, "qJumpUsedMarkerSet"),
+    jumpSameTurnUnavailable: booleanField(
+      state,
+      "qJumpSameTurnUnavailable",
+    ),
+    jumpNextTargetTurnAvailable: booleanField(
+      state,
+      "qJumpNextTargetTurnAvailable",
+    ),
+    jumpMissingLandingFactRejected: booleanField(
+      state,
+      "qJumpMissingLandingFactRejected",
+    ),
+    jumpFailedLandingProne: booleanField(state, "qJumpFailedLandingProne"),
+    jumpSlotExpended: booleanField(state, "qJumpSlotExpended"),
     projectedIllumination: mbtIllumination(state["qProjectedIllumination"]),
     ordinarySightObscurement: mbtSightObscurement(
       state["qOrdinarySightObscurement"],
@@ -2784,7 +3194,8 @@ function mbtLastResult(
     raw === "featherFallReactionMitigationLanding" ||
     raw === "fogCloudAreaIdentityObscurementStrongWindCleanup" ||
     raw === "greaseCastGroundHazardSavingThrows" ||
-    raw === "greaseMovementAndTurnTriggers"
+    raw === "greaseMovementAndTurnTriggers" ||
+    raw === "jumpMovementReplacementLandingWitness"
   ) {
     return raw;
   }

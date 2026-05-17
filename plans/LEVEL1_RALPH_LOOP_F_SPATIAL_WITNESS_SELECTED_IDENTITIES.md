@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "L1F-JUMP",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Jump Selected Identity Replay"
     },
     {
@@ -258,13 +258,23 @@ application, mismatched trigger target rejection, and reuse the Task 6
 
 ### Task 8 - L1F-JUMP - Jump Selected Identity Replay
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Add selected identity evidence for `jump`, proving the supported target effect,
 once-per-turn use marker, 10-foot Movement spend, and caller-supplied landing
 facts without runtime-owned pathfinding.
 
 RAW: `.references/srd-5.2.1/Spells/Descriptions-E-L.md` Jump.
+
+Result: `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts`
+and
+`packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt`
+record the selected-identity replay for Jump's touched willing target effect,
+one-minute movement replacement, once-per-target-turn use marker, 10-foot
+Movement spend for a caller-supplied jump up to 30 feet, caller-supplied legal
+landing facts, failed Difficult Terrain landing Prone outcome, and Spell Slot
+expenditure without adding runtime-owned pathfinding or final-position
+derivation.
 
 ### Task 9 - L1F-LIGHT - Light Selected Identity Replay
 

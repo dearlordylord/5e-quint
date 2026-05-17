@@ -8,6 +8,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
   val qGreaseDifficultTerrainDistanceFeet = 5
   val qGreaseDifficultTerrainExpectedMovementCostFeet =
     qGreaseDifficultTerrainTotalDistanceFeet + qGreaseDifficultTerrainDistanceFeet
+  val qJumpMovementCostFeet = 10
 
   var qLightEmitterCount: int
   var qDimLightEmitterCount: int
@@ -56,6 +57,14 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
   var qGreaseEndTurnAdvancedToCaster: bool
   var qGreaseEndTurnMismatchedTargetRejected: bool
   var qGreaseSlotExpended: bool
+  var qJumpTargetEffectInstalled: bool
+  var qJumpMovementSpentFeet: int
+  var qJumpUsedMarkerSet: bool
+  var qJumpSameTurnUnavailable: bool
+  var qJumpNextTargetTurnAvailable: bool
+  var qJumpMissingLandingFactRejected: bool
+  var qJumpFailedLandingProne: bool
+  var qJumpSlotExpended: bool
   var qProjectedIllumination: str
   var qOrdinarySightObscurement: str
   var qDarkvisionSightObscurement: str
@@ -114,6 +123,14 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     greaseEndTurnAdvancedToCaster: bool,
     greaseEndTurnMismatchedTargetRejected: bool,
     greaseSlotExpended: bool,
+    jumpTargetEffectInstalled: bool,
+    jumpMovementSpentFeet: int,
+    jumpUsedMarkerSet: bool,
+    jumpSameTurnUnavailable: bool,
+    jumpNextTargetTurnAvailable: bool,
+    jumpMissingLandingFactRejected: bool,
+    jumpFailedLandingProne: bool,
+    jumpSlotExpended: bool,
     projectedIllumination: str,
     ordinarySightObscurement: str,
     darkvisionSightObscurement: str,
@@ -171,6 +188,14 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     qGreaseEndTurnAdvancedToCaster' = greaseEndTurnAdvancedToCaster,
     qGreaseEndTurnMismatchedTargetRejected' = greaseEndTurnMismatchedTargetRejected,
     qGreaseSlotExpended' = greaseSlotExpended,
+    qJumpTargetEffectInstalled' = jumpTargetEffectInstalled,
+    qJumpMovementSpentFeet' = jumpMovementSpentFeet,
+    qJumpUsedMarkerSet' = jumpUsedMarkerSet,
+    qJumpSameTurnUnavailable' = jumpSameTurnUnavailable,
+    qJumpNextTargetTurnAvailable' = jumpNextTargetTurnAvailable,
+    qJumpMissingLandingFactRejected' = jumpMissingLandingFactRejected,
+    qJumpFailedLandingProne' = jumpFailedLandingProne,
+    qJumpSlotExpended' = jumpSlotExpended,
     qProjectedIllumination' = projectedIllumination,
     qOrdinarySightObscurement' = ordinarySightObscurement,
     qDarkvisionSightObscurement' = darkvisionSightObscurement,
@@ -190,6 +215,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       false, 0, 0, 0, false, false, false, false, false,
       false, 0, 0, 0, false, false, false,
       0, 0, false, false, false, false, false, false, false, false, false,
+      false, 0, false, false, false, false, false, false,
       "darkness", "heavilyObscured", "lightlyObscured", "darkness",
       0, false, true, true,
       "init",
@@ -204,6 +230,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       false, 0, 0, 0, false, false, false, false, false,
       false, 0, 0, 0, false, false, false,
       0, 0, false, false, false, false, false, false, false, false, false,
+      false, 0, false, false, false, false, false, false,
       "dimLight", "lightlyObscured", "unobscured", "darkness",
       0, true, false, false,
       "dancingLightsMovableDimLight",
@@ -219,6 +246,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       false, 0, 0, 0, false, false, false, false, false,
       false, 0, 0, 0, false, false, false,
       0, 0, false, false, false, false, false, false, false, false, false,
+      false, 0, false, false, false, false, false, false,
       "dimLight", "lightlyObscured", "unobscured", "darkness",
       0, true, true, true,
       "faerieFireOutlineAdvantageInvisibleDimLight",
@@ -234,6 +262,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       false, 0, 0, 0, false, false, false, false, false,
       false, 0, 0, 0, false, false, false,
       0, 0, false, false, false, false, false, false, false, false, false,
+      false, 0, false, false, false, false, false, false,
       "darkness", "heavilyObscured", "lightlyObscured", "darkness",
       0, false, true, true,
       "featherFallReactionMitigationLanding",
@@ -250,6 +279,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       true, true, true, true, true,
       false, 0, 0, 0, false, false, false,
       0, 0, false, false, false, false, false, false, false, false, false,
+      false, 0, false, false, false, false, false, false,
       "darkness", "heavilyObscured", "lightlyObscured", "darkness",
       0, false, false, true,
       "fogCloudAreaIdentityObscurementStrongWindCleanup",
@@ -265,6 +295,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       false, 0, 0, 0, false, false, false, false, false,
       true, 1, qGreaseOneMinuteDurationTicks, 2, true, false, true,
       0, 0, false, false, false, false, false, false, false, false, true,
+      false, 0, false, false, false, false, false, false,
       "darkness", "heavilyObscured", "lightlyObscured", "darkness",
       0, false, false, true,
       "greaseCastGroundHazardSavingThrows",
@@ -282,9 +313,26 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       qGreaseDifficultTerrainExpectedMovementCostFeet,
       qGreaseDifficultTerrainExpectedMovementCostFeet,
       true, true, true, true, true, true, true, true, true,
+      false, 0, false, false, false, false, false, false,
       "darkness", "heavilyObscured", "lightlyObscured", "darkness",
       0, false, true, true,
       "greaseMovementAndTurnTriggers",
+    ),
+  }
+
+  action doJumpMovementReplacementLandingWitness = all {
+    qLastResult == "init",
+    recordProjection(
+      0, 0, 0,
+      0, 0, "normal", "normal", "normal", false, false,
+      false, false, false, false, 0, 0, false, false, false, false,
+      false, 0, 0, 0, false, false, false, false, false,
+      false, 0, 0, 0, false, false, false,
+      0, 0, false, false, false, false, false, false, false, false, false,
+      true, qJumpMovementCostFeet, true, true, true, true, true, true,
+      "darkness", "heavilyObscured", "lightlyObscured", "darkness",
+      0, false, true, true,
+      "jumpMovementReplacementLandingWitness",
     ),
   }
 
@@ -295,5 +343,6 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     doFogCloudAreaIdentityObscurementStrongWindCleanup,
     doGreaseCastGroundHazardSavingThrows,
     doGreaseMovementAndTurnTriggers,
+    doJumpMovementReplacementLandingWitness,
   }
 }
