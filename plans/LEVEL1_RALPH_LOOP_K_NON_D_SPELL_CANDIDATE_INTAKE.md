@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "L1K-PROTECTION-RESTORATION-CANDIDATES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Protection Restoration Spell Candidate Intake"
     },
     {
@@ -137,7 +137,7 @@ Every task runs:
 | 1 | L1K-PRECHECK - Non-D Spell Candidate Precheck | done | none | refreshed non-D spell candidate set and exclusion list |
 | 2 | L1K-DAMAGE-SPELL-CANDIDATES - Damage Spell Candidate Intake | done | 1 | candidate split for damage spells outside D |
 | 3 | L1K-CONDITION-CONTROL-CANDIDATES - Condition Control Spell Candidate Intake | done | 1 | candidate split for condition/control spells outside D |
-| 4 | L1K-PROTECTION-RESTORATION-CANDIDATES - Protection Restoration Spell Candidate Intake | ready-for-research | 1 | candidate split for protection/restoration spells outside D |
+| 4 | L1K-PROTECTION-RESTORATION-CANDIDATES - Protection Restoration Spell Candidate Intake | done | 1 | candidate split for protection/restoration spells outside D |
 | 5 | L1K-MOBILITY-TRANSFORMATION-CANDIDATES - Mobility Transformation Spell Candidate Intake | ready-for-research | 1 | candidate split for mobility/transformation spells outside D |
 | 6 | L1K-ZONE-WALL-CANDIDATES - Zone Wall Emanation Spell Candidate Intake | ready-for-research | 1 | candidate split for zones/walls/emanations outside D |
 | 7 | L1K-DETECTION-COMMUNICATION-CANDIDATES - Detection Communication Spell Candidate Intake | ready-for-research | 1 | runtime-detached versus runtime-witness split for detection/communication spells |
@@ -201,13 +201,29 @@ catalog admission, QNT behavior, battle reducer behavior, or MBT evidence.
 
 ### Task 4 - L1K-PROTECTION-RESTORATION-CANDIDATES - Protection Restoration Spell Candidate Intake
 
-Status: `ready-for-research`
+Status: `done`
 
 Initial candidates: `aid`, `barkskin`, `death_ward`, `lesser_restoration`,
 `protection_from_poison`, and `protection_from_energy`.
 
 Classify by existing scalar buff, condition removal, damage prevention, or new
 profile needs.
+
+Decision artifact:
+`plans/unit-profile-coverage/L1K_PROTECTION_RESTORATION_SPELL_CANDIDATE_INTAKE.md`.
+
+Final split:
+
+- existing scalar buff exact fit: none;
+- scalar buff widening needs: `aid`, `barkskin`;
+- condition removal needs: `lesser_restoration`, `protection_from_poison`;
+- damage and death prevention needs: `protection_from_energy`, `death_ward`.
+
+No candidate is admitted by the existing scalar-buff or damage-reduction
+profiles. The decision artifact records structured source blockers for
+`lesser_restoration`, `protection_from_poison`, and `aid`; this intake task
+does not add Unit claims, catalog admission, QNT behavior, battle reducer
+behavior, or MBT evidence.
 
 ### Task 5 - L1K-MOBILITY-TRANSFORMATION-CANDIDATES - Mobility Transformation Spell Candidate Intake
 
