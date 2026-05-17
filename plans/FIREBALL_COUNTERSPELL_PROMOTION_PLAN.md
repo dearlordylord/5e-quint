@@ -117,11 +117,12 @@ domain questions before implementation:
   is countered" mean as an interrupted spell invocation? The interrupted spell
   should be present enough to be observed and countered, but not yet have applied
   target outcomes, saving throws, damage, active effects, or object outcomes.
-- What does "the spell slot, charge, or use spent to cast the interrupted spell
-  is not expended" mean for each resource kind? Prefer a domain model where the
-  interrupted spell has not committed its spend yet; use technical
-  spend/refund only if future resource-spend triggers cannot observe a
-  false spend.
+- What does "If that spell was cast with a spell slot, the slot isn't expended"
+  mean for the interrupted spell invocation? Prefer a domain model where the
+  interrupted slotted spell has not committed slot expenditure yet; use
+  technical spend/refund only if future spell-slot-expenditure triggers cannot
+  observe a false spend. Non-slot resource refunds are not stated by the local
+  SRD Counterspell text and need their own source before modeling.
 - What exactly is the higher-slot Counterspell rule called? The current Surface
   `autoSuccessIfCasterSlotGte` wording may be wrong domain language because RAW
   says the spell "is automatically countered" when Counterspell is cast with a
@@ -152,8 +153,8 @@ domain questions before implementation:
   expenditure.
 - Put only Counterspell-relevant facts in the frame: triggering caster,
   triggering spell identity, triggering spell Components, Base Spell Level, Cast
-  Level, visibility/range facts, resource kind, and a continuation for the
-  uncommitted triggering spell.
+  Level, visibility/range facts, whether the invocation is using a spell slot,
+  and a continuation for the uncommitted triggering spell.
 - Add Counterspell reaction choices from the same reaction-choice pipeline used
   by Shield, Hellish Rebuke, Feather Fall, and Ready.
 - Resolve Counterspell as a spell cast itself, so its S component opens another
