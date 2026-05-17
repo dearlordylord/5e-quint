@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "L1I-RANGER-LATER-FEATURES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Ranger Later Feature Catalog Pressure"
     },
     {
@@ -168,7 +168,7 @@ Every task runs:
 | 4 | L1I-BARD-KNOWLEDGE-FEATURES - Bard Knowledge Feature Catalog Pressure | done | 1 | closure artifact and unsupported-profile claims for Bard knowledge-feature records |
 | 5 | L1I-BARBARIAN-LATER-FEATURES - Barbarian Later Feature Catalog Pressure | done | 1 | closure artifact and unsupported-profile claims for Barbarian later-feature records |
 | 6 | L1I-PALADIN-SMITE-STYLE-SURFACE - Paladin Smite And Fighting Style Surface Pressure | done | 1 | closure artifact and unsupported-profile claims for Paladin Fighting Style and Paladin's Smite |
-| 7 | L1I-RANGER-LATER-FEATURES - Ranger Later Feature Catalog Pressure | ready-for-research | 1 | Ranger feature disposition without stealing D Favored Enemy work |
+| 7 | L1I-RANGER-LATER-FEATURES - Ranger Later Feature Catalog Pressure | done | 1 | Ranger feature disposition without stealing D Favored Enemy work |
 | 8 | L1I-MONK-BODY-AND-MIND - Monk Body And Mind Catalog Pressure | ready-for-research | 1 | Monk feature disposition without stealing D Martial Arts scaling |
 | 9 | L1I-WARLOCK-WIZARD-KNOWLEDGE-FEATURES - Warlock Wizard Knowledge Feature Catalog Pressure | ready-for-research | 1 | Warlock/Wizard knowledge-feature disposition without stealing D invocation work |
 | 10 | L1I-SPECIES-TRAIT-PRESSURE-SPLIT - Species Trait Catalog Pressure Split | ready-for-research | 1 | split species traits into runtime-supported, runtime-detached, later-level, or follow-up lanes |
@@ -295,12 +295,22 @@ support past level 1.
 
 ### Task 7 - L1I-RANGER-LATER-FEATURES - Ranger Later Feature Catalog Pressure
 
-Status: `ready-for-research`
+Status: `done`
 
 Units: `ranger_feral_senses`, `ranger_tireless`.
 
 Do not touch `ranger_favored_enemy` or `hunters_mark`; D owns that accounting.
 Classify only the listed later features.
+
+Result:
+`plans/unit-profile-coverage/L1I_CLASS_SPECIES_RANGER_LATER_FEATURES_CLOSURE.md`.
+Both Ranger later-feature records are closed as explicit
+`unsupported-profile` claims. `ranger_feral_senses` is a level-18 Blindsight
+sense grant that belongs to a future sight/sense projection owner rather than a
+standalone Ranger-only battle Unit profile. `ranger_tireless` is a level-10
+two-part feature combining a Magic action Wisdom-derived Temporary Hit Points
+resource with Short Rest Exhaustion reduction, so the partial authored action
+shape is not claimed as a promoted battle Unit profile.
 
 ### Task 8 - L1I-MONK-BODY-AND-MIND - Monk Body And Mind Catalog Pressure
 

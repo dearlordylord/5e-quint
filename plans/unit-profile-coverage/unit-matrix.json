@@ -16717,6 +16717,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "later-level-only",
+          "owner": "future sight and sense projection owner",
+          "reason": "The feature is acquired after level 1 and grants Blindsight with a range of 30 feet. Current promoted Unit profiles do not install class-feature sense grants or project Blindsight from authored feature Units into battle sight state."
+        },
+        "reason": "Feral Senses is a level-18 Blindsight sense grant; no standalone promoted battle Unit profile is claimed for the authored class-feature record until class-feature sense grants have a sight projection owner.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
@@ -16735,6 +16745,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "later-level-only",
+          "owner": "future Tireless feature owner spanning Temporary Hit Points actions and Short Rest Exhaustion recovery",
+          "reason": "The feature is acquired after level 1 and combines a Magic action Temporary Hit Points resource with a separate Short Rest Exhaustion reduction benefit. Current promoted Unit profiles do not support this ability-modifier Magic action resource or the rest-triggered Exhaustion recovery clause."
+        },
+        "reason": "Tireless is a level-10 two-part feature: a Magic action Wisdom-derived Temporary Hit Points use pool plus Short Rest Exhaustion reduction; no standalone promoted battle Unit profile is claimed for the partial authored action shape.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "class_feature",
