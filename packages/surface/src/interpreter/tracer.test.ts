@@ -16,8 +16,7 @@ describe("Surface trace interpreter", () => {
         }),
         expect.objectContaining({
           atomKind: "class_weapon_proficiencies",
-          label:
-            "class_weapon_proficiencies\nsimple weapons, martial weapons",
+          label: "class_weapon_proficiencies\nsimple weapons, martial weapons",
         }),
         expect.objectContaining({
           atomKind: "class_tool_proficiencies",
