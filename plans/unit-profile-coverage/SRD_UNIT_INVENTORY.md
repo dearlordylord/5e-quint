@@ -27,14 +27,14 @@ This is the default `%` for level-1 readiness questions. A row counts only when 
 
 This is the default `%` for level-1 plus level-2 readiness questions. It uses the same acceptance rules as the level-1 metric, but includes level-2 class-feature rows and level-2 spell-list pressure.
 
-- Accepted: 466/556 (83.8%)
+- Accepted: 467/556 (84%)
 
 #### Level 1-2 Battle Readiness by Status
 
-- accepted: 282
+- accepted: 283
 - accepted-no-battle-effect: 184
 - battle-runtime-required: 74
-- owner-evidence-required: 16
+- owner-evidence-required: 15
 
 ### Level-1 Rows by Disposition
 
@@ -43,7 +43,8 @@ This is the default `%` for level-1 plus level-2 readiness questions. It uses th
 
 ### Level-2 Rows by Disposition
 
-- catalog-installed-needs-owner-evidence: 4
+- catalog-installed-needs-owner-evidence: 3
+- catalog-installed-owner-evidence-present: 1
 - catalog-only/dead-for-now: 5
 - missing-authored-record: 12
 - non-runtime: 12
@@ -319,7 +320,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 | Row | Category | Creation ownership | Surface | Authored | Catalog | Unit profile | Disposition | Battle readiness | Readiness closure | Owner evidence | Next action | Source |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 |Barbarian Danger Sense|class feature||current-surface-can-express-source-facts|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|later-level-only: future unit-feature.passive-saving-throw-roll-mode owner||Decide whether to admit/support, or keep catalog-only closure counted.|.references/srd-5.2.1/Classes/Barbarian.md:90|
-|Barbarian Reckless Attack|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-needs-owner-evidence|owner-evidence-required||Unit catalog/admission: catalog-only evidence; operational owner evidence still required|Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only.|.references/srd-5.2.1/Classes/Barbarian.md:94|
+|Barbarian Reckless Attack|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Barbarian.md:94|
 |Barbarian level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Barbarian.md:36|
 |Bard Expertise|class feature||current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|owner-evidence-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Bard.md:93|
 |Bard Jack of All Trades|class feature||current-surface-can-express-source-facts|authored-record-present|not-installed|unsupported-profile|catalog-only/dead-for-now|accepted-no-battle-effect|later-level-only: future character-sheet.ability-check-proficiency-bonus profile||Decide whether to admit/support, or keep catalog-only closure counted.|.references/srd-5.2.1/Classes/Bard.md:99|

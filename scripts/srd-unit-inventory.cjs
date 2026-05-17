@@ -173,6 +173,10 @@ const battleRuntimeRelevantFeatureUnitIds = new Set([
   "warlock_eldritch_invocations",
 ]);
 
+const levelTwoBattleRuntimeOwnerEvidenceUnitIds = new Set([
+  "barbarian_reckless_attack",
+]);
+
 const classContainerSurfaceBlockers = new Map();
 
 const classFeatureSurfaceBlockers = new Map();
@@ -714,7 +718,40 @@ function installedOwnerClassification(row, ownerEvidenceSources, installedIds) {
     installedIds,
   );
   if (spellUnitClassification !== undefined) return spellUnitClassification;
+  const levelTwoClassFeatureClassification =
+    installedLevelTwoClassFeatureOwnerClassification(row, ownerEvidenceSources);
+  if (levelTwoClassFeatureClassification !== undefined)
+    return levelTwoClassFeatureClassification;
   return installedLevelOneOwnerClassification(row, ownerEvidenceSources);
+}
+
+function installedLevelTwoClassFeatureOwnerClassification(
+  row,
+  ownerEvidenceSources,
+) {
+  if (
+    row.levelBand !== "level-2" ||
+    row.rowKind !== "class-feature-grant" ||
+    !levelTwoBattleRuntimeOwnerEvidenceUnitIds.has(row.candidateUnitId)
+  ) {
+    return undefined;
+  }
+  const battleRuntimeEvidence = ownerEvidenceSources.battleRuntime.get(
+    row.candidateUnitId,
+  );
+  if (battleRuntimeEvidence) {
+    return {
+      kind: "evidence-present",
+      owner: "battle-runtime",
+      evidence: battleRuntimeEvidence,
+    };
+  }
+  return {
+    kind: "evidence-required",
+    owner: "battle-runtime",
+    requirement:
+      "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this level-2 class feature as operationally supported.",
+  };
 }
 
 function installedSpellUnitOwnerClassification(

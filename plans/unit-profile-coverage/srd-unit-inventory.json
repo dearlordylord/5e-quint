@@ -171,12 +171,12 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 466,
-      "percent": "83.8%",
+      "numerator": 467,
+      "percent": "84%",
       "rowsByStatus": {
-        "accepted": 282,
+        "accepted": 283,
         "accepted-no-battle-effect": 184,
-        "owner-evidence-required": 16,
+        "owner-evidence-required": 15,
         "battle-runtime-required": 74
       }
     },
@@ -187,16 +187,17 @@
     },
     "levelTwoRowsByDisposition": {
       "catalog-only/dead-for-now": 5,
-      "catalog-installed-needs-owner-evidence": 4,
+      "catalog-installed-owner-evidence-present": 1,
       "non-runtime": 12,
-      "missing-authored-record": 12
+      "missing-authored-record": 12,
+      "catalog-installed-needs-owner-evidence": 3
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 287,
+      "catalog-installed-owner-evidence-present": 288,
       "non-runtime": 24,
       "catalog-only/dead-for-now": 155,
-      "catalog-installed-needs-owner-evidence": 4,
-      "missing-authored-record": 86
+      "missing-authored-record": 86,
+      "catalog-installed-needs-owner-evidence": 3
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 143,
@@ -3954,16 +3955,21 @@
         "unitId": "barbarian_reckless_attack"
       },
       "unitProfileDisposition": "supported-profile",
-      "finalDisposition": "catalog-installed-needs-owner-evidence",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit barbarian_reckless_attack is installed in srdUnitCollection",
-          "status": "catalog-only evidence; operational owner evidence still required"
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT7 at packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/barbarian:level-2:class-table-summary:barbarian_level_2_feature_table_row",
