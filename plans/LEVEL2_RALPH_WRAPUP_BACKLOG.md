@@ -2,7 +2,17 @@
 
 Generated on 2026-05-18 while putting active level-2 Ralph lanes A-D into organic shutdown. This file stores unfinished work that was removed from active lane plans so each worker has exactly one current task left.
 
-Do not treat this file as an active Ralph plan. Future orchestration should copy selected tasks into a fresh lane plan with a task index, dependencies, and reviewer-loop instructions.
+Do not treat this file as an active Ralph plan.
+
+As of the stashed-frontier restart, the stored leftovers were copied into
+active runnable plans:
+
+- `plans/LEVEL2_RALPH_LOOP_A_STASHED_FRONTIER.md`
+- `plans/LEVEL2_RALPH_LOOP_C_STASHED_FRONTIER.md`
+- `plans/LEVEL2_RALPH_LOOP_D_STASHED_FRONTIER.md`
+
+Keep this file as the archived pre-research source for those plans. Do not run
+Ralph directly against it.
 
 ## Active Tasks Left In Lanes
 
