@@ -1185,6 +1185,9 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
 - `battle-runtime-thaumaturgy.qnt` - Thaumaturgy Booming Voice active effect,
   one-minute effect count, and self ability-check Advantage helpers imported by
   the canonical spec.
+- `battle-runtime-bardic-inspiration.qnt` - Bardic Inspiration and Cutting
+  Words d20-test helpers imported by the canonical spec and focused Bardic
+  selected-identity lane.
 - `battle-runtime.mbt.qnt` - package-local randomized model for the selected
   integrated promoted MBT path.
 
