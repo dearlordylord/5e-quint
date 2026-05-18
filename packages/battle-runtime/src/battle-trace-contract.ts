@@ -19,6 +19,7 @@ export const BATTLE_TRACE_HOLE_KINDS = [
   "rolledDice",
   "skillChoice",
   "abilityChoice",
+  "conditionChoice",
   "commandOptionChoice",
   "thaumaturgyActiveOneMinuteEffectCount",
   "dancingLightsPlacement",

@@ -38,6 +38,7 @@ import {
   endTurn,
   resolveBattlePossessionAttempt,
   resolveBattleSubject,
+  selectFailedSaveConditionEffect,
   spellId,
   spellSavingThrowOutcomeHole,
 } from "./unit-profile-admission-test-support.ts";
@@ -46,7 +47,21 @@ import type {
   BattleCreatureState,
   BattleState,
   CombatantId,
+  SupportedSpellInvocation,
 } from "./unit-profile-admission-test-support.ts";
+
+function selectedFixedConditionEffect(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "saveGatedCondition" }
+  >,
+) {
+  const selected = selectFailedSaveConditionEffect(invocation.effect, null);
+  if (selected.tag !== "selected") {
+    throw new Error("Expected a fixed failed-save condition effect.");
+  }
+  return selected.effect;
+}
 
 describe("SRDINV30C deterministic Protection from Evil and Good admission", () => {
   test("protection from evil and good imposes attack Disadvantage only for scoped creature types", () => {
@@ -247,6 +262,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
     if (charmInvocation.procedure !== "saveGatedCondition") {
       throw new Error("Expected Charm Person to be a save-gated condition.");
     }
+    const charmEffect = selectedFixedConditionEffect(charmInvocation);
     const targetTurn = endTurn({
       state: protectedResult.state,
       actorId: spellCasterId,
@@ -296,6 +312,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
       feySourceId,
       [spellTargetId],
       charmInvocation,
+      charmEffect,
     );
     expect(requireCombatant(scopedSourceApplied, spellTargetId)).toMatchObject({
       conditions: expect.not.objectContaining({ charmed: true }),
@@ -312,6 +329,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
       spellCasterId,
       [spellTargetId],
       charmInvocation,
+      charmEffect,
     );
     expect(
       requireCombatant(unscopedSourceApplied, spellTargetId),
@@ -366,6 +384,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
     if (charmInvocation.procedure !== "saveGatedCondition") {
       throw new Error("Expected Charm Person to be a save-gated condition.");
     }
+    const charmEffect = selectedFixedConditionEffect(charmInvocation);
 
     const concentrationBroken = breakBattleConcentration(
       protectedResult.state,
@@ -395,6 +414,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
       undeadSourceId,
       [spellTargetId],
       charmInvocation,
+      charmEffect,
     );
     expect(requireCombatant(afterScopedSource, spellTargetId)).toMatchObject({
       conditions: expect.objectContaining({ charmed: true }),

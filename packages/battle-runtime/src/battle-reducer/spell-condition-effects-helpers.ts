@@ -41,6 +41,7 @@ type ProtectionRelevantEffectKind = ProtectionRelevantCondition | "possession";
 type ConditionApplyingActiveEffect =
   | Extract<BattleActiveEffect, { readonly kind: "spellCondition" }>
   | Extract<BattleActiveEffect, { readonly kind: "spellConditionRepeatSave" }>
+  | Extract<BattleActiveEffect, { readonly kind: "spellConditionEndTurnSave" }>
   | Extract<BattleActiveEffect, { readonly kind: "sleepPendingRepeatSave" }>
   | Extract<BattleActiveEffect, { readonly kind: "sleepUnconscious" }>
   | Extract<BattleActiveEffect, { readonly kind: "hideousLaughter" }>;
@@ -363,6 +364,8 @@ function activeEffectSourcesCondition(
         (condition === "prone" && effect.condition === "unconscious"))) ||
     (effect.kind === "spellConditionRepeatSave" &&
       effect.condition === condition) ||
+    (effect.kind === "spellConditionEndTurnSave" &&
+      effect.condition === condition) ||
     (effect.kind === "sleepUnconscious" &&
       (condition === "unconscious" || condition === "prone")) ||
     activeEffectDirectlyAppliesCondition(effect, condition)
@@ -376,6 +379,8 @@ function activeEffectDirectlyAppliesCondition(
   return (
     (effect.kind === "spellCondition" && effect.condition === condition) ||
     (effect.kind === "spellConditionRepeatSave" &&
+      effect.condition === condition) ||
+    (effect.kind === "spellConditionEndTurnSave" &&
       effect.condition === condition) ||
     (effect.kind === "sleepPendingRepeatSave" &&
       condition === "incapacitated") ||
@@ -457,7 +462,12 @@ export function removeSpellConditionEffect(
   combatantId: CombatantId,
   effect: Extract<
     BattleActiveEffect,
-    { readonly kind: "spellCondition" | "spellConditionRepeatSave" }
+    {
+      readonly kind:
+        | "spellCondition"
+        | "spellConditionRepeatSave"
+        | "spellConditionEndTurnSave";
+    }
   >,
 ): BattleState {
   const combatant = state.combatants.get(combatantId);
@@ -688,6 +698,7 @@ function isConditionApplyingActiveEffect(
   return (
     effect.kind === "spellCondition" ||
     effect.kind === "spellConditionRepeatSave" ||
+    effect.kind === "spellConditionEndTurnSave" ||
     effect.kind === "sleepPendingRepeatSave" ||
     effect.kind === "sleepUnconscious" ||
     effect.kind === "hideousLaughter"
@@ -707,7 +718,8 @@ function activeEffectCondition(
 ): Condition {
   if (
     effect.kind === "spellCondition" ||
-    effect.kind === "spellConditionRepeatSave"
+    effect.kind === "spellConditionRepeatSave" ||
+    effect.kind === "spellConditionEndTurnSave"
   )
     return effect.condition;
   return effect.kind === "sleepPendingRepeatSave"

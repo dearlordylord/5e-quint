@@ -51,8 +51,10 @@ import {
   type BattleSpellAreaChoice,
   type BattleState,
   type SpellActiveEffectPostDamageRider,
+  type SpellFailedSaveConditionChoiceEffect,
   type SpellFailedSaveConditionEffect,
   type SpellFailedSavePostDamageRider,
+  type SpellSelectedFailedSaveConditionEffect,
   type SpellLightEmissionPostDamageRider,
   type SpellPostDamageRider,
   type SpellPostDamageRiderExpiration,
@@ -63,6 +65,62 @@ import { HIDEOUS_LAUGHTER_DURATION_TICKS } from "./domain-constants.ts";
 
 export const FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND = 60;
 export const FAERIE_FIRE_DIM_LIGHT_RADIUS_FEET = movementFeet(10);
+
+export type SelectFailedSaveConditionEffectResult =
+  | {
+      readonly tag: "selected";
+      readonly effect: SpellSelectedFailedSaveConditionEffect;
+    }
+  | {
+      readonly tag: "needsConditionChoice";
+      readonly effect: SpellFailedSaveConditionChoiceEffect;
+    }
+  | { readonly tag: "invalidConditionChoice"; readonly message: string };
+
+export function selectFailedSaveConditionEffect(
+  effect: SpellFailedSaveConditionEffect,
+  conditionChoice: SpellSelectedFailedSaveConditionEffect["condition"] | null,
+): SelectFailedSaveConditionEffectResult {
+  if (effect.kind === "fixed") {
+    return {
+      tag: "selected",
+      effect: selectedConditionEffect(effect, effect.condition),
+    };
+  }
+  if (conditionChoice === null) {
+    return { tag: "needsConditionChoice", effect };
+  }
+  return effect.choices.includes(conditionChoice)
+    ? {
+        tag: "selected",
+        effect: selectedConditionEffect(effect, conditionChoice),
+      }
+    : {
+        tag: "invalidConditionChoice",
+        message: "Condition choice is not available for this spell.",
+      };
+}
+
+function selectedConditionEffect(
+  effect: SpellFailedSaveConditionEffect,
+  condition: SpellSelectedFailedSaveConditionEffect["condition"],
+): SpellSelectedFailedSaveConditionEffect {
+  return effect.repeatSave === null
+    ? {
+        condition,
+        expiresAt: effect.expiresAt,
+        escape: effect.escape,
+        turnStartDamage: effect.turnStartDamage,
+        repeatSave: null,
+      }
+    : {
+        condition,
+        expiresAt: effect.expiresAt,
+        escape: null,
+        turnStartDamage: null,
+        repeatSave: effect.repeatSave,
+      };
+}
 export const DANCING_LIGHTS_DIM_LIGHT_RADIUS_FEET = movementFeet(10);
 export const PERCEPTION_LIGHTLY_OBSCURED_ROLL_MODE = "disadvantage" as const;
 type DancingLightsActiveEffect = Extract<
@@ -950,6 +1008,7 @@ export function applyFailedSaveSpellConditionEffects(
       readonly procedure: "afterHitSaveGatedCondition" | "saveGatedCondition";
     }
   >,
+  appliedEffect: SpellSelectedFailedSaveConditionEffect,
 ): BattleState {
   const combatants = new Map(state.combatants);
   for (const targetId of targetIds) {
@@ -962,38 +1021,57 @@ export function applyFailedSaveSpellConditionEffects(
         state,
         actorId,
         target,
-        invocation.effect.condition,
+        appliedEffect.condition,
       )
     ) {
       continue;
     }
     const replacing = target.activeEffects.filter(
-      (effect) =>
-        effect.kind === "spellCondition" &&
-        effect.sourceSpellId === invocation.spell.id &&
-        effect.sourceCombatantId === actorId &&
-        effect.condition === invocation.effect.condition,
+      (activeEffect) =>
+        (activeEffect.kind === "spellCondition" ||
+          activeEffect.kind === "spellConditionEndTurnSave") &&
+        activeEffect.sourceSpellId === invocation.spell.id &&
+        activeEffect.sourceCombatantId === actorId &&
+        activeEffect.condition === appliedEffect.condition,
     );
+    const expiresAt = activeEffectExpirationForPostDamageRider(
+      state,
+      actorId,
+      target.combatantId,
+      appliedEffect.expiresAt,
+    );
+    const nextEffect =
+      appliedEffect.repeatSave === null
+        ? {
+            kind: "spellCondition" as const,
+            sourceSpellId: invocation.spell.id,
+            sourceCombatantId: actorId,
+            condition: appliedEffect.condition,
+            conditionHadNonSpellSource:
+              conditionHadNonSpellSourceBeforeSpellEffect(
+                target,
+                appliedEffect.condition,
+              ),
+            escape: appliedEffect.escape,
+            turnStartDamage: appliedEffect.turnStartDamage,
+            expiresAt,
+          }
+        : {
+            kind: "spellConditionEndTurnSave" as const,
+            sourceSpellId: invocation.spell.id,
+            sourceCombatantId: actorId,
+            condition: appliedEffect.condition,
+            conditionHadNonSpellSource:
+              conditionHadNonSpellSourceBeforeSpellEffect(
+                target,
+                appliedEffect.condition,
+              ),
+            save: appliedEffect.repeatSave,
+            expiresAt,
+          };
     const activeEffects = [
       ...target.activeEffects.filter((effect) => !replacing.includes(effect)),
-      {
-        kind: "spellCondition" as const,
-        sourceSpellId: invocation.spell.id,
-        sourceCombatantId: actorId,
-        condition: invocation.effect.condition,
-        conditionHadNonSpellSource: conditionHadNonSpellSourceBeforeSpellEffect(
-          target,
-          invocation.effect.condition,
-        ),
-        escape: invocation.effect.escape,
-        turnStartDamage: invocation.effect.turnStartDamage,
-        expiresAt: activeEffectExpirationForPostDamageRider(
-          state,
-          actorId,
-          target.combatantId,
-          invocation.effect.expiresAt,
-        ),
-      },
+      nextEffect,
     ];
     combatants.set(
       targetId,

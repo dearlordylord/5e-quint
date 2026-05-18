@@ -14,6 +14,7 @@ module battleRuntimeSaveGatedSpell {
   import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
   import battleRuntimeAttackFacts.* from "./battle-runtime-attack-facts"
   import battleRuntimeHidden.* from "./battle-runtime-hidden"
+  import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
 
   pure def battleRuntimeSaveGatedDamageProfileForInvocation(
     invocation: SaveGatedDamageInvocation
@@ -37,6 +38,7 @@ module battleRuntimeSaveGatedSpell {
       | EntangleSaveGate => BattleRuntimeEntangleSaveCondition
       | AnimalFriendshipSaveGate => BattleRuntimeAnimalFriendshipSaveCondition
       | CharmPersonSaveGate => BattleRuntimeCharmPersonSaveCondition
+      | BlindnessDeafnessSaveGate => BattleRuntimeBlindnessDeafnessSaveCondition
     }
 
   pure def battleRuntimeAttackBurstSaveDamageProfileForInvocation(
@@ -191,6 +193,7 @@ module battleRuntimeSaveGatedSpell {
       | EntangleSaveGate => Set(EntangleRestrained)
       | AnimalFriendshipSaveGate => Set(AnimalFriendshipCharmed({ source: source, durationTicks: 24 * 60 }))
       | CharmPersonSaveGate => Set(CharmPersonCharmed({ source: source, durationTicks: charmPersonCharmedDurationTicks }))
+      | BlindnessDeafnessSaveGate => Set()
     }
 
   pure def activeEffectsWithoutColorSprayFrom(effects: Set[ActiveEffect], source: Actor): Set[ActiveEffect] =
@@ -200,6 +203,10 @@ module battleRuntimeSaveGatedSpell {
     })
 
   pure def charmPersonCharmedDurationTicks: int = 60 * 10
+  pure def blindnessDeafnessDurationTicks: int = 10
+
+  pure def saveGatedConditionRequiresConditionChoice(invocation: SaveGatedConditionInvocation): bool =
+    invocation == BlindnessDeafnessSaveGate
 
   pure def saveGatedConditionTargetCreatureTypeIsLegal(
     invocation: SaveGatedConditionInvocation,
@@ -224,6 +231,7 @@ module battleRuntimeSaveGatedSpell {
     invocation: SaveGatedConditionInvocation,
     canCastSpells: bool,
     targetFilled: bool,
+    conditionChoiceFilled: bool,
     savingThrowOutcomesFilled: bool,
   ): Set[Hole] =
     if (not(canCastSpells))
@@ -232,6 +240,8 @@ module battleRuntimeSaveGatedSpell {
       Set(TargetChoice)
     else if (match saveGatedConditionTargeting(invocation) { | TargetListSaveTargets(_) => true | _ => false } and not(targetFilled))
       Set(SpellTargetList)
+    else if (saveGatedConditionRequiresConditionChoice(invocation) and not(conditionChoiceFilled))
+      Set(ConditionChoice)
     else if (not(savingThrowOutcomesFilled))
       Set(SavingThrowOutcome)
     else
@@ -430,7 +440,11 @@ module battleRuntimeSaveGatedSpell {
     source: Actor,
     sourceCreatureType: RuntimeCreatureType,
   ): Combatant =
-    if (savingThrowSucceeded or saveGatedConditionPreventedByCreatureTypeProtection(invocation, sourceCreatureType, target.activeEffects))
+    if (
+      savingThrowSucceeded or
+      saveGatedConditionRequiresConditionChoice(invocation) or
+      saveGatedConditionPreventedByCreatureTypeProtection(invocation, sourceCreatureType, target.activeEffects)
+    )
       target
     else
       {
@@ -444,6 +458,12 @@ module battleRuntimeSaveGatedSpell {
   pure def selectedTargetCount(fighterTargeted: bool, goblinTargeted: bool): int =
     (if (fighterTargeted) 1 else 0) + (if (goblinTargeted) 1 else 0)
 
+  pure def saveGatedConditionSlotLevelIsLegal(invocation: SaveGatedConditionInvocation, slotLevel: int): bool =
+    match saveGatedConditionTargeting(invocation) {
+      | TargetListSaveTargets(data) => slotLevel >= data.baseSlotLevel
+      | _ => true
+    }
+
   pure def saveGatedConditionTargetCountIsLegal(
     invocation: SaveGatedConditionInvocation,
     slotLevel: int,
@@ -456,7 +476,8 @@ module battleRuntimeSaveGatedSpell {
       | TargetListSaveTargets(data) => data.minTargets
       | _ => 1
     }
-    count >= 1 and
+    saveGatedConditionSlotLevelIsLegal(invocation, slotLevel) and
+      count >= 1 and
       count >= minTargets and
       count <= saveGatedTargetMaxTargets(targeting, slotLevel)
   }
@@ -480,6 +501,7 @@ module battleRuntimeSaveGatedSpell {
       fighterHasRage(state) or
       not(canExpendSpellSlotThisTurn(state)) or
       not(match saveGatedConditionTargeting(invocation) { | TargetListSaveTargets(_) => true | _ => false }) or
+      saveGatedConditionRequiresConditionChoice(invocation) or
       not(saveGatedConditionTargetCountIsLegal(invocation, slotLevel, fighterTargeted, goblinTargeted)) or
       (fighterTargeted and not(saveGatedConditionTargetCreatureTypeIsLegal(invocation, fighterCreatureType))) or
       (goblinTargeted and not(saveGatedConditionTargetCreatureTypeIsLegal(invocation, goblinCreatureType)))
@@ -492,6 +514,119 @@ module battleRuntimeSaveGatedSpell {
         goblin: if (goblinTargeted) saveGatedConditionTarget(invocation, state, state.goblin, goblinSavingThrowSucceeded, Fighter, HumanoidCreature) else state.goblin,
         actionAvailable: false,
       }, Fighter)
+
+  pure def blindnessDeafnessActiveEffect(choice: BlindnessDeafnessConditionChoice, source: Actor): ActiveEffect =
+    match choice {
+      | BlindnessDeafnessBlindedChoice => BlindnessDeafnessBlinded({
+          source: source,
+          durationTicks: blindnessDeafnessDurationTicks,
+        })
+      | BlindnessDeafnessDeafenedChoice => BlindnessDeafnessDeafened({
+          source: source,
+          durationTicks: blindnessDeafnessDurationTicks,
+        })
+    }
+
+  pure def activeEffectsWithoutBlindnessDeafnessChoiceFrom(
+    effects: Set[ActiveEffect],
+    choice: BlindnessDeafnessConditionChoice,
+    source: Actor,
+  ): Set[ActiveEffect] =
+    effects.filter(effect => match choice {
+      | BlindnessDeafnessBlindedChoice => match effect {
+          | BlindnessDeafnessBlinded(data) => data.source != source
+          | _ => true
+        }
+      | BlindnessDeafnessDeafenedChoice => match effect {
+          | BlindnessDeafnessDeafened(data) => data.source != source
+          | _ => true
+        }
+    })
+
+  pure def blindnessDeafnessRepeatSaveDue(
+    effects: Set[ActiveEffect],
+    source: Actor,
+    choice: BlindnessDeafnessConditionChoice,
+  ): bool =
+    effects.exists(effect => match choice {
+      | BlindnessDeafnessBlindedChoice => match effect {
+          | BlindnessDeafnessBlinded(data) => data.source == source
+          | _ => false
+        }
+      | BlindnessDeafnessDeafenedChoice => match effect {
+          | BlindnessDeafnessDeafened(data) => data.source == source
+          | _ => false
+        }
+    })
+
+  pure def combatantWithoutBlindnessDeafnessChoiceFrom(
+    target: Combatant,
+    source: Actor,
+    choice: BlindnessDeafnessConditionChoice,
+  ): Combatant =
+    { ...target, activeEffects: activeEffectsWithoutBlindnessDeafnessChoiceFrom(target.activeEffects, choice, source) }
+
+  pure def blindnessDeafnessTarget(
+    target: Combatant,
+    savingThrowSucceeded: bool,
+    source: Actor,
+    choice: BlindnessDeafnessConditionChoice,
+  ): Combatant =
+    if (savingThrowSucceeded)
+      target
+    else
+      {
+        ...target,
+        activeEffects: activeEffectsWithoutBlindnessDeafnessChoiceFrom(target.activeEffects, choice, source)
+          .union(Set(blindnessDeafnessActiveEffect(choice, source))),
+      }
+
+  pure def resolveBlindnessDeafness(
+    state: BattleState,
+    slotLevel: int,
+    choice: BlindnessDeafnessConditionChoice,
+    fighterTargeted: bool,
+    fighterSavingThrowSucceeded: bool,
+    goblinTargeted: bool,
+    goblinSavingThrowSucceeded: bool,
+  ): BattleState =
+    if (
+      not(state.actionAvailable) or
+      currentActor(state) != Fighter or
+      state.fighter.unconscious or
+      state.fighter.incapacitated or
+      fighterHasRage(state) or
+      not(canExpendSpellSlotThisTurn(state)) or
+      not(saveGatedConditionTargetCountIsLegal(BlindnessDeafnessSaveGate, slotLevel, fighterTargeted, goblinTargeted))
+    )
+      state
+    else
+      commitActorSpellSlotUse({
+        ...state,
+        fighter: if (fighterTargeted) blindnessDeafnessTarget(state.fighter, fighterSavingThrowSucceeded, Fighter, choice) else state.fighter,
+        goblin: if (goblinTargeted) blindnessDeafnessTarget(state.goblin, goblinSavingThrowSucceeded, Fighter, choice) else state.goblin,
+        actionAvailable: false,
+      }, Fighter)
+
+  pure def endTurnWithBlindnessDeafnessRepeatSave(
+    state: BattleState,
+    source: Actor,
+    choice: BlindnessDeafnessConditionChoice,
+    savingThrowSucceeded: bool,
+  ): BattleState =
+    if (currentActor(state) == Fighter) {
+      val fighter = if (savingThrowSucceeded and blindnessDeafnessRepeatSaveDue(state.fighter.activeEffects, source, choice))
+        combatantWithoutBlindnessDeafnessChoiceFrom(state.fighter, source, choice)
+      else
+        state.fighter
+      endTurn({ ...state, fighter: fighter })
+    } else {
+      val goblin = if (savingThrowSucceeded and blindnessDeafnessRepeatSaveDue(state.goblin.activeEffects, source, choice))
+        combatantWithoutBlindnessDeafnessChoiceFrom(state.goblin, source, choice)
+      else
+        state.goblin
+      endTurn({ ...state, goblin: goblin })
+    }
 
   pure def resolveColorSpray(
     state: BattleState,

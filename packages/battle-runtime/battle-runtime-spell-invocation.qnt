@@ -71,6 +71,7 @@ module battleRuntimeSpellInvocation {
       | FaerieFire => true
       | AnimalFriendship => true
       | CharmPerson => true
+      | BlindnessDeafness => true
       | ProtectionFromEvilAndGood => true
       | IceKnife => true
       | HealingWord => true

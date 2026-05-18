@@ -230,73 +230,6 @@
       "executableMechanics": true,
       "kind": "spell",
       "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
-      "sourceRecordPath": "packages/surface/content/blindness_deafness.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Bard spell list Blindness/Deafness",
-          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_blindness_deafness",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 192,
-            "lineStart": 192,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Cleric spell list Blindness/Deafness",
-          "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_blindness_deafness",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 184,
-            "lineStart": 184,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Blindness/Deafness",
-          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_blindness_deafness",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 271,
-            "lineStart": 271,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Blindness/Deafness",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_blindness_deafness",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 202,
-            "lineStart": 202,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
-      "unitId": "blindness_deafness"
-    },
-    {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
       "sourceRecordPath": "packages/surface/content/blur.json",
       "sourceRows": [
         {
@@ -2538,7 +2471,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 92,
+      "count": 93,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2554,6 +2487,7 @@
         "bard_jack_of_all_trades",
         "barkskin",
         "bless",
+        "blindness_deafness",
         "burning_hands",
         "chill_touch",
         "chromatic_orb",
@@ -2637,11 +2571,10 @@
       ]
     },
     {
-      "count": 26,
+      "count": 25,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
-        "blindness_deafness",
         "blur",
         "continual_flame",
         "find_steed",
@@ -2739,30 +2672,29 @@
       "numerator": 473,
       "percent": "85.1%",
       "rowsByStatus": {
-        "accepted": 304,
-        "accepted-no-battle-effect": 169,
+        "accepted": 308,
+        "accepted-no-battle-effect": 165,
         "battle-runtime-required": 79,
         "owner-evidence-required": 4
       }
     },
     "strictRuntimeProfileSupport": {
       "denominator": 146,
-      "numerator": 92,
-      "percent": "63%"
+      "numerator": 93,
+      "percent": "63.7%"
     },
     "strictTargetClosure": {
       "denominator": 146,
-      "numerator": 119,
-      "percent": "81.5%"
+      "numerator": 120,
+      "percent": "82.2%"
     }
   },
   "openFrontier": [
     {
-      "count": 26,
+      "count": 25,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
-        "blindness_deafness",
         "blur",
         "continual_flame",
         "find_steed",
@@ -6267,9 +6199,9 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
-      "missing": 26,
+      "missing": 25,
       "profile-subset-supported": 9,
-      "supported-profile": 92,
+      "supported-profile": 93,
       "unsupported-profile": 19
     },
     "groupsByStatus": {
@@ -6278,10 +6210,10 @@
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 12,
       "open-profile-accounting": 1,
-      "open-runtime-behavior": 26,
-      "supported-profile": 92
+      "open-runtime-behavior": 25,
+      "supported-profile": 93
     },
-    "nonSupportedFrontier": 54,
+    "nonSupportedFrontier": 53,
     "strictDenominator": 146
   }
 }

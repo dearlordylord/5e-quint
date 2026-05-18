@@ -3519,6 +3519,9 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
   if (hole.kind === "abilityChoice") {
     throw new Error("Battle runtime MBT does not model ability choice holes.");
   }
+  if (hole.kind === "conditionChoice") {
+    throw new Error("Battle runtime MBT does not model condition choice holes.");
+  }
   if (hole.kind === "spellAreaChoice") {
     throw new Error("Battle runtime MBT does not model spell area holes.");
   }

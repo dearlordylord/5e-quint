@@ -60,6 +60,7 @@ import {
   type BattleSpellAbilityChoiceHole,
   type BattleSpellDamageRollHole,
   type BattleSpellDamageTypeChoiceHole,
+  type BattleSpellConditionChoiceHole,
   type BattleSpellHealingRollHole,
   type BattleSpellSavingThrowOutcomeHole,
   type BattleSpellSkillChoiceHole,
@@ -72,6 +73,7 @@ import {
   type SaveDamageResult,
   type SpellMarkedDamageRider,
   type SpellTargeting,
+  type SpellFailedSaveConditionChoiceEffect,
   type SupportedDamageSpellInvocation,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
@@ -229,6 +231,48 @@ export function spellDamageTypeChoiceHole(
     spell: invocation,
     choices,
   };
+}
+
+export type SaveGatedConditionChoiceInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "saveGatedCondition" }
+> & {
+  readonly effect: SpellFailedSaveConditionChoiceEffect;
+};
+
+export function saveGatedConditionHasConditionChoice(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "saveGatedCondition" }
+  >,
+): invocation is SaveGatedConditionChoiceInvocation {
+  return invocation.effect.kind === "choice";
+}
+
+export function spellConditionChoiceHole(
+  invocation: SaveGatedConditionChoiceInvocation,
+): BattleSpellConditionChoiceHole {
+  const protocolId = spellConditionChoiceHoleProtocolId(invocation);
+  return {
+    kind: "conditionChoice",
+    holeId: holeId(protocolId),
+    holeInstanceKey: holeInstanceKey(protocolId),
+    label: `${invocation.spell.name} condition`,
+    spell: invocation,
+    choices: invocation.effect.choices,
+  };
+}
+
+export function spellConditionChoiceHoleId(
+  invocation: SaveGatedConditionChoiceInvocation,
+): BattleHoleId {
+  return holeId(spellConditionChoiceHoleProtocolId(invocation));
+}
+
+function spellConditionChoiceHoleProtocolId(
+  invocation: SaveGatedConditionChoiceInvocation,
+): string {
+  return `battle:spell:condition-choice:${invocation.spell.id}`;
 }
 
 export function chainedSpellTargetHole(input: {

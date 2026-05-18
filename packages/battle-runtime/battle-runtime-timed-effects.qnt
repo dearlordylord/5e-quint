@@ -171,6 +171,14 @@ module battleRuntimeTimedEffects {
             source: data.source,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
+        | BlindnessDeafnessBlinded(data) => BlindnessDeafnessBlinded({
+            source: data.source,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
+        | BlindnessDeafnessDeafened(data) => BlindnessDeafnessDeafened({
+            source: data.source,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
         | AidHitPointMaximumIncrease(data) => AidHitPointMaximumIncrease({
             amount: data.amount,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
@@ -240,6 +248,8 @@ module battleRuntimeTimedEffects {
         | SearingSmiteBurning(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | AnimalFriendshipCharmed(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | CharmPersonCharmed(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | BlindnessDeafnessBlinded(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | BlindnessDeafnessDeafened(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | AidHitPointMaximumIncrease(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | BarkskinArmorClassFloor(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | DancingLightsEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)

@@ -365,12 +365,17 @@ module battleRuntime {
   //   creature and grants a one-hour Armor Class floor of 17 that does not lower
   //   higher Armor Class values.
   // - Spells/Descriptions-A-D.md lines 85-97 and 692-703,
+  //   Spells/Descriptions-A-D.md lines 563-581,
   //   Spells/Descriptions-M-P.md lines 907-918, and
+  //   Rules-Glossary.md lines 122-130 and 373-379, and
   //   UBIQUITOUS_LANGUAGE.md: Animal Friendship is a Beast-only Wisdom-save
   //   spell whose failed save grants Charmed for 24 hours, Charm Person is a
   //   Humanoid-only Wisdom-save spell whose failed save grants Charmed for 1
-  //   hour with hostile-target save Advantage, and Protection from Evil and
-  //   Good applies a Concentration protection whose scoped creature types have
+  //   hour with hostile-target save Advantage, Blindness/Deafness is a
+  //   level-2 Constitution-save spell whose failed save applies the caster's
+  //   chosen Blinded or Deafened condition until a successful end-of-turn
+  //   repeat save or duration expiry, and Protection from Evil and Good
+  //   applies a Concentration protection whose scoped creature types have
   //   Disadvantage on attack rolls against the target, can't possess the
   //   target, and can't apply Charmed or Frightened to the target.
   //

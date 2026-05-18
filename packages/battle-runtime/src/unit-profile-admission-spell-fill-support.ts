@@ -13,6 +13,7 @@ import {
   type BattleObjectDamageDisposition,
   type BattleObjectIgnitionDisposition,
   type BattleSpellAreaChoice,
+  type BattleSpellConditionChoiceHole,
   type BattleState,
   type BattleSubject,
   type BattleTargetSpatialFact,
@@ -423,6 +424,17 @@ export function savingThrowOutcomeFill(
             outcomes,
           }
         : { outcomes },
+  };
+}
+
+export function spellConditionChoiceFill(
+  hole: BattleSpellConditionChoiceHole,
+  value: BattleSpellConditionChoiceHole["choices"][number],
+): Extract<BattleFill, { readonly kind: "conditionChoice" }> {
+  return {
+    kind: "conditionChoice",
+    holeId: hole.holeId,
+    value,
   };
 }
 

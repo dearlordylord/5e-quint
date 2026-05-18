@@ -164,6 +164,7 @@ import type {
   BattleResolutionResult,
   BattleResolvedMovement,
   BattleSleepRepeatSavingThrowOutcomeHole,
+  BattleSpellConditionEndTurnSavingThrowOutcomeHole,
   BattleSpellTurnStartDamageRollHole,
   BattleSpellTurnStartSavingThrowOutcomeHole,
   BattleStatBlockRechargeRollHole,
@@ -188,6 +189,10 @@ export function resolveEndTurn(
     { readonly kind: "savingThrowOutcome" }
   >[] = [],
   hideousLaughterRepeatSaves: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[] = [],
+  spellConditionEndTurnSaves: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[] = [],
@@ -273,8 +278,14 @@ export function resolveEndTurn(
       currentActorId(state),
       hideousLaughterRepeatSaves,
     );
+  const combatantsAfterSpellConditionRepeatSaves =
+    applySpellConditionEndTurnSaveFills(
+      combatantsAfterHideousLaughterRepeatSaves,
+      currentActorId(state),
+      spellConditionEndTurnSaves,
+    );
   const combatantsAfterEndEffects = expireEndOfTurnEffects(
-    combatantsAfterHideousLaughterRepeatSaves,
+    combatantsAfterSpellConditionRepeatSaves,
     currentActorId(state),
     state.initiative.round,
   );
@@ -662,6 +673,10 @@ type SleepPendingRepeatSaveEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "sleepPendingRepeatSave" }
 >;
+type SpellConditionEndTurnSaveEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "spellConditionEndTurnSave" }
+>;
 type HideousLaughterEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "hideousLaughter" }
@@ -731,6 +746,59 @@ function sleepRepeatSavingThrowOutcomeFor(
   return fills.find((fill) => fill.holeId === hole.holeId);
 }
 
+function spellConditionEndTurnSaveEffects(
+  combatant: BattleCreatureState | undefined,
+): readonly SpellConditionEndTurnSaveEffect[] {
+  return combatant === undefined
+    ? []
+    : combatant.activeEffects.filter(
+        (effect): effect is SpellConditionEndTurnSaveEffect =>
+          effect.kind === "spellConditionEndTurnSave",
+      );
+}
+
+function spellConditionEndTurnSavingThrowOutcomeHole(
+  targetId: CombatantId,
+  effect: SpellConditionEndTurnSaveEffect,
+): BattleSpellConditionEndTurnSavingThrowOutcomeHole {
+  const key = [
+    "battle:spell-condition-end-turn-save",
+    targetId,
+    effect.sourceCombatantId,
+    effect.sourceSpellId,
+    effect.condition,
+  ]
+    .map(String)
+    .join(":");
+  return {
+    kind: "savingThrowOutcome",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${effect.sourceSpellId} ${effect.condition} end-turn save`,
+    spellConditionEndTurnSave: {
+      targetId,
+      sourceSpellId: effect.sourceSpellId,
+      sourceCombatantId: effect.sourceCombatantId,
+      condition: effect.condition,
+      save: effect.save,
+    },
+    ability: effect.save.ability,
+    dc: effect.save.dc,
+    areaChoices: [],
+    targetRollModes: [],
+  };
+}
+
+function spellConditionEndTurnSavingThrowOutcomeFor(
+  fills: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[],
+  hole: BattleSpellConditionEndTurnSavingThrowOutcomeHole,
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
+  return fills.find((fill) => fill.holeId === hole.holeId);
+}
+
 function hideousLaughterRepeatSavingThrowOutcomeFor(
   fills: readonly Extract<
     BattleFill,
@@ -751,6 +819,18 @@ function validateSleepRepeatSavingThrowOutcome(
   return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
     ? null
     : "Sleep repeat Saving Throw outcome must match the ending-turn target.";
+}
+
+function validateSpellConditionEndTurnSavingThrowOutcome(
+  value: BattleSavingThrowOutcomeValue,
+  targetId: CombatantId,
+): string | null {
+  if ("area" in value) {
+    return "Spell condition end-turn Saving Throw outcome must not include area facts.";
+  }
+  return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
+    ? null
+    : "Spell condition end-turn Saving Throw outcome must match the ending-turn target.";
 }
 
 export type GreaseGroundHazardEffect = Extract<
@@ -1843,6 +1923,63 @@ function applyHideousLaughterRepeatSaveFills(
   }, combatants);
 }
 
+function applySpellConditionEndTurnSaveFills(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  actorId: CombatantId,
+  saves: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[],
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  const actor = combatants.get(actorId);
+  const effects = spellConditionEndTurnSaveEffects(actor);
+  if (actor === undefined || effects.length === 0) {
+    return combatants;
+  }
+  return effects.reduce((nextCombatants, effect) => {
+    const hole = spellConditionEndTurnSavingThrowOutcomeHole(actorId, effect);
+    const save = spellConditionEndTurnSavingThrowOutcomeFor(saves, hole);
+    if (save?.value.outcomes[0]?.succeeded !== true) {
+      return nextCombatants;
+    }
+    return removeSpellConditionEffectFromCombatants(
+      nextCombatants,
+      actorId,
+      effect,
+    );
+  }, combatants);
+}
+
+function removeSpellConditionEffectFromCombatants(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  targetId: CombatantId,
+  expiringEffect: SpellConditionEndTurnSaveEffect,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  const target = combatants.get(targetId);
+  if (
+    target === undefined ||
+    !target.activeEffects.some((effect) => effect === expiringEffect)
+  ) {
+    return combatants;
+  }
+  const activeEffects = target.activeEffects.filter(
+    (effect) => effect !== expiringEffect,
+  );
+  const nextCombatant: BattleCreatureState =
+    target.positiveHpUnconscious === null
+      ? {
+          ...target,
+          activeEffects,
+          conditions: conditionsAfterExpiringSpellConditionEffects(
+            target.conditions,
+            activeEffects,
+            [expiringEffect],
+          ),
+        }
+      : { ...target, activeEffects };
+  return new Map(combatants).set(targetId, nextCombatant);
+}
+
 function removeHideousLaughterEffectFromCombatants(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   targetId: CombatantId,
@@ -2329,6 +2466,13 @@ export function resolveEndTurnCommand(
   const hideousLaughterRepeatSaveHoles = hideousLaughterRepeatSaveRequests.map(
     (request) => request.hole,
   );
+  const spellConditionEndTurnSaveRequests =
+    spellConditionEndTurnSaveEffects(actor).map((effect) => ({
+      effect,
+      hole: spellConditionEndTurnSavingThrowOutcomeHole(actorId, effect),
+    }));
+  const spellConditionEndTurnSaveHoles =
+    spellConditionEndTurnSaveRequests.map((request) => request.hole);
   const needsDeathSavingThrow = startTurnDeathSavingThrowRequired(nextActor);
   const rechargeHole = statBlockRechargeRollHole(nextActor);
   const startTurnDamageEffects = spellTurnStartDamageEffects(nextActor);
@@ -2355,6 +2499,7 @@ export function resolveEndTurnCommand(
   const initialHoles = [
     ...sleepRepeatSaveHoles,
     ...hideousLaughterRepeatSaveHoles,
+    ...spellConditionEndTurnSaveHoles,
     ...(needsDeathSavingThrow ? [deathSavingThrowHole(nextActorId)] : []),
     ...(rechargeHole === null ? [] : [rechargeHole]),
     ...startTurnDamageHoles,
@@ -2425,6 +2570,14 @@ export function resolveEndTurnCommand(
       return fill === undefined ? [] : [fill];
     },
   );
+  const spellConditionEndTurnSaves =
+    spellConditionEndTurnSaveRequests.flatMap((request) => {
+      const fill = spellConditionEndTurnSavingThrowOutcomeFor(
+        savingThrowOutcomeFills,
+        request.hole,
+      );
+      return fill === undefined ? [] : [fill];
+    });
   const missingSleepRepeatSaveHoles = sleepRepeatSaveRequests.flatMap(
     (request) =>
       sleepRepeatSavingThrowOutcomeFor(
@@ -2451,6 +2604,20 @@ export function resolveEndTurnCommand(
   if (missingHideousLaughterRepeatSaveHoles.length > 0) {
     return needsHolesResult(input.state, input.subject, [
       ...missingHideousLaughterRepeatSaveHoles,
+    ]);
+  }
+  const missingSpellConditionEndTurnSaveHoles =
+    spellConditionEndTurnSaveRequests.flatMap((request) =>
+      spellConditionEndTurnSavingThrowOutcomeFor(
+        savingThrowOutcomeFills,
+        request.hole,
+      ) === undefined
+        ? [request.hole]
+        : [],
+    );
+  if (missingSpellConditionEndTurnSaveHoles.length > 0) {
+    return needsHolesResult(input.state, input.subject, [
+      ...missingSpellConditionEndTurnSaveHoles,
     ]);
   }
   const startTurnDamageRolls = startTurnDamageRequests.flatMap((request) => {
@@ -2572,6 +2739,7 @@ export function resolveEndTurnCommand(
     [
       ...sleepRepeatSaveHoles,
       ...hideousLaughterRepeatSaveHoles,
+      ...spellConditionEndTurnSaveHoles,
       ...startTurnSaveHoles,
       ...startTurnHideousLaughterDamageRepeatSaveHoles,
     ].map((hole) => hole.holeId),
@@ -2593,6 +2761,7 @@ export function resolveEndTurnCommand(
     savingThrowOutcomeFills.length !==
     sleepRepeatSaves.length +
       hideousLaughterRepeatSaves.length +
+      spellConditionEndTurnSaves.length +
       startTurnSaves.length +
       startTurnHideousLaughterDamageRepeatSaves.length
   ) {
@@ -2627,6 +2796,22 @@ export function resolveEndTurnCommand(
       continue;
     }
     const validation = validateSleepRepeatSavingThrowOutcome(
+      fill.value,
+      actorId,
+    );
+    if (validation !== null) {
+      return invalidResult(input.state, "invalidFill", validation);
+    }
+  }
+  for (const request of spellConditionEndTurnSaveRequests) {
+    const fill = spellConditionEndTurnSavingThrowOutcomeFor(
+      savingThrowOutcomeFills,
+      request.hole,
+    );
+    if (fill === undefined) {
+      continue;
+    }
+    const validation = validateSpellConditionEndTurnSavingThrowOutcome(
       fill.value,
       actorId,
     );
@@ -2812,6 +2997,7 @@ export function resolveEndTurnCommand(
       : undefined,
     sleepRepeatSaves,
     hideousLaughterRepeatSaves,
+    spellConditionEndTurnSaves,
     startTurnDamageRolls,
     startTurnSaves,
     startTurnHideousLaughterDamageRepeatSaves,

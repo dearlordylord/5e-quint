@@ -349,14 +349,18 @@ module battleRuntimeSaveSpellTests {
       assert(saveGatedDamageReplayHoles(BurningHandsSaveGate, true, true, true, true) == Set(DamageRoll)),
       assert(saveGatedDamageReplayHoles(FireballSaveGate, true, true, false, false) == Set(SavingThrowOutcome)),
       assert(saveGatedDamageReplayHoles(FireballSaveGate, true, true, true, true) == Set(DamageRoll)),
-      assert(saveGatedConditionReplayHoles(ColorSpraySaveGate, true, true, false) == Set(SavingThrowOutcome)),
-      assert(saveGatedConditionReplayHoles(ColorSpraySaveGate, true, true, true) == Set()),
-      assert(saveGatedConditionReplayHoles(ColorSpraySaveGate, true, false, true) == Set()),
-      assert(saveGatedConditionReplayHoles(EntangleSaveGate, true, true, false) == Set(SavingThrowOutcome)),
-      assert(saveGatedConditionReplayHoles(EntangleSaveGate, true, true, true) == Set()),
-      assert(saveGatedConditionReplayHoles(CharmPersonSaveGate, true, false, false) == Set(SpellTargetList)),
-      assert(saveGatedConditionReplayHoles(CharmPersonSaveGate, true, true, false) == Set(SavingThrowOutcome)),
-      assert(saveGatedConditionReplayHoles(CharmPersonSaveGate, true, true, true) == Set()),
+      assert(saveGatedConditionReplayHoles(ColorSpraySaveGate, true, true, false, false) == Set(SavingThrowOutcome)),
+      assert(saveGatedConditionReplayHoles(ColorSpraySaveGate, true, true, false, true) == Set()),
+      assert(saveGatedConditionReplayHoles(ColorSpraySaveGate, true, false, false, true) == Set()),
+      assert(saveGatedConditionReplayHoles(EntangleSaveGate, true, true, false, false) == Set(SavingThrowOutcome)),
+      assert(saveGatedConditionReplayHoles(EntangleSaveGate, true, true, false, true) == Set()),
+      assert(saveGatedConditionReplayHoles(CharmPersonSaveGate, true, false, false, false) == Set(SpellTargetList)),
+      assert(saveGatedConditionReplayHoles(CharmPersonSaveGate, true, true, false, false) == Set(SavingThrowOutcome)),
+      assert(saveGatedConditionReplayHoles(CharmPersonSaveGate, true, true, false, true) == Set()),
+      assert(saveGatedConditionReplayHoles(BlindnessDeafnessSaveGate, true, false, false, false) == Set(SpellTargetList)),
+      assert(saveGatedConditionReplayHoles(BlindnessDeafnessSaveGate, true, true, false, false) == Set(ConditionChoice)),
+      assert(saveGatedConditionReplayHoles(BlindnessDeafnessSaveGate, true, true, true, false) == Set(SavingThrowOutcome)),
+      assert(saveGatedConditionReplayHoles(BlindnessDeafnessSaveGate, true, true, true, true) == Set()),
       assert(saveGatedAttackRollAdvantageReplayHoles(FaerieFireSaveGate, true, false) == Set(SavingThrowOutcome)),
       assert(saveGatedAttackRollAdvantageReplayHoles(FaerieFireSaveGate, true, true) == Set()),
     }
@@ -653,6 +657,84 @@ module battleRuntimeSaveSpellTests {
       assert(twoTargets.fighter.activeEffects.contains(CharmPersonCharmed({ source: Fighter, durationTicks: charmPersonCharmedDurationTicks }))),
       assert(twoTargets.goblin.activeEffects.contains(CharmPersonCharmed({ source: Fighter, durationTicks: charmPersonCharmedDurationTicks }))),
       assert(illegalTwoTargets == initialState),
+    }
+  }
+
+  run test_blindness_deafness_condition_choice_slot_scaling_and_repeat_save = {
+    val deafened = resolveBlindnessDeafness(
+      initialState,
+      2,
+      BlindnessDeafnessDeafenedChoice,
+      false,
+      true,
+      true,
+      false,
+    )
+    val illegalLevelOne = resolveBlindnessDeafness(
+      initialState,
+      1,
+      BlindnessDeafnessDeafenedChoice,
+      false,
+      true,
+      true,
+      false,
+    )
+    val illegalTwoTargetsLevelTwo = resolveBlindnessDeafness(
+      initialState,
+      2,
+      BlindnessDeafnessBlindedChoice,
+      true,
+      false,
+      true,
+      false,
+    )
+    val twoTargetsLevelThree = resolveBlindnessDeafness(
+      initialState,
+      3,
+      BlindnessDeafnessBlindedChoice,
+      true,
+      false,
+      true,
+      false,
+    )
+    val goblinTurn = endTurn(deafened)
+    val failedRepeat = endTurnWithBlindnessDeafnessRepeatSave(
+      goblinTurn,
+      Fighter,
+      BlindnessDeafnessDeafenedChoice,
+      false,
+    )
+    val successfulRepeat = endTurnWithBlindnessDeafnessRepeatSave(
+      goblinTurn,
+      Fighter,
+      BlindnessDeafnessDeafenedChoice,
+      true,
+    )
+    all {
+      assert(deafened.goblin.activeEffects.contains(BlindnessDeafnessDeafened({
+        source: Fighter,
+        durationTicks: blindnessDeafnessDurationTicks,
+      }))),
+      assert(battleActorHasCommittedSpellSlotUse(deafened, Fighter)),
+      assert(not(deafened.actionAvailable)),
+      assert(illegalLevelOne == initialState),
+      assert(illegalTwoTargetsLevelTwo == initialState),
+      assert(twoTargetsLevelThree.fighter.activeEffects.contains(BlindnessDeafnessBlinded({
+        source: Fighter,
+        durationTicks: blindnessDeafnessDurationTicks,
+      }))),
+      assert(twoTargetsLevelThree.goblin.activeEffects.contains(BlindnessDeafnessBlinded({
+        source: Fighter,
+        durationTicks: blindnessDeafnessDurationTicks,
+      }))),
+      assert(failedRepeat.goblin.activeEffects.contains(BlindnessDeafnessDeafened({
+        source: Fighter,
+        durationTicks: blindnessDeafnessDurationTicks - 1,
+      }))),
+      assert(not(successfulRepeat.goblin.activeEffects.exists(effect => match effect {
+        | BlindnessDeafnessDeafened(_) => true
+        | _ => false
+      }))),
     }
   }
 

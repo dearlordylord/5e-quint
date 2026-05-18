@@ -133,6 +133,7 @@ import { spellRequiresVerbal } from "./spells-discovery.ts";
 import {
   applyAfterHitTimedDamageAndSaveSpellEffect,
   applyFailedSaveSpellConditionEffects,
+  selectFailedSaveConditionEffect,
   battleLightEmitters,
   battleObscurementZones,
   applySpellDamage,
@@ -2855,11 +2856,23 @@ function resolveCastAttackHitSaveGatedConditionSpellCommand(
   if (resourced.tag === "invalid") {
     return resourced;
   }
+  const selectedEffect = selectFailedSaveConditionEffect(
+    invocation.effect,
+    null,
+  );
+  if (selectedEffect.tag !== "selected") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Readied save-gate condition spell requires a fixed failed-save condition effect.",
+    );
+  }
   const effected = applyFailedSaveSpellConditionEffects(
     resourced.state,
     input.subject.casterId,
     failedTargets,
     invocation,
+    selectedEffect.effect,
   );
   const readiedSpellCastReactionWindow = maybeOpenPostCastReadySpellCastWindow({
     state: effected,

@@ -905,6 +905,69 @@ const SupportedHealingSpellInvocationSchema = Schema.Struct({
   rangeFeet: MovementFeet,
 });
 
+const SpellFailedSaveConditionExpirationSchema = Schema.Union(
+  Schema.Literal("endOfCasterNextTurn", "concentration"),
+  Schema.Struct({
+    kind: Schema.Literal("duration"),
+    durationTicks: Schema.Number,
+  }),
+);
+const SpellConditionEscapeSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("abilityCheck"),
+    ability: Schema.Literal("str"),
+    skill: Schema.Literal("athletics"),
+    successEnds: Schema.Literal(...SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("targetDamagedByCasterOrAlly"),
+  }),
+);
+const SpellConditionRepeatSaveSchema = Schema.Struct({
+  ability: AbilitySchema,
+  dc: DcSourceSchema,
+});
+const SpellFailedSaveFixedConditionEffectSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("fixed"),
+    condition: Schema.Literal(...ALL_CONDITIONS),
+    expiresAt: SpellFailedSaveConditionExpirationSchema,
+    escape: Schema.NullOr(SpellConditionEscapeSchema),
+    turnStartDamage: Schema.NullOr(BattleRuntimeObjectSchema),
+    repeatSave: Schema.Null,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("fixed"),
+    condition: Schema.Literal(...ALL_CONDITIONS),
+    expiresAt: SpellFailedSaveConditionExpirationSchema,
+    escape: Schema.Null,
+    turnStartDamage: Schema.Null,
+    repeatSave: SpellConditionRepeatSaveSchema,
+  }),
+);
+const SpellFailedSaveConditionChoiceEffectSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("choice"),
+    choices: Schema.NonEmptyArray(Schema.Literal(...ALL_CONDITIONS)),
+    expiresAt: SpellFailedSaveConditionExpirationSchema,
+    escape: Schema.NullOr(SpellConditionEscapeSchema),
+    turnStartDamage: Schema.NullOr(BattleRuntimeObjectSchema),
+    repeatSave: Schema.Null,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("choice"),
+    choices: Schema.NonEmptyArray(Schema.Literal(...ALL_CONDITIONS)),
+    expiresAt: SpellFailedSaveConditionExpirationSchema,
+    escape: Schema.Null,
+    turnStartDamage: Schema.Null,
+    repeatSave: SpellConditionRepeatSaveSchema,
+  }),
+);
+const SpellFailedSaveConditionEffectSchema = Schema.Union(
+  SpellFailedSaveFixedConditionEffectSchema,
+  SpellFailedSaveConditionChoiceEffectSchema,
+);
+
 // Schema.Union preserves the runtime parser but infers a wider structural
 // union for nested BattleRuntimeObjectSchema fields than the authored
 // SupportedSpellInvocation variants. The variant discriminants below cover
@@ -1281,32 +1344,7 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
         }),
       ),
       targetCreatureTypes: Schema.NullOr(Schema.Array(Schema.String)),
-      effect: Schema.Struct({
-        condition: Schema.Literal(...ALL_CONDITIONS),
-        expiresAt: Schema.Union(
-          Schema.Literal("endOfCasterNextTurn", "concentration"),
-          Schema.Struct({
-            kind: Schema.Literal("duration"),
-            durationTicks: Schema.Number,
-          }),
-        ),
-        escape: Schema.NullOr(
-          Schema.Union(
-            Schema.Struct({
-              kind: Schema.Literal("abilityCheck"),
-              ability: Schema.Literal("str"),
-              skill: Schema.Literal("athletics"),
-              successEnds: Schema.Literal(
-                ...SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS,
-              ),
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("targetDamagedByCasterOrAlly"),
-            }),
-          ),
-        ),
-        turnStartDamage: Schema.NullOr(BattleRuntimeObjectSchema),
-      }),
+      effect: SpellFailedSaveConditionEffectSchema,
       saveRollModeRule: Schema.NullOr(SpellSavingThrowRollModeRuleSchema),
       rangeFeet: MovementFeet,
     }),
@@ -1892,6 +1930,13 @@ export const BattleHoleSchema = Schema.Union(
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
+    kind: Schema.Literal("conditionChoice"),
+    label: Schema.String,
+    spell: SupportedSpellInvocationSchema,
+    choices: Schema.NonEmptyArray(Schema.Literal(...ALL_CONDITIONS)),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
     kind: Schema.Literal("thaumaturgyActiveOneMinuteEffectCount"),
     label: Schema.String,
     spell: SupportedSpellInvocationSchema,
@@ -1981,6 +2026,21 @@ export const BattleHoleSchema = Schema.Union(
     label: Schema.String,
     greaseGroundHazard: BattleRuntimeObjectSchema,
     ability: Schema.Literal("dex"),
+    dc: DcSourceSchema,
+    areaChoices: Schema.Array(BattleRuntimeObjectSchema),
+    targetRollModes: Schema.Array(
+      Schema.Struct({
+        targetId: CombatantId,
+        rollMode: Schema.Literal(...ATTACK_ROLL_MODES),
+      }),
+    ),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("savingThrowOutcome"),
+    label: Schema.String,
+    spellConditionEndTurnSave: BattleRuntimeObjectSchema,
+    ability: AbilitySchema,
     dc: DcSourceSchema,
     areaChoices: Schema.Array(BattleRuntimeObjectSchema),
     targetRollModes: Schema.Array(
@@ -2364,6 +2424,11 @@ type BattleFillEncoded =
       readonly kind: "damageTypeChoice";
       readonly holeId: string;
       readonly value: DamageType;
+    }
+  | {
+      readonly kind: "conditionChoice";
+      readonly holeId: string;
+      readonly value: (typeof ALL_CONDITIONS)[number];
     }
   | {
       readonly kind: "spellAreaChoice";
@@ -2895,6 +2960,11 @@ export const BattleFillSchema: Schema.Schema<
       kind: Schema.Literal("damageTypeChoice"),
       holeId: BattleHoleIdSchema,
       value: DamageTypeSchema,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("conditionChoice"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Literal(...ALL_CONDITIONS),
     }),
     Schema.Struct({
       kind: Schema.Literal("spellAreaChoice"),

@@ -95,6 +95,7 @@ module spellProcedureProfiles {
     | EntangleSaveConditionProfile
     | AnimalFriendshipSaveConditionProfile
     | CharmPersonSaveConditionProfile
+    | BlindnessDeafnessSaveConditionProfile
     | FaerieFireSaveAttackRollAdvantageProfile
 
   type SpellSaveGatedFailedEffect =
@@ -103,8 +104,10 @@ module spellProcedureProfiles {
     | DissonantWhispersForcedReactionMovementEffect
     | ColorSprayBlindedEffect
     | EntangleRestrainedEffect
-    | AnimalFriendshipCharmedEffect({ durationMinutes: int })
-    | CharmPersonCharmedEffect({ durationMinutes: int })
+    | AnimalFriendshipCharmedEffect({ durationTicks: int })
+    | CharmPersonCharmedEffect({ durationTicks: int })
+    | BlindnessDeafnessBlindedEffect({ durationTicks: int })
+    | BlindnessDeafnessDeafenedEffect({ durationTicks: int })
     | FaerieFireOutlineEffect
 
   type ScalarBuffSpellProfile =
@@ -465,6 +468,7 @@ module spellProcedureProfiles {
       | EntangleSaveConditionProfile => SpellAreaSaveTargets
       | AnimalFriendshipSaveConditionProfile => SpellTargetListSaveTargets({ minTargets: 1, baseSlotLevel: 1, baseTargets: 1, additionalTargetsPerSlotLevel: 1 })
       | CharmPersonSaveConditionProfile => SpellTargetListSaveTargets({ minTargets: 1, baseSlotLevel: 1, baseTargets: 1, additionalTargetsPerSlotLevel: 1 })
+      | BlindnessDeafnessSaveConditionProfile => SpellTargetListSaveTargets({ minTargets: 1, baseSlotLevel: 2, baseTargets: 1, additionalTargetsPerSlotLevel: 1 })
       | FaerieFireSaveAttackRollAdvantageProfile => SpellAreaSaveTargets
     }
 
@@ -474,6 +478,7 @@ module spellProcedureProfiles {
       | EntangleSaveConditionProfile => SpellStrengthSavingThrow
       | AnimalFriendshipSaveConditionProfile => SpellWisdomSavingThrow
       | CharmPersonSaveConditionProfile => SpellWisdomSavingThrow
+      | BlindnessDeafnessSaveConditionProfile => SpellConstitutionSavingThrow
       | FaerieFireSaveAttackRollAdvantageProfile => SpellDexteritySavingThrow
     }
 
@@ -492,8 +497,12 @@ module spellProcedureProfiles {
     match profile {
       | ColorSpraySaveConditionProfile => Set(ColorSprayBlindedEffect)
       | EntangleSaveConditionProfile => Set(EntangleRestrainedEffect)
-      | AnimalFriendshipSaveConditionProfile => Set(AnimalFriendshipCharmedEffect({ durationMinutes: 24 * 60 }))
-      | CharmPersonSaveConditionProfile => Set(CharmPersonCharmedEffect({ durationMinutes: 10 * 60 }))
+      | AnimalFriendshipSaveConditionProfile => Set(AnimalFriendshipCharmedEffect({ durationTicks: 24 * 60 }))
+      | CharmPersonSaveConditionProfile => Set(CharmPersonCharmedEffect({ durationTicks: 10 * 60 }))
+      | BlindnessDeafnessSaveConditionProfile => Set(
+          BlindnessDeafnessBlindedEffect({ durationTicks: 10 }),
+          BlindnessDeafnessDeafenedEffect({ durationTicks: 10 })
+        )
       | FaerieFireSaveAttackRollAdvantageProfile => Set(FaerieFireOutlineEffect)
     }
 
@@ -505,6 +514,7 @@ module spellProcedureProfiles {
     match profile {
       | AnimalFriendshipSaveConditionProfile => targetIsBeast
       | CharmPersonSaveConditionProfile => targetIsHumanoid
+      | BlindnessDeafnessSaveConditionProfile => true
       | _ => true
     }
 
@@ -1235,6 +1245,7 @@ module spellProcedureProfiles {
 
   run test_save_gated_spell_profiles_project_damage_targeting_and_effects = {
     val animalTargets = spellSaveGatedConditionTargeting(AnimalFriendshipSaveConditionProfile)
+    val blindnessTargets = spellSaveGatedConditionTargeting(BlindnessDeafnessSaveConditionProfile)
     all {
       assert(spellSaveGatedDamageTargeting(SacredFlameSaveDamageProfile) == SpellSingleSaveTarget),
       assert(spellSaveGatedDamageTargeting(BurningHandsSaveDamageProfile) == SpellAreaSaveTargets),
@@ -1264,9 +1275,16 @@ module spellProcedureProfiles {
       assert(spellSaveGatedConditionTargeting(ColorSpraySaveConditionProfile) == SpellAreaSaveTargets),
       assert(spellSaveGatedConditionSavingThrowAbility(ColorSpraySaveConditionProfile) == SpellConstitutionSavingThrow),
       assert(spellSaveGatedConditionSavingThrowAbility(EntangleSaveConditionProfile) == SpellStrengthSavingThrow),
+      assert(spellSaveGatedConditionSavingThrowAbility(BlindnessDeafnessSaveConditionProfile) == SpellConstitutionSavingThrow),
       assert(spellSaveGatedTargetMaxTargets(animalTargets, 1) == 1),
       assert(spellSaveGatedTargetMaxTargets(animalTargets, 2) == 2),
+      assert(spellSaveGatedTargetMaxTargets(blindnessTargets, 2) == 1),
+      assert(spellSaveGatedTargetMaxTargets(blindnessTargets, 3) == 2),
       assert(spellSaveGatedConditionFailedSaveEffects(EntangleSaveConditionProfile) == Set(EntangleRestrainedEffect)),
+      assert(spellSaveGatedConditionFailedSaveEffects(BlindnessDeafnessSaveConditionProfile) == Set(
+        BlindnessDeafnessBlindedEffect({ durationTicks: 10 }),
+        BlindnessDeafnessDeafenedEffect({ durationTicks: 10 })
+      )),
       assert(spellSaveGatedConditionFailedSaveEffects(FaerieFireSaveAttackRollAdvantageProfile) == Set(FaerieFireOutlineEffect)),
       assert(spellSaveGatedConditionTargetCreatureTypeIsLegal(AnimalFriendshipSaveConditionProfile, true, false)),
       assert(not(spellSaveGatedConditionTargetCreatureTypeIsLegal(AnimalFriendshipSaveConditionProfile, false, true))),

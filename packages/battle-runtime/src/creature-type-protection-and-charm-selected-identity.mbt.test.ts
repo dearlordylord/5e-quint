@@ -54,7 +54,10 @@ import {
   type CombatantId,
   type SupportedSpellInvocation,
 } from "./index.ts";
-import { applyFailedSaveSpellConditionEffects } from "./battle-reducer/spells-active-effects.ts";
+import {
+  applyFailedSaveSpellConditionEffects,
+  selectFailedSaveConditionEffect,
+} from "./battle-reducer/spells-active-effects.ts";
 import { applyPreparedSlotSpellDamage } from "./battle-reducer/spells-damage-fills.ts";
 
 const creatureTypeProtectionAndCharmSelectedIdentityDriverSchema = {
@@ -701,17 +704,20 @@ function projectProtectionFromEvilAndGoodCharmBoundary(): {
 } {
   const resolved = resolveProtectionFromEvilAndGood();
   const charmInvocation = charmPersonSpellInvocation();
+  const charmEffect = selectedFixedConditionEffect(charmInvocation);
   const scopedSourceApplied = applyFailedSaveSpellConditionEffects(
     resolved.state,
     feySourceId,
     [protectedTargetId],
     charmInvocation,
+    charmEffect,
   );
   const unscopedSourceApplied = applyFailedSaveSpellConditionEffects(
     resolved.state,
     humanoidAttackerId,
     [protectedTargetId],
     charmInvocation,
+    charmEffect,
   );
   const scopedPossession = resolveBattlePossessionAttempt({
     state: resolved.state,
@@ -745,6 +751,19 @@ function projectProtectionFromEvilAndGoodCharmBoundary(): {
       unscopedPossessionUnprevented: unscopedPossession.tag === "unprevented",
     },
   };
+}
+
+function selectedFixedConditionEffect(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "saveGatedCondition" }
+  >,
+) {
+  const selected = selectFailedSaveConditionEffect(invocation.effect, null);
+  if (selected.tag !== "selected") {
+    throw new Error("Expected a fixed failed-save condition effect.");
+  }
+  return selected.effect;
 }
 
 function resolveProtectionFromEvilAndGoodRelevantCharmSave(): {

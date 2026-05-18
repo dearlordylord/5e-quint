@@ -611,6 +611,13 @@ export type BattleActiveEffect =
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {
+      readonly kind: "spellConditionEndTurnSave";
+      readonly condition: Condition;
+      readonly conditionHadNonSpellSource: boolean;
+      readonly save: SpellConditionRepeatSave;
+      readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleSpellEffectBase & {
       readonly kind: "possession";
       readonly save: SpellConditionRepeatSave;
       readonly expiresAt: BattleActiveEffectExpiration;
@@ -1887,22 +1894,59 @@ export type SpellPostSaveAreaEffect =
       };
       readonly audibleBoom: BattleThunderwaveAudibleBoom;
     };
-export type SpellFailedSaveConditionEffect = {
-  readonly condition: Condition;
-  readonly expiresAt:
-    | "endOfCasterNextTurn"
-    | "concentration"
-    | {
-        readonly kind: "duration";
-        readonly durationTicks: ElapsedTimeTicks;
-      };
-  readonly escape: SpellConditionEscape | null;
-  readonly turnStartDamage: SpellTurnStartDamage | null;
-};
+export type SpellFailedSaveConditionExpiration =
+  | "endOfCasterNextTurn"
+  | "concentration"
+  | {
+      readonly kind: "duration";
+      readonly durationTicks: ElapsedTimeTicks;
+    };
 export type SpellConditionRepeatSave = {
   readonly ability: Ability;
   readonly dc: DcSource;
 };
+type SpellFailedSaveConditionEffectBase = {
+  readonly expiresAt: SpellFailedSaveConditionExpiration;
+};
+type SpellFailedSaveConditionNoRepeatLifecycle = {
+  readonly escape: SpellConditionEscape | null;
+  readonly turnStartDamage: SpellTurnStartDamage | null;
+  readonly repeatSave: null;
+};
+type SpellFailedSaveConditionEndTurnSaveLifecycle = {
+  readonly escape: null;
+  readonly turnStartDamage: null;
+  readonly repeatSave: SpellConditionRepeatSave;
+};
+export type SpellFailedSaveFixedConditionEffect =
+  SpellFailedSaveConditionEffectBase &
+    (
+      | SpellFailedSaveConditionNoRepeatLifecycle
+      | SpellFailedSaveConditionEndTurnSaveLifecycle
+    ) & {
+    readonly kind: "fixed";
+    readonly condition: Condition;
+  };
+export type SpellFailedSaveConditionChoiceEffect =
+  SpellFailedSaveConditionEffectBase &
+    (
+      | SpellFailedSaveConditionNoRepeatLifecycle
+      | SpellFailedSaveConditionEndTurnSaveLifecycle
+    ) & {
+    readonly kind: "choice";
+    readonly choices: readonly [Condition, ...Condition[]];
+  };
+export type SpellFailedSaveConditionEffect =
+  | SpellFailedSaveFixedConditionEffect
+  | SpellFailedSaveConditionChoiceEffect;
+export type SpellSelectedFailedSaveConditionEffect =
+  SpellFailedSaveConditionEffectBase &
+    (
+      | SpellFailedSaveConditionNoRepeatLifecycle
+      | SpellFailedSaveConditionEndTurnSaveLifecycle
+    ) & {
+    readonly condition: Condition;
+  };
 export type SpellSavingThrowRollModeRule =
   | {
       readonly kind: "hostileTarget";
@@ -3543,6 +3587,23 @@ export type BattleGreaseGroundHazardSavingThrowOutcomeHole = {
   readonly areaChoices: readonly [];
   readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
 };
+export type BattleSpellConditionEndTurnSavingThrowOutcomeHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "savingThrowOutcome";
+  readonly label: string;
+  readonly spellConditionEndTurnSave: {
+    readonly targetId: CombatantId;
+    readonly sourceSpellId: SpellRecord["id"];
+    readonly sourceCombatantId: CombatantId;
+    readonly condition: Condition;
+    readonly save: SpellConditionRepeatSave;
+  };
+  readonly ability: Ability;
+  readonly dc: DcSource;
+  readonly areaChoices: readonly [];
+  readonly targetRollModes: readonly BattleSavingThrowRollModeProjection[];
+};
 export type BattleProtectionRelevantEffectSavingThrowOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -3590,6 +3651,19 @@ export type BattleSpellAbilityChoiceHole = {
     { readonly procedure: "markedDamageRider"; readonly action: "cast" }
   >;
   readonly choices: readonly Ability[];
+};
+export type BattleSpellConditionChoiceHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "conditionChoice";
+  readonly label: string;
+  readonly spell: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "saveGatedCondition" }
+  > & {
+    readonly effect: SpellFailedSaveConditionChoiceEffect;
+  };
+  readonly choices: readonly [Condition, ...Condition[]];
 };
 export type BattleThaumaturgyActiveOneMinuteEffectCountHole = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -3950,6 +4024,7 @@ export type BattleHole =
   | BattleSpellHealingRollHole
   | BattleSpellSkillChoiceHole
   | BattleSpellAbilityChoiceHole
+  | BattleSpellConditionChoiceHole
   | BattleThaumaturgyActiveOneMinuteEffectCountHole
   | BattleCommandOptionChoiceHole
   | BattleDancingLightsPlacementHole
@@ -3958,6 +4033,7 @@ export type BattleHole =
   | BattleSleepRepeatSavingThrowOutcomeHole
   | BattleHideousLaughterRepeatSavingThrowOutcomeHole
   | BattleGreaseGroundHazardSavingThrowOutcomeHole
+  | BattleSpellConditionEndTurnSavingThrowOutcomeHole
   | BattleProtectionRelevantEffectSavingThrowOutcomeHole
   | BattleUnitFeatureSavingThrowOutcomeHole
   | BattleUnitFeatureRollHole
@@ -4016,6 +4092,11 @@ export type BattleFill =
       readonly kind: "savingThrowOutcome";
       readonly holeId: BattleHoleId;
       readonly value: BattleSavingThrowOutcomeValue;
+    }
+  | {
+      readonly kind: "conditionChoice";
+      readonly holeId: BattleHoleId;
+      readonly value: Condition;
     }
   | {
       readonly kind: "skillChoice";

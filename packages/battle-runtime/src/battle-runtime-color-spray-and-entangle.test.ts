@@ -62,7 +62,11 @@ describe("battle runtime: Color Spray and Entangle", () => {
       ability: "con",
       spell: {
         targeting: { kind: "selfOriginCone", lengthFeet: 15 },
-        effect: { condition: "blinded", expiresAt: "endOfCasterNextTurn" },
+        effect: expect.objectContaining({
+          kind: "fixed",
+          condition: "blinded",
+          expiresAt: "endOfCasterNextTurn",
+        }),
         rangeFeet: 0,
       },
     });
@@ -204,7 +208,11 @@ describe("battle runtime: Color Spray and Entangle", () => {
       ability: "str",
       spell: {
         targeting: { kind: "pointOriginCubeExcludingCaster", sideFeet: 20 },
-        effect: { condition: "restrained", expiresAt: "concentration" },
+        effect: expect.objectContaining({
+          kind: "fixed",
+          condition: "restrained",
+          expiresAt: "concentration",
+        }),
         rangeFeet: 90,
       },
     });

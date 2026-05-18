@@ -34,7 +34,9 @@ import { representedMovementSpeedKinds } from "./movement-speed.ts";
 import {
   scalarBuffInitialHoles,
   commandOptionChoiceHole,
+  saveGatedConditionHasConditionChoice,
   spellAbilityChoiceHole,
+  spellConditionChoiceHole,
   spellDamageTypeChoiceHole,
   spellBeamObjectTargetHole,
   spellBeamTargetHole,
@@ -156,6 +158,11 @@ export function discoverSupportedSpellInvocations(
           if (targetHole.choices.length === 0) {
             return [];
           }
+          const conditionChoiceHoles =
+            invocation.procedure === "saveGatedCondition" &&
+            saveGatedConditionHasConditionChoice(invocation)
+              ? [spellConditionChoiceHole(invocation)]
+              : [];
           const castActs = [
             {
               subject: {
@@ -166,7 +173,7 @@ export function discoverSupportedSpellInvocations(
               },
               label: invocation.spell.name,
               summary: `${spellActivationInvocationCastSummary(invocation)} Table-supplied affected targets make ${spellSavingThrowAbility(invocation).toUpperCase()} Saving Throws.`,
-              initialHoles: [targetHole],
+              initialHoles: [targetHole, ...conditionChoiceHoles],
             },
           ];
           return invocation.procedure === "greaseGroundHazard"
@@ -178,6 +185,11 @@ export function discoverSupportedSpellInvocations(
           actorId,
           invocation,
         );
+        const conditionChoiceHoles =
+          invocation.procedure === "saveGatedCondition" &&
+          saveGatedConditionHasConditionChoice(invocation)
+            ? [spellConditionChoiceHole(invocation)]
+            : [];
         const castActs = [
           {
             subject: {
@@ -188,7 +200,7 @@ export function discoverSupportedSpellInvocations(
             },
             label: invocation.spell.name,
             summary: `${spellActivationInvocationCastSummary(invocation)} Table-supplied affected targets make ${spellSavingThrowAbility(invocation).toUpperCase()} Saving Throws.`,
-            initialHoles: [initialHole],
+            initialHoles: [initialHole, ...conditionChoiceHoles],
           },
         ];
         return invocation.procedure === "greaseGroundHazard"

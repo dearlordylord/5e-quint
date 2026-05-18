@@ -98,5 +98,6 @@ module battleRuntimeCreatureTypeProtection {
           protectionFromEvilAndGoodPreventsConditionFromCreatureType(sourceCreatureType, targetEffects, PreventedCharmed)
       | ColorSpraySaveGate => false
       | EntangleSaveGate => false
+      | BlindnessDeafnessSaveGate => false
     }
 }

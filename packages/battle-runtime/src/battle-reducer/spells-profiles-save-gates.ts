@@ -8,6 +8,7 @@ import {
   movementDeltaFeet,
   movementFeet,
   spellSlotLevel,
+  type Condition,
   type MovementFeet,
   type SpellSlotLevel,
 } from "@dnd/shared/types";
@@ -173,6 +174,15 @@ const SHATTER_AREA_RADIUS_FEET = 10;
 const SHATTER_BASE_DAMAGE_DICE = 3;
 const SHATTER_DAMAGE_DIE_SIZE = 8;
 const SHATTER_SLOT_DAMAGE_DICE_INCREMENT = 1;
+const BLINDNESS_DEAFNESS_SPELL_NAME = "Blindness/Deafness";
+const BLINDNESS_DEAFNESS_PROVENANCE_SECTION =
+  "Spells/Descriptions-A-D#Blindness/Deafness";
+const BLINDNESS_DEAFNESS_BASE_SPELL_LEVEL = 2;
+const BLINDNESS_DEAFNESS_RANGE_FEET = 120;
+const BLINDNESS_DEAFNESS_FAILED_SAVE_CONDITION_CHOICES = [
+  "blinded",
+  "deafened",
+] as const satisfies readonly [Condition, ...Condition[]];
 
 export function hasSaveGateRepeatSaves(
   phase: ActivationPhase | undefined,
@@ -245,6 +255,7 @@ export function supportedSaveGateConditionSpell(
 ): SaveGateConditionSpell | null {
   return (
     animalFriendshipSaveGateConditionSpell(spell) ??
+    blindnessDeafnessSaveGateConditionSpell(spell) ??
     charmPersonSaveGateConditionSpell(spell) ??
     colorSpraySaveGateConditionSpell(spell) ??
     entangleSaveGateConditionSpell(spell)
@@ -831,6 +842,103 @@ export function charmPersonSaveGateConditionSpell(
   });
 }
 
+export function blindnessDeafnessSaveGateConditionSpell(
+  spell: SpellRecord,
+): SaveGateConditionSpell | null {
+  if (spell.mechanics.family !== "activation") {
+    return null;
+  }
+  const phase = spell.mechanics.phases[0];
+  const failedEffect = phase?.kind === "save_gate" ? phase.onFail : undefined;
+  const failedCondition =
+    failedEffect?.kind === "apply_condition" ? failedEffect.condition : null;
+  const targetSelection =
+    phase?.kind === "save_gate" &&
+    phase.attachment.kind === "hole" &&
+    phase.attachment.value.kind === "target"
+      ? phase.attachment.value.selection
+      : null;
+  const repeatSaves =
+    phase?.kind === "save_gate" ? (phase.repeatSaves ?? []) : [];
+  const repeatSave = repeatSaves.length === 1 ? repeatSaves[0] : undefined;
+  const durationTicks =
+    spell.mechanics.duration.kind === "timed"
+      ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.value)
+      : null;
+  if (
+    spell.name !== BLINDNESS_DEAFNESS_SPELL_NAME ||
+    spell.provenance.kind !== "srd-5.2.1" ||
+    spell.provenance.section !== BLINDNESS_DEAFNESS_PROVENANCE_SECTION ||
+    spell.mechanics.level !== BLINDNESS_DEAFNESS_BASE_SPELL_LEVEL ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "point" ||
+    spell.mechanics.range.feet !== BLINDNESS_DEAFNESS_RANGE_FEET ||
+    spell.mechanics.duration.kind !== "timed" ||
+    spell.mechanics.duration.value.unit !== "minute" ||
+    spell.mechanics.duration.value.amount !== 1 ||
+    spell.mechanics.phases.length !== 1 ||
+    phase?.kind !== "save_gate" ||
+    phase.ability !== "con" ||
+    phase.dc.kind !== "caster_spell_save_dc" ||
+    phase.onSuccess.kind !== "none" ||
+    targetSelection === null ||
+    targetSelection.mode !== "choose_up_to" ||
+    targetSelection.count === undefined ||
+    failedCondition === null ||
+    typeof failedCondition === "string" ||
+    !("kind" in failedCondition) ||
+    failedCondition.kind !== "choose" ||
+    !sameStringSet(
+      failedCondition.from,
+      BLINDNESS_DEAFNESS_FAILED_SAVE_CONDITION_CHOICES,
+    ) ||
+    repeatSave === undefined ||
+    repeatSave.cadence !== "end_of_target_turn" ||
+    repeatSave.rollMode !== undefined ||
+    repeatSave.onSuccess !== "ends_on_target" ||
+    repeatSave.onFailAgain !== undefined ||
+    durationTicks === null ||
+    Either.isLeft(durationTicks)
+  ) {
+    return null;
+  }
+  const targetCountBySlot = commandTargetCountBySlot(
+    targetSelection,
+    spell.mechanics.level,
+  );
+  if (
+    targetCountBySlot === null ||
+    (targetSelection.targetKinds !== undefined &&
+      !sameStringSet(targetSelection.targetKinds, ["creature"])) ||
+    targetCountBySlot(spellSlotLevel(spell.mechanics.level)) !== 1
+  ) {
+    return null;
+  }
+
+  return {
+    phase,
+    targeting: (slotLevel) => ({
+      kind: "targetList",
+      minTargets: 1,
+      maxTargets: targetCountBySlot(slotLevel),
+    }),
+    targetCreatureTypes: null,
+    effect: {
+      kind: "choice",
+      choices: BLINDNESS_DEAFNESS_FAILED_SAVE_CONDITION_CHOICES,
+      expiresAt: { kind: "duration", durationTicks: durationTicks.right },
+      escape: null,
+      turnStartDamage: null,
+      repeatSave: {
+        ability: phase.ability,
+        dc: phase.dc,
+      },
+    },
+    saveRollModeRule: null,
+    rangeFeet: movementFeet(spell.mechanics.range.feet),
+  };
+}
+
 function creatureTypeCharmedSaveGateConditionSpell(input: {
   readonly spell: SpellRecord;
   readonly name: string;
@@ -907,10 +1015,12 @@ function creatureTypeCharmedSaveGateConditionSpell(input: {
     },
     targetCreatureTypes: [input.targetCreatureType],
     effect: {
+      kind: "fixed",
       condition: "charmed",
       expiresAt: { kind: "duration", durationTicks: durationTicks.right },
       escape: { kind: "targetDamagedByCasterOrAlly" },
       turnStartDamage: null,
+      repeatSave: null,
     },
     saveRollModeRule: input.saveRollModeRule,
     rangeFeet: movementFeet(spell.mechanics.range.feet),
@@ -958,10 +1068,12 @@ export function colorSpraySaveGateConditionSpell(
     }),
     targetCreatureTypes: null,
     effect: {
+      kind: "fixed",
       condition: COLOR_SPRAY_FAILED_SAVE_CONDITION,
       expiresAt: "endOfCasterNextTurn",
       escape: null,
       turnStartDamage: null,
+      repeatSave: null,
     },
     saveRollModeRule: null,
     rangeFeet: movementFeet(0),
@@ -1011,6 +1123,7 @@ export function entangleSaveGateConditionSpell(
     }),
     targetCreatureTypes: null,
     effect: {
+      kind: "fixed",
       condition: ENTANGLE_FAILED_SAVE_CONDITION,
       expiresAt: "concentration",
       escape: {
@@ -1020,6 +1133,7 @@ export function entangleSaveGateConditionSpell(
         successEnds: "condition",
       },
       turnStartDamage: null,
+      repeatSave: null,
     },
     saveRollModeRule: null,
     rangeFeet: movementFeet(spell.mechanics.range.feet),

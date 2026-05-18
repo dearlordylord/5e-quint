@@ -285,6 +285,8 @@ export {
   type BattleSnapshot,
   type BattleSpellAreaChoice,
   type BattleSpellAttackRollHole,
+  type BattleSpellConditionChoiceHole,
+  type BattleSpellConditionEndTurnSavingThrowOutcomeHole,
   type BattleSpellDamageRollHole,
   type BattleSpellDamageTypeChoiceHole,
   type BattleSpellHealingRollHole,

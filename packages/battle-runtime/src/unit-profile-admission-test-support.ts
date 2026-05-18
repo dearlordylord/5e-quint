@@ -60,7 +60,10 @@ import { battleCreatureStateWithKnockOutPreservedConditions } from "./battle-red
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
 import { hideousLaughterRepeatSavingThrowOutcomeHole } from "./battle-reducer/hideous-laughter-repeat-save.ts";
 import { conditionApplicationPreventedByCreatureTypeProtection } from "./battle-reducer/spell-condition-effects-helpers.ts";
-import { applyFailedSaveSpellConditionEffects } from "./battle-reducer/spells-active-effects.ts";
+import {
+  applyFailedSaveSpellConditionEffects,
+  selectFailedSaveConditionEffect,
+} from "./battle-reducer/spells-active-effects.ts";
 import {
   applyPreparedSlotSpellDamage,
   spellDamageHole,
@@ -161,6 +164,7 @@ export {
   applyBattleHitPointDamage,
   applyCondition,
   applyFailedSaveSpellConditionEffects,
+  selectFailedSaveConditionEffect,
   applyPreparedSlotSpellDamage,
   armorClass,
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,

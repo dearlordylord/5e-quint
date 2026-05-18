@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 374,
-      "numerator": 146,
-      "percent": "39%"
+      "numerator": 147,
+      "percent": "39.3%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 446,
-      "numerator": 178,
-      "percent": "39.9%"
+      "numerator": 179,
+      "percent": "40.1%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 179
+      "value": 180
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 115,
-      "numerator": 115,
+      "denominator": 116,
+      "numerator": 116,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 179,
-      "numerator": 179,
+      "denominator": 180,
+      "numerator": 180,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 115,
+      "denominator": 116,
       "numerator": 104,
-      "percent": "90.4%"
+      "percent": "89.7%"
     },
     "supportedProfileCoverage": {
-      "denominator": 147,
-      "numerator": 115,
-      "percent": "78.2%"
+      "denominator": 148,
+      "numerator": 116,
+      "percent": "78.4%"
     }
   },
   "metricSemantics": [
@@ -8978,6 +8978,73 @@
       },
       "claim": {
         "profileIds": [
+          "spell.invocation-condition-save"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action level-2 Spell Slot casting",
+          "one visible creature target at 120-foot range with one additional target per slot level above 2",
+          "Constitution Spell Save DC gate",
+          "caster choice between Blinded and Deafened on a failed save",
+          "end-of-target-turn Constitution repeat save ends the spell-owned condition on that target on success",
+          "maximum-duration expiration removes the spell-owned condition without duplicating non-spell condition sources"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-SPELL-BLINDNESS-DEAFNESS"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-condition-save",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV29B",
+            "SRDINV91C"
+          ],
+          "title": "Spell invocation resolves supported save-gated condition effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/blindness_deafness.json",
+      "unitId": "blindness_deafness"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
           "spell.invocation-roll-modifier"
         ],
         "rawRequirementIds": [
@@ -15453,24 +15520,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/blight.json",
       "unitId": "blight"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/blindness_deafness.json",
-      "unitId": "blindness_deafness"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

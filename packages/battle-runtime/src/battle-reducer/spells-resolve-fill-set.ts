@@ -2,6 +2,7 @@
 // Owns classification and validation of supplied fills against spell replay holes.
 
 import { type AttackRollResult } from "@dnd/shared-algebras/runtime-hole-algebra";
+import type { Condition } from "@dnd/shared/types";
 import type { Ability, Skill } from "@dnd/surface/surface/types";
 import {
   ATTACK_ROLL_HOLE_ID,
@@ -36,7 +37,9 @@ import {
   commandOptionChoiceHoleId,
   spellDamageHole,
   spellDamageTypeChoiceHole,
+  saveGatedConditionHasConditionChoice,
   spellAreaChoiceHoleId,
+  spellConditionChoiceHoleId,
   spellObjectTargetHoleId,
   spellAbilityChoiceHoleId,
   spellRollModifierSkillChoiceHoleId,
@@ -128,6 +131,7 @@ export type SpellFillSet =
           >
         | undefined;
       readonly commandOptionChoice: BattleCommandOption | undefined;
+      readonly conditionChoice: Condition | undefined;
       readonly areaChoice: BattleFogCloudAreaChoice | undefined;
       readonly dancingLightsPlacement:
         | Extract<BattleFill, { readonly kind: "dancingLightsPlacement" }>
@@ -220,6 +224,7 @@ export function spellFillSet(
       >
     | undefined;
   let commandOptionChoice: BattleCommandOption | undefined;
+  let conditionChoice: Condition | undefined;
   let areaChoice: BattleFogCloudAreaChoice | undefined;
   let dancingLightsPlacement:
     | Extract<BattleFill, { readonly kind: "dancingLightsPlacement" }>
@@ -719,6 +724,39 @@ export function spellFillSet(
       continue;
     }
 
+    if (fill.kind === "conditionChoice") {
+      if (
+        invocation.procedure !== "saveGatedCondition" ||
+        !saveGatedConditionHasConditionChoice(invocation)
+      ) {
+        return {
+          tag: "invalid",
+          message: "Spell condition choice does not match this spell act.",
+        };
+      }
+      if (fill.holeId !== spellConditionChoiceHoleId(invocation)) {
+        return {
+          tag: "invalid",
+          message:
+            "Spell condition choice must use the selected spell act condition-choice hole.",
+        };
+      }
+      if (!invocation.effect.choices.includes(fill.value)) {
+        return {
+          tag: "invalid",
+          message: "Spell condition choice is not available for this spell.",
+        };
+      }
+      if (conditionChoice !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Spell condition choice was filled twice.",
+        };
+      }
+      conditionChoice = fill.value;
+      continue;
+    }
+
     if (fill.kind === "abilityChoice") {
       if (
         invocation.procedure !== "markedDamageRider" ||
@@ -972,6 +1010,7 @@ export function spellFillSet(
     abilityChoice,
     thaumaturgyActiveOneMinuteEffectCount,
     commandOptionChoice,
+    conditionChoice,
     areaChoice,
     dancingLightsPlacement,
     damageTypeChoice,
@@ -1009,6 +1048,7 @@ export function spellFillSetContainsOnlySpellCastReactionFacts(
     fillSet.abilityChoice === undefined &&
     fillSet.thaumaturgyActiveOneMinuteEffectCount === undefined &&
     fillSet.commandOptionChoice === undefined &&
+    fillSet.conditionChoice === undefined &&
     fillSet.areaChoice === undefined &&
     fillSet.dancingLightsPlacement === undefined &&
     fillSet.damageTypeChoice === undefined &&

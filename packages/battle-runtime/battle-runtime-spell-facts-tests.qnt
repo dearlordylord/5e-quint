@@ -47,6 +47,10 @@ module battleRuntimeSpellFactsTests {
 
   run test_spell_invocation_executable_spell_facts = {
     val animalFriendshipCharmed = AnimalFriendshipCharmed({ source: Fighter, durationTicks: 24 * 60 })
+    val blindnessDeafnessDeafened = BlindnessDeafnessDeafened({
+      source: Fighter,
+      durationTicks: blindnessDeafnessDurationTicks,
+    })
     all {
       assert(rollModifierMaximumTargets(BlessRollModifier, 2) == 4),
       assert(rollModifierMaximumTargets(BaneRollModifier, 3) == 5),
@@ -245,6 +249,12 @@ module battleRuntimeSpellFactsTests {
       assert(saveGatedConditionFailedSaveActiveEffects(CharmPersonSaveGate, initialState, Fighter) == Set(CharmPersonCharmed({ source: Fighter, durationTicks: charmPersonCharmedDurationTicks }))),
       assert(saveGatedConditionSavingThrowHasAdvantage(CharmPersonSaveGate, true)),
       assert(not(saveGatedConditionSavingThrowHasAdvantage(CharmPersonSaveGate, false))),
+      assert(saveGatedConditionTargeting(BlindnessDeafnessSaveGate) == TargetListSaveTargets({ minTargets: 1, baseSlotLevel: 2, baseTargets: 1, additionalTargetsPerSlotLevel: 1 })),
+      assert(saveGatedConditionSavingThrowAbility(BlindnessDeafnessSaveGate) == ConAbility),
+      assert(saveGatedTargetMaxTargets(saveGatedConditionTargeting(BlindnessDeafnessSaveGate), 2) == 1),
+      assert(saveGatedTargetMaxTargets(saveGatedConditionTargeting(BlindnessDeafnessSaveGate), 3) == 2),
+      assert(saveGatedConditionRequiresConditionChoice(BlindnessDeafnessSaveGate)),
+      assert(blindnessDeafnessActiveEffect(BlindnessDeafnessDeafenedChoice, Fighter) == blindnessDeafnessDeafened),
       assert(spellAttackRollModeFromActiveEffects(Set(), Set(GuidingBoltNextAttackAdvantage), false) == AdvantageSpellAttackRoll),
       assert(spellAttackRollModeFromActiveEffects(Set(), Set(FaerieFireOutline), true) == AdvantageSpellAttackRoll),
       assert(spellAttackRollModeFromActiveEffects(Set(), Set(FaerieFireOutline), false) == NormalSpellAttackRoll),

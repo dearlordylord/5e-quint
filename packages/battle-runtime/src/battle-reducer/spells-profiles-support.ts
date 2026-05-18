@@ -933,6 +933,7 @@ export function supportedPreparedAfterHitSaveGatedConditionSpellProfile(
         dc: projection.dc,
         targeting: { kind: "singleCombatant" },
         effect: {
+          kind: "fixed",
           condition: projection.condition,
           expiresAt: "concentration",
           escape: {
@@ -945,6 +946,7 @@ export function supportedPreparedAfterHitSaveGatedConditionSpellProfile(
             expr: damageExpr,
             damageType: projection.turnStartDamageType,
           },
+          repeatSave: null,
         },
       },
     ];

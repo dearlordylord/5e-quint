@@ -56,10 +56,12 @@ import {
   applySleepPendingRepeatSaveEffects,
   applyFailedSaveSpellActiveEffects,
   applyFailedSaveSpellConditionEffects,
+  selectFailedSaveConditionEffect,
   saveGatedAttackRollAdvantageInvocationIsFaerieFire,
   applySpellDamage,
   saveGateDamageResultForOutcome,
   commandOptionChoiceHole,
+  spellConditionChoiceHole,
   spellDamageAmountForTarget,
   spellDamageHole,
   spellObjectDamageOutcome,
@@ -1202,6 +1204,25 @@ export function resolveSaveGateConditionSpellAct(input: {
       "Save-gate condition spells do not use attack or damage fills.",
     );
   }
+  const selectedEffect = selectFailedSaveConditionEffect(
+    input.invocation.effect,
+    input.fillSet.conditionChoice ?? null,
+  );
+  if (selectedEffect.tag === "needsConditionChoice") {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      spellConditionChoiceHole({
+        ...input.invocation,
+        effect: selectedEffect.effect,
+      }),
+    ]);
+  }
+  if (selectedEffect.tag === "invalidConditionChoice") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      selectedEffect.message,
+    );
+  }
   if (input.fillSet.savingThrowOutcomes === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
       savingThrowHole,
@@ -1265,6 +1286,7 @@ export function resolveSaveGateConditionSpellAct(input: {
     input.actorId,
     failedTargets,
     input.invocation,
+    selectedEffect.effect,
   );
   const nextState = extendSavingThrowOngoingFeatures(
     effected,
