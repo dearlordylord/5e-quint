@@ -2039,17 +2039,15 @@
       "unitId": "rogue_thieves_cant"
     },
     {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT: Promote See Invisibility as a level-2 self spell that spends the Magic Action and Spell Slot, applies a one-hour self effect, and exposes observer-scoped sight facts that let only the caster see creatures and objects with the Invisible condition as visible and see Ethereal Plane facts through table-supplied plane, distance, cover, and sight-line witnesses, without granting full Truesight, Darkness, visual-illusion, or transformation behavior. Owner: battle-runtime spell invocation/effect lifecycle plus observer-sight witness boundary. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused battle-runtime tests, and promoted Quint/runtime parity for the self effect, duration cleanup, observer-scoped Invisible benefit denial, and Ethereal visibility witness facts without full Truesight behavior.",
       "sourceRecordPath": "packages/surface/content/see_invisibility.json",
       "sourceRows": [
         {
@@ -2089,8 +2087,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
       "unitId": "see_invisibility"
     },
     {
@@ -2709,7 +2707,7 @@
       ]
     },
     {
-      "count": 29,
+      "count": 28,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
@@ -2735,7 +2733,6 @@
         "prayer_of_healing",
         "protection_from_poison",
         "ray_of_enfeeblement",
-        "see_invisibility",
         "shining_smite",
         "spider_climb",
         "spike_growth",
@@ -2763,7 +2760,7 @@
       ]
     },
     {
-      "count": 6,
+      "count": 7,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
@@ -2771,6 +2768,7 @@
         "druid_wild_shape",
         "monk_monks_focus",
         "monk_uncanny_metabolism",
+        "see_invisibility",
         "sorcerer_font_of_magic",
         "sorcerer_metamagic"
       ]
@@ -2809,12 +2807,12 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 475,
-      "percent": "85.4%",
+      "numerator": 472,
+      "percent": "84.9%",
       "rowsByStatus": {
         "accepted": 299,
-        "accepted-no-battle-effect": 176,
-        "battle-runtime-required": 77,
+        "accepted-no-battle-effect": 173,
+        "battle-runtime-required": 80,
         "owner-evidence-required": 4
       }
     },
@@ -2825,13 +2823,13 @@
     },
     "strictTargetClosure": {
       "denominator": 146,
-      "numerator": 116,
-      "percent": "79.5%"
+      "numerator": 117,
+      "percent": "80.1%"
     }
   },
   "openFrontier": [
     {
-      "count": 29,
+      "count": 28,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
@@ -2857,7 +2855,6 @@
         "prayer_of_healing",
         "protection_from_poison",
         "ray_of_enfeeblement",
-        "see_invisibility",
         "shining_smite",
         "spider_climb",
         "spike_growth",
@@ -6343,18 +6340,18 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
-      "missing": 29,
+      "missing": 28,
       "profile-subset-supported": 9,
       "supported-profile": 91,
-      "unsupported-profile": 17
+      "unsupported-profile": 18
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 6,
+      "blocked-follow-up-split": 7,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 11,
       "open-profile-accounting": 1,
-      "open-runtime-behavior": 29,
+      "open-runtime-behavior": 28,
       "supported-profile": 91
     },
     "nonSupportedFrontier": 55,

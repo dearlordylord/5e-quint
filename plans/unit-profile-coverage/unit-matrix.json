@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 374,
-      "numerator": 145,
-      "percent": "38.8%"
+      "numerator": 146,
+      "percent": "39%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 446,
-      "numerator": 177,
-      "percent": "39.7%"
+      "numerator": 178,
+      "percent": "39.9%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 178
+      "value": 179
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 114,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 178,
-      "numerator": 178,
+      "denominator": 179,
+      "numerator": 179,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -97,9 +97,9 @@
       "percent": "91.2%"
     },
     "supportedProfileCoverage": {
-      "denominator": 146,
+      "denominator": 147,
       "numerator": 114,
-      "percent": "78.1%"
+      "percent": "77.6%"
     }
   },
   "metricSemantics": [
@@ -12405,6 +12405,34 @@
         "status": "installed"
       },
       "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT",
+            "mechanic": "Promote See Invisibility as a level-2 self spell that spends the Magic Action and Spell Slot, applies a one-hour self effect, and exposes observer-scoped sight facts that let only the caster see creatures and objects with the Invisible condition as visible and see Ethereal Plane facts through table-supplied plane, distance, cover, and sight-line witnesses, without granting full Truesight, Darkness, visual-illusion, or transformation behavior.",
+            "owner": "battle-runtime spell invocation/effect lifecycle plus observer-sight witness boundary",
+            "requiredOutput": "Supported-profile Unit claim, deterministic admission/projection evidence, focused battle-runtime tests, and promoted Quint/runtime parity for the self effect, duration cleanup, observer-scoped Invisible benefit denial, and Ethereal visibility witness facts without full Truesight behavior.",
+            "title": "See Invisibility Observer Sight Runtime Support"
+          }
+        ],
+        "futureProfileOwner": "battle-runtime spell invocation/effect lifecycle plus observer-sight witness boundary",
+        "reason": "See Invisibility is authored and installed as an SRD Surface Spell Definition with catalog-level self sight-override metadata only. Runtime support remains blocked on an observer-scoped sight witness; Task 44 claims no battle-runtime profile, Invisible interaction support, or Ethereal Plane visibility execution.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/see_invisibility.json",
+      "unitId": "see_invisibility"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "profileIds": [
           "spell.invocation-after-hit-timed-damage-save"
         ],
@@ -18576,24 +18604,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/rogue_ability_score_improvement_l4.json",
       "unitId": "rogue_ability_score_improvement_l4"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/see_invisibility.json",
-      "unitId": "see_invisibility"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

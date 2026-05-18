@@ -153,6 +153,7 @@ import shockingGraspInput from "../../content/shocking_grasp.json";
 import sleepInput from "../../content/sleep.json";
 import sacredFlameInput from "../../content/sacred_flame.json";
 import scorchingRayInput from "../../content/scorching_ray.json";
+import seeInvisibilityInput from "../../content/see_invisibility.json";
 import searingSmiteInput from "../../content/searing_smite.json";
 import sorcererFontOfMagicInput from "../../content/sorcerer_font_of_magic.json";
 import sorcererInnateSorceryInput from "../../content/sorcerer_innate_sorcery.json";
@@ -430,6 +431,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     sacredFlameInput,
     sanctuaryInput,
     scorchingRayInput,
+    seeInvisibilityInput,
     searingSmiteInput,
     shockingGraspInput,
     sorcerousBurstInput,

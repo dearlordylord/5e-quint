@@ -98,6 +98,7 @@ export function traceEffectAtom(
     case "block_gases_and_gaseous_creatures":
     case "block_flying_movement":
     case "negate_named_effect":
+    case "see_invisible_and_ethereal":
     case "grant_sense":
     case "modify_sense_range":
     case "grant_language_understanding":

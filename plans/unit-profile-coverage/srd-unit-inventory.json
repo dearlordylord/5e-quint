@@ -179,12 +179,12 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 475,
-      "percent": "85.4%",
+      "numerator": 472,
+      "percent": "84.9%",
       "rowsByStatus": {
         "accepted": 299,
-        "accepted-no-battle-effect": 176,
-        "battle-runtime-required": 77,
+        "accepted-no-battle-effect": 173,
+        "battle-runtime-required": 80,
         "owner-evidence-required": 4
       }
     },
@@ -202,15 +202,16 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 304,
       "non-runtime": 24,
-      "catalog-only/dead-for-now": 147,
+      "catalog-only/dead-for-now": 144,
       "missing-authored-record": 75,
-      "catalog-installed-owner-evidence-required": 5,
+      "catalog-installed-owner-evidence-required": 8,
       "catalog-authored-executable-follow-up": 1
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 145,
-      "catalog-only/dead-for-now": 147,
+      "catalog-only/dead-for-now": 144,
       "missing-authored-record": 74,
+      "catalog-installed-owner-evidence-required": 3,
       "catalog-authored-executable-follow-up": 1
     },
     "levelOneRowsByCategory": {
@@ -6611,13 +6612,25 @@
         "sourceRecordPath": "packages/surface/content/see_invisibility.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "see_invisibility"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit see_invisibility is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/effect lifecycle plus observer-sight witness boundary",
+          "evidence": "Promote follow-up split L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT: L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT owns Promote See Invisibility as a level-2 self spell that spends the Magic Action and Spell Slot, applies a one-hour self effect, and exposes observer-scoped sight facts that let only the caster see creatures and objects with the Invisible condition as visible and see Ethereal Plane facts through table-supplied plane, distance, cover, and sight-line witnesses, without granting full Truesight, Darkness, visual-illusion, or transformation behavior. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused battle-runtime tests, and promoted Quint/runtime parity for the self effect, duration cleanup, observer-scoped Invisible benefit denial, and Ethereal visibility witness facts without full Truesight behavior.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT: L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT owns Promote See Invisibility as a level-2 self spell that spends the Magic Action and Spell Slot, applies a one-hour self effect, and exposes observer-scoped sight facts that let only the caster see creatures and objects with the Invisible condition as visible and see Ethereal Plane facts through table-supplied plane, distance, cover, and sight-line witnesses, without granting full Truesight, Darkness, visual-illusion, or transformation behavior. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused battle-runtime tests, and promoted Quint/runtime parity for the self effect, duration cleanup, observer-scoped Invisible benefit denial, and Ethereal visibility witness facts without full Truesight behavior.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_shatter",
@@ -19925,13 +19938,25 @@
         "sourceRecordPath": "packages/surface/content/see_invisibility.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "see_invisibility"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit see_invisibility is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/effect lifecycle plus observer-sight witness boundary",
+          "evidence": "Promote follow-up split L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT: L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT owns Promote See Invisibility as a level-2 self spell that spends the Magic Action and Spell Slot, applies a one-hour self effect, and exposes observer-scoped sight facts that let only the caster see creatures and objects with the Invisible condition as visible and see Ethereal Plane facts through table-supplied plane, distance, cover, and sight-line witnesses, without granting full Truesight, Darkness, visual-illusion, or transformation behavior. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused battle-runtime tests, and promoted Quint/runtime parity for the self effect, duration cleanup, observer-scoped Invisible benefit denial, and Ethereal visibility witness facts without full Truesight behavior.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT: L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT owns Promote See Invisibility as a level-2 self spell that spends the Magic Action and Spell Slot, applies a one-hour self effect, and exposes observer-scoped sight facts that let only the caster see creatures and objects with the Invisible condition as visible and see Ethereal Plane facts through table-supplied plane, distance, cover, and sight-line witnesses, without granting full Truesight, Darkness, visual-illusion, or transformation behavior. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused battle-runtime tests, and promoted Quint/runtime parity for the self effect, duration cleanup, observer-scoped Invisible benefit denial, and Ethereal visibility witness facts without full Truesight behavior.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_shatter",
@@ -25234,13 +25259,25 @@
         "sourceRecordPath": "packages/surface/content/see_invisibility.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "see_invisibility"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit see_invisibility is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/effect lifecycle plus observer-sight witness boundary",
+          "evidence": "Promote follow-up split L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT: L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT owns Promote See Invisibility as a level-2 self spell that spends the Magic Action and Spell Slot, applies a one-hour self effect, and exposes observer-scoped sight facts that let only the caster see creatures and objects with the Invisible condition as visible and see Ethereal Plane facts through table-supplied plane, distance, cover, and sight-line witnesses, without granting full Truesight, Darkness, visual-illusion, or transformation behavior. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused battle-runtime tests, and promoted Quint/runtime parity for the self effect, duration cleanup, observer-scoped Invisible benefit denial, and Ethereal visibility witness facts without full Truesight behavior.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT: L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT owns Promote See Invisibility as a level-2 self spell that spends the Magic Action and Spell Slot, applies a one-hour self effect, and exposes observer-scoped sight facts that let only the caster see creatures and objects with the Invisible condition as visible and see Ethereal Plane facts through table-supplied plane, distance, cover, and sight-line witnesses, without granting full Truesight, Darkness, visual-illusion, or transformation behavior. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused battle-runtime tests, and promoted Quint/runtime parity for the self effect, duration cleanup, observer-scoped Invisible benefit denial, and Ethereal visibility witness facts without full Truesight behavior.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_shatter",

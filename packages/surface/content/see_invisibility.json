@@ -27,9 +27,7 @@
         },
         "effects": [
           {
-            "kind": "grant_sense",
-            "rangeFeet": 0,
-            "sense": "truesight"
+            "kind": "see_invisible_and_ethereal"
           }
         ],
         "kind": "direct"

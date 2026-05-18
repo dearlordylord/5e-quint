@@ -769,6 +769,7 @@ type EffectAtom =
         | "caster_slot_level"
         | "contested_spell_level";
     }
+  | { readonly kind: "see_invisible_and_ethereal" }
   | {
       readonly kind: "grant_sense";
       readonly sense: "darkvision" | "blindsight" | "tremorsense" | "truesight";
@@ -2268,6 +2269,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
           Schema.Literal("caster_slot_level", "contested_spell_level"),
         ),
       }),
+      Schema.Struct({ kind: Schema.Literal("see_invisible_and_ethereal") }),
       Schema.Struct({
         kind: Schema.Literal("grant_sense"),
         sense: Schema.Literal(
