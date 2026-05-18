@@ -259,207 +259,207 @@
     {
       "number": 43,
       "id": "L12G-SPELL-SCORCHING-RAY",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Scorching Ray Runtime Support"
     },
     {
       "number": 44,
       "id": "L12G-SPELL-SEE-INVISIBILITY",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "See Invisibility Runtime Support Or Closure"
     },
     {
       "number": 45,
       "id": "L12G-SPELL-SHATTER",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Shatter Runtime Support"
     },
     {
       "number": 46,
       "id": "L12G-SPELL-SHINING-SMITE",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Shining Smite Runtime Support"
     },
     {
       "number": 47,
       "id": "L12G-SPELL-SPIDER-CLIMB",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Spider Climb Runtime Support"
     },
     {
       "number": 48,
       "id": "L12G-SPELL-SPIKE-GROWTH",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Spike Growth Runtime Support Or Closure"
     },
     {
       "number": 49,
       "id": "L12G-SPELL-SPIRITUAL-WEAPON",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Spiritual Weapon Runtime Support"
     },
     {
       "number": 50,
       "id": "L12G-SPELL-WARDING-BOND",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Warding Bond Runtime Support"
     },
     {
       "number": 51,
       "id": "L12G-SPELL-WEB",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Web Runtime Support Or Closure"
     },
     {
       "number": 52,
       "id": "L12G-MISSING-ANIMAL-MESSENGER",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Animal Messenger Definition And Closure"
     },
     {
       "number": 53,
       "id": "L12G-MISSING-ARCANISTS-MAGIC-AURA",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Arcanists Magic Aura Definition And Closure"
     },
     {
       "number": 54,
       "id": "L12G-MISSING-AUGURY",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Augury Definition And Closure"
     },
     {
       "number": 55,
       "id": "L12G-MISSING-CALM-EMOTIONS",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Calm Emotions Definition And Support"
     },
     {
       "number": 56,
       "id": "L12G-MISSING-DARKNESS",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Darkness Definition And Support Or Closure"
     },
     {
       "number": 57,
       "id": "L12G-MISSING-DARKVISION",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Darkvision Definition And Support Or Closure"
     },
     {
       "number": 58,
       "id": "L12G-MISSING-DETECT-THOUGHTS",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Detect Thoughts Definition And Closure"
     },
     {
       "number": 59,
       "id": "L12G-MISSING-DRAGONS-BREATH",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Dragons Breath Definition And Runtime Support"
     },
     {
       "number": 60,
       "id": "L12G-MISSING-ENHANCE-ABILITY",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Enhance Ability Definition And Support"
     },
     {
       "number": 61,
       "id": "L12G-MISSING-ENLARGE-REDUCE",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Enlarge Reduce Definition And Support"
     },
     {
       "number": 62,
       "id": "L12G-MISSING-ENTHRALL",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Enthrall Definition And Closure"
     },
     {
       "number": 63,
       "id": "L12G-MISSING-FIND-TRAPS",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Find Traps Definition And Closure"
     },
     {
       "number": 64,
       "id": "L12G-MISSING-FLAMING-SPHERE",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Flaming Sphere Definition And Runtime Support"
     },
     {
       "number": 65,
       "id": "L12G-MISSING-GUST-OF-WIND",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Gust Of Wind Definition And Support Or Closure"
     },
     {
       "number": 66,
       "id": "L12G-MISSING-KNOCK",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Knock Definition And Closure"
     },
     {
       "number": 67,
       "id": "L12G-MISSING-LEVITATE",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Levitate Definition And Support Or Closure"
     },
     {
       "number": 68,
       "id": "L12G-MISSING-LOCATE-ANIMALS-OR-PLANTS",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Locate Animals Or Plants Definition And Closure"
     },
     {
       "number": 69,
       "id": "L12G-MISSING-LOCATE-OBJECT",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Locate Object Definition And Closure"
     },
     {
       "number": 70,
       "id": "L12G-MISSING-MAGIC-MOUTH",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Magic Mouth Definition And Closure"
     },
     {
       "number": 71,
       "id": "L12G-MISSING-MIRROR-IMAGE",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Mirror Image Definition And Runtime Support"
     },
     {
       "number": 72,
       "id": "L12G-MISSING-ROPE-TRICK",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Rope Trick Definition And Closure"
     },
     {
       "number": 73,
       "id": "L12G-MISSING-SILENCE",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Silence Definition And Support Or Closure"
     },
     {
       "number": 74,
       "id": "L12G-MISSING-SUGGESTION",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Suggestion Definition And Closure"
     },
     {
       "number": 75,
       "id": "L12G-MISSING-ZONE-OF-TRUTH",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Zone Of Truth Definition And Closure"
     }
   ]
 }
 -->
 
-This is the single big level-2 execution lane prepared from
-`plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`. It is not running yet.
+This is the level-2 execution lane prepared from
+`plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`. It is running as Loop A. Tasks 43-75 were split into Loop B and are intentionally non-runnable here.
 
 This lane deliberately excludes:
 
@@ -543,9 +543,7 @@ use the repository MBT scarcity protocol.
 
 ## Included Work
 
-The lane contains 75 atomic tasks: all current level-2 gate tasks except the
-two companion boundary tasks. Keep this lane out of Loop D's level-1 recursive
-frontier and Loop L's language-access frontier.
+Loop A owns Tasks 10-42 after the split. Tasks 1-9 are already done. Tasks 43-75 are owned by `plans/LEVEL2_RALPH_LOOP_B_BIG_FRONTIER.md` and stay `deferred` here so Loop A cannot pick them. Keep this lane out of Loop D's level-1 recursive frontier and Loop L's language-access frontier.
 
 | Lane | Gate | Task | Unit |
 | ---: | ---: | --- | --- |
@@ -1766,7 +1764,7 @@ Acceptance:
 
 ### Task 43 - L12G-SPELL-SCORCHING-RAY - Scorching Ray Runtime Support
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `scorching_ray`. Gate task: 45 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -1793,7 +1791,7 @@ Acceptance:
 
 ### Task 44 - L12G-SPELL-SEE-INVISIBILITY - See Invisibility Runtime Support Or Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `see_invisibility`. Gate task: 46 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -1820,7 +1818,7 @@ Acceptance:
 
 ### Task 45 - L12G-SPELL-SHATTER - Shatter Runtime Support
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `shatter`. Gate task: 47 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -1847,7 +1845,7 @@ Acceptance:
 
 ### Task 46 - L12G-SPELL-SHINING-SMITE - Shining Smite Runtime Support
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `shining_smite`. Gate task: 48 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -1874,7 +1872,7 @@ Acceptance:
 
 ### Task 47 - L12G-SPELL-SPIDER-CLIMB - Spider Climb Runtime Support
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `spider_climb`. Gate task: 49 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -1901,7 +1899,7 @@ Acceptance:
 
 ### Task 48 - L12G-SPELL-SPIKE-GROWTH - Spike Growth Runtime Support Or Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `spike_growth`. Gate task: 50 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -1928,7 +1926,7 @@ Acceptance:
 
 ### Task 49 - L12G-SPELL-SPIRITUAL-WEAPON - Spiritual Weapon Runtime Support
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `spiritual_weapon`. Gate task: 51 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -1955,7 +1953,7 @@ Acceptance:
 
 ### Task 50 - L12G-SPELL-WARDING-BOND - Warding Bond Runtime Support
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `warding_bond`. Gate task: 52 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -1982,7 +1980,7 @@ Acceptance:
 
 ### Task 51 - L12G-SPELL-WEB - Web Runtime Support Or Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `web`. Gate task: 53 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -2009,7 +2007,7 @@ Acceptance:
 
 ### Task 52 - L12G-MISSING-ANIMAL-MESSENGER - Animal Messenger Definition And Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `animal_messenger`. Gate task: 54 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -2036,7 +2034,7 @@ Acceptance:
 
 ### Task 53 - L12G-MISSING-ARCANISTS-MAGIC-AURA - Arcanists Magic Aura Definition And Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `arcanists_magic_aura`. Gate task: 55 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -2063,7 +2061,7 @@ Acceptance:
 
 ### Task 54 - L12G-MISSING-AUGURY - Augury Definition And Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `augury`. Gate task: 56 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -2090,7 +2088,7 @@ Acceptance:
 
 ### Task 55 - L12G-MISSING-CALM-EMOTIONS - Calm Emotions Definition And Support
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `calm_emotions`. Gate task: 57 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -2117,7 +2115,7 @@ Acceptance:
 
 ### Task 56 - L12G-MISSING-DARKNESS - Darkness Definition And Support Or Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `darkness`. Gate task: 58 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -2144,7 +2142,7 @@ Acceptance:
 
 ### Task 57 - L12G-MISSING-DARKVISION - Darkvision Definition And Support Or Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `darkvision`. Gate task: 59 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -2171,7 +2169,7 @@ Acceptance:
 
 ### Task 58 - L12G-MISSING-DETECT-THOUGHTS - Detect Thoughts Definition And Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `detect_thoughts`. Gate task: 60 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -2198,7 +2196,7 @@ Acceptance:
 
 ### Task 59 - L12G-MISSING-DRAGONS-BREATH - Dragons Breath Definition And Runtime Support
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `dragons_breath`. Gate task: 61 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -2225,7 +2223,7 @@ Acceptance:
 
 ### Task 60 - L12G-MISSING-ENHANCE-ABILITY - Enhance Ability Definition And Support
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `enhance_ability`. Gate task: 62 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -2252,7 +2250,7 @@ Acceptance:
 
 ### Task 61 - L12G-MISSING-ENLARGE-REDUCE - Enlarge Reduce Definition And Support
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `enlarge_reduce`. Gate task: 63 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -2279,7 +2277,7 @@ Acceptance:
 
 ### Task 62 - L12G-MISSING-ENTHRALL - Enthrall Definition And Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `enthrall`. Gate task: 64 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -2306,7 +2304,7 @@ Acceptance:
 
 ### Task 63 - L12G-MISSING-FIND-TRAPS - Find Traps Definition And Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `find_traps`. Gate task: 65 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -2333,7 +2331,7 @@ Acceptance:
 
 ### Task 64 - L12G-MISSING-FLAMING-SPHERE - Flaming Sphere Definition And Runtime Support
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `flaming_sphere`. Gate task: 66 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -2360,7 +2358,7 @@ Acceptance:
 
 ### Task 65 - L12G-MISSING-GUST-OF-WIND - Gust Of Wind Definition And Support Or Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `gust_of_wind`. Gate task: 67 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -2387,7 +2385,7 @@ Acceptance:
 
 ### Task 66 - L12G-MISSING-KNOCK - Knock Definition And Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `knock`. Gate task: 68 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -2414,7 +2412,7 @@ Acceptance:
 
 ### Task 67 - L12G-MISSING-LEVITATE - Levitate Definition And Support Or Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `levitate`. Gate task: 69 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -2441,7 +2439,7 @@ Acceptance:
 
 ### Task 68 - L12G-MISSING-LOCATE-ANIMALS-OR-PLANTS - Locate Animals Or Plants Definition And Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `locate_animals_or_plants`. Gate task: 70 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -2468,7 +2466,7 @@ Acceptance:
 
 ### Task 69 - L12G-MISSING-LOCATE-OBJECT - Locate Object Definition And Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `locate_object`. Gate task: 71 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -2495,7 +2493,7 @@ Acceptance:
 
 ### Task 70 - L12G-MISSING-MAGIC-MOUTH - Magic Mouth Definition And Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `magic_mouth`. Gate task: 72 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -2522,7 +2520,7 @@ Acceptance:
 
 ### Task 71 - L12G-MISSING-MIRROR-IMAGE - Mirror Image Definition And Runtime Support
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `mirror_image`. Gate task: 73 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -2549,7 +2547,7 @@ Acceptance:
 
 ### Task 72 - L12G-MISSING-ROPE-TRICK - Rope Trick Definition And Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `rope_trick`. Gate task: 74 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -2576,7 +2574,7 @@ Acceptance:
 
 ### Task 73 - L12G-MISSING-SILENCE - Silence Definition And Support Or Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `silence`. Gate task: 75 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -2603,7 +2601,7 @@ Acceptance:
 
 ### Task 74 - L12G-MISSING-SUGGESTION - Suggestion Definition And Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `suggestion`. Gate task: 76 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -2630,7 +2628,7 @@ Acceptance:
 
 ### Task 75 - L12G-MISSING-ZONE-OF-TRUTH - Zone Of Truth Definition And Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `zone_of_truth`. Gate task: 77 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
