@@ -7,10 +7,11 @@ let StartingEquipmentOption : Type =
 let warlock =
       { armorTraining = { categories = [ "light" ], kind = "trained" }
       , className = "warlock"
-      , description = "SRD Warlock class creation facts for a level-1 character."
+      , description = "SRD Warlock class creation and early progression facts for level-1 and level-2 characters, including Pact Magic and the level-2 Magical Cunning feature grant."
       , featureGrants =
         [ { level = 1, unitId = "warlock_eldritch_invocations" }
         , { level = 1, unitId = "warlock_pact_magic" }
+        , { level = 2, unitId = "warlock_magical_cunning" }
         ]
       , hitPointDie = 8
       , id = "class_warlock"
@@ -23,7 +24,7 @@ let warlock =
       , primaryAbilities = { abilities = [ "cha" ], kind = "all_of" }
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Classes/Warlock.md:3-24,31-54,68-88"
+        , section = "Classes/Warlock.md:3-24,31-54,68-92"
         }
       , savingThrowProficiencies = [ "wis", "cha" ]
       , skillProficiencyChoice =

@@ -8,22 +8,22 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Metric | Value |
 | --- | ---: |
-| Installed collection inventory count | 176 Units |
+| Installed collection inventory count | 177 Units |
 
 ## Coverage Metrics
 
 | Metric | Covered | Percent |
 | --- | ---: | ---: |
-| Authored Surface Unit catalog admission | 175/445 | 39.3% |
-| Authored Surface executable catalog admission | 143/373 | 38.3% |
-| Installed Unit profile classification coverage | 176/176 | 100% |
-| Supported executable Unit coverage | 112/144 | 77.8% |
+| Authored Surface Unit catalog admission | 176/446 | 39.5% |
+| Authored Surface executable catalog admission | 144/374 | 38.5% |
+| Installed Unit profile classification coverage | 177/177 | 100% |
+| Supported executable Unit coverage | 113/145 | 77.9% |
 | QNT profile modeling coverage | 65/65 | 100% |
 | QNT proof coverage | 65/65 | 100% |
 | Runtime mapping coverage | 65/65 | 100% |
 | Runtime parity coverage | 65/65 | 100% |
-| Deterministic admission/projection coverage | 112/112 | 100% |
-| Selected identity MBT coverage | 104/112 | 92.9% |
+| Deterministic admission/projection coverage | 113/113 | 100% |
+| Selected identity MBT coverage | 104/113 | 92% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -76,6 +76,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `rogue_sneak_attack` | srd-5.2.1 | `unit-feature.attack-damage-rider` |
 | `sorcerer_innate_sorcery` | srd-5.2.1 | `unit-feature.innate-sorcery-activation` |
 | `warlock_eldritch_invocations` | srd-5.2.1 | `character-creation.eldritch-invocation-choice`, `character-creation.class-feature-advancement-replacement`, `character-creation.warlock-pact-magic-advancement` |
+| `warlock_magical_cunning` | srd-5.2.1 | `character-sheet.pact-slot-recovery` |
 | `wizard_ritual_adept` | srd-5.2.1 | `character-sheet.spellbook-ritual-invocation` |
 | `wizard_arcane_recovery` | srd-5.2.1 | `character-sheet.short-rest-spell-slot-recovery` |
 | `wizard_scholar` | srd-5.2.1 | `character-creation.skill-expertise-choice` |
@@ -786,6 +787,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `sorcerer_innate_sorcery` | `unit-feature.innate-sorcery-activation` | SRDINV75A | `packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts` |
 | `sorcerer_innate_sorcery` | `unit-feature.innate-sorcery-activation` | SRDINV75B | `packages/battle-runtime/src/battle-runtime-test-support.ts` |
 | `warlock_eldritch_invocations` | `character-creation.eldritch-invocation-choice`, `character-creation.class-feature-advancement-replacement`, `character-creation.warlock-pact-magic-advancement` | L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE | `packages/character-creation-runtime/src/index.test.ts` |
+| `warlock_magical_cunning` | `character-sheet.pact-slot-recovery` | L12G-AUTHOR-WARLOCK-MAGICAL-CUNNING | `packages/character-sheet-runtime/src/index.test.ts` |
 | `wizard_ritual_adept` | `character-sheet.spellbook-ritual-invocation` | SRDINV91B | `packages/character-sheet-runtime/src/index.test.ts` |
 | `wizard_arcane_recovery` | `character-sheet.short-rest-spell-slot-recovery` | SRDINV91B | `packages/character-sheet-runtime/src/index.test.ts` |
 | `wizard_scholar` | `character-creation.skill-expertise-choice` | L12G-CLASS-WIZARD-SCHOLAR | `packages/character-creation-runtime/src/wizard-scholar.test.ts` |
@@ -1308,6 +1310,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | L1D2-THAUMATURGY-BOOMING-VOICE | completed-runtime-parity | `spell.invocation-self-ability-check-advantage` |
 | L12G-CLASS-BARD-JACK-OF-ALL-TRADES | completed-runtime-parity | `character-sheet.ability-check-proficiency-bonus` |
 | L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY | completed-runtime-parity | `character-creation.class-feature-resource-projection` |
+| L12G-AUTHOR-WARLOCK-MAGICAL-CUNNING | completed-runtime-parity | `character-sheet.pact-slot-recovery` |
 
 ## Supported Profiles Lacking Runtime Parity
 

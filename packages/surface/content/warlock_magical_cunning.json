@@ -1,0 +1,29 @@
+{
+  "acquiredAtLevel": 2,
+  "className": "warlock",
+  "description": "SRD Warlock level 2 Magical Cunning Pact Slot recovery source facts. A Warlock can perform a 1-minute esoteric rite to regain expended Pact Magic spell slots, up to half the Pact Slot maximum rounded up, and can't use this feature again until finishing a Long Rest.",
+  "id": "warlock_magical_cunning",
+  "kind": "class_feature",
+  "mechanics": {
+    "activationCost": {
+      "kind": "one_minute_rite"
+    },
+    "family": "pact_slot_recovery",
+    "recoveryCap": {
+      "kind": "half_maximum_rounded_up"
+    },
+    "requiresExpendedSlots": true,
+    "resetCadence": {
+      "kind": "long_rest"
+    },
+    "resource": {
+      "kind": "pact_slots",
+      "source": "class_record_pact_magic"
+    }
+  },
+  "name": "Magical Cunning",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Warlock.md:35-36,92-94"
+  }
+}

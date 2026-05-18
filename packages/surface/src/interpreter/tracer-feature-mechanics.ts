@@ -124,6 +124,20 @@ export function traceClassFeatureMechanics(
       });
       return [recoveryId];
     }
+    case "pact_slot_recovery": {
+      const recoveryId = ids("pact");
+      nodes.push({
+        id: recoveryId,
+        category: "resource",
+        atomKind: "pact_slot_recovery",
+        label:
+          `pact_slot_recovery\nactivation ${m.activationCost.kind}\n` +
+          `resource ${m.resource.kind}\n` +
+          `${m.recoveryCap.kind}\n` +
+          `reset ${m.resetCadence.kind}`,
+      });
+      return [recoveryId];
+    }
     case "failed_ability_check_resource_boost": {
       const tacticalId = ids("tactical");
       nodes.push({

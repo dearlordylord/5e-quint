@@ -163,6 +163,7 @@ import thaumaturgyInput from "../../content/thaumaturgy.json";
 import thunderwaveInput from "../../content/thunderwave.json";
 import trueStrikeInput from "../../content/true_strike.json";
 import warlockEldritchInvocationsInput from "../../content/warlock_eldritch_invocations.json";
+import warlockMagicalCunningInput from "../../content/warlock_magical_cunning.json";
 import viciousMockeryInput from "../../content/vicious_mockery.json";
 import weaponClubInput from "../../content/weapon_club.json";
 import weaponDaggerInput from "../../content/weapon_dagger.json";
@@ -351,6 +352,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     sorcererFontOfMagicInput,
     sorcererMetamagicInput,
     warlockEldritchInvocationsInput,
+    warlockMagicalCunningInput,
     wizardRitualAdeptInput,
     wizardArcaneRecoveryInput,
     wizardScholarInput,

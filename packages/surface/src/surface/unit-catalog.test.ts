@@ -1669,6 +1669,45 @@ describe("SRD Unit catalog boundary", () => {
     });
   });
 
+  test("installs Warlock Magical Cunning as Pact Slot recovery metadata", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("class_warlock")).toMatchObject({
+      featureGrants: expect.arrayContaining([
+        { level: 2, unitId: "warlock_magical_cunning" },
+      ]),
+      kind: "class",
+      spellcasting: expect.objectContaining({
+        kind: "pact_magic_spellcasting_creation",
+      }),
+    });
+    expect(result.catalog.requireUnit("warlock_magical_cunning")).toMatchObject(
+      {
+        acquiredAtLevel: 2,
+        className: "warlock",
+        kind: "class_feature",
+        mechanics: {
+          activationCost: { kind: "one_minute_rite" },
+          family: "pact_slot_recovery",
+          recoveryCap: { kind: "half_maximum_rounded_up" },
+          requiresExpendedSlots: true,
+          resetCadence: { kind: "long_rest" },
+          resource: {
+            kind: "pact_slots",
+            source: "class_record_pact_magic",
+          },
+        },
+        provenance: {
+          kind: "srd-5.2.1",
+          section: "Classes/Warlock.md:35-36,92-94",
+        },
+      },
+    );
+  });
+
   test("installs Sorcerer Metamagic as shared Sorcery Point option metadata", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 

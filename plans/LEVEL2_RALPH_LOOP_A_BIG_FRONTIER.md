@@ -121,7 +121,7 @@
     {
       "number": 20,
       "id": "L12G-AUTHOR-WARLOCK-MAGICAL-CUNNING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Warlock Magical Cunning Authoring And Support"
     },
     {
@@ -1253,7 +1253,7 @@ Acceptance:
 
 ### Task 20 - L12G-AUTHOR-WARLOCK-MAGICAL-CUNNING - Warlock Magical Cunning Authoring And Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `warlock_magical_cunning`. Gate task: 21 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 

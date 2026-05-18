@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 373,
-      "numerator": 143,
-      "percent": "38.3%"
+      "denominator": 374,
+      "numerator": 144,
+      "percent": "38.5%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 445,
-      "numerator": 175,
-      "percent": "39.3%"
+      "denominator": 446,
+      "numerator": 176,
+      "percent": "39.5%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 176
+      "value": 177
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 112,
-      "numerator": 112,
+      "denominator": 113,
+      "numerator": 113,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 176,
-      "numerator": 176,
+      "denominator": 177,
+      "numerator": 177,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 112,
+      "denominator": 113,
       "numerator": 104,
-      "percent": "92.9%"
+      "percent": "92%"
     },
     "supportedProfileCoverage": {
-      "denominator": 144,
-      "numerator": 112,
-      "percent": "77.8%"
+      "denominator": 145,
+      "numerator": 113,
+      "percent": "77.9%"
     }
   },
   "metricSemantics": [
@@ -2453,6 +2453,25 @@
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
         }
       ]
+    },
+    {
+      "id": "character-sheet.pact-slot-recovery",
+      "profileKind": "character-sheet",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "CharacterBuild Warlock level-2 progression plus installed Magical Cunning class-feature Unit and Pact Magic slot pool state derived from the Warlock class record.",
+      "taskRefs": [
+        "L12G-AUTHOR-WARLOCK-MAGICAL-CUNNING"
+      ],
+      "title": "Character Sheet applies Magical Cunning once-per-Long-Rest Pact Slot recovery",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+        }
+      ]
     }
   ],
   "taskClaims": [
@@ -4055,6 +4074,14 @@
         "character-creation.class-feature-resource-projection"
       ],
       "taskId": "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Surface, Character Creation, and Character Sheet runtime tests cover Warlock level 2 Magical Cunning unit admission, class feature grant ownership, existing Pact Magic slot-pool reuse, half-maximum-rounded-up Pact Slot recovery, once-per-Long-Rest use tracking, and Long Rest reset.",
+      "profileIds": [
+        "character-sheet.pact-slot-recovery"
+      ],
+      "taskId": "L12G-AUTHOR-WARLOCK-MAGICAL-CUNNING"
     }
   ],
   "units": [
@@ -6978,6 +7005,58 @@
       ],
       "sourceRecordPath": "packages/surface/content/warlock_eldritch_invocations.json",
       "unitId": "warlock_eldritch_invocations"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "character-sheet.pact-slot-recovery"
+        ],
+        "rawRequirementIds": [],
+        "supportedMechanics": [
+          "Warlock level-2 CharacterBuild feature ownership is derived from the Warlock class feature grant without duplicating Pact Magic state",
+          "Character Sheet completes the 1-minute Magical Cunning rite by recovering expended Pact Slots from the existing Pact Magic slot pool up to half the Pact Slot maximum rounded up",
+          "Magical Cunning use state is tracked as a once-per-Long-Rest rest feature use, and Long Rest clears that state while restoring Pact Slots"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-AUTHOR-WARLOCK-MAGICAL-CUNNING"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "character-sheet.pact-slot-recovery",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "CharacterBuild Warlock level-2 progression plus installed Magical Cunning class-feature Unit and Pact Magic slot pool state derived from the Warlock class record.",
+          "taskRefs": [
+            "L12G-AUTHOR-WARLOCK-MAGICAL-CUNNING"
+          ],
+          "title": "Character Sheet applies Magical Cunning once-per-Long-Rest Pact Slot recovery",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/warlock_magical_cunning.json",
+      "unitId": "warlock_magical_cunning"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

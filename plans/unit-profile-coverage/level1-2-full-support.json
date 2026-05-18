@@ -2651,7 +2651,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 89,
+      "count": 90,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2741,6 +2741,7 @@
         "true_strike",
         "vicious_mockery",
         "warlock_eldritch_invocations",
+        "warlock_magical_cunning",
         "wizard_arcane_recovery",
         "wizard_ritual_adept",
         "wizard_scholar"
@@ -2848,24 +2849,24 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 475,
-      "percent": "85.4%",
+      "numerator": 476,
+      "percent": "85.6%",
       "rowsByStatus": {
-        "accepted": 296,
+        "accepted": 297,
         "accepted-no-battle-effect": 179,
         "battle-runtime-required": 76,
-        "owner-evidence-required": 5
+        "owner-evidence-required": 4
       }
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 145,
-      "numerator": 89,
-      "percent": "61.4%"
+      "denominator": 146,
+      "numerator": 90,
+      "percent": "61.6%"
     },
     "strictTargetClosure": {
-      "denominator": 145,
-      "numerator": 113,
-      "percent": "77.9%"
+      "denominator": 146,
+      "numerator": 114,
+      "percent": "78.1%"
     }
   },
   "openFrontier": [
@@ -4492,24 +4493,6 @@
           }
         ],
         "unitId": "unseen_servant"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
-            "concept": "Warlock Magical Cunning",
-            "id": "srd521:classes/warlock:level-2:class-feature-grant:warlock_magical_cunning",
-            "levelBand": "level-2",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 95,
-              "lineStart": 92,
-              "path": ".references/srd-5.2.1/Classes/Warlock.md"
-            }
-          }
-        ],
-        "unitId": "warlock_magical_cunning"
       },
       {
         "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
@@ -6404,7 +6387,7 @@
     "groupsByClaimTag": {
       "missing": 31,
       "profile-subset-supported": 9,
-      "supported-profile": 89,
+      "supported-profile": 90,
       "unsupported-profile": 16
     },
     "groupsByStatus": {
@@ -6414,9 +6397,9 @@
       "closed-runtime-detached-table-adjudication": 11,
       "open-profile-accounting": 1,
       "open-runtime-behavior": 31,
-      "supported-profile": 89
+      "supported-profile": 90
     },
     "nonSupportedFrontier": 56,
-    "strictDenominator": 145
+    "strictDenominator": 146
   }
 }

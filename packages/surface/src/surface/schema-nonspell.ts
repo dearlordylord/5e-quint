@@ -765,6 +765,22 @@ export const ClassSpellcastingProjectionMechanicsSchema = Schema.Struct({
   spellcastingKind: Schema.Literal("pact_magic_spellcasting_creation"),
 });
 
+export const WarlockPactSlotRecoveryMechanicsSchema = Schema.Struct({
+  family: Schema.Literal("pact_slot_recovery"),
+  activationCost: Schema.Struct({
+    kind: Schema.Literal("one_minute_rite"),
+  }),
+  resource: Schema.Struct({
+    kind: Schema.Literal("pact_slots"),
+    source: Schema.Literal("class_record_pact_magic"),
+  }),
+  requiresExpendedSlots: Schema.Literal(true),
+  recoveryCap: Schema.Struct({
+    kind: Schema.Literal("half_maximum_rounded_up"),
+  }),
+  resetCadence: Schema.Struct({ kind: Schema.Literal("long_rest") }),
+});
+
 export const ClassFeatureComponentMechanicsSchema = Schema.Union(
   Schema.suspend(() => PassiveMechanicsSchema),
   ActivatedAbilityMechanicsSchema,
@@ -865,6 +881,7 @@ export const ClassFeatureMechanicsSchema = Schema.Union(
   WeaponMasteryChoiceMechanicsSchema,
   SpellbookRitualAccessMechanicsSchema,
   RestSpellSlotRecoveryMechanicsSchema,
+  WarlockPactSlotRecoveryMechanicsSchema,
   FailedAbilityCheckResourceBoostMechanicsSchema,
   MonkInitiativeFocusRecoveryMechanicsSchema,
 );
@@ -894,6 +911,13 @@ export const MonkClassFeatureMechanicsSchema = Schema.Union(
 export const SorcererClassFeatureMechanicsSchema = Schema.Union(
   ClassGeneralFeatureMechanicsSchema,
   SorcererMetamagicMechanicsSchema,
+);
+
+export const WarlockClassFeatureMechanicsSchema = Schema.Union(
+  ClassGeneralFeatureMechanicsSchema,
+  FeatureChoiceMechanicsSchema,
+  ClassSpellcastingProjectionMechanicsSchema,
+  WarlockPactSlotRecoveryMechanicsSchema,
 );
 
 export const MasteryTriggerSchema = Schema.Union(
@@ -2619,11 +2643,7 @@ export const SorcererClassFeatureRecordSchema = Schema.Struct({
 export const WarlockClassFeatureRecordSchema = Schema.Struct({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literal("warlock"),
-  mechanics: Schema.Union(
-    ClassGeneralFeatureMechanicsSchema,
-    FeatureChoiceMechanicsSchema,
-    ClassSpellcastingProjectionMechanicsSchema,
-  ),
+  mechanics: WarlockClassFeatureMechanicsSchema,
 });
 
 export const OtherClassFeatureRecordSchema = Schema.Struct({
