@@ -1224,6 +1224,8 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
   mitigation active-effect projection, and landing cleanup outcomes.
 - `battle-runtime-jump-movement.qnt` - Jump movement-replacement slot scaling,
   landing facts, and per-target use tracking helpers.
+- `battle-runtime-weapon-hit-spell-riders.qnt` - Divine Favor, Divine Smite,
+  Ensnaring Strike, and Searing Smite damage/effect rider projections.
 - `battle-runtime.mbt.qnt` - package-local randomized model for the selected
   integrated promoted MBT path.
 
