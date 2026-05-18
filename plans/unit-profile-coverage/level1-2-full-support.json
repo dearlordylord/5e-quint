@@ -1907,6 +1907,35 @@
     },
     {
       "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "L12G-AUTHOR-RANGER-FIGHTING-STYLE: Author and retain Ranger Fighting Style alongside Deft Explorer before admitting same-class Ranger level-2 progression, including Fighting Style feat choice or Druidic Warrior Spell Access facts without treating selected feat or cantrip execution as Deft Explorer support. Owner: character-creation-runtime plus character-sheet-runtime. Required output: Character Creation can retain both Ranger level-2 feature refs and project Deft Explorer Expertise/language choices only after the sibling Fighting Style grant is present.",
+      "sourceRecordPath": "packages/surface/content/ranger_deft_explorer.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Ranger Deft Explorer",
+          "id": "srd521:classes/ranger:level-2:class-feature-grant:ranger_deft_explorer",
+          "levelBand": "level-2",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 95,
+            "lineStart": 88,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
+        }
+      ],
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
+      "unitId": "ranger_deft_explorer"
+    },
+    {
+      "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
         "later-level-only"
@@ -2727,13 +2756,14 @@
       ]
     },
     {
-      "count": 3,
+      "count": 4,
       "description": "The Unit claim records concrete smaller follow-up tasks for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
         "druid_wild_shape",
         "monk_monks_focus",
-        "monk_uncanny_metabolism"
+        "monk_uncanny_metabolism",
+        "ranger_deft_explorer"
       ]
     },
     {
@@ -2767,14 +2797,14 @@
       }
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 141,
+      "denominator": 142,
       "numerator": 88,
-      "percent": "62.4%"
+      "percent": "62%"
     },
     "strictTargetClosure": {
-      "denominator": 141,
-      "numerator": 109,
-      "percent": "77.3%"
+      "denominator": 142,
+      "numerator": 110,
+      "percent": "77.5%"
     }
   },
   "openFrontier": [
@@ -4244,24 +4274,6 @@
           }
         ],
         "unitId": "purify_food_and_drink"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
-            "concept": "Ranger Deft Explorer",
-            "id": "srd521:classes/ranger:level-2:class-feature-grant:ranger_deft_explorer",
-            "levelBand": "level-2",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 95,
-              "lineStart": 88,
-              "path": ".references/srd-5.2.1/Classes/Ranger.md"
-            }
-          }
-        ],
-        "unitId": "ranger_deft_explorer"
       },
       {
         "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
@@ -6386,10 +6398,10 @@
       "missing": 31,
       "profile-subset-supported": 8,
       "supported-profile": 88,
-      "unsupported-profile": 14
+      "unsupported-profile": 15
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 3,
+      "blocked-follow-up-split": 4,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 5,
       "closed-runtime-detached-table-adjudication": 11,
@@ -6397,7 +6409,7 @@
       "open-runtime-behavior": 31,
       "supported-profile": 88
     },
-    "nonSupportedFrontier": 53,
-    "strictDenominator": 141
+    "nonSupportedFrontier": 54,
+    "strictDenominator": 142
   }
 }

@@ -193,15 +193,15 @@
     "levelTwoRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 12,
       "non-runtime": 12,
-      "missing-authored-record": 6,
-      "catalog-installed-owner-evidence-required": 3
+      "missing-authored-record": 5,
+      "catalog-installed-owner-evidence-required": 4
     },
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 299,
       "non-runtime": 24,
       "catalog-only/dead-for-now": 150,
-      "missing-authored-record": 80,
-      "catalog-installed-owner-evidence-required": 3
+      "missing-authored-record": 79,
+      "catalog-installed-owner-evidence-required": 4
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 143,
@@ -15175,15 +15175,29 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "ranger_deft_explorer",
+        "sourceRecordPath": "packages/surface/content/ranger_deft_explorer.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "ranger_deft_explorer"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit ranger_deft_explorer is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime plus character-sheet-runtime",
+          "evidence": "Promote follow-up split L12G-AUTHOR-RANGER-FIGHTING-STYLE: L12G-AUTHOR-RANGER-FIGHTING-STYLE owns Author and retain Ranger Fighting Style alongside Deft Explorer before admitting same-class Ranger level-2 progression, including Fighting Style feat choice or Druidic Warrior Spell Access facts without treating selected feat or cantrip execution as Deft Explorer support. Required output: Character Creation can retain both Ranger level-2 feature refs and project Deft Explorer Expertise/language choices only after the sibling Fighting Style grant is present.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L12G-AUTHOR-RANGER-FIGHTING-STYLE: L12G-AUTHOR-RANGER-FIGHTING-STYLE owns Author and retain Ranger Fighting Style alongside Deft Explorer before admitting same-class Ranger level-2 progression, including Fighting Style feat choice or Druidic Warrior Spell Access facts without treating selected feat or cantrip execution as Deft Explorer support. Required output: Character Creation can retain both Ranger level-2 feature refs and project Deft Explorer Expertise/language choices only after the sibling Fighting Style grant is present.",
       "battleReadinessStatus": "owner-evidence-required"
     },
     {

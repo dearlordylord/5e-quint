@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 369,
-      "numerator": 139,
-      "percent": "37.7%"
+      "denominator": 370,
+      "numerator": 140,
+      "percent": "37.8%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 441,
-      "numerator": 171,
-      "percent": "38.8%"
+      "denominator": 442,
+      "numerator": 172,
+      "percent": "38.9%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 172
+      "value": 173
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 111,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 172,
-      "numerator": 172,
+      "denominator": 173,
+      "numerator": 173,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -97,9 +97,9 @@
       "percent": "93.7%"
     },
     "supportedProfileCoverage": {
-      "denominator": 140,
+      "denominator": 141,
       "numerator": 111,
-      "percent": "79.3%"
+      "percent": "78.7%"
     }
   },
   "metricSemantics": [
@@ -6150,6 +6150,34 @@
       ],
       "sourceRecordPath": "packages/surface/content/monk_deflect_attacks.json",
       "unitId": "monk_deflect_attacks"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-AUTHOR-RANGER-FIGHTING-STYLE",
+            "mechanic": "Author and retain Ranger Fighting Style alongside Deft Explorer before admitting same-class Ranger level-2 progression, including Fighting Style feat choice or Druidic Warrior Spell Access facts without treating selected feat or cantrip execution as Deft Explorer support.",
+            "owner": "character-creation-runtime plus character-sheet-runtime",
+            "requiredOutput": "Character Creation can retain both Ranger level-2 feature refs and project Deft Explorer Expertise/language choices only after the sibling Fighting Style grant is present.",
+            "title": "Ranger Fighting Style Authoring And Support"
+          }
+        ],
+        "futureProfileOwner": "character-creation-runtime plus character-sheet-runtime",
+        "reason": "Ranger Deft Explorer is authored and installed as an SRD Surface class-feature record with catalog-level Expertise and language-choice metadata only. It remains blocked by Task 17 because SRD Ranger level 2 grants both Deft Explorer and Fighting Style, and Character Creation must not admit same-class Ranger 2 until all sibling level-2 feature grants can be retained.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/ranger_deft_explorer.json",
+      "unitId": "ranger_deft_explorer"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

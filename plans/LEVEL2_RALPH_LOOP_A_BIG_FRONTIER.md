@@ -97,7 +97,7 @@
     {
       "number": 16,
       "id": "L12G-AUTHOR-RANGER-DEFT-EXPLORER",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Ranger Deft Explorer Authoring And Support"
     },
     {
@@ -1102,7 +1102,7 @@ Acceptance:
 
 ### Task 16 - L12G-AUTHOR-RANGER-DEFT-EXPLORER - Ranger Deft Explorer Authoring And Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `ranger_deft_explorer`. Gate task: 17 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 

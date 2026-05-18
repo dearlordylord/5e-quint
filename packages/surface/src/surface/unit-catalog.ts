@@ -113,6 +113,7 @@ import paladinWeaponMasteryInput from "../../content/paladin_weapon_mastery.json
 import poisonSprayInput from "../../content/poison_spray.json";
 import protectionFromEvilAndGoodInput from "../../content/protection_from_evil_and_good.json";
 import produceFlameInput from "../../content/produce_flame.json";
+import rangerDeftExplorerInput from "../../content/ranger_deft_explorer.json";
 import rangerExtraAttackInput from "../../content/ranger_extra_attack.json";
 import rangerFavoredEnemyInput from "../../content/ranger_favored_enemy.json";
 import rangerRovingInput from "../../content/ranger_roving.json";
@@ -334,6 +335,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     monkUnarmoredMovementInput,
     monkUncannyMetabolismInput,
     monkDeflectAttacksInput,
+    rangerDeftExplorerInput,
     rangerFavoredEnemyInput,
     rogueCunningActionInput,
     rogueEvasionInput,

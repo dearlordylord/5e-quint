@@ -44,8 +44,8 @@ This is the default `%` for level-1 plus level-2 readiness questions. It uses th
 ### Level-2 Rows by Disposition
 
 - catalog-installed-owner-evidence-present: 12
-- catalog-installed-owner-evidence-required: 3
-- missing-authored-record: 6
+- catalog-installed-owner-evidence-required: 4
+- missing-authored-record: 5
 - non-runtime: 12
 
 ### Level-1 Rows by Category
@@ -339,7 +339,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Paladin Fighting Style|class feature||current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted|profile-subset-remaining-mechanics-closed: future Paladin advancement cantrip replacement owner|Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Paladin.md:90|
 |Paladin Paladin's Smite|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Paladin.md:96|
 |Paladin level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Paladin.md:36|
-|Ranger Deft Explorer|class feature||current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|owner-evidence-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Ranger.md:88|
+|Ranger Deft Explorer|class feature||current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-required|owner-evidence-required||Unit catalog/admission: catalog evidence; character-creation-runtime plus character-sheet-runtime: owner evidence required|Promote follow-up split L12G-AUTHOR-RANGER-FIGHTING-STYLE: L12G-AUTHOR-RANGER-FIGHTING-STYLE owns Author and retain Ranger Fighting Style alongside Deft Explorer before admitting same-class Ranger level-2 progression, including Fighting Style feat choice or Druidic Warrior Spell Access facts without treating selected feat or cantrip execution as Deft Explorer support. Required output: Character Creation can retain both Ranger level-2 feature refs and project Deft Explorer Expertise/language choices only after the sibling Fighting Style grant is present.|.references/srd-5.2.1/Classes/Ranger.md:88|
 |Ranger Fighting Style|class feature||current-surface-can-express-source-facts|missing-authored-record|not-installed||missing-authored-record|owner-evidence-required|||Author an SRD-provenance Surface record or explicitly close the row.|.references/srd-5.2.1/Classes/Ranger.md:96|
 |Ranger level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Ranger.md:36|
 |Rogue Cunning Action|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Rogue.md:81|

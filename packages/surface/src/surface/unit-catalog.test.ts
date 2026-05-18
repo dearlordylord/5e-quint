@@ -1864,6 +1864,37 @@ describe("SRD Unit catalog boundary", () => {
     );
   });
 
+  test("installs Ranger Deft Explorer as level-2 Expertise and language choices", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("ranger_deft_explorer")).toMatchObject({
+      acquiredAtLevel: 2,
+      className: "ranger",
+      kind: "class_feature",
+      mechanics: {
+        family: "passive",
+        grants: [
+          {
+            choiceCount: {
+              kind: "class_level_total_choices",
+              levels: [{ atLevel: 2, total: 1 }],
+            },
+            kind: "grant_expertise",
+            skills: { kind: "owned_skill_proficiencies_without_expertise" },
+          },
+          {
+            count: 2,
+            kind: "grant_language_choice",
+            source: "character_creation_language_tables",
+          },
+        ],
+      },
+    });
+  });
+
   test("installs Find Familiar with catalog-backed familiar form references", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 
