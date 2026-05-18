@@ -112,8 +112,8 @@ export function traceAttachment(
   }
 }
 
-export function describeOngoingCasterActionCost(
-  cost: import("../surface/types.ts").OngoingCasterActionCost,
+export function describeOngoingActionCost(
+  cost: import("../surface/types.ts").OngoingActionCost,
 ): string {
   switch (cost.kind) {
     case "bonus_action":
@@ -122,7 +122,7 @@ export function describeOngoingCasterActionCost(
       return `${cost.action} action`;
     default: {
       const _: never = cost;
-      throw new Error(`unhandled ongoing caster action cost: ${String(_)}`);
+      throw new Error(`unhandled ongoing action cost: ${String(_)}`);
     }
   }
 }

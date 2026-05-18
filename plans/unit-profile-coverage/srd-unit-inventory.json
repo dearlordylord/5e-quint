@@ -203,15 +203,15 @@
       "catalog-installed-owner-evidence-present": 302,
       "non-runtime": 24,
       "catalog-only/dead-for-now": 149,
-      "missing-authored-record": 75,
+      "missing-authored-record": 73,
       "catalog-installed-owner-evidence-required": 5,
-      "catalog-authored-executable-follow-up": 1
+      "catalog-authored-executable-follow-up": 3
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 143,
       "catalog-only/dead-for-now": 149,
-      "missing-authored-record": 74,
-      "catalog-authored-executable-follow-up": 1
+      "missing-authored-record": 72,
+      "catalog-authored-executable-follow-up": 3
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -19490,15 +19490,18 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "dragons_breath",
+        "sourceRecordPath": "packages/surface/content/dragons_breath.json"
       },
       "catalogAdmission": {
         "state": "not-installed",
         "unitId": "dragons_breath"
       },
-      "finalDisposition": "missing-authored-record",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST, L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION: L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST owns Promote the Bonus Action spell invocation that spends a level-2-or-higher Spell Slot, chooses Acid, Cold, Fire, Lightning, or Poison once at cast time, targets one willing touched creature, starts caster-owned Concentration for up to 1 minute, and stores a target-attached active effect with the chosen damage type, caster spell save DC, and original slot level without duplicating Spell Access state or reauthoring damage-type options. Required output: Supported runtime owner evidence for Dragon's Breath initial casting, Spell Slot spending, damage-type choice retention, caster spell save DC retention, original slot level retention, willing target attachment, Concentration expiry, and active-effect cleanup.; L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION owns Discover and execute the attached target's Magic action while the spell remains active, using the stored caster spell save DC, chosen damage type, and original slot level to resolve a 15-foot Cone Dexterity save for half damage with slot scaling from the original cast. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for target-side action discovery, action economy spending, area membership input, save-for-half damage, slot scaling, and expiry behavior.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {
@@ -24638,15 +24641,18 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "dragons_breath",
+        "sourceRecordPath": "packages/surface/content/dragons_breath.json"
       },
       "catalogAdmission": {
         "state": "not-installed",
         "unitId": "dragons_breath"
       },
-      "finalDisposition": "missing-authored-record",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST, L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION: L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST owns Promote the Bonus Action spell invocation that spends a level-2-or-higher Spell Slot, chooses Acid, Cold, Fire, Lightning, or Poison once at cast time, targets one willing touched creature, starts caster-owned Concentration for up to 1 minute, and stores a target-attached active effect with the chosen damage type, caster spell save DC, and original slot level without duplicating Spell Access state or reauthoring damage-type options. Required output: Supported runtime owner evidence for Dragon's Breath initial casting, Spell Slot spending, damage-type choice retention, caster spell save DC retention, original slot level retention, willing target attachment, Concentration expiry, and active-effect cleanup.; L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION owns Discover and execute the attached target's Magic action while the spell remains active, using the stored caster spell save DC, chosen damage type, and original slot level to resolve a 15-foot Cone Dexterity save for half damage with slot scaling from the original cast. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for target-side action discovery, action economy spending, area membership input, save-for-half damage, slot scaling, and expiry behavior.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {

@@ -1190,6 +1190,7 @@ type OngoingEffect =
   | EffectAtom
   | {
       readonly kind: "save_gate";
+      readonly attachment?: AreaAttachment;
       readonly ability: Ability;
       readonly dc: DcSource;
       readonly onFail: EffectAtom;
@@ -1441,6 +1442,7 @@ export const TargetSelectionSchema = Schema.Union(
 export const AreaOriginSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("point_within_range") }),
   Schema.Struct({ kind: Schema.Literal("on_primary_target") }),
+  Schema.Struct({ kind: Schema.Literal("on_attached_creature") }),
   Schema.Struct({ kind: Schema.Literal("self") }),
 );
 
@@ -1636,7 +1638,7 @@ export const DcSourceSchema = Schema.Union(
   }),
 );
 
-export const OngoingCasterActionCostSchema = Schema.Union(
+export const OngoingActionCostSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("bonus_action") }),
   Schema.Struct({
     kind: Schema.Literal("standard_action"),
@@ -1710,7 +1712,11 @@ export const OngoingTriggerSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("on_caster_spends_action"),
-    cost: OngoingCasterActionCostSchema,
+    cost: OngoingActionCostSchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("on_attached_spends_action"),
+    cost: OngoingActionCostSchema,
   }),
   Schema.Struct({ kind: Schema.Literal("on_creature_studies") }),
 );
@@ -2856,6 +2862,7 @@ export const OngoingEffectSchema: Schema.suspend<
     EffectAtomSchema,
     Schema.Struct({
       kind: Schema.Literal("save_gate"),
+      attachment: optionalExact(AreaAttachmentSchema),
       ability: AbilitySchema,
       dc: DcSourceSchema,
       onFail: EffectAtomSchema,

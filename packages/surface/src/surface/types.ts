@@ -355,8 +355,8 @@ export type DcSource = Schema.Schema.Type<typeof SurfaceSchema.DcSourceSchema>;
 export type OngoingTrigger = Schema.Schema.Type<
   typeof SurfaceSchema.OngoingTriggerSchema
 >;
-export type OngoingCasterActionCost = Schema.Schema.Type<
-  typeof SurfaceSchema.OngoingCasterActionCostSchema
+export type OngoingActionCost = Schema.Schema.Type<
+  typeof SurfaceSchema.OngoingActionCostSchema
 >;
 export type OngoingPredicate = Schema.Schema.Type<
   typeof SurfaceSchema.OngoingPredicateSchema

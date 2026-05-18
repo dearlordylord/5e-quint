@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 374,
+      "denominator": 375,
       "numerator": 144,
-      "percent": "38.5%"
+      "percent": "38.4%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 446,
+      "denominator": 447,
       "numerator": 176,
-      "percent": "39.5%"
+      "percent": "39.4%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -15815,6 +15815,46 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/dominate_person.json",
       "unitId": "dominate_person"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "disposition": {
+          "category": "srd-candidate",
+          "planningLane": "QMBT14-QMBT16",
+          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
+        },
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST",
+            "mechanic": "Promote the Bonus Action spell invocation that spends a level-2-or-higher Spell Slot, chooses Acid, Cold, Fire, Lightning, or Poison once at cast time, targets one willing touched creature, starts caster-owned Concentration for up to 1 minute, and stores a target-attached active effect with the chosen damage type, caster spell save DC, and original slot level without duplicating Spell Access state or reauthoring damage-type options.",
+            "owner": "battle-runtime spell invocation/effect lifecycle",
+            "requiredOutput": "Supported runtime owner evidence for Dragon's Breath initial casting, Spell Slot spending, damage-type choice retention, caster spell save DC retention, original slot level retention, willing target attachment, Concentration expiry, and active-effect cleanup.",
+            "title": "Dragon's Breath Initial Cast And Effect State"
+          },
+          {
+            "id": "L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION",
+            "mechanic": "Discover and execute the attached target's Magic action while the spell remains active, using the stored caster spell save DC, chosen damage type, and original slot level to resolve a 15-foot Cone Dexterity save for half damage with slot scaling from the original cast.",
+            "owner": "battle-runtime target-granted action lifecycle plus promoted Quint parity",
+            "requiredOutput": "Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for target-side action discovery, action economy spending, area membership input, save-for-half damage, slot scaling, and expiry behavior.",
+            "title": "Dragon's Breath Granted Magic Action"
+          }
+        ],
+        "futureProfileOwner": "battle-runtime spell invocation plus target-granted action lifecycle",
+        "reason": "Dragon's Breath is authored as an SRD Surface Spell Definition for the willing touched target, chosen damage type, concentration duration, target-spent Magic action, attached-creature-origin 15-foot Cone, Dexterity save-for-half damage, and slot scaling. Task 59 claims no battle-runtime support yet because promoted battle runtime has no target-granted spell action lifecycle for a non-caster target to spend a Magic action through a caster-owned concentration effect.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/dragons_breath.json",
+      "unitId": "dragons_breath"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

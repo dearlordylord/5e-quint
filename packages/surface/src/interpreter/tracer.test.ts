@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import classFighterInput from "../../content/class_fighter.json";
+import dragonsBreathInput from "../../content/dragons_breath.json";
 import { decodeUnitRecordSync } from "../surface/schema.ts";
 import { traceUnit } from "./tracer.ts";
 
@@ -25,6 +26,31 @@ describe("Surface trace interpreter", () => {
         expect.objectContaining({
           atomKind: "class_armor_training",
           label: "class_armor_training\nlight, medium, heavy, shield",
+        }),
+      ]),
+    );
+  });
+
+  test("renders Dragon's Breath as a target-granted cone save gate", () => {
+    const trace = traceUnit(decodeUnitRecordSync(dragonsBreathInput));
+
+    expect(trace.nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          atomKind: "hole",
+          label: expect.stringContaining("willing"),
+        }),
+        expect.objectContaining({
+          atomKind: "action_window",
+          label: "action_window\n(attached creature spends magic action)",
+        }),
+        expect.objectContaining({
+          atomKind: "area",
+          label: expect.stringContaining("origin: attached creature"),
+        }),
+        expect.objectContaining({
+          atomKind: "save_gate",
+          label: "save_gate\nDEX vs caster spell save DC",
         }),
       ]),
     );

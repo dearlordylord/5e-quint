@@ -7,7 +7,7 @@
     {
       "number": 59,
       "id": "L12G-MISSING-DRAGONS-BREATH",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Dragons Breath Definition And Runtime Support"
     },
     {
@@ -105,12 +105,24 @@
       "id": "L12G-MISSING-ZONE-OF-TRUTH",
       "status": "ready-for-research",
       "title": "Zone Of Truth Definition And Closure"
+    },
+    {
+      "number": 90,
+      "id": "L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST",
+      "status": "ready-for-research",
+      "title": "Dragon's Breath Initial Cast And Effect State"
+    },
+    {
+      "number": 91,
+      "id": "L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION",
+      "status": "ready-for-research",
+      "title": "Dragon's Breath Granted Magic Action"
     }
   ]
 }
 -->
 
-This is the fourth level-2 execution lane split from Loop B tail work. Loop D owns Tasks 59-75 only.
+This is the fourth level-2 execution lane split from Loop B tail work. Loop D owns Tasks 59-75 and Dragon's Breath follow-up Tasks 90-91 only.
 
 ## Worktree Safety Prefix
 
@@ -165,7 +177,7 @@ use the repository MBT scarcity protocol.
 
 ## Included Work
 
-Loop D contains 17 atomic tasks: the missing-definition/runtime-or-closure tail from Dragons Breath through Zone of Truth.
+Loop D contains 19 atomic tasks: the missing-definition/runtime-or-closure tail from Dragons Breath through Zone of Truth, plus the Dragon's Breath initial-cast and granted-action follow-up split.
 
 It excludes Loop A Tasks 22-36 and 88-89, Loop B Tasks 43-58, Loop C Tasks 37-42 and 76-87, all level-1 Loop D/L work, companion/familiar boundary work, and Counterspell work.
 
@@ -188,12 +200,21 @@ It excludes Loop A Tasks 22-36 and 88-89, Loop B Tasks 43-58, Loop C Tasks 37-42
 | 73 | 75 | `L12G-MISSING-SILENCE` | `silence` |
 | 74 | 76 | `L12G-MISSING-SUGGESTION` | `suggestion` |
 | 75 | 77 | `L12G-MISSING-ZONE-OF-TRUTH` | `zone_of_truth` |
+| 90 | 61 follow-up | `L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST` | `dragons_breath` |
+| 91 | 61 follow-up | `L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION` | `dragons_breath` |
+
+## Follow-Up Dependencies
+
+| Task | Depends on | Dependency reason |
+| --- | --- | --- |
+| `L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST` | `L12G-MISSING-DRAGONS-BREATH` | Runtime support should consume the authored SRD Surface spell definition rather than duplicating Dragon's Breath spell facts in battle-runtime code. |
+| `L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION` | `L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST` | Target-granted Magic action execution needs the initial cast to own Spell Slot spending, caster Concentration, target attachment, chosen damage type, caster spell save DC, and original slot level state. |
 
 ## Task Details
 
 ### Task 59 - L12G-MISSING-DRAGONS-BREATH - Dragons Breath Definition And Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `dragons_breath`. Gate task: 61 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -649,3 +670,67 @@ Acceptance:
 - the level 1-2 metric row for `zone_of_truth` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
 - no level-1 Loop D/L or companion boundary work is pulled into this lane;
 - focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 90 - L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST - Dragon's Breath Initial Cast And Effect State
+
+Status: `ready-for-research`
+
+Unit: `dragons_breath`. Follow-up split from Task 59.
+
+Dependency: Task 59 (`L12G-MISSING-DRAGONS-BREATH`) done.
+
+Inputs:
+
+- `packages/surface/content/dragons_breath.json`;
+- `packages/surface/content/dragons_breath.dhall`;
+- the `dragons_breath` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Spells/Descriptions-A-D.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- battle-runtime spell invocation/effect lifecycle, owner evidence, and focused tests for Dragon's Breath initial casting.
+
+Outputs:
+
+- supported runtime owner evidence for the Bonus Action spell invocation that spends a level-2-or-higher Spell Slot, chooses Acid, Cold, Fire, Lightning, or Poison once at cast time, targets one willing touched creature, starts caster-owned Concentration for up to 1 minute, and stores a target-attached active effect;
+- active effect state retains the chosen damage type, caster spell save DC, original slot level, willing target attachment, Concentration expiry, and cleanup facts without duplicating Spell Access state or reauthoring the damage type options;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the initial-cast/effect-state portion of `dragons_breath` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no target-granted Magic action execution is implemented in this task;
+- runtime behavior traces to SRD Dragon's Breath without homebrew extensions and consumes the authored Spell Definition facts rather than duplicating spell mechanics in runtime code;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.
+
+### Task 91 - L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION - Dragon's Breath Granted Magic Action
+
+Status: `ready-for-research`
+
+Unit: `dragons_breath`. Follow-up split from Task 59.
+
+Dependency: Task 90 (`L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST`) done.
+
+Inputs:
+
+- `packages/surface/content/dragons_breath.json`;
+- the `dragons_breath` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Spells/Descriptions-A-D.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- battle-runtime target-granted action lifecycle, promoted Quint parity, Unit profile, owner evidence, and focused tests for Dragon's Breath target action execution.
+
+Outputs:
+
+- supported-profile Unit claim, deterministic admission/projection evidence, and focused runtime tests for discovering and executing the attached target's Magic action while Dragon's Breath remains active;
+- target action execution spends the attached target's Magic action and uses the stored caster spell save DC, chosen damage type, original slot level, and table-supplied area membership to resolve a 15-foot Cone Dexterity save for half damage;
+- promoted Quint/runtime parity updates cover target-side action discovery, action economy spending, area membership input, save-for-half damage, slot scaling, and expiry behavior;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the granted-action execution portion of `dragons_breath` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- runtime behavior traces to SRD Dragon's Breath without homebrew extensions and consumes Task 90 effect state rather than creating a parallel spell-action owner;
+- no unrelated level-1 Loop D/L spell frontier work is implemented in this task;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.

@@ -64,10 +64,10 @@ This is the default `%` for level-1 plus level-2 readiness questions. It uses th
 
 ### Spell Unit Pressure by Disposition
 
-- catalog-authored-executable-follow-up: 1
+- catalog-authored-executable-follow-up: 3
 - catalog-installed-owner-evidence-present: 143
 - catalog-only/dead-for-now: 149
-- missing-authored-record: 74
+- missing-authored-record: 72
 
 ## Recommended Ralph Batches
 

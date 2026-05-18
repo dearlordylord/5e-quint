@@ -866,6 +866,52 @@
       "unitId": "detect_poison_and_disease"
     },
     {
+      "catalogDisposition": {
+        "category": "srd-candidate",
+        "planningLane": "QMBT14-QMBT16",
+        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
+      },
+      "catalogStatus": "not-in-unit-catalog",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST: Promote the Bonus Action spell invocation that spends a level-2-or-higher Spell Slot, chooses Acid, Cold, Fire, Lightning, or Poison once at cast time, targets one willing touched creature, starts caster-owned Concentration for up to 1 minute, and stores a target-attached active effect with the chosen damage type, caster spell save DC, and original slot level without duplicating Spell Access state or reauthoring damage-type options. Owner: battle-runtime spell invocation/effect lifecycle. Required output: Supported runtime owner evidence for Dragon's Breath initial casting, Spell Slot spending, damage-type choice retention, caster spell save DC retention, original slot level retention, willing target attachment, Concentration expiry, and active-effect cleanup.; L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION: Discover and execute the attached target's Magic action while the spell remains active, using the stored caster spell save DC, chosen damage type, and original slot level to resolve a 15-foot Cone Dexterity save for half damage with slot scaling from the original cast. Owner: battle-runtime target-granted action lifecycle plus promoted Quint parity. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for target-side action discovery, action economy spending, area membership input, save-for-half damage, slot scaling, and expiry behavior.",
+      "sourceRecordPath": "packages/surface/content/dragons_breath.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Sorcerer spell list Dragon's Breath",
+          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_dragons_breath",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 276,
+            "lineStart": 276,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Dragon's Breath",
+          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_dragons_breath",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 208,
+            "lineStart": 208,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
+      "unitId": "dragons_breath"
+    },
+    {
       "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
@@ -2806,11 +2852,12 @@
       ]
     },
     {
-      "count": 6,
+      "count": 7,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
         "acid_arrow",
+        "dragons_breath",
         "druid_wild_shape",
         "monk_monks_focus",
         "monk_uncanny_metabolism",
@@ -2862,14 +2909,14 @@
       }
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 146,
+      "denominator": 147,
       "numerator": 90,
-      "percent": "61.6%"
+      "percent": "61.2%"
     },
     "strictTargetClosure": {
-      "denominator": 146,
-      "numerator": 115,
-      "percent": "78.8%"
+      "denominator": 147,
+      "numerator": 116,
+      "percent": "78.9%"
     }
   },
   "openFrontier": [
@@ -3284,36 +3331,6 @@
           }
         ],
         "unitId": "disguise_self"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "spell Unit pressure",
-            "concept": "Sorcerer spell list Dragon's Breath",
-            "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_dragons_breath",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 276,
-              "lineStart": 276,
-              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Wizard spell list Dragon's Breath",
-            "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_dragons_breath",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 208,
-              "lineStart": 208,
-              "path": ".references/srd-5.2.1/Classes/Wizard.md"
-            }
-          }
-        ],
-        "unitId": "dragons_breath"
       },
       {
         "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
@@ -6390,10 +6407,10 @@
       "missing": 30,
       "profile-subset-supported": 9,
       "supported-profile": 90,
-      "unsupported-profile": 17
+      "unsupported-profile": 18
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 6,
+      "blocked-follow-up-split": 7,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 11,
@@ -6401,7 +6418,7 @@
       "open-runtime-behavior": 30,
       "supported-profile": 90
     },
-    "nonSupportedFrontier": 56,
-    "strictDenominator": 146
+    "nonSupportedFrontier": 57,
+    "strictDenominator": 147
   }
 }

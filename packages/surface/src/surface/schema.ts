@@ -68,7 +68,7 @@ export {
   MarkTransferSchema,
   ObjectFilterSchema,
   ObjectMaterialSchema,
-  OngoingCasterActionCostSchema,
+  OngoingActionCostSchema,
   OngoingEffectMechanicsSchema,
   OngoingEffectSchema,
   OngoingOperationSchema,
