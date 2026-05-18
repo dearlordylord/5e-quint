@@ -884,6 +884,9 @@ Inputs:
 - local RAW under `.references/srd-5.2.1/`;
 - `UBIQUITOUS_LANGUAGE.md`;
 - existing Surface content, Unit claims, owner evidence, and focused tests for `bard_expertise`.
+- continuation WIP, if still available, on branch `backup/level2-a-task-10-bard-expertise-wip-20260518-024127`
+  at commit `852a47eebfe4a477f33682efdc04124efa9880bc`; inspect and cherry-pick/rework it only
+  if it still matches RAW, ubiquitous language, architecture, and the task output contract.
 
 Outputs:
 
