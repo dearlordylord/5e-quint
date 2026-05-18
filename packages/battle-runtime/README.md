@@ -1226,6 +1226,9 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
   landing facts, and per-target use tracking helpers.
 - `battle-runtime-weapon-hit-spell-riders.qnt` - Divine Favor, Divine Smite,
   Ensnaring Strike, and Searing Smite damage/effect rider projections.
+- `battle-runtime-fighter-ongoing-features.qnt` - Fighter Rage and Reckless
+  Attack ongoing-feature lifecycle, extension, resistance, and attack-roll
+  hooks.
 - `battle-runtime.mbt.qnt` - package-local randomized model for the selected
   integrated promoted MBT path.
 
