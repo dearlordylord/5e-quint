@@ -25,7 +25,7 @@
     {
       "number": 62,
       "id": "L12G-MISSING-ENTHRALL",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Enthrall Definition And Closure"
     },
     {
@@ -135,12 +135,18 @@
       "id": "L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH",
       "status": "ready-for-research",
       "title": "Enlarge Reduce Object Branch"
+    },
+    {
+      "number": 95,
+      "id": "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Enthrall Perception Penalty Runtime Support"
     }
   ]
 }
 -->
 
-This is the fourth level-2 execution lane split from Loop B tail work. Loop D owns Tasks 59-75 plus follow-up Tasks 90-94 only.
+This is the fourth level-2 execution lane split from Loop B tail work. Loop D owns Tasks 59-75 plus follow-up Tasks 90-95 only.
 
 ## Worktree Safety Prefix
 
@@ -195,7 +201,7 @@ use the repository MBT scarcity protocol.
 
 ## Included Work
 
-Loop D contains 22 atomic tasks: the missing-definition/runtime-or-closure tail from Dragons Breath through Zone of Truth, plus the Dragon's Breath initial-cast and granted-action follow-up split, the Enhance Ability upcast per-target ability follow-up, and the Enlarge/Reduce creature-runtime and object-branch follow-up split.
+Loop D contains 23 atomic tasks: the missing-definition/runtime-or-closure tail from Dragons Breath through Zone of Truth, plus the Dragon's Breath initial-cast and granted-action follow-up split, the Enhance Ability upcast per-target ability follow-up, the Enlarge/Reduce creature-runtime and object-branch follow-up split, and the Enthrall Perception penalty runtime follow-up.
 
 It excludes Loop A Tasks 22-36 and 88-89, Loop B Tasks 43-58, Loop C Tasks 37-42 and 76-87, all level-1 Loop D/L work, companion/familiar boundary work, and Counterspell work.
 
@@ -223,6 +229,7 @@ It excludes Loop A Tasks 22-36 and 88-89, Loop B Tasks 43-58, Loop C Tasks 37-42
 | 92 | 62 follow-up | `L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES` | `enhance_ability` |
 | 93 | 63 follow-up | `L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME` | `enlarge_reduce` |
 | 94 | 63 follow-up | `L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH` | `enlarge_reduce` |
+| 95 | 64 follow-up | `L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME` | `enthrall` |
 
 ## Follow-Up Dependencies
 
@@ -233,6 +240,7 @@ It excludes Loop A Tasks 22-36 and 88-89, Loop B Tasks 43-58, Loop C Tasks 37-42
 | `L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES` | `L12G-MISSING-ENHANCE-ABILITY` | Slot-scaled Enhance Ability casting needs the authored spell definition and one-target chosen-ability runtime subset before widening the target-list fill protocol to carry independent ability choices per target. |
 | `L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME` | `L12G-MISSING-ENLARGE-REDUCE` | Creature-branch runtime support should consume the authored SRD Surface spell definition rather than duplicating Enlarge/Reduce spell facts in battle-runtime code. |
 | `L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH` | `L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME` | Object and item size lifecycle work needs the creature branch's active-effect representation before adding object-target behavior and worn/carried/dropped/thrown item normalization. |
+| `L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME` | `L12G-MISSING-ENTHRALL` | Runtime support should consume the authored SRD Surface spell definition and preserve the table-supplied fighting-caster-or-companions auto-success boundary before promoting the Perception penalty. |
 
 ## Task Details
 
@@ -319,7 +327,7 @@ Acceptance:
 
 ### Task 62 - L12G-MISSING-ENTHRALL - Enthrall Definition And Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `enthrall`. Gate task: 64 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -853,5 +861,37 @@ Acceptance:
 
 - the object-branch and item-lifecycle portion of `enlarge_reduce` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
 - runtime behavior traces to SRD Enlarge/Reduce without inventing object inventory, dropped-item, or thrown-item state outside accepted runtime owners;
+- no unrelated level-1 Loop D/L spell frontier work is implemented in this task;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.
+
+### Task 95 - L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME - Enthrall Perception Penalty Runtime Support
+
+Status: `ready-for-research`
+
+Unit: `enthrall`. Follow-up split from Task 62.
+
+Dependency: Task 62 (`L12G-MISSING-ENTHRALL`) done.
+
+Inputs:
+
+- `packages/surface/content/enthrall.json`;
+- `packages/surface/content/enthrall.dhall`;
+- the `enthrall` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Spells/Descriptions-E-L.md` and `.references/srd-5.2.1/Rules-Glossary.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- battle-runtime spell invocation/effect lifecycle, promoted Quint parity, Unit profile, owner evidence, and focused tests for Enthrall's Perception penalty.
+
+Outputs:
+
+- supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Enthrall's Perception penalty without modeling social attention state;
+- Magic Action and level-2+ Spell Slot spending, caster-owned Concentration, caller-supplied eligible creature target list, Wisdom save, failed-save active -10 modifier to Wisdom (Perception) Ability Checks, derived Passive Perception consequence, and cleanup when Concentration or duration ends consume the authored Surface spell definition rather than duplicating spell facts;
+- the fighting-caster-or-companions auto-success predicate remains a table/allegiance boundary input, so runtime support only accepts eligible target facts after that predicate has been applied.
+
+Acceptance:
+
+- the Perception-penalty portion of `enthrall` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- runtime behavior traces to SRD Enthrall and Passive Perception without inventing social attention or allegiance state outside accepted runtime owners;
 - no unrelated level-1 Loop D/L spell frontier work is implemented in this task;
 - focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.

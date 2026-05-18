@@ -1125,6 +1125,47 @@
     },
     {
       "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME: Promote Enthrall's battle-visible Perception subset: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied eligible creature target list after applying the fighting-caster-or-companions auto-success predicate at the table boundary, Wisdom save, failed-save active -10 modifier to Wisdom (Perception) Ability Checks, derived Passive Perception consequence from the same modifier, and cleanup when Concentration or duration ends. Owner: battle-runtime spell invocation/effect lifecycle plus promoted Quint parity. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Enthrall's Perception penalty without modeling social attention state.",
+      "sourceRecordPath": "packages/surface/content/enthrall.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Enthrall",
+          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_enthrall",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 197,
+            "lineStart": 197,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Warlock spell list Enthrall",
+          "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_enthrall",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 366,
+            "lineStart": 366,
+            "path": ".references/srd-5.2.1/Classes/Warlock.md"
+          }
+        }
+      ],
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
+      "unitId": "enthrall"
+    },
+    {
+      "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
         "later-level-only"
@@ -3006,7 +3047,7 @@
       ]
     },
     {
-      "count": 9,
+      "count": 10,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
@@ -3015,6 +3056,7 @@
         "druid_wild_shape",
         "enhance_ability",
         "enlarge_reduce",
+        "enthrall",
         "monk_monks_focus",
         "monk_uncanny_metabolism",
         "sorcerer_font_of_magic",
@@ -3066,14 +3108,14 @@
       }
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 149,
+      "denominator": 150,
       "numerator": 90,
-      "percent": "60.4%"
+      "percent": "60%"
     },
     "strictTargetClosure": {
-      "denominator": 149,
-      "numerator": 118,
-      "percent": "79.2%"
+      "denominator": 150,
+      "numerator": 119,
+      "percent": "79.3%"
     }
   },
   "openFrontier": [
@@ -3568,36 +3610,6 @@
           }
         ],
         "unitId": "elementalism"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "spell Unit pressure",
-            "concept": "Bard spell list Enthrall",
-            "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_enthrall",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 197,
-              "lineStart": 197,
-              "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Warlock spell list Enthrall",
-            "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_enthrall",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 366,
-              "lineStart": 366,
-              "path": ".references/srd-5.2.1/Classes/Warlock.md"
-            }
-          }
-        ],
-        "unitId": "enthrall"
       },
       {
         "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
@@ -6432,10 +6444,10 @@
       "missing": 30,
       "profile-subset-supported": 10,
       "supported-profile": 90,
-      "unsupported-profile": 19
+      "unsupported-profile": 20
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 9,
+      "blocked-follow-up-split": 10,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 11,
@@ -6443,7 +6455,7 @@
       "open-runtime-behavior": 30,
       "supported-profile": 90
     },
-    "nonSupportedFrontier": 59,
-    "strictDenominator": 149
+    "nonSupportedFrontier": 60,
+    "strictDenominator": 150
   }
 }

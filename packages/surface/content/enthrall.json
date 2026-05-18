@@ -1,0 +1,77 @@
+{
+  "description": "You weave a distracting string of words, causing creatures of your choice that you can see within range to make a Wisdom saving throw. Any creature you or your companions are fighting automatically succeeds on this save. On a failed save, a target has a -10 penalty to Wisdom (Perception) checks and Passive Perception until the spell ends.",
+  "id": "enthrall",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "activation",
+    "level": 2,
+    "phases": [
+      {
+        "ability": "wis",
+        "attachment": {
+          "holeId": "enthrall_targets",
+          "kind": "hole",
+          "label": "targets",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "mode": "any_number",
+              "targetKinds": [
+                "creature"
+              ]
+            }
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "delta": {
+            "amount": 10,
+            "kind": "fixed_number",
+            "sign": "-"
+          },
+          "kind": "modify_roll_numeric",
+          "on": [
+            "ability_check"
+          ],
+          "skillFilter": {
+            "kind": "fixed",
+            "skills": [
+              "perception"
+            ]
+          }
+        },
+        "onSuccess": {
+          "kind": "none"
+        }
+      }
+    ],
+    "range": {
+      "feet": 60,
+      "kind": "point"
+    },
+    "school": "enchantment"
+  },
+  "name": "Enthrall",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Enthrall"
+  }
+}

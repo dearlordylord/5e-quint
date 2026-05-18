@@ -50,6 +50,7 @@ import enhanceAbilityInput from "../../content/enhance_ability.json";
 import enlargeReduceInput from "../../content/enlarge_reduce.json";
 import ensnaringStrikeInput from "../../content/ensnaring_strike.json";
 import entangleInput from "../../content/entangle.json";
+import enthrallInput from "../../content/enthrall.json";
 import expeditiousRetreatInput from "../../content/expeditious_retreat.json";
 import faerieFireInput from "../../content/faerie_fire.json";
 import featherFallInput from "../../content/feather_fall.json";
@@ -405,6 +406,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     enlargeReduceInput,
     ensnaringStrikeInput,
     entangleInput,
+    enthrallInput,
     expeditiousRetreatInput,
     faerieFireInput,
     featherFallInput,

@@ -128,6 +128,7 @@ const requiredFirstVerticalUnitIds = [
   "dissonant_whispers",
   "enhance_ability",
   "enlarge_reduce",
+  "enthrall",
   "expeditious_retreat",
   "feather_fall",
   "jump",
@@ -894,6 +895,58 @@ describe("SRD Unit catalog boundary", () => {
               },
             },
           },
+        },
+      ]);
+    }
+  });
+
+  test("decodes Enthrall as save-gated Perception penalty over any-number creature targets", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const enthrall = result.catalog.requireUnit("enthrall");
+      expect(enthrall.kind).toBe("spell");
+      if (enthrall.kind !== "spell") return;
+      expect(enthrall.mechanics.family).toBe("activation");
+      if (enthrall.mechanics.family !== "activation") return;
+
+      expect(enthrall.mechanics.level).toBe(2);
+      expect(enthrall.mechanics.castingTime).toEqual({
+        kind: "action",
+      });
+      expect(enthrall.mechanics.range).toEqual({
+        kind: "point",
+        feet: 60,
+      });
+      expect(enthrall.mechanics.duration).toEqual({
+        kind: "concentration",
+        upTo: { unit: "minute", amount: 1 },
+      });
+      expect(enthrall.mechanics.phases).toEqual([
+        {
+          kind: "save_gate",
+          attachment: {
+            kind: "hole",
+            holeId: "enthrall_targets",
+            label: "targets",
+            value: {
+              kind: "target",
+              selection: {
+                mode: "any_number",
+                targetKinds: ["creature"],
+              },
+            },
+          },
+          ability: "wis",
+          dc: { kind: "caster_spell_save_dc" },
+          onFail: {
+            kind: "modify_roll_numeric",
+            on: ["ability_check"],
+            delta: { kind: "fixed_number", amount: 10, sign: "-" },
+            skillFilter: { kind: "fixed", skills: ["perception"] },
+          },
+          onSuccess: { kind: "none" },
         },
       ]);
     }

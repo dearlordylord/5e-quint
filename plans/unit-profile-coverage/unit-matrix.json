@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 377,
-      "numerator": 146,
-      "percent": "38.7%"
+      "denominator": 378,
+      "numerator": 147,
+      "percent": "38.9%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 449,
-      "numerator": 178,
-      "percent": "39.6%"
+      "denominator": 450,
+      "numerator": 179,
+      "percent": "39.8%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 179
+      "value": 180
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 113,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 179,
-      "numerator": 179,
+      "denominator": 180,
+      "numerator": 180,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -97,9 +97,9 @@
       "percent": "92%"
     },
     "supportedProfileCoverage": {
-      "denominator": 147,
+      "denominator": 148,
       "numerator": 113,
-      "percent": "76.9%"
+      "percent": "76.4%"
     }
   },
   "metricSemantics": [
@@ -10164,6 +10164,34 @@
       ],
       "sourceRecordPath": "packages/surface/content/entangle.json",
       "unitId": "entangle"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME",
+            "mechanic": "Promote Enthrall's battle-visible Perception subset: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied eligible creature target list after applying the fighting-caster-or-companions auto-success predicate at the table boundary, Wisdom save, failed-save active -10 modifier to Wisdom (Perception) Ability Checks, derived Passive Perception consequence from the same modifier, and cleanup when Concentration or duration ends.",
+            "owner": "battle-runtime spell invocation/effect lifecycle plus promoted Quint parity",
+            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Enthrall's Perception penalty without modeling social attention state.",
+            "title": "Enthrall Perception Penalty Runtime Support"
+          }
+        ],
+        "futureProfileOwner": "battle-runtime roll-modifier spell invocation plus table/social owner",
+        "reason": "Enthrall is authored as an SRD Surface Spell Definition with Magic Action Spell Slot casting, Concentration up to 1 minute, any-number creature target selection, a Wisdom save gate, and a failed-save -10 modifier to Wisdom (Perception) Ability Checks. Task 62 claims no promoted battle-runtime profile yet because runtime roll-modifier spell targeting has no unbounded any-number target-list projection, active d20 roll modifiers do not support fixed-number deltas such as -10, and the fighting-caster-or-companions auto-success predicate is allegiance/table state rather than a current battle-runtime target predicate. Passive Perception remains derived from the Wisdom (Perception) check bonus rather than duplicated as separate Surface state; broader social attention adjudication remains runtime-detached.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/enthrall.json",
+      "unitId": "enthrall"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
