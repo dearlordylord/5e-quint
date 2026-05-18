@@ -2444,12 +2444,7 @@
       "unitId": "thaumaturgy"
     },
     {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
+      "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
         "follow-up-split"
@@ -2457,7 +2452,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "L12G-FOLLOWUP-WARDING-BOND-SURFACE-LIFECYCLE: Replace the partial Warding Bond Surface shape with a lossless linked-bond Spell Effect source shape that represents the willing target, paired platinum rings worn by caster and target for the duration, 60-foot range-gated target benefits, same-amount damage sharing to the caster, early ending when the caster drops to 0 Hit Points or the pair separates by more than 60 feet, and recast ending on either connected creature without encoding those lifecycle facts as prose-only comments. Owner: surface Spell Definition authoring. Required output: Warding Bond Dhall and JSON content, plus schema/tracer support where required, make the coupled bond identity, range-gated projections, damage-sharing trigger, material/worn-ring witnesses, and early-end triggers executable source facts.; L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME: Promote Warding Bond as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, consumes caller-supplied willing-target, worn-ring/material, and 60-foot connection facts, records one paired-creature bond occurrence, projects +1 Armor Class, +1 Saving Throws, and all-damage Resistance only while the target is within 60 feet, applies the same amount to the caster after the target takes damage with the caster damage lifecycle handled by the runtime boundary, and cleans up on duration end, caster 0 Hit Points, separation beyond 60 feet, or recast on either connected creature. Owner: battle-runtime spell invocation/effect lifecycle plus material and table/spatial witness boundary. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for casting, Spell Slot spend, target projections, Resistance interaction, same-amount damage sharing, caster-0-HP cleanup, separation cleanup, recast cleanup, and duration cleanup without duplicating inventory or generic position state.",
+      "reason": "L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME: Promote Warding Bond as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, consumes caller-supplied willing-target, worn-ring/material, and 60-foot connection facts, records one paired-creature bond occurrence, projects +1 Armor Class, +1 Saving Throws, and all-damage Resistance only while the target is within 60 feet, applies the same amount to the caster after the target takes damage with the caster damage lifecycle handled by the runtime boundary, and cleans up on duration end, caster 0 Hit Points, separation beyond 60 feet, or recast on either connected creature. Owner: battle-runtime spell invocation/effect lifecycle plus material and table/spatial witness boundary. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for casting, Spell Slot spend, target projections, Resistance interaction, same-amount damage sharing, caster-0-HP cleanup, separation cleanup, recast cleanup, and duration cleanup without duplicating inventory or generic position state.",
       "sourceRecordPath": "packages/surface/content/warding_bond.json",
       "sourceRows": [
         {

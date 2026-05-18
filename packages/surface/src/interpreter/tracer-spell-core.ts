@@ -1,5 +1,6 @@
 import type {
   CastingTime,
+  Components,
   SpellLevel,
   SpellMechanics,
   SpellRecord,
@@ -85,6 +86,7 @@ export function traceSpellMechanics(
     edges.push({ from: procId, to: slotId, relation: "consumes" });
 
   traceDuration(m.duration, procId, nodes, edges, ids);
+  traceMaterialComponents(m.components, procId, nodes, edges, ids);
 
   const ctx: SpellCtx = { procId, slotId, range: m.range };
 
@@ -117,6 +119,37 @@ export function traceSpellMechanics(
   }
 
   return procId;
+}
+
+function traceMaterialComponents(
+  components: Components,
+  procId: string,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  if (components.m === false || typeof components.m === "string") return;
+  switch (components.m.kind) {
+    case "paired_worn_items": {
+      const id = ids("mat");
+      nodes.push({
+        id,
+        category: "resolution",
+        atomKind: "paired_worn_material_component",
+        label:
+          `paired_worn_material_component\n${components.m.material} ${components.m.itemKind}s` +
+          `\n${components.m.minimumValueGpEach}+ GP each` +
+          `\nworn by ${components.m.wornBy.join(" and ")}` +
+          `\nrequired: ${components.m.requiredFor}`,
+      });
+      edges.push({ from: procId, to: id, relation: "requires" });
+      return;
+    }
+    default: {
+      const _exhaustive: never = components.m.kind;
+      throw new Error(`unhandled material component: ${String(_exhaustive)}`);
+    }
+  }
 }
 
 export function traceCastingTimeQuota(

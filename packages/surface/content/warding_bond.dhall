@@ -1,99 +1,87 @@
 -- Warding Bond — SRD 5.2.1 Spell, level 2, Abjuration.
 --
 -- RAW (Spells/Descriptions-S-Z#Warding Bond):
+--   "You touch another creature that is willing and create a mystic
+--    connection between you and the target until the spell ends."
 --   "While the target is within 60 feet of you, it gains a +1 bonus to
 --    AC and saving throws, and it has Resistance to all damage."
 --   "Also, each time it takes damage, you take the same amount of
 --    damage."
---
--- PARTIAL: ending when either creature drops to 0 Hit Points, when the
--- creatures are separated by more than 60 feet, or when the spell is
--- cast again on either creature is not represented in this surface.
+--   "The spell ends if you drop to 0 Hit Points or if you and the target
+--    become separated by more than 60 feet. It also ends if the spell is
+--    cast again on either of the connected creatures."
 
 let DiceDelta : Type =
       { kind : Text, dice : Natural, dieSize : Natural, sign : Text }
 
-let ChildEffect : Type =
-      { kind : Text
-      , damageType : Optional Text
-      , delta : Optional DiceDelta
-      , on : Optional (List Text)
-      , rangeFeet : Optional Natural
-      }
+let DamageTypeRef : Type = { kind : Text }
 
 let Effect : Type =
       { kind : Text
-      , damageType : Optional Text
+      , damageType : Optional DamageTypeRef
       , delta : Optional DiceDelta
       , on : Optional (List Text)
-      , rangeFeet : Optional Natural
-      , effects : Optional (List ChildEffect)
+      , amount : Optional Text
       }
 
-let noneChildren = None (List ChildEffect)
+let Trigger : Type = { kind : Text }
+
+let Predicate : Type = { kind : Text }
+
+let Operation : Type =
+      { trigger : Trigger, predicate : Optional Predicate, effect : Effect }
+
+let noneDamageType = None DamageTypeRef
+
+let noneDelta = None DiceDelta
+
+let noneRollKinds = None (List Text)
+
+let noneAmount = None Text
 
 let plusOne : DiceDelta =
       { kind = "fixed_dice", dice = 1, dieSize = 1, sign = "+" }
 
+let attachedBondWithinRange : Predicate =
+      { kind = "attached_bond_within_range" }
+
+let rangeGated =
+      \(effect : Effect) ->
+        { trigger = { kind = "passive" }
+        , predicate = Some attachedBondWithinRange
+        , effect
+        }
+
 let acBonus : Effect =
       { kind = "modify_ac"
-      , damageType = None Text
+      , damageType = noneDamageType
       , delta = Some plusOne
-      , on = None (List Text)
-      , rangeFeet = None Natural
-      , effects = noneChildren
+      , on = noneRollKinds
+      , amount = noneAmount
       }
 
 let saveBonus : Effect =
       { kind = "modify_roll_numeric"
-      , damageType = None Text
+      , damageType = noneDamageType
       , delta = Some plusOne
       , on = Some [ "saving_throw" ]
-      , rangeFeet = None Natural
-      , effects = noneChildren
+      , amount = noneAmount
       }
-
-let resistance =
-      \(damageType : Text) ->
-        { kind = "grant_resistance"
-        , damageType = Some damageType
-        , delta = None DiceDelta
-        , on = None (List Text)
-        , rangeFeet = None Natural
-        }
-
-let childEffects =
-      [ resistance "acid"
-      , resistance "bludgeoning"
-      , resistance "cold"
-      , resistance "fire"
-      , resistance "force"
-      , resistance "lightning"
-      , resistance "necrotic"
-      , resistance "piercing"
-      , resistance "poison"
-      , resistance "psychic"
-      , resistance "radiant"
-      , resistance "slashing"
-      , resistance "thunder"
-      ]
 
 let allDamageResistance : Effect =
-      { kind = "composite"
-      , damageType = None Text
-      , delta = None DiceDelta
-      , on = None (List Text)
-      , rangeFeet = None Natural
-      , effects = Some childEffects
+      { kind = "grant_resistance"
+      , damageType = Some { kind = "all_damage_types" }
+      , delta = noneDelta
+      , on = noneRollKinds
+      , amount = noneAmount
       }
 
-let shareDamage : Effect =
+let shareDamageToCaster : Effect =
       { kind = "share_damage_to_caster"
-      , damageType = None Text
-      , delta = None DiceDelta
-      , on = None (List Text)
-      , rangeFeet = Some 60
-      , effects = noneChildren
+      , damageType = noneDamageType
+      , delta = noneDelta
+      , on = noneRollKinds
+      , amount = Some "same_as_attached_damage_taken"
       }
 
 let wardingBond =
@@ -116,22 +104,50 @@ let wardingBond =
               { v = True
               , s = True
               , m =
-                  Some
-                    "a pair of platinum rings worth 50+ GP each, which you and the target must wear for the duration"
+                  { kind = "paired_worn_items"
+                  , itemKind = "ring"
+                  , material = "platinum"
+                  , minimumValueGpEach = 50
+                  , wornBy = [ "caster", "target" ]
+                  , requiredFor = "spell_duration"
+                  }
               }
-          , duration = { kind = "timed", value = { unit = "hour", amount = 1 } }
+          , duration =
+              { kind = "timed"
+              , value = { unit = "hour", amount = 1 }
+              , earlyEnd =
+                  [ { kind = "caster_drops_to_0_hp" }
+                  , { kind = "attached_bond_exceeds_range" }
+                  , { kind = "spell_cast_again_on_connected_creature" }
+                  ]
+              }
           , attachment =
-              { kind = "hole"
-              , holeId = "warding_bond_target"
-              , label = "willing creature"
-              , value = { kind = "target", selection = { mode = "one" } }
+              { kind = "caster_target_bond"
+              , bondId = "warding_bond_mystic_connection"
+              , target =
+                  { kind = "hole"
+                  , holeId = "warding_bond_target"
+                  , label = "willing creature"
+                  , value =
+                      { kind = "target"
+                      , selection =
+                          { mode = "one"
+                          , targetKinds = [ "creature" ]
+                          , disposition = "willing"
+                          }
+                      }
+                  }
+              , range = { kind = "within_feet", feet = 60 }
               }
           , operations =
-              [ { trigger = { kind = "passive" }, effect = acBonus }
-              , { trigger = { kind = "passive" }, effect = saveBonus }
-              , { trigger = { kind = "passive" }, effect = allDamageResistance }
-              , { trigger = { kind = "passive" }, effect = shareDamage }
-              ]
+              [ rangeGated acBonus
+              , rangeGated saveBonus
+              , rangeGated allDamageResistance
+              , { trigger = { kind = "on_attached_damaged" }
+                , predicate = None Predicate
+                , effect = shareDamageToCaster
+                }
+              ] : List Operation
           }
       }
 

@@ -55,7 +55,7 @@
     {
       "number": 95,
       "id": "L12G-FOLLOWUP-WARDING-BOND-SURFACE-LIFECYCLE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Warding Bond Surface Linked Effect Lifecycle"
     },
     {
@@ -475,7 +475,7 @@ Acceptance:
 
 ### Task 95 - L12G-FOLLOWUP-WARDING-BOND-SURFACE-LIFECYCLE - Warding Bond Surface Linked Effect Lifecycle
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `warding_bond`. Gate task: 52 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 

@@ -178,6 +178,7 @@ import trueStrikeInput from "../../content/true_strike.json";
 import warlockEldritchInvocationsInput from "../../content/warlock_eldritch_invocations.json";
 import warlockMagicalCunningInput from "../../content/warlock_magical_cunning.json";
 import viciousMockeryInput from "../../content/vicious_mockery.json";
+import wardingBondInput from "../../content/warding_bond.json";
 import weaponClubInput from "../../content/weapon_club.json";
 import weaponDaggerInput from "../../content/weapon_dagger.json";
 import weaponFlailInput from "../../content/weapon_flail.json";
@@ -481,6 +482,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     charmPersonInput,
     hellishRebukeInput,
     hideousLaughterInput,
+    wardingBondInput,
     armorChainMailInput,
     equipmentShieldInput,
     weaponClubInput,

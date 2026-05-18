@@ -118,11 +118,14 @@ structured Surface records, the following candidate-source gaps were found:
   Resistance choice, and same-choice retaliatory damage. The existing runtime
   profiles do not consume `grant_resistance`, `retaliatory_damage`, or the
   linked `same_table_choice_as` mode relation for spell admission.
-- `packages/surface/content/warding_bond.json` records the target attachment,
-  +1 Armor Class, +1 Saving Throw roll modifier, all-damage Resistance as a
-  composite, and damage sharing to the caster. Its Dhall source marks the early
-  ending conditions as partial: caster 0 Hit Points, separation beyond 60 feet,
-  and recast on either connected creature are not executable source facts.
+- `packages/surface/content/warding_bond.json` records a single caster-target
+  bond attachment, willing creature target, paired worn platinum-ring material
+  witness, 60-foot range-gated Armor Class, Saving Throw, and all-damage
+  Resistance projections, same-amount damage sharing to the caster, and the RAW
+  caster-0-HP, separation, and recast early-end triggers as executable Surface
+  facts. Runtime admission remains blocked on a paired-creature bond occurrence
+  that consumes the target, material, and range witnesses without duplicating
+  inventory or active-effect state.
 
 Do not add Unit claims for these candidates until the structured source facts
 needed by the chosen runtime profile are executable or explicitly documented as

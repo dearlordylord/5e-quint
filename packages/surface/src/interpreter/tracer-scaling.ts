@@ -18,7 +18,11 @@ export function traceTargetCountScaling(
 ): void {
   // target + mark are the two attachments that can carry a target count.
   const selection =
-    a.kind === "target" || a.kind === "mark" ? a.selection : null;
+    a.kind === "target" || a.kind === "mark"
+      ? a.selection
+      : a.kind === "caster_target_bond"
+        ? a.target.value.selection
+        : null;
   if (selection === null || selection.mode !== "choose_up_to") return;
   // Fixed count (Aid: "up to three creatures" — no upcast on count) has
   // no scaling node; the spell's upcast acts elsewhere.

@@ -4,13 +4,25 @@
   "kind": "spell",
   "mechanics": {
     "attachment": {
-      "holeId": "warding_bond_target",
-      "kind": "hole",
-      "label": "willing creature",
-      "value": {
-        "kind": "target",
-        "selection": {
-          "mode": "one"
+      "bondId": "warding_bond_mystic_connection",
+      "kind": "caster_target_bond",
+      "range": {
+        "feet": 60,
+        "kind": "within_feet"
+      },
+      "target": {
+        "holeId": "warding_bond_target",
+        "kind": "hole",
+        "label": "willing creature",
+        "value": {
+          "kind": "target",
+          "selection": {
+            "disposition": "willing",
+            "mode": "one",
+            "targetKinds": [
+              "creature"
+            ]
+          }
         }
       }
     },
@@ -18,11 +30,32 @@
       "kind": "action"
     },
     "components": {
-      "m": "a pair of platinum rings worth 50+ GP each, which you and the target must wear for the duration",
+      "m": {
+        "itemKind": "ring",
+        "kind": "paired_worn_items",
+        "material": "platinum",
+        "minimumValueGpEach": 50,
+        "requiredFor": "spell_duration",
+        "wornBy": [
+          "caster",
+          "target"
+        ]
+      },
       "s": true,
       "v": true
     },
     "duration": {
+      "earlyEnd": [
+        {
+          "kind": "caster_drops_to_0_hp"
+        },
+        {
+          "kind": "attached_bond_exceeds_range"
+        },
+        {
+          "kind": "spell_cast_again_on_connected_creature"
+        }
+      ],
       "kind": "timed",
       "value": {
         "amount": 1,
@@ -42,6 +75,9 @@
           },
           "kind": "modify_ac"
         },
+        "predicate": {
+          "kind": "attached_bond_within_range"
+        },
         "trigger": {
           "kind": "passive"
         }
@@ -59,67 +95,8 @@
             "saving_throw"
           ]
         },
-        "trigger": {
-          "kind": "passive"
-        }
-      },
-      {
-        "effect": {
-          "effects": [
-            {
-              "damageType": "acid",
-              "kind": "grant_resistance"
-            },
-            {
-              "damageType": "bludgeoning",
-              "kind": "grant_resistance"
-            },
-            {
-              "damageType": "cold",
-              "kind": "grant_resistance"
-            },
-            {
-              "damageType": "fire",
-              "kind": "grant_resistance"
-            },
-            {
-              "damageType": "force",
-              "kind": "grant_resistance"
-            },
-            {
-              "damageType": "lightning",
-              "kind": "grant_resistance"
-            },
-            {
-              "damageType": "necrotic",
-              "kind": "grant_resistance"
-            },
-            {
-              "damageType": "piercing",
-              "kind": "grant_resistance"
-            },
-            {
-              "damageType": "poison",
-              "kind": "grant_resistance"
-            },
-            {
-              "damageType": "psychic",
-              "kind": "grant_resistance"
-            },
-            {
-              "damageType": "radiant",
-              "kind": "grant_resistance"
-            },
-            {
-              "damageType": "slashing",
-              "kind": "grant_resistance"
-            },
-            {
-              "damageType": "thunder",
-              "kind": "grant_resistance"
-            }
-          ],
-          "kind": "composite"
+        "predicate": {
+          "kind": "attached_bond_within_range"
         },
         "trigger": {
           "kind": "passive"
@@ -127,11 +104,25 @@
       },
       {
         "effect": {
-          "kind": "share_damage_to_caster",
-          "rangeFeet": 60
+          "damageType": {
+            "kind": "all_damage_types"
+          },
+          "kind": "grant_resistance"
+        },
+        "predicate": {
+          "kind": "attached_bond_within_range"
         },
         "trigger": {
           "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "amount": "same_as_attached_damage_taken",
+          "kind": "share_damage_to_caster"
+        },
+        "trigger": {
+          "kind": "on_attached_damaged"
         }
       }
     ],
