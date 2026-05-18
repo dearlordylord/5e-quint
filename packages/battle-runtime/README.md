@@ -1211,6 +1211,11 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
 - `battle-runtime-reaction-window.qnt` - Reaction trigger matching, window
   opening, reactor availability, Shield and Counterspell reaction helpers, and
   Hellish Rebuke admission facts.
+- `battle-runtime-combatant-side.qnt` - actor side, damage-source side, ally,
+  and enemy relation helpers used by Concentration and Rage procedures.
+- `battle-runtime-concentration.qnt` - Concentration Saving Throw DCs,
+  Concentration-breaking active-effect cleanup, Sleep cleanup, and damage-ended
+  Charm cleanup helpers.
 - `battle-runtime.mbt.qnt` - package-local randomized model for the selected
   integrated promoted MBT path.
 

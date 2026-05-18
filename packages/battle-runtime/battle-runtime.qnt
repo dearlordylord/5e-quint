@@ -41,7 +41,6 @@ module battleRuntime {
   import hitPointRecovery.* from "../shared-algebras/proofs/rule-core/hit-point-recovery"
   import zeroHitPointLifecycle.* from "../shared-algebras/proofs/rule-core/zero-hit-point-lifecycle"
   import battleRuntimeMovementBridge.* from "./battle-runtime-movement-bridge"
-  import battleRuntimeConcentrationBridge.* from "./battle-runtime-concentration-bridge"
   import battleRuntimeInterruptBridge.* from "./battle-runtime-interrupt-bridge"
   import battleRuntimeStatBlockBridge.* from "./battle-runtime-stat-block-bridge"
   import battleRuntimeFeatureBridge.* from "./battle-runtime-feature-bridge"
@@ -62,6 +61,8 @@ module battleRuntime {
   import battleRuntimeSaveGatedSpell.* from "./battle-runtime-save-gated-spell"
   import battleRuntimeMarkedRiders.* from "./battle-runtime-marked-riders"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
+  import battleRuntimeCombatantSide.* from "./battle-runtime-combatant-side"
+  import battleRuntimeConcentration.* from "./battle-runtime-concentration"
 
   // SRD traceability for this canonical battle runtime spec:
   // - Playing-the-Game.md lines 479-495: combat proceeds in rounds and turns
@@ -1893,133 +1894,8 @@ module battleRuntime {
       { ...secondResolved, actionAvailable: false }
     }
 
-  pure def concentrationSavingThrowDc(damage: int): int = {
-    battleRuntimeConcentrationSavingThrowDc(damage)
-  }
-
-  pure def eldritchMindConcentrationSavingThrowMode(hasEldritchMind: bool): SavingThrowRollMode =
-    if (hasEldritchMind)
-      AdvantageSavingThrow
-    else
-      NormalSavingThrow
-
-  pure def dangerSenseSavingThrowMode(ability: Ability, incapacitated: bool): SavingThrowRollMode =
-    if (ability == DexAbility and not(incapacitated))
-      AdvantageSavingThrow
-    else
-      NormalSavingThrow
-
-  pure def spellEffectConcentrationActiveEffects(): Set[ActiveEffect] =
-    Set(ShieldOfFaithArmorClassBonus, HeroismFrightenedImmunity, BaneD20RollPenalty, BlessD20RollBonus, GuidanceAbilityCheckBonus, EntangleRestrained, FaerieFireOutline, ProtectionFromEvilAndGoodCreatureTypeProtection, ExpeditiousRetreatDashBonusAction)
-
-  pure def activeEffectsWithoutSpellEffectConcentration(effects: Set[ActiveEffect]): Set[ActiveEffect] =
-    effects
-      .exclude(spellEffectConcentrationActiveEffects)
-      .filter(effect => match effect {
-        | HeroismTurnStartTemporaryHitPoints(_) => false
-        | EnsnaringStrikeRestrained(_) => false
-        | SearingSmiteBurning(_) => false
-        | FogCloudObscurement(_) => false
-        | ResistanceDamageReduction(_) => false
-        | SleepPendingRepeatSave(_) => false
-        | SleepUnconscious(_) => false
-        | HideousLaughterEffect(_) => false
-        | DancingLightsEffect(_) => false
-        | _ => true
-      })
-
-  pure def activeEffectsWithoutSleepEffects(effects: Set[ActiveEffect]): Set[ActiveEffect] =
-    effects.filter(effect => match effect {
-      | SleepPendingRepeatSave(_) => false
-      | SleepUnconscious(_) => false
-      | _ => true
-    })
-
-  pure def combatantWithSleepEffectsRemoved(target: Combatant, activeEffects: Set[ActiveEffect]): Combatant = {
-    val hadSleepPending = target.activeEffects.exists(effect => match effect {
-      | SleepPendingRepeatSave(_) => true
-      | _ => false
-    })
-    val hadSleepUnconscious = target.activeEffects.exists(effect => match effect {
-      | SleepUnconscious(_) => true
-      | _ => false
-    })
-    val sleepPendingHadIncapacitated = target.activeEffects.exists(effect => match effect {
-      | SleepPendingRepeatSave(data) => data.hadIncapacitated
-      | _ => false
-    })
-    val sleepUnconsciousHadIncapacitated = target.activeEffects.exists(effect => match effect {
-      | SleepUnconscious(data) => data.hadIncapacitated
-      | _ => false
-    })
-    val sleepUnconsciousHadUnconscious = target.activeEffects.exists(effect => match effect {
-      | SleepUnconscious(data) => data.hadUnconscious
-      | _ => false
-    })
-    {
-      ...target,
-      activeEffects: activeEffects,
-      incapacitated:
-        if (hadSleepUnconscious) sleepUnconsciousHadIncapacitated
-        else if (hadSleepPending) sleepPendingHadIncapacitated
-        else target.incapacitated,
-      unconscious: if (hadSleepUnconscious) sleepUnconsciousHadUnconscious else target.unconscious,
-      prone: if (hadSleepUnconscious and not(sleepUnconsciousHadUnconscious)) true else target.prone,
-    }
-  }
-
-  pure def combatantWithoutSpellEffectConcentrationEffects(target: Combatant): Combatant =
-    combatantWithSleepEffectsRemoved(target, activeEffectsWithoutSpellEffectConcentration(target.activeEffects))
-
-  pure def breakConcentration(target: Combatant): Combatant = {
-    val withoutSpellEffectConcentration = combatantWithoutSpellEffectConcentrationEffects(target)
-    {
-      ...withoutSpellEffectConcentration,
-      concentrating: false,
-      activeEffects: activeEffectsWithoutMarkedDamageRider(withoutSpellEffectConcentration.activeEffects),
-    }
-  }
-
-  pure def sleepEffectFromOtherSource(effect: ActiveEffect, targetActor: Actor): bool =
-    match effect {
-      | SleepPendingRepeatSave(data) => data.source != targetActor
-      | SleepUnconscious(data) => data.source != targetActor
-      | _ => false
-    }
-
-  pure def breakConcentrationFromSleepAppliedIncapacitated(target: Combatant, targetActor: Actor): Combatant =
-    if (not(target.concentrating))
-      target
-    else {
-      val sleepEffectsFromOtherSources = target.activeEffects.filter(effect => sleepEffectFromOtherSource(effect, targetActor))
-      val effectsSubjectToBreak = target.activeEffects.filter(effect => not(sleepEffectFromOtherSource(effect, targetActor)))
-      val broken = breakConcentration({ ...target, activeEffects: effectsSubjectToBreak })
-      { ...broken, activeEffects: broken.activeEffects.union(sleepEffectsFromOtherSources) }
-    }
-
-  pure def stateWithFighterDamage(state: BattleState, damagedFighter: Combatant): BattleState =
-    if (state.fighter.concentrating and not(damagedFighter.concentrating))
-      {
-        ...state,
-        fighter: damagedFighter,
-        goblin: { ...state.goblin, activeEffects: activeEffectsWithoutSpellEffectConcentration(state.goblin.activeEffects) },
-      }
-    else
-      { ...state, fighter: damagedFighter }
-
   pure def applyDamage(target: Combatant, damage: int, deathFailuresAtZeroHp: int, concentrationSaveSucceeded: bool): Combatant =
     applyDamageWithDisposition(target, damage, deathFailuresAtZeroHp, concentrationSaveSucceeded, OrdinaryDamage)
-
-  pure def activeEffectsAfterTargetDamagedByCasterOrAlly(effects: Set[ActiveEffect], damageSource: DamageSourceActor): Set[ActiveEffect] =
-    effects.filter(effect => match effect {
-      | AnimalFriendshipCharmed(data) => not(damageSourceIsCasterOrAlly(data.source, damageSource))
-      | CharmPersonCharmed(data) => not(damageSourceIsCasterOrAlly(data.source, damageSource))
-      | _ => true
-    })
-
-  pure def combatantWithoutSleepEffects(target: Combatant): Combatant =
-    combatantWithSleepEffectsRemoved(target, activeEffectsWithoutSleepEffects(target.activeEffects))
-
 
   pure def applyDamageFromSource(
     target: Combatant,
@@ -4003,31 +3879,6 @@ module battleRuntime {
       }
     else
       { state: state, usesRemaining: usesRemaining }
-
-  pure def actorSide(actor: Actor): CombatantSide =
-    match actor {
-      | Fighter => PartySide
-      | Goblin => OppositionSide
-    }
-
-  pure def actorDamageSource(actor: Actor): DamageSourceActor =
-    match actor {
-      | Fighter => FighterDamageSource
-      | Goblin => GoblinDamageSource
-    }
-
-  pure def damageSourceSide(damageSource: DamageSourceActor): CombatantSide =
-    match damageSource {
-      | FighterDamageSource => PartySide
-      | FighterAllyDamageSource => PartySide
-      | GoblinDamageSource => OppositionSide
-    }
-
-  pure def damageSourceIsCasterOrAlly(caster: Actor, damageSource: DamageSourceActor): bool =
-    actorSide(caster) == damageSourceSide(damageSource)
-
-  pure def actorsAreEnemies(attacker: Actor, target: Actor): bool =
-    actorSide(attacker) != actorSide(target)
 
   pure def extendRageWithAttackRoll(state: BattleState, target: Actor): BattleState =
     if (currentActor(state) == Fighter and actorsAreEnemies(Fighter, target) and fighterHasRoundExtendedRage(state))
