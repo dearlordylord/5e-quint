@@ -18228,6 +18228,35 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-MOONBEAM-SURFACE-LIFECYCLE",
+            "mechanic": "Replace the partial Moonbeam mechanics with a lossless SRD Surface shape for the point-origin Cylinder, Concentration duration, Dim Light area, Magic-action Cylinder movement up to 60 feet, the initial, area-moved, creature-enter, and end-turn Constitution Saving Throw triggers with the once-per-turn limiter, slot-scaled Radiant damage, and failed-save shape-shift reversion plus shape-shift prevention until the creature leaves the Cylinder.",
+            "owner": "surface Spell Definition authoring",
+            "requiredOutput": "Moonbeam Dhall and JSON content, with schema and tracer support where required, represent the RAW lifecycle as executable source facts without encoding Dim Light, movement triggers, once-per-turn limiting, or shape-shift suppression as comments or lossy prose.",
+            "title": "Moonbeam Surface Area Lifecycle"
+          },
+          {
+            "id": "L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME",
+            "mechanic": "Promote Moonbeam as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, consumes caller-supplied Cylinder area identity and affected-creature facts for appearance saves, records a Concentration-owned movable area effect, exposes later Magic-action beam movement up to 60 feet from caller-supplied destination facts, resolves table-triggered area-moves-into-creature-space, creature-enters-area, and end-turn saves at most once per creature per turn, applies slot-scaled Radiant damage with half damage on success, projects Dim Light and Lightly Obscured facts for the active Cylinder, and performs concentration and duration cleanup.",
+            "owner": "battle-runtime spell invocation/effect lifecycle plus table/spatial owner",
+            "requiredOutput": "Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Moonbeam zone damage, movement, once-per-turn save limiting, Dim Light projection, resource spending, and cleanup while leaving automatic geometry and area membership derivation table-owned.",
+            "title": "Moonbeam Movable Zone Runtime"
+          },
+          {
+            "id": "L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER",
+            "mechanic": "Execute the failed-save shape-shift rider by consuming a battle-visible shape-shifted and true-form state, reverting a shape-shifted target to its true form when it fails the Moonbeam Constitution Saving Throw, preventing that creature from shape-shifting again while it remains in the Moonbeam Cylinder, and clearing the prevention when it leaves the Cylinder or the spell ends without duplicating the shape-shifting source state.",
+            "owner": "stat-block-control shape-shifting runtime plus battle-runtime spell effect lifecycle",
+            "requiredOutput": "Supported runtime profile or profile-subset evidence for Moonbeam's shape-shift reversion and suppression rider integrated with the promoted shape-shifting owner, including focused tests and Quint/runtime parity for failed save, successful save, exit cleanup, and spell cleanup.",
+            "title": "Moonbeam Shape-Shifting Rider Runtime"
+          }
+        ],
+        "futureProfileOwner": "surface Spell Definition authoring plus battle-runtime movable area-effect lifecycle plus stat-block-control shape-shifting runtime",
+        "reason": "Moonbeam is authored as an SRD Surface Spell Definition, but its executable shape is not a safe runtime source for the level 1-2 gate: the local SRD passage requires a movable 5-foot-radius, 40-foot-high Cylinder with Dim Light, initial and recurring Constitution Saving Throws when the spell appears, when the area moves into a creature's space, when a creature enters, and when a creature ends its turn there, a once-per-turn save limit, slot-scaled Radiant damage, Concentration cleanup, and a failed-save shape-shift reversion and suppression rider. Task 38 claims no battle-runtime support and leaves the row blocked by the concrete follow-up tasks listed on this claim.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",

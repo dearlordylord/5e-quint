@@ -179,12 +179,12 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 475,
-      "percent": "85.4%",
+      "numerator": 474,
+      "percent": "85.3%",
       "rowsByStatus": {
         "accepted": 300,
-        "accepted-no-battle-effect": 175,
-        "battle-runtime-required": 77,
+        "accepted-no-battle-effect": 174,
+        "battle-runtime-required": 78,
         "owner-evidence-required": 4
       }
     },
@@ -202,16 +202,16 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 305,
       "non-runtime": 24,
-      "catalog-only/dead-for-now": 146,
+      "catalog-only/dead-for-now": 145,
       "missing-authored-record": 75,
       "catalog-installed-owner-evidence-required": 5,
-      "catalog-authored-executable-follow-up": 1
+      "catalog-authored-executable-follow-up": 2
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 146,
-      "catalog-only/dead-for-now": 146,
+      "catalog-only/dead-for-now": 145,
       "missing-authored-record": 74,
-      "catalog-authored-executable-follow-up": 1
+      "catalog-authored-executable-follow-up": 2
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -11306,10 +11306,11 @@
         "state": "not-installed",
         "unitId": "moonbeam"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-MOONBEAM-SURFACE-LIFECYCLE, L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME, L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER: L12G-FOLLOWUP-MOONBEAM-SURFACE-LIFECYCLE owns Replace the partial Moonbeam mechanics with a lossless SRD Surface shape for the point-origin Cylinder, Concentration duration, Dim Light area, Magic-action Cylinder movement up to 60 feet, the initial, area-moved, creature-enter, and end-turn Constitution Saving Throw triggers with the once-per-turn limiter, slot-scaled Radiant damage, and failed-save shape-shift reversion plus shape-shift prevention until the creature leaves the Cylinder. Required output: Moonbeam Dhall and JSON content, with schema and tracer support where required, represent the RAW lifecycle as executable source facts without encoding Dim Light, movement triggers, once-per-turn limiting, or shape-shift suppression as comments or lossy prose.; L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME owns Promote Moonbeam as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, consumes caller-supplied Cylinder area identity and affected-creature facts for appearance saves, records a Concentration-owned movable area effect, exposes later Magic-action beam movement up to 60 feet from caller-supplied destination facts, resolves table-triggered area-moves-into-creature-space, creature-enters-area, and end-turn saves at most once per creature per turn, applies slot-scaled Radiant damage with half damage on success, projects Dim Light and Lightly Obscured facts for the active Cylinder, and performs concentration and duration cleanup. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Moonbeam zone damage, movement, once-per-turn save limiting, Dim Light projection, resource spending, and cleanup while leaving automatic geometry and area membership derivation table-owned.; L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER owns Execute the failed-save shape-shift rider by consuming a battle-visible shape-shifted and true-form state, reverting a shape-shifted target to its true form when it fails the Moonbeam Constitution Saving Throw, preventing that creature from shape-shifting again while it remains in the Moonbeam Cylinder, and clearing the prevention when it leaves the Cylinder or the spell ends without duplicating the shape-shifting source state. Required output: Supported runtime profile or profile-subset evidence for Moonbeam's shape-shift reversion and suppression rider integrated with the promoted shape-shifting owner, including focused tests and Quint/runtime parity for failed save, successful save, exit cleanup, and spell cleanup.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_pass_without_trace",

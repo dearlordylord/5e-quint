@@ -1647,11 +1647,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "L12G-FOLLOWUP-MOONBEAM-SURFACE-LIFECYCLE: Replace the partial Moonbeam mechanics with a lossless SRD Surface shape for the point-origin Cylinder, Concentration duration, Dim Light area, Magic-action Cylinder movement up to 60 feet, the initial, area-moved, creature-enter, and end-turn Constitution Saving Throw triggers with the once-per-turn limiter, slot-scaled Radiant damage, and failed-save shape-shift reversion plus shape-shift prevention until the creature leaves the Cylinder. Owner: surface Spell Definition authoring. Required output: Moonbeam Dhall and JSON content, with schema and tracer support where required, represent the RAW lifecycle as executable source facts without encoding Dim Light, movement triggers, once-per-turn limiting, or shape-shift suppression as comments or lossy prose.; L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME: Promote Moonbeam as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, consumes caller-supplied Cylinder area identity and affected-creature facts for appearance saves, records a Concentration-owned movable area effect, exposes later Magic-action beam movement up to 60 feet from caller-supplied destination facts, resolves table-triggered area-moves-into-creature-space, creature-enters-area, and end-turn saves at most once per creature per turn, applies slot-scaled Radiant damage with half damage on success, projects Dim Light and Lightly Obscured facts for the active Cylinder, and performs concentration and duration cleanup. Owner: battle-runtime spell invocation/effect lifecycle plus table/spatial owner. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Moonbeam zone damage, movement, once-per-turn save limiting, Dim Light projection, resource spending, and cleanup while leaving automatic geometry and area membership derivation table-owned.; L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER: Execute the failed-save shape-shift rider by consuming a battle-visible shape-shifted and true-form state, reverting a shape-shifted target to its true form when it fails the Moonbeam Constitution Saving Throw, preventing that creature from shape-shifting again while it remains in the Moonbeam Cylinder, and clearing the prevention when it leaves the Cylinder or the spell ends without duplicating the shape-shifting source state. Owner: stat-block-control shape-shifting runtime plus battle-runtime spell effect lifecycle. Required output: Supported runtime profile or profile-subset evidence for Moonbeam's shape-shift reversion and suppression rider integrated with the promoted shape-shifting owner, including focused tests and Quint/runtime parity for failed save, successful save, exit cleanup, and spell cleanup.",
       "sourceRecordPath": "packages/surface/content/moonbeam.json",
       "sourceRows": [
         {
@@ -1667,8 +1670,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
       "unitId": "moonbeam"
     },
     {
@@ -2697,7 +2700,7 @@
       ]
     },
     {
-      "count": 29,
+      "count": 28,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
@@ -2717,7 +2720,6 @@
         "lesser_restoration",
         "magic_weapon",
         "mind_spike",
-        "moonbeam",
         "pass_without_trace",
         "prayer_of_healing",
         "protection_from_poison",
@@ -2751,7 +2753,7 @@
       ]
     },
     {
-      "count": 6,
+      "count": 7,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
@@ -2759,6 +2761,7 @@
         "druid_wild_shape",
         "monk_monks_focus",
         "monk_uncanny_metabolism",
+        "moonbeam",
         "sorcerer_font_of_magic",
         "sorcerer_metamagic"
       ]
@@ -2797,12 +2800,12 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 475,
-      "percent": "85.4%",
+      "numerator": 474,
+      "percent": "85.3%",
       "rowsByStatus": {
         "accepted": 300,
-        "accepted-no-battle-effect": 175,
-        "battle-runtime-required": 77,
+        "accepted-no-battle-effect": 174,
+        "battle-runtime-required": 78,
         "owner-evidence-required": 4
       }
     },
@@ -2813,13 +2816,13 @@
     },
     "strictTargetClosure": {
       "denominator": 146,
-      "numerator": 116,
-      "percent": "79.5%"
+      "numerator": 117,
+      "percent": "80.1%"
     }
   },
   "openFrontier": [
     {
-      "count": 29,
+      "count": 28,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
@@ -2839,7 +2842,6 @@
         "lesser_restoration",
         "magic_weapon",
         "mind_spike",
-        "moonbeam",
         "pass_without_trace",
         "prayer_of_healing",
         "protection_from_poison",
@@ -6331,18 +6333,18 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
-      "missing": 29,
+      "missing": 28,
       "profile-subset-supported": 9,
       "supported-profile": 91,
-      "unsupported-profile": 17
+      "unsupported-profile": 18
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 6,
+      "blocked-follow-up-split": 7,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 11,
       "open-profile-accounting": 1,
-      "open-runtime-behavior": 29,
+      "open-runtime-behavior": 28,
       "supported-profile": 91
     },
     "nonSupportedFrontier": 55,
