@@ -155,6 +155,7 @@ export {
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.skill-expertise-choice
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.class-feature-advancement-replacement
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.warlock-pact-magic-advancement
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.class-feature-resource-projection
 
 export {
   LEVEL_ONE_ELDRITCH_INVOCATION_OPTIONS,

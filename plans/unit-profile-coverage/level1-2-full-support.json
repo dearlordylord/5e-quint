@@ -260,6 +260,35 @@
       "unitId": "barbarian_weapon_mastery"
     },
     {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "later-level-only"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "The remaining Bard Expertise selected-skill count increase occurs only at Bard level 9, outside the level 1-2 support lane.",
+      "sourceRecordPath": "packages/surface/content/bard_expertise.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Bard Expertise",
+          "id": "srd521:classes/bard:level-2:class-feature-grant:bard_expertise",
+          "levelBand": "level-2",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 98,
+            "lineStart": 93,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        }
+      ],
+      "status": "closed-later-level-only",
+      "strictTargetClosed": true,
+      "unitId": "bard_expertise"
+    },
+    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -861,6 +890,35 @@
       "status": "closed-character-fact-and-runtime-detached-split",
       "strictTargetClosed": true,
       "unitId": "druid_druidic"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "L12G-AUTHOR-DRUID-WILD-COMPANION: Admit Druid level-2 progression only after Wild Companion can spend a spell slot or Wild Shape use to cast Find Familiar without Material components and close companion execution separately. Owner: character-creation-runtime plus companion boundary. Required output: Character Creation can retain both Druid level-2 feature refs without treating companion execution as Wild Shape support.; L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS: Project Wild Shape use count, partial Short Rest/full Long Rest reset, rounded-down duration, learned Beast forms, and one known-form replacement on Long Rest from the retained feature without duplicating class progression state. Owner: character-creation-runtime plus character-sheet-runtime. Required output: Owner evidence for CharacterBuild or Character Sheet Wild Shape resource, rounded-down duration, known-form roster, and Long Rest known-form replacement facts.; L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME: Execute Beast form choice, game-statistic replacement and retained facts, Temporary Hit Points, no spellcasting, equipment choice/effects, and reversion triggers. Owner: stat-block-control shape-shifting runtime. Required output: Supported runtime profile and owner evidence for Wild Shape shape-shifting execution.",
+      "sourceRecordPath": "packages/surface/content/druid_wild_shape.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Druid Wild Shape",
+          "id": "srd521:classes/druid:level-2:class-feature-grant:druid_wild_shape",
+          "levelBand": "level-2",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 123,
+            "lineStart": 95,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        }
+      ],
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
+      "unitId": "druid_wild_shape"
     },
     {
       "catalogStatus": "installed",
@@ -1577,6 +1635,64 @@
       "unitId": "misty_step"
     },
     {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS: Admit Monk level-2 progression after sibling Monk level-2 grants can be retained, then project Focus Point count, Short or Long Rest reset, initial Focus feature option names, and the authored Focus save DC fact without duplicating class progression or option execution state. Owner: character-creation-runtime plus character-sheet-runtime. Required output: Owner evidence for CharacterBuild or Character Sheet Focus Point resource, Focus save DC, and retained Monk level-2 feature refs.; L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS: Execute Flurry of Blows, Patient Defense, and Step of the Wind option modes, including Bonus Action economy, Focus Point spending where RAW requires it, Dodge and jump-distance effects, and shared Focus Point spending for later Focus spenders instead of synthetic per-feature pools. Owner: battle-runtime plus character-battle-runtime resource handoff. Required output: Supported runtime profile and owner evidence for Monk's Focus option execution and a single shared Focus Point resource consumed by Focus-spending Monk features.",
+      "sourceRecordPath": "packages/surface/content/monk_monks_focus.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Monk Monk's Focus",
+          "id": "srd521:classes/monk:level-2:class-feature-grant:monk_monks_focus",
+          "levelBand": "level-2",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 91,
+            "lineStart": 76,
+            "path": ".references/srd-5.2.1/Classes/Monk.md"
+          }
+        }
+      ],
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
+      "unitId": "monk_monks_focus"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS: Retain the Uncanny Metabolism feature ref with Monk level-2 progression after the sibling Monk's Focus character-facts task owns the shared Focus Point resource, then project only Uncanny Metabolism's once-per-Long-Rest use state and source links to Focus Points and the existing Martial Arts die without duplicating either table. Owner: character-creation-runtime plus character-sheet-runtime. Required output: Owner evidence for CharacterBuild or Character Sheet retained Uncanny Metabolism feature ref, once-per-Long-Rest use state, and links to the shared Focus Point resource and existing Martial Arts die source.; L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME: Offer the optional Uncanny Metabolism choice when the Monk rolls Initiative, recover all expended shared Focus Points, roll the Martial Arts die from the existing Monk Martial Arts source, restore Hit Points equal to Monk level plus that die roll, and spend the once-per-Long-Rest feature use. Owner: battle-runtime plus character-battle-runtime resource handoff. Required output: Supported runtime profile and owner evidence for Initiative-window Focus Point recovery, self-healing, and Long Rest recharge using the shared Focus Point resource and existing Martial Arts die source.",
+      "sourceRecordPath": "packages/surface/content/monk_uncanny_metabolism.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Monk Uncanny Metabolism",
+          "id": "srd521:classes/monk:level-2:class-feature-grant:monk_uncanny_metabolism",
+          "levelBand": "level-2",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 101,
+            "lineStart": 96,
+            "path": ".references/srd-5.2.1/Classes/Monk.md"
+          }
+        }
+      ],
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
+      "unitId": "monk_uncanny_metabolism"
+    },
+    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -1817,6 +1933,35 @@
       "status": "closed-later-level-only",
       "strictTargetClosed": true,
       "unitId": "ranger_favored_enemy"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "later-level-only"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "Druidic Warrior cantrip replacement only occurs on later Ranger level gains after the level-2 acquisition choice is complete.",
+      "sourceRecordPath": "packages/surface/content/ranger_fighting_style.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Ranger Fighting Style",
+          "id": "srd521:classes/ranger:level-2:class-feature-grant:ranger_fighting_style",
+          "levelBand": "level-2",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 101,
+            "lineStart": 96,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
+        }
+      ],
+      "status": "closed-later-level-only",
+      "strictTargetClosed": true,
+      "unitId": "ranger_fighting_style"
     },
     {
       "catalogDisposition": {
@@ -2129,6 +2274,35 @@
       "status": "closed-runtime-detached-table-adjudication",
       "strictTargetClosed": true,
       "unitId": "silent_image"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS: Retain the Font of Magic feature ref with Sorcerer level-2 progression, then project the shared Sorcery Point pool, Sorcerer-level cap, and Long Rest reset from the authored record without duplicating class progression or Metamagic option state. Owner: character-creation-runtime plus character-sheet-runtime. Required output: Owner evidence for CharacterBuild or Character Sheet retained Font of Magic feature ref and shared Sorcery Point resource facts consumed by Metamagic and later Sorcerer features.; L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS: Execute the no-action conversion that expends one spell slot and grants Sorcery Points equal to the expended slot's level, bounded by the shared Sorcery Point cap. Owner: character-battle-runtime plus spellcasting resource owner. Required output: Supported runtime profile and owner evidence for spell slot to Sorcery Point conversion using the shared Sorcery Point resource and existing Spell Slot state.; L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS: Execute the Bonus Action conversion that spends Sorcery Points by the Creating Spell Slots table, enforces the minimum Sorcerer level for the target slot, creates one spell slot no higher than level 5, and expires created slots on Long Rest. Owner: character-battle-runtime plus spellcasting resource owner. Required output: Supported runtime profile and owner evidence for Sorcery Point to temporary Spell Slot creation, Bonus Action spending, minimum-level gating, and Long Rest expiry.",
+      "sourceRecordPath": "packages/surface/content/sorcerer_font_of_magic.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Sorcerer Font of Magic",
+          "id": "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_font_of_magic",
+          "levelBand": "level-2",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 110,
+            "lineStart": 87,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        }
+      ],
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
+      "unitId": "sorcerer_font_of_magic"
     },
     {
       "catalogDisposition": {
@@ -2448,7 +2622,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 86,
+      "count": 89,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2465,6 +2639,7 @@
         "burning_hands",
         "chill_touch",
         "chromatic_orb",
+        "cleric_channel_divinity",
         "cleric_divine_order",
         "color_spray",
         "command",
@@ -2505,12 +2680,14 @@
         "magic_missile",
         "monk_martial_arts",
         "monk_unarmored_defense",
+        "monk_unarmored_movement",
         "paladin_lay_on_hands",
         "paladin_paladins_smite",
         "paladin_weapon_mastery",
         "poison_spray",
         "produce_flame",
         "protection_from_evil_and_good",
+        "ranger_deft_explorer",
         "ranger_weapon_mastery",
         "ray_of_frost",
         "ray_of_sickness",
@@ -2597,14 +2774,27 @@
       ]
     },
     {
-      "count": 4,
+      "count": 6,
       "description": "The in-scope behavior is complete and every remaining residual is outside this strict accounting scope.",
       "status": "closed-later-level-only",
       "unitIds": [
         "barbarian_weapon_mastery",
+        "bard_expertise",
         "fighter_weapon_mastery",
         "paladin_fighting_style",
-        "ranger_favored_enemy"
+        "ranger_favored_enemy",
+        "ranger_fighting_style"
+      ]
+    },
+    {
+      "count": 4,
+      "description": "The Unit claim records concrete smaller follow-up tasks for the remaining executable owner work.",
+      "status": "blocked-follow-up-split",
+      "unitIds": [
+        "druid_wild_shape",
+        "monk_monks_focus",
+        "monk_uncanny_metabolism",
+        "sorcerer_font_of_magic"
       ]
     },
     {
@@ -2628,24 +2818,24 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 470,
-      "percent": "84.5%",
+      "numerator": 475,
+      "percent": "85.4%",
       "rowsByStatus": {
-        "accepted": 291,
+        "accepted": 296,
         "accepted-no-battle-effect": 179,
-        "battle-runtime-required": 74,
-        "owner-evidence-required": 12
+        "battle-runtime-required": 76,
+        "owner-evidence-required": 5
       }
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 135,
-      "numerator": 86,
-      "percent": "63.7%"
+      "denominator": 144,
+      "numerator": 89,
+      "percent": "61.8%"
     },
     "strictTargetClosure": {
-      "denominator": 135,
-      "numerator": 103,
-      "percent": "76.3%"
+      "denominator": 144,
+      "numerator": 112,
+      "percent": "77.8%"
     }
   },
   "openFrontier": [
@@ -2824,24 +3014,6 @@
         "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
-            "category": "class feature",
-            "concept": "Bard Expertise",
-            "id": "srd521:classes/bard:level-2:class-feature-grant:bard_expertise",
-            "levelBand": "level-2",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 98,
-              "lineStart": 93,
-              "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
-          }
-        ],
-        "unitId": "bard_expertise"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
             "category": "spell Unit pressure",
             "concept": "Bard spell list Calm Emotions",
             "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_calm_emotions",
@@ -2867,24 +3039,6 @@
           }
         ],
         "unitId": "calm_emotions"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
-            "concept": "Cleric Channel Divinity",
-            "id": "srd521:classes/cleric:level-2:class-feature-grant:cleric_channel_divinity",
-            "levelBand": "level-2",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 101,
-              "lineStart": 88,
-              "path": ".references/srd-5.2.1/Classes/Cleric.md"
-            }
-          }
-        ],
-        "unitId": "cleric_channel_divinity"
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/create_or_destroy_water.md",
@@ -3145,24 +3299,6 @@
           }
         ],
         "unitId": "druid_wild_companion"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
-            "concept": "Druid Wild Shape",
-            "id": "srd521:classes/druid:level-2:class-feature-grant:druid_wild_shape",
-            "levelBand": "level-2",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 123,
-              "lineStart": 95,
-              "path": ".references/srd-5.2.1/Classes/Druid.md"
-            }
-          }
-        ],
-        "unitId": "druid_wild_shape"
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/druidcraft.md",
@@ -4073,60 +4209,6 @@
         "unitId": "mirror_image"
       },
       {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
-            "concept": "Monk Monk's Focus",
-            "id": "srd521:classes/monk:level-2:class-feature-grant:monk_monks_focus",
-            "levelBand": "level-2",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 91,
-              "lineStart": 76,
-              "path": ".references/srd-5.2.1/Classes/Monk.md"
-            }
-          }
-        ],
-        "unitId": "monk_monks_focus"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
-            "concept": "Monk Unarmored Movement",
-            "id": "srd521:classes/monk:level-2:class-feature-grant:monk_unarmored_movement",
-            "levelBand": "level-2",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 95,
-              "lineStart": 92,
-              "path": ".references/srd-5.2.1/Classes/Monk.md"
-            }
-          }
-        ],
-        "unitId": "monk_unarmored_movement"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
-            "concept": "Monk Uncanny Metabolism",
-            "id": "srd521:classes/monk:level-2:class-feature-grant:monk_uncanny_metabolism",
-            "levelBand": "level-2",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 101,
-              "lineStart": 96,
-              "path": ".references/srd-5.2.1/Classes/Monk.md"
-            }
-          }
-        ],
-        "unitId": "monk_uncanny_metabolism"
-      },
-      {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/prestidigitation.md",
         "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
@@ -4228,42 +4310,6 @@
         "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
-            "category": "class feature",
-            "concept": "Ranger Deft Explorer",
-            "id": "srd521:classes/ranger:level-2:class-feature-grant:ranger_deft_explorer",
-            "levelBand": "level-2",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 95,
-              "lineStart": 88,
-              "path": ".references/srd-5.2.1/Classes/Ranger.md"
-            }
-          }
-        ],
-        "unitId": "ranger_deft_explorer"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
-            "concept": "Ranger Fighting Style",
-            "id": "srd521:classes/ranger:level-2:class-feature-grant:ranger_fighting_style",
-            "levelBand": "level-2",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 101,
-              "lineStart": 96,
-              "path": ".references/srd-5.2.1/Classes/Ranger.md"
-            }
-          }
-        ],
-        "unitId": "ranger_fighting_style"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
             "category": "spell Unit pressure",
             "concept": "Wizard spell list Rope Trick",
             "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_rope_trick",
@@ -4319,24 +4365,6 @@
           }
         ],
         "unitId": "silence"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
-            "concept": "Sorcerer Font of Magic",
-            "id": "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_font_of_magic",
-            "levelBand": "level-2",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 110,
-              "lineStart": 87,
-              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-            }
-          }
-        ],
-        "unitId": "sorcerer_font_of_magic"
       },
       {
         "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
@@ -6363,19 +6391,20 @@
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
       "missing": 31,
-      "profile-subset-supported": 7,
-      "supported-profile": 86,
-      "unsupported-profile": 11
+      "profile-subset-supported": 9,
+      "supported-profile": 89,
+      "unsupported-profile": 15
     },
     "groupsByStatus": {
+      "blocked-follow-up-split": 4,
       "closed-character-fact-and-runtime-detached-split": 2,
-      "closed-later-level-only": 4,
+      "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 11,
       "open-profile-accounting": 1,
       "open-runtime-behavior": 31,
-      "supported-profile": 86
+      "supported-profile": 89
     },
-    "nonSupportedFrontier": 49,
-    "strictDenominator": 135
+    "nonSupportedFrontier": 55,
+    "strictDenominator": 144
   }
 }

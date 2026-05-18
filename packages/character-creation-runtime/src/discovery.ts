@@ -28,11 +28,8 @@ import type {
   ProficiencyGrantSubject,
   Skill,
   StartingEquipmentChoice,
-  ClassSpellcastingCreation,
-  ListPreparedSpellcastingCreation,
   Size,
   UnitRecord,
-  WizardSpellcastingCreation,
 } from "@dnd/surface/surface/types";
 import { proficiencyGrantSubjectOptions } from "./choice-option-codecs.ts";
 import {
@@ -126,7 +123,13 @@ import {
   weaponMasteryChoiceProfileForFeature,
   type WeaponMasteryChoiceFeature,
 } from "./weapon-mastery.ts";
-import { wizardSpellcastingCreationAtLevel } from "./wizard-spellcasting.ts";
+import {
+  classSpellcastingCreationAtLevel,
+  isListPreparedSpellcastingCreation,
+  isPactMagicSpellcastingCreation,
+  isWizardSpellcastingCreation,
+  type ReadableClassSpellcasting,
+} from "./class-spellcasting.ts";
 
 type GrantExpertiseEffect = Extract<
   EffectAtom,
@@ -261,10 +264,6 @@ export type ReadableClassCreationFacts = Extract<
   ReturnType<typeof readClassCreationFacts>,
   { readonly tag: "readable" }
 >["value"];
-type ReadableClassSpellcasting =
-  | ClassSpellcastingCreation
-  | WizardSpellcastingCreation;
-
 function discoverClassSpellcastingHoles(
   classUnitId: UnitRecord["id"],
   classLevel: number,
@@ -383,38 +382,10 @@ function classSpellcastingCreation(
   facts: ReadableClassCreationFacts,
   classLevel: number,
 ): ReadableClassSpellcasting | undefined {
-  if (!("spellcasting" in facts) || facts.spellcasting == null) {
-    return undefined;
-  }
-  if (facts.spellcasting.featureLevel > classLevel) {
-    return undefined;
-  }
-  if (isWizardSpellcastingCreation(facts.spellcasting)) {
-    return wizardSpellcastingCreationAtLevel(facts.spellcasting, classLevel);
-  }
-
-  return facts.spellcasting;
-}
-
-function isListPreparedSpellcastingCreation(
-  spellcasting: ReadableClassSpellcasting,
-): spellcasting is ListPreparedSpellcastingCreation {
-  return spellcasting.kind === "list_prepared_spellcasting_creation";
-}
-
-function isPactMagicSpellcastingCreation(
-  spellcasting: ReadableClassSpellcasting,
-): spellcasting is Extract<
-  ClassSpellcastingCreation,
-  { readonly kind: "pact_magic_spellcasting_creation" }
-> {
-  return spellcasting.kind === "pact_magic_spellcasting_creation";
-}
-
-function isWizardSpellcastingCreation(
-  spellcasting: ReadableClassSpellcasting,
-): spellcasting is WizardSpellcastingCreation {
-  return spellcasting.kind === "wizard_spellcasting_creation";
+  return classSpellcastingCreationAtLevel(
+    "spellcasting" in facts ? facts.spellcasting : undefined,
+    classLevel,
+  );
 }
 
 function discoverSubclassHoles(
@@ -1554,8 +1525,9 @@ export function eligibleExpertiseSkills(
     (skill) => !uniqueOwnedExpertise.includes(skill),
   );
   return Match.value(skills).pipe(
-    Match.when({ kind: "owned_skill_proficiencies_without_expertise" }, () =>
-      uniqueOwnedSkills,
+    Match.when(
+      { kind: "owned_skill_proficiencies_without_expertise" },
+      () => uniqueOwnedSkills,
     ),
     Match.when(
       { kind: "listed_owned_skill_proficiencies_without_expertise" },

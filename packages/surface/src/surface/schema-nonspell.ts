@@ -16,6 +16,7 @@ import {
   DamageTypeSchema,
   DiceAmountSchema,
   FeatCategorySchema,
+  HalfClassLevelRoundedDownHoursDurationValueSchema,
   HeavyArmorAcFormulaSchema,
   LIST_PREPARED_SPELLCASTING_CLASS_NAMES,
   LevelAxisSchema,
@@ -44,11 +45,13 @@ import {
   CreatureDismissalSchema,
   CreatureModeSchema,
   DcSourceSchema,
+  DurationEndTriggerSchema,
   DurationSchema,
   EffectAtomSchema,
   OngoingPredicateSchema,
   RangeSchema,
   ReactionTriggerSchema,
+  SPELL_SLOT_LEVELS,
   SpellRecordSchema,
   SpawnedCreatureStatBlockSchema,
 } from "./schema-spell.ts";
@@ -65,19 +68,30 @@ const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.greaterThanOrEqualTo(1),
 );
 
-const NON_FIGHTER_NON_WIZARD_NON_WARLOCK_CLASS_NAMES = CLASS_NAMES.filter(
+const FONT_OF_MAGIC_CREATED_SPELL_SLOT_LEVELS = [
+  1, 2, 3, 4, 5,
+] as const satisfies ReadonlyArray<(typeof SPELL_SLOT_LEVELS)[number]>;
+const FontOfMagicCreatedSpellSlotLevelSchema = Schema.Literal(
+  ...FONT_OF_MAGIC_CREATED_SPELL_SLOT_LEVELS,
+);
+
+const GENERAL_CLASS_FEATURE_RECORD_CLASS_NAMES = CLASS_NAMES.filter(
   (
     className,
-  ): className is Exclude<ClassName, "fighter" | "wizard" | "warlock"> =>
+  ): className is Exclude<
+    ClassName,
+    "fighter" | "monk" | "wizard" | "warlock"
+  > =>
     className !== "fighter" &&
+    className !== "monk" &&
     className !== "wizard" &&
     className !== "warlock",
   // Brands and literal unions are erased at runtime; the filter above removes
   // exactly the excluded class names, and Schema.Literal requires a non-empty
   // tuple rather than a narrowed readonly array.
 ) as unknown as readonly [
-  Exclude<ClassName, "fighter" | "wizard" | "warlock">,
-  ...Array<Exclude<ClassName, "fighter" | "wizard" | "warlock">>,
+  Exclude<ClassName, "fighter" | "monk" | "wizard" | "warlock">,
+  ...Array<Exclude<ClassName, "fighter" | "monk" | "wizard" | "warlock">>,
 ];
 
 const CLASS_CONTAINER_WITHOUT_SPELL_ACCESS_CLASS_NAMES = [
@@ -95,6 +109,34 @@ const AbilityModifierCapSchema = Schema.Struct({
   ability: AbilitySchema,
   minimum: exactOptional(Schema.Number),
 });
+
+const FixedCountCapSchema = Schema.Struct({
+  kind: Schema.Literal("fixed"),
+  uses: Schema.Number,
+});
+
+const ThresholdCountCapSchema = Schema.Struct({
+  kind: Schema.Literal("threshold_tiers"),
+  axis: LevelAxisSchema,
+  base: Schema.Number,
+  tiers: Schema.NonEmptyArray(numberTierSchema),
+});
+
+const LinearCountCapSchema = Schema.Struct({
+  kind: Schema.Literal("linear_per_level"),
+  axis: LevelAxisSchema,
+  base: Schema.Number,
+  perLevel: Schema.Number,
+  startingAtLevel: Schema.Number,
+});
+
+const FiniteResourceCapSchema = Schema.Union(
+  FixedCountCapSchema,
+  ThresholdCountCapSchema,
+  LinearCountCapSchema,
+  Schema.Struct({ kind: Schema.Literal("proficiency_bonus") }),
+  AbilityModifierCapSchema,
+);
 
 export const ClassFeatureActivationCostSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("free") }),
@@ -120,22 +162,7 @@ export const ClassFeatureActivationCostSchema = Schema.Union(
 );
 
 export const UseCountCapSchema = Schema.Union(
-  Schema.Struct({ kind: Schema.Literal("fixed"), uses: Schema.Number }),
-  Schema.Struct({
-    kind: Schema.Literal("threshold_tiers"),
-    axis: LevelAxisSchema,
-    base: Schema.Number,
-    tiers: Schema.NonEmptyArray(numberTierSchema),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("linear_per_level"),
-    axis: LevelAxisSchema,
-    base: Schema.Number,
-    perLevel: Schema.Number,
-    startingAtLevel: Schema.Number,
-  }),
-  Schema.Struct({ kind: Schema.Literal("proficiency_bonus") }),
-  AbilityModifierCapSchema,
+  FiniteResourceCapSchema,
   Schema.Struct({ kind: Schema.Literal("unlimited") }),
 );
 
@@ -146,26 +173,15 @@ export const UseCountResourceSchema = Schema.Struct({
 
 export const ChargePoolResourceSchema = Schema.Struct({
   kind: Schema.Literal("charge_pool"),
-  cap: Schema.Union(
-    Schema.Struct({ kind: Schema.Literal("fixed"), uses: Schema.Number }),
-    Schema.Struct({
-      kind: Schema.Literal("threshold_tiers"),
-      axis: LevelAxisSchema,
-      base: Schema.Number,
-      tiers: Schema.NonEmptyArray(numberTierSchema),
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("linear_per_level"),
-      axis: LevelAxisSchema,
-      base: Schema.Number,
-      perLevel: Schema.Number,
-      startingAtLevel: Schema.Number,
-    }),
-    Schema.Struct({ kind: Schema.Literal("proficiency_bonus") }),
-    AbilityModifierCapSchema,
-  ),
+  cap: FiniteResourceCapSchema,
   initialCount: exactOptional(DiceAmountSchema),
   lifetimeAbsorptionCap: exactOptional(Schema.Number),
+});
+
+export const PointPoolResourceSchema = Schema.Struct({
+  kind: Schema.Literal("point_pool"),
+  poolId: NonEmptyStringSchema,
+  cap: FiniteResourceCapSchema,
 });
 
 export const ActivationResourceSchema = Schema.Union(
@@ -334,6 +350,15 @@ export const PassiveOperationSchema = Schema.Struct({
   effect: EffectAtomSchema,
 });
 
+export const ClassFeatureDurationSchema = Schema.Union(
+  DurationSchema,
+  Schema.Struct({
+    kind: Schema.Literal("timed"),
+    value: HalfClassLevelRoundedDownHoursDurationValueSchema,
+    earlyEnd: exactOptional(Schema.NonEmptyArray(DurationEndTriggerSchema)),
+  }),
+);
+
 const ActivatedAbilityBaseFields = {
   condition: exactOptional(EquipmentPredicateSchema),
   range: exactOptional(RangeSchema),
@@ -345,7 +370,7 @@ const ResourceActivatedAbilityFields = {
   ...ActivatedAbilityBaseFields,
   resource: ActivationResourceSchema,
   resetCadence: ResetCadenceSchema,
-  duration: exactOptional(DurationSchema),
+  duration: exactOptional(ClassFeatureDurationSchema),
 };
 const ResourceOngoingFeatureAbilityFields = {
   ...ActivatedAbilityBaseFields,
@@ -390,7 +415,7 @@ export const TriggeredReactionAbilityMechanicsSchema = Schema.Struct({
   condition: exactOptional(EquipmentPredicateSchema),
   resource: ActivationResourceSchema,
   resetCadence: ResetCadenceSchema,
-  duration: exactOptional(DurationSchema),
+  duration: exactOptional(ClassFeatureDurationSchema),
   usageLimit: exactOptional(
     Schema.Struct({ kind: Schema.Literal("once_per_turn") }),
   ),
@@ -457,6 +482,84 @@ export const ClassFeatureAcquisitionChoiceMechanicsSchema = Schema.Struct({
       mechanics: Schema.suspend(() => PassiveMechanicsSchema),
     }),
   ),
+});
+
+export const ClassFeatureEffectSaveDcSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("class_spellcasting_spell_save_dc"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("class_feature_ability_save_dc"),
+    base: Schema.Literal(8),
+    ability: AbilitySchema,
+  }),
+);
+
+export const ClassFeatureResourceContainerMechanicsSchema = Schema.Struct({
+  family: Schema.Literal("resource_container"),
+  resource: ActivationResourceSchema,
+  resetCadence: ResetCadenceSchema,
+  optionSet: Schema.Struct({
+    choiceKey: NonEmptyStringSchema,
+    timing: Schema.Literal("resource_use"),
+    initialOptions: Schema.NonEmptyArray(
+      Schema.Struct({
+        id: NonEmptyStringSchema,
+        displayName: NonEmptyStringSchema,
+      }),
+    ),
+  }),
+  effectSaveDc: exactOptional(ClassFeatureEffectSaveDcSchema),
+});
+
+export const SpellSlotToPointPoolOperationSchema = Schema.Struct({
+  kind: Schema.Literal("spell_slot_to_point_pool"),
+  activationCost: Schema.Struct({ kind: Schema.Literal("free") }),
+  pointGain: Schema.Struct({
+    kind: Schema.Literal("equal_to_spell_slot_level"),
+  }),
+});
+
+const ResourcePoolSpellSlotCreationOptionSchema = Schema.Struct({
+  spellSlotLevel: FontOfMagicCreatedSpellSlotLevelSchema,
+  pointCost: PositiveIntegerSchema,
+  minimumClassLevel: PositiveIntegerSchema,
+});
+
+const distinctSpellSlotCreationLevels = (
+  options: readonly Schema.Schema.Type<
+    typeof ResourcePoolSpellSlotCreationOptionSchema
+  >[],
+): boolean =>
+  new Set(options.map((option) => option.spellSlotLevel)).size ===
+  options.length;
+
+const ResourcePoolSpellSlotCreationOptionsSchema = Schema.NonEmptyArray(
+  ResourcePoolSpellSlotCreationOptionSchema,
+).pipe(
+  Schema.filter(distinctSpellSlotCreationLevels, {
+    message: () =>
+      "Point-pool Spell Slot creation options must have distinct Spell Slot levels.",
+  }),
+);
+
+export const PointPoolToSpellSlotOperationSchema = Schema.Struct({
+  kind: Schema.Literal("point_pool_to_spell_slot"),
+  activationCost: Schema.Struct({ kind: Schema.Literal("bonus_action") }),
+  createdSlotExpiry: Schema.Struct({ kind: Schema.Literal("long_rest") }),
+  options: ResourcePoolSpellSlotCreationOptionsSchema,
+});
+
+export const ResourcePoolOperationSchema = Schema.Union(
+  SpellSlotToPointPoolOperationSchema,
+  PointPoolToSpellSlotOperationSchema,
+);
+
+export const ClassFeatureResourcePoolMechanicsSchema = Schema.Struct({
+  family: Schema.Literal("resource_pool"),
+  resource: PointPoolResourceSchema,
+  resetCadence: RestResetCadenceSchema,
+  operations: Schema.NonEmptyArray(ResourcePoolOperationSchema),
 });
 
 export const FeatureChoiceMechanicsSchema = Schema.Union(
@@ -535,6 +638,27 @@ export const FailedAbilityCheckResourceBoostMechanicsSchema = Schema.Struct({
   refundSpendOnStillFailed: Schema.Literal(true),
 });
 
+const MonkUncannyMetabolismHealingAmountSchema = Schema.Struct({
+  kind: Schema.Literal("monk_martial_arts_die_plus_monk_level"),
+  martialArtsUnitId: Schema.Literal("monk_martial_arts"),
+});
+
+export const MonkInitiativeFocusRecoveryMechanicsSchema = Schema.Struct({
+  family: Schema.Literal("initiative_focus_recovery"),
+  trigger: Schema.Struct({ kind: Schema.Literal("roll_initiative") }),
+  optional: Schema.Literal(true),
+  recovery: Schema.Struct({
+    kind: Schema.Literal("recover_all_expended_uses"),
+    resourceUnitId: Schema.Literal("monk_monks_focus"),
+  }),
+  healing: Schema.Struct({
+    kind: Schema.Literal("heal_hp"),
+    target: Schema.Literal("self"),
+    amount: MonkUncannyMetabolismHealingAmountSchema,
+  }),
+  resetCadence: Schema.Struct({ kind: Schema.Literal("long_rest") }),
+});
+
 export const WeaponMasteryChoiceMechanicsSchema = Schema.Struct({
   family: Schema.Literal("weapon_mastery_choice"),
   choose: PositiveIntegerSchema,
@@ -561,17 +685,22 @@ export const ClassFeatureMechanicsSchema = Schema.Union(
   CompositeClassFeatureMechanicsSchema,
   FeatureChoiceMechanicsSchema,
   ClassFeatureAcquisitionChoiceMechanicsSchema,
+  ClassFeatureResourceContainerMechanicsSchema,
+  ClassFeatureResourcePoolMechanicsSchema,
   ClassSpellcastingProjectionMechanicsSchema,
   WeaponMasteryChoiceMechanicsSchema,
   SpellbookRitualAccessMechanicsSchema,
   RestSpellSlotRecoveryMechanicsSchema,
   FailedAbilityCheckResourceBoostMechanicsSchema,
+  MonkInitiativeFocusRecoveryMechanicsSchema,
 );
 
 export const ClassGeneralFeatureMechanicsSchema = Schema.Union(
   ClassFeatureComponentMechanicsSchema,
   CompositeClassFeatureMechanicsSchema,
   ClassFeatureAcquisitionChoiceMechanicsSchema,
+  ClassFeatureResourceContainerMechanicsSchema,
+  ClassFeatureResourcePoolMechanicsSchema,
   WeaponMasteryChoiceMechanicsSchema,
 );
 
@@ -582,6 +711,11 @@ export const WizardClassFeatureMechanicsSchema = Schema.Union(
 
 export const FighterClassFeatureMechanicsSchema =
   FailedAbilityCheckResourceBoostMechanicsSchema;
+
+export const MonkClassFeatureMechanicsSchema = Schema.Union(
+  ClassGeneralFeatureMechanicsSchema,
+  MonkInitiativeFocusRecoveryMechanicsSchema,
+);
 
 export const MasteryTriggerSchema = Schema.Union(
   strictStruct({ kind: Schema.Literal("weapon_hit") }),
@@ -1085,6 +1219,13 @@ const WizardSpellcastingProgressionRowSchema = Schema.Struct({
   atLevel: PositiveIntegerSchema,
   cantripCount: PositiveIntegerSchema,
   spellbookSpellCount: PositiveIntegerSchema,
+  preparedSpellCount: PositiveIntegerSchema,
+  spellSlots: Schema.NonEmptyArray(SpellSlotCapacitySchema),
+});
+
+const ListPreparedSpellcastingProgressionRowSchema = Schema.Struct({
+  atLevel: PositiveIntegerSchema,
+  cantripCount: NonNegativeIntegerSchema,
   preparedSpellCount: PositiveIntegerSchema,
   spellSlots: Schema.NonEmptyArray(SpellSlotCapacitySchema),
 });
@@ -1621,6 +1762,85 @@ export const ListPreparedSpellcastingCreationSchema = Schema.Struct({
   ),
 );
 
+export const ListPreparedSpellcastingProgressionCreationSchema = Schema.Struct({
+  kind: Schema.Literal("list_prepared_spellcasting_progression_creation"),
+  featureLevel: Schema.Literal(1),
+  spellcastingAbility: Schema.Literal("cha", "wis"),
+  cantripAccess: exactOptional(ClassCantripAccessSchema),
+  preparedAccess: ClassPreparedAccessSchema,
+  spellSlotProjection: SpellSlotProjectionSchema,
+  spellcastingProgression: Schema.NonEmptyArray(
+    ListPreparedSpellcastingProgressionRowSchema,
+  ),
+  spellcastingFocus: Schema.Literal(
+    "arcane_focus",
+    "druidic_focus",
+    "holy_symbol",
+    "musical_instrument",
+  ),
+}).pipe(
+  Schema.filter(
+    (spellcasting) => {
+      const levelOne = listPreparedSpellcastingProgressionAtLevel(
+        spellcasting.spellcastingProgression,
+        1,
+      );
+      if (
+        levelOne === undefined ||
+        !distinctListPreparedSpellcastingProgressionLevels(
+          spellcasting.spellcastingProgression,
+        ) ||
+        !sameSpellSlotCapacities(
+          levelOne.spellSlots,
+          spellcasting.spellSlotProjection.slots,
+        )
+      ) {
+        return false;
+      }
+
+      const maxCantripCount = Math.max(
+        ...spellcasting.spellcastingProgression.map((row) => row.cantripCount),
+      );
+      const maxPreparedSpellCount = Math.max(
+        ...spellcasting.spellcastingProgression.map(
+          (row) => row.preparedSpellCount,
+        ),
+      );
+      const maxPreparedSpellLevel = Math.max(
+        ...spellcasting.spellcastingProgression.flatMap((row) =>
+          row.spellSlots
+            .filter((slot) => slot.count > 0)
+            .map((slot) => slot.spellLevel),
+        ),
+      );
+
+      return (
+        spellcasting.preparedAccess.choose === levelOne.preparedSpellCount &&
+        spellcasting.preparedAccess.spells.length >= maxPreparedSpellCount &&
+        allSpellIdsDistinct(spellcasting.preparedAccess.spells) &&
+        distinctSlotLevels(spellcasting.spellSlotProjection.slots) &&
+        spellcasting.spellcastingProgression.every((row) =>
+          distinctSlotLevels(row.spellSlots),
+        ) &&
+        (maxCantripCount === 0
+          ? spellcasting.cantripAccess === undefined
+          : spellcasting.cantripAccess !== undefined &&
+            spellcasting.cantripAccess.choose === levelOne.cantripCount &&
+            spellcasting.cantripAccess.spellIds.length >= maxCantripCount &&
+            distinctStrings(spellcasting.cantripAccess.spellIds)) &&
+        allSpellLevelsAtOrBelow(
+          spellcasting.preparedAccess.spells,
+          maxPreparedSpellLevel,
+        )
+      );
+    },
+    {
+      message: () =>
+        "List-prepared spellcasting progression choices must match level-1 facts, provide enough unique spell options for each progression row, and prepare only spells at or below available Spell Slot levels.",
+    },
+  ),
+);
+
 export const PactMagicSpellcastingCreationSchema = Schema.Struct({
   kind: Schema.Literal("pact_magic_spellcasting_creation"),
   featureLevel: Schema.Literal(1),
@@ -1818,6 +2038,14 @@ function distinctWizardSpellcastingProgressionLevels(
   return distinctStrings(progression.map((row) => row.atLevel.toString()));
 }
 
+function distinctListPreparedSpellcastingProgressionLevels(
+  progression: readonly {
+    readonly atLevel: number;
+  }[],
+): boolean {
+  return distinctStrings(progression.map((row) => row.atLevel.toString()));
+}
+
 function wizardSpellcastingProgressionMatchesLevelOneFacts(spellcasting: {
   readonly cantripAccess: { readonly choose: number };
   readonly spellbookAccess: { readonly choose: number };
@@ -1902,6 +2130,34 @@ function pactMagicProgressionAtLevel(
     .at(-1);
 }
 
+function listPreparedSpellcastingProgressionAtLevel(
+  progression: readonly {
+    readonly atLevel: number;
+    readonly cantripCount: number;
+    readonly preparedSpellCount: number;
+    readonly spellSlots: readonly {
+      readonly spellLevel: number;
+      readonly count: number;
+    }[];
+  }[],
+  classLevel: number,
+):
+  | {
+      readonly atLevel: number;
+      readonly cantripCount: number;
+      readonly preparedSpellCount: number;
+      readonly spellSlots: readonly {
+        readonly spellLevel: number;
+        readonly count: number;
+      }[];
+    }
+  | undefined {
+  return progression
+    .filter((row) => row.atLevel <= classLevel)
+    .sort((left, right) => left.atLevel - right.atLevel)
+    .at(-1);
+}
+
 function pactMagicProgressionMatchesLevelOneFacts(spellcasting: {
   readonly cantripAccess: { readonly choose: number };
   readonly preparedAccess: { readonly choose: number };
@@ -1932,6 +2188,7 @@ function pactMagicProgressionMatchesLevelOneFacts(spellcasting: {
 
 export const ClassSpellcastingCreationSchema = Schema.Union(
   ListPreparedSpellcastingCreationSchema,
+  ListPreparedSpellcastingProgressionCreationSchema,
   PactMagicSpellcastingCreationSchema,
   WizardSpellcastingCreationSchema,
 );
@@ -1969,7 +2226,10 @@ export const WizardClassRecordSchema = Schema.Struct({
 export const ListPreparedSpellcastingClassRecordSchema = Schema.Struct({
   ...ClassRecordBaseFields,
   className: ClassSpellcastingClassNameSchema,
-  spellcasting: ListPreparedSpellcastingCreationSchema,
+  spellcasting: Schema.Union(
+    ListPreparedSpellcastingCreationSchema,
+    ListPreparedSpellcastingProgressionCreationSchema,
+  ),
 }).pipe(
   Schema.filter(
     (unit) => {
@@ -1989,8 +2249,11 @@ export const ListPreparedSpellcastingClassRecordSchema = Schema.Struct({
         unit.spellcasting.preparedAccess.changeOn.replacementCount ===
           classFacts.preparedChangeOn.replacementCount &&
         unit.spellcasting.preparedAccess.choose === classFacts.preparedCount &&
-        unit.spellcasting.preparedAccess.spells.length ===
-          classFacts.preparedCount &&
+        (unit.spellcasting.kind === "list_prepared_spellcasting_creation"
+          ? unit.spellcasting.preparedAccess.spells.length ===
+            classFacts.preparedCount
+          : unit.spellcasting.preparedAccess.spells.length >=
+            classFacts.preparedCount) &&
         spellSlotProjectionMatchesLevelOneFacts(
           unit.spellcasting,
           classFacts,
@@ -2008,7 +2271,14 @@ export const ListPreparedSpellcastingClassRecordSchema = Schema.Struct({
         allPreparedSpellsFromClassSpellList(
           unit.className,
           unit.spellcasting.preparedAccess.spells,
-        )
+        ) &&
+        (unit.spellcasting.kind ===
+        "list_prepared_spellcasting_progression_creation"
+          ? listPreparedSpellcastingProgressionMatchesLevelOneFacts(
+              unit.spellcasting,
+              classFacts,
+            )
+          : true)
       );
     },
     {
@@ -2017,6 +2287,49 @@ export const ListPreparedSpellcastingClassRecordSchema = Schema.Struct({
     },
   ),
 );
+
+function listPreparedSpellcastingProgressionMatchesLevelOneFacts(
+  spellcasting: {
+    readonly cantripAccess?: { readonly choose: number };
+    readonly preparedAccess: { readonly choose: number };
+    readonly spellSlotProjection: {
+      readonly slots: readonly {
+        readonly spellLevel: number;
+        readonly count: number;
+      }[];
+    };
+    readonly spellcastingProgression: readonly {
+      readonly atLevel: number;
+      readonly cantripCount: number;
+      readonly preparedSpellCount: number;
+      readonly spellSlots: readonly {
+        readonly spellLevel: number;
+        readonly count: number;
+      }[];
+    }[];
+  },
+  facts: {
+    readonly cantripCount: number;
+    readonly preparedCount: number;
+    readonly spellSlotCount: number;
+    readonly spellSlotLevel: number;
+  },
+): boolean {
+  const levelOne = listPreparedSpellcastingProgressionAtLevel(
+    spellcasting.spellcastingProgression,
+    1,
+  );
+  return (
+    levelOne?.atLevel === 1 &&
+    levelOne.cantripCount === facts.cantripCount &&
+    levelOne.preparedSpellCount === facts.preparedCount &&
+    spellSlotProjectionMatchesLevelOneFacts(spellcasting, facts) &&
+    sameSpellSlotCapacities(
+      levelOne.spellSlots,
+      spellcasting.spellSlotProjection.slots,
+    )
+  );
+}
 
 export const PactMagicClassRecordSchema = Schema.Struct({
   ...ClassRecordBaseFields,
@@ -2112,6 +2425,12 @@ export const FighterClassFeatureRecordSchema = Schema.Struct({
   ),
 });
 
+export const MonkClassFeatureRecordSchema = Schema.Struct({
+  ...ClassFeatureRecordBaseFields,
+  className: Schema.Literal("monk"),
+  mechanics: MonkClassFeatureMechanicsSchema,
+});
+
 export const WarlockClassFeatureRecordSchema = Schema.Struct({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literal("warlock"),
@@ -2124,13 +2443,14 @@ export const WarlockClassFeatureRecordSchema = Schema.Struct({
 
 export const OtherClassFeatureRecordSchema = Schema.Struct({
   ...ClassFeatureRecordBaseFields,
-  className: Schema.Literal(...NON_FIGHTER_NON_WIZARD_NON_WARLOCK_CLASS_NAMES),
+  className: Schema.Literal(...GENERAL_CLASS_FEATURE_RECORD_CLASS_NAMES),
   mechanics: ClassGeneralFeatureMechanicsSchema,
 });
 
 export const ClassFeatureRecordSchema = Schema.Union(
   WizardClassFeatureRecordSchema,
   FighterClassFeatureRecordSchema,
+  MonkClassFeatureRecordSchema,
   WarlockClassFeatureRecordSchema,
   OtherClassFeatureRecordSchema,
 );

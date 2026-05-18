@@ -1,5 +1,6 @@
 import {
   abilityModifier,
+  armorClassDelta,
   defaultArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
 import {
@@ -40,6 +41,7 @@ import {
   combatProwessSupportProfile,
   extraAttackSupportProfile,
   fighterExtraAttackUnitId,
+  monkUnarmoredMovementUnitId,
   oppositionSide,
   orcAdrenalineRushUnitId,
   orcRelentlessEnduranceUnitId,
@@ -318,6 +320,50 @@ export function rovingBattle(
         ...(input.armorClass === undefined
           ? {}
           : { armorClass: input.armorClass }),
+      }),
+      characterCreature({
+        combatantId: spellTargetId,
+        displayName: "Target",
+        initiative: 10,
+        side: oppositionSide,
+      }),
+    ],
+  });
+  expect(Either.isRight(result)).toBe(true);
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
+export function monkUnarmoredMovementBattle(
+  input: {
+    readonly armorClass?: Extract<
+      BattleCreatureInit["creatureInit"],
+      { readonly kind: "character" }
+    >["armorClass"];
+    readonly selectedLoadout?: Extract<
+      BattleCreatureInit["creatureInit"],
+      { readonly kind: "character" }
+    >["selectedLoadout"];
+  } = {},
+): BattleState {
+  const result = startBattle({
+    battleId: battleId("unit-profile-monk-unarmored-movement-admission"),
+    combatants: [
+      characterCreature({
+        combatantId: spellCasterId,
+        displayName: "Mobile Monk",
+        initiative: 20,
+        side: partySide,
+        characterUnitRefs: [monkUnarmoredMovementBattleUnitRef()],
+        classLevels: [{ className: "monk", level: classLevel(2) }],
+        ...(input.armorClass === undefined
+          ? {}
+          : { armorClass: input.armorClass }),
+        ...(input.selectedLoadout === undefined
+          ? {}
+          : { selectedLoadout: input.selectedLoadout }),
       }),
       characterCreature({
         combatantId: spellTargetId,
@@ -706,6 +752,27 @@ export function rovingBattleUnitRef(): Extract<
   return unitRef.right;
 }
 
+export function monkUnarmoredMovementBattleUnitRef(): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["characterUnitRefs"][number] {
+  const unit = unitLibrary.requireUnit(monkUnarmoredMovementUnitId);
+  const unitRef = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
+  });
+  expect(unitRef).toEqual(
+    Either.right({
+      unitId: monkUnarmoredMovementUnitId,
+      supportProfiles: [monkUnarmoredMovementSupportProfile()],
+    }),
+  );
+  if (Either.isLeft(unitRef)) {
+    throw new Error(unitRef.left.message);
+  }
+  return unitRef.right;
+}
+
 export function adrenalineRushBattleUnitRef(): Extract<
   BattleCreatureInit["creatureInit"],
   { readonly kind: "character" }
@@ -734,6 +801,16 @@ export function fastMovementSupportProfile() {
     condition: {
       kind: "notWearingArmor",
       categories: ["heavy"],
+    },
+  } as const;
+}
+
+export function monkUnarmoredMovementSupportProfile() {
+  return {
+    kind: PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
+    deltaFeet: movementDeltaFeet(10),
+    condition: {
+      kind: "unarmoredUnshielded",
     },
   } as const;
 }
@@ -821,4 +898,43 @@ export function heavyArmorClassState(): ReturnType<
     },
     armorTraining: new Set(["heavy"]),
   };
+}
+
+export function lightArmorClassState(): ReturnType<
+  typeof defaultArmorClassState
+> {
+  return {
+    ...defaultArmorClassState(),
+    base: {
+      kind: "armor",
+      category: "light",
+      formula: { kind: "light_dex", base: 11 },
+    },
+    armorTraining: new Set(["light"]),
+  };
+}
+
+export function shieldArmorClassState(): ReturnType<
+  typeof defaultArmorClassState
+> {
+  return {
+    ...defaultArmorClassState(),
+    bonuses: [
+      {
+        kind: "shield",
+        bonus: armorClassDelta(2),
+        handUse: "shield",
+        trainingRequired: "shield",
+      },
+    ],
+    armorTraining: new Set(["shield"]),
+    leftHandUse: "shield",
+  };
+}
+
+export function shieldLoadout(): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["selectedLoadout"] {
+  return { shield: "equipment_shield" };
 }

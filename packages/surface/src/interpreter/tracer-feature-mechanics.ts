@@ -1,3 +1,4 @@
+import { Match } from "effect";
 import type {
   ClassFeatureMechanics,
   PassiveMechanics,
@@ -18,7 +19,12 @@ import { traceEffectAtom } from "./tracer-effect-atom.ts";
 
 import {
   describeWeaponMasteryEligibility,
+  describeUseCountCap,
   traceActivatedAbility,
+  traceActivationResource,
+  traceActivationCost,
+  traceCountedResourceCapScaling,
+  traceResetCadence,
 } from "./tracer-activated-abilities.ts";
 
 import { traceOnHitTriggerMechanics } from "./tracer-mastery.ts";
@@ -76,6 +82,10 @@ export function traceClassFeatureMechanics(
       }
       return [choiceId];
     }
+    case "resource_container":
+      return [traceResourceContainerMechanics(m, nodes, edges, ids)];
+    case "resource_pool":
+      return [traceResourcePoolMechanics(m, nodes, edges, ids)];
     case "class_spellcasting_projection": {
       const spellcastingId = ids("spellcasting");
       nodes.push({
@@ -125,6 +135,8 @@ export function traceClassFeatureMechanics(
       });
       return [tacticalId];
     }
+    case "initiative_focus_recovery":
+      return [traceInitiativeFocusRecoveryMechanics(m, nodes, edges, ids)];
     case "composite":
       return m.parts.map((part) => {
         switch (part.family) {
@@ -161,6 +173,55 @@ export function traceClassFeatureMechanics(
   }
 }
 
+export function traceInitiativeFocusRecoveryMechanics(
+  m: Extract<
+    ClassFeatureMechanics,
+    { readonly family: "initiative_focus_recovery" }
+  >,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const triggerId = ids("initiative");
+  nodes.push({
+    id: triggerId,
+    category: "window",
+    atomKind: "initiative_focus_recovery_window",
+    label: `initiative_focus_recovery\n${m.trigger.kind}\noptional ${m.optional}`,
+  });
+
+  const recoveryId = ids("focus");
+  nodes.push({
+    id: recoveryId,
+    category: "resource",
+    atomKind: m.recovery.kind,
+    label: `${m.recovery.kind}\n${m.recovery.resourceUnitId}`,
+  });
+  edges.push({ from: triggerId, to: recoveryId, relation: "recovers" });
+
+  const healingId = ids("heal");
+  nodes.push({
+    id: healingId,
+    category: "effect",
+    atomKind: m.healing.kind,
+    label:
+      `${m.healing.kind}\n${m.healing.target}\n` +
+      `${m.healing.amount.kind}\n${m.healing.amount.martialArtsUnitId}`,
+  });
+  edges.push({ from: recoveryId, to: healingId, relation: "also_grants" });
+
+  const resetId = ids("reset");
+  nodes.push({
+    id: resetId,
+    category: "resource",
+    atomKind: "reset_cadence",
+    label: `reset_cadence\n${m.resetCadence.kind}`,
+  });
+  edges.push({ from: triggerId, to: resetId, relation: "recovers_on" });
+
+  return triggerId;
+}
+
 export function traceFeatureChoiceMechanics(
   m: Extract<ClassFeatureMechanics, { readonly family: "feature_choice" }>,
   nodes: TraceNode[],
@@ -176,6 +237,182 @@ export function traceFeatureChoiceMechanics(
       `${m.optionSource.className} ${m.optionSource.optionKind}\n${describeFeatureChoiceChange(m.changeOn)}`,
   });
   return choiceId;
+}
+
+export function traceResourceContainerMechanics(
+  m: Extract<ClassFeatureMechanics, { readonly family: "resource_container" }>,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const containerId = ids("resource-container");
+  const options = m.optionSet.initialOptions
+    .map((option) => option.displayName)
+    .join(" | ");
+  const saveDc =
+    m.effectSaveDc === undefined
+      ? ""
+      : `\nsave DC ${describeClassFeatureEffectSaveDc(m.effectSaveDc)}`;
+  nodes.push({
+    id: containerId,
+    category: "procedure",
+    atomKind: "class_feature_resource_container",
+    label:
+      `class_feature_resource_container\n${m.optionSet.choiceKey}\n` +
+      `timing ${m.optionSet.timing}\n${options}${saveDc}`,
+  });
+
+  const resourceId = traceActivationResource(m.resource, nodes, edges, ids);
+  edges.push({ from: containerId, to: resourceId, relation: "contains" });
+  traceResetCadence(m.resetCadence, resourceId, nodes, edges, ids);
+  return containerId;
+}
+
+export function traceResourcePoolMechanics(
+  m: Extract<ClassFeatureMechanics, { readonly family: "resource_pool" }>,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const containerId = ids("resource-pool");
+  nodes.push({
+    id: containerId,
+    category: "procedure",
+    atomKind: "class_feature_resource_pool",
+    label: `class_feature_resource_pool\n${m.resource.poolId}`,
+  });
+
+  const resourceId = tracePointPoolResource(m.resource, nodes, edges, ids);
+  edges.push({ from: containerId, to: resourceId, relation: "contains" });
+  traceResetCadence(m.resetCadence, resourceId, nodes, edges, ids);
+
+  for (const operation of m.operations) {
+    const operationId = traceResourcePoolOperation(
+      operation,
+      nodes,
+      edges,
+      ids,
+    );
+    edges.push({ from: containerId, to: operationId, relation: "offers" });
+    edges.push({
+      from: operationId,
+      to: resourceId,
+      relation: resourcePoolOperationResourceRelation(operation),
+    });
+  }
+
+  return containerId;
+}
+
+type ResourcePoolOperation = Extract<
+  ClassFeatureMechanics,
+  { readonly family: "resource_pool" }
+>["operations"][number];
+
+function resourcePoolOperationResourceRelation(
+  operation: ResourcePoolOperation,
+): "grants" | "spends" {
+  return Match.value(operation).pipe(
+    Match.when({ kind: "spell_slot_to_point_pool" }, () => "grants" as const),
+    Match.when({ kind: "point_pool_to_spell_slot" }, () => "spends" as const),
+    Match.exhaustive,
+  );
+}
+
+function tracePointPoolResource(
+  resource: Extract<
+    ClassFeatureMechanics,
+    { readonly family: "resource_pool" }
+  >["resource"],
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const resourceId = ids("point-pool");
+  nodes.push({
+    id: resourceId,
+    category: "resource",
+    atomKind: "point_pool",
+    label: `point_pool\n${resource.poolId}\n${describeUseCountCap(resource.cap)}`,
+  });
+  traceCountedResourceCapScaling(resource.cap, resourceId, nodes, edges, ids);
+  return resourceId;
+}
+
+function traceResourcePoolOperation(
+  operation: ResourcePoolOperation,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  return Match.value(operation).pipe(
+    Match.when({ kind: "spell_slot_to_point_pool" }, (slotToPool) => {
+      const operationId = ids("slot-to-pool");
+      nodes.push({
+        id: operationId,
+        category: "procedure",
+        atomKind: "spell_slot_to_point_pool",
+        label: `spell_slot_to_point_pool\npoints ${slotToPool.pointGain.kind}`,
+      });
+      traceActivationCost(
+        slotToPool.activationCost,
+        operationId,
+        nodes,
+        edges,
+        ids,
+      );
+      return operationId;
+    }),
+    Match.when({ kind: "point_pool_to_spell_slot" }, (poolToSlot) => {
+      const operationId = ids("pool-to-slot");
+      const options = poolToSlot.options
+        .map(
+          (option) =>
+            `slot L${option.spellSlotLevel}: ${option.pointCost} points at class L${option.minimumClassLevel}`,
+        )
+        .join(" | ");
+      nodes.push({
+        id: operationId,
+        category: "procedure",
+        atomKind: "point_pool_to_spell_slot",
+        label:
+          `point_pool_to_spell_slot\n${options}\n` +
+          `created slot expires ${poolToSlot.createdSlotExpiry.kind}`,
+      });
+      traceActivationCost(
+        poolToSlot.activationCost,
+        operationId,
+        nodes,
+        edges,
+        ids,
+      );
+      return operationId;
+    }),
+    Match.exhaustive,
+  );
+}
+
+type ClassFeatureEffectSaveDc = NonNullable<
+  Extract<
+    ClassFeatureMechanics,
+    { readonly family: "resource_container" }
+  >["effectSaveDc"]
+>;
+
+function describeClassFeatureEffectSaveDc(
+  saveDc: ClassFeatureEffectSaveDc,
+): string {
+  return Match.value(saveDc).pipe(
+    Match.when(
+      { kind: "class_spellcasting_spell_save_dc" },
+      () => "class spellcasting spell save DC",
+    ),
+    Match.when(
+      { kind: "class_feature_ability_save_dc" },
+      (dc) => `${dc.base} + ${dc.ability.toUpperCase()} mod + PB`,
+    ),
+    Match.exhaustive,
+  );
 }
 
 export function describeFeatureChoiceChange(

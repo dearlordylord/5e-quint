@@ -81,6 +81,8 @@ export const sorcererInnateSorceryUnitId = "sorcerer_innate_sorcery";
 
 export const monkMartialArtsUnitId = "monk_martial_arts";
 
+export const monkUnarmoredMovementUnitId = "monk_unarmored_movement";
+
 export const baneUnitId = "bane";
 
 export const blessUnitId = "bless";

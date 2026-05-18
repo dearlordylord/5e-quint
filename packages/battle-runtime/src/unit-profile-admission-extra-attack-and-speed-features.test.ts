@@ -1,12 +1,14 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT37 fighter_extra_attack paladin_extra_attack ranger_extra_attack
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT40 barbarian_fast_movement
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT44 ranger_roving
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-AUTHOR-MONK-UNARMORED-MOVEMENT monk_unarmored_movement
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants
 import { describe, expect, test } from "vitest";
 import {
   barbarianFastMovementUnitId,
   extraAttackSupportProfile,
   fighterExtraAttackUnitId,
+  monkUnarmoredMovementUnitId,
   paladinExtraAttackUnitId,
   rangerExtraAttackUnitId,
   rangerRovingUnitId,
@@ -25,11 +27,16 @@ import {
   fastMovementBattle,
   fastMovementSupportProfile,
   heavyArmorClassState,
+  lightArmorClassState,
+  monkUnarmoredMovementBattle,
+  monkUnarmoredMovementSupportProfile,
   rovingBattle,
   rovingMovementHole,
   rovingSpeedBonusProfile,
   rovingSpeedKindGrants,
   rovingSupportProfile,
+  shieldArmorClassState,
+  shieldLoadout,
 } from "./unit-profile-admission-feature-fixture-support.ts";
 import {
   battlePassiveSpeedKindGrantsSupportForUnit,
@@ -434,6 +441,163 @@ describe("QMBT40 deterministic Fast Movement admission", () => {
       expect(
         parseSupportedUnitFeatureProfile(adjacentUnit, [
           { className: "barbarian", level: classLevel(5) },
+        ]),
+      ).toBeNull();
+    }
+  });
+});
+
+describe("L12G-AUTHOR-MONK-UNARMORED-MOVEMENT deterministic admission", () => {
+  test("monk_unarmored_movement is admitted as a passive Speed bonus while unarmored and unshielded", () => {
+    const unit = unitLibrary.requireUnit(monkUnarmoredMovementUnitId);
+    const profile = parseSupportedUnitFeatureProfile(unit, [
+      { className: "monk", level: classLevel(2) },
+    ]);
+
+    expect(
+      battleUnitRefWithSupportProfiles({
+        unitRef: { unitId: unit.id },
+        unit,
+      }),
+    ).toEqual(
+      Either.right({
+        unitId: monkUnarmoredMovementUnitId,
+        supportProfiles: [monkUnarmoredMovementSupportProfile()],
+      }),
+    );
+    expect(profile).toEqual(
+      expect.objectContaining({
+        kind: "passiveSpeedBonus",
+        unit,
+        speed: {
+          deltaFeet: movementDeltaFeet(10),
+          condition: { kind: "unarmoredUnshielded" },
+        },
+      }),
+    );
+  });
+
+  test("Unarmored Movement increases movement budget and Dash bonus while unarmored and unshielded", () => {
+    const state = monkUnarmoredMovementBattle();
+    expect(snapshotBattle(state).combatants).toContainEqual(
+      expect.objectContaining({
+        combatantId: spellCasterId,
+        movement: expect.objectContaining({
+          speedFeet: 40,
+          remainingFeet: 40,
+        }),
+      }),
+    );
+
+    const dashed = resolveBattleSubject({
+      state,
+      subject: {
+        tag: "action",
+        actorId: spellCasterId,
+        action: "dash",
+        speedKind: "walk",
+      },
+      fills: [],
+    });
+    expect(dashed).toMatchObject({ tag: "resolved" });
+    if (dashed.tag !== "resolved") {
+      throw new Error("Expected Unarmored Movement Dash to resolve.");
+    }
+    expect(dashed.snapshot.turn.dashMovementBonusFeet).toBe(40);
+    expect(dashed.snapshot.combatants).toContainEqual(
+      expect.objectContaining({
+        combatantId: spellCasterId,
+        movement: expect.objectContaining({
+          speedFeet: 40,
+          remainingFeet: 80,
+        }),
+      }),
+    );
+  });
+
+  test("Unarmored Movement does not increase Speed while wearing armor", () => {
+    const state = monkUnarmoredMovementBattle({
+      armorClass: lightArmorClassState(),
+    });
+    expect(snapshotBattle(state).combatants).toContainEqual(
+      expect.objectContaining({
+        combatantId: spellCasterId,
+        movement: expect.objectContaining({
+          speedFeet: 30,
+          remainingFeet: 30,
+        }),
+      }),
+    );
+  });
+
+  test("Unarmored Movement does not increase Speed while wielding a Shield", () => {
+    const state = monkUnarmoredMovementBattle({
+      armorClass: shieldArmorClassState(),
+      selectedLoadout: shieldLoadout(),
+    });
+    expect(snapshotBattle(state).combatants).toContainEqual(
+      expect.objectContaining({
+        combatantId: spellCasterId,
+        movement: expect.objectContaining({
+          speedFeet: 30,
+          remainingFeet: 30,
+        }),
+      }),
+    );
+  });
+
+  test("Unarmored Movement support gate rejects adjacent passive Speed bonus shapes", () => {
+    const unit = unitLibrary.requireUnit(monkUnarmoredMovementUnitId);
+    if (unit.kind !== "class_feature" || unit.mechanics.family !== "passive") {
+      throw new Error("Expected Unarmored Movement passive class feature.");
+    }
+    const [effect] = unit.mechanics.grants;
+    if (effect?.kind !== "modify_speed") {
+      throw new Error("Expected Unarmored Movement Speed modifier.");
+    }
+    const adjacentSpeedUnits = [
+      {
+        ...unit,
+        id: "test_unarmored_movement_missing_shield_predicate",
+        mechanics: {
+          ...unit.mechanics,
+          condition: {
+            kind: "not_wearing_armor",
+            categories: ["light", "medium", "heavy"],
+          },
+        },
+      },
+      {
+        ...unit,
+        id: "test_unarmored_movement_heavy_only_with_shield_predicate",
+        mechanics: {
+          ...unit.mechanics,
+          condition: {
+            kind: "all_of",
+            predicates: [
+              { kind: "not_wearing_armor", categories: ["heavy"] },
+              { kind: "not_wielding_shield" },
+            ],
+          },
+        },
+      },
+    ] as const satisfies readonly UnitRecord[];
+
+    for (const adjacentUnit of adjacentSpeedUnits) {
+      expect(
+        battleUnitRefWithSupportProfiles({
+          unitRef: { unitId: adjacentUnit.id },
+          unit: adjacentUnit,
+        }),
+      ).toEqual(
+        Either.left({
+          tag: "battleUnitSupportProfileIssue",
+          message: `Unsupported battle passive Speed bonus Unit hook: ${adjacentUnit.id}.`,
+        }),
+      );
+      expect(
+        parseSupportedUnitFeatureProfile(adjacentUnit, [
+          { className: "monk", level: classLevel(2) },
         ]),
       ).toBeNull();
     }

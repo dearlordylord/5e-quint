@@ -3,16 +3,16 @@
 // refactor map, hoisting these here lets S avoid cycling back into G.
 
 import {
-hasCondition,
-isIncapacitated,
+  hasCondition,
+  isIncapacitated,
 } from "@dnd/shared-algebras/conditions-algebra";
 import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
-import type { HandUse } from "@dnd/shared/types";
+import type { ArmorCategory, HandUse } from "@dnd/shared/types";
 import { Match } from "effect";
 import {
-type BattleCreatureState,
-type BattleGrappleLink,
-type BattleState,
+  type BattleCreatureState,
+  type BattleGrappleLink,
+  type BattleState,
 } from "../battle-reducer.ts";
 import type { CombatantId } from "../identity.ts";
 
@@ -51,11 +51,24 @@ export function currentActorId(state: BattleState): CombatantId {
 
 export function combatantWearingArmorCategory(
   combatant: BattleCreatureState,
-  category: "heavy",
+  category: ArmorCategory,
 ): boolean {
   return (
     combatant.armorClass.base.kind === "armor" &&
     combatant.armorClass.base.category === category
+  );
+}
+
+export function combatantWearingArmor(combatant: BattleCreatureState): boolean {
+  return combatant.armorClass.base.kind === "armor";
+}
+
+export function combatantWieldingShield(
+  combatant: BattleCreatureState,
+): boolean {
+  return (
+    combatant.armorClass.leftHandUse === "shield" ||
+    combatant.armorClass.rightHandUse === "shield"
   );
 }
 
@@ -139,11 +152,9 @@ export function normalizeBattleGrapples(state: BattleState): BattleState {
     : { ...state, grapples };
 }
 
-
-
-
-
-export function zeroHpLifecycleIsTerminal(combatant: BattleCreatureState): boolean {
+export function zeroHpLifecycleIsTerminal(
+  combatant: BattleCreatureState,
+): boolean {
   return Match.value(combatant.zeroHpLifecycle).pipe(
     Match.when({ policy: "diesAtZeroHp" }, () => combatant.hp === 0),
     Match.when(

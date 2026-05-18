@@ -1,0 +1,34 @@
+{
+  "acquiredAtLevel": 2,
+  "className": "monk",
+  "description": "Your Speed increases by 10 feet while you aren't wearing armor or wielding a Shield.",
+  "id": "monk_unarmored_movement",
+  "kind": "class_feature",
+  "mechanics": {
+    "condition": {
+      "kind": "all_of",
+      "predicates": [
+        {
+          "categories": ["light", "medium", "heavy"],
+          "kind": "not_wearing_armor"
+        },
+        {
+          "kind": "not_wielding_shield"
+        }
+      ]
+    },
+    "family": "passive",
+    "grants": [
+      {
+        "delta": 10,
+        "kind": "modify_speed",
+        "unit": "feet"
+      }
+    ]
+  },
+  "name": "Unarmored Movement",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Monk.md:30-33,92-94"
+  }
+}

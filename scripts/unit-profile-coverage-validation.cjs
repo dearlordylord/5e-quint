@@ -41,6 +41,39 @@ function battleReadinessClosureIssues(unitId, closure, context) {
   return issues;
 }
 
+function followUpTaskIssues(unitId, tasks) {
+  const issues = [];
+  if (tasks === undefined) return issues;
+  if (!Array.isArray(tasks) || tasks.length === 0) {
+    return [`Unit ${unitId} followUpTasks must be a non-empty array.`];
+  }
+  for (const [index, task] of tasks.entries()) {
+    const context = `Unit ${unitId} followUpTasks[${index}]`;
+    if (!isRecord(task)) {
+      issues.push(`${context} must be an object.`);
+      continue;
+    }
+    for (const field of [
+      "id",
+      "title",
+      "owner",
+      "mechanic",
+      "requiredOutput",
+    ]) {
+      if (typeof task[field] !== "string" || task[field].length === 0) {
+        issues.push(`${context}.${field} must be a non-empty string.`);
+      }
+    }
+    if (
+      typeof task.id === "string" &&
+      !/^L12G-[A-Z0-9-]+$/.test(task.id)
+    ) {
+      issues.push(`${context}.id must be an L12G task id.`);
+    }
+  }
+  return issues;
+}
+
 function collectFields(value, prefix = "") {
   if (Array.isArray(value)) {
     return value.flatMap((entry, index) =>
@@ -253,6 +286,7 @@ function validateUnitClaims(claims, inventory, authoredSurfaceUnits, profiles) {
         ),
       );
     }
+    issues.push(...followUpTaskIssues(claim.unitId, claim.claim.followUpTasks));
     if (claim.claim.tag === "profile-subset-supported") {
       if (
         !Array.isArray(claim.claim.supportedMechanics) ||

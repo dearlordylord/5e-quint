@@ -167,6 +167,9 @@ export type DurationUpcastTier = Schema.Schema.Type<
 export type TimeSpanDurationValue = Schema.Schema.Type<
   typeof SurfaceSchema.TimeSpanDurationValueSchema
 >;
+export type HalfClassLevelRoundedDownHoursDurationValue = Schema.Schema.Type<
+  typeof SurfaceSchema.HalfClassLevelRoundedDownHoursDurationValueSchema
+>;
 export type DurationValue = Schema.Schema.Type<
   typeof SurfaceSchema.DurationValueSchema
 >;
@@ -219,6 +222,9 @@ export type DiceExprDelta = Schema.Schema.Type<
 >;
 export type DiceAmount = Schema.Schema.Type<
   typeof SurfaceSchema.DiceAmountSchema
+>;
+export type ClassLevelChoiceCount = Schema.Schema.Type<
+  typeof SurfaceSchema.ClassLevelChoiceCountSchema
 >;
 export type LinkedSpeed = Schema.Schema.Type<
   typeof SurfaceSchema.LinkedSpeedSchema
@@ -488,17 +494,17 @@ export type CreatureControl = Schema.Schema.Type<
 export type CreatureDismissal = Schema.Schema.Type<
   typeof SurfaceSchema.CreatureDismissalSchema
 >;
-export type PolymorphFormSource = Schema.Schema.Type<
-  typeof SurfaceSchema.PolymorphFormSourceSchema
+export type ShapeShiftFormSource = Schema.Schema.Type<
+  typeof SurfaceSchema.ShapeShiftFormSourceSchema
 >;
-export type PolymorphRetainedField = Schema.Schema.Type<
-  typeof SurfaceSchema.PolymorphRetainedFieldSchema
+export type ShapeShiftRetainedField = Schema.Schema.Type<
+  typeof SurfaceSchema.ShapeShiftRetainedFieldSchema
 >;
-export type PolymorphActionRestriction = Schema.Schema.Type<
-  typeof SurfaceSchema.PolymorphActionRestrictionSchema
+export type ShapeShiftActionRestriction = Schema.Schema.Type<
+  typeof SurfaceSchema.ShapeShiftActionRestrictionSchema
 >;
-export type PolymorphRevertTrigger = Schema.Schema.Type<
-  typeof SurfaceSchema.PolymorphRevertTriggerSchema
+export type ShapeShiftRevertTrigger = Schema.Schema.Type<
+  typeof SurfaceSchema.ShapeShiftRevertTriggerSchema
 >;
 export type TemplatedCapacity = Schema.Schema.Type<
   typeof SurfaceSchema.TemplatedCapacitySchema
@@ -551,6 +557,9 @@ export type UseCountResource = Schema.Schema.Type<
 export type ChargePoolResource = Schema.Schema.Type<
   typeof SurfaceSchema.ChargePoolResourceSchema
 >;
+export type PointPoolResource = Schema.Schema.Type<
+  typeof SurfaceSchema.PointPoolResourceSchema
+>;
 export type ActivationResource = Schema.Schema.Type<
   typeof SurfaceSchema.ActivationResourceSchema
 >;
@@ -565,6 +574,9 @@ export type TimeResetCadence = Schema.Schema.Type<
 >;
 export type ResetCadence = Schema.Schema.Type<
   typeof SurfaceSchema.ResetCadenceSchema
+>;
+export type ClassFeatureDuration = Schema.Schema.Type<
+  typeof SurfaceSchema.ClassFeatureDurationSchema
 >;
 export type ActivatedAbilityMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.ActivatedAbilityMechanicsSchema
@@ -586,6 +598,18 @@ export type CompositeClassFeatureMechanics = Schema.Schema.Type<
 >;
 export type ClassFeatureAcquisitionChoiceMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.ClassFeatureAcquisitionChoiceMechanicsSchema
+>;
+export type ClassFeatureResourceContainerMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.ClassFeatureResourceContainerMechanicsSchema
+>;
+export type ResourcePoolOperation = Schema.Schema.Type<
+  typeof SurfaceSchema.ResourcePoolOperationSchema
+>;
+export type ClassFeatureResourcePoolMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.ClassFeatureResourcePoolMechanicsSchema
+>;
+export type MonkInitiativeFocusRecoveryMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.MonkInitiativeFocusRecoveryMechanicsSchema
 >;
 export type FeatureChoiceMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.FeatureChoiceMechanicsSchema
@@ -715,6 +739,9 @@ export type WizardSpellcastingCreation = Schema.Schema.Type<
 >;
 export type ListPreparedSpellcastingCreation = Schema.Schema.Type<
   typeof SurfaceSchema.ListPreparedSpellcastingCreationSchema
+>;
+export type ListPreparedSpellcastingProgressionCreation = Schema.Schema.Type<
+  typeof SurfaceSchema.ListPreparedSpellcastingProgressionCreationSchema
 >;
 export type PactMagicSpellcastingCreation = Schema.Schema.Type<
   typeof SurfaceSchema.PactMagicSpellcastingCreationSchema

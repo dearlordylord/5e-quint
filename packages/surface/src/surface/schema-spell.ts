@@ -37,8 +37,12 @@ import {
 // Handwritten spell / mechanics surface schema slice built on the shared base
 // vocabulary in schema-base.ts.
 
+export const SPELL_SLOT_LEVELS = [
+  1, 2, 3, 4, 5, 6, 7, 8, 9,
+] as const satisfies ReadonlyArray<number>;
+
 export const SpellLevelSchema = Schema.Literal(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
-export const SpellSlotLevelSchema = Schema.Literal(1, 2, 3, 4, 5, 6, 7, 8, 9);
+export const SpellSlotLevelSchema = Schema.Literal(...SPELL_SLOT_LEVELS);
 const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.int(),
   Schema.greaterThanOrEqualTo(1),
@@ -332,12 +336,14 @@ type CreatedObjectDurability = Schema.Schema.Type<
 type IllusionSensoryChannel = Schema.Schema.Type<
   typeof IllusionSensoryChannelSchema
 >;
-type PolymorphFormSource = Schema.Schema.Type<typeof PolymorphFormSourceSchema>;
-type PolymorphRetainedField = Schema.Schema.Type<
-  typeof PolymorphRetainedFieldSchema
+type ShapeShiftFormSource = Schema.Schema.Type<
+  typeof ShapeShiftFormSourceSchema
 >;
-type PolymorphActionRestriction = Schema.Schema.Type<
-  typeof PolymorphActionRestrictionSchema
+type ShapeShiftRetainedField = Schema.Schema.Type<
+  typeof ShapeShiftRetainedFieldSchema
+>;
+type ShapeShiftActionRestriction = Schema.Schema.Type<
+  typeof ShapeShiftActionRestrictionSchema
 >;
 type CommandTargetNextTurnOptions = Schema.Schema.Type<
   typeof CommandTargetNextTurnOptionsSchema
@@ -358,8 +364,8 @@ type AreaPushUnsecuredObjects = Schema.Schema.Type<
 >;
 type AreaScopedEffectAtom = AreaPushUnsecuredObjects;
 type AreaDirectEffectAtom = EffectAtom | AreaScopedEffectAtom;
-type PolymorphRevertTrigger = Schema.Schema.Type<
-  typeof PolymorphRevertTriggerSchema
+type ShapeShiftRevertTrigger = Schema.Schema.Type<
+  typeof ShapeShiftRevertTriggerSchema
 >;
 type AreaAttachment = Schema.Schema.Type<typeof AreaAttachmentSchema>;
 type Attachment = Schema.Schema.Type<typeof AttachmentSchema>;
@@ -750,11 +756,11 @@ type EffectAtom =
   | { readonly kind: "maximize_healing_received" }
   | {
       readonly kind: "transform_target";
-      readonly newForm: PolymorphFormSource;
-      readonly retainedFields: ReadonlyNonEmptyArray<PolymorphRetainedField>;
+      readonly newForm: ShapeShiftFormSource;
+      readonly retainedFields: ReadonlyNonEmptyArray<ShapeShiftRetainedField>;
       readonly tempHpFromForm?: true;
-      readonly actionRestriction?: PolymorphActionRestriction;
-      readonly revertTriggers: ReadonlyNonEmptyArray<PolymorphRevertTrigger>;
+      readonly actionRestriction?: ShapeShiftActionRestriction;
+      readonly revertTriggers: ReadonlyNonEmptyArray<ShapeShiftRevertTrigger>;
     }
   | {
       readonly kind: "end_ongoing_spells";
@@ -1761,7 +1767,7 @@ export const CreatedObjectDurabilitySchema = Schema.Struct({
   damageVulnerabilities: optionalExact(nonEmpty(DamageTypeSchema)),
 });
 
-export const PolymorphFormSourceSchema = Schema.Struct({
+export const ShapeShiftCatalogRefFormSourceSchema = Schema.Struct({
   kind: Schema.Literal("catalog_ref"),
   creatureType: CreatureTypeSchema,
   crBound: Schema.Union(
@@ -1774,28 +1780,68 @@ export const PolymorphFormSourceSchema = Schema.Struct({
   ),
 });
 
-export const PolymorphRetainedFieldSchema = Schema.Literal(
+export const ShapeShiftKnownFormsRosterSourceSchema = Schema.Struct({
+  kind: Schema.Literal("known_forms_roster"),
+  creatureType: CreatureTypeSchema,
+  knownForms: ClassLevelChoiceCountSchema,
+  knownFormChange: Schema.Struct({
+    kind: Schema.Literal("long_rest"),
+    replacementCount: Schema.Literal(1),
+  }),
+  maxChallengeRating: ThresholdTiersNumberSchema,
+  flySpeed: Schema.Union(
+    Schema.Struct({ kind: Schema.Literal("forbidden") }),
+    Schema.Struct({
+      kind: Schema.Literal("allowed_at_class_level"),
+      atLevel: PositiveIntegerSchema,
+    }),
+  ),
+});
+
+export const ShapeShiftFormSourceSchema = Schema.Union(
+  ShapeShiftCatalogRefFormSourceSchema,
+  ShapeShiftKnownFormsRosterSourceSchema,
+);
+
+export const ShapeShiftRetainedFieldSchema = Schema.Literal(
   "alignment",
   "personality",
+  "memories",
+  "speech",
   "creature_type",
   "hit_points",
   "hit_point_dice",
   "intelligence",
   "wisdom",
   "charisma",
+  "class_features",
   "skill_proficiencies",
+  "saving_throw_proficiencies",
   "languages",
+  "feats",
 );
 
-export const PolymorphActionRestrictionSchema = Schema.Literal(
+export const ShapeShiftActionRestrictionSchema = Schema.Literal(
   "no_speech_no_spells",
+  "no_spellcasting",
 );
 
-export const PolymorphRevertTriggerSchema = Schema.Union(
+export const ShapeShiftRevertTriggerSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("zero_hp") }),
   Schema.Struct({ kind: Schema.Literal("spell_ends") }),
   Schema.Struct({ kind: Schema.Literal("temp_hp_depleted") }),
   Schema.Struct({ kind: Schema.Literal("dismissed_by_caster") }),
+  Schema.Struct({ kind: Schema.Literal("duration_expires") }),
+  Schema.Struct({ kind: Schema.Literal("source_used_again") }),
+  Schema.Struct({
+    kind: Schema.Literal("condition_active"),
+    condition: ConditionSchema,
+  }),
+  Schema.Struct({ kind: Schema.Literal("death") }),
+  Schema.Struct({
+    kind: Schema.Literal("dismissed_by_target"),
+    action: Schema.Literal("bonus_action"),
+  }),
 );
 
 export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
@@ -2209,11 +2255,11 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       Schema.Struct({ kind: Schema.Literal("maximize_healing_received") }),
       Schema.Struct({
         kind: Schema.Literal("transform_target"),
-        newForm: PolymorphFormSourceSchema,
-        retainedFields: nonEmpty(PolymorphRetainedFieldSchema),
+        newForm: ShapeShiftFormSourceSchema,
+        retainedFields: nonEmpty(ShapeShiftRetainedFieldSchema),
         tempHpFromForm: optionalExact(Schema.Literal(true)),
-        actionRestriction: optionalExact(PolymorphActionRestrictionSchema),
-        revertTriggers: nonEmpty(PolymorphRevertTriggerSchema),
+        actionRestriction: optionalExact(ShapeShiftActionRestrictionSchema),
+        revertTriggers: nonEmpty(ShapeShiftRevertTriggerSchema),
       }),
       Schema.Struct({
         kind: Schema.Literal("end_ongoing_spells"),
