@@ -617,6 +617,9 @@ export type FeatureChoiceMechanics = Schema.Schema.Type<
 export type ClassSpellcastingProjectionMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.ClassSpellcastingProjectionMechanicsSchema
 >;
+export type WarlockPactSlotRecoveryMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.WarlockPactSlotRecoveryMechanicsSchema
+>;
 export type WeaponMasteryChoiceMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.WeaponMasteryChoiceMechanicsSchema
 >;

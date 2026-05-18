@@ -103,113 +103,110 @@
     {
       "number": 59,
       "id": "L12G-MISSING-DRAGONS-BREATH",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Dragons Breath Definition And Runtime Support"
     },
     {
       "number": 60,
       "id": "L12G-MISSING-ENHANCE-ABILITY",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Enhance Ability Definition And Support"
     },
     {
       "number": 61,
       "id": "L12G-MISSING-ENLARGE-REDUCE",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Enlarge Reduce Definition And Support"
     },
     {
       "number": 62,
       "id": "L12G-MISSING-ENTHRALL",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Enthrall Definition And Closure"
     },
     {
       "number": 63,
       "id": "L12G-MISSING-FIND-TRAPS",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Find Traps Definition And Closure"
     },
     {
       "number": 64,
       "id": "L12G-MISSING-FLAMING-SPHERE",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Flaming Sphere Definition And Runtime Support"
     },
     {
       "number": 65,
       "id": "L12G-MISSING-GUST-OF-WIND",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Gust Of Wind Definition And Support Or Closure"
     },
     {
       "number": 66,
       "id": "L12G-MISSING-KNOCK",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Knock Definition And Closure"
     },
     {
       "number": 67,
       "id": "L12G-MISSING-LEVITATE",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Levitate Definition And Support Or Closure"
     },
     {
       "number": 68,
       "id": "L12G-MISSING-LOCATE-ANIMALS-OR-PLANTS",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Locate Animals Or Plants Definition And Closure"
     },
     {
       "number": 69,
       "id": "L12G-MISSING-LOCATE-OBJECT",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Locate Object Definition And Closure"
     },
     {
       "number": 70,
       "id": "L12G-MISSING-MAGIC-MOUTH",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Magic Mouth Definition And Closure"
     },
     {
       "number": 71,
       "id": "L12G-MISSING-MIRROR-IMAGE",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Mirror Image Definition And Runtime Support"
     },
     {
       "number": 72,
       "id": "L12G-MISSING-ROPE-TRICK",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Rope Trick Definition And Closure"
     },
     {
       "number": 73,
       "id": "L12G-MISSING-SILENCE",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Silence Definition And Support Or Closure"
     },
     {
       "number": 74,
       "id": "L12G-MISSING-SUGGESTION",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Suggestion Definition And Closure"
     },
     {
       "number": 75,
       "id": "L12G-MISSING-ZONE-OF-TRUTH",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Zone Of Truth Definition And Closure"
     }
   ]
 }
 -->
 
-This is the second level-2 execution lane split out of
-`plans/LEVEL2_RALPH_LOOP_A_BIG_FRONTIER.md`. Loop B owns Tasks 43-75 only.
-Loop A owns Tasks 10-42, and Tasks 1-9 are already done. Do not implement or
-re-open Loop A tasks from this lane.
+This is the second level-2 execution lane. Loop B owns Tasks 43-58 only. Loop D owns Tasks 59-75. Loop A owns Tasks 22-36 and 88-89; Loop C owns Tasks 37-42 and 76-87. Do not implement or re-open sibling-lane tasks from this lane.
 
 ## Worktree Safety Prefix
 
@@ -284,9 +281,11 @@ use the repository MBT scarcity protocol.
 
 ## Included Work
 
-Loop B contains 33 atomic tasks: the second half of the remaining level-2 A
-frontier, from Scorching Ray through Zone of Truth. It excludes all level-1,
-Loop D/L, companion/familiar boundary, and Counterspell work.
+Loop B contains 16 atomic tasks: Tasks 43-58, from Scorching Ray through
+Detect Thoughts. Tasks 59-75 have moved to Loop D. The historical manifest rows
+for Tasks 59-75 remain below, but they stay `deferred` here so Loop B cannot
+pick them. It excludes all level-1, Loop D/L, companion/familiar boundary, and
+Counterspell work.
 
 | Lane | Gate | Task | Unit |
 | ---: | ---: | --- | --- |
@@ -763,7 +762,7 @@ Acceptance:
 
 ### Task 59 - L12G-MISSING-DRAGONS-BREATH - Dragons Breath Definition And Runtime Support
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `dragons_breath`. Gate task: 61 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -790,7 +789,7 @@ Acceptance:
 
 ### Task 60 - L12G-MISSING-ENHANCE-ABILITY - Enhance Ability Definition And Support
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `enhance_ability`. Gate task: 62 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -817,7 +816,7 @@ Acceptance:
 
 ### Task 61 - L12G-MISSING-ENLARGE-REDUCE - Enlarge Reduce Definition And Support
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `enlarge_reduce`. Gate task: 63 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -844,7 +843,7 @@ Acceptance:
 
 ### Task 62 - L12G-MISSING-ENTHRALL - Enthrall Definition And Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `enthrall`. Gate task: 64 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -871,7 +870,7 @@ Acceptance:
 
 ### Task 63 - L12G-MISSING-FIND-TRAPS - Find Traps Definition And Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `find_traps`. Gate task: 65 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -898,7 +897,7 @@ Acceptance:
 
 ### Task 64 - L12G-MISSING-FLAMING-SPHERE - Flaming Sphere Definition And Runtime Support
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `flaming_sphere`. Gate task: 66 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -925,7 +924,7 @@ Acceptance:
 
 ### Task 65 - L12G-MISSING-GUST-OF-WIND - Gust Of Wind Definition And Support Or Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `gust_of_wind`. Gate task: 67 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -952,7 +951,7 @@ Acceptance:
 
 ### Task 66 - L12G-MISSING-KNOCK - Knock Definition And Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `knock`. Gate task: 68 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -979,7 +978,7 @@ Acceptance:
 
 ### Task 67 - L12G-MISSING-LEVITATE - Levitate Definition And Support Or Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `levitate`. Gate task: 69 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -1006,7 +1005,7 @@ Acceptance:
 
 ### Task 68 - L12G-MISSING-LOCATE-ANIMALS-OR-PLANTS - Locate Animals Or Plants Definition And Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `locate_animals_or_plants`. Gate task: 70 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -1033,7 +1032,7 @@ Acceptance:
 
 ### Task 69 - L12G-MISSING-LOCATE-OBJECT - Locate Object Definition And Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `locate_object`. Gate task: 71 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -1060,7 +1059,7 @@ Acceptance:
 
 ### Task 70 - L12G-MISSING-MAGIC-MOUTH - Magic Mouth Definition And Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `magic_mouth`. Gate task: 72 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -1087,7 +1086,7 @@ Acceptance:
 
 ### Task 71 - L12G-MISSING-MIRROR-IMAGE - Mirror Image Definition And Runtime Support
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `mirror_image`. Gate task: 73 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -1114,7 +1113,7 @@ Acceptance:
 
 ### Task 72 - L12G-MISSING-ROPE-TRICK - Rope Trick Definition And Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `rope_trick`. Gate task: 74 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -1141,7 +1140,7 @@ Acceptance:
 
 ### Task 73 - L12G-MISSING-SILENCE - Silence Definition And Support Or Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `silence`. Gate task: 75 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -1168,7 +1167,7 @@ Acceptance:
 
 ### Task 74 - L12G-MISSING-SUGGESTION - Suggestion Definition And Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `suggestion`. Gate task: 76 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -1195,7 +1194,7 @@ Acceptance:
 
 ### Task 75 - L12G-MISSING-ZONE-OF-TRUTH - Zone Of Truth Definition And Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `zone_of_truth`. Gate task: 77 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 

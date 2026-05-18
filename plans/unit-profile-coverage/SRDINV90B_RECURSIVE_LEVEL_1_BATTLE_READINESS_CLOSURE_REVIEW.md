@@ -11,7 +11,7 @@ profile. The generated Unit metric, supported executable Unit coverage, remains
 85/117 (72.6%). That metric answers a narrower Unit-profile support question;
 the product readiness metric also counts character-creation ownership,
 non-runtime table summaries, selected-option containers, later-level-only
-residuals, table/spatial derivations, social/knowledge state, companion-AI
+residuals, table/spatial derivations, social/knowledge state, companion-control boundary
 exclusions, and exploration/presentation closures when those facts are explicit
 at the matrix/inventory boundary.
 
@@ -64,7 +64,7 @@ only through one of these owner-accepted boundaries:
 
 The rows that were previously reported as `partial-battle-runtime` now close
 only when their remaining mechanics name an explicit non-level-1,
-non-battle-runtime, table/spatial, social/knowledge, companion-AI, or
+non-battle-runtime, table/spatial, social/knowledge, companion-control boundary, or
 presentation owner. Their supported battle subsets continue to rely on the
 existing promoted runtime/profile evidence.
 

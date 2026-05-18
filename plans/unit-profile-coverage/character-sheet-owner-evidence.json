@@ -180,6 +180,23 @@
         "packages/character-sheet-runtime/src/index.test.ts:jackOfAllTradesRequiresNoOtherProficiencyBonusTestName",
         "packages/character-sheet-runtime/src/index.test.ts:jackOfAllTradesRequiresBardLevelTwoFeatureTestName"
       ]
+    },
+    "srd521:classes/warlock:level-2:class-feature-grant:warlock_magical_cunning": {
+      "taskId": "L12G-AUTHOR-WARLOCK-MAGICAL-CUNNING",
+      "profile": "Character Sheet Pact Slot recovery runtime",
+      "summary": "Warlock Magical Cunning is read from the installed Surface class-feature record and applied by the Character Sheet runtime as a completed 1-minute rite that recovers expended Pact Slots from the existing Pact Magic slot pool. The runtime enforces Warlock level 2 feature ownership, requires expended Pact Slots, recovers no more than half the Pact Slot maximum rounded up, records once-per-Long-Rest use state, and clears that use state on Long Rest while the existing Pact Slot rest path restores the pool.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/index.ts:completeMagicalCunningRite",
+        "packages/character-sheet-runtime/src/index.ts:pactSlotRecoveryProfileForBuild",
+        "packages/character-sheet-runtime/src/index.ts:isPactSlotRecoveryFeature",
+        "packages/character-sheet-runtime/src/index.ts:magicalCunningRecoveredPactSlots",
+        "packages/character-sheet-runtime/src/index.ts:characterSheetPactSlots",
+        "packages/character-sheet-runtime/src/index.ts:completeLongRest"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/index.test.ts:warlockMagicalCunningBuild",
+        "packages/character-sheet-runtime/src/index.test.ts:requireRight"
+      ]
     }
   }
 }

@@ -456,21 +456,43 @@ describe("character-creation Surface records", () => {
         input: classSorcererInput,
         className: "sorcerer",
         hitPointDie: 6,
-        spellcasting: listPreparedSpellcasting({
-          className: "sorcerer",
-          spellcastingAbility: "cha",
-          spellcastingFocus: "arcane_focus",
-          preparedChangeOn: "class_level",
-          preparedReplacementCount: 1,
-          preparedCount: 2,
-          preparedSpells: ["burning_hands", "detect_magic"],
-          cantrips: [
-            "light",
-            "prestidigitation",
-            "shocking_grasp",
-            "sorcerous_burst",
+        spellcasting: {
+          ...listPreparedSpellcasting({
+            className: "sorcerer",
+            spellcastingAbility: "cha",
+            spellcastingFocus: "arcane_focus",
+            preparedChangeOn: "class_level",
+            preparedReplacementCount: 1,
+            preparedCount: 2,
+            preparedSpells: [
+              "burning_hands",
+              "detect_magic",
+              "chromatic_orb",
+              "thunderwave",
+            ],
+            cantrips: [
+              "light",
+              "prestidigitation",
+              "shocking_grasp",
+              "sorcerous_burst",
+            ],
+          }),
+          kind: "list_prepared_spellcasting_progression_creation",
+          spellcastingProgression: [
+            {
+              atLevel: 1,
+              cantripCount: 4,
+              preparedSpellCount: 2,
+              spellSlots: [{ spellLevel: 1, count: 2 }],
+            },
+            {
+              atLevel: 2,
+              cantripCount: 4,
+              preparedSpellCount: 4,
+              spellSlots: [{ spellLevel: 1, count: 3 }],
+            },
           ],
-        }),
+        },
       },
     ] as const;
 

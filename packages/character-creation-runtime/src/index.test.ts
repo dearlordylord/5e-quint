@@ -4581,6 +4581,9 @@ describe("character creation finalization", () => {
       slotLevel: 1,
       count: 2,
     });
+    expect(characterBuildFeatureUnitIds(result, unitLibrary)).toEqual(
+      expect.arrayContaining(["warlock_magical_cunning"]),
+    );
   });
 
   test("uses Warlock class-list levels for Pact Magic prepared-spell advancement without requiring spell Unit admission", () => {

@@ -75,7 +75,7 @@ const strictStatusDefinitions = [
     status: "blocked-follow-up-split",
     strictTargetClosed: true,
     description:
-      "The Unit claim records concrete smaller follow-up tasks for the remaining executable owner work.",
+      "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
   },
   {
     status: "open-profile-accounting",

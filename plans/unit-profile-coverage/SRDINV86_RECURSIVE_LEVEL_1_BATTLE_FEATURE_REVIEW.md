@@ -30,7 +30,7 @@ Find Familiar deterministic admission/projection evidence marker and running
 The checker-visible installed Spell Definition owner-evidence gap is now
 closed. The readiness numerator does not increase because Find Familiar remains
 `profile-subset-supported`: the promoted runtime owns the usable battle
-companion subset, while generic command AI and unsupported familiar-form
+companion subset, while generic command/action-selection policy and unsupported familiar-form
 attacks remain outside the claimed subset.
 
 ## SRDINV84I1-I5 Batch Review
@@ -68,7 +68,7 @@ batch for them.
 | `chill_touch` | `battle-runtime` | Non-combatant target eligibility belongs to SRDINV34 target-boundary work. |
 | `faerie_fire` | `battle-runtime` | Dim Light emission belongs to SRDINV70A light-emitter work. |
 | `feather_fall` | `battle-runtime` | Fall distance, elevation, and landing geometry belong to SRDINV55 spatial work. |
-| `find_familiar` | `battle-runtime` | Generic command AI and unsupported familiar-form attacks remain outside the promoted subset; SRDINV86 records the closure decision without starting another batch. |
+| `find_familiar` | `battle-runtime` | Generic command/action-selection policy and unsupported familiar-form attacks remain outside the promoted subset; SRDINV86 records the closure decision without starting another batch. |
 | `fog_cloud` | `battle-runtime`; table/spatial caller facts | Area membership, line of sight, map illumination, pathfinding, and wind derivation belong to SRDINV66 spatial/table work. |
 | `grease` | `battle-runtime` | Automatic area membership and pathfinding belong to SRDINV66 spatial work. |
 | `hunters_mark` | `battle-runtime`; `character-battle-runtime` | Perception/Survival finding Advantage belongs to SRDINV66 ability-check roll-mode work. |
@@ -142,5 +142,5 @@ assigned to existing owners or explicitly outside promoted battle execution.
   until the manifest and in-file marker agreed.
 - Round 2: rejected a new Find Familiar batch. Ordinary attacks are already
   rejected, Pact of the Chain attacks are supported through the Stat Block
-  attack path, and generic command AI is not a distinct SRD battle-runtime
+  attack path, and generic command/action-selection policy is not a distinct SRD battle-runtime
   owner for this lane.

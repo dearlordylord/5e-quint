@@ -120,6 +120,7 @@ import { Brand, Either, Match, Option } from "effect";
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.spellbook-ritual-invocation
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.weapon-mastery-reselection
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.ability-check-proficiency-bonus
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.pact-slot-recovery
 
 const WEAPON_PROFICIENCY_CATEGORY_VALUES = ["simple", "martial"] as const;
 const ARMOR_TRAINING_CATEGORY_VALUES = [
@@ -130,6 +131,10 @@ const ARMOR_TRAINING_CATEGORY_VALUES = [
 ] as const;
 export const BARD_JACK_OF_ALL_TRADES_UNIT_ID =
   "bard_jack_of_all_trades" as const satisfies UnitRecord["id"];
+const WARLOCK_MAGICAL_CUNNING_UNIT_ID =
+  "warlock_magical_cunning" as const satisfies UnitRecord["id"];
+const ARCANE_RECOVERY_REST_FEATURE_TAG = "arcaneRecovery" as const;
+const MAGICAL_CUNNING_REST_FEATURE_TAG = "magicalCunning" as const;
 const JACK_OF_ALL_TRADES_PROFICIENCY_BONUS_DIVISOR = 2;
 const LAY_ON_HANDS_POISONED_REMOVAL_COST = resourceCount(5);
 const RITUAL_ADDITIONAL_CASTING_TIME_MINUTES = 10;
@@ -240,10 +245,15 @@ export type CharacterSheetHitDieSpend = {
   readonly roll: DieRollResult;
 };
 
-export type CharacterSheetRestFeatureUse = {
-  readonly tag: "arcaneRecovery";
-  readonly usedSinceLongRest: true;
-};
+export type CharacterSheetRestFeatureUse =
+  | {
+      readonly tag: typeof ARCANE_RECOVERY_REST_FEATURE_TAG;
+      readonly usedSinceLongRest: true;
+    }
+  | {
+      readonly tag: typeof MAGICAL_CUNNING_REST_FEATURE_TAG;
+      readonly usedSinceLongRest: true;
+    };
 
 export type CharacterSheetResourceExpenditure = {
   readonly tag:
@@ -285,6 +295,11 @@ export type CharacterSheetShortRestInput = {
   readonly arcaneRecovery?: {
     readonly refundSpellSlots: readonly CharacterSheetArcaneRecoverySlotRefund[];
   };
+};
+
+export type CharacterSheetMagicalCunningInput = {
+  readonly sheet: CharacterSheet;
+  readonly unitLibrary: UnitCatalog;
 };
 
 export type CharacterSheetWeaponMasteryReselection = {
@@ -1122,6 +1137,55 @@ export function completeLongRest(
   });
 }
 
+export function completeMagicalCunningRite(
+  input: CharacterSheetMagicalCunningInput,
+): Either.Either<CharacterSheet, CharacterSheetIssue> {
+  if (
+    !("pactSlotExpenditure" in input.sheet) ||
+    input.sheet.pactSlotExpenditure === undefined
+  ) {
+    return characterSheetIssue("Magical Cunning requires Pact Slot state.");
+  }
+  const profile = pactSlotRecoveryProfileForBuild(
+    input.sheet.build,
+    input.unitLibrary,
+  );
+  if (Either.isLeft(profile)) return Either.left(profile.left);
+  if (
+    input.sheet.restFeatureUses.some(
+      (use) => use.tag === MAGICAL_CUNNING_REST_FEATURE_TAG,
+    )
+  ) {
+    return characterSheetIssue(
+      "Magical Cunning cannot be used again until a Long Rest.",
+    );
+  }
+  const pactSlots = input.sheet.pactSlotExpenditure;
+  if (pactSlots.expended < resourceCount(1)) {
+    return characterSheetIssue(
+      "Magical Cunning must recover expended Pact Slots.",
+    );
+  }
+  const recovered = magicalCunningRecoveredPactSlots({
+    pactSlots,
+    profile: profile.right,
+  });
+  return Either.right({
+    ...input.sheet,
+    pactSlotExpenditure: {
+      ...pactSlots,
+      expended: resourceCount(Math.max(0, pactSlots.expended - recovered)),
+    },
+    restFeatureUses: [
+      ...input.sheet.restFeatureUses,
+      {
+        tag: MAGICAL_CUNNING_REST_FEATURE_TAG,
+        usedSinceLongRest: true,
+      },
+    ],
+  });
+}
+
 function characterSheetLongRestBuild<TBuild extends CharacterBuild>(
   input: CharacterSheetLongRestInput,
   build: TBuild,
@@ -1493,6 +1557,18 @@ type CharacterSheetRestSpellSlotRecoveryFeature =
   };
 type CharacterSheetRestSpellSlotRecoveryProfile = {
   readonly feature: CharacterSheetRestSpellSlotRecoveryFeature;
+  readonly classUnitId: UnitRecord["id"];
+};
+type PactSlotRecoveryMechanics = Extract<
+  CharacterSheetClassFeatureRecord["mechanics"],
+  { readonly family: "pact_slot_recovery" }
+>;
+type CharacterSheetPactSlotRecoveryFeature =
+  CharacterSheetClassFeatureRecord & {
+    readonly mechanics: PactSlotRecoveryMechanics;
+  };
+type CharacterSheetPactSlotRecoveryProfile = {
+  readonly feature: CharacterSheetPactSlotRecoveryFeature;
   readonly classUnitId: UnitRecord["id"];
 };
 type SpellbookRitualAccessMechanics = Extract<
@@ -2050,12 +2126,25 @@ function restFeatureUsesFromInput(
   const uses = input.restFeatureUses ?? [];
   const usedFeatureTags = new Set<string>();
   for (const use of uses) {
-    if (use.tag !== "arcaneRecovery" || use.usedSinceLongRest !== true) {
+    if (use.usedSinceLongRest !== true) {
       return characterSheetIssue("Expected supported rest feature use state.");
     }
     if (usedFeatureTags.has(use.tag)) {
       return characterSheetIssue("Rest feature use state must not duplicate.");
     }
+    const featureUseState = restFeatureUseStateMatchesBuild(input, use);
+    if (Either.isLeft(featureUseState))
+      return Either.left(featureUseState.left);
+    usedFeatureTags.add(use.tag);
+  }
+  return Either.right([...uses]);
+}
+
+function restFeatureUseStateMatchesBuild(
+  input: Pick<CharacterSheetInput, "build" | "unitLibrary">,
+  use: CharacterSheetRestFeatureUse,
+): Either.Either<void, CharacterSheetIssue> {
+  if (use.tag === ARCANE_RECOVERY_REST_FEATURE_TAG) {
     if (
       Either.isLeft(
         restSpellSlotRecoveryProfileForBuild(input.build, input.unitLibrary),
@@ -2065,9 +2154,21 @@ function restFeatureUsesFromInput(
         "Arcane Recovery rest feature use requires the Wizard Arcane Recovery feature.",
       );
     }
-    usedFeatureTags.add(use.tag);
+    return Either.right(undefined);
   }
-  return Either.right([...uses]);
+  if (use.tag === MAGICAL_CUNNING_REST_FEATURE_TAG) {
+    if (
+      Either.isLeft(
+        pactSlotRecoveryProfileForBuild(input.build, input.unitLibrary),
+      )
+    ) {
+      return characterSheetIssue(
+        "Magical Cunning rest feature use requires the Warlock Magical Cunning feature.",
+      );
+    }
+    return Either.right(undefined);
+  }
+  return characterSheetIssue("Expected supported rest feature use state.");
 }
 
 function conditionsFromInput(
@@ -2567,7 +2668,11 @@ function applyArcaneRecovery(input: {
     input.unitLibrary,
   );
   if (Either.isLeft(profile)) return Either.left(profile.left);
-  if (input.sheet.restFeatureUses.some((use) => use.tag === "arcaneRecovery")) {
+  if (
+    input.sheet.restFeatureUses.some(
+      (use) => use.tag === ARCANE_RECOVERY_REST_FEATURE_TAG,
+    )
+  ) {
     return characterSheetIssue(
       "Arcane Recovery cannot be used again until a Long Rest.",
     );
@@ -2585,7 +2690,7 @@ function applyArcaneRecovery(input: {
     restFeatureUses: [
       ...sheet.restFeatureUses,
       {
-        tag: "arcaneRecovery",
+        tag: ARCANE_RECOVERY_REST_FEATURE_TAG,
         usedSinceLongRest: true,
       },
     ],
@@ -2663,6 +2768,18 @@ function arcaneRecoverySpellSlotRefund(input: {
   return Either.right(updated);
 }
 
+function magicalCunningRecoveredPactSlots(input: {
+  readonly pactSlots: CharacterPactSlotExpenditure;
+  readonly profile: CharacterSheetPactSlotRecoveryProfile;
+}): ResourceCount {
+  return Match.value(input.profile.feature.mechanics.recoveryCap.kind).pipe(
+    Match.when("half_maximum_rounded_up", () =>
+      resourceCount(Math.ceil(input.pactSlots.count / 2)),
+    ),
+    Match.exhaustive,
+  );
+}
+
 function restSpellSlotRecoveryProfileForBuild(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
@@ -2730,6 +2847,49 @@ function restSpellSlotRecoveryProfileForFeature(input: {
   );
 }
 
+function pactSlotRecoveryProfileForBuild(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): Either.Either<CharacterSheetPactSlotRecoveryProfile, CharacterSheetIssue> {
+  const profiles: CharacterSheetPactSlotRecoveryProfile[] = [];
+  for (const classUnitId of progressionClassUnitIds(build.progression)) {
+    const unit = getRequiredUnit(unitLibrary, classUnitId);
+    if (Either.isLeft(unit)) return Either.left(unit.left);
+    const facts = readClassCreationFacts(unit.right);
+    if (facts.tag !== "readable") continue;
+    const classLevel = classLevelForUnit(build.progression, classUnitId);
+    for (const grant of facts.value.featureGrants) {
+      if (grant.level > classLevel) continue;
+      const feature = unitLibrary.getUnit(grant.unitId);
+      if (
+        Option.isSome(feature) &&
+        isPactSlotRecoveryFeature(feature.value) &&
+        unit.right.kind === "class" &&
+        unit.right.className === feature.value.className
+      ) {
+        profiles.push({ feature: feature.value, classUnitId });
+      }
+    }
+  }
+  if (profiles.length === 0) {
+    return characterSheetIssue(
+      "Magical Cunning requires the Warlock Magical Cunning feature.",
+    );
+  }
+  if (profiles.length > 1) {
+    return characterSheetIssue(
+      "Character Sheet supports only one Pact Slot recovery feature.",
+    );
+  }
+  const profile = profiles[0];
+  if (profile === undefined) {
+    return characterSheetIssue(
+      "Magical Cunning requires the Warlock Magical Cunning feature.",
+    );
+  }
+  return Either.right(profile);
+}
+
 function isCharacterSheetWithSpellSlots(
   sheet: CharacterSheet,
 ): sheet is CharacterSheetWithSpellSlots {
@@ -2745,6 +2905,22 @@ function isRestSpellSlotRecoveryFeature(
     unit.mechanics.recoveryTrigger === "short_rest" &&
     unit.mechanics.resetCadence.kind === "long_rest" &&
     unit.mechanics.recoveredSlotLevelCap.kind === "half_class_level_rounded_up"
+  );
+}
+
+function isPactSlotRecoveryFeature(
+  unit: UnitRecord,
+): unit is CharacterSheetPactSlotRecoveryFeature {
+  return (
+    unit.kind === "class_feature" &&
+    unit.id === WARLOCK_MAGICAL_CUNNING_UNIT_ID &&
+    unit.mechanics.family === "pact_slot_recovery" &&
+    unit.mechanics.activationCost.kind === "one_minute_rite" &&
+    unit.mechanics.resource.kind === "pact_slots" &&
+    unit.mechanics.resource.source === "class_record_pact_magic" &&
+    unit.mechanics.requiresExpendedSlots === true &&
+    unit.mechanics.recoveryCap.kind === "half_maximum_rounded_up" &&
+    unit.mechanics.resetCadence.kind === "long_rest"
   );
 }
 
@@ -3063,11 +3239,15 @@ function parseStoredRestFeatureUses(
     if (!isRecord(use)) {
       return characterSheetIssue("Expected Character Sheet rest feature use.");
     }
-    if (use.tag !== "arcaneRecovery" || use.usedSinceLongRest !== true) {
+    if (
+      (use.tag !== ARCANE_RECOVERY_REST_FEATURE_TAG &&
+        use.tag !== MAGICAL_CUNNING_REST_FEATURE_TAG) ||
+      use.usedSinceLongRest !== true
+    ) {
       return characterSheetIssue("Expected supported rest feature use state.");
     }
     uses.push({
-      tag: "arcaneRecovery",
+      tag: use.tag,
       usedSinceLongRest: true,
     });
   }

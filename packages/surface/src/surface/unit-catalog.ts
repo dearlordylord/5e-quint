@@ -155,6 +155,7 @@ import sacredFlameInput from "../../content/sacred_flame.json";
 import searingSmiteInput from "../../content/searing_smite.json";
 import sorcererFontOfMagicInput from "../../content/sorcerer_font_of_magic.json";
 import sorcererInnateSorceryInput from "../../content/sorcerer_innate_sorcery.json";
+import sorcererMetamagicInput from "../../content/sorcerer_metamagic.json";
 import sorcerousBurstInput from "../../content/sorcerous_burst.json";
 import spareTheDyingInput from "../../content/spare_the_dying.json";
 import starryWispInput from "../../content/starry_wisp.json";
@@ -162,6 +163,7 @@ import thaumaturgyInput from "../../content/thaumaturgy.json";
 import thunderwaveInput from "../../content/thunderwave.json";
 import trueStrikeInput from "../../content/true_strike.json";
 import warlockEldritchInvocationsInput from "../../content/warlock_eldritch_invocations.json";
+import warlockMagicalCunningInput from "../../content/warlock_magical_cunning.json";
 import viciousMockeryInput from "../../content/vicious_mockery.json";
 import weaponClubInput from "../../content/weapon_club.json";
 import weaponDaggerInput from "../../content/weapon_dagger.json";
@@ -348,7 +350,9 @@ export const srdUnitCollection = defineSrdUnitCollection({
     rogueThievesCantInput,
     sorcererInnateSorceryInput,
     sorcererFontOfMagicInput,
+    sorcererMetamagicInput,
     warlockEldritchInvocationsInput,
+    warlockMagicalCunningInput,
     wizardRitualAdeptInput,
     wizardArcaneRecoveryInput,
     wizardScholarInput,

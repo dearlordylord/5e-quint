@@ -7,11 +7,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE: Replace the current lossy Acid Arrow mechanics with a lossless SRD Surface shape for the spell's initial hit damage, later damage at the end of the target's next turn, immediate half-of-initial miss damage only, and slot scaling for both initial and later damage without storing the miss branch as an independently fixed 2d4 approximation. Owner: surface Spell Definition authoring. Required output: Acid Arrow Dhall/JSON content, and schema/tracer support if needed, represent the RAW initial/later/miss damage relationships as executable facts that can be projected by battle-runtime without duplicating or reinterpreting spell damage state.; L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT: Promote Acid Arrow as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, resolves a ranged Spell Attack, applies immediate Acid damage on hit, stores the Acid damage Spell Effect that applies at the end of the target's next turn on hit, applies immediate half-of-initial Acid damage on miss only, and scales all RAW damage amounts by slot level. Owner: battle-runtime spell invocation/effect lifecycle. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Acid Arrow hit, miss, delayed target-turn damage, slot scaling, and resource spending.",
       "sourceRecordPath": "packages/surface/content/acid_arrow.json",
       "sourceRows": [
         {
@@ -27,8 +30,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
       "unitId": "acid_arrow"
     },
     {
@@ -2305,6 +2308,35 @@
       "unitId": "sorcerer_font_of_magic"
     },
     {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS: Retain the Metamagic feature ref with Sorcerer level-2 progression, then project chosen Metamagic option count, Sorcerer-level replacement, unique known-option roster, option costs, stacking exceptions, and the source link to the shared Font of Magic Sorcery Point resource without duplicating class progression or Sorcery Point pool state. Owner: character-creation-runtime plus character-sheet-runtime. Required output: Owner evidence for CharacterBuild or Character Sheet retained Metamagic feature ref, known Metamagic options, replacement lifecycle, option costs, stacking facts, and reference to the shared Font of Magic Sorcery Point resource.; L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION: Execute known Metamagic options at spell-cast time by spending the shared Sorcery Point resource projected from Font of Magic, enforcing the one-option-per-spell rule plus Empowered and Seeking stacking exceptions, Quickened level-1-plus spell turn limits, and the option-specific spell modifications for Careful, Distant, Empowered, Extended, Heightened, Quickened, Seeking, Subtle, Transmuted, and Twinned Spell. Owner: character-battle-runtime plus battle-runtime spell invocation hooks. Required output: Supported runtime profile and owner evidence for Metamagic option execution that consumes the shared Sorcery Point resource rather than a synthetic Metamagic-local point pool.",
+      "sourceRecordPath": "packages/surface/content/sorcerer_metamagic.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Sorcerer Metamagic",
+          "id": "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_metamagic",
+          "levelBand": "level-2",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 118,
+            "lineStart": 111,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        }
+      ],
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
+      "unitId": "sorcerer_metamagic"
+    },
+    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -2622,7 +2654,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 89,
+      "count": 90,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2712,17 +2744,17 @@
         "true_strike",
         "vicious_mockery",
         "warlock_eldritch_invocations",
+        "warlock_magical_cunning",
         "wizard_arcane_recovery",
         "wizard_ritual_adept",
         "wizard_scholar"
       ]
     },
     {
-      "count": 31,
+      "count": 30,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
-        "acid_arrow",
         "aid",
         "alter_self",
         "arcane_lock",
@@ -2775,6 +2807,19 @@
     },
     {
       "count": 6,
+      "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
+      "status": "blocked-follow-up-split",
+      "unitIds": [
+        "acid_arrow",
+        "druid_wild_shape",
+        "monk_monks_focus",
+        "monk_uncanny_metabolism",
+        "sorcerer_font_of_magic",
+        "sorcerer_metamagic"
+      ]
+    },
+    {
+      "count": 6,
       "description": "The in-scope behavior is complete and every remaining residual is outside this strict accounting scope.",
       "status": "closed-later-level-only",
       "unitIds": [
@@ -2784,17 +2829,6 @@
         "paladin_fighting_style",
         "ranger_favored_enemy",
         "ranger_fighting_style"
-      ]
-    },
-    {
-      "count": 4,
-      "description": "The Unit claim records concrete smaller follow-up tasks for the remaining executable owner work.",
-      "status": "blocked-follow-up-split",
-      "unitIds": [
-        "druid_wild_shape",
-        "monk_monks_focus",
-        "monk_uncanny_metabolism",
-        "sorcerer_font_of_magic"
       ]
     },
     {
@@ -2821,30 +2855,29 @@
       "numerator": 475,
       "percent": "85.4%",
       "rowsByStatus": {
-        "accepted": 296,
-        "accepted-no-battle-effect": 179,
-        "battle-runtime-required": 76,
-        "owner-evidence-required": 5
+        "accepted": 297,
+        "accepted-no-battle-effect": 178,
+        "battle-runtime-required": 77,
+        "owner-evidence-required": 4
       }
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 144,
-      "numerator": 89,
-      "percent": "61.8%"
+      "denominator": 146,
+      "numerator": 90,
+      "percent": "61.6%"
     },
     "strictTargetClosure": {
-      "denominator": 144,
-      "numerator": 112,
-      "percent": "77.8%"
+      "denominator": 146,
+      "numerator": 115,
+      "percent": "78.8%"
     }
   },
   "openFrontier": [
     {
-      "count": 31,
+      "count": 30,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
-        "acid_arrow",
         "aid",
         "alter_self",
         "arcane_lock",
@@ -4370,24 +4403,6 @@
         "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
-            "category": "class feature",
-            "concept": "Sorcerer Metamagic",
-            "id": "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_metamagic",
-            "levelBand": "level-2",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 118,
-              "lineStart": 111,
-              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-            }
-          }
-        ],
-        "unitId": "sorcerer_metamagic"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
             "category": "spell Unit pressure",
             "concept": "Bard spell list Suggestion",
             "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_suggestion",
@@ -4480,24 +4495,6 @@
           }
         ],
         "unitId": "unseen_servant"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
-            "concept": "Warlock Magical Cunning",
-            "id": "srd521:classes/warlock:level-2:class-feature-grant:warlock_magical_cunning",
-            "levelBand": "level-2",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 95,
-              "lineStart": 92,
-              "path": ".references/srd-5.2.1/Classes/Warlock.md"
-            }
-          }
-        ],
-        "unitId": "warlock_magical_cunning"
       },
       {
         "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
@@ -6390,21 +6387,21 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
-      "missing": 31,
+      "missing": 30,
       "profile-subset-supported": 9,
-      "supported-profile": 89,
-      "unsupported-profile": 15
+      "supported-profile": 90,
+      "unsupported-profile": 17
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 4,
+      "blocked-follow-up-split": 6,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 11,
       "open-profile-accounting": 1,
-      "open-runtime-behavior": 31,
-      "supported-profile": 89
+      "open-runtime-behavior": 30,
+      "supported-profile": 90
     },
-    "nonSupportedFrontier": 55,
-    "strictDenominator": 144
+    "nonSupportedFrontier": 56,
+    "strictDenominator": 146
   }
 }

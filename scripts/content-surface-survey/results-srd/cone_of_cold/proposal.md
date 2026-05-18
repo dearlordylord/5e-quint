@@ -45,7 +45,7 @@ export type AreaOrigin =
 | { readonly kind: "self" }
 ```
 
-**Why:** Cone of Cold's range is `Self` — the cone originates from the caster's body, not from a chosen point within range. `point_within_range` implies a directed, positionally-free choice (like Fireball's targeted-point origin). A self-emanating area is not positionally free: it always starts at the caster. The distinction matters for AI/pathfinding, opportunity attack, and targeting legality.
+**Why:** Cone of Cold's range is `Self` — the cone originates from the caster's body, not from a chosen point within range. `point_within_range` implies a directed, positionally-free choice (like Fireball's targeted-point origin). A self-emanating area is not positionally free: it always starts at the caster. The distinction matters for pathfinding/targeting-policy, opportunity attack, and targeting legality.
 
 **Evidence:** "a 60-foot Cone originating from you"; source range field `"type": "cone"` with no separate point target.
 

@@ -40,7 +40,7 @@ const battleReadinessClosureKind = Object.freeze({
   laterLevelOnly: "later-level-only",
   tableSpatialDerivation: "table-spatial-derivation",
   socialKnowledgeEffect: "social-knowledge-effect",
-  companionAiExclusion: "companion-ai-exclusion",
+  companionControlBoundary: "companion-control-boundary",
   outsideRuntimePresentationExploration:
     "outside-runtime-presentation-exploration",
   outsideBattleRuntime: "outside-battle-runtime",

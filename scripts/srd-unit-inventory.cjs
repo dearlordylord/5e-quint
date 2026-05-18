@@ -654,7 +654,14 @@ function finalDisposition(row, authored, installedIds, ownerEvidenceSources) {
   if (
     catalogAdmissionForRow(row, authored, installedIds).state !== "installed"
   ) {
-    if (spellUnitExecutableFollowUps.has(row.candidateUnitId)) {
+    const claim = row.candidateUnitId
+      ? ownerEvidenceSources.unitClaims.get(row.candidateUnitId)?.claim
+      : undefined;
+    if (
+      row.rowKind === "spell-unit-pressure" &&
+      (spellUnitExecutableFollowUps.has(row.candidateUnitId) ||
+        claimFollowUpTasks(claim).length > 0)
+    ) {
       return "catalog-authored-executable-follow-up";
     }
     return "catalog-only/dead-for-now";
@@ -699,7 +706,17 @@ function nextAction(
   }
   if (disposition === "catalog-authored-executable-follow-up") {
     const followUp = spellUnitExecutableFollowUps.get(row.candidateUnitId);
-    return `Promote follow-up batch ${followUp.id}: ${followUp.nextAction}`;
+    if (followUp !== undefined) {
+      return `Promote follow-up batch ${followUp.id}: ${followUp.nextAction}`;
+    }
+    const claim = row.candidateUnitId
+      ? ownerEvidenceSources.unitClaims.get(row.candidateUnitId)?.claim
+      : undefined;
+    const followUpTasks = claimFollowUpTasks(claim);
+    if (followUpTasks.length > 0) {
+      return followUpTaskRequirement(followUpTasks);
+    }
+    return "Promote the executable follow-up split named by the Unit claim.";
   }
   if (
     disposition === "catalog-only/dead-for-now" &&
@@ -880,6 +897,17 @@ function installedSpellUnitOwnerClassification(
       owner:
         "Surface Spell Definition plus battle-runtime spell invocation/projection",
       missingConstruct: claim.issue,
+    };
+  }
+  const followUpTasks = claimFollowUpTasks(claim);
+  if (
+    claim?.tag === "unsupported-profile" &&
+    followUpTasks.length > 0
+  ) {
+    return {
+      kind: "evidence-required",
+      owner: followUpTaskOwners(followUpTasks),
+      requirement: followUpTaskRequirement(followUpTasks),
     };
   }
   if (
