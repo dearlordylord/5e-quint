@@ -1241,6 +1241,8 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
 - `battle-runtime-movement.qnt` - Movement projection, Dash/Disengage/Dodge,
   Grapple/Escape, forced movement, Opportunity Attack movement windows, light
   weapon bonus attacks, and movement-backed action-cost spending.
+- `battle-runtime-restoration-and-buffs.qnt` - direct Hit Point restoration,
+  scalar buffs, Heroism, and their movement-backed spell action costs.
 - `battle-runtime-*-tests.qnt` - package-local QNT self-tests split by domain
   so the canonical integration spec stays focused on reducer behavior.
 - `battle-runtime-self-tests.qnt` - import-only QNT self-test suite used by the
