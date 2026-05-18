@@ -519,10 +519,11 @@ In scope:
 Out of scope:
 
 - `plans/ACTIVE_PLAN.md`.
-- Companion/familiar implementation. `find_familiar` remains excluded by the
-  companion worktree. `find_steed` and `druid_wild_companion` are boundary
-  tasks: either route them to the companion owner or add metric-visible
-  exclusion/closure, but do not implement companion AI here.
+- Broad companion/familiar controller behavior. Existing Find Familiar support
+  may be reused where a task only wires access, resources, or source links.
+  `find_steed` and `druid_wild_companion` remain boundary tasks: either route
+  them to the companion owner or add metric-visible exclusion/closure, but do
+  not implement autonomous command/action/target/route selection here.
 - Loop L language access work for `druid_druidic` and `rogue_thieves_cant`.
 - Broad map/pathfinding/rendering/detection engines. Use table-supplied
   witnesses or runtime-detached closures where that is the product boundary.
@@ -552,7 +553,9 @@ Reviewers should reject:
 - object/geometry/light/pathfinding derivation hidden inside spell support;
 - duplicate Spell Definition, Spell Access, Spell Invocation, or Spell Effect
   state;
-- companion behavior in this plan without an explicit owner handoff.
+- companion control behavior in this plan without an explicit owner handoff,
+  especially command/action/target/route selection that should come from
+  table decisions.
 
 ## Common Task Contract
 

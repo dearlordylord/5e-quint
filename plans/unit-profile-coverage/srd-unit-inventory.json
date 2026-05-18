@@ -23500,7 +23500,7 @@
         "source": "deferred-mechanics",
         "kind": "profile-subset-remaining-mechanics-closed",
         "owner": "SRDINV86 companion review boundary",
-        "reason": "Unsupported familiar form attacks and generic command AI are outside the promoted companion lifecycle subset."
+        "reason": "Unsupported familiar form attacks and companion command/action selection beyond table choices are outside the promoted companion lifecycle subset."
       },
       "ownerEvidence": [
         {

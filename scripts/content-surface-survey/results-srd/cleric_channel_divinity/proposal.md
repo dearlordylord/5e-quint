@@ -47,7 +47,7 @@ All existing `DurationEndTrigger` variants are target-side events. These two are
 
 ### Out of scope (DM agenda)
 
-The Turn Undead failure behavior "tries to move as far away from you as it can on its turns" is creature AI / movement decision — DM agenda. This is correctly omitted regardless of any surface gaps.
+The Turn Undead failure behavior "tries to move as far away from you as it can on its turns" is creature movement decision — DM agenda. This is correctly omitted regardless of any surface gaps.
 
 ## What does fit
 

@@ -152,14 +152,14 @@ Scope:
   moved within 5 feet of the caster and end the turn only when that predicate is
   true;
 - for Flee, represent the whole-turn moving-away obligation with supplied
-  fastest-available route facts, without deriving pathfinding or tactical AI;
+  fastest-available route facts, without deriving pathfinding or tactical route-selection policy;
 - derive Opportunity Attack eligibility from actual movement through the
   existing movement/reaction boundary rather than from route labels.
 
 Out of scope:
 
 - automatic shortest, direct, safest, or fastest route derivation;
-- map collision, terrain, or pathfinding AI;
+- map collision, terrain, pathfinding, or route-selection policy;
 - treating "fastest available means" as permission to invent non-RAW movement
   modes.
 

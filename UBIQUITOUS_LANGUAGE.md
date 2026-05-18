@@ -142,11 +142,22 @@ This table is a support-layer projection of the SRD condition text. Quint remain
 - Occurrence state should carry only mutable runtime facts, such as the active source key and current expiry. Do not duplicate display names, source mechanics, or derived support labels into the occurrence.
 - Use this term for Rage/Reckless-style active riders. Avoid `stance` unless the SRD source actually uses that term for the rule being modeled.
 
+### Table Decisions
+
+- A **Table Decision** is an in-game choice or adjudication made outside the reducer by the players, GM, or table-facing session layer. Prefer this term when discussing who chooses a companion command, action, target, route, placement, or similar tactical input.
+- A reducer may receive a Table Decision through a technical caller payload, hole, fill, or witness, but that transport is not the domain owner of the choice.
+
 ### Encounter Relationships
 
 - An **Encounter Side** is a caller-supplied battle-runtime relationship id used to project current ally/enemy facts for supported procedures.
 - Combatants with the same Encounter Side are allies for the current encounter; combatants with different Encounter Side ids are enemies for the current encounter. This models the SRD's ally/enemy designation at the promoted runtime boundary without deriving it from creature kind, provenance, or player/monster origin.
 - Encounter Side is battle setup state, not SRD content provenance and not a creature trait. If a future rule needs per-pair hostility that cannot be represented by side equality, widen this relationship model before adding rule-specific exceptions.
+
+### Controlled Creatures And Companions
+
+- A **Companion** is a creature admitted through a source rule that links it to an owner/controller, such as a familiar, steed, or summoned spirit. The companion is still a battle creature or stat block at runtime; the source-owner relationship is not provenance and is not a tactic policy.
+- **Companion Control** is the RAW command and turn protocol for a controlled creature: who can command it, what command cost applies, when it takes turns, what default behavior RAW fixes, and which mechanical resources or links are consumed. Avoid phrases such as companion AI, game AI, or autonomous tactical control.
+- **Companion Execution** is the runtime resolution of a table-selected companion act after any required holes/fills and table-supplied witnesses are available. The runtime may validate legality and apply consequences; it does not choose the act, target, route, placement, or command content.
 
 ## Turn Structure
 

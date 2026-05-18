@@ -1467,7 +1467,7 @@
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
         "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
       ],
-      "sourceBoundary": "This profile supports Command Flee by consuming caller-supplied fastest-available moving-away route facts on the existing Movement fill, requiring the selected remaining Movement budget to be spent when movement is available, clearing the pending effect, and ending the target turn. If the target has no available movement, it clears the pending Flee effect and ends the turn without a Movement fill. Opportunity Attack eligibility is derived from the Movement fill's actual provoked-threat facts, not from Command route metadata. It does not add pathfinding, route storage, or route choice AI.",
+      "sourceBoundary": "This profile supports Command Flee by consuming caller-supplied fastest-available moving-away route facts on the existing Movement fill, requiring the selected remaining Movement budget to be spent when movement is available, clearing the pending effect, and ending the target turn. If the target has no available movement, it clears the pending Flee effect and ends the turn without a Movement fill. Opportunity Attack eligibility is derived from the Movement fill's actual provoked-threat facts, not from Command route metadata. It does not add pathfinding, route storage, or route-choice policy.",
       "taskRefs": [
         "SRDINV50D2"
       ],
@@ -9356,7 +9356,7 @@
             "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
             "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
           ],
-          "sourceBoundary": "This profile supports Command Flee by consuming caller-supplied fastest-available moving-away route facts on the existing Movement fill, requiring the selected remaining Movement budget to be spent when movement is available, clearing the pending effect, and ending the target turn. If the target has no available movement, it clears the pending Flee effect and ends the turn without a Movement fill. Opportunity Attack eligibility is derived from the Movement fill's actual provoked-threat facts, not from Command route metadata. It does not add pathfinding, route storage, or route choice AI.",
+          "sourceBoundary": "This profile supports Command Flee by consuming caller-supplied fastest-available moving-away route facts on the existing Movement fill, requiring the selected remaining Movement budget to be spent when movement is available, clearing the pending effect, and ending the target turn. If the target has no available movement, it clears the pending Flee effect and ends the turn without a Movement fill. Opportunity Attack eligibility is derived from the Movement fill's actual provoked-threat facts, not from Command route metadata. It does not add pathfinding, route storage, or route-choice policy.",
           "taskRefs": [
             "SRDINV50D2"
           ],
@@ -10388,12 +10388,12 @@
         "deferredMechanics": [
           {
             "battleReadinessClosure": {
-              "kind": "companion-ai-exclusion",
+              "kind": "companion-control-boundary",
               "owner": "SRDINV86 companion review boundary",
-              "reason": "Unsupported familiar form attacks and generic command AI are outside the promoted companion lifecycle subset."
+              "reason": "Unsupported familiar form attacks and companion command/action selection beyond table choices are outside the promoted companion lifecycle subset."
             },
             "followUpTaskId": "SRDINV86",
-            "mechanic": "unsupported familiar form attacks and generic command AI"
+            "mechanic": "unsupported familiar form attacks and companion command/action selection beyond table choices"
           }
         ],
         "profileIds": [

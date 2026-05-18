@@ -203,6 +203,30 @@ Not every table-owned rule fact is a runtime input. Keep these cases separate:
   disclosure, language conversation, broad detection result narration, and
   illusion/social adjudication that does not feed a modeled procedure.
 
+## Companion Control Frontier
+
+Companion, familiar, steed, summon, and other controlled-creature rules follow
+the same ownership boundary as spatial facts and player choices. The runtime may
+model the mechanical protocol that RAW gives it: creature admission, source-owner
+links, one-at-a-time replacement, command cost, turn ordering, legal action
+discovery, resources, HP/damage, dismissal, and the mechanical consequences of a
+table-selected action.
+
+The runtime must not choose a companion's tactics. It must not select whether the
+owner commands the companion, which legal action the companion takes, which target
+it chooses, which route it follows, where it moves, or how it interprets an
+open-ended command. Those are Table Decisions expressed through the same explicit
+channels used elsewhere: selected public acts, holes/fills, and table-supplied
+witnesses such as target, route, range, line of sight, placement, and
+area-membership facts.
+
+When RAW says a controlled creature "obeys commands", "acts independently", or
+takes a default behavior, model only the rule protocol that has a mechanical
+consequence. A default such as Dodge can be a modeled action if RAW fixes it; an
+open-ended instruction such as choosing useful tactics remains outside runtime
+ownership unless a future product explicitly adds a separate caller-owned policy
+layer outside the rules reducer.
+
 ## Designing Ownership
 
 Design starts from the rule and its state-transition consequence, not from the
