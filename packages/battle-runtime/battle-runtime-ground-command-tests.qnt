@@ -43,6 +43,7 @@ module battleRuntimeGroundCommandTests {
   import battleRuntimeSleepHideousLaughter.* from "./battle-runtime-sleep-hideous-laughter"
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
   import battleRuntimeGroundCommand.* from "./battle-runtime-ground-command"
+  import battleRuntimeWeaponAttacks.* from "./battle-runtime-weapon-attacks"
 
   run test_grease_records_ground_hazard_and_prones_failed_appearance_save = {
     val resolved = resolveGrease(initialState, true, false)

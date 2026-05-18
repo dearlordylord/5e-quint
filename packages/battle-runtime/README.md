@@ -1253,6 +1253,9 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
   reset, recharge roll, and start-turn Death Saving Throw wrappers.
 - `battle-runtime-ground-command.qnt` - Grease and Fog Cloud ground/obscurement
   reducers plus Command pending-effect follow-up procedures.
+- `battle-runtime-weapon-attacks.qnt` - Fighter weapon attack, True Strike
+  hosted weapon attack, Stat Block attack, Multiattack, and Opportunity Attack
+  reducers.
 - `battle-runtime-*-tests.qnt` - package-local QNT self-tests split by domain
   so the canonical integration spec stays focused on reducer behavior.
 - `battle-runtime-self-tests.qnt` - import-only QNT self-test suite used by the

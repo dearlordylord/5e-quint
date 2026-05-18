@@ -43,6 +43,7 @@ module battleRuntimeHpArmorBuffSpatialTests {
   import battleRuntimeSleepHideousLaughter.* from "./battle-runtime-sleep-hideous-laughter"
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
   import battleRuntimeGroundCommand.* from "./battle-runtime-ground-command"
+  import battleRuntimeWeaponAttacks.* from "./battle-runtime-weapon-attacks"
 
   run test_evasion_style_save_damage_replacement = {
     all {
