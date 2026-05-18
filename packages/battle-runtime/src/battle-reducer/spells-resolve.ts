@@ -160,6 +160,7 @@ export {
   validateSavingThrowOutcomes,
 } from "./spells-resolve-save-gates.ts";
 export {
+  resolveBlurAttackRollDefenseSpellAct,
   resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
   resolveCreatureTypeProtectionSpellAct,
   resolveDamageReductionSpellAct,
@@ -189,6 +190,7 @@ export {
 } from "./spells-resolve-target-selection.ts";
 
 import {
+  resolveBlurAttackRollDefenseSpellAct,
   resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
   resolveCreatureTypeProtectionSpellAct,
   resolveDamageReductionSpellAct,
@@ -366,6 +368,7 @@ export function resolveSpellAct(
       invocation.procedure === "rollModifier" ||
       invocation.procedure === "thaumaturgyBoomingVoice" ||
       invocation.procedure === "creatureTypeProtection" ||
+      invocation.procedure === "blurAttackRollDefense" ||
       invocation.procedure ===
         "conditionImmunityAndTurnStartTemporaryHitPoints" ||
       invocation.procedure === "afterHitDamage" ||
@@ -603,6 +606,14 @@ export function resolveSpellAct(
   }
   if (invocation.procedure === "creatureTypeProtection") {
     return resolveCreatureTypeProtectionSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "blurAttackRollDefense") {
+    return resolveBlurAttackRollDefenseSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

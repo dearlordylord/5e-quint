@@ -214,6 +214,14 @@ export function supportedSpellInvocationRef(
       procedure: "thaumaturgyBoomingVoice",
     };
   }
+  if (invocation.procedure === "blurAttackRollDefense") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "blurAttackRollDefense",
+    };
+  }
   return Match.value(invocation).pipe(
     Match.when({ procedure: "heldLight" }, (cantrip) => ({
       tag: "cantrip" as const,

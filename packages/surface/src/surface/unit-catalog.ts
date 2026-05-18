@@ -20,6 +20,7 @@ import barkskinInput from "../../content/barkskin.json";
 import blindnessDeafnessInput from "../../content/blindness_deafness.json";
 import baneInput from "../../content/bane.json";
 import blessInput from "../../content/bless.json";
+import blurInput from "../../content/blur.json";
 import burningHandsInput from "../../content/burning_hands.json";
 import classBardInput from "../../content/class_bard.json";
 import classBarbarianInput from "../../content/class_barbarian.json";
@@ -403,6 +404,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     blindnessDeafnessInput,
     baneInput,
     blessInput,
+    blurInput,
     burningHandsInput,
     chillTouchInput,
     chromaticOrbInput,

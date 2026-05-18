@@ -11,6 +11,7 @@ import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { Condition, CreatureType } from "@dnd/shared/game-facts";
 import { movementFeet } from "@dnd/shared/types";
 import type {
+  CreatureSense,
   DamageType,
   Skill,
   SpellRecord,
@@ -40,6 +41,13 @@ export const ELDRITCH_BLAST_SPELL_ID =
   "eldritch_blast" satisfies SpellRecord["id"];
 export const SCORCHING_RAY_SPELL_ID =
   "scorching_ray" satisfies SpellRecord["id"];
+export const BLUR_UNIT_ID = "blur" satisfies SpellRecord["id"];
+export const BLUR_ATTACK_ROLL_BYPASS_SENSES = [
+  "blindsight",
+  "truesight",
+] as const satisfies ReadonlyArray<CreatureSense["kind"]>;
+export type BlurAttackRollBypassSense =
+  (typeof BLUR_ATTACK_ROLL_BYPASS_SENSES)[number];
 export const CHROMATIC_ORB_DAMAGE_TYPES = [
   "acid",
   "cold",

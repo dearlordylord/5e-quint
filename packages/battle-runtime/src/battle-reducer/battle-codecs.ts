@@ -78,6 +78,7 @@ import type {
 import { PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS } from "../find-familiar-forms.ts";
 import {
   BATTLE_ATTACK_RANGE_BANDS,
+  BLUR_ATTACK_ROLL_BYPASS_SENSES,
   COMMAND_OPTIONS,
   ELDRITCH_BLAST_BEAM_COUNTS,
   SCORCHING_RAY_RAY_COUNTS,
@@ -678,6 +679,12 @@ const BattleTargetSpatialFactSchema = Schema.Union(
     kind: Schema.Literal("attackTargetCannotSeeAttacker"),
     attackerId: CombatantId,
     targetId: CombatantId,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("attackAttackerPerceivesBlurredTargetWithSense"),
+    attackerId: CombatantId,
+    targetId: CombatantId,
+    sense: Schema.Literal(...BLUR_ATTACK_ROLL_BYPASS_SENSES),
   }),
   Schema.Struct({
     kind: Schema.Literal("spellTarget"),
@@ -1605,6 +1612,14 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       }),
       activeEffect: BattleRuntimeObjectSchema,
       rangeFeet: MovementFeet,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("blurAttackRollDefense"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      activeEffect: BattleRuntimeObjectSchema,
     }),
     Schema.Struct({
       access: PreparedSpellAccessSchema,

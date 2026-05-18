@@ -163,7 +163,7 @@
     {
       "number": 27,
       "id": "L12G-SPELL-BLUR",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Blur Runtime Support"
     },
     {
@@ -1487,7 +1487,7 @@ Acceptance:
 
 ### Task 27 - L12G-SPELL-BLUR - Blur Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `blur`. Gate task: 28 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 

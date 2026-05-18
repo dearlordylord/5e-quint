@@ -277,7 +277,7 @@ module battleRuntimeSpellAttack {
     else
       Set()
 
-  pure def targetEffectsGrantAttackRollAdvantage(
+  pure def activeEffectsGrantAttackRollAdvantage(
     targetEffects: Set[ActiveEffect],
     attackerCanSeeTarget: bool,
   ): bool =
@@ -295,17 +295,37 @@ module battleRuntimeSpellAttack {
     attackerEffects: Set[ActiveEffect],
     targetEffects: Set[ActiveEffect],
     attackerCanSeeTarget: bool,
-  ): SpellAttackRollMode = {
-    val targetAdvantage = targetEffectsGrantAttackRollAdvantage(targetEffects, attackerCanSeeTarget)
-    if ((attackerEffects.contains(ViciousMockeryNextAttackDisadvantage) or attackerEffects.exists(effect => match effect { | WeaponMasterySapNextAttackDisadvantage(_) => true | _ => false })) and targetAdvantage)
-      NormalSpellAttackRoll
-    else if (targetAdvantage)
+  ): SpellAttackRollMode =
+    attackRollModeFromFlags(
+      activeEffectsGrantAttackRollAdvantage(targetEffects, attackerCanSeeTarget),
+      activeEffectsGrantAttackRollDisadvantage(attackerEffects),
+    )
+
+  pure def spellAttackRollModeFromBlurredActiveEffects(
+    attackerEffects: Set[ActiveEffect],
+    targetEffects: Set[ActiveEffect],
+    attackerCanSeeTarget: bool,
+    attackerPerceivesBlurredTargetWithBlindsightOrTruesight: bool,
+  ): SpellAttackRollMode =
+    attackRollModeFromFlags(
+      activeEffectsGrantAttackRollAdvantage(targetEffects, attackerCanSeeTarget),
+      activeEffectsGrantAttackRollDisadvantage(attackerEffects) or (
+        targetEffects.contains(Blurred)
+        and not(attackerPerceivesBlurredTargetWithBlindsightOrTruesight)
+      ),
+    )
+
+  pure def activeEffectsGrantAttackRollDisadvantage(attackerEffects: Set[ActiveEffect]): bool =
+    attackerEffects.contains(ViciousMockeryNextAttackDisadvantage)
+    or attackerEffects.exists(effect => match effect { | WeaponMasterySapNextAttackDisadvantage(_) => true | _ => false })
+
+  pure def attackRollModeFromFlags(hasAdvantage: bool, hasDisadvantage: bool): SpellAttackRollMode =
+    if (hasAdvantage and not(hasDisadvantage))
       AdvantageSpellAttackRoll
-    else if (attackerEffects.contains(ViciousMockeryNextAttackDisadvantage) or attackerEffects.exists(effect => match effect { | WeaponMasterySapNextAttackDisadvantage(_) => true | _ => false }))
+    else if (hasDisadvantage and not(hasAdvantage))
       DisadvantageSpellAttackRoll
     else
       NormalSpellAttackRoll
-  }
 
   pure def objectOutlinesGrantAttackRollAdvantage(
     outlines: Set[ObjectOutline],

@@ -75,6 +75,7 @@ import {
   supportedPreparedAfterHitDamageAndIlluminationSpellProfile,
   supportedPreparedAfterHitSaveGatedConditionSpellProfile,
   supportedPreparedAfterHitTimedDamageAndSaveSpellProfile,
+  supportedPreparedBlurAttackRollDefenseSpellProfile,
   supportedPreparedCreatureTypeProtectionSpellProfile,
   supportedPreparedExpeditiousRetreatDashSpellProfile,
   supportedPreparedFeatherFallMitigationSpellProfile,
@@ -254,6 +255,13 @@ export function supportedSpellActs(
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedCreatureTypeProtectionSpellProfile(
+        actor.combatantId,
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedBlurAttackRollDefenseSpellProfile(
         actor.combatantId,
         spell,
         spellcasting.spellSlots,

@@ -30,6 +30,7 @@ import type {
 import { Either, Match, Schema } from "effect";
 import {
   BATTLE_D20_ROLL_MODIFIER_KINDS,
+  type BlurAttackRollDefenseSpellInvocation,
   type BattleActiveEffectExpiration,
   type BattleCreatureState,
   type BattleState,
@@ -64,6 +65,7 @@ import { currentActorId } from "./creature-state-leaves.ts";
 import { activeMarkedDamageRiderEffect } from "./damage-helpers.ts";
 import {
   BATTLE_D20_ROLL_MODIFIER_DIE_SIZES,
+  BLUR_UNIT_ID,
   HUNTERS_MARK_FINDING_SKILLS,
   PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES,
   PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS,
@@ -647,6 +649,81 @@ export function supportedPreparedCreatureTypeProtectionSpellProfile(
           },
         ],
   );
+}
+
+export function supportedPreparedBlurAttackRollDefenseSpellProfile(
+  actorId: CombatantId,
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  const projection = blurAttackRollDefenseSpellProjection(actorId, spell);
+  if (projection === null) {
+    return [];
+  }
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] =>
+    Number(slot.spellLevel) < spell.mechanics.level
+      ? []
+      : [
+          {
+            access: { tag: "prepared" },
+            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+            procedure: "blurAttackRollDefense",
+            spell,
+            actionCost: "magicAction",
+            ...projection,
+          },
+        ],
+  );
+}
+
+function blurAttackRollDefenseSpellProjection(
+  actorId: CombatantId,
+  spell: SpellRecord,
+): Pick<BlurAttackRollDefenseSpellInvocation, "activeEffect"> | null {
+  if (
+    spell.id !== BLUR_UNIT_ID ||
+    spell.name !== "Blur" ||
+    spell.provenance.kind !== "srd-5.2.1" ||
+    spell.provenance.section !== "Spells/Descriptions-A-D#Blur" ||
+    spell.mechanics.family !== "activation" ||
+    spell.mechanics.level !== 2 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "self" ||
+    spell.mechanics.duration.kind !== "concentration" ||
+    spell.mechanics.duration.upTo.unit !== "minute" ||
+    spell.mechanics.duration.upTo.amount !== 1 ||
+    spell.mechanics.phases.length !== 1
+  ) {
+    return null;
+  }
+  const phase = spell.mechanics.phases[0];
+  const effects = phase?.kind === "direct" ? (phase.effects ?? []) : [];
+  const effect = effects[0];
+  const expiresAt = scalarBuffActiveEffectExpiration(
+    actorId,
+    spell.mechanics.duration,
+  );
+  if (
+    phase?.kind !== "direct" ||
+    phase.attachment.kind !== "self" ||
+    effects.length !== 1 ||
+    effect?.kind !== "modify_roll_advantage" ||
+    effect.mode !== "disadvantage" ||
+    (effect.affects ?? "rolls_against_self") !== "rolls_against_self" ||
+    !sameStringSet(effect.on, ["attack_roll"]) ||
+    effect.attackerTypeFilter !== undefined ||
+    expiresAt?.kind !== "concentration"
+  ) {
+    return null;
+  }
+  return {
+    activeEffect: {
+      kind: "blurred",
+      sourceSpellId: spell.id,
+      sourceCombatantId: actorId,
+      expiresAt,
+    },
+  };
 }
 
 export function creatureTypeProtectionSpellProjection(

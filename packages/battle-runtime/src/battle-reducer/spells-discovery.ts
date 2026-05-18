@@ -300,6 +300,21 @@ export function discoverSupportedSpellInvocations(
               ];
         return castActs;
       }
+      if (invocation.procedure === "blurAttackRollDefense") {
+        return [
+          {
+            subject: {
+              tag: "actionSpell" as const,
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
+            },
+            label: invocation.spell.name,
+            summary: spellInvocationCastSummary(invocation),
+            initialHoles: [],
+          },
+        ];
+      }
       if (invocation.procedure === "damageReduction") {
         const targetHole = spellTargetHole(state, actorId, invocation);
         const castActs =
@@ -794,6 +809,9 @@ export function spellInvocationCastSummary(
   if (invocation.procedure === "creatureTypeProtection") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
+  if (invocation.procedure === "blurAttackRollDefense") {
+    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+  }
   if (invocation.procedure === "damageReduction") {
     return `Cast ${invocation.spell.name} as a cantrip.`;
   }
@@ -889,6 +907,7 @@ export function spellActivationInvocationCastSummary(
         | "rollModifier"
         | "thaumaturgyBoomingVoice"
         | "creatureTypeProtection"
+        | "blurAttackRollDefense"
         | "saveGatedDamage"
         | "saveGatedCondition"
         | "saveGatedAttackRollAdvantage"
@@ -1014,6 +1033,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "persistentArmorEffect" &&
     invocation.procedure !== "rollModifier" &&
     invocation.procedure !== "creatureTypeProtection" &&
+    invocation.procedure !== "blurAttackRollDefense" &&
     invocation.procedure !== "scalarBuff" &&
     invocation.procedure !== "weaponDamageRider" &&
     invocation.procedure !== "afterHitDamage" &&
@@ -1065,6 +1085,7 @@ export function readiedSpellAct(
     invocation.procedure === "heldLightHurl" ||
     invocation.procedure === "rollModifier" ||
     invocation.procedure === "creatureTypeProtection" ||
+    invocation.procedure === "blurAttackRollDefense" ||
     invocation.procedure === "attackBurstSaveDamage" ||
     invocation.procedure === "saveGatedCondition" ||
     invocation.procedure === "saveGatedAttackRollAdvantage" ||
