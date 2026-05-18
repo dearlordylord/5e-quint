@@ -3,6 +3,11 @@
 module battleRuntimeWeaponHitSpellRiders {
   import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
+  import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
+  import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
+  import battleRuntimeConcentration.* from "./battle-runtime-concentration"
+  import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
+  import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
 
   pure def favorWeaponDamageRiderDurationTicks: int =
     battleRuntimeDivineFavorDurationTicks
@@ -81,4 +86,160 @@ module battleRuntimeWeaponHitSpellRiders {
         | _ => 0
       })
       .fold(0, (highest, dice) => if (highest > dice) highest else dice)
+
+  pure def resolveDivineFavor(state: BattleState): BattleState =
+    if (
+      currentActor(state) == Fighter and
+      state.bonusActionAvailable and
+      canExpendSpellSlotThisTurn(state) and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(fighterHasRage(state))
+    )
+      commitActorSpellSlotUse({
+        ...state,
+        fighter: {
+          ...state.fighter,
+          activeEffects: activeEffectsWithoutDivineFavor(state.fighter.activeEffects)
+            .union(Set(DivineFavorWeaponDamageRider({ durationTicks: favorWeaponDamageRiderDurationTicks }))),
+        },
+        bonusActionAvailable: false,
+      }, Fighter)
+    else
+      state
+
+  pure def resolveDivineSmiteAfterMeleeHit(
+    state: BattleState,
+    slotLevel: int,
+    smiteDamageRoll: int,
+    targetCreatureType: RuntimeCreatureType,
+    attackCritical: bool,
+    concentrationSaveSucceeded: bool,
+  ): BattleState =
+    if (
+      currentActor(state) == Fighter and
+      slotLevel >= 1 and
+      state.bonusActionAvailable and
+      canExpendSpellSlotThisTurn(state) and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(fighterHasRage(state))
+    )
+      commitActorSpellSlotUse({
+        ...state,
+        bonusActionAvailable: false,
+        goblin: applyDamageFromSource(state.goblin, smiteDamageRoll * (if (attackCritical) 2 else 1), 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter),
+      }, Fighter)
+    else
+      state
+
+  pure def resolvePaladinsSmiteAfterMeleeHit(
+    state: BattleState,
+    paladinsSmiteUsesRemaining: int,
+    smiteDamageRoll: int,
+    targetCreatureType: RuntimeCreatureType,
+    attackCritical: bool,
+    concentrationSaveSucceeded: bool,
+  ): { state: BattleState, paladinsSmiteUsesRemaining: int } =
+    if (
+      currentActor(state) == Fighter and
+      paladinsSmiteUsesRemaining > 0 and
+      state.bonusActionAvailable and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(fighterHasRage(state))
+    )
+      {
+        state: {
+          ...state,
+          bonusActionAvailable: false,
+          goblin: applyDamageFromSource(state.goblin, smiteDamageRoll * (if (attackCritical) 2 else 1), 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter),
+        },
+        paladinsSmiteUsesRemaining: paladinsSmiteUsesRemaining - 1,
+      }
+    else
+      { state: state, paladinsSmiteUsesRemaining: paladinsSmiteUsesRemaining }
+
+  pure def resolveEnsnaringStrikeAfterWeaponHit(
+    state: BattleState,
+    slotLevel: int,
+    goblinSavingThrowSucceeded: bool,
+  ): BattleState =
+    if (
+      currentActor(state) == Fighter and
+      slotLevel >= 1 and
+      state.bonusActionAvailable and
+      canExpendSpellSlotThisTurn(state) and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(fighterHasRage(state))
+    )
+      {
+        val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
+        commitActorSpellSlotUse({
+          ...withoutPrior,
+          fighter: { ...withoutPrior.fighter, concentrating: not(goblinSavingThrowSucceeded) },
+          goblin: if (goblinSavingThrowSucceeded)
+            withoutPrior.goblin
+          else
+            {
+              ...withoutPrior.goblin,
+              activeEffects: activeEffectsWithoutEnsnaringStrike(withoutPrior.goblin.activeEffects)
+                .union(Set(EnsnaringStrikeRestrained({ damageDice: ensnaringStrikeDamageDiceForSlot(slotLevel) }))),
+            },
+          bonusActionAvailable: false,
+        }, Fighter)
+      }
+    else
+      state
+
+  pure def resolveSearingSmiteAfterMeleeHit(
+    state: BattleState,
+    slotLevel: int,
+    smiteDamageRoll: int,
+    attackCritical: bool,
+    concentrationSaveSucceeded: bool,
+  ): BattleState =
+    if (
+      currentActor(state) == Fighter and
+      slotLevel >= 1 and
+      state.bonusActionAvailable and
+      canExpendSpellSlotThisTurn(state) and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(fighterHasRage(state))
+    )
+      commitActorSpellSlotUse({
+        ...state,
+        goblin: {
+          ...applyDamageFromSource(state.goblin, smiteDamageRoll * (if (attackCritical) 2 else 1), 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter),
+          activeEffects: activeEffectsWithoutSearingSmite(state.goblin.activeEffects)
+            .union(Set(SearingSmiteBurning({
+              damageDice: searingSmiteDamageDiceForSlot(slotLevel),
+              durationTicks: searingSmiteDurationTicks,
+            }))),
+        },
+        bonusActionAvailable: false,
+      }, Fighter)
+    else
+      state
+
+  pure def escapeEnsnaringStrike(
+    state: BattleState,
+    checkSucceeded: bool,
+    actorWithinRestrainedTargetReach: bool,
+  ): BattleState =
+    if (
+      not(state.actionAvailable)
+        or not(activeEffectsContainEnsnaringStrike(state.goblin.activeEffects))
+        or (currentActor(state) != Goblin and not(actorWithinRestrainedTargetReach))
+    )
+      state
+    else
+      {
+        ...state,
+        fighter: if (checkSucceeded) { ...state.fighter, concentrating: false } else state.fighter,
+        goblin: if (checkSucceeded) { ...state.goblin, activeEffects: activeEffectsWithoutEnsnaringStrike(state.goblin.activeEffects) } else state.goblin,
+        actionAvailable: false,
+      }
 }

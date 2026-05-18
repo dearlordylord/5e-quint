@@ -26,7 +26,8 @@ QNT modules, such as `battle-runtime-find-familiar.qnt`,
 `battle-runtime-turn-order.qnt`, and `battle-runtime-damage-adjustments.qnt`,
 `battle-runtime-spell-invocation.qnt`, `battle-runtime-spell-attack.qnt`,
 `battle-runtime-chained-spell-attack.qnt`, and
-`battle-runtime-save-gated-spell.qnt`, and `battle-runtime-marked-riders.qnt`,
+`battle-runtime-save-gated-spell.qnt`, `battle-runtime-marked-riders.qnt`, and
+`battle-runtime-marked-spells.qnt`,
 `battle-runtime-reaction-window.qnt`, `battle-runtime-combatant-side.qnt`, and
 `battle-runtime-concentration.qnt`, `battle-runtime-actor-combatants.qnt`, and
 `battle-runtime-sanctuary.qnt`, `battle-runtime-feather-fall.qnt`, and

@@ -60,6 +60,7 @@ module battleRuntime {
   import battleRuntimeChainedSpellAttack.* from "./battle-runtime-chained-spell-attack"
   import battleRuntimeSaveGatedSpell.* from "./battle-runtime-save-gated-spell"
   import battleRuntimeMarkedRiders.* from "./battle-runtime-marked-riders"
+  import battleRuntimeMarkedSpells.* from "./battle-runtime-marked-spells"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
   import battleRuntimeCombatantSide.* from "./battle-runtime-combatant-side"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
@@ -1389,112 +1390,6 @@ module battleRuntime {
     }
   }
 
-  pure def resolveDivineFavor(state: BattleState): BattleState =
-    if (
-      currentActor(state) == Fighter and
-      state.bonusActionAvailable and
-      canExpendSpellSlotThisTurn(state) and
-      not(state.fighter.unconscious) and
-      not(state.fighter.incapacitated) and
-      not(fighterHasRage(state))
-    )
-	      commitActorSpellSlotUse({
-	        ...state,
-	        fighter: {
-	          ...state.fighter,
-	          activeEffects: activeEffectsWithoutDivineFavor(state.fighter.activeEffects)
-	            .union(Set(DivineFavorWeaponDamageRider({ durationTicks: favorWeaponDamageRiderDurationTicks }))),
-	        },
-	        bonusActionAvailable: false,
-	      }, Fighter)
-    else
-      state
-
-  pure def resolveDivineSmiteAfterMeleeHit(
-    state: BattleState,
-    slotLevel: int,
-    smiteDamageRoll: int,
-    targetCreatureType: RuntimeCreatureType,
-    attackCritical: bool,
-    concentrationSaveSucceeded: bool,
-  ): BattleState =
-    if (
-      currentActor(state) == Fighter and
-      slotLevel >= 1 and
-      state.bonusActionAvailable and
-      canExpendSpellSlotThisTurn(state) and
-      not(state.fighter.unconscious) and
-      not(state.fighter.incapacitated) and
-      not(fighterHasRage(state))
-    )
-      commitActorSpellSlotUse({
-        ...state,
-        bonusActionAvailable: false,
-        goblin: applyDamageFromSource(state.goblin, smiteDamageRoll * (if (attackCritical) 2 else 1), 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter),
-      }, Fighter)
-    else
-      state
-
-  pure def resolvePaladinsSmiteAfterMeleeHit(
-    state: BattleState,
-    paladinsSmiteUsesRemaining: int,
-    smiteDamageRoll: int,
-    targetCreatureType: RuntimeCreatureType,
-    attackCritical: bool,
-    concentrationSaveSucceeded: bool,
-  ): { state: BattleState, paladinsSmiteUsesRemaining: int } =
-    if (
-      currentActor(state) == Fighter and
-      paladinsSmiteUsesRemaining > 0 and
-      state.bonusActionAvailable and
-      not(state.fighter.unconscious) and
-      not(state.fighter.incapacitated) and
-      not(fighterHasRage(state))
-    )
-      {
-        state: {
-          ...state,
-          bonusActionAvailable: false,
-          goblin: applyDamageFromSource(state.goblin, smiteDamageRoll * (if (attackCritical) 2 else 1), 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter),
-        },
-        paladinsSmiteUsesRemaining: paladinsSmiteUsesRemaining - 1,
-      }
-    else
-      { state: state, paladinsSmiteUsesRemaining: paladinsSmiteUsesRemaining }
-
-  pure def resolveEnsnaringStrikeAfterWeaponHit(
-    state: BattleState,
-    slotLevel: int,
-    goblinSavingThrowSucceeded: bool,
-  ): BattleState =
-    if (
-      currentActor(state) == Fighter and
-      slotLevel >= 1 and
-      state.bonusActionAvailable and
-      canExpendSpellSlotThisTurn(state) and
-      not(state.fighter.unconscious) and
-      not(state.fighter.incapacitated) and
-      not(fighterHasRage(state))
-    )
-	      {
-	      val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
-	      commitActorSpellSlotUse({
-	        ...withoutPrior,
-	        fighter: { ...withoutPrior.fighter, concentrating: not(goblinSavingThrowSucceeded) },
-	        goblin: if (goblinSavingThrowSucceeded)
-          withoutPrior.goblin
-        else
-          {
-            ...withoutPrior.goblin,
-            activeEffects: activeEffectsWithoutEnsnaringStrike(withoutPrior.goblin.activeEffects)
-              .union(Set(EnsnaringStrikeRestrained({ damageDice: ensnaringStrikeDamageDiceForSlot(slotLevel) }))),
-	          },
-	        bonusActionAvailable: false,
-	      }, Fighter)
-	    }
-    else
-      state
-
   pure def endTurnWithEnsnaringStrikeDamage(
     state: BattleState,
     damageRoll: int,
@@ -1507,37 +1402,6 @@ module battleRuntime {
     else
       advanced
   }
-
-  pure def resolveSearingSmiteAfterMeleeHit(
-    state: BattleState,
-    slotLevel: int,
-    smiteDamageRoll: int,
-    attackCritical: bool,
-    concentrationSaveSucceeded: bool,
-  ): BattleState =
-    if (
-      currentActor(state) == Fighter and
-      slotLevel >= 1 and
-      state.bonusActionAvailable and
-      canExpendSpellSlotThisTurn(state) and
-      not(state.fighter.unconscious) and
-      not(state.fighter.incapacitated) and
-      not(fighterHasRage(state))
-    )
-	      commitActorSpellSlotUse({
-	        ...state,
-	        goblin: {
-	          ...applyDamageFromSource(state.goblin, smiteDamageRoll * (if (attackCritical) 2 else 1), 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter),
-          activeEffects: activeEffectsWithoutSearingSmite(state.goblin.activeEffects)
-            .union(Set(SearingSmiteBurning({
-              damageDice: searingSmiteDamageDiceForSlot(slotLevel),
-              durationTicks: searingSmiteDurationTicks,
-            }))),
-	        },
-	        bonusActionAvailable: false,
-	      }, Fighter)
-    else
-      state
 
   pure def endTurnWithSearingSmiteDamageAndSave(
     state: BattleState,
@@ -1561,165 +1425,6 @@ module battleRuntime {
     else
       advanced
   }
-
-  pure def escapeEnsnaringStrike(
-    state: BattleState,
-    checkSucceeded: bool,
-    actorWithinRestrainedTargetReach: bool,
-  ): BattleState =
-    if (
-      not(state.actionAvailable)
-        or not(activeEffectsContainEnsnaringStrike(state.goblin.activeEffects))
-        or (currentActor(state) != Goblin and not(actorWithinRestrainedTargetReach))
-    )
-      state
-    else
-      {
-        ...state,
-        fighter: if (checkSucceeded) { ...state.fighter, concentrating: false } else state.fighter,
-        goblin: if (checkSucceeded) { ...state.goblin, activeEffects: activeEffectsWithoutEnsnaringStrike(state.goblin.activeEffects) } else state.goblin,
-        actionAvailable: false,
-      }
-
-  pure def resolveHuntersMark(state: BattleState, target: Actor, slotLevel: int): BattleState =
-    if (
-      currentActor(state) == Fighter and
-      target == Goblin and
-      slotLevel >= 1 and
-      state.bonusActionAvailable and
-      canExpendSpellSlotThisTurn(state) and
-      not(state.fighter.unconscious) and
-      not(state.fighter.incapacitated) and
-      not(fighterHasRage(state))
-    )
-	      commitActorSpellSlotUse({
-	        ...state,
-	        fighter: {
-	          ...state.fighter,
-          concentrating: true,
-            activeEffects: activeEffectsWithoutHuntersMark(state.fighter.activeEffects)
-            .union(Set(HuntersMarkDamageRider({
-              target: target,
-              transfer: AwaitingTargetDrop,
-              durationTicks: huntersMarkDurationTicks(slotLevel),
-            }))),
-	        },
-	        bonusActionAvailable: false,
-	      }, Fighter)
-    else
-      state
-
-  pure def resolveFavoredEnemyHuntersMark(
-    state: BattleState,
-    target: Actor,
-    favoredEnemyUsesRemaining: int,
-  ): { state: BattleState, favoredEnemyUsesRemaining: int } =
-    if (
-      currentActor(state) == Fighter and
-      target == Goblin and
-      favoredEnemyUsesRemaining > 0 and
-      state.bonusActionAvailable and
-      not(state.fighter.unconscious) and
-      not(state.fighter.incapacitated) and
-      not(fighterHasRage(state))
-    )
-      {
-        state: {
-          ...state,
-          fighter: {
-            ...state.fighter,
-            concentrating: true,
-              activeEffects: activeEffectsWithoutHuntersMark(state.fighter.activeEffects)
-              .union(Set(HuntersMarkDamageRider({
-                target: target,
-                transfer: AwaitingTargetDrop,
-                durationTicks: huntersMarkDurationTicks(1),
-              }))),
-          },
-          bonusActionAvailable: false,
-        },
-        favoredEnemyUsesRemaining: favoredEnemyUsesRemaining - 1,
-      }
-    else
-      { state: state, favoredEnemyUsesRemaining: favoredEnemyUsesRemaining }
-
-  pure def transferHuntersMark(state: BattleState, target: Actor): BattleState =
-    if (
-      currentActor(state) == Fighter and
-      target == Goblin and
-      state.bonusActionAvailable and
-      activeEffectsContainTransferableHuntersMark(state, state.fighter.activeEffects) and
-      state.fighter.concentrating
-    )
-      {
-        ...state,
-        fighter: {
-          ...state.fighter,
-          activeEffects: activeEffectsWithoutHuntersMark(state.fighter.activeEffects)
-            .union(Set(HuntersMarkDamageRider({
-              target: target,
-              transfer: AwaitingTargetDrop,
-              durationTicks: activeEffectsHuntersMarkDurationTicks(state.fighter.activeEffects),
-            }))),
-        },
-        bonusActionAvailable: false,
-      }
-    else
-      state
-
-  pure def resolveHex(state: BattleState, target: Actor, ability: Ability, slotLevel: int): BattleState =
-    if (
-      currentActor(state) == Fighter and
-      target == Goblin and
-      slotLevel >= 1 and
-      state.bonusActionAvailable and
-      canExpendSpellSlotThisTurn(state) and
-      not(state.fighter.unconscious) and
-      not(state.fighter.incapacitated) and
-      not(fighterHasRage(state))
-    )
-      commitActorSpellSlotUse({
-        ...state,
-        fighter: {
-          ...state.fighter,
-          concentrating: true,
-          activeEffects: activeEffectsWithoutHex(state.fighter.activeEffects)
-            .union(Set(HexDamageRider({
-              target: target,
-              ability: ability,
-              transfer: AwaitingTargetDrop,
-              durationTicks: hexDurationTicks(slotLevel),
-            }))),
-        },
-        bonusActionAvailable: false,
-      }, Fighter)
-    else
-      state
-
-  pure def transferHex(state: BattleState, target: Actor): BattleState =
-    if (
-      currentActor(state) == Fighter and
-      target == Goblin and
-      state.bonusActionAvailable and
-      activeEffectsContainTransferableHex(state, state.fighter.activeEffects) and
-      state.fighter.concentrating
-    )
-      {
-        ...state,
-        fighter: {
-          ...state.fighter,
-          activeEffects: activeEffectsWithoutHex(state.fighter.activeEffects)
-            .union(Set(HexDamageRider({
-              target: target,
-              ability: activeEffectsHexAbility(state.fighter.activeEffects),
-              transfer: AwaitingTargetDrop,
-              durationTicks: activeEffectsHexDurationTicks(state.fighter.activeEffects),
-            }))),
-        },
-        bonusActionAvailable: false,
-      }
-    else
-      state
 
   pure def resolveThaumaturgyBoomingVoice(state: BattleState, activeOneMinuteEffectCount: int): BattleState =
     resolveFighterThaumaturgyBoomingVoice(state, currentActor(state), activeOneMinuteEffectCount, fighterHasRage(state))
@@ -3068,28 +2773,6 @@ module battleRuntime {
       target
     else
       { ...target, activeEffects: target.activeEffects.union(saveGatedAttackRollAdvantageFailedSaveActiveEffects(invocation)) }
-
-  pure def breakConcentrationSpellEffects(state: BattleState, caster: Actor): BattleState =
-    match caster {
-      | Fighter =>
-        {
-          ...state,
-          fighter: breakConcentration(state.fighter),
-          goblin: combatantWithoutSpellEffectConcentrationEffects(state.goblin),
-          objectOutlines: state.objectOutlines.filter(outline => match outline {
-            | FaerieFireObjectOutline(data) => data.source != Fighter
-          }),
-        }
-      | Goblin =>
-        {
-          ...state,
-          goblin: breakConcentration(state.goblin),
-          fighter: combatantWithoutSpellEffectConcentrationEffects(state.fighter),
-          objectOutlines: state.objectOutlines.filter(outline => match outline {
-            | FaerieFireObjectOutline(data) => data.source != Goblin
-          }),
-        }
-    }
 
   pure def resolveFaerieFireWithObjects(
     state: BattleState,

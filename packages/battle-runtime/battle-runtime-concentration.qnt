@@ -129,4 +129,26 @@ module battleRuntimeConcentration {
 
   pure def combatantWithoutSleepEffects(target: Combatant): Combatant =
     combatantWithSleepEffectsRemoved(target, activeEffectsWithoutSleepEffects(target.activeEffects))
+
+  pure def breakConcentrationSpellEffects(state: BattleState, caster: Actor): BattleState =
+    match caster {
+      | Fighter =>
+        {
+          ...state,
+          fighter: breakConcentration(state.fighter),
+          goblin: combatantWithoutSpellEffectConcentrationEffects(state.goblin),
+          objectOutlines: state.objectOutlines.filter(outline => match outline {
+            | FaerieFireObjectOutline(data) => data.source != Fighter
+          }),
+        }
+      | Goblin =>
+        {
+          ...state,
+          goblin: breakConcentration(state.goblin),
+          fighter: combatantWithoutSpellEffectConcentrationEffects(state.fighter),
+          objectOutlines: state.objectOutlines.filter(outline => match outline {
+            | FaerieFireObjectOutline(data) => data.source != Goblin
+          }),
+        }
+    }
 }

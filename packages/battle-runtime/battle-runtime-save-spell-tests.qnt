@@ -26,6 +26,7 @@ module battleRuntimeSaveSpellTests {
   import battleRuntimeChainedSpellAttack.* from "./battle-runtime-chained-spell-attack"
   import battleRuntimeSaveGatedSpell.* from "./battle-runtime-save-gated-spell"
   import battleRuntimeMarkedRiders.* from "./battle-runtime-marked-riders"
+  import battleRuntimeMarkedSpells.* from "./battle-runtime-marked-spells"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
   import battleRuntimeCombatantSide.* from "./battle-runtime-combatant-side"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"

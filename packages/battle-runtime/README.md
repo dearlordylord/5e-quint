@@ -1208,6 +1208,8 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
   replay holes.
 - `battle-runtime-marked-riders.qnt` - Hunter's Mark and Hex durations,
   transfer eligibility, marked damage riders, and marked Ability Check modes.
+- `battle-runtime-marked-spells.qnt` - Hunter's Mark, Favored Enemy Hunter's
+  Mark, Hex, and marked-rider transfer spell reducers.
 - `battle-runtime-reaction-window.qnt` - Reaction trigger matching, window
   opening, reactor availability, Shield and Counterspell reaction helpers, and
   Hellish Rebuke admission facts.
@@ -1225,7 +1227,8 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
 - `battle-runtime-jump-movement.qnt` - Jump movement-replacement slot scaling,
   landing facts, and per-target use tracking helpers.
 - `battle-runtime-weapon-hit-spell-riders.qnt` - Divine Favor, Divine Smite,
-  Ensnaring Strike, and Searing Smite damage/effect rider projections.
+  Ensnaring Strike, and Searing Smite damage/effect rider projections and
+  after-hit spell reducers.
 - `battle-runtime-fighter-ongoing-features.qnt` - Fighter Rage and Reckless
   Attack ongoing-feature lifecycle, extension, resistance, and attack-roll
   hooks.
