@@ -8,7 +8,7 @@
     "kind": "trained"
   },
   "className": "ranger",
-  "description": "SRD Ranger class creation facts for a level-1 character, including class-list prepared Spell Access, Spell Slots, and spellcasting focus facts.",
+  "description": "SRD Ranger class creation facts for level-1 characters plus the level-2 Deft Explorer and Fighting Style class-feature grants, including class-list prepared Spell Access, Spell Slots, and spellcasting focus facts.",
   "featureGrants": [
     {
       "level": 1,
@@ -17,6 +17,14 @@
     {
       "level": 1,
       "unitId": "ranger_weapon_mastery"
+    },
+    {
+      "level": 2,
+      "unitId": "ranger_deft_explorer"
+    },
+    {
+      "level": 2,
+      "unitId": "ranger_fighting_style"
     }
   ],
   "hitPointDie": 10,
@@ -91,7 +99,7 @@
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Ranger.md:3-24,33-35,58-74"
+    "section": "Classes/Ranger.md:3-24,33-36,58-99,156-177"
   },
   "savingThrowProficiencies": [
     "str",
@@ -111,7 +119,7 @@
     ]
   },
   "spellcasting": {
-    "kind": "list_prepared_spellcasting_creation",
+    "kind": "list_prepared_spellcasting_progression_creation",
     "featureLevel": 1,
     "preparedAccess": {
       "changeOn": {
@@ -127,6 +135,10 @@
         },
         {
           "spellId": "ensnaring_strike",
+          "spellLevel": 1
+        },
+        {
+          "spellId": "longstrider",
           "spellLevel": 1
         }
       ]
@@ -144,6 +156,30 @@
       ]
     },
     "spellcastingAbility": "wis",
+    "spellcastingProgression": [
+      {
+        "atLevel": 1,
+        "cantripCount": 0,
+        "preparedSpellCount": 2,
+        "spellSlots": [
+          {
+            "count": 2,
+            "spellLevel": 1
+          }
+        ]
+      },
+      {
+        "atLevel": 2,
+        "cantripCount": 0,
+        "preparedSpellCount": 3,
+        "spellSlots": [
+          {
+            "count": 2,
+            "spellLevel": 1
+          }
+        ]
+      }
+    ],
     "spellcastingFocus": "druidic_focus"
   },
   "subclassChoices": [],

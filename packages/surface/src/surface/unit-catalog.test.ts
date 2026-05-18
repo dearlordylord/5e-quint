@@ -77,6 +77,7 @@ const requiredFirstVerticalUnitIds = [
   ...task184WeaponMasteryUnitIds,
   "paladin_fighting_style",
   "paladin_paladins_smite",
+  "ranger_fighting_style",
   "subclass_fighter_champion",
   "subclass_wizard_evoker",
   "rogue_evasion",
@@ -1889,6 +1890,50 @@ describe("SRD Unit catalog boundary", () => {
             count: 2,
             kind: "grant_language_choice",
             source: "character_creation_language_tables",
+          },
+        ],
+      },
+    });
+  });
+
+  test("installs Ranger Fighting Style as a feat or Druidic Warrior acquisition choice", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("ranger_fighting_style")).toMatchObject({
+      acquiredAtLevel: 2,
+      className: "ranger",
+      kind: "class_feature",
+      mechanics: {
+        choiceKey: "ranger_fighting_style",
+        family: "class_feature_acquisition_choice",
+        options: [
+          {
+            id: "fighting_style_feat",
+            mechanics: {
+              grants: [
+                {
+                  category: "fighting_style",
+                  kind: "grant_feat",
+                },
+              ],
+            },
+          },
+          {
+            id: "druidic_warrior",
+            mechanics: {
+              grants: [
+                {
+                  count: 2,
+                  kind: "grant_spell_access_choice",
+                  mode: "known",
+                  spellLevel: 0,
+                  spellList: "druid",
+                },
+              ],
+            },
           },
         ],
       },

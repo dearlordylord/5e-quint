@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 370,
-      "numerator": 140,
-      "percent": "37.8%"
+      "denominator": 371,
+      "numerator": 141,
+      "percent": "38%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 442,
-      "numerator": 172,
-      "percent": "38.9%"
+      "denominator": 443,
+      "numerator": 173,
+      "percent": "39.1%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 173
+      "value": 174
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 111,
-      "numerator": 111,
+      "denominator": 112,
+      "numerator": 112,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 173,
-      "numerator": 173,
+      "denominator": 174,
+      "numerator": 174,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 111,
+      "denominator": 112,
       "numerator": 104,
-      "percent": "93.7%"
+      "percent": "92.9%"
     },
     "supportedProfileCoverage": {
-      "denominator": 141,
-      "numerator": 111,
-      "percent": "78.7%"
+      "denominator": 142,
+      "numerator": 112,
+      "percent": "78.9%"
     }
   },
   "metricSemantics": [
@@ -6158,24 +6158,50 @@
         "status": "installed"
       },
       "claim": {
-        "followUpTasks": [
-          {
-            "id": "L12G-AUTHOR-RANGER-FIGHTING-STYLE",
-            "mechanic": "Author and retain Ranger Fighting Style alongside Deft Explorer before admitting same-class Ranger level-2 progression, including Fighting Style feat choice or Druidic Warrior Spell Access facts without treating selected feat or cantrip execution as Deft Explorer support.",
-            "owner": "character-creation-runtime plus character-sheet-runtime",
-            "requiredOutput": "Character Creation can retain both Ranger level-2 feature refs and project Deft Explorer Expertise/language choices only after the sibling Fighting Style grant is present.",
-            "title": "Ranger Fighting Style Authoring And Support"
-          }
+        "profileIds": [
+          "character-creation.skill-expertise-choice"
         ],
-        "futureProfileOwner": "character-creation-runtime plus character-sheet-runtime",
-        "reason": "Ranger Deft Explorer is authored and installed as an SRD Surface class-feature record with catalog-level Expertise and language-choice metadata only. It remains blocked by Task 17 because SRD Ranger level 2 grants both Deft Explorer and Fighting Style, and Character Creation must not admit same-class Ranger 2 until all sibling level-2 feature grants can be retained.",
-        "tag": "unsupported-profile"
+        "rawRequirementIds": [],
+        "supportedMechanics": [
+          "Ranger Deft Explorer is installed as a level-2 Surface class-feature grant on class_ranger alongside Ranger Fighting Style",
+          "Surface Ranger spellcasting carries level-1 and level-2 table rows so admitting same-class Ranger 2 projects three prepared spells and two level-1 Spell Slots",
+          "Surface grant_expertise represents the level-2 Deft Explorer acquisition choice as one owned skill proficiency without existing Expertise",
+          "Surface grant_language_choice represents the two Deft Explorer Character Creation language-table choices without changing origin language state",
+          "Character Creation admits supported Ranger level-2 progression, discovers and finalizes the Deft Explorer Expertise and language choices, and projects CharacterBuild Expertise and classFeatureLanguages from the selected choices without duplicating skill proficiency or origin language state"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-AUTHOR-RANGER-FIGHTING-STYLE"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-creation.skill-expertise-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface grant-expertise class-feature choices over existing CharacterBuild skill proficiencies projected into Expertise proficiency levels.",
+          "taskRefs": [
+            "AT-L1-03S"
+          ],
+          "title": "Character Creation finalizes skill Expertise choices into build proficiency levels",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/ranger_deft_explorer.json",
       "unitId": "ranger_deft_explorer"
     },
@@ -6261,6 +6287,89 @@
       ],
       "sourceRecordPath": "packages/surface/content/ranger_favored_enemy.json",
       "unitId": "ranger_favored_enemy"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "later-level-only",
+              "owner": "future Ranger advancement cantrip replacement owner",
+              "reason": "Druidic Warrior cantrip replacement only occurs on later Ranger level gains after the level-2 acquisition choice is complete."
+            },
+            "mechanic": "Druidic Warrior cantrip replacement when later gaining Ranger levels after acquiring the feature"
+          }
+        ],
+        "profileIds": [
+          "character-creation.class-feature-feat-choice",
+          "character-creation.class-feature-option-projection"
+        ],
+        "supportedMechanics": [
+          "Ranger Fighting Style is installed as a Surface class-feature acquisition choice between the Fighting Style feat branch and the Druidic Warrior branch",
+          "Character Creation admits a supported Ranger level-2 same-class progression, discovers the Ranger Fighting Style branch choice through the normal draft hole workflow, and fill/finalizes both supported branches end to end",
+          "Character Creation admits the Fighting Style feat branch, discovers exactly one supported Fighting Style feat choice, and finalizes the selected feat as a selected CharacterBuild class-choice ref with selectedFromUnitId ranger_fighting_style",
+          "Character Creation admits the Druidic Warrior branch, discovers exactly two Druid cantrip choices from the selected branch, and projects selected cantrips as Ranger spellcasting cantrips using the Ranger Wisdom spellcasting source",
+          "Selected Fighting Style feat Units and selected cantrip Spell Units own their executable behavior; the Ranger feature owns only the branch and grant selection container"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-AUTHOR-RANGER-FIGHTING-STYLE"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "character-creation.class-feature-feat-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface class-feature grant_feat records plus Character Draft Unit-backed selections; selected feat execution remains owned by the selected feat Unit profile.",
+          "taskRefs": [
+            "AT-L1-03S"
+          ],
+          "title": "Character Creation finalizes class-feature feat choices as selected build feature refs",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-creation.class-feature-option-projection",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface class-feature option records such as Divine Order and Primal Order projected from accepted Character Draft selections into CharacterBuild facts.",
+          "taskRefs": [
+            "AT-L1-03S"
+          ],
+          "title": "Character Creation projects class-feature option choices into build facts",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/ranger_fighting_style.json",
+      "unitId": "ranger_fighting_style"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

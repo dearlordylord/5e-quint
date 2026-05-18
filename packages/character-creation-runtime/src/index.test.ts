@@ -107,8 +107,11 @@ import {
   CLASS_CANTRIP_CHOICE_KEY,
   CLASS_FEATURE_FEAT_CHOICE_KEY,
   CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
+  CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
   CLASS_PREPARED_SPELL_CHOICE_KEY,
+  CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
   PALADIN_FIGHTING_STYLE_CHOICE_KEY,
+  RANGER_FIGHTING_STYLE_CHOICE_KEY,
   abilityScoreIncreaseChoiceOptions,
   ELDRITCH_INVOCATIONS_CHOICE_KEY,
   progressionOptionId,
@@ -133,6 +136,7 @@ import {
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE warlock_eldritch_invocations
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-06 cleric_divine_order druid_primal_order
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-CLASS-PALADIN-FIGHTING-STYLE paladin_fighting_style
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-AUTHOR-RANGER-FIGHTING-STYLE ranger_deft_explorer ranger_fighting_style
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-07 rogue_expertise
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY cleric_channel_divinity
 
@@ -726,6 +730,7 @@ describe("character creation hole discovery", () => {
           "13:class_paladin:level_1:maximum_hit_die",
           "13:class_paladin|13:class_paladin:level_2:fixed_hp_gain",
           "12:class_ranger:level_1:maximum_hit_die",
+          "12:class_ranger|12:class_ranger:level_2:fixed_hp_gain",
           "11:class_rogue:level_1:maximum_hit_die",
           "11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue:level_6:fixed_hp_gain",
           "14:class_sorcerer:level_1:maximum_hit_die",
@@ -1123,6 +1128,368 @@ describe("character creation hole discovery", () => {
         (source) => source.sourceUnitId === "class_paladin",
       )?.spellcastingAbility,
     ).toBe("cha");
+  });
+
+  test("models Ranger level 2 Deft Explorer and Fighting Style acquisition choices", () => {
+    const rangerFacts = readClassCreationFacts(
+      unitLibrary.requireUnit("class_ranger"),
+    );
+    expect(rangerFacts.tag).toBe("readable");
+    if (rangerFacts.tag !== "readable") return;
+    expect(rangerFacts.value.featureGrants).toEqual(
+      expect.arrayContaining([
+        { level: 2, unitId: "ranger_deft_explorer" },
+        { level: 2, unitId: "ranger_fighting_style" },
+      ]),
+    );
+    if (
+      !("spellcasting" in rangerFacts.value) ||
+      rangerFacts.value.spellcasting.kind !==
+        "list_prepared_spellcasting_progression_creation"
+    ) {
+      throw new Error("Expected Ranger level-scaled spellcasting facts.");
+    }
+    expect(rangerFacts.value.spellcasting.spellcastingProgression).toEqual(
+      expect.arrayContaining([
+        {
+          atLevel: 2,
+          cantripCount: 0,
+          preparedSpellCount: 3,
+          spellSlots: [{ spellLevel: 1, count: 2 }],
+        },
+      ]),
+    );
+
+    const deftHoles = classFeatureGrantChoiceHoles(
+      "ranger_deft_explorer",
+      unitLibrary,
+      {
+        classLevel: 2,
+        knownLanguages: ["Common", "Dwarvish", "Goblin"],
+        ownedSkillProficiencies: ["perception", "survival"],
+      },
+    );
+    expect(deftHoles).toHaveLength(2);
+    const deftExpertiseHole = deftHoles.find(
+      (hole) =>
+        hole.source.tag === "unitChoice" &&
+        hole.source.choiceKey === CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
+    );
+    const deftLanguageHole = deftHoles.find(
+      (hole) =>
+        hole.source.tag === "unitChoice" &&
+        hole.source.choiceKey === CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
+    );
+    expect(deftExpertiseHole).toMatchObject({
+      kind: "choice",
+      source: {
+        unitId: "ranger_deft_explorer",
+        choiceKey: CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
+      },
+      cardinality: { tag: "exactly", count: 1 },
+    });
+    expect(optionIds(deftExpertiseHole)).toEqual(["perception", "survival"]);
+    expect(deftLanguageHole).toMatchObject({
+      kind: "choice",
+      source: {
+        unitId: "ranger_deft_explorer",
+        choiceKey: CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
+      },
+      cardinality: { tag: "exactly", count: 2 },
+    });
+    expect(optionIds(deftLanguageHole)).toEqual(
+      expect.arrayContaining(["Elvish", "Gnomish"]),
+    );
+
+    const branchHole = classFeatureGrantChoiceHoles(
+      "ranger_fighting_style",
+      unitLibrary,
+      { classLevel: 2 },
+    )[0];
+    expect(branchHole).toBeDefined();
+    if (branchHole === undefined) return;
+    expect(branchHole).toMatchObject({
+      kind: "choice",
+      source: {
+        unitId: "ranger_fighting_style",
+        choiceKey: RANGER_FIGHTING_STYLE_CHOICE_KEY,
+      },
+      cardinality: { tag: "exactly", count: 1 },
+    });
+    expect(optionIds(branchHole)).toEqual([
+      "fighting_style_feat",
+      "druidic_warrior",
+    ]);
+    expect(supportedHoleOptionIds(branchHole)).toEqual([
+      "fighting_style_feat",
+      "druidic_warrior",
+    ]);
+
+    const featBranchHoles = selectedClassFeatureAcquisitionGrantChoiceHoles({
+      choices: [
+        selectedChoice(
+          "ranger_fighting_style",
+          RANGER_FIGHTING_STYLE_CHOICE_KEY,
+          "fighting_style_feat",
+        ),
+      ],
+      classUnitId: "class_ranger",
+      classFacts: rangerFacts.value,
+      classLevel: 2,
+      unitLibrary,
+    });
+    expect(featBranchHoles[0]).toBeDefined();
+    if (featBranchHoles[0] === undefined) return;
+    expect(featBranchHoles[0]).toMatchObject({
+      kind: "choice",
+      source: {
+        unitId: "ranger_fighting_style",
+        choiceKey: CLASS_FEATURE_FEAT_CHOICE_KEY,
+      },
+      cardinality: { tag: "exactly", count: 1 },
+    });
+    expect(optionIds(featBranchHoles[0])).toEqual(
+      expect.arrayContaining(["defense", "feat_archery"]),
+    );
+
+    const druidicWarriorHoles = selectedClassFeatureAcquisitionGrantChoiceHoles(
+      {
+        choices: [
+          selectedChoice(
+            "ranger_fighting_style",
+            RANGER_FIGHTING_STYLE_CHOICE_KEY,
+            "druidic_warrior",
+          ),
+        ],
+        classUnitId: "class_ranger",
+        classFacts: rangerFacts.value,
+        classLevel: 2,
+        unitLibrary,
+      },
+    );
+    expect(druidicWarriorHoles[0]).toBeDefined();
+    if (druidicWarriorHoles[0] === undefined) return;
+    expect(druidicWarriorHoles[0]).toMatchObject({
+      kind: "choice",
+      source: {
+        unitId: "ranger_fighting_style",
+        choiceKey: CLASS_CANTRIP_CHOICE_KEY,
+      },
+      cardinality: { tag: "exactly", count: 2 },
+    });
+    expect(optionIds(druidicWarriorHoles[0])).toEqual(
+      expect.arrayContaining(["guidance", "starry_wisp"]),
+    );
+    expect(optionIds(druidicWarriorHoles[0])).not.toContain("fire_bolt");
+    expect(optionIds(druidicWarriorHoles[0])).not.toContain("sacred_flame");
+  });
+
+  test("fills and finalizes Ranger level 2 Deft Explorer and Fighting Style branches through the supported workflow", () => {
+    const progression = testProgression("class_ranger", 2);
+    const initialDraft = createTestDraft("draft:ranger-level-2-initial");
+    expect(
+      optionIds(
+        holeById(
+          discoverCreationHoles({ draft: initialDraft, unitLibrary }),
+          "cc:draft:draft.progression.initial",
+        ),
+      ),
+    ).toContain(progressionOptionId(progression));
+    const afterInitial = requireAcceptedBatch(
+      fillCreationHoles({
+        draft: initialDraft,
+        unitLibrary,
+        expectedRevision: initialDraft.revision,
+        fills: initialManifestFills(progressionOptionId(progression)),
+      }),
+    );
+    const initialRangerHoles = discoverCreationHoles({
+      draft: afterInitial,
+      unitLibrary,
+    });
+    expect(
+      holeById(
+        initialRangerHoles,
+        testUnitHoleId(
+          "ranger_fighting_style",
+          RANGER_FIGHTING_STYLE_CHOICE_KEY,
+        ),
+      ),
+    ).toMatchObject({
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 1 },
+    });
+    expect(
+      holeById(
+        initialRangerHoles,
+        testUnitHoleId(
+          "ranger_deft_explorer",
+          CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
+        ),
+      ),
+    ).toMatchObject({
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 1 },
+    });
+    expect(
+      holeById(
+        initialRangerHoles,
+        testUnitHoleId(
+          "ranger_deft_explorer",
+          CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
+        ),
+      ),
+    ).toMatchObject({
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 2 },
+    });
+
+    const rangerCommonChoices = {
+      [testUnitChoiceSourceKey(
+        "class_ranger",
+        CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
+      )]: [
+        creationChoiceOptionId("animal_handling"),
+        creationChoiceOptionId("perception"),
+        creationChoiceOptionId("survival"),
+      ],
+      [testUnitChoiceSourceKey(
+        "ranger_deft_explorer",
+        CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
+      )]: [creationChoiceOptionId("athletics")],
+      [testUnitChoiceSourceKey(
+        "ranger_deft_explorer",
+        CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
+      )]: [creationChoiceOptionId("Elvish"), creationChoiceOptionId("Gnomish")],
+    } as const;
+    const featDraft = completeSupportedProgressionDraft({
+      draftId: "draft:ranger-level-2-fighting-style-feat",
+      progression,
+      preferredOptionIdsBySource: {
+        ...rangerCommonChoices,
+        [testUnitChoiceSourceKey(
+          "ranger_fighting_style",
+          RANGER_FIGHTING_STYLE_CHOICE_KEY,
+        )]: [creationChoiceOptionId("fighting_style_feat")],
+        [testUnitChoiceSourceKey(
+          "ranger_fighting_style",
+          CLASS_FEATURE_FEAT_CHOICE_KEY,
+        )]: [creationChoiceOptionId("defense")],
+      },
+    });
+    expect(
+      selectedChoiceOptionIds(
+        featDraft,
+        "ranger_fighting_style",
+        RANGER_FIGHTING_STYLE_CHOICE_KEY,
+      ),
+    ).toEqual(["fighting_style_feat"]);
+    expect(
+      selectedChoiceOptionIds(
+        featDraft,
+        "ranger_fighting_style",
+        CLASS_FEATURE_FEAT_CHOICE_KEY,
+      ),
+    ).toEqual(["defense"]);
+    const rangerFeatBuild = finalizeCharacterDraft({
+      draft: featDraft,
+      unitLibrary,
+    });
+    expect(rangerFeatBuild.tag).toBe("ready");
+    if (rangerFeatBuild.tag !== "ready") return;
+    expect(
+      characterBuildFeatureUnitIds(rangerFeatBuild.build, unitLibrary),
+    ).toEqual(
+      expect.arrayContaining([
+        "ranger_deft_explorer",
+        "ranger_fighting_style",
+        "defense",
+      ]),
+    );
+    expect(
+      selectedBuildClassChoiceUnitIds(
+        rangerFeatBuild.build,
+        "ranger_fighting_style",
+      ),
+    ).toEqual(["defense"]);
+    expect(
+      expectRight(
+        characterBuildProficiencies(rangerFeatBuild.build, unitLibrary),
+      ),
+    ).toMatchObject({
+      skills: expect.arrayContaining(["athletics"]),
+      expertise: ["athletics"],
+    });
+    expect(rangerFeatBuild.build.classFeatureLanguages).toEqual([
+      {
+        kind: "classFeatureLanguageChoice",
+        sourceUnitId: "ranger_deft_explorer",
+        language: "Elvish",
+      },
+      {
+        kind: "classFeatureLanguageChoice",
+        sourceUnitId: "ranger_deft_explorer",
+        language: "Gnomish",
+      },
+    ]);
+    expect(
+      rangerFeatBuild.build.spellcasting?.sources.find(
+        (source) => source.sourceUnitId === "class_ranger",
+      )?.preparedSpells,
+    ).toHaveLength(3);
+
+    const druidicWarriorDraft = completeSupportedProgressionDraft({
+      draftId: "draft:ranger-level-2-druidic-warrior",
+      progression,
+      preferredOptionIdsBySource: {
+        ...rangerCommonChoices,
+        [testUnitChoiceSourceKey(
+          "ranger_fighting_style",
+          RANGER_FIGHTING_STYLE_CHOICE_KEY,
+        )]: [creationChoiceOptionId("druidic_warrior")],
+        [testUnitChoiceSourceKey(
+          "ranger_fighting_style",
+          CLASS_CANTRIP_CHOICE_KEY,
+        )]: [
+          creationChoiceOptionId("guidance"),
+          creationChoiceOptionId("starry_wisp"),
+        ],
+      },
+    });
+    expect(
+      selectedChoiceOptionIds(
+        druidicWarriorDraft,
+        "ranger_fighting_style",
+        RANGER_FIGHTING_STYLE_CHOICE_KEY,
+      ),
+    ).toEqual(["druidic_warrior"]);
+    expect(
+      selectedChoiceOptionIds(
+        druidicWarriorDraft,
+        "ranger_fighting_style",
+        CLASS_CANTRIP_CHOICE_KEY,
+      ),
+    ).toEqual(["guidance", "starry_wisp"]);
+    const druidicWarriorBuild = finalizeCharacterDraft({
+      draft: druidicWarriorDraft,
+      unitLibrary,
+    });
+    expect(druidicWarriorBuild.tag).toBe("ready");
+    if (druidicWarriorBuild.tag !== "ready") return;
+    expect(
+      spellcastingSourceCantrips(druidicWarriorBuild.build, "class_ranger"),
+    ).toEqual(["guidance", "starry_wisp"]);
+    expect(
+      druidicWarriorBuild.build.spellcasting?.sources.find(
+        (source) => source.sourceUnitId === "class_ranger",
+      )?.spellcastingAbility,
+    ).toBe("wis");
+    expect(
+      selectedBuildClassChoiceUnitIds(
+        druidicWarriorBuild.build,
+        "ranger_fighting_style",
+      ),
+    ).toEqual([]);
   });
 
   test("opens Rogue Thieves' Cant extra language choice from Character Creation language tables", () => {

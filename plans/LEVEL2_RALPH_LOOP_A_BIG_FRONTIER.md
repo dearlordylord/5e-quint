@@ -103,7 +103,7 @@
     {
       "number": 17,
       "id": "L12G-AUTHOR-RANGER-FIGHTING-STYLE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Ranger Fighting Style Authoring And Support"
     },
     {
@@ -1129,7 +1129,7 @@ Acceptance:
 
 ### Task 17 - L12G-AUTHOR-RANGER-FIGHTING-STYLE - Ranger Fighting Style Authoring And Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `ranger_fighting_style`. Gate task: 18 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 

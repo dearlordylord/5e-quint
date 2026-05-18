@@ -116,6 +116,7 @@ import produceFlameInput from "../../content/produce_flame.json";
 import rangerDeftExplorerInput from "../../content/ranger_deft_explorer.json";
 import rangerExtraAttackInput from "../../content/ranger_extra_attack.json";
 import rangerFavoredEnemyInput from "../../content/ranger_favored_enemy.json";
+import rangerFightingStyleInput from "../../content/ranger_fighting_style.json";
 import rangerRovingInput from "../../content/ranger_roving.json";
 import rangerWeaponMasteryInput from "../../content/ranger_weapon_mastery.json";
 import resistanceInput from "../../content/resistance.json";
@@ -337,6 +338,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     monkDeflectAttacksInput,
     rangerDeftExplorerInput,
     rangerFavoredEnemyInput,
+    rangerFightingStyleInput,
     rogueCunningActionInput,
     rogueEvasionInput,
     rogueUncannyDodgeInput,

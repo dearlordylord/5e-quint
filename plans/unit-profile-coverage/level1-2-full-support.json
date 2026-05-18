@@ -1907,35 +1907,6 @@
     },
     {
       "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "follow-up-split"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "L12G-AUTHOR-RANGER-FIGHTING-STYLE: Author and retain Ranger Fighting Style alongside Deft Explorer before admitting same-class Ranger level-2 progression, including Fighting Style feat choice or Druidic Warrior Spell Access facts without treating selected feat or cantrip execution as Deft Explorer support. Owner: character-creation-runtime plus character-sheet-runtime. Required output: Character Creation can retain both Ranger level-2 feature refs and project Deft Explorer Expertise/language choices only after the sibling Fighting Style grant is present.",
-      "sourceRecordPath": "packages/surface/content/ranger_deft_explorer.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Ranger Deft Explorer",
-          "id": "srd521:classes/ranger:level-2:class-feature-grant:ranger_deft_explorer",
-          "levelBand": "level-2",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 95,
-            "lineStart": 88,
-            "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
-        }
-      ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
-      "unitId": "ranger_deft_explorer"
-    },
-    {
-      "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
         "later-level-only"
@@ -1962,6 +1933,35 @@
       "status": "closed-later-level-only",
       "strictTargetClosed": true,
       "unitId": "ranger_favored_enemy"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "later-level-only"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "Druidic Warrior cantrip replacement only occurs on later Ranger level gains after the level-2 acquisition choice is complete.",
+      "sourceRecordPath": "packages/surface/content/ranger_fighting_style.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Ranger Fighting Style",
+          "id": "srd521:classes/ranger:level-2:class-feature-grant:ranger_fighting_style",
+          "levelBand": "level-2",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 101,
+            "lineStart": 96,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
+        }
+      ],
+      "status": "closed-later-level-only",
+      "strictTargetClosed": true,
+      "unitId": "ranger_fighting_style"
     },
     {
       "catalogDisposition": {
@@ -2593,7 +2593,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 88,
+      "count": 89,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2658,6 +2658,7 @@
         "poison_spray",
         "produce_flame",
         "protection_from_evil_and_good",
+        "ranger_deft_explorer",
         "ranger_weapon_mastery",
         "ray_of_frost",
         "ray_of_sickness",
@@ -2744,7 +2745,7 @@
       ]
     },
     {
-      "count": 5,
+      "count": 6,
       "description": "The in-scope behavior is complete and every remaining residual is outside this strict accounting scope.",
       "status": "closed-later-level-only",
       "unitIds": [
@@ -2752,18 +2753,18 @@
         "bard_expertise",
         "fighter_weapon_mastery",
         "paladin_fighting_style",
-        "ranger_favored_enemy"
+        "ranger_favored_enemy",
+        "ranger_fighting_style"
       ]
     },
     {
-      "count": 4,
+      "count": 3,
       "description": "The Unit claim records concrete smaller follow-up tasks for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
         "druid_wild_shape",
         "monk_monks_focus",
-        "monk_uncanny_metabolism",
-        "ranger_deft_explorer"
+        "monk_uncanny_metabolism"
       ]
     },
     {
@@ -2787,24 +2788,24 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 473,
-      "percent": "85.1%",
+      "numerator": 475,
+      "percent": "85.4%",
       "rowsByStatus": {
-        "accepted": 294,
+        "accepted": 296,
         "accepted-no-battle-effect": 179,
         "battle-runtime-required": 76,
-        "owner-evidence-required": 7
+        "owner-evidence-required": 5
       }
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 142,
-      "numerator": 88,
-      "percent": "62%"
+      "denominator": 143,
+      "numerator": 89,
+      "percent": "62.2%"
     },
     "strictTargetClosure": {
-      "denominator": 142,
-      "numerator": 110,
-      "percent": "77.5%"
+      "denominator": 143,
+      "numerator": 111,
+      "percent": "77.6%"
     }
   },
   "openFrontier": [
@@ -4274,24 +4275,6 @@
           }
         ],
         "unitId": "purify_food_and_drink"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
-            "concept": "Ranger Fighting Style",
-            "id": "srd521:classes/ranger:level-2:class-feature-grant:ranger_fighting_style",
-            "levelBand": "level-2",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 101,
-              "lineStart": 96,
-              "path": ".references/srd-5.2.1/Classes/Ranger.md"
-            }
-          }
-        ],
-        "unitId": "ranger_fighting_style"
       },
       {
         "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
@@ -6396,20 +6379,20 @@
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
       "missing": 31,
-      "profile-subset-supported": 8,
-      "supported-profile": 88,
-      "unsupported-profile": 15
+      "profile-subset-supported": 9,
+      "supported-profile": 89,
+      "unsupported-profile": 14
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 4,
+      "blocked-follow-up-split": 3,
       "closed-character-fact-and-runtime-detached-split": 2,
-      "closed-later-level-only": 5,
+      "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 11,
       "open-profile-accounting": 1,
       "open-runtime-behavior": 31,
-      "supported-profile": 88
+      "supported-profile": 89
     },
     "nonSupportedFrontier": 54,
-    "strictDenominator": 142
+    "strictDenominator": 143
   }
 }

@@ -1,0 +1,48 @@
+{
+  "acquiredAtLevel": 2,
+  "className": "ranger",
+  "description": "You gain a Fighting Style feat of your choice (see \"Feats\"). Instead of choosing one of those feats, you can choose the option below.\n\nDruidic Warrior. You learn two Druid cantrips of your choice. The chosen cantrips count as Ranger spells for you, and Wisdom is your spellcasting ability for them. Whenever you gain a Ranger level, you can replace one of these cantrips with another Druid cantrip.",
+  "id": "ranger_fighting_style",
+  "kind": "class_feature",
+  "mechanics": {
+    "choiceKey": "ranger_fighting_style",
+    "family": "class_feature_acquisition_choice",
+    "options": [
+      {
+        "displayName": "Fighting Style feat",
+        "id": "fighting_style_feat",
+        "mechanics": {
+          "family": "passive",
+          "grants": [
+            {
+              "category": "fighting_style",
+              "kind": "grant_feat"
+            }
+          ]
+        }
+      },
+      {
+        "displayName": "Druidic Warrior",
+        "id": "druidic_warrior",
+        "mechanics": {
+          "family": "passive",
+          "grants": [
+            {
+              "count": 2,
+              "kind": "grant_spell_access_choice",
+              "mode": "known",
+              "spellLevel": 0,
+              "spellList": "druid"
+            }
+          ]
+        }
+      }
+    ],
+    "timing": "class_feature_acquisition"
+  },
+  "name": "Fighting Style",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Ranger#Fighting Style"
+  }
+}

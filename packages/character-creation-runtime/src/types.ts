@@ -117,6 +117,7 @@ export const UNIT_CHOICE_KEYS = [
   "divine_order",
   "primal_order",
   "paladin_fighting_style",
+  "ranger_fighting_style",
   "bard_multiclass_skill_proficiency",
   "bard_multiclass_musical_instrument_proficiency",
   "ranger_multiclass_skill_proficiency",

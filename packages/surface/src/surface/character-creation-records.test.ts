@@ -424,15 +424,32 @@ describe("character-creation Surface records", () => {
         input: classRangerInput,
         className: "ranger",
         hitPointDie: 10,
-        spellcasting: listPreparedSpellcasting({
-          className: "ranger",
-          spellcastingAbility: "wis",
-          spellcastingFocus: "druidic_focus",
-          preparedChangeOn: "long_rest",
-          preparedReplacementCount: 1,
-          preparedCount: 2,
-          preparedSpells: ["cure_wounds", "ensnaring_strike"],
-        }),
+        spellcasting: {
+          ...listPreparedSpellcasting({
+            className: "ranger",
+            spellcastingAbility: "wis",
+            spellcastingFocus: "druidic_focus",
+            preparedChangeOn: "long_rest",
+            preparedReplacementCount: 1,
+            preparedCount: 2,
+            preparedSpells: ["cure_wounds", "ensnaring_strike", "longstrider"],
+          }),
+          kind: "list_prepared_spellcasting_progression_creation",
+          spellcastingProgression: [
+            {
+              atLevel: 1,
+              cantripCount: 0,
+              preparedSpellCount: 2,
+              spellSlots: [{ spellLevel: 1, count: 2 }],
+            },
+            {
+              atLevel: 2,
+              cantripCount: 0,
+              preparedSpellCount: 3,
+              spellSlots: [{ spellLevel: 1, count: 2 }],
+            },
+          ],
+        },
       },
       { input: classRogueInput, className: "rogue", hitPointDie: 8 },
       {

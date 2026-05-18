@@ -92,6 +92,8 @@
         "srd521:classes/ranger:level-1:mastery-pressure:ranger_weapon_mastery",
         "srd521:classes/ranger:level-1:multiclass-entry:ranger_multiclass_entry_traits",
         "srd521:classes/ranger:level-1:spell-access:ranger_spellcasting",
+        "srd521:classes/ranger:level-2:class-feature-grant:ranger_deft_explorer",
+        "srd521:classes/ranger:level-2:class-feature-grant:ranger_fighting_style",
         "srd521:classes/rogue:level-1:class-container:rogue_class_container",
         "srd521:classes/rogue:level-1:class-feature-grant:rogue_expertise",
         "srd521:classes/rogue:level-1:class-feature-grant:rogue_thieves_cant",
@@ -176,13 +178,13 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 473,
-      "percent": "85.1%",
+      "numerator": 475,
+      "percent": "85.4%",
       "rowsByStatus": {
-        "accepted": 294,
+        "accepted": 296,
         "accepted-no-battle-effect": 179,
         "battle-runtime-required": 76,
-        "owner-evidence-required": 7
+        "owner-evidence-required": 5
       }
     },
     "levelOneClassContainers": 12,
@@ -191,17 +193,17 @@
       "non-runtime": 12
     },
     "levelTwoRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 12,
+      "catalog-installed-owner-evidence-present": 14,
       "non-runtime": 12,
-      "missing-authored-record": 5,
-      "catalog-installed-owner-evidence-required": 4
+      "missing-authored-record": 4,
+      "catalog-installed-owner-evidence-required": 3
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 299,
+      "catalog-installed-owner-evidence-present": 301,
       "non-runtime": 24,
       "catalog-only/dead-for-now": 150,
-      "missing-authored-record": 79,
-      "catalog-installed-owner-evidence-required": 4
+      "missing-authored-record": 78,
+      "catalog-installed-owner-evidence-required": 3
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 143,
@@ -15183,8 +15185,8 @@
         "state": "installed",
         "unitId": "ranger_deft_explorer"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -15192,13 +15194,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime plus character-sheet-runtime",
-          "evidence": "Promote follow-up split L12G-AUTHOR-RANGER-FIGHTING-STYLE: L12G-AUTHOR-RANGER-FIGHTING-STYLE owns Author and retain Ranger Fighting Style alongside Deft Explorer before admitting same-class Ranger level-2 progression, including Fighting Style feat choice or Druidic Warrior Spell Access facts without treating selected feat or cantrip execution as Deft Explorer support. Required output: Character Creation can retain both Ranger level-2 feature refs and project Deft Explorer Expertise/language choices only after the sibling Fighting Style grant is present.",
-          "status": "owner evidence required"
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L12G-AUTHOR-RANGER-FIGHTING-STYLE level-2 Ranger Deft Explorer support profile; Ranger Deft Explorer is discovered from the owned-skill grant-expertise and language-choice Surface grants, finalized from one selected owned skill proficiency plus two Character Creation language-table selections, and projected into CharacterBuild Expertise and classFeatureLanguages while Ranger level-2 progression retains both sibling level-2 feature refs.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L12G-AUTHOR-RANGER-FIGHTING-STYLE: L12G-AUTHOR-RANGER-FIGHTING-STYLE owns Author and retain Ranger Fighting Style alongside Deft Explorer before admitting same-class Ranger level-2 progression, including Fighting Style feat choice or Druidic Warrior Spell Access facts without treating selected feat or cantrip execution as Deft Explorer support. Required output: Character Creation can retain both Ranger level-2 feature refs and project Deft Explorer Expertise/language choices only after the sibling Fighting Style grant is present.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/ranger:level-2:class-feature-grant:ranger_fighting_style",
@@ -15218,16 +15220,36 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "ranger_fighting_style",
+        "sourceRecordPath": "packages/surface/content/ranger_fighting_style.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "ranger_fighting_style"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "future Ranger advancement cantrip replacement owner",
+        "reason": "Druidic Warrior cantrip replacement only occurs on later Ranger level gains after the level-2 acquisition choice is complete."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit ranger_fighting_style is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L12G-AUTHOR-RANGER-FIGHTING-STYLE character-creation Ranger Fighting Style branch and grant-selection support profile; Ranger Fighting Style is discovered from the Surface class-feature acquisition choice, fill-gated to Fighting Style feat or Druidic Warrior, finalized through the selected branch's downstream feat or cantrip choices, and projected without duplicating selected feat or cantrip behavior on the Ranger feature Unit.",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/ranger:level-2:class-table-summary:ranger_level_2_feature_table_row",

@@ -173,6 +173,7 @@ const battleRuntimeRelevantFeatureUnitIds = new Set([
   "paladin_paladins_smite",
   "paladin_weapon_mastery",
   "ranger_favored_enemy",
+  "ranger_fighting_style",
   "ranger_weapon_mastery",
   "rogue_weapon_mastery",
   "sorcerer_innate_sorcery",

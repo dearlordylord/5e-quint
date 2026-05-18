@@ -45,9 +45,11 @@ import {
   PHASE1_WEAPON_LONGSWORD_UNIT_ID,
   PRIMAL_ORDER_CHOICE_KEY,
   PALADIN_FIGHTING_STYLE_CHOICE_KEY,
+  RANGER_FIGHTING_STYLE_CHOICE_KEY,
   RANGER_MULTICLASS_SKILL_PROFICIENCY_CHOICE_KEY,
   ROGUE_MULTICLASS_SKILL_PROFICIENCY_CHOICE_KEY,
   SRD_PALADIN_CLASS_UNIT_ID,
+  SRD_RANGER_CLASS_UNIT_ID,
   SRD_LEVEL_ONE_CLASS_UNIT_IDS,
   SRD_CHARACTER_ADMISSION_SPECIES_UNIT_IDS,
   progressionOptionId,
@@ -174,6 +176,7 @@ const SUPPORTED_PROGRESSIONS = [
   supportedSameClassSecondLevelProgression(SRD_BARD_CLASS_UNIT_ID),
   supportedSameClassSecondLevelProgression(SRD_CLERIC_CLASS_UNIT_ID),
   supportedSameClassSecondLevelProgression(SRD_PALADIN_CLASS_UNIT_ID),
+  supportedSameClassSecondLevelProgression(SRD_RANGER_CLASS_UNIT_ID),
   supportedSameClassSecondLevelProgression(WIDTH_CLASS_WIZARD_UNIT_ID),
   supportedSameClassProgression(SRD_ROGUE_CLASS_UNIT_ID, 6),
   ...SRD_LEVEL_ONE_CLASS_UNIT_IDS.filter(
@@ -314,6 +317,10 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
     [PALADIN_FIGHTING_STYLE_CHOICE_KEY]: [
       creationChoiceOptionId("fighting_style_feat"),
       creationChoiceOptionId("blessed_warrior"),
+    ],
+    [RANGER_FIGHTING_STYLE_CHOICE_KEY]: [
+      creationChoiceOptionId("fighting_style_feat"),
+      creationChoiceOptionId("druidic_warrior"),
     ],
     [CLASS_TOOL_PROFICIENCY_CHOICE_KEY]: SUPPORTED_PROFICIENCY_GRANT_OPTION_IDS,
     [BARD_MULTICLASS_SKILL_PROFICIENCY_CHOICE_KEY]:

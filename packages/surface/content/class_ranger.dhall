@@ -6,6 +6,11 @@ let StartingEquipmentOption : Type =
 
 let ClassSpellAccess : Type = { spellId : Text, spellLevel : Natural }
 
+let SpellSlot : Type = { count : Natural, spellLevel : Natural }
+
+let SpellcastingProgressionRow : Type =
+      { atLevel : Natural, cantripCount : Natural, preparedSpellCount : Natural, spellSlots : List SpellSlot }
+
 
 let rangerSkills =
       [ "animal_handling", "athletics", "insight", "investigation", "nature", "perception", "stealth", "survival" ]
@@ -13,10 +18,12 @@ let rangerSkills =
 let ranger =
       { armorTraining = { categories = [ "light", "medium", "shield" ], kind = "trained" }
       , className = "ranger"
-      , description = "SRD Ranger class creation facts for a level-1 character, including class-list prepared Spell Access, Spell Slots, and spellcasting focus facts."
+      , description = "SRD Ranger class creation facts for level-1 characters plus the level-2 Deft Explorer and Fighting Style class-feature grants, including class-list prepared Spell Access, Spell Slots, and spellcasting focus facts."
       , featureGrants =
         [ { level = 1, unitId = "ranger_favored_enemy" }
         , { level = 1, unitId = "ranger_weapon_mastery" }
+        , { level = 2, unitId = "ranger_deft_explorer" }
+        , { level = 2, unitId = "ranger_fighting_style" }
         ]
       , hitPointDie = 10
       , id = "class_ranger"
@@ -46,11 +53,11 @@ let ranger =
           }
       , name = "Ranger"
       , primaryAbilities = { abilities = [ "dex", "wis" ], kind = "all_of" }
-      , provenance = { kind = "srd-5.2.1", section = "Classes/Ranger.md:3-24,33-35,58-74" }
+      , provenance = { kind = "srd-5.2.1", section = "Classes/Ranger.md:3-24,33-36,58-99,156-177" }
       , savingThrowProficiencies = [ "str", "dex" ]
       , skillProficiencyChoice = { choose = 3, options = rangerSkills }
       , spellcasting =
-          { kind = "list_prepared_spellcasting_creation"
+          { kind = "list_prepared_spellcasting_progression_creation"
           , featureLevel = 1
           , spellcastingAbility = "wis"
           , preparedAccess =
@@ -59,6 +66,7 @@ let ranger =
               , spells =
                 [ { spellId = "cure_wounds", spellLevel = 1 }
                 , { spellId = "ensnaring_strike", spellLevel = 1 }
+                , { spellId = "longstrider", spellLevel = 1 }
                 ] : List ClassSpellAccess
               , changeOn = { kind = "long_rest", replacementCount = 1 }
               }
@@ -67,6 +75,18 @@ let ranger =
               , slots = [ { spellLevel = 1, count = 2 } ]
               , resetCadence = { kind = "long_rest" }
               }
+          , spellcastingProgression =
+              [ { atLevel = 1
+                , cantripCount = 0
+                , preparedSpellCount = 2
+                , spellSlots = [ { spellLevel = 1, count = 2 } ]
+                }
+              , { atLevel = 2
+                , cantripCount = 0
+                , preparedSpellCount = 3
+                , spellSlots = [ { spellLevel = 1, count = 2 } ]
+                }
+              ] : List SpellcastingProgressionRow
           , spellcastingFocus = "druidic_focus"
           }
       , subclassChoices = [] : List { level : Natural, options : List Text }
