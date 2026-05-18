@@ -444,7 +444,8 @@ export function discoverSupportedSpellInvocations(
       if (
         invocation.procedure === "afterHitDamage" ||
         invocation.procedure === "afterHitSaveGatedCondition" ||
-        invocation.procedure === "afterHitTimedDamageAndSave"
+        invocation.procedure === "afterHitTimedDamageAndSave" ||
+        invocation.procedure === "afterHitDamageAndIllumination"
       ) {
         return [];
       }
@@ -554,7 +555,12 @@ export function discoverSupportedSpellInvocations(
         const initialHoles = Array.from(
           { length: invocation.targeting.attackCount },
           (_, partIndex) => [
-            spellAttackSequencePartTargetHole(state, actorId, invocation, partIndex),
+            spellAttackSequencePartTargetHole(
+              state,
+              actorId,
+              invocation,
+              partIndex,
+            ),
             spellAttackSequencePartObjectTargetHole(invocation, partIndex),
           ],
         ).flat();
@@ -819,6 +825,9 @@ export function spellInvocationCastSummary(
   if (invocation.procedure === "afterHitTimedDamageAndSave") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot after a qualifying hit.`;
   }
+  if (invocation.procedure === "afterHitDamageAndIllumination") {
+    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot after a qualifying hit.`;
+  }
   if (invocation.procedure === "markedDamageRider") {
     if (invocation.action === "transfer") {
       return `Move ${invocation.spell.name} to a new target.`;
@@ -940,7 +949,8 @@ export function spellSubjectTagForInvocation(
   }
   if (
     invocation.procedure === "afterHitDamage" ||
-    invocation.procedure === "afterHitTimedDamageAndSave"
+    invocation.procedure === "afterHitTimedDamageAndSave" ||
+    invocation.procedure === "afterHitDamageAndIllumination"
   ) {
     return "bonusActionSpell";
   }
@@ -1009,6 +1019,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "afterHitDamage" &&
     invocation.procedure !== "afterHitSaveGatedCondition" &&
     invocation.procedure !== "afterHitTimedDamageAndSave" &&
+    invocation.procedure !== "afterHitDamageAndIllumination" &&
     invocation.procedure !== "markedDamageRider" &&
     invocation.procedure !== "expeditiousRetreatDash" &&
     invocation.procedure !== "jumpMovementReplacement" &&
@@ -1049,6 +1060,7 @@ export function readiedSpellAct(
     invocation.procedure === "spellAttackSequence" ||
     invocation.procedure === "afterHitSaveGatedCondition" ||
     invocation.procedure === "afterHitTimedDamageAndSave" ||
+    invocation.procedure === "afterHitDamageAndIllumination" ||
     invocation.procedure === "heldLight" ||
     invocation.procedure === "heldLightHurl" ||
     invocation.procedure === "rollModifier" ||

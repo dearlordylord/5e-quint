@@ -67,15 +67,33 @@ module battleRuntimeWeaponHitSpellRiders {
   pure def searingSmiteDurationTicks: int =
     battleRuntimeSearingSmiteDurationTicks
 
+  pure def shiningSmiteDamageDiceForSlot(slotLevel: int): int =
+    battleRuntimeShiningSmiteDamageDice(slotLevel)
+
+  pure def shiningSmiteDurationTicks: int =
+    battleRuntimeShiningSmiteDurationTicks
+
   pure def activeEffectsWithoutSearingSmite(effects: Set[ActiveEffect]): Set[ActiveEffect] =
     effects.filter(effect => match effect {
       | SearingSmiteBurning(_) => false
       | _ => true
     })
 
+  pure def activeEffectsWithoutShiningSmite(effects: Set[ActiveEffect]): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | ShiningSmiteIllumination(_) => false
+      | _ => true
+    })
+
   pure def activeEffectsContainSearingSmite(effects: Set[ActiveEffect]): bool =
     effects.exists(effect => match effect {
       | SearingSmiteBurning(_) => true
+      | _ => false
+    })
+
+  pure def activeEffectsContainShiningSmite(effects: Set[ActiveEffect]): bool =
+    effects.exists(effect => match effect {
+      | ShiningSmiteIllumination(_) => true
       | _ => false
     })
 
@@ -221,6 +239,39 @@ module battleRuntimeWeaponHitSpellRiders {
         },
         bonusActionAvailable: false,
       }, Fighter)
+    else
+      state
+
+  pure def resolveShiningSmiteAfterMeleeHit(
+    state: BattleState,
+    slotLevel: int,
+    smiteDamageRoll: int,
+    attackCritical: bool,
+    concentrationSaveSucceeded: bool,
+  ): BattleState =
+    if (
+      currentActor(state) == Fighter and
+      slotLevel >= 2 and
+      state.bonusActionAvailable and
+      canExpendSpellSlotThisTurn(state) and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(fighterHasRage(state))
+    ) {
+      val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
+      commitActorSpellSlotUse({
+        ...withoutPrior,
+        fighter: { ...withoutPrior.fighter, concentrating: true },
+        goblin: {
+          ...applyDamageFromSource(withoutPrior.goblin, smiteDamageRoll * (if (attackCritical) 2 else 1), 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter),
+          activeEffects: activeEffectsWithoutShiningSmite(withoutPrior.goblin.activeEffects)
+            .union(Set(ShiningSmiteIllumination({
+              durationTicks: shiningSmiteDurationTicks,
+            }))),
+        },
+        bonusActionAvailable: false,
+      }, Fighter)
+    }
     else
       state
 

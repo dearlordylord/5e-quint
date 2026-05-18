@@ -371,6 +371,7 @@ export function resolveSpellAct(
       invocation.procedure === "afterHitDamage" ||
       invocation.procedure === "afterHitSaveGatedCondition" ||
       invocation.procedure === "afterHitTimedDamageAndSave" ||
+      invocation.procedure === "afterHitDamageAndIllumination" ||
       invocation.procedure === "saveGatedCondition" ||
       invocation.procedure === "saveGatedAttackRollAdvantage" ||
       invocation.procedure === "hideousLaughter" ||

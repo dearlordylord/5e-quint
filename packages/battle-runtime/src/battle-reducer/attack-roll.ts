@@ -149,7 +149,10 @@ export function requiredAttackRollMode(
     attack,
     targetSpatialFacts,
   );
-  return attackRollModeFromSources(sources.hasAdvantage, sources.hasDisadvantage);
+  return attackRollModeFromSources(
+    sources.hasAdvantage,
+    sources.hasDisadvantage,
+  );
 }
 
 type AttackRollSourceFlags = {
@@ -193,6 +196,11 @@ function attackRollSourceFlags(
     attackerId,
     targetId,
   );
+  const attackerCanSeeTarget =
+    attacker !== undefined &&
+    target !== undefined &&
+    !sightDisadvantage &&
+    combatantCanSee(state, attacker.combatantId, target.combatantId);
   const hasAdvantage =
     sightAdvantage ||
     (attacker?.hidden !== null &&
@@ -201,7 +209,9 @@ function attackRollSourceFlags(
     state.helpAttacks.some(
       (help) => help.allyId === attackerId && help.targetEnemyId === targetId,
     ) ||
-    activeEffectGrantsAttackRollMode(state, attacker, target, "advantage") ||
+    activeEffectGrantsAttackRollMode(state, attacker, target, "advantage", {
+      attackerCanSeeTarget,
+    }) ||
     ongoingFeatureGrantsAttackRollMode(attacker, target, "advantage", attack);
   const hasDisadvantage =
     sightDisadvantage ||
@@ -210,7 +220,9 @@ function attackRollSourceFlags(
     grappleDisadvantage ||
     longRangeDisadvantage ||
     hasCondition(attacker?.conditions ?? EMPTY_CONDITION_STATE, "poisoned") ||
-    activeEffectGrantsAttackRollMode(state, attacker, target, "disadvantage") ||
+    activeEffectGrantsAttackRollMode(state, attacker, target, "disadvantage", {
+      attackerCanSeeTarget,
+    }) ||
     ongoingFeatureGrantsAttackRollMode(
       attacker,
       target,
@@ -250,7 +262,10 @@ export function requiredObjectTargetAttackRollMode(
     targetObjectId,
     attackerCanSeeObject,
   );
-  return attackRollModeFromSources(sources.hasAdvantage, sources.hasDisadvantage);
+  return attackRollModeFromSources(
+    sources.hasAdvantage,
+    sources.hasDisadvantage,
+  );
 }
 
 function objectTargetAttackRollSourceFlags(
@@ -596,9 +611,17 @@ export function activeEffectGrantsAttackRollMode(
   attacker: BattleCreatureState | undefined,
   target: BattleCreatureState | undefined,
   mode: AttackRollMode,
+  context: {
+    readonly attackerCanSeeTarget?: boolean;
+  } = {},
 ): boolean {
   const attackerCreatureType =
     attacker === undefined ? null : battleCreatureType(attacker);
+  const attackerCanSeeTarget =
+    context.attackerCanSeeTarget ??
+    (attacker !== undefined &&
+      target !== undefined &&
+      combatantCanSee(state, attacker.combatantId, target.combatantId));
   return (
     attacker?.activeEffects.some(
       (effect) =>
@@ -609,9 +632,9 @@ export function activeEffectGrantsAttackRollMode(
         (effect.kind === "nextAttackRollAgainstSelf" && effect.mode === mode) ||
         (effect.kind === "faerieFireOutline" &&
           mode === "advantage" &&
-          attacker !== undefined &&
-          target !== undefined &&
-          combatantCanSee(state, attacker.combatantId, target.combatantId)) ||
+          attackerCanSeeTarget) ||
+        (effect.kind === "shiningSmiteIllumination" &&
+          mode === "advantage") ||
         (effect.kind === "creatureTypeProtection" &&
           effect.attackRollMode === mode &&
           attackerCreatureType !== null &&

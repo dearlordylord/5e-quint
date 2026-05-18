@@ -107,6 +107,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "afterHitDamage",
   "afterHitSaveGatedCondition",
   "afterHitTimedDamageAndSave",
+  "afterHitDamageAndIllumination",
   "markedDamageRider",
   "expeditiousRetreatDash",
   "jumpMovementReplacement",

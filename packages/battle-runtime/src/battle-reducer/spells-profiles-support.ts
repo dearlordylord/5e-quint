@@ -36,6 +36,7 @@ import {
   type BattleD20RollModifierDelta,
   type BattleD20RollModifierKind,
   type AbilityCheckRollModeSpellEffect,
+  type AfterHitDamageAndIlluminationSpellInvocation,
   type AfterHitTimedDamageAndSaveSpellInvocation,
   type ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation,
   type CreatureTypeProtectionSpellInvocation,
@@ -74,6 +75,7 @@ import {
   sameStringSet,
   scalarBuffSpellTargetCount,
 } from "./spells-profile-shared.ts";
+import { SHINING_SMITE_BRIGHT_LIGHT_RADIUS_FEET } from "./spells-active-effects.ts";
 export * from "./spells-profiles-healing.ts";
 export * from "./spells-profiles-repeated-damage.ts";
 
@@ -1114,6 +1116,136 @@ export function supportedPreparedAfterHitTimedDamageAndSaveSpellProfile(
       },
     ];
   });
+}
+
+export function supportedPreparedAfterHitDamageAndIlluminationSpellProfile(
+  actorId: CombatantId,
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  const projection = afterHitDamageAndIlluminationSpellProjection(
+    actorId,
+    spell,
+  );
+  if (projection === null) {
+    return [];
+  }
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    const damageExpr = supportedDamageAmountExpr({
+      amount: projection.damageAmount,
+      spellLevel: spell.mechanics.level,
+      slotLevel: slot.spellLevel,
+    });
+    if (damageExpr === null) {
+      return [];
+    }
+    return [
+      {
+        access: { tag: "prepared" },
+        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+        procedure: "afterHitDamageAndIllumination",
+        spell,
+        actionCost: "bonusAction",
+        damage: {
+          expr: damageExpr,
+          damageType: projection.damageType,
+        },
+        activeEffect: {
+          kind: "shiningSmiteIllumination",
+          sourceSpellId: spell.id,
+          sourceCombatantId: actorId,
+          expiresAt: projection.expiresAt,
+        },
+      },
+    ];
+  });
+}
+
+export function afterHitDamageAndIlluminationSpellProjection(
+  actorId: CombatantId,
+  spell: SpellRecord,
+): {
+  readonly damageAmount: SurfaceDiceAmount;
+  readonly damageType: Extract<DamageType, "radiant">;
+  readonly expiresAt: AfterHitDamageAndIlluminationSpellInvocation["activeEffect"]["expiresAt"];
+} | null {
+  if (
+    spell.name !== "Shining Smite" ||
+    spell.provenance.kind !== "srd-5.2.1" ||
+    spell.provenance.section !== "Spells/Descriptions-S-Z#Shining Smite" ||
+    spell.mechanics.family !== "ongoing_effect" ||
+    spell.mechanics.level !== 2 ||
+    spell.mechanics.castingTime.kind !== "bonus_action" ||
+    spell.mechanics.castingTime.trigger?.kind !== "after_hit_with" ||
+    spell.mechanics.castingTime.trigger.attack !==
+      "melee_weapon_or_unarmed_strike" ||
+    spell.mechanics.range.kind !== "self" ||
+    spell.mechanics.duration.kind !== "concentration" ||
+    spell.mechanics.duration.upTo.unit !== "minute" ||
+    spell.mechanics.duration.upTo.amount !== 1 ||
+    spell.mechanics.attachment.kind !== "hole" ||
+    spell.mechanics.attachment.value.kind !== "target" ||
+    spell.mechanics.attachment.value.selection.mode !== "one" ||
+    spell.mechanics.operations.length !== 3 ||
+    !spell.mechanics.operations.every(
+      (operation) => operation.trigger.kind === "passive",
+    )
+  ) {
+    return null;
+  }
+
+  const initialPhase = spell.mechanics.initialPhase;
+  const damage =
+    initialPhase?.kind === "direct" ? initialPhase.effects?.[0] : undefined;
+  const operationEffects = spell.mechanics.operations.map(
+    (operation) => operation.effect,
+  );
+  const light = operationEffects.find((effect) => effect.kind === "emit_light");
+  const attackAdvantage = operationEffects.find(
+    (effect) => effect.kind === "modify_roll_advantage",
+  );
+  const suppressInvisible = operationEffects.find(
+    (effect) => effect.kind === "suppress_condition_benefit",
+  );
+  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
+    spell.mechanics.duration.upTo,
+  );
+  if (
+    initialPhase?.kind !== "direct" ||
+    initialPhase.attachment.kind !== "hole" ||
+    initialPhase.attachment.value.kind !== "target" ||
+    initialPhase.attachment.value.selection.mode !== "one" ||
+    initialPhase.effects?.length !== 1 ||
+    damage?.kind !== "damage" ||
+    damage.damageType !== "radiant" ||
+    damage.amount === undefined ||
+    light?.kind !== "emit_light" ||
+    light.brightRadiusFeet !== SHINING_SMITE_BRIGHT_LIGHT_RADIUS_FEET ||
+    (light.dimAdditionalFeet ?? 0) !== 0 ||
+    attackAdvantage?.kind !== "modify_roll_advantage" ||
+    attackAdvantage.mode !== "advantage" ||
+    attackAdvantage.affects !== "rolls_against_self" ||
+    attackAdvantage.on === undefined ||
+    !sameStringSet(attackAdvantage.on, ["attack_roll"]) ||
+    suppressInvisible?.kind !== "suppress_condition_benefit" ||
+    suppressInvisible.condition !== "invisible" ||
+    Either.isLeft(durationTicks)
+  ) {
+    return null;
+  }
+
+  return {
+    damageAmount: damage.amount,
+    damageType: "radiant",
+    expiresAt: {
+      kind: "concentration",
+      combatantId: actorId,
+      durationTicks: durationTicks.right,
+    },
+  };
 }
 
 export function afterHitTimedDamageAndSaveSpellProjection(

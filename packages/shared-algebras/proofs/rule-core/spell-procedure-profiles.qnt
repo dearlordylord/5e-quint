@@ -133,6 +133,7 @@ module spellProcedureProfiles {
     | HuntersMarkMarkedDamageRiderProfile
     | EnsnaringStrikeAfterHitConditionProfile
     | SearingSmiteAfterHitTimedDamageProfile
+    | ShiningSmiteAfterHitDamageIlluminationProfile
 
   type ChainedSpellAttackDamageProfile =
     | ChromaticOrbChainedSpellAttackProfile
@@ -567,6 +568,7 @@ module spellProcedureProfiles {
   pure def damageRiderRequiresConcentration(profile: DamageRiderSpellProfile): bool =
     profile == HuntersMarkMarkedDamageRiderProfile
       or profile == EnsnaringStrikeAfterHitConditionProfile
+      or profile == ShiningSmiteAfterHitDamageIlluminationProfile
 
   pure def divineFavorDamageType: RuleDamageType = RadiantDamage
 
@@ -595,6 +597,15 @@ module spellProcedureProfiles {
     if (slotLevel < 1) 0 else slotLevel
 
   pure def searingSmiteDurationTicks: int = 10
+
+  pure def shiningSmiteDamageType: RuleDamageType = RadiantDamage
+
+  pure def shiningSmiteDamageDice(slotLevel: int): int =
+    if (slotLevel < 2) 0 else slotLevel
+
+  pure def shiningSmiteBrightLightRadiusFeet: int = 5
+
+  pure def shiningSmiteDurationTicks: int = 10
 
   pure def chainedSpellAttackDamageChoices(
     profile: ChainedSpellAttackDamageProfile
@@ -1343,6 +1354,7 @@ module spellProcedureProfiles {
       assert(damageRiderSpellAction(DivineSmiteAfterHitDamageProfile) == BonusActionSpellInvocation),
       assert(damageRiderRequiresConcentration(HuntersMarkMarkedDamageRiderProfile)),
       assert(damageRiderRequiresConcentration(EnsnaringStrikeAfterHitConditionProfile)),
+      assert(damageRiderRequiresConcentration(ShiningSmiteAfterHitDamageIlluminationProfile)),
       assert(not(damageRiderRequiresConcentration(DivineFavorWeaponDamageRiderProfile))),
       assert(divineFavorDamageType == RadiantDamage),
       assert(divineFavorDurationTicks == 10),
@@ -1359,6 +1371,11 @@ module spellProcedureProfiles {
       assert(searingSmiteDamageType == FireDamage),
       assert(searingSmiteDamageDice(3) == 3),
       assert(searingSmiteDurationTicks == 10),
+      assert(shiningSmiteDamageType == RadiantDamage),
+      assert(shiningSmiteDamageDice(1) == 0),
+      assert(shiningSmiteDamageDice(3) == 3),
+      assert(shiningSmiteBrightLightRadiusFeet == 5),
+      assert(shiningSmiteDurationTicks == 10),
     }
   }
 

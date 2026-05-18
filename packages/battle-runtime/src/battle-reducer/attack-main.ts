@@ -320,11 +320,7 @@ export function resolveSelectedAttackProcedure(
           attack,
           fillSet.targetSpatialFacts,
         ),
-        attackRollOngoingFeatureActivations(
-          input.state,
-          attackerId,
-          attack,
-        ),
+        attackRollOngoingFeatureActivations(input.state, attackerId, attack),
       ),
     ]);
   }
@@ -363,7 +359,10 @@ export function resolveSelectedAttackProcedure(
     fillSet.targetSpatialFacts,
     fillSet.attackRoll.activatedOngoingFeatureUnitId,
   );
+  const attackRollModeWasEstablishedBeforeReplay =
+    input.replayingInterruptedProcedure === true;
   if (
+    !attackRollModeWasEstablishedBeforeReplay &&
     fillSet.attackRoll.activatedOngoingFeatureUnitId !== undefined &&
     fillSet.attackRoll.rollMode !== requiredRollMode
   ) {
@@ -373,7 +372,10 @@ export function resolveSelectedAttackProcedure(
       "Attack roll mode does not match the activated ongoing feature rule.",
     );
   }
-  if (!attackRollModeMatches(fillSet.attackRoll, requiredRollMode)) {
+  if (
+    !attackRollModeWasEstablishedBeforeReplay &&
+    !attackRollModeMatches(fillSet.attackRoll, requiredRollMode)
+  ) {
     return invalidResult(
       input.state,
       "invalidFill",

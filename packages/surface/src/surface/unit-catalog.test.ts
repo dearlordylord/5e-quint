@@ -118,6 +118,7 @@ const requiredFirstVerticalUnitIds = [
   "healing_word",
   "shield",
   "shatter",
+  "shining_smite",
   "see_invisibility",
   "sleep",
   "thunderwave",
@@ -263,6 +264,79 @@ describe("SRD Unit catalog boundary", () => {
           onSuccess: { kind: "half_damage" },
         },
       ]);
+    }
+  });
+
+  test("keeps Shining Smite as an after-hit Radiant damage and illumination spell", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const shiningSmite = result.catalog.requireUnit("shining_smite");
+
+      expect(shiningSmite.kind).toBe("spell");
+      if (
+        shiningSmite.kind !== "spell" ||
+        shiningSmite.mechanics.family !== "ongoing_effect"
+      ) {
+        throw new Error("Expected Shining Smite to be an ongoing spell.");
+      }
+      expect(shiningSmite.description).toContain(
+        "Immediately after hitting a creature with a Melee weapon or an Unarmed Strike",
+      );
+      expect(shiningSmite.mechanics).toMatchObject({
+        level: 2,
+        castingTime: {
+          kind: "bonus_action",
+          trigger: {
+            kind: "after_hit_with",
+            attack: "melee_weapon_or_unarmed_strike",
+          },
+        },
+        range: { kind: "self" },
+        duration: {
+          kind: "concentration",
+          upTo: { amount: 1, unit: "minute" },
+        },
+        initialPhase: {
+          kind: "direct",
+          effects: [
+            {
+              kind: "damage",
+              damageType: "radiant",
+              amount: {
+                kind: "linear_per_level",
+                axis: "slot",
+                base: { dice: 2, dieSize: 6 },
+                perLevel: { dice: 1, dieSize: 6 },
+                startingAtLevel: 2,
+              },
+            },
+          ],
+        },
+        operations: [
+          {
+            trigger: { kind: "passive" },
+            effect: { kind: "emit_light", brightRadiusFeet: 5 },
+          },
+          {
+            trigger: { kind: "passive" },
+            effect: {
+              kind: "modify_roll_advantage",
+              mode: "advantage",
+              affects: "rolls_against_self",
+              on: ["attack_roll"],
+            },
+          },
+          {
+            trigger: { kind: "passive" },
+            effect: {
+              kind: "suppress_condition_benefit",
+              condition: "invisible",
+            },
+          },
+        ],
+      });
     }
   });
 

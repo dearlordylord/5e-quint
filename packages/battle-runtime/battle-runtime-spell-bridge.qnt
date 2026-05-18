@@ -101,6 +101,7 @@ module battleRuntimeSpellBridge {
     | BattleRuntimeHuntersMarkMarkedDamageRider
     | BattleRuntimeEnsnaringStrikeAfterHitCondition
     | BattleRuntimeSearingSmiteAfterHitTimedDamage
+    | BattleRuntimeShiningSmiteAfterHitDamageIllumination
 
   type BattleRuntimeChainedSpellAttackDamageProfile =
     | BattleRuntimeChromaticOrbChainedSpellAttack
@@ -417,6 +418,7 @@ module battleRuntimeSpellBridge {
       | BattleRuntimeHuntersMarkMarkedDamageRider => HuntersMarkMarkedDamageRiderProfile
       | BattleRuntimeEnsnaringStrikeAfterHitCondition => EnsnaringStrikeAfterHitConditionProfile
       | BattleRuntimeSearingSmiteAfterHitTimedDamage => SearingSmiteAfterHitTimedDamageProfile
+      | BattleRuntimeShiningSmiteAfterHitDamageIllumination => ShiningSmiteAfterHitDamageIlluminationProfile
     }
 
   pure def battleRuntimeDamageRiderUsesBonusAction(profile: BattleRuntimeDamageRiderSpellProfile): bool =
@@ -452,6 +454,17 @@ module battleRuntimeSpellBridge {
     searingSmiteDamageDice(slotLevel)
 
   pure def battleRuntimeSearingSmiteDurationTicks: int = searingSmiteDurationTicks
+
+  pure def battleRuntimeShiningSmiteDamageType: RuleDamageType = shiningSmiteDamageType
+
+  pure def battleRuntimeShiningSmiteDamageDice(slotLevel: int): int =
+    shiningSmiteDamageDice(slotLevel)
+
+  pure def battleRuntimeShiningSmiteBrightLightRadiusFeet: int =
+    shiningSmiteBrightLightRadiusFeet
+
+  pure def battleRuntimeShiningSmiteDurationTicks: int =
+    shiningSmiteDurationTicks
 
   pure def battleRuntimeChainedSpellAttackDamageProfile(
     profile: BattleRuntimeChainedSpellAttackDamageProfile
@@ -856,6 +869,7 @@ module battleRuntimeSpellBridge {
       assert(battleRuntimeDamageRiderUsesBonusAction(BattleRuntimeDivineSmiteAfterHitDamage)),
       assert(battleRuntimeDamageRiderRequiresConcentration(BattleRuntimeHuntersMarkMarkedDamageRider)),
       assert(battleRuntimeDamageRiderRequiresConcentration(BattleRuntimeEnsnaringStrikeAfterHitCondition)),
+      assert(battleRuntimeDamageRiderRequiresConcentration(BattleRuntimeShiningSmiteAfterHitDamageIllumination)),
       assert(not(battleRuntimeDamageRiderRequiresConcentration(BattleRuntimeDivineFavorWeaponDamageRider))),
       assert(battleRuntimeDivineFavorDamageType == RadiantDamage),
       assert(battleRuntimeDivineFavorDurationTicks == 10),
@@ -870,6 +884,11 @@ module battleRuntimeSpellBridge {
       assert(battleRuntimeSearingSmiteDamageType == FireDamage),
       assert(battleRuntimeSearingSmiteDamageDice(3) == 3),
       assert(battleRuntimeSearingSmiteDurationTicks == 10),
+      assert(battleRuntimeShiningSmiteDamageType == RadiantDamage),
+      assert(battleRuntimeShiningSmiteDamageDice(1) == 0),
+      assert(battleRuntimeShiningSmiteDamageDice(3) == 3),
+      assert(battleRuntimeShiningSmiteBrightLightRadiusFeet == 5),
+      assert(battleRuntimeShiningSmiteDurationTicks == 10),
     }
   }
 

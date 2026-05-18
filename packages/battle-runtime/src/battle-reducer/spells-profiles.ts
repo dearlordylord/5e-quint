@@ -72,6 +72,7 @@ import {
   supportedCantripRollModifierSpellProfile,
   supportedPreparedConditionImmunityAndTurnStartTemporaryHitPointsSpellProfile,
   supportedPreparedAfterHitDamageSpellProfile,
+  supportedPreparedAfterHitDamageAndIlluminationSpellProfile,
   supportedPreparedAfterHitSaveGatedConditionSpellProfile,
   supportedPreparedAfterHitTimedDamageAndSaveSpellProfile,
   supportedPreparedCreatureTypeProtectionSpellProfile,
@@ -288,6 +289,13 @@ export function supportedSpellActs(
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedAfterHitTimedDamageAndSaveSpellProfile(
+        actor.combatantId,
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedAfterHitDamageAndIlluminationSpellProfile(
         actor.combatantId,
         spell,
         spellcasting.spellSlots,

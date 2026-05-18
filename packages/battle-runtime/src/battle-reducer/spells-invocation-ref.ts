@@ -47,6 +47,14 @@ export function supportedSpellInvocationRef(
       procedure: "afterHitTimedDamageAndSave",
     };
   }
+  if (invocation.procedure === "afterHitDamageAndIllumination") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "afterHitDamageAndIllumination",
+    };
+  }
   if (invocation.procedure === "spellHostedWeaponAttack") {
     return {
       tag: "cantrip",

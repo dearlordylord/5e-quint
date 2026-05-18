@@ -182,8 +182,8 @@
       "numerator": 472,
       "percent": "84.9%",
       "rowsByStatus": {
-        "accepted": 315,
-        "accepted-no-battle-effect": 157,
+        "accepted": 316,
+        "accepted-no-battle-effect": 156,
         "battle-runtime-required": 74,
         "partial-battle-runtime": 6,
         "owner-evidence-required": 4
@@ -201,16 +201,16 @@
       "catalog-installed-owner-evidence-required": 5
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 326,
+      "catalog-installed-owner-evidence-present": 327,
       "non-runtime": 24,
-      "catalog-only/dead-for-now": 128,
+      "catalog-only/dead-for-now": 127,
       "missing-authored-record": 58,
       "catalog-installed-owner-evidence-required": 14,
       "catalog-authored-executable-follow-up": 6
     },
     "spellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 167,
-      "catalog-only/dead-for-now": 128,
+      "catalog-installed-owner-evidence-present": 168,
+      "catalog-only/dead-for-now": 127,
       "missing-authored-record": 57,
       "catalog-installed-owner-evidence-required": 9,
       "catalog-authored-executable-follow-up": 6
@@ -14722,13 +14722,31 @@
         "sourceRecordPath": "packages/surface/content/shining_smite.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "shining_smite"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/sight and light projection owner",
+        "reason": "Automatic line-of-sight, map geometry, and Bright Light presentation/color rendering remain caller/table-owned; battle runtime consumes explicit sight and light-projection witness facts and owns the Shining Smite spell effect and mechanical projections."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit shining_smite is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-SPELL-SHINING-SMITE at packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/paladin:spell-level-2:spell-unit-pressure:paladin_spell_list_warding_bond",

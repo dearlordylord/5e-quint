@@ -2155,37 +2155,6 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
-      "sourceRecordPath": "packages/surface/content/shining_smite.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Paladin spell list Shining Smite",
-          "id": "srd521:classes/paladin:spell-level-2:spell-unit-pressure:paladin_spell_list_shining_smite",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 202,
-            "lineStart": 202,
-            "path": ".references/srd-5.2.1/Classes/Paladin.md"
-          }
-        }
-      ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
-      "unitId": "shining_smite"
-    },
-    {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
       "claimTag": "unsupported-profile",
       "closureKinds": [
         "outside-runtime-presentation-exploration"
@@ -2613,7 +2582,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 96,
+      "count": 97,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2699,6 +2668,7 @@
         "shield",
         "shield_of_faith",
         "shillelagh",
+        "shining_smite",
         "shocking_grasp",
         "sleep",
         "sorcerer_innate_sorcery",
@@ -2716,7 +2686,7 @@
       ]
     },
     {
-      "count": 20,
+      "count": 19,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
@@ -2734,7 +2704,6 @@
         "prayer_of_healing",
         "protection_from_poison",
         "ray_of_enfeeblement",
-        "shining_smite",
         "spider_climb",
         "spike_growth",
         "spiritual_weapon",
@@ -2812,42 +2781,42 @@
       "numerator": 472,
       "percent": "84.9%",
       "rowsByStatus": {
-        "accepted": 315,
-        "accepted-no-battle-effect": 157,
+        "accepted": 316,
+        "accepted-no-battle-effect": 156,
         "battle-runtime-required": 74,
         "owner-evidence-required": 4,
         "partial-battle-runtime": 6
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 68,
+      "denominator": 69,
       "numerator": 11,
-      "percent": "16.2%"
+      "percent": "15.9%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 68,
+      "denominator": 69,
       "numerator": 16,
-      "percent": "23.5%"
+      "percent": "23.2%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 96,
+      "denominator": 97,
       "numerator": 30,
-      "percent": "31.3%"
+      "percent": "30.9%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 151,
-      "numerator": 96,
-      "percent": "63.6%"
+      "numerator": 97,
+      "percent": "64.2%"
     },
     "strictTargetClosure": {
       "denominator": 151,
-      "numerator": 131,
-      "percent": "86.8%"
+      "numerator": 132,
+      "percent": "87.4%"
     }
   },
   "openFrontier": [
     {
-      "count": 20,
+      "count": 19,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
@@ -2865,7 +2834,6 @@
         "prayer_of_healing",
         "protection_from_poison",
         "ray_of_enfeeblement",
-        "shining_smite",
         "spider_climb",
         "spike_growth",
         "spiritual_weapon",
@@ -6091,9 +6059,9 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 96,
+        "denominator": 97,
         "numerator": 30,
-        "percent": "31.3%"
+        "percent": "30.9%"
       }
     },
     "units": [
@@ -7613,6 +7581,18 @@
         "unitId": "shillelagh"
       },
       {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-after-hit-damage-illumination",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "shining_smite"
+      },
+      {
         "joinStatus": "covered",
         "profiles": [
           {
@@ -7915,9 +7895,9 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
-      "missing": 20,
+      "missing": 19,
       "profile-subset-supported": 10,
-      "supported-profile": 96,
+      "supported-profile": 97,
       "unsupported-profile": 25
     },
     "groupsByStatus": {
@@ -7925,10 +7905,10 @@
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 14,
-      "open-runtime-behavior": 20,
-      "supported-profile": 96
+      "open-runtime-behavior": 19,
+      "supported-profile": 97
     },
-    "nonSupportedFrontier": 55,
+    "nonSupportedFrontier": 54,
     "strictDenominator": 151
   }
 }
