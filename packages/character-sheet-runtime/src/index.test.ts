@@ -21,7 +21,11 @@ import { Either } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
+  BARD_JACK_OF_ALL_TRADES_UNIT_ID,
+  CHARACTER_SHEET_NO_OTHER_PROFICIENCY_BONUS,
+  CHARACTER_SHEET_OTHER_PROFICIENCY_BONUS_APPLIES,
   applyLayOnHands,
+  characterSheetAbilityCheckProficiencyBonus,
   characterSheetArmorClassState,
   characterSheetHitDice,
   characterSheetPactSlots,
@@ -45,8 +49,10 @@ import {
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.short-rest-spell-slot-recovery
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.spellbook-ritual-invocation
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.weapon-mastery-reselection
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.ability-check-proficiency-bonus
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B barbarian_unarmored_defense monk_unarmored_defense paladin_lay_on_hands wizard_arcane_recovery wizard_ritual_adept
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-04 fighter_weapon_mastery barbarian_weapon_mastery paladin_weapon_mastery ranger_weapon_mastery rogue_weapon_mastery
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-CLASS-BARD-JACK-OF-ALL-TRADES bard_jack_of_all_trades
 
 const build = armorClassBuild({ startingClass: "class_fighter" });
 
@@ -74,6 +80,14 @@ const ritualAdeptRejectsMissingFeatureTestName =
   "rejects spellbook ritual invocation without a spellbook Ritual Access feature";
 const weaponMasteryLongRestReselectionTestName =
   "Long Rest reselects Weapon Mastery choices from Surface feature eligibility";
+const jackOfAllTradesAddsHalfProficiencyBonusTestName =
+  "Jack of All Trades adds half Proficiency Bonus to an unproficient skill Ability Check";
+const skillProficiencyOverridesJackOfAllTradesTestName =
+  "skill proficiency and Expertise determine the Ability Check Proficiency Bonus before Jack of All Trades";
+const jackOfAllTradesRequiresNoOtherProficiencyBonusTestName =
+  "Jack of All Trades does not apply when another Proficiency Bonus applies";
+const jackOfAllTradesRequiresBardLevelTwoFeatureTestName =
+  "Jack of All Trades requires the Bard level 2 feature grant";
 
 function createFreshCharacterSheet(
   input: Omit<CharacterSheetInput, "conditions"> &
@@ -1020,6 +1034,98 @@ describe("Character Sheet runtime", () => {
     expect(currentArmorClass(state)).toBe(16);
   });
 
+  test(jackOfAllTradesAddsHalfProficiencyBonusTestName, () => {
+    const result = requireRight(
+      characterSheetAbilityCheckProficiencyBonus({
+        build: bardJackOfAllTradesBuild({ totalLevel: 2 }),
+        unitLibrary,
+        skill: "performance",
+        otherProficiencyBonus: CHARACTER_SHEET_NO_OTHER_PROFICIENCY_BONUS,
+      }),
+    );
+    const roundedDown = requireRight(
+      characterSheetAbilityCheckProficiencyBonus({
+        build: bardJackOfAllTradesBuild({ totalLevel: 5 }),
+        unitLibrary,
+        skill: "performance",
+        otherProficiencyBonus: CHARACTER_SHEET_NO_OTHER_PROFICIENCY_BONUS,
+      }),
+    );
+
+    expect(result).toEqual({
+      tag: "jackOfAllTrades",
+      sourceUnitId: BARD_JACK_OF_ALL_TRADES_UNIT_ID,
+      skill: "performance",
+      bonus: 1,
+    });
+    expect(roundedDown).toMatchObject({ tag: "jackOfAllTrades", bonus: 1 });
+  });
+
+  test(skillProficiencyOverridesJackOfAllTradesTestName, () => {
+    const skillProficiency = requireRight(
+      characterSheetAbilityCheckProficiencyBonus({
+        build: bardJackOfAllTradesBuild({
+          totalLevel: 5,
+          proficiencyChoices: [{ kind: "skill", skill: "performance" }],
+        }),
+        unitLibrary,
+        skill: "performance",
+        otherProficiencyBonus: CHARACTER_SHEET_NO_OTHER_PROFICIENCY_BONUS,
+      }),
+    );
+    const expertise = requireRight(
+      characterSheetAbilityCheckProficiencyBonus({
+        build: bardJackOfAllTradesBuild({
+          totalLevel: 5,
+          proficiencyChoices: [
+            { kind: "skill_expertise", skill: "performance" },
+          ],
+        }),
+        unitLibrary,
+        skill: "performance",
+        otherProficiencyBonus: CHARACTER_SHEET_NO_OTHER_PROFICIENCY_BONUS,
+      }),
+    );
+
+    expect(skillProficiency).toEqual({
+      tag: "skillProficiency",
+      skill: "performance",
+      bonus: 3,
+    });
+    expect(expertise).toEqual({
+      tag: "expertise",
+      skill: "performance",
+      bonus: 6,
+    });
+  });
+
+  test(jackOfAllTradesRequiresNoOtherProficiencyBonusTestName, () => {
+    const result = requireRight(
+      characterSheetAbilityCheckProficiencyBonus({
+        build: bardJackOfAllTradesBuild({ totalLevel: 5 }),
+        unitLibrary,
+        skill: "performance",
+        otherProficiencyBonus:
+          CHARACTER_SHEET_OTHER_PROFICIENCY_BONUS_APPLIES,
+      }),
+    );
+
+    expect(result).toEqual({ tag: "none", bonus: 0 });
+  });
+
+  test(jackOfAllTradesRequiresBardLevelTwoFeatureTestName, () => {
+    const result = requireRight(
+      characterSheetAbilityCheckProficiencyBonus({
+        build: bardJackOfAllTradesBuild({ totalLevel: 1 }),
+        unitLibrary,
+        skill: "performance",
+        otherProficiencyBonus: CHARACTER_SHEET_NO_OTHER_PROFICIENCY_BONUS,
+      }),
+    );
+
+    expect(result).toEqual({ tag: "none", bonus: 0 });
+  });
+
   test("Long Rest restores HP, Spell Slots, Pact Slots, and Arcane Recovery use", () => {
     const sheet = requireRight(
       createFreshCharacterSheet({
@@ -1237,13 +1343,13 @@ describe("Character Sheet runtime", () => {
     expect(result.target.conditions).toEqual([]);
     expect(characterSheetResources(result.source, unitLibrary)).toMatchObject({
       _tag: "Right",
-      right: [
-        {
+      right: expect.arrayContaining([
+        expect.objectContaining({
           unitId: "paladin_lay_on_hands",
           count: 10,
           expended: 7,
-        },
-      ],
+        }),
+      ]),
     });
   });
 
@@ -1353,6 +1459,53 @@ describe("Character Sheet runtime", () => {
           expended: 0,
         },
       ],
+    });
+  });
+
+  test("Long Rest restores the Paladin's Smite Divine Smite free-cast pool", () => {
+    const spent = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:paladin-smite-rest"),
+        build: armorClassBuild({
+          startingClass: "class_paladin",
+          advancements: ["class_paladin"],
+        }),
+        maximumHp: Hp(20),
+        currentHp: Hp(20),
+        tempHp: Hp(0),
+        unitLibrary,
+        resourceExpenditures: [
+          {
+            tag: "paladinsSmiteDivineSmiteFreeCast",
+            expended: resourceCount(1),
+          },
+        ],
+      }),
+    );
+
+    expect(characterSheetResources(spent, unitLibrary)).toMatchObject({
+      _tag: "Right",
+      right: expect.arrayContaining([
+        expect.objectContaining({
+          unitId: "paladin_paladins_smite",
+          count: 1,
+          expended: 1,
+        }),
+      ]),
+    });
+
+    const rested = requireRight(completeLongRest({ sheet: spent }));
+
+    expect(rested.resourceExpenditures).toEqual([]);
+    expect(characterSheetResources(rested, unitLibrary)).toMatchObject({
+      _tag: "Right",
+      right: expect.arrayContaining([
+        expect.objectContaining({
+          unitId: "paladin_paladins_smite",
+          count: 1,
+          expended: 0,
+        }),
+      ]),
     });
   });
 
@@ -1855,6 +2008,22 @@ function selectedClassChoiceUnitIds(
       ? [feature.unitId]
       : [],
   );
+}
+
+function bardJackOfAllTradesBuild(input: {
+  readonly totalLevel: 1 | 2 | 5;
+  readonly proficiencyChoices?: CharacterBuild["proficiencyChoices"];
+}): CharacterBuild {
+  return {
+    ...armorClassBuild({
+      startingClass: "class_bard",
+      advancements: Array.from(
+        { length: input.totalLevel - 1 },
+        () => "class_bard",
+      ),
+    }),
+    proficiencyChoices: input.proficiencyChoices ?? [],
+  };
 }
 
 function druidLanguageBuild(): CharacterBuild {

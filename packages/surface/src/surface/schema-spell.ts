@@ -290,6 +290,10 @@ type ClassLevelChoiceCount = Schema.Schema.Type<
   typeof ClassLevelChoiceCountSchema
 >;
 type ClassSpellListName = (typeof CLASS_SPELLCASTING_CLASS_NAMES)[number];
+
+function distinctSkills(skills: readonly Skill[]): boolean {
+  return new Set(skills).size === skills.length;
+}
 type SpellGrantedWeaponAttack = {
   readonly kind: "make_weapon_attack";
   readonly weapon: "material_component";
@@ -586,6 +590,9 @@ type EffectAtom =
             readonly options: ReadonlyNonEmptyArray<Skill>;
           };
       readonly count?: number;
+    }
+  | {
+      readonly kind: "jack_of_all_trades_ability_check_bonus";
     }
   | {
       readonly kind: "modify_damage_numeric";
@@ -906,9 +913,14 @@ type EffectAtom =
   | {
       readonly kind: "grant_expertise";
       readonly choiceCount: ClassLevelChoiceCount;
-      readonly skills: {
-        readonly kind: "owned_skill_proficiencies_without_expertise";
-      };
+      readonly skills:
+        | {
+            readonly kind: "owned_skill_proficiencies_without_expertise";
+          }
+        | {
+            readonly kind: "listed_owned_skill_proficiencies_without_expertise";
+            readonly skills: ReadonlyNonEmptyArray<Skill>;
+          };
     }
   | {
       readonly kind: "grant_language";
@@ -1991,6 +2003,9 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         abilityFilter: optionalExact(AbilityFilterSchema),
         count: optionalExact(Schema.Number),
       }),
+      strictStruct({
+        kind: Schema.Literal("jack_of_all_trades_ability_check_bonus"),
+      }),
       Schema.Struct({
         kind: Schema.Literal("modify_damage_numeric"),
         delta: DiceDeltaSchema,
@@ -2282,9 +2297,22 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       Schema.Struct({
         kind: Schema.Literal("grant_expertise"),
         choiceCount: ClassLevelChoiceCountSchema,
-        skills: Schema.Struct({
-          kind: Schema.Literal("owned_skill_proficiencies_without_expertise"),
-        }),
+        skills: Schema.Union(
+          Schema.Struct({
+            kind: Schema.Literal("owned_skill_proficiencies_without_expertise"),
+          }),
+          Schema.Struct({
+            kind: Schema.Literal(
+              "listed_owned_skill_proficiencies_without_expertise",
+            ),
+            skills: nonEmpty(SkillSchema),
+          }).pipe(
+            Schema.filter((source) => distinctSkills(source.skills), {
+              message: () =>
+                "Listed Expertise skill source must contain distinct skills.",
+            }),
+          ),
+        ),
       }),
       Schema.Struct({
         kind: Schema.Literal("grant_language"),

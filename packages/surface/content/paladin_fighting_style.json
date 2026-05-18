@@ -5,13 +5,40 @@
   "id": "paladin_fighting_style",
   "kind": "class_feature",
   "mechanics": {
-    "family": "passive",
-    "grants": [
+    "choiceKey": "paladin_fighting_style",
+    "family": "class_feature_acquisition_choice",
+    "options": [
       {
-        "category": "fighting_style",
-        "kind": "grant_feat"
+        "displayName": "Fighting Style feat",
+        "id": "fighting_style_feat",
+        "mechanics": {
+          "family": "passive",
+          "grants": [
+            {
+              "category": "fighting_style",
+              "kind": "grant_feat"
+            }
+          ]
+        }
+      },
+      {
+        "displayName": "Blessed Warrior",
+        "id": "blessed_warrior",
+        "mechanics": {
+          "family": "passive",
+          "grants": [
+            {
+              "count": 2,
+              "kind": "grant_spell_access_choice",
+              "mode": "known",
+              "spellLevel": 0,
+              "spellList": "cleric"
+            }
+          ]
+        }
       }
-    ]
+    ],
+    "timing": "class_feature_acquisition"
   },
   "name": "Fighting Style",
   "provenance": {

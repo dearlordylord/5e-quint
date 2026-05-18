@@ -231,40 +231,6 @@
       "unitId": "arcane_lock"
     },
     {
-      "catalogDisposition": {
-        "category": "unsupported-widening-pressure",
-        "planningLane": "QMBT18",
-        "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "later-level-only"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "The feature is acquired after level 1 and grants Advantage on Dexterity Saving Throws unless the creature has the Incapacitated condition. Current promoted Unit profiles do not consume class-feature passive Saving Throw roll-mode grants or make both the saveAbilityFilter and passive condition suppressor executable at admission.",
-      "sourceRecordPath": "packages/surface/content/barbarian_danger_sense.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Barbarian Danger Sense",
-          "id": "srd521:classes/barbarian:level-2:class-feature-grant:barbarian_danger_sense",
-          "levelBand": "level-2",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 93,
-            "lineStart": 90,
-            "path": ".references/srd-5.2.1/Classes/Barbarian.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "barbarian_danger_sense"
-    },
-    {
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
@@ -292,40 +258,6 @@
       "status": "closed-later-level-only",
       "strictTargetClosed": true,
       "unitId": "barbarian_weapon_mastery"
-    },
-    {
-      "catalogDisposition": {
-        "category": "unsupported-widening-pressure",
-        "planningLane": "QMBT18",
-        "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "later-level-only"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "The feature is acquired after level 1 and depends on a concrete Ability Check witness with a skill, the existing CharacterBuild skill and Expertise proficiency facts, and whether another rule already contributes Proficiency Bonus. Current promoted Unit profiles do not model that passive half-proficiency computation, and generic modify_roll_numeric cannot make the RAW gate executable.",
-      "sourceRecordPath": "packages/surface/content/bard_jack_of_all_trades.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Bard Jack of All Trades",
-          "id": "srd521:classes/bard:level-2:class-feature-grant:bard_jack_of_all_trades",
-          "levelBand": "level-2",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 104,
-            "lineStart": 99,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "bard_jack_of_all_trades"
     },
     {
       "catalogDisposition": {
@@ -1676,20 +1608,15 @@
       "unitId": "moonbeam"
     },
     {
-      "catalogDisposition": {
-        "category": "unsupported-widening-pressure",
-        "planningLane": "QMBT18",
-        "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "unsupported-profile",
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "selection-grant-container"
+        "later-level-only"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "The class feature opens a level-2 choice between a Fighting Style feat and Blessed Warrior's Cleric cantrip Spell Access. Selected Fighting Style feat Units own executable battle behavior, and Blessed Warrior cantrip access and replacement belong to Character Sheet Spell Access rather than duplicate battle Unit state.",
+      "reason": "Blessed Warrior cantrip replacement only occurs on later Paladin level gains after the level-2 acquisition choice is complete.",
       "sourceRecordPath": "packages/surface/content/paladin_fighting_style.json",
       "sourceRows": [
         {
@@ -1705,43 +1632,9 @@
           }
         }
       ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
+      "status": "closed-later-level-only",
+      "strictTargetClosed": true,
       "unitId": "paladin_fighting_style"
-    },
-    {
-      "catalogDisposition": {
-        "category": "unsupported-widening-pressure",
-        "planningLane": "QMBT18",
-        "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "later-level-only"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "The feature is acquired after level 1, makes Divine Smite always prepared, and grants one Long Rest no-slot Divine Smite cast. The Divine Smite spell Unit already owns after-hit damage invocation behavior; a future Paladin feature owner should retain this source Unit for Spell Access and free-cast resource projection without duplicating the spell procedure.",
-      "sourceRecordPath": "packages/surface/content/paladin_paladins_smite.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Paladin Paladin's Smite",
-          "id": "srd521:classes/paladin:level-2:class-feature-grant:paladin_paladins_smite",
-          "levelBand": "level-2",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 99,
-            "lineStart": 96,
-            "path": ".references/srd-5.2.1/Classes/Paladin.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "paladin_paladins_smite"
     },
     {
       "catalogDisposition": {
@@ -2550,56 +2443,24 @@
       "status": "open-runtime-behavior",
       "strictTargetClosed": false,
       "unitId": "web"
-    },
-    {
-      "catalogDisposition": {
-        "category": "unsupported-widening-pressure",
-        "planningLane": "QMBT18",
-        "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "later-level-only"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "The feature is acquired after level 1 and belongs to durable Character Sheet proficiency projection. Existing Rogue Expertise support admits owned skill proficiencies without Expertise, but Scholar additionally intersects that owned-skill set with a fixed six-skill list; the current authored modify-roll shape cannot represent that acquisition-time prerequisite without semantic leakage.",
-      "sourceRecordPath": "packages/surface/content/wizard_scholar.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Wizard Scholar",
-          "id": "srd521:classes/wizard:level-2:class-feature-grant:wizard_scholar",
-          "levelBand": "level-2",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 107,
-            "lineStart": 104,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "wizard_scholar"
     }
   ],
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 82,
+      "count": 86,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
         "acid_splash",
         "animal_friendship",
         "bane",
+        "barbarian_danger_sense",
         "barbarian_rage",
         "barbarian_reckless_attack",
         "barbarian_unarmored_defense",
         "bard_bardic_inspiration",
+        "bard_jack_of_all_trades",
         "bless",
         "burning_hands",
         "chill_touch",
@@ -2645,6 +2506,7 @@
         "monk_martial_arts",
         "monk_unarmored_defense",
         "paladin_lay_on_hands",
+        "paladin_paladins_smite",
         "paladin_weapon_mastery",
         "poison_spray",
         "produce_flame",
@@ -2674,7 +2536,8 @@
         "vicious_mockery",
         "warlock_eldritch_invocations",
         "wizard_arcane_recovery",
-        "wizard_ritual_adept"
+        "wizard_ritual_adept",
+        "wizard_scholar"
       ]
     },
     {
@@ -2734,25 +2597,13 @@
       ]
     },
     {
-      "count": 6,
-      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
-      "status": "open-profile-accounting",
-      "unitIds": [
-        "barbarian_danger_sense",
-        "bard_jack_of_all_trades",
-        "paladin_fighting_style",
-        "paladin_paladins_smite",
-        "shatter",
-        "wizard_scholar"
-      ]
-    },
-    {
-      "count": 3,
+      "count": 4,
       "description": "The in-scope behavior is complete and every remaining residual is outside this strict accounting scope.",
       "status": "closed-later-level-only",
       "unitIds": [
         "barbarian_weapon_mastery",
         "fighter_weapon_mastery",
+        "paladin_fighting_style",
         "ranger_favored_enemy"
       ]
     },
@@ -2764,29 +2615,37 @@
         "druid_druidic",
         "rogue_thieves_cant"
       ]
+    },
+    {
+      "count": 1,
+      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
+      "status": "open-profile-accounting",
+      "unitIds": [
+        "shatter"
+      ]
     }
   ],
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 466,
-      "percent": "83.8%",
+      "numerator": 470,
+      "percent": "84.5%",
       "rowsByStatus": {
-        "accepted": 282,
-        "accepted-no-battle-effect": 184,
+        "accepted": 291,
+        "accepted-no-battle-effect": 179,
         "battle-runtime-required": 74,
-        "owner-evidence-required": 16
+        "owner-evidence-required": 12
       }
     },
     "strictRuntimeProfileSupport": {
       "denominator": 135,
-      "numerator": 82,
-      "percent": "60.7%"
+      "numerator": 86,
+      "percent": "63.7%"
     },
     "strictTargetClosure": {
       "denominator": 135,
-      "numerator": 98,
-      "percent": "72.6%"
+      "numerator": 103,
+      "percent": "76.3%"
     }
   },
   "openFrontier": [
@@ -2829,16 +2688,11 @@
       ]
     },
     {
-      "count": 6,
+      "count": 1,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
-        "barbarian_danger_sense",
-        "bard_jack_of_all_trades",
-        "paladin_fighting_style",
-        "paladin_paladins_smite",
-        "shatter",
-        "wizard_scholar"
+        "shatter"
       ]
     }
   ],
@@ -6509,19 +6363,19 @@
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
       "missing": 31,
-      "profile-subset-supported": 6,
-      "supported-profile": 82,
-      "unsupported-profile": 16
+      "profile-subset-supported": 7,
+      "supported-profile": 86,
+      "unsupported-profile": 11
     },
     "groupsByStatus": {
       "closed-character-fact-and-runtime-detached-split": 2,
-      "closed-later-level-only": 3,
+      "closed-later-level-only": 4,
       "closed-runtime-detached-table-adjudication": 11,
-      "open-profile-accounting": 6,
+      "open-profile-accounting": 1,
       "open-runtime-behavior": 31,
-      "supported-profile": 82
+      "supported-profile": 86
     },
-    "nonSupportedFrontier": 53,
+    "nonSupportedFrontier": 49,
     "strictDenominator": 135
   }
 }

@@ -65,6 +65,7 @@ import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
   FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE,
+  PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   parseSupportedUnitFeatureProfile,
@@ -223,6 +224,13 @@ export function battleCreatureStateFromInit(
           creatureInit.characterUnitRefs,
           classLevels,
         ),
+        passiveSavingThrowRollModeProfiles:
+          characterPassiveSavingThrowRollModeProfiles(
+            creatureInit.resources ?? [],
+            creatureInit.unitFeatures ?? [],
+            creatureInit.characterUnitRefs,
+            classLevels,
+          ),
         reactionRollOrDamageReductionProfiles:
           characterReactionRollOrDamageReductionProfiles(
             creatureInit.resources ?? [],
@@ -996,6 +1004,37 @@ export function characterSaveDamageReplacementProfiles(
           unitRefs,
           unit.id,
           SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
+        )
+        ? [[unit.id, profile] as const]
+        : [];
+    }),
+  );
+}
+
+export function characterPassiveSavingThrowRollModeProfiles(
+  resources: readonly CharacterBattleResourceInit[],
+  features: readonly CharacterBattleFeatureInit[],
+  unitRefs: readonly BattleUnitRef[],
+  classLevels: readonly CharacterBattleClassLevel[],
+): ReadonlyMap<
+  UnitRecord["id"],
+  Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "passiveSavingThrowRollMode" }
+  >
+> {
+  const units = [
+    ...resources.map((resource) => resource.unit),
+    ...features.map((feature) => feature.unit),
+  ];
+  return new Map(
+    units.flatMap((unit) => {
+      const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
+      return profile?.kind === "passiveSavingThrowRollMode" &&
+        unitRefSupportsProfileKind(
+          unitRefs,
+          unit.id,
+          PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
         )
         ? [[unit.id, profile] as const]
         : [];

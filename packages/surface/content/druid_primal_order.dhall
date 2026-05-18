@@ -55,7 +55,7 @@ let primalOrder =
       , description =
           "Choose Magician for one Druid cantrip and a Wisdom-modifier bonus to Arcana or Nature checks, or Warden for Martial weapon proficiency and Medium armor training."
       , mechanics =
-          { family = "suborder_choice"
+          { family = "class_feature_acquisition_choice"
           , choiceKey = "primal_order"
           , timing = "class_feature_acquisition"
           , options =

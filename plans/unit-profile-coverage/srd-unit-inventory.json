@@ -78,6 +78,7 @@
         "srd521:classes/paladin:level-1:mastery-pressure:paladin_weapon_mastery",
         "srd521:classes/paladin:level-1:multiclass-entry:paladin_multiclass_entry_traits",
         "srd521:classes/paladin:level-1:spell-access:paladin_spellcasting",
+        "srd521:classes/paladin:level-2:class-feature-grant:paladin_fighting_style",
         "srd521:classes/ranger:level-1:class-container:ranger_class_container",
         "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy",
         "srd521:classes/ranger:level-1:core-trait:ranger_armor_training",
@@ -129,7 +130,8 @@
         "srd521:classes/wizard:level-1:core-trait:wizard_weapon_proficiencies",
         "srd521:classes/wizard:level-1:equipment-pressure:wizard_starting_equipment",
         "srd521:classes/wizard:level-1:multiclass-entry:wizard_multiclass_entry_traits",
-        "srd521:classes/wizard:level-1:spell-access:wizard_spellcasting"
+        "srd521:classes/wizard:level-1:spell-access:wizard_spellcasting",
+        "srd521:classes/wizard:level-2:class-feature-grant:wizard_scholar"
       ],
       "issues": []
     },
@@ -138,6 +140,7 @@
       "rowIds": [
         "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense",
         "srd521:classes/barbarian:level-1:mastery-pressure:barbarian_weapon_mastery",
+        "srd521:classes/bard:level-2:class-feature-grant:bard_jack_of_all_trades",
         "srd521:classes/fighter:level-1:mastery-pressure:fighter_weapon_mastery",
         "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense",
         "srd521:classes/paladin:level-1:class-feature-grant:paladin_lay_on_hands",
@@ -171,12 +174,12 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 466,
-      "percent": "83.8%",
+      "numerator": 470,
+      "percent": "84.5%",
       "rowsByStatus": {
-        "accepted": 282,
-        "accepted-no-battle-effect": 184,
-        "owner-evidence-required": 16,
+        "accepted": 291,
+        "accepted-no-battle-effect": 179,
+        "owner-evidence-required": 12,
         "battle-runtime-required": 74
       }
     },
@@ -186,17 +189,15 @@
       "non-runtime": 12
     },
     "levelTwoRowsByDisposition": {
-      "catalog-only/dead-for-now": 5,
-      "catalog-installed-needs-owner-evidence": 4,
+      "catalog-installed-owner-evidence-present": 9,
       "non-runtime": 12,
       "missing-authored-record": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 287,
+      "catalog-installed-owner-evidence-present": 296,
       "non-runtime": 24,
-      "catalog-only/dead-for-now": 155,
-      "catalog-installed-needs-owner-evidence": 4,
-      "missing-authored-record": 86
+      "missing-authored-record": 86,
+      "catalog-only/dead-for-now": 150
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 143,
@@ -3912,20 +3913,25 @@
         "sourceRecordPath": "packages/surface/content/barbarian_danger_sense.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "barbarian_danger_sense"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "battleReadinessClosure": {
-        "source": "unit-claim",
-        "kind": "later-level-only",
-        "owner": "future unit-feature.passive-saving-throw-roll-mode owner",
-        "reason": "The feature is acquired after level 1 and grants Advantage on Dexterity Saving Throws unless the creature has the Incapacitated condition. Current promoted Unit profiles do not consume class-feature passive Saving Throw roll-mode grants or make both the saveAbilityFilter and passive condition suppressor executable at admission."
-      },
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit barbarian_danger_sense is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-CLASS-BARBARIAN-DANGER-SENSE at packages/battle-runtime/src/unit-profile-admission-danger-sense.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/barbarian:level-2:class-feature-grant:barbarian_reckless_attack",
@@ -3954,16 +3960,21 @@
         "unitId": "barbarian_reckless_attack"
       },
       "unitProfileDisposition": "supported-profile",
-      "finalDisposition": "catalog-installed-needs-owner-evidence",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit barbarian_reckless_attack is installed in srdUnitCollection",
-          "status": "catalog-only evidence; operational owner evidence still required"
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT7 at packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/barbarian:level-2:class-table-summary:barbarian_level_2_feature_table_row",
@@ -4661,20 +4672,25 @@
         "sourceRecordPath": "packages/surface/content/bard_jack_of_all_trades.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "bard_jack_of_all_trades"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "battleReadinessClosure": {
-        "source": "unit-claim",
-        "kind": "later-level-only",
-        "owner": "future character-sheet.ability-check-proficiency-bonus profile",
-        "reason": "The feature is acquired after level 1 and depends on a concrete Ability Check witness with a skill, the existing CharacterBuild skill and Expertise proficiency facts, and whether another rule already contributes Proficiency Bonus. Current promoted Unit profiles do not model that passive half-proficiency computation, and generic modify_roll_numeric cannot make the RAW gate executable."
-      },
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit bard_jack_of_all_trades is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L12G-CLASS-BARD-JACK-OF-ALL-TRADES Character Sheet Ability Check Proficiency Bonus runtime; Bard Jack of All Trades is read from the installed Surface class-feature record and projected by the Character Sheet runtime only for unproficient skill Ability Checks when no other Proficiency Bonus applies. The runtime derives ordinary skill proficiency and Expertise from existing CharacterBuild proficiency facts, derives Jack ownership from the Bard level 2 class feature grant, and stores no parallel skill state.",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/bard:level-2:class-table-summary:bard_level_2_feature_table_row",
@@ -11971,16 +11987,21 @@
         "unitId": "fighter_action_surge"
       },
       "unitProfileDisposition": "supported-profile",
-      "finalDisposition": "catalog-installed-needs-owner-evidence",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit fighter_action_surge is installed in srdUnitCollection",
-          "status": "catalog-only evidence; operational owner evidence still required"
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT8 at packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/fighter:level-2:class-feature-grant:fighter_tactical_mind",
@@ -12009,16 +12030,21 @@
         "unitId": "fighter_tactical_mind"
       },
       "unitProfileDisposition": "supported-profile",
-      "finalDisposition": "catalog-installed-needs-owner-evidence",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit fighter_tactical_mind is installed in srdUnitCollection",
-          "status": "catalog-only evidence; operational owner evidence still required"
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT62 at packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/fighter:level-2:class-table-summary:fighter_level_2_feature_table_row",
@@ -13418,20 +13444,31 @@
         "sourceRecordPath": "packages/surface/content/paladin_fighting_style.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "paladin_fighting_style"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "unit-claim",
-        "kind": "selection-grant-container",
-        "owner": "selected Fighting Style feat Unit profiles and future Blessed Warrior Spell Access character owner",
-        "reason": "The class feature opens a level-2 choice between a Fighting Style feat and Blessed Warrior's Cleric cantrip Spell Access. Selected Fighting Style feat Units own executable battle behavior, and Blessed Warrior cantrip access and replacement belong to Character Sheet Spell Access rather than duplicate battle Unit state."
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "future Paladin advancement cantrip replacement owner",
+        "reason": "Blessed Warrior cantrip replacement only occurs on later Paladin level gains after the level-2 acquisition choice is complete."
       },
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit paladin_fighting_style is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L12G-CLASS-PALADIN-FIGHTING-STYLE character-creation Paladin Fighting Style branch and grant-selection support profile; Paladin Fighting Style is discovered from the Surface class-feature acquisition choice, fill-gated to Fighting Style feat or Blessed Warrior, finalized through the selected branch's downstream feat or cantrip choices, and projected without duplicating selected feat or cantrip behavior on the Paladin feature Unit.",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/paladin:level-2:class-feature-grant:paladin_paladins_smite",
@@ -13456,20 +13493,25 @@
         "sourceRecordPath": "packages/surface/content/paladin_paladins_smite.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "paladin_paladins_smite"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "battleReadinessClosure": {
-        "source": "unit-claim",
-        "kind": "later-level-only",
-        "owner": "future Paladin's Smite Spell Access and class-feature free-cast resource owner",
-        "reason": "The feature is acquired after level 1, makes Divine Smite always prepared, and grants one Long Rest no-slot Divine Smite cast. The Divine Smite spell Unit already owns after-hit damage invocation behavior; a future Paladin feature owner should retain this source Unit for Spell Access and free-cast resource projection without duplicating the spell procedure."
-      },
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit paladin_paladins_smite is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-CLASS-PALADINS-SMITE at packages/battle-runtime/src/battle-runtime-favored-enemy.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/paladin:level-2:class-table-summary:paladin_level_2_feature_table_row",
@@ -16850,16 +16892,21 @@
         "unitId": "rogue_cunning_action"
       },
       "unitProfileDisposition": "supported-profile",
-      "finalDisposition": "catalog-installed-needs-owner-evidence",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
           "evidence": "candidate Unit rogue_cunning_action is installed in srdUnitCollection",
-          "status": "catalog-only evidence; operational owner evidence still required"
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; QMBT8 at packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Classify the operational owner and add owner-specific evidence, or explicitly close as catalog-only.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/rogue:level-2:class-table-summary:rogue_level_2_feature_table_row",
@@ -22178,20 +22225,25 @@
         "sourceRecordPath": "packages/surface/content/wizard_scholar.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "wizard_scholar"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "battleReadinessClosure": {
-        "source": "unit-claim",
-        "kind": "later-level-only",
-        "owner": "future constrained Character Creation skill Expertise choice owner",
-        "reason": "The feature is acquired after level 1 and belongs to durable Character Sheet proficiency projection. Existing Rogue Expertise support admits owned skill proficiencies without Expertise, but Scholar additionally intersects that owned-skill set with a fixed six-skill list; the current authored modify-roll shape cannot represent that acquisition-time prerequisite without semantic leakage."
-      },
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit wizard_scholar is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L12G-CLASS-WIZARD-SCHOLAR level-2 Wizard Scholar support profile; Wizard Scholar is discovered from the listed-owned-skill grant-expertise acquisition choice, finalized from one selected skill that is owned, in the Scholar skill list, and not already Expertise, and projected into CharacterBuild Expertise evidence while Wizard level-2 spellcasting projects its level-scaled prepared spell and Spell Slot facts.",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:level-2:class-table-summary:wizard_level_2_feature_table_row",

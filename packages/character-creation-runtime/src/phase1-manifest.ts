@@ -46,6 +46,7 @@ export const INITIAL_CHARACTER_DRAFT_PATHS = [
 export const PHASE1_CLASS_FIGHTER_UNIT_ID = "class_fighter";
 export const WIDTH_CLASS_WIZARD_UNIT_ID = "class_wizard";
 export const SRD_ROGUE_CLASS_UNIT_ID = "class_rogue";
+export const SRD_PALADIN_CLASS_UNIT_ID = "class_paladin";
 export const SRD_LEVEL_ONE_CLASS_UNIT_IDS = [
   "class_barbarian",
   "class_bard",
@@ -53,7 +54,7 @@ export const SRD_LEVEL_ONE_CLASS_UNIT_IDS = [
   "class_druid",
   PHASE1_CLASS_FIGHTER_UNIT_ID,
   "class_monk",
-  "class_paladin",
+  SRD_PALADIN_CLASS_UNIT_ID,
   "class_ranger",
   SRD_ROGUE_CLASS_UNIT_ID,
   "class_sorcerer",
@@ -201,6 +202,8 @@ export const CLASS_FEATURE_LANGUAGE_CHOICE_KEY =
   "class_feature_language_choice" satisfies UnitChoiceKey;
 export const DIVINE_ORDER_CHOICE_KEY = "divine_order" satisfies UnitChoiceKey;
 export const PRIMAL_ORDER_CHOICE_KEY = "primal_order" satisfies UnitChoiceKey;
+export const PALADIN_FIGHTING_STYLE_CHOICE_KEY =
+  "paladin_fighting_style" satisfies UnitChoiceKey;
 export const BARD_MULTICLASS_SKILL_PROFICIENCY_CHOICE_KEY =
   "bard_multiclass_skill_proficiency" satisfies UnitChoiceKey;
 export const BARD_MULTICLASS_MUSICAL_INSTRUMENT_PROFICIENCY_CHOICE_KEY =

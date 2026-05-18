@@ -69,14 +69,19 @@ const requiredFirstVerticalUnitIds = [
   "fighter_action_surge",
   "fighter_tactical_mind",
   "fighter_improved_critical",
+  "barbarian_danger_sense",
   "barbarian_fast_movement",
+  "bard_jack_of_all_trades",
   ...task183ClassFeatureUnitIds,
   ...task184WeaponMasteryUnitIds,
+  "paladin_fighting_style",
+  "paladin_paladins_smite",
   "subclass_fighter_champion",
   "subclass_wizard_evoker",
   "rogue_evasion",
   "wizard_ritual_adept",
   "wizard_arcane_recovery",
+  "wizard_scholar",
   "feat_ability_score_improvement",
   "feat_archery",
   "feat_boon_of_combat_prowess",
@@ -1495,7 +1500,7 @@ describe("SRD Unit catalog boundary", () => {
           kind: "class_feature",
           mechanics: expect.objectContaining({
             choiceKey: "divine_order",
-            family: "suborder_choice",
+            family: "class_feature_acquisition_choice",
           }),
         }),
         expect.objectContaining({
@@ -1513,7 +1518,7 @@ describe("SRD Unit catalog boundary", () => {
           kind: "class_feature",
           mechanics: expect.objectContaining({
             choiceKey: "primal_order",
-            family: "suborder_choice",
+            family: "class_feature_acquisition_choice",
           }),
         }),
         expect.objectContaining({

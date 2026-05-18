@@ -137,6 +137,7 @@
 {"unitId":"hunters_mark","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV31B","ownerPath":"packages/battle-runtime/src/unit-profile-admission-candidate-narrowing-spells.test.ts"}}
 {"unitId":"hunters_mark","evidence":{"tag":"selected-identity-mbt","taskId":"L1E-HUNTERS-MARK","ownerPath":"packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts"}}
 {"unitId":"ranger_favored_enemy","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV87C","ownerPath":"packages/battle-runtime/src/battle-runtime-test-support.ts"}}
+{"unitId":"paladin_paladins_smite","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-CLASS-PALADINS-SMITE","ownerPath":"packages/battle-runtime/src/battle-runtime-favored-enemy.test.ts"}}
 {"unitId":"produce_flame","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV87A","ownerPath":"packages/battle-runtime/src/unit-profile-admission-produce-flame.test.ts"}}
 {"unitId":"produce_flame","evidence":{"tag":"selected-identity-mbt","taskId":"level1-spatial-witness","ownerPath":"packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts"}}
 {"unitId":"dancing_lights","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV88A","ownerPath":"packages/battle-runtime/src/unit-profile-admission-dancing-lights.test.ts"}}
@@ -189,6 +190,7 @@
 {"unitId":"paladin_weapon_mastery","evidence":{"tag":"deterministic-admission-projection","taskId":"AT-L1-04","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"paladin_weapon_mastery","evidence":{"tag":"selected-identity-mbt","taskId":"L1D2-WEAPON-MASTERY-CONTAINERS","ownerPath":"packages/character-creation-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts"}}
 {"unitId":"paladin_weapon_mastery","evidence":{"tag":"selected-identity-mbt","taskId":"L1D2-WEAPON-MASTERY-CONTAINERS","ownerPath":"packages/character-sheet-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts"}}
+{"unitId":"paladin_fighting_style","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-CLASS-PALADIN-FIGHTING-STYLE","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"ranger_weapon_mastery","evidence":{"tag":"deterministic-admission-projection","taskId":"AT-L1-04","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"ranger_weapon_mastery","evidence":{"tag":"selected-identity-mbt","taskId":"L1D2-WEAPON-MASTERY-CONTAINERS","ownerPath":"packages/character-creation-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts"}}
 {"unitId":"ranger_weapon_mastery","evidence":{"tag":"selected-identity-mbt","taskId":"L1D2-WEAPON-MASTERY-CONTAINERS","ownerPath":"packages/character-sheet-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts"}}
@@ -222,3 +224,6 @@
 {"unitId":"mastery_cleave","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV91B","ownerPath":"packages/character-battle-runtime/src/index.test.ts"}}
 {"unitId":"mastery_cleave","evidence":{"tag":"selected-identity-mbt","taskId":"weapon-mastery-properties","ownerPath":"packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts"}}
 {"unitId":"thaumaturgy","evidence":{"tag":"deterministic-admission-projection","taskId":"L1D2-THAUMATURGY-BOOMING-VOICE","ownerPath":"packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts"}}
+{"unitId":"barbarian_danger_sense","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-CLASS-BARBARIAN-DANGER-SENSE","ownerPath":"packages/battle-runtime/src/unit-profile-admission-danger-sense.test.ts"}}
+{"unitId":"bard_jack_of_all_trades","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-CLASS-BARD-JACK-OF-ALL-TRADES","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
+{"unitId":"wizard_scholar","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-CLASS-WIZARD-SCHOLAR","ownerPath":"packages/character-creation-runtime/src/wizard-scholar.test.ts"}}

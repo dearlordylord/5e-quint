@@ -54,6 +54,7 @@ export function traceEffectAtom(
     case "grant_alternate_action_cost":
     case "grant_extra_action":
     case "modify_roll_numeric":
+    case "jack_of_all_trades_ability_check_bonus":
     case "modify_damage_numeric":
     case "modify_roll_advantage":
     case "suppress_roll_disadvantage":

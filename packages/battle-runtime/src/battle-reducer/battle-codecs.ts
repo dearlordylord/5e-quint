@@ -1525,7 +1525,10 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
     }),
     Schema.Struct({
       access: PreparedSpellAccessSchema,
-      resource: SpellSlotInvocationResourceSchema,
+      resource: Schema.Union(
+        SpellSlotInvocationResourceSchema,
+        ClassFeatureFreeCastInvocationResourceSchema,
+      ),
       procedure: Schema.Literal("afterHitDamage"),
       spell: BattleRuntimeObjectSchema,
       actionCost: Schema.Literal("bonusAction"),

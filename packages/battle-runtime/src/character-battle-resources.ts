@@ -16,7 +16,10 @@ import type {
   SpellRecord,
   UnitRecord,
 } from "@dnd/surface/surface/types";
-import { favoredEnemyHuntersMarkFreeCastGrantsForUnit } from "@dnd/surface/surface/types";
+import {
+  supportedClassFeatureSpellFreeCastGrantsForUnit,
+  type SupportedClassFeatureSpellFreeCastProfile,
+} from "@dnd/surface/surface/types";
 import {
   type CharacterBattleClassLevel,
   type CharacterBattleClassLevelInit,
@@ -448,13 +451,22 @@ export function characterBattleResourceSupportedForUnit(
 export function unitIsFavoredEnemyHuntersMarkFreeCastResource(
   unit: UnitRecord,
 ): boolean {
-  return favoredEnemyHuntersMarkFreeCastResource(unit) !== null;
+  return (
+    classFeatureSpellFreeCastProfileForUnit(unit)?.resourceTag ===
+    "favoredEnemyHuntersMarkFreeCasts"
+  );
+}
+
+export function unitIsSupportedClassFeatureSpellFreeCastResource(
+  unit: UnitRecord,
+): boolean {
+  return classFeatureSpellFreeCastResource(unit) !== null;
 }
 
 function characterBattleActivationResourceForUnit(
   unit: UnitRecord,
 ): CharacterBattleActivationResource | null {
-  const freeCastResource = favoredEnemyHuntersMarkFreeCastResource(unit);
+  const freeCastResource = classFeatureSpellFreeCastResource(unit);
   if (freeCastResource !== null) {
     return freeCastResource;
   }
@@ -512,16 +524,12 @@ function characterBattleActivationResourceForUnit(
     : null;
 }
 
-function favoredEnemyHuntersMarkFreeCastResource(
+function classFeatureSpellFreeCastResource(
   unit: UnitRecord,
 ): LimitedUseCountActivationResource | null {
-  const grants = favoredEnemyHuntersMarkFreeCastGrantsForUnit(unit);
+  const grants = supportedClassFeatureSpellFreeCastGrantsForUnit(unit);
   const freeCastGrant = grants?.freeCastGrant;
-  if (
-    freeCastGrant === undefined ||
-    freeCastGrant.count !== 2 ||
-    freeCastGrant.resetCadence !== "long_rest"
-  ) {
+  if (freeCastGrant === undefined) {
     return null;
   }
   return {
@@ -533,7 +541,31 @@ function favoredEnemyHuntersMarkFreeCastResource(
 export function characterResourceIsFavoredEnemyFreeCast(
   resource: CharacterBattleResourceState,
 ): boolean {
-  return favoredEnemyHuntersMarkFreeCastResource(resource.unit) !== null;
+  return (
+    classFeatureSpellFreeCastProfileForResource(resource)?.resourceTag ===
+    "favoredEnemyHuntersMarkFreeCasts"
+  );
+}
+
+export function classFeatureSpellFreeCastProfileForResource(
+  resource: CharacterBattleResourceState,
+): SupportedClassFeatureSpellFreeCastProfile | null {
+  return classFeatureSpellFreeCastProfileForUnit(resource.unit);
+}
+
+export function characterResourceIsClassFeatureFreeCastForSpell(
+  resource: CharacterBattleResourceState,
+  spellId: SpellRecord["id"],
+): boolean {
+  return (
+    classFeatureSpellFreeCastProfileForResource(resource)?.spellId === spellId
+  );
+}
+
+function classFeatureSpellFreeCastProfileForUnit(
+  unit: UnitRecord,
+): SupportedClassFeatureSpellFreeCastProfile | null {
+  return supportedClassFeatureSpellFreeCastGrantsForUnit(unit)?.profile ?? null;
 }
 
 export function characterBattleResourceUsage(

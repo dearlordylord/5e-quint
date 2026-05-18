@@ -8,15 +8,7 @@
     "family": "passive",
     "grants": [
       {
-        "delta": {
-          "kind": "proficiency_bonus",
-          "scale": "half",
-          "sign": "+"
-        },
-        "kind": "modify_roll_numeric",
-        "on": [
-          "ability_check"
-        ]
+        "kind": "jack_of_all_trades_ability_check_bonus"
       }
     ]
   },

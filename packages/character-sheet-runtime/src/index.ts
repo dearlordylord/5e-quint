@@ -5,12 +5,14 @@ import {
   characterBuildArmorTraining,
   characterBuildFeatureUnitIds,
   characterBuildHitPoints,
+  characterBuildProficiencies,
   characterBuildResources,
   characterBuildSpellcastingSlotCapacity,
   classLevelForUnit,
   classUnitId,
   classUnitIdToClassName,
   CHARACTER_CLASS_LEVELS,
+  computeTotalLevel,
   characterEquipmentItemSourceFromId,
   eldritchInvocationOptionForInvocationId,
   eldritchInvocationRepeatableChoiceSatisfiesRule,
@@ -105,14 +107,19 @@ import {
   allLeveledSpellsFromAnyClassSpellList,
 } from "@dnd/surface/surface/schema";
 import { readClassCreationFacts } from "@dnd/surface/surface/character-creation-readers";
-import { favoredEnemyHuntersMarkFreeCastGrantsForUnit } from "@dnd/surface/surface/types";
-import { Brand, Either, Option } from "effect";
+import {
+  isSupportedClassFeatureSpellFreeCastResourceTag,
+  supportedClassFeatureSpellFreeCastGrantsForUnit,
+  type SupportedClassFeatureSpellFreeCastResourceTag,
+} from "@dnd/surface/surface/types";
+import { Brand, Either, Match, Option } from "effect";
 
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.armor-class-base-formula
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.healing-resource-action
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.short-rest-spell-slot-recovery
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.spellbook-ritual-invocation
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.weapon-mastery-reselection
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.ability-check-proficiency-bonus
 
 const WEAPON_PROFICIENCY_CATEGORY_VALUES = ["simple", "martial"] as const;
 const ARMOR_TRAINING_CATEGORY_VALUES = [
@@ -121,6 +128,9 @@ const ARMOR_TRAINING_CATEGORY_VALUES = [
   "heavy",
   "shield",
 ] as const;
+export const BARD_JACK_OF_ALL_TRADES_UNIT_ID =
+  "bard_jack_of_all_trades" as const satisfies UnitRecord["id"];
+const JACK_OF_ALL_TRADES_PROFICIENCY_BONUS_DIVISOR = 2;
 const LAY_ON_HANDS_POISONED_REMOVAL_COST = resourceCount(5);
 const RITUAL_ADDITIONAL_CASTING_TIME_MINUTES = 10;
 type StoredClassFeatureLanguageFact =
@@ -236,7 +246,9 @@ export type CharacterSheetRestFeatureUse = {
 };
 
 export type CharacterSheetResourceExpenditure = {
-  readonly tag: "layOnHandsHealingPool" | "favoredEnemyHuntersMarkFreeCasts";
+  readonly tag:
+    | "layOnHandsHealingPool"
+    | SupportedClassFeatureSpellFreeCastResourceTag;
   readonly expended: ResourceCount;
 };
 
@@ -245,8 +257,9 @@ type CharacterSheetLayOnHandsResource = CharacterBuildResource & {
   readonly resource: ChargePoolResource;
 };
 
-type CharacterSheetFavoredEnemyHuntersMarkResource = {
+type CharacterSheetClassFeatureSpellFreeCastResource = {
   readonly unitId: UnitRecord["id"];
+  readonly tag: SupportedClassFeatureSpellFreeCastResourceTag;
   readonly count: ResourceCount;
 };
 
@@ -256,8 +269,7 @@ export type CharacterSheetResourceState =
       readonly count: ResourceCount;
       readonly expended: ResourceCount;
     })
-  | (CharacterSheetFavoredEnemyHuntersMarkResource & {
-      readonly tag: "favoredEnemyHuntersMarkFreeCasts";
+  | (CharacterSheetClassFeatureSpellFreeCastResource & {
       readonly expended: ResourceCount;
     });
 
@@ -427,6 +439,47 @@ export type CharacterSheetArmorClassStateInput = {
   readonly baseChoice?: CharacterSheetArmorClassBaseChoice;
 };
 
+export type CharacterSheetAbilityCheckOtherProficiencyBonusState =
+  | { readonly tag: "noOtherProficiencyBonus" }
+  | { readonly tag: "otherProficiencyBonusApplies" };
+
+export const CHARACTER_SHEET_NO_OTHER_PROFICIENCY_BONUS = {
+  tag: "noOtherProficiencyBonus",
+} as const satisfies CharacterSheetAbilityCheckOtherProficiencyBonusState;
+
+export const CHARACTER_SHEET_OTHER_PROFICIENCY_BONUS_APPLIES = {
+  tag: "otherProficiencyBonusApplies",
+} as const satisfies CharacterSheetAbilityCheckOtherProficiencyBonusState;
+
+export type CharacterSheetAbilityCheckProficiencyBonusInput = {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly skill: SurfaceSkill;
+  readonly otherProficiencyBonus: CharacterSheetAbilityCheckOtherProficiencyBonusState;
+};
+
+export type CharacterSheetAbilityCheckProficiencyBonus =
+  | {
+      readonly tag: "none";
+      readonly bonus: 0;
+    }
+  | {
+      readonly tag: "skillProficiency";
+      readonly skill: SurfaceSkill;
+      readonly bonus: number;
+    }
+  | {
+      readonly tag: "expertise";
+      readonly skill: SurfaceSkill;
+      readonly bonus: number;
+    }
+  | {
+      readonly tag: "jackOfAllTrades";
+      readonly sourceUnitId: typeof BARD_JACK_OF_ALL_TRADES_UNIT_ID;
+      readonly skill: SurfaceSkill;
+      readonly bonus: number;
+    };
+
 export type CharacterSheetSpellInvocationInput = {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
@@ -484,6 +537,109 @@ export function characterSheetIssue(
   message: string,
 ): Either.Either<never, CharacterSheetIssue> {
   return Either.left({ tag: "characterSheetIssue", message });
+}
+
+export function characterSheetAbilityCheckProficiencyBonus(
+  input: CharacterSheetAbilityCheckProficiencyBonusInput,
+): Either.Either<
+  CharacterSheetAbilityCheckProficiencyBonus,
+  CharacterSheetIssue
+> {
+  const proficiencies = characterBuildProficiencies(
+    input.build,
+    input.unitLibrary,
+  );
+  if (Either.isLeft(proficiencies)) {
+    return characterSheetIssue(
+      proficiencies.left.map((issue) => issue.message).join("; "),
+    );
+  }
+
+  const proficiencyBonus = proficiencyBonusForCharacterLevel(
+    computeTotalLevel(input.build.progression),
+  );
+  if (proficiencies.right.expertise.includes(input.skill)) {
+    return Either.right({
+      tag: "expertise",
+      skill: input.skill,
+      bonus: proficiencyBonus * 2,
+    });
+  }
+  if (proficiencies.right.skills.includes(input.skill)) {
+    return Either.right({
+      tag: "skillProficiency",
+      skill: input.skill,
+      bonus: proficiencyBonus,
+    });
+  }
+  const ownsJackOfAllTrades = characterBuildOwnsJackOfAllTradesFeature(
+    input.build,
+    input.unitLibrary,
+  );
+  if (Either.isLeft(ownsJackOfAllTrades)) {
+    return Either.left(ownsJackOfAllTrades.left);
+  }
+  return Match.value(input.otherProficiencyBonus).pipe(
+    Match.when({ tag: "otherProficiencyBonusApplies" }, () =>
+      Either.right({
+        tag: "none" as const,
+        bonus: 0 as const,
+      }),
+    ),
+    Match.when({ tag: "noOtherProficiencyBonus" }, () =>
+      ownsJackOfAllTrades.right
+        ? Either.right({
+            tag: "jackOfAllTrades" as const,
+            sourceUnitId: BARD_JACK_OF_ALL_TRADES_UNIT_ID,
+            skill: input.skill,
+            bonus: Math.floor(
+              proficiencyBonus / JACK_OF_ALL_TRADES_PROFICIENCY_BONUS_DIVISOR,
+            ),
+          })
+        : Either.right({
+            tag: "none" as const,
+            bonus: 0 as const,
+          }),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function characterBuildOwnsJackOfAllTradesFeature(
+  build: Pick<CharacterBuild, "progression" | "features">,
+  unitLibrary: UnitCatalog,
+): Either.Either<boolean, CharacterSheetIssue> {
+  if (
+    !characterBuildOwnsFeatureUnit(
+      build,
+      unitLibrary,
+      BARD_JACK_OF_ALL_TRADES_UNIT_ID,
+    )
+  ) {
+    return Either.right(false);
+  }
+  const unit = getRequiredUnit(unitLibrary, BARD_JACK_OF_ALL_TRADES_UNIT_ID);
+  if (Either.isLeft(unit)) return Either.left(unit.left);
+  if (
+    unit.right.kind === "class_feature" &&
+    unit.right.mechanics.family === "passive" &&
+    unit.right.mechanics.grants.some(
+      (grant) => grant.kind === "jack_of_all_trades_ability_check_bonus",
+    )
+  ) {
+    return Either.right(true);
+  }
+  return characterSheetIssue(
+    "Jack of All Trades requires the installed Surface feature record.",
+  );
+}
+
+function characterBuildOwnsFeatureUnit(
+  build: Pick<CharacterBuild, "progression" | "features">,
+  unitLibrary: UnitCatalog,
+  unitId: UnitRecord["id"],
+): boolean {
+  return characterBuildFeatureUnitIds(build, unitLibrary).includes(unitId);
 }
 
 export function createFreshCharacterSheet(
@@ -795,21 +951,19 @@ export function characterSheetResources(
     });
   }
 
-  const favoredEnemyResource = favoredEnemyHuntersMarkResourceForBuild(
+  const freeCastResources = classFeatureSpellFreeCastResourcesForBuild(
     sheet.build,
     unitLibrary,
   );
-  if (Either.isLeft(favoredEnemyResource)) {
-    return Either.left(favoredEnemyResource.left);
+  if (Either.isLeft(freeCastResources)) {
+    return Either.left(freeCastResources.left);
   }
-  if (favoredEnemyResource.right !== null) {
+  for (const freeCastResource of freeCastResources.right) {
     resources.push({
-      ...favoredEnemyResource.right,
-      tag: "favoredEnemyHuntersMarkFreeCasts",
+      ...freeCastResource,
       expended:
         sheet.resourceExpenditures.find(
-          (expenditure) =>
-            expenditure.tag === "favoredEnemyHuntersMarkFreeCasts",
+          (expenditure) => expenditure.tag === freeCastResource.tag,
         )?.expended ?? resourceCount(0),
     });
   }
@@ -1953,12 +2107,12 @@ function resourceExpendituresFromInput(
   if (Either.isLeft(layOnHandsResource)) {
     return Either.left(layOnHandsResource.left);
   }
-  const favoredEnemyResource = favoredEnemyHuntersMarkResourceForBuild(
+  const freeCastResources = classFeatureSpellFreeCastResourcesForBuild(
     input.build,
     input.unitLibrary,
   );
-  if (Either.isLeft(favoredEnemyResource)) {
-    return Either.left(favoredEnemyResource.left);
+  if (Either.isLeft(freeCastResources)) {
+    return Either.left(freeCastResources.left);
   }
   const seen = new Set<CharacterSheetResourceExpenditure["tag"]>();
   const result: CharacterSheetResourceExpenditure[] = [];
@@ -1973,7 +2127,7 @@ function resourceExpendituresFromInput(
       build: input.build,
       unitLibrary: input.unitLibrary,
       layOnHandsResource: layOnHandsResource.right,
-      favoredEnemyResource: favoredEnemyResource.right,
+      freeCastResources: freeCastResources.right,
       expenditureTag: expenditure.tag,
     });
     if (Either.isLeft(count)) return Either.left(count.left);
@@ -2000,7 +2154,7 @@ function characterSheetResourceExpenditureCapacity(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
   readonly layOnHandsResource: CharacterSheetLayOnHandsResource | null;
-  readonly favoredEnemyResource: CharacterSheetFavoredEnemyHuntersMarkResource | null;
+  readonly freeCastResources: readonly CharacterSheetClassFeatureSpellFreeCastResource[];
   readonly expenditureTag: CharacterSheetResourceExpenditure["tag"];
 }): Either.Either<ResourceCount, CharacterSheetIssue> {
   if (input.expenditureTag === "layOnHandsHealingPool") {
@@ -2015,12 +2169,15 @@ function characterSheetResourceExpenditureCapacity(input: {
       resource: input.layOnHandsResource,
     });
   }
-  if (input.favoredEnemyResource === null) {
+  const freeCastResource = input.freeCastResources.find(
+    (resource) => resource.tag === input.expenditureTag,
+  );
+  if (freeCastResource === undefined) {
     return characterSheetIssue(
-      "Favored Enemy Hunter's Mark free-cast expenditure requires the Ranger Favored Enemy feature.",
+      "Class feature spell free-cast expenditure requires the matching class feature.",
     );
   }
-  return Either.right(input.favoredEnemyResource.count);
+  return Either.right(freeCastResource.count);
 }
 
 function layOnHandsResourceForBuild(
@@ -2075,35 +2232,42 @@ function layOnHandsHealingPoolResourceForUnit(
   return healsFromSpentPool ? mechanics.resource : null;
 }
 
-function favoredEnemyHuntersMarkResourceForBuild(
+function classFeatureSpellFreeCastResourcesForBuild(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
 ): Either.Either<
-  CharacterSheetFavoredEnemyHuntersMarkResource | null,
+  readonly CharacterSheetClassFeatureSpellFreeCastResource[],
   CharacterSheetIssue
 > {
+  const resources: CharacterSheetClassFeatureSpellFreeCastResource[] = [];
   for (const featureUnitId of characterBuildFeatureUnitIds(
     build,
     unitLibrary,
   )) {
     const unit = unitLibrary.getUnit(featureUnitId);
     if (Option.isNone(unit)) continue;
-    const count = favoredEnemyHuntersMarkFreeCastCountForUnit(unit.value);
-    if (count !== null) {
-      return Either.right({ unitId: featureUnitId, count });
+    const resource = classFeatureSpellFreeCastResourceForUnit(unit.value);
+    if (resource !== null) {
+      resources.push({ unitId: featureUnitId, ...resource });
     }
   }
-  return Either.right(null);
+  return Either.right(resources);
 }
 
-function favoredEnemyHuntersMarkFreeCastCountForUnit(
+function classFeatureSpellFreeCastResourceForUnit(
   unit: UnitRecord,
-): ResourceCount | null {
-  const grant =
-    favoredEnemyHuntersMarkFreeCastGrantsForUnit(unit)?.freeCastGrant;
-  return grant?.count === 2 && grant.resetCadence === "long_rest"
-    ? resourceCount(grant.count)
-    : null;
+): Pick<
+  CharacterSheetClassFeatureSpellFreeCastResource,
+  "tag" | "count"
+> | null {
+  const grants = supportedClassFeatureSpellFreeCastGrantsForUnit(unit);
+  if (grants === null) {
+    return null;
+  }
+  return {
+    tag: grants.profile.resourceTag,
+    count: resourceCount(grants.freeCastGrant.count),
+  };
 }
 
 type CharacterSheetResourceCapacityInput = {
@@ -2869,7 +3033,7 @@ function parseStoredResourceExpenditures(
     if (
       !isRecord(expenditure) ||
       (expenditure.tag !== "layOnHandsHealingPool" &&
-        expenditure.tag !== "favoredEnemyHuntersMarkFreeCasts")
+        !isSupportedClassFeatureSpellFreeCastResourceTag(expenditure.tag))
     ) {
       return characterSheetIssue(
         "Expected Character Sheet resource expenditure.",
@@ -3545,7 +3709,10 @@ function parseStoredClassFeatureLanguages(input: {
   readonly originLanguages: CharacterBuild["originLanguages"];
   readonly build: Pick<CharacterBuild, "progression">;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<CharacterBuild["classFeatureLanguages"], CharacterSheetIssue> {
+}): Either.Either<
+  CharacterBuild["classFeatureLanguages"],
+  CharacterSheetIssue
+> {
   const { value, originLanguages, build, unitLibrary } = input;
   if (!Array.isArray(value)) {
     return characterSheetIssue(
@@ -3633,10 +3800,8 @@ function parseStoredClassFeatureLanguages(input: {
     classFeatureLanguages.push(languageFact);
   }
 
-  for (const [
-    sourceUnitId,
-    expectedLanguages,
-  ] of expectedProjection.right.fixedLanguagesBySourceUnitId) {
+  for (const [sourceUnitId, expectedLanguages] of expectedProjection.right
+    .fixedLanguagesBySourceUnitId) {
     const storedLanguages =
       fixedLanguagesBySourceUnitId.get(sourceUnitId) ??
       new Set<StoredClassFeatureLanguage>();
@@ -3649,10 +3814,8 @@ function parseStoredClassFeatureLanguages(input: {
     }
   }
 
-  for (const [
-    sourceUnitId,
-    expectedCount,
-  ] of expectedProjection.right.choiceCountsBySourceUnitId) {
+  for (const [sourceUnitId, expectedCount] of expectedProjection.right
+    .choiceCountsBySourceUnitId) {
     const selectedCount = choiceCountsBySourceUnitId.get(sourceUnitId) ?? 0;
     if (selectedCount !== expectedCount) {
       return characterSheetIssue(
@@ -3710,8 +3873,7 @@ function storedClassFeatureLanguageMatchesSourceUnit(input: {
     if (grant.kind !== "grant_language") return false;
     const language = languageFromSurfaceLanguageId(grant.languageId);
     return (
-      Either.isRight(language) &&
-      language.right === input.languageFact.language
+      Either.isRight(language) && language.right === input.languageFact.language
     );
   });
   return matches
@@ -3954,8 +4116,9 @@ function parseStoredEldritchInvocationSelection(
     );
   }
   const repeatableChoiceInput = value.repeatableChoice;
-  const repeatableChoice =
-    parseStoredEldritchInvocationRepeatableChoice(repeatableChoiceInput);
+  const repeatableChoice = parseStoredEldritchInvocationRepeatableChoice(
+    repeatableChoiceInput,
+  );
   if (Either.isLeft(repeatableChoice)) {
     return Either.left(repeatableChoice.left);
   }

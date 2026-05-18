@@ -20,9 +20,11 @@ let allSkills =
 let bard =
       { armorTraining = { categories = [ "light" ], kind = "trained" }
       , className = "bard"
-      , description = "SRD Bard class creation facts for a level-1 character, including class-list prepared Spell Access, Spell Slots, and spellcasting focus facts."
+      , description = "SRD Bard class creation and early progression facts, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, and level 1-2 class feature grants."
       , featureGrants =
-        [ { level = 1, unitId = "bard_bardic_inspiration" } ]
+        [ { level = 1, unitId = "bard_bardic_inspiration" }
+        , { level = 2, unitId = "bard_jack_of_all_trades" }
+        ]
       , hitPointDie = 8
       , id = "class_bard"
       , kind = "class"
@@ -67,7 +69,7 @@ let bard =
           }
       , name = "Bard"
       , primaryAbilities = { abilities = [ "cha" ], kind = "all_of" }
-      , provenance = { kind = "srd-5.2.1", section = "Classes/Bard.md:3-25,34-36,69-91" }
+      , provenance = { kind = "srd-5.2.1", section = "Classes/Bard.md:3-25,34-37,69-91,99-103" }
       , savingThrowProficiencies = [ "dex", "cha" ]
       , skillProficiencyChoice = { choose = 3, options = allSkills }
       , spellcasting =

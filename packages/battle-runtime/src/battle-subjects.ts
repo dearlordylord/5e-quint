@@ -133,7 +133,7 @@ export const SpellInvocationRefSchema = Schema.Union(
     tag: Schema.Literal("classFeatureFreeCast"),
     spellId: SpellId,
     resourceUnitId: Schema.String,
-    procedure: Schema.Literal("markedDamageRider"),
+    procedure: Schema.Literal("afterHitDamage", "markedDamageRider"),
   }),
   Schema.Struct({
     tag: Schema.Literal("armorOfShadows"),
@@ -190,7 +190,7 @@ export function spellEffectInvocationRef(
 export function classFeatureFreeCastSpellInvocationRef(
   rawSpellId: string,
   resourceUnitId: string,
-  procedure: "markedDamageRider",
+  procedure: "afterHitDamage" | "markedDamageRider",
 ): SpellInvocationRef {
   return {
     tag: "classFeatureFreeCast",

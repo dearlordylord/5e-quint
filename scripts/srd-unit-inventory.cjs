@@ -50,6 +50,7 @@ const classContainerOwnedCreationRowKinds = new Set([
 const deterministicAdmissionProjectionEvidenceTag =
   "deterministic-admission-projection";
 const characterCreationProfileIdPrefix = "character-creation.";
+const characterSheetProfileIdPrefix = "character-sheet.";
 const characterCreationOwnerEvidenceSchema =
   "dnd.srd-character-creation-owner-evidence.v1";
 const characterSheetOwnerEvidenceSchema =
@@ -159,18 +160,29 @@ const spellPressureLevelBands = new Set([
 ]);
 
 const battleRuntimeRelevantFeatureUnitIds = new Set([
+  "barbarian_danger_sense",
   "barbarian_weapon_mastery",
   "bard_bardic_inspiration",
   "fighter_fighting_style",
   "fighter_weapon_mastery",
   "monk_martial_arts",
   "paladin_fighting_style",
+  "paladin_paladins_smite",
   "paladin_weapon_mastery",
   "ranger_favored_enemy",
   "ranger_weapon_mastery",
   "rogue_weapon_mastery",
   "sorcerer_innate_sorcery",
   "warlock_eldritch_invocations",
+]);
+
+const levelTwoBattleRuntimeOwnerEvidenceUnitIds = new Set([
+  "barbarian_danger_sense",
+  "barbarian_reckless_attack",
+  "fighter_action_surge",
+  "fighter_tactical_mind",
+  "paladin_paladins_smite",
+  "rogue_cunning_action",
 ]);
 
 const classContainerSurfaceBlockers = new Map();
@@ -714,7 +726,87 @@ function installedOwnerClassification(row, ownerEvidenceSources, installedIds) {
     installedIds,
   );
   if (spellUnitClassification !== undefined) return spellUnitClassification;
+  const levelTwoClassFeatureClassification =
+    installedLevelTwoClassFeatureOwnerClassification(row, ownerEvidenceSources);
+  if (levelTwoClassFeatureClassification !== undefined)
+    return levelTwoClassFeatureClassification;
   return installedLevelOneOwnerClassification(row, ownerEvidenceSources);
+}
+
+function installedLevelTwoClassFeatureOwnerClassification(
+  row,
+  ownerEvidenceSources,
+) {
+  if (
+    row.levelBand !== "level-2" ||
+    row.rowKind !== "class-feature-grant"
+  ) {
+    return undefined;
+  }
+  const claim = row.candidateUnitId
+    ? ownerEvidenceSources.unitClaims.get(row.candidateUnitId)?.claim
+    : undefined;
+  const characterSheetEvidence = ownerEvidenceSources.characterSheet.get(
+    row.id,
+  );
+  const characterCreationEvidence = ownerEvidenceSources.characterCreation.get(
+    row.id,
+  );
+  if (
+    characterCreationEvidence &&
+    claimUsesOnlyProfilePrefix(claim, characterCreationProfileIdPrefix)
+  ) {
+    return {
+      kind: "evidence-present",
+      owner: "character-creation-runtime",
+      evidence: characterCreationEvidence,
+    };
+  }
+  if (claimUsesOnlyProfilePrefix(claim, characterCreationProfileIdPrefix)) {
+    return {
+      kind: "evidence-required",
+      owner: "character-creation-runtime",
+      requirement:
+        "Add checker-readable character-creation owner evidence before treating this level-2 class feature as operationally supported.",
+    };
+  }
+  if (
+    characterSheetEvidence &&
+    claimUsesOnlyProfilePrefix(claim, characterSheetProfileIdPrefix)
+  ) {
+    return {
+      kind: "evidence-present",
+      owner: "character-sheet-runtime",
+      evidence: characterSheetEvidence,
+    };
+  }
+  if (claimUsesOnlyProfilePrefix(claim, characterSheetProfileIdPrefix)) {
+    return {
+      kind: "evidence-required",
+      owner: "character-sheet-runtime",
+      requirement:
+        "Add checker-readable character-sheet owner evidence before treating this level-2 class feature as operationally supported.",
+    };
+  }
+  if (!levelTwoBattleRuntimeOwnerEvidenceUnitIds.has(row.candidateUnitId)) {
+    return undefined;
+  }
+  const battleRuntimeEvidence = ownerEvidenceSources.battleRuntime.get(
+    row.candidateUnitId,
+  );
+  if (battleRuntimeEvidence) {
+    return {
+      kind: "evidence-present",
+      owner: "battle-runtime",
+      evidence: battleRuntimeEvidence,
+    };
+  }
+  return {
+    kind: "evidence-required",
+    owner: "battle-runtime",
+    requirement:
+      "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this level-2 class feature as operationally supported.",
+  };
 }
 
 function installedSpellUnitOwnerClassification(

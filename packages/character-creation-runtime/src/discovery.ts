@@ -13,7 +13,10 @@ import {
   readClassCreationFacts,
   readSpeciesCreationFacts,
 } from "@dnd/surface/surface/character-creation-readers";
-import { allCantripsFromClassSpellList } from "@dnd/surface/surface/schema";
+import {
+  CLASS_SPELL_LISTS,
+  allCantripsFromClassSpellList,
+} from "@dnd/surface/surface/schema";
 import { SKILLS } from "@dnd/surface/surface/types";
 import type {
   BackgroundToolProficiency,
@@ -40,7 +43,6 @@ import {
   CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
   CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
   CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
-  DIVINE_ORDER_CHOICE_KEY,
   CLASS_SUBCLASS_CHOICE_KEY,
   CLASS_CANTRIP_CHOICE_KEY,
   CLASS_EQUIPMENT_CHOICE_KEY,
@@ -57,7 +59,6 @@ import {
   WIZARD_PREPARED_SPELL_CHOICE_KEY,
   WIZARD_SPELLBOOK_CHOICE_KEY,
   ELDRITCH_INVOCATIONS_CHOICE_KEY,
-  PRIMAL_ORDER_CHOICE_KEY,
 } from "./phase1-manifest.ts";
 import { levelOneEldritchInvocationChoiceOptions } from "./eldritch-invocations.ts";
 import {
@@ -97,7 +98,6 @@ import {
   type CreationChoiceOptionId,
   type CreationHole,
   type CreationHoleSource,
-  type UnitChoiceKey,
   type UnitCatalog,
 } from "./types.ts";
 import {
@@ -126,6 +126,16 @@ import {
   weaponMasteryChoiceProfileForFeature,
   type WeaponMasteryChoiceFeature,
 } from "./weapon-mastery.ts";
+import { wizardSpellcastingCreationAtLevel } from "./wizard-spellcasting.ts";
+
+type GrantExpertiseEffect = Extract<
+  EffectAtom,
+  { readonly kind: "grant_expertise" }
+>;
+type GrantExpertiseSkillSource = Extract<
+  EffectAtom,
+  { readonly kind: "grant_expertise" }
+>["skills"];
 
 const SRD_GAMING_SET_OPTIONS = [
   {
@@ -214,7 +224,7 @@ export function discoverClassGrantedHoles(input: {
     ),
     ...discoverSubclassHoles(classUnitId, classLevel, facts.value, input),
     ...discoverSelectedFeatAbilityScoreIncreaseHoles(input),
-    ...selectedSuborderSpellAccessChoiceHoles({
+    ...selectedClassFeatureAcquisitionGrantChoiceHoles({
       choices: input.draft.selections.choices,
       classUnitId,
       classFacts: facts.value,
@@ -379,6 +389,9 @@ function classSpellcastingCreation(
   if (facts.spellcasting.featureLevel > classLevel) {
     return undefined;
   }
+  if (isWizardSpellcastingCreation(facts.spellcasting)) {
+    return wizardSpellcastingCreationAtLevel(facts.spellcasting, classLevel);
+  }
 
   return facts.spellcasting;
 }
@@ -460,7 +473,7 @@ function discoverAdditionalClassGrantedHoles(
       classUnitId,
       facts.value.multiclassProficiencies,
     ).flatMap((hole) => unselectedUnitChoiceHole(draft, hole)),
-    ...selectedSuborderSpellAccessChoiceHoles({
+    ...selectedClassFeatureAcquisitionGrantChoiceHoles({
       choices: draft.selections.choices,
       classUnitId,
       classFacts: facts.value,
@@ -470,46 +483,36 @@ function discoverAdditionalClassGrantedHoles(
   ];
 }
 
-const SUBORDER_SPELL_LIST_BY_CHOICE_KEY = {
-  [DIVINE_ORDER_CHOICE_KEY]: "cleric",
-  [PRIMAL_ORDER_CHOICE_KEY]: "druid",
-} as const satisfies Partial<Record<UnitChoiceKey, "cleric" | "druid">>;
+type GrantSpellAccessChoice = Extract<
+  EffectAtom,
+  { readonly kind: "grant_spell_access_choice" }
+>;
+type ClassFeatureAcquisitionCantripGrantSpellList =
+  keyof typeof CLASS_SPELL_LISTS;
 
-function isSpellAccessSuborderChoiceKey(
-  choiceKey: UnitChoiceKey,
-): choiceKey is keyof typeof SUBORDER_SPELL_LIST_BY_CHOICE_KEY {
-  return Object.hasOwn(SUBORDER_SPELL_LIST_BY_CHOICE_KEY, choiceKey);
+function classFeatureAcquisitionCantripGrantSpellList(
+  spellList: GrantSpellAccessChoice["spellList"],
+): ClassFeatureAcquisitionCantripGrantSpellList | undefined {
+  return isClassFeatureAcquisitionCantripGrantSpellList(spellList)
+    ? spellList
+    : undefined;
 }
 
-export function selectedSuborderSpellAccessChoiceHoles(input: {
+function isClassFeatureAcquisitionCantripGrantSpellList(
+  spellList: GrantSpellAccessChoice["spellList"],
+): spellList is ClassFeatureAcquisitionCantripGrantSpellList {
+  return Object.hasOwn(CLASS_SPELL_LISTS, spellList);
+}
+
+export function selectedClassFeatureAcquisitionGrantChoiceHoles(input: {
   readonly choices: readonly CharacterChoiceSelection[];
   readonly classUnitId: UnitRecord["id"];
   readonly classFacts: ReadableClassCreationFacts;
   readonly classLevel: number;
   readonly unitLibrary: UnitCatalog;
 }): readonly ChoiceCreationHole[] {
-  const spellcasting = classSpellcastingCreation(
-    input.classFacts,
-    input.classLevel,
-  );
-  if (
-    spellcasting === undefined ||
-    !isListPreparedSpellcastingCreation(spellcasting)
-  ) {
-    return [];
-  }
-
   return input.choices.flatMap((selection) => {
-    if (
-      selection.kind !== "unitChoice" ||
-      !isSpellAccessSuborderChoiceKey(selection.source.choiceKey)
-    ) {
-      return [];
-    }
-
-    const spellList =
-      SUBORDER_SPELL_LIST_BY_CHOICE_KEY[selection.source.choiceKey];
-    if (input.classFacts.className !== spellList) {
+    if (selection.kind !== "unitChoice") {
       return [];
     }
 
@@ -517,8 +520,15 @@ export function selectedSuborderSpellAccessChoiceHoles(input: {
     if (
       Option.isNone(feature) ||
       feature.value.kind !== "class_feature" ||
-      feature.value.className !== spellList ||
-      feature.value.mechanics.family !== "suborder_choice"
+      feature.value.className !== input.classFacts.className ||
+      feature.value.mechanics.family !== "class_feature_acquisition_choice"
+    ) {
+      return [];
+    }
+    const featureChoiceKey = unitChoiceKey(feature.value.mechanics.choiceKey);
+    if (
+      Either.isLeft(featureChoiceKey) ||
+      featureChoiceKey.right !== selection.source.choiceKey
     ) {
       return [];
     }
@@ -537,17 +547,40 @@ export function selectedSuborderSpellAccessChoiceHoles(input: {
       .filter((option) => optionIds.has(creationChoiceOptionId(option.id)))
       .flatMap((option) =>
         option.mechanics.grants.flatMap((grant) => {
+          if (grant.kind === "grant_feat") {
+            const hole = featGrantFeatureHoleSource(
+              selection.source.unitId,
+              grant,
+              input.unitLibrary,
+            );
+            return hole === undefined ? [] : [hole];
+          }
           if (
             grant.kind !== "grant_spell_access_choice" ||
             grant.mode !== "known" ||
-            grant.spellLevel !== 0 ||
-            grant.spellList !== spellList
+            grant.spellLevel !== 0
+          ) {
+            return [];
+          }
+          const spellcasting = classSpellcastingCreation(
+            input.classFacts,
+            input.classLevel,
+          );
+          if (
+            spellcasting === undefined ||
+            !isListPreparedSpellcastingCreation(spellcasting)
           ) {
             return [];
           }
 
           const cardinality = exactChoiceCardinality(grant.count);
           if (cardinality === undefined) {
+            return [];
+          }
+          const grantedSpellList = classFeatureAcquisitionCantripGrantSpellList(
+            grant.spellList,
+          );
+          if (grantedSpellList === undefined) {
             return [];
           }
 
@@ -557,7 +590,7 @@ export function selectedSuborderSpellAccessChoiceHoles(input: {
               (unit) =>
                 unit.kind === "spell" &&
                 unit.mechanics.level === 0 &&
-                allCantripsFromClassSpellList(spellList, [unit.id]) &&
+                allCantripsFromClassSpellList(grantedSpellList, [unit.id]) &&
                 !primaryCantrips.has(creationChoiceOptionId(unit.id)),
             )
             .sort((left, right) =>
@@ -1188,6 +1221,11 @@ export function discoverClassFeatureGrantHoles(
 ): readonly CreationHole[] {
   return classFeatureGrantChoiceHoles(featureUnitId, unitLibrary, {
     classLevel,
+    ownedSkillExpertise: draftOwnedSkillExpertise(
+      draft,
+      featureUnitId,
+      unitLibrary,
+    ),
     ownedSkillProficiencies: draftOwnedSkillProficiencies(draft, unitLibrary),
     knownLanguages: draftKnownLanguages(draft, featureUnitId, unitLibrary),
   }).flatMap((hole) => unselectedUnitChoiceHole(draft, hole));
@@ -1198,6 +1236,7 @@ export function classFeatureGrantChoiceHoles(
   unitLibrary: UnitCatalog,
   input: {
     readonly classLevel?: number;
+    readonly ownedSkillExpertise?: readonly Skill[];
     readonly ownedSkillProficiencies?: readonly Skill[];
     readonly knownLanguages?: readonly Language[];
   } = {},
@@ -1224,7 +1263,7 @@ export function classFeatureGrantChoiceHoles(
     }
   }
 
-  if (mechanics.family === "suborder_choice") {
+  if (mechanics.family === "class_feature_acquisition_choice") {
     const choiceKey = unitChoiceKey(mechanics.choiceKey);
     if (Either.isLeft(choiceKey)) {
       return [];
@@ -1292,6 +1331,7 @@ function passiveGrantChoiceHoles(
   unitLibrary: UnitCatalog,
   input: {
     readonly classLevel?: number;
+    readonly ownedSkillExpertise?: readonly Skill[];
     readonly ownedSkillProficiencies?: readonly Skill[];
     readonly knownLanguages?: readonly Language[];
   },
@@ -1307,7 +1347,9 @@ function passiveGrantChoiceHoles(
     return expertiseGrantChoiceHole(
       featureUnitId,
       classLevelChoiceCountAtLevel(grant.choiceCount, input.classLevel ?? 1),
+      grant.skills,
       input.ownedSkillProficiencies ?? [],
+      input.ownedSkillExpertise ?? [],
     );
   }
   if (grant.kind === "grant_language_choice") {
@@ -1346,9 +1388,10 @@ function languageGrantChoiceHole(
 }
 
 function languageChoiceOptionsForSource(
-  source: Extract<EffectAtom, { readonly kind: "grant_language_choice" }>[
-    "source"
-  ],
+  source: Extract<
+    EffectAtom,
+    { readonly kind: "grant_language_choice" }
+  >["source"],
   knownLanguages: readonly Language[],
 ): readonly CreationChoiceOption[] {
   return Match.value(source).pipe(
@@ -1381,9 +1424,8 @@ function draftKnownLanguages(
   unitLibrary: UnitCatalog,
 ): readonly Language[] {
   const originLanguages =
-    draft.selections.languages ?? (["Common"] as const satisfies readonly [
-      Language,
-    ]);
+    draft.selections.languages ??
+    (["Common"] as const satisfies readonly [Language]);
   return uniqueLanguages([
     ...originLanguages,
     ...selectedClassFeatureLanguageChoices(
@@ -1475,9 +1517,15 @@ function selectedClassFeatureLanguageChoices(
 function expertiseGrantChoiceHole(
   sourceUnitId: UnitRecord["id"],
   count: number,
+  skills: GrantExpertiseSkillSource,
   ownedSkillProficiencies: readonly Skill[],
+  ownedSkillExpertise: readonly Skill[],
 ): readonly ChoiceCreationHole[] {
-  const options = uniqueSkills(ownedSkillProficiencies).map(skillOption);
+  const options = eligibleExpertiseSkills(
+    skills,
+    ownedSkillProficiencies,
+    ownedSkillExpertise,
+  ).map(skillOption);
   const cardinality = exactChoiceCardinality(count);
   if (
     cardinality === undefined ||
@@ -1496,6 +1544,99 @@ function expertiseGrantChoiceHole(
   return hole === undefined ? [] : [hole];
 }
 
+export function eligibleExpertiseSkills(
+  skills: GrantExpertiseSkillSource,
+  ownedSkillProficiencies: readonly Skill[],
+  ownedSkillExpertise: readonly Skill[] = [],
+): readonly Skill[] {
+  const uniqueOwnedExpertise = uniqueSkills(ownedSkillExpertise);
+  const uniqueOwnedSkills = uniqueSkills(ownedSkillProficiencies).filter(
+    (skill) => !uniqueOwnedExpertise.includes(skill),
+  );
+  return Match.value(skills).pipe(
+    Match.when({ kind: "owned_skill_proficiencies_without_expertise" }, () =>
+      uniqueOwnedSkills,
+    ),
+    Match.when(
+      { kind: "listed_owned_skill_proficiencies_without_expertise" },
+      (listed) =>
+        uniqueOwnedSkills.filter((skill) => listed.skills.includes(skill)),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function draftOwnedSkillExpertise(
+  draft: CharacterDraft,
+  expertiseChoiceSourceUnitId: UnitRecord["id"],
+  unitLibrary: UnitCatalog,
+): readonly Skill[] {
+  return skillExpertiseFromChoiceSelections(
+    draft.selections.choices,
+    unitLibrary,
+    (selection) =>
+      selection.kind === "unitChoice" &&
+      selection.source.unitId === expertiseChoiceSourceUnitId &&
+      selection.source.choiceKey === CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
+  );
+}
+
+export function skillExpertiseFromChoiceSelections(
+  choices: readonly CharacterChoiceSelection[],
+  unitLibrary: UnitCatalog,
+  shouldIgnoreSelection: (
+    selection: CharacterChoiceSelection,
+  ) => boolean = () => false,
+): readonly Skill[] {
+  return uniqueSkills(
+    choices.flatMap((selection) => {
+      if (shouldIgnoreSelection(selection)) {
+        return [];
+      }
+      if (
+        grantExpertiseSkillSourceForSelection(selection, unitLibrary) ===
+        undefined
+      ) {
+        return [];
+      }
+
+      return selection.options.flatMap((option) => {
+        const skill = skillFromChoiceOptionId(option.optionId);
+        return skill === undefined ? [] : [skill];
+      });
+    }),
+  );
+}
+
+export function grantExpertiseSkillSourceForSelection(
+  selection: CharacterChoiceSelection,
+  unitLibrary: UnitCatalog,
+): GrantExpertiseSkillSource | undefined {
+  if (selection.kind !== "unitChoice") {
+    return undefined;
+  }
+  const feature = unitLibrary.getUnit(selection.source.unitId);
+  if (
+    Option.isNone(feature) ||
+    feature.value.kind !== "class_feature" ||
+    feature.value.mechanics.family !== "passive"
+  ) {
+    return undefined;
+  }
+
+  const grant = feature.value.mechanics.grants.find(
+    (candidate): candidate is GrantExpertiseEffect =>
+      candidate.kind === "grant_expertise",
+  );
+  return grant?.skills;
+}
+
+function skillFromChoiceOptionId(
+  optionId: CreationChoiceOptionId,
+): Skill | undefined {
+  return SKILLS.find((candidate) => candidate === optionId);
+}
+
 function draftOwnedSkillProficiencies(
   draft: CharacterDraft,
   unitLibrary: UnitCatalog,
@@ -1506,6 +1647,10 @@ function draftOwnedSkillProficiencies(
       : backgroundSkillProficiencies(draft.selections.background, unitLibrary);
   const selectedSkills = skillProficienciesFromChoiceSelections(
     draft.selections.choices,
+    (selection) =>
+      selection.kind === "unitChoice" &&
+      grantExpertiseSkillSourceForSelection(selection, unitLibrary) !==
+        undefined,
   );
 
   return uniqueSkills([...backgroundSkills, ...selectedSkills]);
@@ -1592,10 +1737,7 @@ function requireClassFeature(
 
 function featGrantFeatureHoleSource(
   featureUnitId: UnitRecord["id"],
-  grant: Extract<
-    ClassFeatureRecord["mechanics"],
-    { readonly family: "passive" }
-  >["grants"][number] & { readonly kind: "grant_feat" },
+  grant: Extract<EffectAtom, { readonly kind: "grant_feat" }>,
   unitLibrary: UnitCatalog,
 ): ChoiceCreationHole | undefined {
   const categories = "category" in grant ? [grant.category] : grant.categories;

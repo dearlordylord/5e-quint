@@ -8,17 +8,19 @@
     "family": "passive",
     "grants": [
       {
-        "delta": {
-          "kind": "proficiency_bonus",
-          "sign": "+"
+        "choiceCount": {
+          "kind": "class_level_total_choices",
+          "levels": [
+            {
+              "atLevel": 2,
+              "total": 1
+            }
+          ]
         },
-        "kind": "modify_roll_numeric",
-        "on": [
-          "ability_check"
-        ],
-        "skillFilter": {
-          "kind": "choice",
-          "options": [
+        "kind": "grant_expertise",
+        "skills": {
+          "kind": "listed_owned_skill_proficiencies_without_expertise",
+          "skills": [
             "arcana",
             "history",
             "investigation",

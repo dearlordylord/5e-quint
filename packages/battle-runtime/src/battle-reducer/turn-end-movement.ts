@@ -117,7 +117,10 @@ import { damageAmountAfterTargetAdjustments } from "./damage-helpers.ts";
 
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 
-import { applyPreparedSlotSpellDamage } from "./spells-damage-fills.ts";
+import {
+  applyPreparedSlotSpellDamage,
+  savingThrowRollModeProjections,
+} from "./spells-damage-fills.ts";
 import {
   applyCommandGrovelProneToTarget,
   applyGreaseProneToTarget,
@@ -1432,6 +1435,7 @@ function greaseGroundHazardEffectFor(
 }
 
 export function greaseGroundHazardSavingThrowOutcomeHole(
+  state: BattleState,
   targetId: CombatantId,
   effect: GreaseGroundHazardEffect,
   trigger: "entersArea" | "endsTurnInArea",
@@ -1453,7 +1457,10 @@ export function greaseGroundHazardSavingThrowOutcomeHole(
     ability: effect.save.ability,
     dc: effect.save.dc,
     areaChoices: [],
-    targetRollModes: [],
+    targetRollModes: savingThrowRollModeProjections(
+      state,
+      effect.save.ability,
+    ).filter((projection) => projection.targetId === targetId),
   };
 }
 
@@ -1531,6 +1538,7 @@ function resolveGreaseGroundHazardEntrySaveCommand(
     );
   }
   const hole = greaseGroundHazardSavingThrowOutcomeHole(
+    input.state,
     input.subject.actorId,
     effect,
     input.subject.trigger,
@@ -1608,6 +1616,7 @@ function resolveGreaseGroundHazardEndTurnSaveCommand(
     );
   }
   const hole = greaseGroundHazardSavingThrowOutcomeHole(
+    input.state,
     input.subject.actorId,
     effect,
     input.subject.trigger,
