@@ -27,6 +27,13 @@ QNT owns reducer semantics. Deterministic Surface coverage owns concrete catalog
 enumeration and display payload width. Focused MBT or deterministic QNT replay
 connects the QNT oracle to current TS behavior.
 
+`generator-readiness.jsonl` records the separate C-axis question: whether a
+covered obligation's QNT owner is shaped like generator-ready semantic core.
+Rows must point to real obligation ids and any referenced dry-run artifact.
+Rows must explicitly declare `semanticCore`, `proofOnly`, `generatorSubset`, and
+`blockedBy`; omitted arrays are invalid because empty and unknown are different
+states.
+
 ## Terms
 
 - **Semantic obligation:** a stable id for one reducer-owned rule fact. The id
@@ -37,6 +44,9 @@ connects the QNT oracle to current TS behavior.
   compares a QNT-owned projection.
 - **Boundary-only:** parser/client/session/protocol behavior that does not
   change legal table-observable game state.
+- **Generator readiness:** a per-obligation assessment of which QNT files are
+  semantic core, which are proof-only, and what language subset a future
+  QNT-to-Rust generator would need.
 
 ## Statuses
 

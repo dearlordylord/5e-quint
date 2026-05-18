@@ -344,6 +344,47 @@ Ordinary catalog width belongs in Surface reader/contract tests and package
 support-gate tests unless it changes a reusable reducer procedure family or a
 selected high-risk composition flow.
 
+## Rules Kernel Coverage And Generator Readiness
+
+Rules-kernel coverage is the obligation ledger for reducer-owned semantics.
+Its denominator is TS-current reducer behavior after Surface admission, not raw
+code coverage, catalog breadth, parser failure coverage, or unsupported authored
+records. The active artifacts live in `plans/rules-kernel-coverage/`.
+
+A semantic obligation is covered only when the full chain exists:
+
+```text
+Surface record or reducer entry point
+        |
+        v
+support profile or boundary classification
+        |
+        v
+semantic obligation id
+        |
+        v
+QNT owner
+        |
+        v
+production TypeScript runtime owner
+        |
+        v
+executable parity witness
+```
+
+The parity witness must run current production TypeScript reducer code against a
+QNT-owned projection. A QNT owner without an executable TS witness is only a
+spec claim; a TS test without a QNT owner is only regression coverage. Boundary
+or unsupported behavior can be recorded outside the QNT denominator only when
+the boundary classification is explicit.
+
+Generator readiness is a separate C-axis record. It asks whether the QNT owner
+is shaped like semantic core that a future QNT-to-Rust generator could consume.
+It does not make the generator part of the current runtime and it does not
+replace parity coverage. A generator-readiness row must distinguish semantic
+core QNT from proof-only QNT and name the small language subset the future
+generator would need.
+
 ## Dependency Direction
 
 The promoted runtime path uses this dependency direction:
@@ -368,14 +409,15 @@ rewritten, or explicitly ledgered for restoration.
 
 ## Reference Authority
 
-| Document                                            | Scope                                                 | Authority                                  |
-| --------------------------------------------------- | ----------------------------------------------------- | ------------------------------------------ |
-| `.references/srd-5.2.1/`                            | Rules text                                            | Ground truth for modeled SRD rules         |
-| `UBIQUITOUS_LANGUAGE.md`                            | Canonical D&D domain terminology                      | Naming authority for domain terms          |
-| `ASSUMPTIONS.md`                                    | Explicit modeling choices where SRD is underspecified | Sole record of intentional RAW assumptions |
-| `packages/character-creation-runtime/VOCABULARY.md` | Character-creation runtime terms                      | Character-creation package vocabulary      |
-| `packages/core/ARCHITECTURE.md`                     | Core-specific runtime and Quint/TS guidance           | Core lane architecture                     |
-| Package READMEs                                     | Package-owned APIs and local invariants               | Local package contracts                    |
+| Document | Scope | Authority |
+| --- | --- | --- |
+| `.references/srd-5.2.1/` | Rules text | Ground truth for modeled SRD rules |
+| `UBIQUITOUS_LANGUAGE.md` | Canonical D&D domain terminology | Naming authority for domain terms |
+| `ASSUMPTIONS.md` | Explicit modeling choices where SRD is underspecified | Sole record of intentional RAW assumptions |
+| `packages/character-creation-runtime/VOCABULARY.md` | Character-creation runtime terms | Character-creation package vocabulary |
+| `plans/rules-kernel-coverage/` | Reducer semantic obligation coverage and generator-readiness ledger | Coverage authority for TS-current reducer semantics |
+| `packages/core/ARCHITECTURE.md` | Core-specific runtime and Quint/TS guidance | Core lane architecture |
+| Package READMEs | Package-owned APIs and local invariants | Local package contracts |
 
 ## Choosing The Right Owner
 

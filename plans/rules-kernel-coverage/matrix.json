@@ -1,8 +1,8 @@
 {
   "summary": {
     "total": 15,
-    "covered": 7,
-    "open": 6,
+    "covered": 8,
+    "open": 5,
     "nonSemantic": 2,
     "byRuntime": {
       "shared-algebras": 1,
@@ -12,9 +12,9 @@
       "character-battle": 1
     },
     "byStatus": {
-      "covered": 7,
+      "covered": 8,
       "needs-qnt-owner": 4,
-      "needs-parity-witness": 1,
+      "needs-parity-witness": 0,
       "needs-surface-evidence": 1,
       "boundary-only": 1,
       "unsupported-by-admission": 1
@@ -315,16 +315,23 @@
     {
       "id": "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
       "kind": "state-transition",
-      "parityWitnesses": [],
+      "parityWitnesses": [
+        {
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/battle-runtime/src/rule-core-hit-point-damage.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
       "profiles": [],
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/hit-point-damage.qnt"
       ],
       "runtime": "shared-algebras",
       "runtimeOwners": [
-        "packages/shared-algebras/src/reducer-algebras.ts"
+        "packages/battle-runtime/src/battle-reducer/damage-apply.ts"
       ],
-      "status": "needs-parity-witness",
+      "status": "covered",
       "surfaceEvidence": [],
       "title": "Shared resolved positive-Hit-Point damage procedure and its TS parity route through consuming reducers"
     }
@@ -476,6 +483,36 @@
         "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT"
       ],
       "profileId": "character-creation.eldritch-invocation-choice"
+    }
+  ],
+  "generatorReadiness": [
+    {
+      "blockedBy": [
+        "packages/shared-algebras/proofs/rule-core/hit-point-damage.qnt mixes semantic definitions with run tests; split tests or teach the generator to ignore run blocks before treating the whole file as generation-subset-clean"
+      ],
+      "dryRun": "plans/rules-kernel-coverage/GENERATOR_READINESS_HIT_POINTS_DRY_RUN.md",
+      "generatorSubset": [
+        "variant",
+        "record",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "implies",
+        "all-block"
+      ],
+      "obligationId": "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/hit-point-damage-inductive.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/hit-point-damage.qnt"
+      ],
+      "status": "fixture-bound"
     }
   ],
   "profileIdsSeenFromUnitProfileCoverage": [

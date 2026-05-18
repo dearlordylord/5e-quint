@@ -48,8 +48,34 @@ function runSelfTest() {
     ].join("\n") + "\n",
   );
   writeFile(
-    path.join(root, "plans", "rules-kernel-coverage", "profile-obligations.jsonl"),
+    path.join(
+      root,
+      "plans",
+      "rules-kernel-coverage",
+      "profile-obligations.jsonl",
+    ),
     '{"profileId":"spell.sample","obligationIds":["BATTLE.SAMPLE"]}\n',
+  );
+  writeFile(
+    path.join(
+      root,
+      "plans",
+      "rules-kernel-coverage",
+      "generator-readiness.jsonl",
+    ),
+    JSON.stringify({
+      obligationId: "BATTLE.SAMPLE",
+      status: "semantic-core-candidate",
+      semanticCore: ["sample.qnt"],
+      proofOnly: [],
+      generatorSubset: ["record", "pure-def"],
+      blockedBy: [],
+      dryRun: "plans/rules-kernel-coverage/SAMPLE_DRY_RUN.md",
+    }) + "\n",
+  );
+  writeFile(
+    path.join(root, "plans", "rules-kernel-coverage", "SAMPLE_DRY_RUN.md"),
+    "# Sample Dry Run\n",
   );
   writeFile(
     path.join(root, "sample.qnt"),
@@ -78,6 +104,7 @@ function runSelfTest() {
   assert.deepEqual(result.issues, []);
   assert.equal(result.matrix.summary.byStatus.covered, 1);
   assert.equal(result.matrix.summary.byStatus["boundary-only"], 1);
+  assert.equal(result.matrix.generatorReadiness.length, 1);
 }
 
 module.exports = { runSelfTest };

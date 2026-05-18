@@ -43,6 +43,14 @@ const parityWitnessKinds = new Set([
   "qnt-generated-projection",
 ]);
 
+const generatorReadinessStatuses = new Set([
+  "not-assessed",
+  "fixture-bound",
+  "semantic-core-candidate",
+  "generation-subset-clean",
+  "blocked",
+]);
+
 const markerKinds = new Set([
   "qnt-owner",
   "runtime-owner",
@@ -68,16 +76,23 @@ function coveragePaths(root) {
     readme: path.join(coverageDir, "README.md"),
     obligations: path.join(coverageDir, "obligations.jsonl"),
     profileObligations: path.join(coverageDir, "profile-obligations.jsonl"),
+    generatorReadiness: path.join(coverageDir, "generator-readiness.jsonl"),
     matrix: path.join(coverageDir, "matrix.json"),
     report: path.join(coverageDir, "REPORT.md"),
     stage3Plan: path.join(coverageDir, "STAGE3_CLOSURE_PLAN.md"),
-    unitProfiles: path.join(root, "plans", "unit-profile-coverage", "profiles.jsonl"),
+    unitProfiles: path.join(
+      root,
+      "plans",
+      "unit-profile-coverage",
+      "profiles.jsonl",
+    ),
   };
 }
 
 module.exports = {
   coveragePaths,
   coveredStatuses,
+  generatorReadinessStatuses,
   markerKinds,
   nonSemanticStatuses,
   obligationKinds,
