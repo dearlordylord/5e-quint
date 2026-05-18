@@ -86,12 +86,27 @@ export function characterCreature(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["armorClass"];
+  readonly selectedLoadout?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["selectedLoadout"];
   readonly unitFeatures?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["unitFeatures"];
 }): BattleCreatureInit {
   const attack = input.attack ?? null;
+  const selectedLoadout =
+    input.selectedLoadout ??
+    (attack === null
+      ? {}
+      : {
+          weapon: {
+            itemId: `main:${attack.weapon.id}`,
+            unitId: attack.weapon.id,
+            grip: "one_handed" as const,
+          },
+        });
   return {
     combatantId: input.combatantId,
     displayName: input.displayName,
@@ -116,16 +131,7 @@ export function characterCreature(input: {
       currentHp: Hp(input.currentHp ?? 12),
       maxHp: Hp(input.maxHp ?? 12),
       tempHp: Hp(input.tempHp ?? 0),
-      selectedLoadout:
-        attack === null
-          ? {}
-          : {
-              weapon: {
-                itemId: `main:${attack.weapon.id}`,
-                unitId: attack.weapon.id,
-                grip: "one_handed" as const,
-              },
-            },
+      selectedLoadout,
       attack,
       ...(input.unitFeatures === undefined
         ? {}

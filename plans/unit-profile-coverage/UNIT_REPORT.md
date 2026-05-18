@@ -8,22 +8,22 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Metric | Value |
 | --- | ---: |
-| Installed collection inventory count | 170 Units |
+| Installed collection inventory count | 171 Units |
 
 ## Coverage Metrics
 
 | Metric | Covered | Percent |
 | --- | ---: | ---: |
-| Authored Surface Unit catalog admission | 169/439 | 38.5% |
-| Authored Surface executable catalog admission | 137/367 | 37.3% |
-| Installed Unit profile classification coverage | 170/170 | 100% |
-| Supported executable Unit coverage | 110/138 | 79.7% |
+| Authored Surface Unit catalog admission | 170/440 | 38.6% |
+| Authored Surface executable catalog admission | 138/368 | 37.5% |
+| Installed Unit profile classification coverage | 171/171 | 100% |
+| Supported executable Unit coverage | 111/139 | 79.9% |
 | QNT profile modeling coverage | 65/65 | 100% |
 | QNT proof coverage | 65/65 | 100% |
 | Runtime mapping coverage | 65/65 | 100% |
 | Runtime parity coverage | 65/65 | 100% |
-| Deterministic admission/projection coverage | 110/110 | 100% |
-| Selected identity MBT coverage | 104/110 | 94.5% |
+| Deterministic admission/projection coverage | 111/111 | 100% |
+| Selected identity MBT coverage | 104/111 | 93.7% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -66,6 +66,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `druid_primal_order` | srd-5.2.1 | `character-creation.class-feature-option-projection` |
 | `monk_martial_arts` | srd-5.2.1 | `unit-feature.martial-arts-attack-projection` |
 | `monk_unarmored_defense` | srd-5.2.1 | `character-sheet.armor-class-base-formula` |
+| `monk_unarmored_movement` | srd-5.2.1 | `unit-feature.passive-speed-bonus` |
 | `monk_deflect_attacks` | srd-5.2.1 | `unit-feature.attack-damage-reduction-zero-damage-redirect` |
 | `rogue_cunning_action` | srd-5.2.1 | `unit-feature.alternate-action-cost` |
 | `rogue_evasion` | srd-5.2.1 | `unit-feature.save-damage-replacement` |
@@ -771,6 +772,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `druid_primal_order` | `character-creation.class-feature-option-projection` | AT-L1-06 | `packages/character-creation-runtime/src/index.test.ts` |
 | `monk_martial_arts` | `unit-feature.martial-arts-attack-projection` | SRDINV73A | `packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts` |
 | `monk_unarmored_defense` | `character-sheet.armor-class-base-formula` | SRDINV91B | `packages/character-sheet-runtime/src/index.test.ts` |
+| `monk_unarmored_movement` | `unit-feature.passive-speed-bonus` | L12G-AUTHOR-MONK-UNARMORED-MOVEMENT | `packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts` |
 | `monk_deflect_attacks` | `unit-feature.attack-damage-reduction-zero-damage-redirect` | QMBT59 | `packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts` |
 | `rogue_cunning_action` | `unit-feature.alternate-action-cost` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts` |
 | `rogue_evasion` | `unit-feature.save-damage-replacement` | QMBT7 | `packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts` |

@@ -176,13 +176,13 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 472,
-      "percent": "84.9%",
+      "numerator": 473,
+      "percent": "85.1%",
       "rowsByStatus": {
-        "accepted": 293,
+        "accepted": 294,
         "accepted-no-battle-effect": 179,
         "battle-runtime-required": 76,
-        "owner-evidence-required": 8
+        "owner-evidence-required": 7
       }
     },
     "levelOneClassContainers": 12,
@@ -191,16 +191,16 @@
       "non-runtime": 12
     },
     "levelTwoRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 11,
+      "catalog-installed-owner-evidence-present": 12,
       "non-runtime": 12,
-      "missing-authored-record": 8,
+      "missing-authored-record": 7,
       "catalog-installed-owner-evidence-required": 2
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 298,
+      "catalog-installed-owner-evidence-present": 299,
       "non-runtime": 24,
       "catalog-only/dead-for-now": 150,
-      "missing-authored-record": 82,
+      "missing-authored-record": 81,
       "catalog-installed-owner-evidence-required": 2
     },
     "spellPressureRowsByDisposition": {
@@ -12803,16 +12803,30 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "monk_unarmored_movement",
+        "sourceRecordPath": "packages/surface/content/monk_unarmored_movement.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "monk_unarmored_movement"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit monk_unarmored_movement is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-AUTHOR-MONK-UNARMORED-MOVEMENT at packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/monk:level-2:class-feature-grant:monk_uncanny_metabolism",

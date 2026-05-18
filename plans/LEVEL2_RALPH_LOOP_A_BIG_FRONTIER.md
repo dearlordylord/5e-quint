@@ -85,7 +85,7 @@
     {
       "number": 14,
       "id": "L12G-AUTHOR-MONK-UNARMORED-MOVEMENT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Monk Unarmored Movement Authoring And Support"
     },
     {
@@ -1031,7 +1031,7 @@ Acceptance:
 
 ### Task 14 - L12G-AUTHOR-MONK-UNARMORED-MOVEMENT - Monk Unarmored Movement Authoring And Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `monk_unarmored_movement`. Gate task: 15 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 

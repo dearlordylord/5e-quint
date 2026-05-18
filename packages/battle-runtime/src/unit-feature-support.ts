@@ -9,6 +9,7 @@ import {
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { zeroHitPointReplacementUnitProfile } from "@dnd/shared-algebras/zero-hit-point-replacement-algebra";
 import {
+  ARMOR_CATEGORIES,
   CONDITIONS as ALL_CONDITIONS,
   ClassLevel,
   classLevel,
@@ -27,6 +28,7 @@ import type {
   DiceAmount,
   DamageType,
   EffectAtom,
+  EquipmentPredicate,
   StandardActionKind,
   UnitRecord,
   WeaponRecord,
@@ -132,10 +134,7 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
 export type BattlePassiveSpeedBonusSupportProfile = {
   readonly kind: typeof PASSIVE_SPEED_BONUS_SUPPORT_PROFILE;
   readonly deltaFeet: MovementDeltaFeet;
-  readonly condition: {
-    readonly kind: "notWearingArmor";
-    readonly categories: readonly ["heavy"];
-  };
+  readonly condition: PassiveSpeedBonusCondition;
 };
 export type PassiveRangedAttackRollBonusProfile = {
   readonly bonus: 2;
@@ -842,11 +841,21 @@ export type PassiveArmorClassBonusProfile = {
 
 export type PassiveSpeedBonusProfile = {
   readonly deltaFeet: MovementDeltaFeet;
-  readonly condition: {
-    readonly kind: "notWearingArmor";
-    readonly categories: readonly ["heavy"];
-  };
+  readonly condition: PassiveSpeedBonusCondition;
 };
+
+type PassiveHeavyArmorSpeedBonusCondition = {
+  readonly kind: "notWearingArmor";
+  readonly categories: readonly ["heavy"];
+};
+
+type PassiveUnarmoredUnshieldedSpeedBonusCondition = {
+  readonly kind: "unarmoredUnshielded";
+};
+
+export type PassiveSpeedBonusCondition =
+  | PassiveHeavyArmorSpeedBonusCondition
+  | PassiveUnarmoredUnshieldedSpeedBonusCondition;
 
 export type PassiveSpeedKindGrantsProfile = {
   readonly speed: PassiveSpeedBonusProfile;
@@ -1891,13 +1900,15 @@ function passiveSpeedBonusProfileForPassiveMechanics(
   >,
 ): PassiveSpeedBonusProfile | null {
   const [effect, ...extraEffects] = mechanics.grants;
+  const condition = passiveSpeedBonusConditionForEquipmentPredicate(
+    mechanics.condition,
+  );
   if (
     effect?.kind !== "modify_speed" ||
     effect.delta !== 10 ||
     effect.unit !== "feet" ||
     extraEffects.length > 0 ||
-    mechanics.condition?.kind !== "not_wearing_armor" ||
-    !sameStringSet(mechanics.condition.categories, ["heavy"]) ||
+    condition === null ||
     mechanics.operations !== undefined ||
     mechanics.suppressedBy !== undefined
   ) {
@@ -1905,11 +1916,34 @@ function passiveSpeedBonusProfileForPassiveMechanics(
   }
   return {
     deltaFeet: movementDeltaFeet(effect.delta),
-    condition: {
+    condition,
+  };
+}
+
+function passiveSpeedBonusConditionForEquipmentPredicate(
+  condition: EquipmentPredicate | undefined,
+): PassiveSpeedBonusCondition | null {
+  if (
+    condition?.kind === "not_wearing_armor" &&
+    sameStringSet(condition.categories, ["heavy"])
+  ) {
+    return {
       kind: "notWearingArmor",
       categories: ["heavy"],
-    },
-  };
+    };
+  }
+  if (condition?.kind !== "all_of" || condition.predicates.length !== 2) {
+    return null;
+  }
+  const unarmored = condition.predicates.some(
+    (predicate) =>
+      predicate.kind === "not_wearing_armor" &&
+      sameStringSet(predicate.categories, ARMOR_CATEGORIES),
+  );
+  const unshielded = condition.predicates.some(
+    (predicate) => predicate.kind === "not_wielding_shield",
+  );
+  return unarmored && unshielded ? { kind: "unarmoredUnshielded" } : null;
 }
 
 function passiveSpeedKindGrantsForPassiveMechanics(
@@ -2035,7 +2069,7 @@ function martialArtsAttackProjectionMechanicsForUnit(
   const unarmored = condition.predicates.some(
     (predicate) =>
       predicate.kind === "not_wearing_armor" &&
-      sameStringSet(predicate.categories, ["light", "medium", "heavy"]),
+      sameStringSet(predicate.categories, ARMOR_CATEGORIES),
   );
   const unshielded = condition.predicates.some(
     (predicate) => predicate.kind === "not_wielding_shield",

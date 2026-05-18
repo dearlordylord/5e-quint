@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 367,
-      "numerator": 137,
-      "percent": "37.3%"
+      "denominator": 368,
+      "numerator": 138,
+      "percent": "37.5%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 439,
-      "numerator": 169,
-      "percent": "38.5%"
+      "denominator": 440,
+      "numerator": 170,
+      "percent": "38.6%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 170
+      "value": 171
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 110,
-      "numerator": 110,
+      "denominator": 111,
+      "numerator": 111,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 170,
-      "numerator": 170,
+      "denominator": 171,
+      "numerator": 171,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 110,
+      "denominator": 111,
       "numerator": 104,
-      "percent": "94.5%"
+      "percent": "93.7%"
     },
     "supportedProfileCoverage": {
-      "denominator": 138,
-      "numerator": 110,
-      "percent": "79.7%"
+      "denominator": 139,
+      "numerator": 111,
+      "percent": "79.9%"
     }
   },
   "metricSemantics": [
@@ -5988,6 +5988,67 @@
       ],
       "sourceRecordPath": "packages/surface/content/monk_unarmored_defense.json",
       "unitId": "monk_unarmored_defense"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "unit-feature.passive-speed-bonus"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Monk Unarmored Movement is installed as an SRD Surface class-feature record with a level-2 +10-foot Speed bonus",
+          "Surface equipment predicates represent the RAW gate as not wearing Light, Medium, or Heavy armor and not wielding a Shield",
+          "Battle runtime projects the Speed bonus into effective Speed, movement budget, and Dash budget only while the character is unarmored and unshielded"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-AUTHOR-MONK-UNARMORED-MOVEMENT"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.passive-speed-bonus",
+          "profileKind": "passive",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE9",
+            "QMBT40"
+          ],
+          "title": "Unit feature passively increases Speed while an equipment predicate holds",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/monk_unarmored_movement.json",
+      "unitId": "monk_unarmored_movement"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

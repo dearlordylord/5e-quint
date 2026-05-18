@@ -2535,7 +2535,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 87,
+      "count": 88,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2593,6 +2593,7 @@
         "magic_missile",
         "monk_martial_arts",
         "monk_unarmored_defense",
+        "monk_unarmored_movement",
         "paladin_lay_on_hands",
         "paladin_paladins_smite",
         "paladin_weapon_mastery",
@@ -2726,24 +2727,24 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 472,
-      "percent": "84.9%",
+      "numerator": 473,
+      "percent": "85.1%",
       "rowsByStatus": {
-        "accepted": 293,
+        "accepted": 294,
         "accepted-no-battle-effect": 179,
         "battle-runtime-required": 76,
-        "owner-evidence-required": 8
+        "owner-evidence-required": 7
       }
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 139,
-      "numerator": 87,
-      "percent": "62.6%"
+      "denominator": 140,
+      "numerator": 88,
+      "percent": "62.9%"
     },
     "strictTargetClosure": {
-      "denominator": 139,
-      "numerator": 107,
-      "percent": "77%"
+      "denominator": 140,
+      "numerator": 108,
+      "percent": "77.1%"
     }
   },
   "openFrontier": [
@@ -4115,24 +4116,6 @@
           }
         ],
         "unitId": "mirror_image"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
-            "concept": "Monk Unarmored Movement",
-            "id": "srd521:classes/monk:level-2:class-feature-grant:monk_unarmored_movement",
-            "levelBand": "level-2",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 95,
-              "lineStart": 92,
-              "path": ".references/srd-5.2.1/Classes/Monk.md"
-            }
-          }
-        ],
-        "unitId": "monk_unarmored_movement"
       },
       {
         "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
@@ -6390,7 +6373,7 @@
     "groupsByClaimTag": {
       "missing": 31,
       "profile-subset-supported": 8,
-      "supported-profile": 87,
+      "supported-profile": 88,
       "unsupported-profile": 13
     },
     "groupsByStatus": {
@@ -6400,9 +6383,9 @@
       "closed-runtime-detached-table-adjudication": 11,
       "open-profile-accounting": 1,
       "open-runtime-behavior": 31,
-      "supported-profile": 87
+      "supported-profile": 88
     },
     "nonSupportedFrontier": 52,
-    "strictDenominator": 139
+    "strictDenominator": 140
   }
 }

@@ -1614,6 +1614,39 @@ describe("SRD Unit catalog boundary", () => {
     });
   });
 
+  test("keeps Monk Unarmored Movement as catalog Speed metadata", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("monk_unarmored_movement")).toMatchObject(
+      {
+        acquiredAtLevel: 2,
+        className: "monk",
+        kind: "class_feature",
+        mechanics: {
+          condition: {
+            kind: "all_of",
+            predicates: [
+              {
+                categories: ["light", "medium", "heavy"],
+                kind: "not_wearing_armor",
+              },
+              { kind: "not_wielding_shield" },
+            ],
+          },
+          family: "passive",
+          grants: [{ delta: 10, kind: "modify_speed", unit: "feet" }],
+        },
+        provenance: {
+          kind: "srd-5.2.1",
+          section: "Classes/Monk.md:30-33,92-94",
+        },
+      },
+    );
+  });
+
   test("installs expressible SRD level-1 class feature records", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 

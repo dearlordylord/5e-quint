@@ -229,3 +229,4 @@
 {"unitId":"bard_jack_of_all_trades","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-CLASS-BARD-JACK-OF-ALL-TRADES","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"wizard_scholar","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-CLASS-WIZARD-SCHOLAR","ownerPath":"packages/character-creation-runtime/src/wizard-scholar.test.ts"}}
 {"unitId":"cleric_channel_divinity","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
+{"unitId":"monk_unarmored_movement","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-AUTHOR-MONK-UNARMORED-MOVEMENT","ownerPath":"packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts"}}
