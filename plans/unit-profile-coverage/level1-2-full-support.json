@@ -2276,6 +2276,35 @@
       "unitId": "silent_image"
     },
     {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS: Retain the Font of Magic feature ref with Sorcerer level-2 progression, then project the shared Sorcery Point pool, Sorcerer-level cap, and Long Rest reset from the authored record without duplicating class progression or Metamagic option state. Owner: character-creation-runtime plus character-sheet-runtime. Required output: Owner evidence for CharacterBuild or Character Sheet retained Font of Magic feature ref and shared Sorcery Point resource facts consumed by Metamagic and later Sorcerer features.; L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS: Execute the no-action conversion that expends one spell slot and grants Sorcery Points equal to the expended slot's level, bounded by the shared Sorcery Point cap. Owner: character-battle-runtime plus spellcasting resource owner. Required output: Supported runtime profile and owner evidence for spell slot to Sorcery Point conversion using the shared Sorcery Point resource and existing Spell Slot state.; L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS: Execute the Bonus Action conversion that spends Sorcery Points by the Creating Spell Slots table, enforces the minimum Sorcerer level for the target slot, creates one spell slot no higher than level 5, and expires created slots on Long Rest. Owner: character-battle-runtime plus spellcasting resource owner. Required output: Supported runtime profile and owner evidence for Sorcery Point to temporary Spell Slot creation, Bonus Action spending, minimum-level gating, and Long Rest expiry.",
+      "sourceRecordPath": "packages/surface/content/sorcerer_font_of_magic.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Sorcerer Font of Magic",
+          "id": "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_font_of_magic",
+          "levelBand": "level-2",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 110,
+            "lineStart": 87,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        }
+      ],
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
+      "unitId": "sorcerer_font_of_magic"
+    },
+    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -2758,13 +2787,14 @@
       ]
     },
     {
-      "count": 3,
+      "count": 4,
       "description": "The Unit claim records concrete smaller follow-up tasks for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
         "druid_wild_shape",
         "monk_monks_focus",
-        "monk_uncanny_metabolism"
+        "monk_uncanny_metabolism",
+        "sorcerer_font_of_magic"
       ]
     },
     {
@@ -2798,14 +2828,14 @@
       }
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 143,
+      "denominator": 144,
       "numerator": 89,
-      "percent": "62.2%"
+      "percent": "61.8%"
     },
     "strictTargetClosure": {
-      "denominator": 143,
-      "numerator": 111,
-      "percent": "77.6%"
+      "denominator": 144,
+      "numerator": 112,
+      "percent": "77.8%"
     }
   },
   "openFrontier": [
@@ -4335,24 +4365,6 @@
           }
         ],
         "unitId": "silence"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
-            "concept": "Sorcerer Font of Magic",
-            "id": "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_font_of_magic",
-            "levelBand": "level-2",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 110,
-              "lineStart": 87,
-              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-            }
-          }
-        ],
-        "unitId": "sorcerer_font_of_magic"
       },
       {
         "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
@@ -6381,10 +6393,10 @@
       "missing": 31,
       "profile-subset-supported": 9,
       "supported-profile": 89,
-      "unsupported-profile": 14
+      "unsupported-profile": 15
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 3,
+      "blocked-follow-up-split": 4,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 11,
@@ -6392,7 +6404,7 @@
       "open-runtime-behavior": 31,
       "supported-profile": 89
     },
-    "nonSupportedFrontier": 54,
-    "strictDenominator": 143
+    "nonSupportedFrontier": 55,
+    "strictDenominator": 144
   }
 }

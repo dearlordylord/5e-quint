@@ -557,6 +557,9 @@ export type UseCountResource = Schema.Schema.Type<
 export type ChargePoolResource = Schema.Schema.Type<
   typeof SurfaceSchema.ChargePoolResourceSchema
 >;
+export type PointPoolResource = Schema.Schema.Type<
+  typeof SurfaceSchema.PointPoolResourceSchema
+>;
 export type ActivationResource = Schema.Schema.Type<
   typeof SurfaceSchema.ActivationResourceSchema
 >;
@@ -598,6 +601,12 @@ export type ClassFeatureAcquisitionChoiceMechanics = Schema.Schema.Type<
 >;
 export type ClassFeatureResourceContainerMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.ClassFeatureResourceContainerMechanicsSchema
+>;
+export type ResourcePoolOperation = Schema.Schema.Type<
+  typeof SurfaceSchema.ResourcePoolOperationSchema
+>;
+export type ClassFeatureResourcePoolMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.ClassFeatureResourcePoolMechanicsSchema
 >;
 export type MonkInitiativeFocusRecoveryMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.MonkInitiativeFocusRecoveryMechanicsSchema

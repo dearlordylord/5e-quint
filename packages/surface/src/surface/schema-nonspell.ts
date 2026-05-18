@@ -51,6 +51,7 @@ import {
   OngoingPredicateSchema,
   RangeSchema,
   ReactionTriggerSchema,
+  SPELL_SLOT_LEVELS,
   SpellRecordSchema,
   SpawnedCreatureStatBlockSchema,
 } from "./schema-spell.ts";
@@ -65,6 +66,13 @@ const NonNegativeIntegerSchema = Schema.Number.pipe(
 const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.int(),
   Schema.greaterThanOrEqualTo(1),
+);
+
+const FONT_OF_MAGIC_CREATED_SPELL_SLOT_LEVELS = [
+  1, 2, 3, 4, 5,
+] as const satisfies ReadonlyArray<(typeof SPELL_SLOT_LEVELS)[number]>;
+const FontOfMagicCreatedSpellSlotLevelSchema = Schema.Literal(
+  ...FONT_OF_MAGIC_CREATED_SPELL_SLOT_LEVELS,
 );
 
 const GENERAL_CLASS_FEATURE_RECORD_CLASS_NAMES = CLASS_NAMES.filter(
@@ -102,6 +110,34 @@ const AbilityModifierCapSchema = Schema.Struct({
   minimum: exactOptional(Schema.Number),
 });
 
+const FixedCountCapSchema = Schema.Struct({
+  kind: Schema.Literal("fixed"),
+  uses: Schema.Number,
+});
+
+const ThresholdCountCapSchema = Schema.Struct({
+  kind: Schema.Literal("threshold_tiers"),
+  axis: LevelAxisSchema,
+  base: Schema.Number,
+  tiers: Schema.NonEmptyArray(numberTierSchema),
+});
+
+const LinearCountCapSchema = Schema.Struct({
+  kind: Schema.Literal("linear_per_level"),
+  axis: LevelAxisSchema,
+  base: Schema.Number,
+  perLevel: Schema.Number,
+  startingAtLevel: Schema.Number,
+});
+
+const FiniteResourceCapSchema = Schema.Union(
+  FixedCountCapSchema,
+  ThresholdCountCapSchema,
+  LinearCountCapSchema,
+  Schema.Struct({ kind: Schema.Literal("proficiency_bonus") }),
+  AbilityModifierCapSchema,
+);
+
 export const ClassFeatureActivationCostSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("free") }),
   Schema.Struct({
@@ -126,22 +162,7 @@ export const ClassFeatureActivationCostSchema = Schema.Union(
 );
 
 export const UseCountCapSchema = Schema.Union(
-  Schema.Struct({ kind: Schema.Literal("fixed"), uses: Schema.Number }),
-  Schema.Struct({
-    kind: Schema.Literal("threshold_tiers"),
-    axis: LevelAxisSchema,
-    base: Schema.Number,
-    tiers: Schema.NonEmptyArray(numberTierSchema),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("linear_per_level"),
-    axis: LevelAxisSchema,
-    base: Schema.Number,
-    perLevel: Schema.Number,
-    startingAtLevel: Schema.Number,
-  }),
-  Schema.Struct({ kind: Schema.Literal("proficiency_bonus") }),
-  AbilityModifierCapSchema,
+  FiniteResourceCapSchema,
   Schema.Struct({ kind: Schema.Literal("unlimited") }),
 );
 
@@ -152,26 +173,15 @@ export const UseCountResourceSchema = Schema.Struct({
 
 export const ChargePoolResourceSchema = Schema.Struct({
   kind: Schema.Literal("charge_pool"),
-  cap: Schema.Union(
-    Schema.Struct({ kind: Schema.Literal("fixed"), uses: Schema.Number }),
-    Schema.Struct({
-      kind: Schema.Literal("threshold_tiers"),
-      axis: LevelAxisSchema,
-      base: Schema.Number,
-      tiers: Schema.NonEmptyArray(numberTierSchema),
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("linear_per_level"),
-      axis: LevelAxisSchema,
-      base: Schema.Number,
-      perLevel: Schema.Number,
-      startingAtLevel: Schema.Number,
-    }),
-    Schema.Struct({ kind: Schema.Literal("proficiency_bonus") }),
-    AbilityModifierCapSchema,
-  ),
+  cap: FiniteResourceCapSchema,
   initialCount: exactOptional(DiceAmountSchema),
   lifetimeAbsorptionCap: exactOptional(Schema.Number),
+});
+
+export const PointPoolResourceSchema = Schema.Struct({
+  kind: Schema.Literal("point_pool"),
+  poolId: NonEmptyStringSchema,
+  cap: FiniteResourceCapSchema,
 });
 
 export const ActivationResourceSchema = Schema.Union(
@@ -502,6 +512,56 @@ export const ClassFeatureResourceContainerMechanicsSchema = Schema.Struct({
   effectSaveDc: exactOptional(ClassFeatureEffectSaveDcSchema),
 });
 
+export const SpellSlotToPointPoolOperationSchema = Schema.Struct({
+  kind: Schema.Literal("spell_slot_to_point_pool"),
+  activationCost: Schema.Struct({ kind: Schema.Literal("free") }),
+  pointGain: Schema.Struct({
+    kind: Schema.Literal("equal_to_spell_slot_level"),
+  }),
+});
+
+const ResourcePoolSpellSlotCreationOptionSchema = Schema.Struct({
+  spellSlotLevel: FontOfMagicCreatedSpellSlotLevelSchema,
+  pointCost: PositiveIntegerSchema,
+  minimumClassLevel: PositiveIntegerSchema,
+});
+
+const distinctSpellSlotCreationLevels = (
+  options: readonly Schema.Schema.Type<
+    typeof ResourcePoolSpellSlotCreationOptionSchema
+  >[],
+): boolean =>
+  new Set(options.map((option) => option.spellSlotLevel)).size ===
+  options.length;
+
+const ResourcePoolSpellSlotCreationOptionsSchema = Schema.NonEmptyArray(
+  ResourcePoolSpellSlotCreationOptionSchema,
+).pipe(
+  Schema.filter(distinctSpellSlotCreationLevels, {
+    message: () =>
+      "Point-pool Spell Slot creation options must have distinct Spell Slot levels.",
+  }),
+);
+
+export const PointPoolToSpellSlotOperationSchema = Schema.Struct({
+  kind: Schema.Literal("point_pool_to_spell_slot"),
+  activationCost: Schema.Struct({ kind: Schema.Literal("bonus_action") }),
+  createdSlotExpiry: Schema.Struct({ kind: Schema.Literal("long_rest") }),
+  options: ResourcePoolSpellSlotCreationOptionsSchema,
+});
+
+export const ResourcePoolOperationSchema = Schema.Union(
+  SpellSlotToPointPoolOperationSchema,
+  PointPoolToSpellSlotOperationSchema,
+);
+
+export const ClassFeatureResourcePoolMechanicsSchema = Schema.Struct({
+  family: Schema.Literal("resource_pool"),
+  resource: PointPoolResourceSchema,
+  resetCadence: RestResetCadenceSchema,
+  operations: Schema.NonEmptyArray(ResourcePoolOperationSchema),
+});
+
 export const FeatureChoiceMechanicsSchema = Schema.Union(
   Schema.Struct({
     family: Schema.Literal("feature_choice"),
@@ -626,6 +686,7 @@ export const ClassFeatureMechanicsSchema = Schema.Union(
   FeatureChoiceMechanicsSchema,
   ClassFeatureAcquisitionChoiceMechanicsSchema,
   ClassFeatureResourceContainerMechanicsSchema,
+  ClassFeatureResourcePoolMechanicsSchema,
   ClassSpellcastingProjectionMechanicsSchema,
   WeaponMasteryChoiceMechanicsSchema,
   SpellbookRitualAccessMechanicsSchema,
@@ -639,6 +700,7 @@ export const ClassGeneralFeatureMechanicsSchema = Schema.Union(
   CompositeClassFeatureMechanicsSchema,
   ClassFeatureAcquisitionChoiceMechanicsSchema,
   ClassFeatureResourceContainerMechanicsSchema,
+  ClassFeatureResourcePoolMechanicsSchema,
   WeaponMasteryChoiceMechanicsSchema,
 );
 

@@ -109,7 +109,7 @@
     {
       "number": 18,
       "id": "L12G-AUTHOR-SORCERER-FONT-OF-MAGIC",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Sorcerer Font Of Magic Authoring And Support"
     },
     {
@@ -495,6 +495,24 @@
       "id": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME",
       "status": "ready-for-research",
       "title": "Monk Uncanny Metabolism Initiative Recovery Runtime"
+    },
+    {
+      "number": 83,
+      "id": "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS",
+      "status": "ready-for-research",
+      "title": "Sorcerer Font Of Magic Sorcery Point Resource Facts"
+    },
+    {
+      "number": 84,
+      "id": "L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS",
+      "status": "ready-for-research",
+      "title": "Sorcerer Font Of Magic Spell Slot To Sorcery Points"
+    },
+    {
+      "number": 85,
+      "id": "L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS",
+      "status": "ready-for-research",
+      "title": "Sorcerer Font Of Magic Sorcery Points To Spell Slot"
     }
   ]
 }
@@ -587,8 +605,9 @@ use the repository MBT scarcity protocol.
 ## Included Work
 
 Loop A owns Tasks 10-42 after the split, Task 12's concrete follow-up split
-tasks 76-78, Task 13's concrete follow-up split tasks 79-80, and Task 15's
-concrete follow-up split tasks 81-82. Tasks 1-9 are already done. Tasks 43-75 are owned by
+tasks 76-78, Task 13's concrete follow-up split tasks 79-80, Task 15's
+concrete follow-up split tasks 81-82, and Task 18's concrete follow-up split
+tasks 83-85. Tasks 1-9 are already done. Tasks 43-75 are owned by
 `plans/LEVEL2_RALPH_LOOP_B_BIG_FRONTIER.md` and stay `deferred` here so Loop A
 cannot pick them. Keep this lane out of Loop D's level-1 recursive frontier and
 Loop L's language-access frontier.
@@ -677,6 +696,9 @@ Loop L's language-access frontier.
 | 80 | 14b | `L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS` | `monk_monks_focus` |
 | 81 | 16a | `L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS` | `monk_uncanny_metabolism` |
 | 82 | 16b | `L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME` | `monk_uncanny_metabolism` |
+| 83 | 19a | `L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS` | `sorcerer_font_of_magic` |
+| 84 | 19b | `L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS` | `sorcerer_font_of_magic` |
+| 85 | 19c | `L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS` | `sorcerer_font_of_magic` |
 
 ## Follow-Up Dependencies
 
@@ -689,6 +711,9 @@ Loop L's language-access frontier.
 | `L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS` | `L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS` | Battle option execution should consume the projected shared Focus Point resource instead of creating per-feature pools. |
 | `L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS` | `L12G-AUTHOR-MONK-UNCANNY-METABOLISM`, `L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS` | Uncanny Metabolism use-state projection should retain the authored feature and link to the already-owned shared Focus Point resource and Martial Arts die source. |
 | `L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME` | `L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS`, `L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS` | Initiative-window recovery should consume the projected once-per-Long-Rest use state and shared Focus Point battle handoff instead of creating a per-feature pool. |
+| `L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS` | `L12G-AUTHOR-SORCERER-FONT-OF-MAGIC`, `L12G-AUTHOR-SORCERER-METAMAGIC` | Sorcerer level-2 admission should retain the full level-2 feature grant set before projecting the shared Sorcery Point resource from Font of Magic. |
+| `L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS` | `L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS` | Spell Slot to Sorcery Point conversion should consume existing Spell Slot state and the projected shared Sorcery Point resource instead of creating per-feature resource state. |
+| `L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS` | `L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS` | Sorcery Point to temporary Spell Slot creation should consume the projected shared Sorcery Point resource and own the temporary slot lifecycle without duplicating class progression state. |
 
 ## Task Details
 
@@ -1156,7 +1181,7 @@ Acceptance:
 
 ### Task 18 - L12G-AUTHOR-SORCERER-FONT-OF-MAGIC - Sorcerer Font Of Magic Authoring And Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `sorcerer_font_of_magic`. Gate task: 19 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -1205,6 +1230,7 @@ Outputs:
 Acceptance:
 
 - the level 1-2 metric row for `sorcerer_metamagic` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- Metamagic execution support must consume the shared Sorcery Point resource projected from `sorcerer_font_of_magic`; do not claim option execution support with a synthetic Metamagic-local point pool;
 - no level-1 Loop D/L or companion boundary work is pulled into this lane;
 - focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
 
@@ -2929,4 +2955,100 @@ Acceptance:
 
 - the runtime execution portion of `monk_uncanny_metabolism` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
 - runtime behavior traces to SRD Uncanny Metabolism without homebrew extensions and consumes projected shared Focus Point, once-per-Long-Rest use, and Martial Arts die facts instead of duplicating class progression or die-table state;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.
+
+### Task 83 - L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS - Sorcerer Font Of Magic Sorcery Point Resource Facts
+
+Status: `ready-for-research`
+
+Unit: `sorcerer_font_of_magic`. Follow-up split from Task 18.
+
+Dependency: Task 18 (`L12G-AUTHOR-SORCERER-FONT-OF-MAGIC`) and Task 19 (`L12G-AUTHOR-SORCERER-METAMAGIC`) done.
+
+Inputs:
+
+- `packages/surface/content/sorcerer_font_of_magic.json`;
+- `packages/surface/content/class_sorcerer.json`;
+- the `sorcerer_font_of_magic` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Classes/Sorcerer.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- character-creation and character-sheet retained-feature and resource owner evidence.
+
+Outputs:
+
+- owner evidence for retaining the Font of Magic feature ref with Sorcerer level-2 progression after the full Sorcerer level-2 feature grant set can be retained;
+- shared Sorcery Point pool facts, Sorcerer-level cap, and Long Rest reset derive from the authored Surface feature and class progression without duplicating class progression or Metamagic option state;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the character-facts/resource portion of `sorcerer_font_of_magic` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no Spell Slot conversion execution or Metamagic option execution is implemented in this task;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 84 - L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS - Sorcerer Font Of Magic Spell Slot To Sorcery Points
+
+Status: `ready-for-research`
+
+Unit: `sorcerer_font_of_magic`. Follow-up split from Task 18.
+
+Dependency: Task 83 (`L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS`) done.
+
+Inputs:
+
+- `packages/surface/content/sorcerer_font_of_magic.json`;
+- the `sorcerer_font_of_magic` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Classes/Sorcerer.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- character-battle-runtime, spellcasting resource owner, Unit profile, owner-evidence, and focused tests for Spell Slot to Sorcery Point conversion.
+
+Outputs:
+
+- supported runtime profile and owner evidence for the no-action conversion that expends one Spell Slot and grants Sorcery Points equal to the expended slot's level;
+- conversion consumes existing Spell Slot state and the projected shared Sorcery Point resource, respecting the shared Sorcery Point cap;
+- Quint/runtime parity updates if promoted battle-runtime behavior changes;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the Spell Slot to Sorcery Point conversion portion of `sorcerer_font_of_magic` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no Sorcery Point to temporary Spell Slot creation or Metamagic option execution is implemented in this task;
+- runtime behavior traces to SRD Font of Magic without homebrew extensions and consumes projected shared Sorcery Point facts instead of duplicating class progression or spellcasting resource state;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.
+
+### Task 85 - L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS - Sorcerer Font Of Magic Sorcery Points To Spell Slot
+
+Status: `ready-for-research`
+
+Unit: `sorcerer_font_of_magic`. Follow-up split from Task 18.
+
+Dependency: Task 83 (`L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS`) done.
+
+Inputs:
+
+- `packages/surface/content/sorcerer_font_of_magic.json`;
+- the `sorcerer_font_of_magic` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Classes/Sorcerer.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- character-battle-runtime, spellcasting resource owner, Unit profile, owner-evidence, and focused tests for Sorcery Point to temporary Spell Slot creation.
+
+Outputs:
+
+- supported runtime profile and owner evidence for the Bonus Action conversion that spends Sorcery Points by the Creating Spell Slots table;
+- execution enforces the minimum Sorcerer level for the target slot, creates one Spell Slot no higher than level 5, and expires created slots on Long Rest;
+- conversion consumes the projected shared Sorcery Point resource and existing Spell Slot state without duplicating class progression state;
+- Quint/runtime parity updates if promoted battle-runtime behavior changes;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the Sorcery Point to temporary Spell Slot conversion portion of `sorcerer_font_of_magic` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no Spell Slot to Sorcery Point conversion or Metamagic option execution is implemented in this task;
+- runtime behavior traces to SRD Font of Magic without homebrew extensions and consumes projected shared Sorcery Point facts instead of duplicating class progression or spellcasting resource state;
 - focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.

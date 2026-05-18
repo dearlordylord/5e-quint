@@ -37,8 +37,12 @@ import {
 // Handwritten spell / mechanics surface schema slice built on the shared base
 // vocabulary in schema-base.ts.
 
+export const SPELL_SLOT_LEVELS = [
+  1, 2, 3, 4, 5, 6, 7, 8, 9,
+] as const satisfies ReadonlyArray<number>;
+
 export const SpellLevelSchema = Schema.Literal(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
-export const SpellSlotLevelSchema = Schema.Literal(1, 2, 3, 4, 5, 6, 7, 8, 9);
+export const SpellSlotLevelSchema = Schema.Literal(...SPELL_SLOT_LEVELS);
 const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.int(),
   Schema.greaterThanOrEqualTo(1),

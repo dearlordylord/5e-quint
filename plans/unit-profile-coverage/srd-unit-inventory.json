@@ -195,15 +195,15 @@
     "levelTwoRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 14,
       "non-runtime": 12,
-      "missing-authored-record": 4,
-      "catalog-installed-owner-evidence-required": 3
+      "missing-authored-record": 3,
+      "catalog-installed-owner-evidence-required": 4
     },
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 301,
       "non-runtime": 24,
       "catalog-only/dead-for-now": 150,
-      "missing-authored-record": 78,
-      "catalog-installed-owner-evidence-required": 3
+      "missing-authored-record": 77,
+      "catalog-installed-owner-evidence-required": 4
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 143,
@@ -17651,15 +17651,29 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "sorcerer_font_of_magic",
+        "sourceRecordPath": "packages/surface/content/sorcerer_font_of_magic.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "sorcerer_font_of_magic"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit sorcerer_font_of_magic is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime plus character-sheet-runtime; character-battle-runtime plus spellcasting resource owner",
+          "evidence": "Promote follow-up split L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS, L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS, L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS: L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS owns Retain the Font of Magic feature ref with Sorcerer level-2 progression, then project the shared Sorcery Point pool, Sorcerer-level cap, and Long Rest reset from the authored record without duplicating class progression or Metamagic option state. Required output: Owner evidence for CharacterBuild or Character Sheet retained Font of Magic feature ref and shared Sorcery Point resource facts consumed by Metamagic and later Sorcerer features.; L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS owns Execute the no-action conversion that expends one spell slot and grants Sorcery Points equal to the expended slot's level, bounded by the shared Sorcery Point cap. Required output: Supported runtime profile and owner evidence for spell slot to Sorcery Point conversion using the shared Sorcery Point resource and existing Spell Slot state.; L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS owns Execute the Bonus Action conversion that spends Sorcery Points by the Creating Spell Slots table, enforces the minimum Sorcerer level for the target slot, creates one spell slot no higher than level 5, and expires created slots on Long Rest. Required output: Supported runtime profile and owner evidence for Sorcery Point to temporary Spell Slot creation, Bonus Action spending, minimum-level gating, and Long Rest expiry.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS, L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS, L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS: L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS owns Retain the Font of Magic feature ref with Sorcerer level-2 progression, then project the shared Sorcery Point pool, Sorcerer-level cap, and Long Rest reset from the authored record without duplicating class progression or Metamagic option state. Required output: Owner evidence for CharacterBuild or Character Sheet retained Font of Magic feature ref and shared Sorcery Point resource facts consumed by Metamagic and later Sorcerer features.; L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS owns Execute the no-action conversion that expends one spell slot and grants Sorcery Points equal to the expended slot's level, bounded by the shared Sorcery Point cap. Required output: Supported runtime profile and owner evidence for spell slot to Sorcery Point conversion using the shared Sorcery Point resource and existing Spell Slot state.; L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS owns Execute the Bonus Action conversion that spends Sorcery Points by the Creating Spell Slots table, enforces the minimum Sorcerer level for the target slot, creates one spell slot no higher than level 5, and expires created slots on Long Rest. Required output: Supported runtime profile and owner evidence for Sorcery Point to temporary Spell Slot creation, Bonus Action spending, minimum-level gating, and Long Rest expiry.",
       "battleReadinessStatus": "owner-evidence-required"
     },
     {

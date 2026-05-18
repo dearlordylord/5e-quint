@@ -8,8 +8,8 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 
 | Metric | Covered |
 | --- | ---: |
-| Strict runtime/profile support | 89/143 (62.2%) |
-| Strict target closure | 111/143 (77.6%) |
+| Strict runtime/profile support | 89/144 (61.8%) |
+| Strict target closure | 112/144 (77.8%) |
 | Product readiness | 475/556 (85.4%) |
 
 ## Scope
@@ -18,10 +18,10 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | --- | ---: |
 | Candidate Unit ids before exclusions | 197 |
 | Companion-worktree exclusions | 1 |
-| SRD pressure with no Unit matrix row | 41 |
+| SRD pressure with no Unit matrix row | 40 |
 | Non-executable class containers | 12 |
-| Strict executable denominator | 143 |
-| Non-supported frontier | 54 |
+| Strict executable denominator | 144 |
+| Non-supported frontier | 55 |
 
 ## Status Groups
 
@@ -31,7 +31,7 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | open-runtime-behavior | 31 | `acid_arrow`, `aid`, `alter_self`, `arcane_lock`, `barkskin`, `blindness_deafness`, `blur`, `continual_flame`, `find_steed`, `flame_blade`, `gentle_repose`, `heat_metal`, `hold_person`, `invisibility`, `lesser_restoration`, `magic_weapon`, `mind_spike`, `misty_step`, `moonbeam`, `pass_without_trace`, `prayer_of_healing`, `protection_from_poison`, `ray_of_enfeeblement`, `scorching_ray`, `see_invisibility`, `shining_smite`, `spider_climb`, `spike_growth`, `spiritual_weapon`, `warding_bond`, `web` |
 | closed-runtime-detached-table-adjudication | 11 | `alarm`, `charm_person`, `comprehend_languages`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `identify`, `minor_illusion`, `silent_image`, `speak_with_animals`, `thaumaturgy` |
 | closed-later-level-only | 6 | `barbarian_weapon_mastery`, `bard_expertise`, `fighter_weapon_mastery`, `paladin_fighting_style`, `ranger_favored_enemy`, `ranger_fighting_style` |
-| blocked-follow-up-split | 3 | `druid_wild_shape`, `monk_monks_focus`, `monk_uncanny_metabolism` |
+| blocked-follow-up-split | 4 | `druid_wild_shape`, `monk_monks_focus`, `monk_uncanny_metabolism`, `sorcerer_font_of_magic` |
 | closed-character-fact-and-runtime-detached-split | 2 | `druid_druidic`, `rogue_thieves_cant` |
 | open-profile-accounting | 1 | `shatter` |
 
@@ -93,6 +93,7 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `shatter` | open-profile-accounting | profile-subset-supported | installed | table-spatial-derivation | Shatter area membership and affected nonmagical unattended objects are table/spatial facts supplied at the battle-runtime boundary. |
 | `shining_smite` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
 | `silent_image` | closed-runtime-detached-table-adjudication | unsupported-profile | not-in-unit-catalog | outside-runtime-presentation-exploration | Silent Image creates table-adjudicated illusion and presentation state; promoted battle runtime does not own image rendering or discovery adjudication. |
+| `sorcerer_font_of_magic` | blocked-follow-up-split | unsupported-profile | installed | follow-up-split | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS: Retain the Font of Magic feature ref with Sorcerer level-2 progression, then project the shared Sorcery Point pool, Sorcerer-level cap, and Long Rest reset from the authored record without duplicating class progression or Metamagic option state. Owner: character-creation-runtime plus character-sheet-runtime. Required output: Owner evidence for CharacterBuild or Character Sheet retained Font of Magic feature ref and shared Sorcery Point resource facts consumed by Metamagic and later Sorcerer features.; L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS: Execute the no-action conversion that expends one spell slot and grants Sorcery Points equal to the expended slot's level, bounded by the shared Sorcery Point cap. Owner: character-battle-runtime plus spellcasting resource owner. Required output: Supported runtime profile and owner evidence for spell slot to Sorcery Point conversion using the shared Sorcery Point resource and existing Spell Slot state.; L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS: Execute the Bonus Action conversion that spends Sorcery Points by the Creating Spell Slots table, enforces the minimum Sorcerer level for the target slot, creates one spell slot no higher than level 5, and expires created slots on Long Rest. Owner: character-battle-runtime plus spellcasting resource owner. Required output: Supported runtime profile and owner evidence for Sorcery Point to temporary Spell Slot creation, Bonus Action spending, minimum-level gating, and Long Rest expiry. |
 | `speak_with_animals` | closed-runtime-detached-table-adjudication | unsupported-profile | not-in-unit-catalog | outside-runtime-presentation-exploration | Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes. |
 | `spider_climb` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
 | `spike_growth` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
@@ -165,7 +166,6 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `purify_food_and_drink` | 3 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/purify_food_and_drink.md` | Cleric spell list Purify Food and Drink; Druid spell list Purify Food and Drink; Paladin spell list Purify Food and Drink |
 | `rope_trick` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Wizard spell list Rope Trick |
 | `silence` | 3 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Bard spell list Silence; Cleric spell list Silence; Ranger spell list Silence |
-| `sorcerer_font_of_magic` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Sorcerer Font of Magic |
 | `sorcerer_metamagic` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Sorcerer Metamagic |
 | `suggestion` | 4 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Bard spell list Suggestion; Sorcerer spell list Suggestion; Warlock spell list Suggestion; Wizard spell list Suggestion |
 | `unseen_servant` | 3 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/unseen_servant.md` | Bard spell list Unseen Servant; Warlock spell list Unseen Servant; Wizard spell list Unseen Servant |

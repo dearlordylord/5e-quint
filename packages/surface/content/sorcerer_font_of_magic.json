@@ -1,0 +1,76 @@
+{
+  "acquiredAtLevel": 2,
+  "className": "sorcerer",
+  "description": "SRD Sorcerer level 2 Sorcery Point pool and spell-slot conversion source facts. A Sorcerer's Sorcery Point maximum equals Sorcerer level from level 2, all expended Sorcery Points return on a Long Rest, a spell slot can be expended for Sorcery Points equal to the slot's level with no action, and Sorcery Points can be spent as a Bonus Action to create a temporary spell slot that vanishes on Long Rest.",
+  "id": "sorcerer_font_of_magic",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "resource_pool",
+    "operations": [
+      {
+        "activationCost": {
+          "kind": "free"
+        },
+        "kind": "spell_slot_to_point_pool",
+        "pointGain": {
+          "kind": "equal_to_spell_slot_level"
+        }
+      },
+      {
+        "activationCost": {
+          "kind": "bonus_action"
+        },
+        "createdSlotExpiry": {
+          "kind": "long_rest"
+        },
+        "kind": "point_pool_to_spell_slot",
+        "options": [
+          {
+            "minimumClassLevel": 2,
+            "pointCost": 2,
+            "spellSlotLevel": 1
+          },
+          {
+            "minimumClassLevel": 3,
+            "pointCost": 3,
+            "spellSlotLevel": 2
+          },
+          {
+            "minimumClassLevel": 5,
+            "pointCost": 5,
+            "spellSlotLevel": 3
+          },
+          {
+            "minimumClassLevel": 7,
+            "pointCost": 6,
+            "spellSlotLevel": 4
+          },
+          {
+            "minimumClassLevel": 9,
+            "pointCost": 7,
+            "spellSlotLevel": 5
+          }
+        ]
+      }
+    ],
+    "resetCadence": {
+      "kind": "long_rest"
+    },
+    "resource": {
+      "cap": {
+        "axis": "class",
+        "base": 2,
+        "kind": "linear_per_level",
+        "perLevel": 1,
+        "startingAtLevel": 2
+      },
+      "kind": "point_pool",
+      "poolId": "sorcery_points"
+    }
+  },
+  "name": "Font of Magic",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Sorcerer.md:33-54,87-109"
+  }
+}

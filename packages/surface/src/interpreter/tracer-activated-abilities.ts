@@ -354,33 +354,43 @@ export function traceActivationResource(
     atomKind,
     label: `${atomKind}\n${capLabel}${initialLabel}${lifetimeAbsorptionLabel}`,
   });
-  // If the cap scales by level, emit a scaling node that modifies the pool/counter.
-  if (r.cap.kind === "threshold_tiers") {
+  traceCountedResourceCapScaling(r.cap, id, nodes, edges, ids);
+  return id;
+}
+
+export function traceCountedResourceCapScaling(
+  cap: UseCountResource["cap"],
+  resourceId: string,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  // If the cap scales by level, emit a scaling node that modifies the pool.
+  if (cap.kind === "threshold_tiers") {
     const scId = ids("sc");
-    const tierText = r.cap.tiers
+    const tierText = cap.tiers
       .map((t) => `L${t.atLevel}:${t.value}`)
       .join(" | ");
     nodes.push({
       id: scId,
       category: "scaling",
       atomKind: "scale_numeric_bonus",
-      label: `scale_numeric_bonus\naxis=${r.cap.axis}\ntiers: ${tierText}`,
+      label: `scale_numeric_bonus\naxis=${cap.axis}\ntiers: ${tierText}`,
     });
-    edges.push({ from: scId, to: id, relation: "modifies" });
-  } else if (r.cap.kind === "linear_per_level") {
+    edges.push({ from: scId, to: resourceId, relation: "modifies" });
+  } else if (cap.kind === "linear_per_level") {
     const scId = ids("sc");
-    const starts = r.cap.startingAtLevel;
+    const starts = cap.startingAtLevel;
     nodes.push({
       id: scId,
       category: "scaling",
       atomKind: "scale_numeric_bonus",
       label:
-        `scale_numeric_bonus\naxis=${r.cap.axis}\n` +
-        `${r.cap.base} + ${r.cap.perLevel}/level above L${starts}`,
+        `scale_numeric_bonus\naxis=${cap.axis}\n` +
+        `${cap.base} + ${cap.perLevel}/level above L${starts}`,
     });
-    edges.push({ from: scId, to: id, relation: "modifies" });
+    edges.push({ from: scId, to: resourceId, relation: "modifies" });
   }
-  return id;
 }
 
 export function describeUseCountCap(cap: UseCountResource["cap"]): string {

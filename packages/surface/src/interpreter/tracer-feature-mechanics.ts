@@ -19,8 +19,11 @@ import { traceEffectAtom } from "./tracer-effect-atom.ts";
 
 import {
   describeWeaponMasteryEligibility,
+  describeUseCountCap,
   traceActivatedAbility,
   traceActivationResource,
+  traceActivationCost,
+  traceCountedResourceCapScaling,
   traceResetCadence,
 } from "./tracer-activated-abilities.ts";
 
@@ -81,6 +84,8 @@ export function traceClassFeatureMechanics(
     }
     case "resource_container":
       return [traceResourceContainerMechanics(m, nodes, edges, ids)];
+    case "resource_pool":
+      return [traceResourcePoolMechanics(m, nodes, edges, ids)];
     case "class_spellcasting_projection": {
       const spellcastingId = ids("spellcasting");
       nodes.push({
@@ -261,6 +266,130 @@ export function traceResourceContainerMechanics(
   edges.push({ from: containerId, to: resourceId, relation: "contains" });
   traceResetCadence(m.resetCadence, resourceId, nodes, edges, ids);
   return containerId;
+}
+
+export function traceResourcePoolMechanics(
+  m: Extract<ClassFeatureMechanics, { readonly family: "resource_pool" }>,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const containerId = ids("resource-pool");
+  nodes.push({
+    id: containerId,
+    category: "procedure",
+    atomKind: "class_feature_resource_pool",
+    label: `class_feature_resource_pool\n${m.resource.poolId}`,
+  });
+
+  const resourceId = tracePointPoolResource(m.resource, nodes, edges, ids);
+  edges.push({ from: containerId, to: resourceId, relation: "contains" });
+  traceResetCadence(m.resetCadence, resourceId, nodes, edges, ids);
+
+  for (const operation of m.operations) {
+    const operationId = traceResourcePoolOperation(
+      operation,
+      nodes,
+      edges,
+      ids,
+    );
+    edges.push({ from: containerId, to: operationId, relation: "offers" });
+    edges.push({
+      from: operationId,
+      to: resourceId,
+      relation: resourcePoolOperationResourceRelation(operation),
+    });
+  }
+
+  return containerId;
+}
+
+type ResourcePoolOperation = Extract<
+  ClassFeatureMechanics,
+  { readonly family: "resource_pool" }
+>["operations"][number];
+
+function resourcePoolOperationResourceRelation(
+  operation: ResourcePoolOperation,
+): "grants" | "spends" {
+  return Match.value(operation).pipe(
+    Match.when({ kind: "spell_slot_to_point_pool" }, () => "grants" as const),
+    Match.when({ kind: "point_pool_to_spell_slot" }, () => "spends" as const),
+    Match.exhaustive,
+  );
+}
+
+function tracePointPoolResource(
+  resource: Extract<
+    ClassFeatureMechanics,
+    { readonly family: "resource_pool" }
+  >["resource"],
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const resourceId = ids("point-pool");
+  nodes.push({
+    id: resourceId,
+    category: "resource",
+    atomKind: "point_pool",
+    label: `point_pool\n${resource.poolId}\n${describeUseCountCap(resource.cap)}`,
+  });
+  traceCountedResourceCapScaling(resource.cap, resourceId, nodes, edges, ids);
+  return resourceId;
+}
+
+function traceResourcePoolOperation(
+  operation: ResourcePoolOperation,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  return Match.value(operation).pipe(
+    Match.when({ kind: "spell_slot_to_point_pool" }, (slotToPool) => {
+      const operationId = ids("slot-to-pool");
+      nodes.push({
+        id: operationId,
+        category: "procedure",
+        atomKind: "spell_slot_to_point_pool",
+        label: `spell_slot_to_point_pool\npoints ${slotToPool.pointGain.kind}`,
+      });
+      traceActivationCost(
+        slotToPool.activationCost,
+        operationId,
+        nodes,
+        edges,
+        ids,
+      );
+      return operationId;
+    }),
+    Match.when({ kind: "point_pool_to_spell_slot" }, (poolToSlot) => {
+      const operationId = ids("pool-to-slot");
+      const options = poolToSlot.options
+        .map(
+          (option) =>
+            `slot L${option.spellSlotLevel}: ${option.pointCost} points at class L${option.minimumClassLevel}`,
+        )
+        .join(" | ");
+      nodes.push({
+        id: operationId,
+        category: "procedure",
+        atomKind: "point_pool_to_spell_slot",
+        label:
+          `point_pool_to_spell_slot\n${options}\n` +
+          `created slot expires ${poolToSlot.createdSlotExpiry.kind}`,
+      });
+      traceActivationCost(
+        poolToSlot.activationCost,
+        operationId,
+        nodes,
+        edges,
+        ids,
+      );
+      return operationId;
+    }),
+    Match.exhaustive,
+  );
 }
 
 type ClassFeatureEffectSaveDc = NonNullable<

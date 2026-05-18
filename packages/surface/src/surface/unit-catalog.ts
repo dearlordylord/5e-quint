@@ -153,6 +153,7 @@ import shockingGraspInput from "../../content/shocking_grasp.json";
 import sleepInput from "../../content/sleep.json";
 import sacredFlameInput from "../../content/sacred_flame.json";
 import searingSmiteInput from "../../content/searing_smite.json";
+import sorcererFontOfMagicInput from "../../content/sorcerer_font_of_magic.json";
 import sorcererInnateSorceryInput from "../../content/sorcerer_innate_sorcery.json";
 import sorcerousBurstInput from "../../content/sorcerous_burst.json";
 import spareTheDyingInput from "../../content/spare_the_dying.json";
@@ -346,6 +347,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     rogueSneakAttackInput,
     rogueThievesCantInput,
     sorcererInnateSorceryInput,
+    sorcererFontOfMagicInput,
     warlockEldritchInvocationsInput,
     wizardRitualAdeptInput,
     wizardArcaneRecoveryInput,

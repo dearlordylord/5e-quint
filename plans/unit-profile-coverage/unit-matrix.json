@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 371,
-      "numerator": 141,
-      "percent": "38%"
+      "denominator": 372,
+      "numerator": 142,
+      "percent": "38.2%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 443,
-      "numerator": 173,
-      "percent": "39.1%"
+      "denominator": 444,
+      "numerator": 174,
+      "percent": "39.2%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 174
+      "value": 175
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 112,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 174,
-      "numerator": 174,
+      "denominator": 175,
+      "numerator": 175,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -97,9 +97,9 @@
       "percent": "92.9%"
     },
     "supportedProfileCoverage": {
-      "denominator": 142,
+      "denominator": 143,
       "numerator": 112,
-      "percent": "78.9%"
+      "percent": "78.3%"
     }
   },
   "metricSemantics": [
@@ -6788,6 +6788,48 @@
       ],
       "sourceRecordPath": "packages/surface/content/sorcerer_innate_sorcery.json",
       "unitId": "sorcerer_innate_sorcery"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS",
+            "mechanic": "Retain the Font of Magic feature ref with Sorcerer level-2 progression, then project the shared Sorcery Point pool, Sorcerer-level cap, and Long Rest reset from the authored record without duplicating class progression or Metamagic option state.",
+            "owner": "character-creation-runtime plus character-sheet-runtime",
+            "requiredOutput": "Owner evidence for CharacterBuild or Character Sheet retained Font of Magic feature ref and shared Sorcery Point resource facts consumed by Metamagic and later Sorcerer features.",
+            "title": "Sorcerer Font Of Magic Sorcery Point Resource Facts"
+          },
+          {
+            "id": "L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS",
+            "mechanic": "Execute the no-action conversion that expends one spell slot and grants Sorcery Points equal to the expended slot's level, bounded by the shared Sorcery Point cap.",
+            "owner": "character-battle-runtime plus spellcasting resource owner",
+            "requiredOutput": "Supported runtime profile and owner evidence for spell slot to Sorcery Point conversion using the shared Sorcery Point resource and existing Spell Slot state.",
+            "title": "Sorcerer Font Of Magic Spell Slot To Sorcery Points"
+          },
+          {
+            "id": "L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS",
+            "mechanic": "Execute the Bonus Action conversion that spends Sorcery Points by the Creating Spell Slots table, enforces the minimum Sorcerer level for the target slot, creates one spell slot no higher than level 5, and expires created slots on Long Rest.",
+            "owner": "character-battle-runtime plus spellcasting resource owner",
+            "requiredOutput": "Supported runtime profile and owner evidence for Sorcery Point to temporary Spell Slot creation, Bonus Action spending, minimum-level gating, and Long Rest expiry.",
+            "title": "Sorcerer Font Of Magic Sorcery Points To Spell Slot"
+          }
+        ],
+        "futureProfileOwner": "character-creation-runtime plus character-sheet-runtime plus character-battle-runtime spellcasting resource handoff",
+        "reason": "Font of Magic is authored and installed as an SRD Surface class-feature record with catalog-level Sorcery Point pool and spell-slot conversion metadata. It remains blocked by the concrete follow-up split listed on this claim; Task 18 claims no CharacterBuild resource projection, spell-slot conversion execution, or temporary created-slot lifecycle profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/sorcerer_font_of_magic.json",
+      "unitId": "sorcerer_font_of_magic"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

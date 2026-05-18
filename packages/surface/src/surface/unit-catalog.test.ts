@@ -4,9 +4,11 @@ import { Either, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import findFamiliarInput from "../../content/find_familiar.json";
+import sorcererFontOfMagicInput from "../../content/sorcerer_font_of_magic.json";
 import {
   ActivationPhaseSchema,
   AudibleEffectSchema,
+  ClassFeatureRecordSchema,
   decodeUnitRecordEither,
   decodeUnitRecordSync,
   EffectAtomSchema,
@@ -1613,6 +1615,97 @@ describe("SRD Unit catalog boundary", () => {
         section: "Classes/Monk.md:30-33,76-90",
       },
     });
+  });
+
+  test("keeps Sorcerer Font of Magic as point-pool conversion metadata", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("sorcerer_font_of_magic")).toMatchObject({
+      acquiredAtLevel: 2,
+      className: "sorcerer",
+      kind: "class_feature",
+      mechanics: {
+        family: "resource_pool",
+        operations: [
+          {
+            activationCost: { kind: "free" },
+            kind: "spell_slot_to_point_pool",
+            pointGain: { kind: "equal_to_spell_slot_level" },
+          },
+          {
+            activationCost: { kind: "bonus_action" },
+            createdSlotExpiry: { kind: "long_rest" },
+            kind: "point_pool_to_spell_slot",
+            options: [
+              { minimumClassLevel: 2, pointCost: 2, spellSlotLevel: 1 },
+              { minimumClassLevel: 3, pointCost: 3, spellSlotLevel: 2 },
+              { minimumClassLevel: 5, pointCost: 5, spellSlotLevel: 3 },
+              { minimumClassLevel: 7, pointCost: 6, spellSlotLevel: 4 },
+              { minimumClassLevel: 9, pointCost: 7, spellSlotLevel: 5 },
+            ],
+          },
+        ],
+        resetCadence: { kind: "long_rest" },
+        resource: {
+          cap: {
+            axis: "class",
+            base: 2,
+            kind: "linear_per_level",
+            perLevel: 1,
+            startingAtLevel: 2,
+          },
+          kind: "point_pool",
+          poolId: "sorcery_points",
+        },
+      },
+      provenance: {
+        kind: "srd-5.2.1",
+        section: "Classes/Sorcerer.md:33-54,87-109",
+      },
+    });
+  });
+
+  test("rejects Font of Magic created Spell Slot options above level 5", () => {
+    const fontOfMagic = decodeUnitRecordSync(sorcererFontOfMagicInput);
+    if (
+      fontOfMagic.kind !== "class_feature" ||
+      fontOfMagic.mechanics.family !== "resource_pool"
+    ) {
+      throw new Error("Expected Font of Magic resource-pool fixture.");
+    }
+
+    const malformedFontOfMagic = {
+      ...fontOfMagic,
+      mechanics: {
+        ...fontOfMagic.mechanics,
+        operations: fontOfMagic.mechanics.operations.map((operation) =>
+          operation.kind === "point_pool_to_spell_slot"
+            ? {
+                ...operation,
+                options: [
+                  ...operation.options,
+                  {
+                    minimumClassLevel: 11,
+                    pointCost: 9,
+                    spellSlotLevel: 6,
+                  },
+                ],
+              }
+            : operation,
+        ),
+      },
+    };
+
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(ClassFeatureRecordSchema)(
+          malformedFontOfMagic,
+        ),
+      ),
+    ).toBe(true);
   });
 
   test("keeps Monk Unarmored Movement as catalog Speed metadata", () => {
