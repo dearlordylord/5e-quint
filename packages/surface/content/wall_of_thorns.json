@@ -101,6 +101,7 @@
     "operations": [
       {
         "effect": {
+          "appliesTo": "any_movement",
           "kind": "area_movement_cost_multiplier",
           "multiplier": 4
         },

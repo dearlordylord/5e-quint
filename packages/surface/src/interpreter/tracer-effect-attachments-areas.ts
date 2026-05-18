@@ -421,7 +421,7 @@ export function traceAttachmentAndAreaEffectAtom(
         id,
         category: "effect",
         atomKind: "area_movement_cost_multiplier",
-        label: `area_movement_cost_multiplier\nx${e.multiplier}`,
+        label: `area_movement_cost_multiplier\nx${e.multiplier}\n${e.appliesTo}`,
       });
       return id;
     }

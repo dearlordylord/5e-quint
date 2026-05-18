@@ -43,14 +43,26 @@
     {
       "number": 65,
       "id": "L12G-MISSING-GUST-OF-WIND",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Gust Of Wind Definition And Support Or Closure"
+    },
+    {
+      "number": 96,
+      "id": "L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME",
+      "status": "deferred",
+      "title": "Gust Of Wind Line Runtime Support"
+    },
+    {
+      "number": 97,
+      "id": "L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE",
+      "status": "deferred",
+      "title": "Gust Of Wind Gas And Flame Presentation Closure"
     }
   ]
 }
 -->
 
-This is the fourth level-2 execution lane split from Loop B tail work. Loop D owns Tasks 59-75 plus follow-up Tasks 90-95 only.
+This is the fourth level-2 execution lane split from Loop B tail work. Loop D owns Tasks 59-75 plus follow-up Tasks 90-97, with Tasks 96-97 recorded as deferred split work from Task 65 during lane wrap-up.
 
 ## Worktree Safety Prefix
 
@@ -134,6 +146,8 @@ It excludes Loop A Tasks 22-36 and 88-89, Loop B Tasks 43-58, Loop C Tasks 37-42
 | 93 | 63 follow-up | `L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME` | `enlarge_reduce` |
 | 94 | 63 follow-up | `L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH` | `enlarge_reduce` |
 | 95 | 64 follow-up | `L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME` | `enthrall` |
+| 96 | 67 follow-up | `L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME` | `gust_of_wind` |
+| 97 | 67 follow-up | `L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE` | `gust_of_wind` |
 
 ## Follow-Up Dependencies
 
@@ -145,6 +159,8 @@ It excludes Loop A Tasks 22-36 and 88-89, Loop B Tasks 43-58, Loop C Tasks 37-42
 | `L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME` | `L12G-MISSING-ENLARGE-REDUCE` | Creature-branch runtime support should consume the authored SRD Surface spell definition rather than duplicating Enlarge/Reduce spell facts in battle-runtime code. |
 | `L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH` | `L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME` | Object and item size lifecycle work needs the creature branch's active-effect representation before adding object-target behavior and worn/carried/dropped/thrown item normalization. |
 | `L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME` | `L12G-MISSING-ENTHRALL` | Runtime support should consume the authored SRD Surface spell definition and preserve the table-supplied fighting-caster-or-companions auto-success boundary before promoting the Perception penalty. |
+| `L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME` | `L12G-MISSING-GUST-OF-WIND` | Runtime support should consume the authored SRD Surface spell definition and its self-origin Line, save, push, movement-cost, and direction-change facts rather than duplicating Gust of Wind spell facts in battle-runtime code. |
+| `L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE` | `L12G-MISSING-GUST-OF-WIND` | Gas, vapor, and flame presentation closure should consume the authored strong-wind fact from Gust of Wind and decide ownership without creating duplicate environmental wind state. |
 
 ## Task Details
 
@@ -318,7 +334,7 @@ Acceptance:
 
 ### Task 65 - L12G-MISSING-GUST-OF-WIND - Gust Of Wind Definition And Support Or Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `gust_of_wind`. Gate task: 67 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -342,3 +358,64 @@ Acceptance:
 - the level 1-2 metric row for `gust_of_wind` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
 - no level-1 Loop D/L or companion boundary work is pulled into this lane;
 - focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 96 - L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME - Gust Of Wind Line Runtime Support
+
+Status: `deferred`
+
+Dependency: Task 65 (`L12G-MISSING-GUST-OF-WIND`) done.
+
+Unit: `gust_of_wind`. Gate task: 67 follow-up in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the authored SRD Surface record for `gust_of_wind`;
+- the matching Gate 67 row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing battle-runtime spell invocation, Concentration, force-move, movement-cost, and area witness owners.
+
+Outputs:
+
+- supported-profile or profile-subset-supported Unit claim for Gust of Wind's battle-visible Line subset;
+- deterministic admission/projection evidence;
+- focused runtime tests and promoted Quint/runtime parity for Line save, push, movement-cost, direction-change, and cleanup behavior without automatic geometry or pathfinding.
+
+Acceptance:
+
+- Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied self-origin Line area identity and direction, initial and end-turn Strength Saving Throws for caller-supplied creatures in the Line, failed-save 15-foot push away from the caster along the Line, active 2-for-1 Movement cost when a creature in the Line moves closer to the caster using table-supplied movement facts, Bonus Action Line direction replacement, and cleanup when Concentration or duration ends are either supported or precisely closed as a subset boundary;
+- battle-runtime consumes the authored Surface facts rather than duplicating Gust of Wind constants;
+- promoted Quint/runtime parity and focused verification are complete.
+
+### Task 97 - L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE - Gust Of Wind Gas And Flame Presentation Closure
+
+Status: `deferred`
+
+Dependency: Task 65 (`L12G-MISSING-GUST-OF-WIND`) done.
+
+Unit: `gust_of_wind`. Gate task: 67 follow-up in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- the authored SRD Surface record for `gust_of_wind`;
+- existing `area_has_strong_wind` Surface effect facts;
+- the matching Gate 67 row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Fog Cloud, Stinking Cloud, Cloudkill, environmental flame, and table/spatial presentation ownership evidence.
+
+Outputs:
+
+- focused Surface/runtime owner decision for gas or vapor dispersal and flame presentation;
+- tests or accepted runtime-detached closure for gas/vapor and flame clauses;
+- updated Unit claim and coverage artifacts when the owner decision changes the profile disposition.
+
+Acceptance:
+
+- the task decides whether Gust of Wind's strong-wind gas or vapor dispersal should execute against promoted Fog Cloud, Stinking Cloud, Cloudkill, or other active gas/vapor areas;
+- candle, unprotected-flame, protected-flame dancing, and 50 percent protected-flame extinguishing clauses are supported or accepted-closed without adding duplicate environmental wind state;
+- any supported behavior reuses the authored `area_has_strong_wind` fact, and verification plus reviewer-loop convergence are complete.

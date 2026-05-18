@@ -1093,7 +1093,11 @@ type EffectAtom =
   | { readonly kind: "area_is_heavily_obscured" }
   | { readonly kind: "area_has_strong_wind" }
   | { readonly kind: "prevent_ranged_weapon_attacks" }
-  | { readonly kind: "area_movement_cost_multiplier"; readonly multiplier: 4 }
+  | {
+      readonly kind: "area_movement_cost_multiplier";
+      readonly multiplier: number;
+      readonly appliesTo: "any_movement" | "toward_source";
+    }
   | { readonly kind: "grant_cover"; readonly cover: "three_quarters" }
   | { readonly kind: "block_line_of_sight" }
   | {
@@ -2711,7 +2715,8 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       Schema.Struct({ kind: Schema.Literal("prevent_ranged_weapon_attacks") }),
       Schema.Struct({
         kind: Schema.Literal("area_movement_cost_multiplier"),
-        multiplier: Schema.Literal(4),
+        multiplier: PositiveIntegerSchema,
+        appliesTo: Schema.Literal("any_movement", "toward_source"),
       }),
       Schema.Struct({
         kind: Schema.Literal("grant_cover"),

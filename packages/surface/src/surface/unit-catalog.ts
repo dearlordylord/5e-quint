@@ -84,6 +84,7 @@ import fogCloudInput from "../../content/fog_cloud.json";
 import guidanceInput from "../../content/guidance.json";
 import greaseInput from "../../content/grease.json";
 import guidingBoltInput from "../../content/guiding_bolt.json";
+import gustOfWindInput from "../../content/gust_of_wind.json";
 import healingWordInput from "../../content/healing_word.json";
 import hellishRebukeInput from "../../content/hellish_rebuke.json";
 import heroismInput from "../../content/heroism.json";
@@ -433,6 +434,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     guidanceInput,
     greaseInput,
     guidingBoltInput,
+    gustOfWindInput,
     heroismInput,
     hexInput,
     huntersMarkInput,

@@ -1,0 +1,149 @@
+{
+  "description": "A Line of strong wind 60 feet long and 10 feet wide blasts from you in a direction you choose for the duration. Each creature in the Line must succeed on a Strength saving throw or be pushed 15 feet away from you in a direction following the Line. A creature that ends its turn in the Line must make the same save. Any creature in the Line must spend 2 feet of movement for every 1 foot it moves when moving closer to you. The gust disperses gas or vapor, extinguishes candles and similar unprotected flames, causes protected flames to dance wildly, and has a 50 percent chance to extinguish protected flames. As a Bonus Action on your later turns, you can change the direction in which the Line blasts from you.",
+  "id": "gust_of_wind",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "holeId": "gust_of_wind_line",
+      "kind": "hole",
+      "label": "gust line",
+      "value": {
+        "kind": "area",
+        "origin": {
+          "kind": "self"
+        },
+        "shape": {
+          "kind": "line",
+          "lengthFeet": 60,
+          "widthFeet": 10
+        }
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a legume seed",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "initialPhase": {
+      "ability": "str",
+      "attachment": {
+        "holeId": "gust_of_wind_line",
+        "kind": "hole",
+        "label": "gust line",
+        "value": {
+          "kind": "area",
+          "origin": {
+            "kind": "self"
+          },
+          "shape": {
+            "kind": "line",
+            "lengthFeet": 60,
+            "widthFeet": 10
+          }
+        }
+      },
+      "dc": {
+        "kind": "caster_spell_save_dc"
+      },
+      "kind": "save_gate",
+      "onFail": {
+        "distanceFeet": 15,
+        "kind": "force_move",
+        "movementKind": "push",
+        "originDirection": "away_from_caster"
+      },
+      "onSuccess": {
+        "kind": "none"
+      }
+    },
+    "level": 2,
+    "operations": [
+      {
+        "effect": {
+          "kind": "area_has_strong_wind"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "appliesTo": "toward_source",
+          "kind": "area_movement_cost_multiplier",
+          "multiplier": 2
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "ability": "str",
+          "attachment": {
+            "holeId": "gust_of_wind_line",
+            "kind": "hole",
+            "label": "gust line",
+            "value": {
+              "kind": "area",
+              "origin": {
+                "kind": "self"
+              },
+              "shape": {
+                "kind": "line",
+                "lengthFeet": 60,
+                "widthFeet": 10
+              }
+            }
+          },
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "kind": "save_gate",
+          "onFail": {
+            "distanceFeet": 15,
+            "kind": "force_move",
+            "movementKind": "push",
+            "originDirection": "away_from_caster"
+          },
+          "onSuccess": {
+            "kind": "none"
+          }
+        },
+        "trigger": {
+          "kind": "on_creature_ends_turn_in_area"
+        }
+      },
+      {
+        "effect": {
+          "kind": "reposition_attachment"
+        },
+        "trigger": {
+          "cost": {
+            "kind": "bonus_action"
+          },
+          "kind": "on_caster_spends_action"
+        }
+      }
+    ],
+    "range": {
+      "kind": "self"
+    },
+    "school": "evocation"
+  },
+  "name": "Gust of Wind",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Gust of Wind"
+  }
+}

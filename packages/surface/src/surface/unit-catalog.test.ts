@@ -132,6 +132,7 @@ const requiredFirstVerticalUnitIds = [
   "enlarge_reduce",
   "enthrall",
   "find_traps",
+  "gust_of_wind",
   "expeditious_retreat",
   "feather_fall",
   "jump",
@@ -573,6 +574,74 @@ describe("SRD Unit catalog boundary", () => {
         {
           trigger: { kind: "passive" },
           effect: { kind: "area_is_heavily_obscured" },
+        },
+      ]);
+    }
+  });
+
+  test("decodes Gust of Wind as a line with push and directional movement cost", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const gustOfWind = result.catalog.requireUnit("gust_of_wind");
+      expect(gustOfWind.kind).toBe("spell");
+      if (gustOfWind.kind !== "spell") return;
+      expect(gustOfWind.mechanics.family).toBe("ongoing_effect");
+      if (gustOfWind.mechanics.family !== "ongoing_effect") return;
+
+      expect(gustOfWind.mechanics.attachment).toEqual({
+        kind: "hole",
+        holeId: "gust_of_wind_line",
+        label: "gust line",
+        value: {
+          kind: "area",
+          shape: { kind: "line", lengthFeet: 60, widthFeet: 10 },
+          origin: { kind: "self" },
+        },
+      });
+      expect(gustOfWind.mechanics.initialPhase).toMatchObject({
+        kind: "save_gate",
+        ability: "str",
+        dc: { kind: "caster_spell_save_dc" },
+        onFail: {
+          kind: "force_move",
+          movementKind: "push",
+          originDirection: "away_from_caster",
+          distanceFeet: 15,
+        },
+        onSuccess: { kind: "none" },
+      });
+      expect(gustOfWind.mechanics.operations).toEqual([
+        {
+          trigger: { kind: "passive" },
+          effect: { kind: "area_has_strong_wind" },
+        },
+        {
+          trigger: { kind: "passive" },
+          effect: {
+            kind: "area_movement_cost_multiplier",
+            multiplier: 2,
+            appliesTo: "toward_source",
+          },
+        },
+        {
+          trigger: { kind: "on_creature_ends_turn_in_area" },
+          effect: expect.objectContaining({
+            kind: "save_gate",
+            ability: "str",
+            onFail: expect.objectContaining({
+              kind: "force_move",
+              distanceFeet: 15,
+            }),
+          }),
+        },
+        {
+          trigger: {
+            kind: "on_caster_spends_action",
+            cost: { kind: "bonus_action" },
+          },
+          effect: { kind: "reposition_attachment" },
         },
       ]);
     }

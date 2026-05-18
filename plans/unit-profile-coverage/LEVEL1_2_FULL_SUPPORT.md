@@ -8,8 +8,8 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 
 | Metric | Covered |
 | --- | ---: |
-| Strict runtime/profile support | 98/152 (64.5%) |
-| Strict target closure | 133/152 (87.5%) |
+| Strict runtime/profile support | 98/153 (64.1%) |
+| Strict target closure | 134/153 (87.6%) |
 | Product readiness | 475/556 (85.4%) |
 | Rules-kernel profile join | 16/70 (22.9%) |
 | Rules-kernel covered profile join | 11/70 (15.7%) |
@@ -21,10 +21,10 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | --- | ---: |
 | Candidate Unit ids before exclusions | 197 |
 | Companion-worktree exclusions | 1 |
-| SRD pressure with no Unit matrix row | 32 |
+| SRD pressure with no Unit matrix row | 31 |
 | Non-executable class containers | 12 |
-| Strict executable denominator | 152 |
-| Non-supported frontier | 54 |
+| Strict executable denominator | 153 |
+| Non-supported frontier | 55 |
 
 ## Status Groups
 
@@ -32,8 +32,8 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | --- | ---: | --- |
 | supported-profile | 98 | `acid_splash`, `aid`, `animal_friendship`, `bane`, `barbarian_danger_sense`, `barbarian_rage`, `barbarian_reckless_attack`, `barbarian_unarmored_defense`, `bard_bardic_inspiration`, `bard_jack_of_all_trades`, `barkskin`, `bless`, `blindness_deafness`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_channel_divinity`, `cleric_divine_order`, `color_spray`, `command`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `druid_primal_order`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feather_fall`, `fighter_action_surge`, `fighter_fighting_style`, `fighter_second_wind`, `fighter_tactical_mind`, `fire_bolt`, `flaming_sphere`, `fog_cloud`, `grease`, `guidance`, `guiding_bolt`, `healing_word`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hunters_mark`, `ice_knife`, `inflict_wounds`, `jump`, `light`, `longstrider`, `mage_armor`, `magic_missile`, `misty_step`, `monk_martial_arts`, `monk_unarmored_defense`, `monk_unarmored_movement`, `paladin_lay_on_hands`, `paladin_paladins_smite`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `ranger_deft_explorer`, `ranger_weapon_mastery`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_cunning_action`, `rogue_expertise`, `rogue_sneak_attack`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `scorching_ray`, `searing_smite`, `shatter`, `shield`, `shield_of_faith`, `shillelagh`, `shining_smite`, `shocking_grasp`, `sleep`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `starry_wisp`, `thunderwave`, `true_strike`, `vicious_mockery`, `warlock_eldritch_invocations`, `warlock_magical_cunning`, `wizard_arcane_recovery`, `wizard_ritual_adept`, `wizard_scholar` |
 | open-runtime-behavior | 19 | `blur`, `continual_flame`, `find_steed`, `flame_blade`, `gentle_repose`, `heat_metal`, `hold_person`, `invisibility`, `lesser_restoration`, `magic_weapon`, `mind_spike`, `prayer_of_healing`, `protection_from_poison`, `ray_of_enfeeblement`, `spider_climb`, `spike_growth`, `spiritual_weapon`, `warding_bond`, `web` |
+| blocked-follow-up-split | 14 | `acid_arrow`, `alter_self`, `dragons_breath`, `druid_wild_shape`, `enhance_ability`, `enlarge_reduce`, `enthrall`, `gust_of_wind`, `monk_monks_focus`, `monk_uncanny_metabolism`, `moonbeam`, `see_invisibility`, `sorcerer_font_of_magic`, `sorcerer_metamagic` |
 | closed-runtime-detached-table-adjudication | 14 | `alarm`, `arcane_lock`, `charm_person`, `comprehend_languages`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `find_traps`, `identify`, `minor_illusion`, `pass_without_trace`, `silent_image`, `speak_with_animals`, `thaumaturgy` |
-| blocked-follow-up-split | 13 | `acid_arrow`, `alter_self`, `dragons_breath`, `druid_wild_shape`, `enhance_ability`, `enlarge_reduce`, `enthrall`, `monk_monks_focus`, `monk_uncanny_metabolism`, `moonbeam`, `see_invisibility`, `sorcerer_font_of_magic`, `sorcerer_metamagic` |
 | closed-later-level-only | 6 | `barbarian_weapon_mastery`, `bard_expertise`, `fighter_weapon_mastery`, `paladin_fighting_style`, `ranger_favored_enemy`, `ranger_fighting_style` |
 | closed-character-fact-and-runtime-detached-split | 2 | `druid_druidic`, `rogue_thieves_cant` |
 
@@ -146,6 +146,7 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `find_traps` | closed-runtime-detached-table-adjudication | unsupported-profile | installed | outside-runtime-presentation-exploration | Trap presence, line of sight, non-location warning, and general-danger disclosure are exploration/detection facts supplied by the table rather than promoted battle runtime state. |
 | `flame_blade` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
 | `gentle_repose` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
+| `gust_of_wind` | blocked-follow-up-split | unsupported-profile | installed | follow-up-split | L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME: Promote Gust of Wind's battle-visible Line profile: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied self-origin Line area identity and direction, initial and end-turn Strength Saving Throws for caller-supplied creatures in the Line, failed-save 15-foot push facts away from the caster along the Line, active 2-for-1 Movement cost when a creature in the Line moves closer to the caster using table-supplied movement facts, Bonus Action Line direction replacement, and cleanup when Concentration or duration ends. Owner: battle-runtime spell invocation/effect lifecycle plus table/spatial area and movement-cost witness boundary. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the Line save, push, movement-cost, direction-change, and cleanup subset without automatic geometry or pathfinding.; L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE: Decide whether Gust of Wind's strong-wind gas or vapor dispersal should execute against promoted Fog Cloud, Stinking Cloud, Cloudkill, or other active gas/vapor areas, and close or support the candle, unprotected-flame, protected-flame dancing, and 50 percent protected-flame extinguishing clauses without adding a duplicate environmental state model. Owner: table/spatial presentation and environmental-effect interaction owner. Required output: Focused Surface/runtime owner decision with tests or accepted runtime-detached closure for gas/vapor dispersal and flame presentation, reusing the authored area_has_strong_wind fact rather than duplicating wind state. |
 | `heat_metal` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
 | `hold_person` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
 | `identify` | closed-runtime-detached-table-adjudication | unsupported-profile | not-in-unit-catalog | outside-runtime-presentation-exploration | Identification facts are supplied by the table or item/knowledge owner; promoted battle runtime does not model discovery of hidden item or spell facts. |
@@ -220,7 +221,6 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `elementalism` | 3 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/elementalism.md` | Druid spell list Elementalism; Sorcerer spell list Elementalism; Wizard spell list Elementalism |
 | `floating_disk` | 1 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/floating_disk.md` | Wizard spell list Floating Disk |
 | `goodberry` | 2 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/goodberry.md` | Druid spell list Goodberry; Ranger spell list Goodberry |
-| `gust_of_wind` | 4 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Druid spell list Gust of Wind; Ranger spell list Gust of Wind; Sorcerer spell list Gust of Wind; Wizard spell list Gust of Wind |
 | `illusory_script` | 3 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/illusory_script.md` | Bard spell list Illusory Script; Warlock spell list Illusory Script; Wizard spell list Illusory Script |
 | `knock` | 3 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Bard spell list Knock; Sorcerer spell list Knock; Wizard spell list Knock |
 | `levitate` | 2 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Sorcerer spell list Levitate; Wizard spell list Levitate |

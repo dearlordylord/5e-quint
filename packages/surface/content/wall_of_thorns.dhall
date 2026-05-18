@@ -67,6 +67,7 @@ let Effect : Type =
       , damageType : Optional Text
       , amount : Optional DiceAmount
       , multiplier : Optional Natural
+      , appliesTo : Optional Text
       , ability : Optional Text
       , dc : Optional { kind : Text }
       , onFail : Optional { kind : Text, damageType : Text, amount : DiceAmount }
@@ -84,6 +85,7 @@ let piercingDamage =
       , damageType = Some "piercing"
       , amount = Some thornDamage
       , multiplier = None Natural
+      , appliesTo = None Text
       , ability = None Text
       , dc = None { kind : Text }
       , onFail = None { kind : Text, damageType : Text, amount : DiceAmount }
@@ -101,6 +103,7 @@ let slashingDamage =
       , damageType = Some "slashing"
       , amount = Some thornDamage
       , multiplier = None Natural
+      , appliesTo = None Text
       , ability = None Text
       , dc = None { kind : Text }
       , onFail = None { kind : Text, damageType : Text, amount : DiceAmount }
@@ -125,6 +128,7 @@ let movementCost =
       , damageType = None Text
       , amount = None DiceAmount
       , multiplier = Some 4
+      , appliesTo = Some "any_movement"
       , ability = None Text
       , dc = None { kind : Text }
       , onFail = None { kind : Text, damageType : Text, amount : DiceAmount }
@@ -142,6 +146,7 @@ let blockSight =
       , damageType = None Text
       , amount = None DiceAmount
       , multiplier = None Natural
+      , appliesTo = None Text
       , ability = None Text
       , dc = None { kind : Text }
       , onFail = None { kind : Text, damageType : Text, amount : DiceAmount }
@@ -170,6 +175,7 @@ let recurringSave =
       , damageType = None Text
       , amount = None DiceAmount
       , multiplier = None Natural
+      , appliesTo = None Text
       , ability = Some "dex"
       , dc = Some { kind = "caster_spell_save_dc" }
       , onFail =
