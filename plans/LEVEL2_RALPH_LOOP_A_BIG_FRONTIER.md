@@ -133,25 +133,25 @@
     {
       "number": 22,
       "id": "L12G-SPELL-AID",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Aid Runtime Support"
     },
     {
       "number": 23,
       "id": "L12G-SPELL-ALTER-SELF",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Alter Self Runtime Support Or Closure"
     },
     {
       "number": 24,
       "id": "L12G-SPELL-ARCANE-LOCK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Arcane Lock Runtime-Detached Closure"
     },
     {
       "number": 25,
       "id": "L12G-SPELL-BARKSKIN",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Barkskin Runtime Support"
     },
     {
@@ -537,6 +537,24 @@
       "id": "L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT",
       "status": "ready-for-research",
       "title": "Acid Arrow Delayed Runtime Support"
+    },
+    {
+      "number": 90,
+      "id": "L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE",
+      "status": "ready-for-research",
+      "title": "Alter Self Surface Option Shape"
+    },
+    {
+      "number": 91,
+      "id": "L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Alter Self Aquatic Adaptation Runtime"
+    },
+    {
+      "number": 92,
+      "id": "L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Alter Self Natural Weapons Runtime"
     }
   ]
 }
@@ -632,7 +650,8 @@ use the repository MBT scarcity protocol.
 
 ## Included Work
 
-Loop A owns active/ready Tasks 22-36 and Acid Arrow follow-up Tasks 88-89.
+Loop A owns Tasks 22-36, Acid Arrow follow-up Tasks 88-89, and Alter Self
+follow-up Tasks 90-92.
 Tasks 1-21 are already done in this lane. Tasks 37-42 and 76-87 moved to
 `plans/LEVEL2_RALPH_LOOP_C_BIG_FRONTIER.md`, Tasks 43-58 moved to
 `plans/LEVEL2_RALPH_LOOP_B_BIG_FRONTIER.md`, and Tasks 59-75 moved to
@@ -732,6 +751,9 @@ language-access frontier.
 | 87 | 20b | `L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION` | `sorcerer_metamagic` |
 | 88 | 22a | `L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE` | `acid_arrow` |
 | 89 | 22b | `L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT` | `acid_arrow` |
+| 90 | 24a | `L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE` | `alter_self` |
+| 91 | 24b | `L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME` | `alter_self` |
+| 92 | 24c | `L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME` | `alter_self` |
 
 ## Follow-Up Dependencies
 
@@ -751,6 +773,9 @@ language-access frontier.
 | `L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION` | `L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS`, `L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS` | Cast-time Metamagic execution should consume known-option and shared Sorcery Point resource facts rather than creating a Metamagic-local point pool. |
 | `L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE` | `L12G-SPELL-ACID-ARROW` | Acid Arrow runtime support needs a lossless Spell Definition shape for initial, later, miss-only, and slot-scaling damage facts before runtime projection can consume the authored record. |
 | `L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT` | `L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE` | Delayed runtime support should consume the repaired Acid Arrow Spell Definition rather than duplicating or reinterpreting lossy authored damage state. |
+| `L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE` | `L12G-SPELL-ALTER-SELF` | Alter Self runtime support needs a lossless Spell Definition option shape for Aquatic Adaptation, Change Appearance, and the Natural Weapons growth and damage-type choices before runtime projection can consume the authored record. |
+| `L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME` | `L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE` | Aquatic Adaptation runtime should consume spell-owned option state, linked Speed projection, and Concentration cleanup from the repaired option shape rather than copying creature Speed into parallel spell state. |
+| `L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME` | `L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE`, `L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME` | Natural Weapons should build on the shared Alter Self mode-replacement and cleanup runtime while consuming the lossless Natural Weapons option facts instead of duplicating Unarmed Strike state. |
 
 ## Task Details
 
@@ -1327,7 +1352,7 @@ Acceptance:
 
 ### Task 22 - L12G-SPELL-AID - Aid Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `aid`. Gate task: 23 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -1354,7 +1379,7 @@ Acceptance:
 
 ### Task 23 - L12G-SPELL-ALTER-SELF - Alter Self Runtime Support Or Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `alter_self`. Gate task: 24 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -1381,7 +1406,7 @@ Acceptance:
 
 ### Task 24 - L12G-SPELL-ARCANE-LOCK - Arcane Lock Runtime-Detached Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `arcane_lock`. Gate task: 25 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -1408,7 +1433,7 @@ Acceptance:
 
 ### Task 25 - L12G-SPELL-BARKSKIN - Barkskin Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `barkskin`. Gate task: 26 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -3220,4 +3245,105 @@ Acceptance:
 - the delayed runtime support portion of `acid_arrow` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
 - runtime behavior traces to SRD Acid Arrow without homebrew extensions and consumes projected Spell Definition facts rather than storing redundant damage formulas;
 - no unrelated level-1 Loop D/L spell frontier work is implemented in this task;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.
+
+### Task 90 - L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE - Alter Self Surface Option Shape
+
+Status: `ready-for-research`
+
+Unit: `alter_self`. Follow-up split from Task 23.
+
+Dependency: Task 23 (`L12G-SPELL-ALTER-SELF`) done.
+
+Inputs:
+
+- `packages/surface/content/alter_self.json`;
+- `packages/surface/content/alter_self.dhall`;
+- the `alter_self` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Spells/Descriptions-A-D.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- Surface spell schema, Dhall generation, tracer, and focused tests for spell option/effect shapes.
+
+Outputs:
+
+- Alter Self authored content represents Aquatic Adaptation, Change Appearance, and Natural Weapons as lossless executable Spell Definition option facts;
+- Natural Weapons preserves the claws, fangs, horns, and hooves choice, the Slashing/Piercing/Bludgeoning damage-type mapping, the 1d6 damage die, and spellcasting-ability attack and damage replacement facts without duplicating Unarmed Strike state;
+- Aquatic Adaptation preserves water breathing and Swim Speed equal to Speed as linked projection facts, and Change Appearance remains a no-statistics-change presentation option;
+- schema/tracer support is updated only if the current Surface shape cannot represent those facts;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the Surface option-shape portion of `alter_self` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no battle-runtime Alter Self invocation, option switching, Aquatic Adaptation execution, or Natural Weapons Unarmed Strike execution is implemented in this task;
+- authored facts trace to SRD Alter Self without duplicating Spell Invocation, Spell Effect, creature Speed, or Unarmed Strike state;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 91 - L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME - Alter Self Aquatic Adaptation Runtime
+
+Status: `ready-for-research`
+
+Unit: `alter_self`. Follow-up split from Task 23.
+
+Dependency: Task 90 (`L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE`) done.
+
+Inputs:
+
+- `packages/surface/content/alter_self.json`;
+- the `alter_self` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Spells/Descriptions-A-D.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- battle-runtime self-transformation spell invocation/effect lifecycle, Unit profile, owner-evidence, and focused tests for Alter Self mode state and Aquatic Adaptation execution.
+
+Outputs:
+
+- profile-subset-supported runtime profile and owner evidence for Alter Self casting, spell-owned option state, Magic Action mode replacement, and Concentration cleanup;
+- Aquatic Adaptation grants water breathing and a Swim Speed equal to current Speed through linked Speed projection rather than copied spell-local Speed state;
+- Change Appearance is closed as runtime-detached presentation with no statistics mutation;
+- Natural Weapons remains visible as a separate runtime follow-up instead of being partially implemented here;
+- Quint/runtime parity updates if promoted battle-runtime behavior changes;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the Aquatic Adaptation and shared mode-lifecycle portion of `alter_self` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no Natural Weapons Unarmed Strike attack, damage, damage-type, or spellcasting-ability replacement behavior is implemented in this task;
+- runtime behavior traces to SRD Alter Self without homebrew extensions and consumes projected Spell Definition facts rather than duplicating creature Speed or option state;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.
+
+### Task 92 - L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME - Alter Self Natural Weapons Runtime
+
+Status: `ready-for-research`
+
+Unit: `alter_self`. Follow-up split from Task 23.
+
+Dependency: Tasks 90 (`L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE`) and 91 (`L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME`) done.
+
+Inputs:
+
+- `packages/surface/content/alter_self.json`;
+- the `alter_self` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Spells/Descriptions-A-D.md` and `.references/srd-5.2.1/Rules-Glossary.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- battle-runtime self-transformation spell invocation/effect lifecycle, character-battle-runtime Unarmed Strike projection, Unit profile, owner-evidence, and focused tests for Natural Weapons execution.
+
+Outputs:
+
+- supported runtime profile and owner evidence for Natural Weapons as a spell-owned Unarmed Strike override;
+- execution uses the chosen claws, fangs, horns, or hooves damage type, deals 1d6 damage instead of normal Unarmed Strike damage, uses the caster's spellcasting ability for attack and damage rolls, and cleans up on Concentration end;
+- runtime consumes the repaired Natural Weapons Spell Definition facts and shared Alter Self mode-lifecycle support instead of duplicating Unarmed Strike or spell option state;
+- Quint/runtime parity updates if promoted battle-runtime behavior changes;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the Natural Weapons runtime portion of `alter_self` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no unrelated Aquatic Adaptation, Change Appearance, or level-1 Loop D/L spell frontier work is implemented in this task;
+- runtime behavior traces to SRD Alter Self and Unarmed Strike terminology without homebrew extensions and consumes projected Spell Definition facts rather than storing redundant Unarmed Strike formulas;
 - focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.

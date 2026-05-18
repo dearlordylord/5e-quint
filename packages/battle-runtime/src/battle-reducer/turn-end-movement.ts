@@ -66,6 +66,7 @@ import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-s
 
 import {
   applyStartTurnDeathSavingThrow,
+  applyHitPointMaximumIncreaseExpiration,
   applyTemporaryHitPoints,
   breakCombatantConcentration,
   concentrationSavingThrowHole,
@@ -2056,7 +2057,7 @@ export function tickDurationEffects(
         } as BattleActiveEffect;
         activeEffects.push(ticked);
       }
-      const nextCombatant: BattleCreatureState =
+      const nextCombatantBase: BattleCreatureState =
         combatant.positiveHpUnconscious === null
           ? {
               ...combatant,
@@ -2068,6 +2069,10 @@ export function tickDurationEffects(
               ),
             }
           : { ...combatant, activeEffects };
+      const nextCombatant = applyHitPointMaximumIncreaseExpiration(
+        nextCombatantBase,
+        expiring,
+      );
       return [id, nextCombatant];
     }),
   );
@@ -2158,7 +2163,7 @@ function expireConcentrationDurationSource(
         id === source.combatantId &&
         combatant.concentration?.effectKind === "spellEffect" &&
         combatant.concentration.sourceSpellId === source.sourceSpellId;
-      const nextCombatant: BattleCreatureState =
+      const nextCombatantBase: BattleCreatureState =
         combatant.positiveHpUnconscious === null
           ? {
               ...combatant,
@@ -2179,6 +2184,10 @@ function expireConcentrationDurationSource(
                 : combatant.concentration,
               activeEffects,
             };
+      const nextCombatant = applyHitPointMaximumIncreaseExpiration(
+        nextCombatantBase,
+        expiring,
+      );
       return [id, nextCombatant];
     }),
   );
@@ -2194,7 +2203,7 @@ export function expireActiveEffects(
       const activeEffects = combatant.activeEffects.filter(
         (effect) => !shouldExpire(effect),
       );
-      const nextCombatant: BattleCreatureState =
+      const nextCombatantBase: BattleCreatureState =
         combatant.positiveHpUnconscious === null
           ? {
               ...combatant,
@@ -2206,6 +2215,10 @@ export function expireActiveEffects(
               ),
             }
           : { ...combatant, activeEffects };
+      const nextCombatant = applyHitPointMaximumIncreaseExpiration(
+        nextCombatantBase,
+        expiring,
+      );
       return [id, nextCombatant];
     }),
   );

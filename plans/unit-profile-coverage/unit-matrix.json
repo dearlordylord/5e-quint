@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 374,
-      "numerator": 144,
-      "percent": "38.5%"
+      "numerator": 146,
+      "percent": "39%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 446,
-      "numerator": 176,
-      "percent": "39.5%"
+      "numerator": 178,
+      "percent": "39.9%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 177
+      "value": 179
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 113,
-      "numerator": 113,
+      "denominator": 115,
+      "numerator": 115,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 177,
-      "numerator": 177,
+      "denominator": 179,
+      "numerator": 179,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -92,9 +92,9 @@
       "percent": "27.9%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 113,
+      "denominator": 115,
       "numerator": 40,
-      "percent": "35.4%"
+      "percent": "34.8%"
     },
     "runtimeMappingCoverage": {
       "denominator": 65,
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 113,
+      "denominator": 115,
       "numerator": 104,
-      "percent": "92%"
+      "percent": "90.4%"
     },
     "supportedProfileCoverage": {
-      "denominator": 145,
-      "numerator": 113,
-      "percent": "77.9%"
+      "denominator": 147,
+      "numerator": 115,
+      "percent": "78.2%"
     }
   },
   "metricSemantics": [
@@ -2152,9 +2152,11 @@
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
       "taskRefs": [
-        "SRDINV30A"
+        "SRDINV30A",
+        "L12G-SPELL-AID",
+        "L12G-SPELL-BARKSKIN"
       ],
-      "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, or Armor Class effects",
+      "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class bonus/floor, or Hit Point maximum effects",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -3253,9 +3255,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 113,
+          "denominator": 115,
           "numerator": 40,
-          "percent": "35.4%"
+          "percent": "34.8%"
         }
       },
       "units": [
@@ -3296,6 +3298,18 @@
             }
           ],
           "unitId": "acid_splash"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.scalar-buff",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "aid"
         },
         {
           "joinStatus": "unmapped",
@@ -3456,6 +3470,18 @@
             }
           ],
           "unitId": "bard_jack_of_all_trades"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.scalar-buff",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "barkskin"
         },
         {
           "joinStatus": "unmapped",
@@ -5840,7 +5866,7 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Promoted battle-runtime Quint facts for scalar buff spells: self Temporary Hit Points, timed Speed increase, and concentration Armor Class bonus.",
+      "note": "Promoted battle-runtime Quint facts for scalar buff spells: self Temporary Hit Points, timed Speed increase, concentration Armor Class bonus, and timed Hit Point maximum increase.",
       "profileIds": [
         "spell.scalar-buff"
       ],
@@ -5848,11 +5874,35 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime admission and reducer tests for False Life, Longstrider, and Shield of Faith scalar buff spells.",
+      "note": "Focused battle-runtime admission and reducer tests for False Life, Longstrider, Shield of Faith, and Aid scalar buff spells.",
       "profileIds": [
         "spell.scalar-buff"
       ],
       "taskId": "SRDINV30A"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests for Aid's up-to-three target timed Hit Point maximum and current Hit Point increase, slot scaling, and duration cleanup.",
+      "profileIds": [
+        "spell.scalar-buff"
+      ],
+      "taskId": "L12G-SPELL-AID"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Barkskin's Bonus Action scalar buff profile, non-Concentration one-hour Armor Class floor active effect, floor derivation, no lowering higher Armor Class values, and duration cleanup.",
+      "profileIds": [
+        "spell.scalar-buff"
+      ],
+      "taskId": "L12G-SPELL-BARKSKIN"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover Barkskin catalog admission, known-willing touched-creature target gate, Spell Slot spend, Armor Class floor 17 derivation, no lowering higher Armor Class values, and duration cleanup.",
+      "profileIds": [
+        "spell.scalar-buff"
+      ],
+      "taskId": "L12G-SPELL-BARKSKIN"
     },
     {
       "claimKind": "qnt-proof",
@@ -11637,6 +11687,62 @@
       },
       "claim": {
         "profileIds": [
+          "spell.scalar-buff"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-SPELL-AID"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.scalar-buff",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV30A",
+            "L12G-SPELL-AID",
+            "L12G-SPELL-BARKSKIN"
+          ],
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class bonus/floor, or Hit Point maximum effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/aid.json",
+      "unitId": "aid"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
           "spell.creature-type-protection-and-charm"
         ],
         "rawRequirementIds": [
@@ -11693,6 +11799,69 @@
       ],
       "sourceRecordPath": "packages/surface/content/animal_friendship.json",
       "unitId": "animal_friendship"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "spell.scalar-buff"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Bonus Action level-2 Spell Slot casting",
+          "one touched willing-creature target through the known-willing scalar-buff target boundary",
+          "one-hour source-owned Armor Class floor of 17 derived through ArmorClassState floors",
+          "Armor Class floor composes after base Armor Class and bonuses and does not lower higher Armor Class values",
+          "maximum-duration expiration removes the Armor Class floor without duplicating Armor Class state"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-SPELL-BARKSKIN"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.scalar-buff",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV30A",
+            "L12G-SPELL-AID",
+            "L12G-SPELL-BARKSKIN"
+          ],
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class bonus/floor, or Hit Point maximum effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/barkskin.json",
+      "unitId": "barkskin"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -13149,9 +13318,11 @@
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
           "taskRefs": [
-            "SRDINV30A"
+            "SRDINV30A",
+            "L12G-SPELL-AID",
+            "L12G-SPELL-BARKSKIN"
           ],
-          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, or Armor Class effects",
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class bonus/floor, or Hit Point maximum effects",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -14376,9 +14547,11 @@
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
           "taskRefs": [
-            "SRDINV30A"
+            "SRDINV30A",
+            "L12G-SPELL-AID",
+            "L12G-SPELL-BARKSKIN"
           ],
-          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, or Armor Class effects",
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class bonus/floor, or Hit Point maximum effects",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -16370,9 +16543,11 @@
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
           "taskRefs": [
-            "SRDINV30A"
+            "SRDINV30A",
+            "L12G-SPELL-AID",
+            "L12G-SPELL-BARKSKIN"
           ],
-          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, or Armor Class effects",
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class bonus/floor, or Hit Point maximum effects",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -17480,24 +17655,6 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/aid.json",
-      "unitId": "aid"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
       "claim": {
         "battleReadinessClosure": {
           "kind": "outside-runtime-presentation-exploration",
@@ -17544,6 +17701,35 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE",
+            "mechanic": "Replace the lossy Natural Weapons placeholder with a lossless SRD Surface shape for claws, fangs, horns, and hooves, preserving the Slashing, Piercing, and Bludgeoning cast-time damage-type choice and the spellcasting-ability attack and damage replacement facts without duplicating Unarmed Strike state.",
+            "owner": "surface Spell Definition authoring",
+            "requiredOutput": "Alter Self Dhall/JSON content, and schema/tracer support if needed, represent Aquatic Adaptation, Change Appearance, and Natural Weapons as executable option facts, with Natural Weapons carrying the chosen natural growth, damage type, d6 damage die, and spellcasting-ability replacement facts.",
+            "title": "Alter Self Surface Option Shape"
+          },
+          {
+            "id": "L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME",
+            "mechanic": "Promote the spell-owned Alter Self option state, Magic-action mode replacement, Concentration cleanup, Aquatic Adaptation water breathing, and linked Swim Speed equal to Speed without copying creature Speed into parallel spell state; keep Change Appearance as runtime-detached presentation facts with no statistic mutation.",
+            "owner": "battle-runtime self-transformation spell invocation/effect lifecycle",
+            "requiredOutput": "Profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Alter Self casting, mode replacement, water breathing, linked Swim Speed projection, Concentration cleanup, Change Appearance closure, and a separate Natural Weapons runtime task.",
+            "title": "Alter Self Aquatic Adaptation Runtime"
+          },
+          {
+            "id": "L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME",
+            "mechanic": "After the Surface option shape and shared mode-replacement runtime are present, promote Natural Weapons as a spell-owned Unarmed Strike override that uses the chosen damage type, deals 1d6 damage instead of the normal Unarmed Strike damage, uses the caster's spellcasting ability for attack and damage rolls, and cleans up on Concentration end.",
+            "owner": "battle-runtime self-transformation spell invocation/effect lifecycle plus character-battle-runtime Unarmed Strike projection",
+            "requiredOutput": "Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Natural Weapons Unarmed Strike attack and damage projection, damage-type choice, spellcasting-ability replacement, mode replacement, and cleanup.",
+            "title": "Alter Self Natural Weapons Runtime"
+          }
+        ],
+        "futureProfileOwner": "surface Spell Definition authoring plus battle-runtime self-transformation spell invocation/effect lifecycle plus character-battle-runtime Unarmed Strike projection",
+        "reason": "Alter Self is authored as an SRD Surface Spell Definition with self-targeted Aquatic Adaptation, Change Appearance, and Natural Weapons modes, but Task 23 claims no battle-runtime support because the executable modes require spell-owned option state and the Natural Weapons authored shape is not lossless. Change Appearance changes presentation without changing statistics and remains runtime-detached table/appearance adjudication; Aquatic Adaptation and Natural Weapons remain blocked by the concrete follow-up tasks listed on this claim.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -17670,6 +17856,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached object/table owner",
+          "reason": "Object lock state, designated opener and passcode/password handling, the one-minute password unlock window, nonmagical-unlock prevention, magic-suppression interaction for the object-attached lock, and any forced-entry Difficulty Class adjudication are object/table facts outside promoted battle runtime; local SRD 5.2.1 Arcane Lock does not define a forced-entry DC mechanic."
+        },
+        "reason": "Arcane Lock is authored as an SRD Surface Spell Definition for a touched closeable object, but its operative facts are durable object/table state: the locked object identity, designated-creature bypass, optional passcode/password, one-minute password unlock window, nonmagical-unlock prevention, magic-suppression interaction for the object-attached lock, and any forced-entry Difficulty Class adjudication are outside promoted battle Unit profiles. Local SRD 5.2.1 Arcane Lock does not define a forced-entry DC runtime mechanic.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -18096,24 +18292,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/bard_words_of_creation.json",
       "unitId": "bard_words_of_creation"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/barkskin.json",
-      "unitId": "barkskin"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

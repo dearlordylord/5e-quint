@@ -1,8 +1,13 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30A false_life longstrider shield_of_faith
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30D heroism
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-AID aid
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-BARKSKIN barkskin
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.scalar-buff spell.invocation-condition-immunity-turn-start-temporary-hit-points
+import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { describe, expect, test } from "vitest";
 import {
+  aidUnitId,
+  barkskinUnitId,
   falseLifeUnitId,
   heroismUnitId,
   longstriderUnitId,
@@ -17,6 +22,7 @@ import {
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   bonusSpellAct,
+  knownWillingSpellTargetFill,
   spellAct,
   spellHoleInvocation,
   spellTargetFill,
@@ -27,6 +33,7 @@ import {
   applyCondition,
   combatantId,
   DieRollResult,
+  Hp,
   elapsedTimeTicks,
   endTurn,
   holeId,
@@ -361,6 +368,468 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
         ],
       },
     });
+  });
+
+  test("barkskin is admitted as a Bonus Action timed willing-target Armor Class floor", () => {
+    const spell = spellRecord(barkskinUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = bonusSpellAct({ state, spellId: barkskinUnitId });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+
+    expect(act.subject).toEqual({
+      tag: "bonusActionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(barkskinUnitId, 2, "scalarBuff"),
+      mode: { tag: "cast" },
+    });
+    expect(targetHole.choices).toEqual([spellCasterId]);
+
+    const unwillingTarget = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(
+          targetHole,
+          barkskinUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+      ],
+    });
+    expect(unwillingTarget).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          targetHole,
+          barkskinUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+      ],
+    });
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.objectContaining({
+            combatantId: spellCasterId,
+            concentrating: false,
+          }),
+          expect.objectContaining({
+            combatantId: spellTargetId,
+            armorClass: 17,
+          }),
+        ],
+      },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Barkskin to resolve.");
+    }
+
+    const target = resolved.state.combatants.get(spellTargetId);
+    if (target === undefined) {
+      throw new Error("Expected Barkskin target.");
+    }
+    expect(
+      target.activeEffects.filter(
+        (effect) =>
+          effect.kind === "spellArmorClassFloor" &&
+          effect.sourceSpellId === barkskinUnitId,
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        sourceCombatantId: spellCasterId,
+        floor: 17,
+        expiresAt: expect.objectContaining({ kind: "duration" }),
+      }),
+    ]);
+    const nearlyExpiredTarget = {
+      ...target,
+      activeEffects: target.activeEffects.map((effect) =>
+        effect.kind === "spellArmorClassFloor" &&
+        effect.sourceSpellId === barkskinUnitId
+          ? {
+              ...effect,
+              expiresAt: {
+                kind: "duration" as const,
+                durationTicks: elapsedTimeTicks(1),
+              },
+            }
+          : effect,
+      ),
+    };
+    const oneRoundRemaining: BattleState = {
+      ...resolved.state,
+      combatants: new Map(resolved.state.combatants).set(
+        spellTargetId,
+        nearlyExpiredTarget,
+      ),
+    };
+    const targetTurn = endTurn({
+      state: oneRoundRemaining,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected Barkskin caster end turn to resolve.");
+    }
+    const nextRound = endTurn({
+      state: targetTurn.state,
+      actorId: spellTargetId,
+    });
+
+    expect(nextRound).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.anything(),
+          expect.objectContaining({
+            combatantId: spellTargetId,
+            armorClass: 10,
+          }),
+        ],
+      },
+    });
+  });
+
+  test("barkskin does not lower a target whose Armor Class is already 17 or higher", () => {
+    const spell = spellRecord(barkskinUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      targetArmorClass: {
+        ...defaultArmorClassState(),
+        base: {
+          kind: "armor",
+          category: "heavy",
+          formula: { kind: "heavy_fixed", ac: 18 },
+        },
+        armorTraining: new Set(["heavy" as const]),
+      },
+    });
+    const act = bonusSpellAct({ state, spellId: barkskinUnitId });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          targetHole,
+          barkskinUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.anything(),
+          expect.objectContaining({
+            combatantId: spellTargetId,
+            armorClass: 18,
+          }),
+        ],
+      },
+    });
+  });
+
+  test("aid is admitted as timed maximum and current Hit Point increases for up to three targets", () => {
+    const spell = spellRecord(aidUnitId);
+    const secondTargetId = combatantId("unit-profile-aid-target-2");
+    const thirdTargetId = combatantId("unit-profile-aid-target-3");
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+      targetHp: 7,
+      targetMaxHp: 12,
+      extraTargetIds: [secondTargetId, thirdTargetId],
+    });
+    const act = spellAct({ state, spellId: aidUnitId, slotLevel: 3 });
+    const targetListHole = requireHole(act.initialHoles, "spellTargetList");
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(aidUnitId, 3, "scalarBuff"),
+      mode: { tag: "cast" },
+    });
+    expect(targetListHole).toEqual(
+      expect.objectContaining({ minTargets: 1, maxTargets: 3 }),
+    );
+    expect(spellHoleInvocation([targetListHole])).toEqual(
+      expect.objectContaining({
+        procedure: "scalarBuff",
+        effect: {
+          kind: "hitPointMaximumIncrease",
+          activeEffect: expect.objectContaining({
+            kind: "hitPointMaximumIncrease",
+            sourceSpellId: aidUnitId,
+            amount: 10,
+            expiresAt: expect.objectContaining({ kind: "duration" }),
+          }),
+        },
+      }),
+    );
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetListFill(targetListHole, spellCasterId, aidUnitId, [
+          spellTargetId,
+          secondTargetId,
+          thirdTargetId,
+        ]),
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.anything(),
+          expect.objectContaining({
+            combatantId: spellTargetId,
+            hp: 17,
+            maxHp: 22,
+            tempHp: 0,
+          }),
+          expect.objectContaining({
+            combatantId: secondTargetId,
+            hp: 22,
+            maxHp: 22,
+            tempHp: 0,
+          }),
+          expect.objectContaining({
+            combatantId: thirdTargetId,
+            hp: 22,
+            maxHp: 22,
+            tempHp: 0,
+          }),
+        ],
+      },
+    });
+  });
+
+  test("aid expiration removes the maximum Hit Point bonus and subtracts the current Hit Point increase", () => {
+    const spell = spellRecord(aidUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      targetHp: 7,
+      targetMaxHp: 12,
+    });
+    const act = spellAct({ state, spellId: aidUnitId, slotLevel: 2 });
+    const targetListHole = requireHole(act.initialHoles, "spellTargetList");
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetListFill(targetListHole, spellCasterId, aidUnitId, [
+          spellTargetId,
+        ]),
+      ],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Aid to resolve.");
+    }
+    const target = resolved.state.combatants.get(spellTargetId);
+    if (target === undefined) {
+      throw new Error("Expected Aid target.");
+    }
+    const nearlyExpiredTarget = {
+      ...target,
+      activeEffects: target.activeEffects.map((effect) =>
+        effect.kind === "hitPointMaximumIncrease" &&
+        effect.sourceSpellId === aidUnitId
+          ? {
+              ...effect,
+              expiresAt: {
+                kind: "duration" as const,
+                durationTicks: elapsedTimeTicks(1),
+              },
+            }
+          : effect,
+      ),
+    };
+    const oneRoundRemaining = {
+      ...resolved.state,
+      combatants: new Map(resolved.state.combatants).set(
+        spellTargetId,
+        nearlyExpiredTarget,
+      ),
+    };
+    const targetTurn = endTurn({
+      state: oneRoundRemaining,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected Aid caster end turn to resolve.");
+    }
+    const nextRound = endTurn({
+      state: targetTurn.state,
+      actorId: spellTargetId,
+    });
+
+    expect(nextRound).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.anything(),
+          expect.objectContaining({
+            combatantId: spellTargetId,
+            hp: 7,
+            maxHp: 12,
+            tempHp: 0,
+          }),
+        ],
+      },
+    });
+    if (nextRound.tag !== "resolved") {
+      throw new Error("Expected Aid duration expiration to resolve.");
+    }
+    const expiredTarget = nextRound.state.combatants.get(spellTargetId);
+    expect(
+      expiredTarget?.activeEffects.some(
+        (effect) =>
+          effect.kind === "hitPointMaximumIncrease" &&
+          effect.sourceSpellId === aidUnitId,
+      ),
+    ).toBe(false);
+  });
+
+  test("aid lower-slot recast waits under a stronger overlapping maximum Hit Point increase", () => {
+    const spell = spellRecord(aidUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      targetHp: 7,
+      targetMaxHp: 12,
+    });
+    const target = state.combatants.get(spellTargetId);
+    if (target === undefined) {
+      throw new Error("Expected Aid target.");
+    }
+    const priorCasterId = combatantId("unit-profile-prior-aid-caster");
+    const stateWithStrongerAid: BattleState = {
+      ...state,
+      combatants: new Map(state.combatants).set(spellTargetId, {
+        ...target,
+        hp: Hp(17),
+        positiveHpUnconscious: null,
+        activeEffects: [
+          ...target.activeEffects,
+          {
+            kind: "hitPointMaximumIncrease",
+            sourceSpellId: aidUnitId,
+            sourceCombatantId: priorCasterId,
+            amount: 10,
+            expiresAt: {
+              kind: "duration",
+              durationTicks: elapsedTimeTicks(1),
+            },
+          },
+        ],
+      }),
+    };
+    const act = spellAct({
+      state: stateWithStrongerAid,
+      spellId: aidUnitId,
+      slotLevel: 2,
+    });
+    const targetListHole = requireHole(act.initialHoles, "spellTargetList");
+
+    const resolved = resolveBattleSubject({
+      state: stateWithStrongerAid,
+      subject: act.subject,
+      fills: [
+        spellTargetListFill(targetListHole, spellCasterId, aidUnitId, [
+          spellTargetId,
+        ]),
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.anything(),
+          expect.objectContaining({
+            combatantId: spellTargetId,
+            hp: 17,
+            maxHp: 22,
+            tempHp: 0,
+          }),
+        ],
+      },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Aid lower-slot recast to resolve.");
+    }
+    const aidEffects =
+      resolved.state.combatants
+        .get(spellTargetId)
+        ?.activeEffects.filter(
+          (effect) =>
+            effect.kind === "hitPointMaximumIncrease" &&
+            effect.sourceSpellId === aidUnitId,
+        ) ?? [];
+    expect(aidEffects).toEqual([
+      expect.objectContaining({ amount: 10, sourceCombatantId: priorCasterId }),
+      expect.objectContaining({ amount: 5, sourceCombatantId: spellCasterId }),
+    ]);
+
+    const targetTurn = endTurn({
+      state: resolved.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected Aid caster end turn to resolve.");
+    }
+    const afterStrongerAidExpires = endTurn({
+      state: targetTurn.state,
+      actorId: spellTargetId,
+    });
+    expect(afterStrongerAidExpires).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.anything(),
+          expect.objectContaining({
+            combatantId: spellTargetId,
+            hp: 12,
+            maxHp: 17,
+            tempHp: 0,
+          }),
+        ],
+      },
+    });
+    if (afterStrongerAidExpires.tag !== "resolved") {
+      throw new Error("Expected stronger Aid duration expiration to resolve.");
+    }
+    const remainingAidEffects =
+      afterStrongerAidExpires.state.combatants
+        .get(spellTargetId)
+        ?.activeEffects.filter(
+          (effect) =>
+            effect.kind === "hitPointMaximumIncrease" &&
+            effect.sourceSpellId === aidUnitId,
+        ) ?? [];
+    expect(remainingAidEffects).toEqual([
+      expect.objectContaining({ amount: 5, sourceCombatantId: spellCasterId }),
+    ]);
   });
 });
 

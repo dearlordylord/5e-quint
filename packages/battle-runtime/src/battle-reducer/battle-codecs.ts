@@ -1428,6 +1428,7 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
           kind: Schema.Literal("targetList"),
           minTargets: Schema.Literal(1),
           maxTargets: Schema.Number,
+          requiredTargetDisposition: Schema.Literal("unrestricted", "willing"),
         }),
       ),
       effect: Schema.Union(
@@ -1439,6 +1440,10 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
         }),
         Schema.Struct({
           kind: Schema.Literal("activeEffect"),
+          activeEffect: BattleRuntimeObjectSchema,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("hitPointMaximumIncrease"),
           activeEffect: BattleRuntimeObjectSchema,
         }),
       ),

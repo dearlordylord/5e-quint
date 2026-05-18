@@ -41,85 +41,6 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
-      "sourceRecordPath": "packages/surface/content/aid.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Bard spell list Aid",
-          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_aid",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 190,
-            "lineStart": 190,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Cleric spell list Aid",
-          "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_aid",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 182,
-            "lineStart": 182,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Druid spell list Aid",
-          "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_aid",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 227,
-            "lineStart": 227,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Paladin spell list Aid",
-          "id": "srd521:classes/paladin:spell-level-2:spell-unit-pressure:paladin_spell_list_aid",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 194,
-            "lineStart": 194,
-            "path": ".references/srd-5.2.1/Classes/Paladin.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Ranger spell list Aid",
-          "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_aid",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 182,
-            "lineStart": 182,
-            "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
-        }
-      ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
-      "unitId": "aid"
-    },
-    {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
       "claimTag": "unsupported-profile",
       "closureKinds": [
         "outside-runtime-presentation-exploration"
@@ -166,11 +87,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE: Replace the lossy Natural Weapons placeholder with a lossless SRD Surface shape for claws, fangs, horns, and hooves, preserving the Slashing, Piercing, and Bludgeoning cast-time damage-type choice and the spellcasting-ability attack and damage replacement facts without duplicating Unarmed Strike state. Owner: surface Spell Definition authoring. Required output: Alter Self Dhall/JSON content, and schema/tracer support if needed, represent Aquatic Adaptation, Change Appearance, and Natural Weapons as executable option facts, with Natural Weapons carrying the chosen natural growth, damage type, d6 damage die, and spellcasting-ability replacement facts.; L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME: Promote the spell-owned Alter Self option state, Magic-action mode replacement, Concentration cleanup, Aquatic Adaptation water breathing, and linked Swim Speed equal to Speed without copying creature Speed into parallel spell state; keep Change Appearance as runtime-detached presentation facts with no statistic mutation. Owner: battle-runtime self-transformation spell invocation/effect lifecycle. Required output: Profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Alter Self casting, mode replacement, water breathing, linked Swim Speed projection, Concentration cleanup, Change Appearance closure, and a separate Natural Weapons runtime task.; L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME: After the Surface option shape and shared mode-replacement runtime are present, promote Natural Weapons as a spell-owned Unarmed Strike override that uses the chosen damage type, deals 1d6 damage instead of the normal Unarmed Strike damage, uses the caster's spellcasting ability for attack and damage rolls, and cleans up on Concentration end. Owner: battle-runtime self-transformation spell invocation/effect lifecycle plus character-battle-runtime Unarmed Strike projection. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Natural Weapons Unarmed Strike attack and damage projection, damage-type choice, spellcasting-ability replacement, mode replacement, and cleanup.",
       "sourceRecordPath": "packages/surface/content/alter_self.json",
       "sourceRows": [
         {
@@ -198,8 +122,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
       "unitId": "alter_self"
     },
     {
@@ -209,11 +133,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "Object lock state, designated opener and passcode/password handling, the one-minute password unlock window, nonmagical-unlock prevention, magic-suppression interaction for the object-attached lock, and any forced-entry Difficulty Class adjudication are object/table facts outside promoted battle runtime; local SRD 5.2.1 Arcane Lock does not define a forced-entry DC mechanic.",
       "sourceRecordPath": "packages/surface/content/arcane_lock.json",
       "sourceRows": [
         {
@@ -229,8 +156,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
       "unitId": "arcane_lock"
     },
     {
@@ -290,49 +217,6 @@
       "status": "closed-later-level-only",
       "strictTargetClosed": true,
       "unitId": "bard_expertise"
-    },
-    {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
-      "sourceRecordPath": "packages/surface/content/barkskin.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Druid spell list Barkskin",
-          "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_barkskin",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 230,
-            "lineStart": 230,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Ranger spell list Barkskin",
-          "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_barkskin",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 184,
-            "lineStart": 184,
-            "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
-        }
-      ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
-      "unitId": "barkskin"
     },
     {
       "catalogDisposition": {
@@ -2654,11 +2538,12 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 90,
+      "count": 92,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
         "acid_splash",
+        "aid",
         "animal_friendship",
         "bane",
         "barbarian_danger_sense",
@@ -2667,6 +2552,7 @@
         "barbarian_unarmored_defense",
         "bard_bardic_inspiration",
         "bard_jack_of_all_trades",
+        "barkskin",
         "bless",
         "burning_hands",
         "chill_touch",
@@ -2751,14 +2637,10 @@
       ]
     },
     {
-      "count": 30,
+      "count": 26,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
-        "aid",
-        "alter_self",
-        "arcane_lock",
-        "barkskin",
         "blindness_deafness",
         "blur",
         "continual_flame",
@@ -2788,11 +2670,12 @@
       ]
     },
     {
-      "count": 11,
+      "count": 12,
       "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
         "alarm",
+        "arcane_lock",
         "charm_person",
         "comprehend_languages",
         "detect_evil_and_good",
@@ -2806,11 +2689,12 @@
       ]
     },
     {
-      "count": 6,
+      "count": 7,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
         "acid_arrow",
+        "alter_self",
         "druid_wild_shape",
         "monk_monks_focus",
         "monk_uncanny_metabolism",
@@ -2852,12 +2736,12 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 475,
-      "percent": "85.4%",
+      "numerator": 473,
+      "percent": "85.1%",
       "rowsByStatus": {
-        "accepted": 297,
-        "accepted-no-battle-effect": 178,
-        "battle-runtime-required": 77,
+        "accepted": 304,
+        "accepted-no-battle-effect": 169,
+        "battle-runtime-required": 79,
         "owner-evidence-required": 4
       }
     },
@@ -2872,31 +2756,27 @@
       "percent": "23.9%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 90,
+      "denominator": 92,
       "numerator": 29,
-      "percent": "32.2%"
+      "percent": "31.5%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 146,
-      "numerator": 90,
-      "percent": "61.6%"
+      "numerator": 92,
+      "percent": "63%"
     },
     "strictTargetClosure": {
       "denominator": 146,
-      "numerator": 115,
-      "percent": "78.8%"
+      "numerator": 119,
+      "percent": "81.5%"
     }
   },
   "openFrontier": [
     {
-      "count": 30,
+      "count": 26,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
-        "aid",
-        "alter_self",
-        "arcane_lock",
-        "barkskin",
         "blindness_deafness",
         "blur",
         "continual_flame",
@@ -6385,9 +6265,9 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 90,
+        "denominator": 92,
         "numerator": 29,
-        "percent": "32.2%"
+        "percent": "31.5%"
       }
     },
     "units": [
@@ -6428,6 +6308,18 @@
           }
         ],
         "unitId": "acid_splash"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.scalar-buff",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "aid"
       },
       {
         "joinStatus": "unmapped",
@@ -6551,6 +6443,18 @@
           }
         ],
         "unitId": "bard_jack_of_all_trades"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.scalar-buff",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "barkskin"
       },
       {
         "joinStatus": "unmapped",
@@ -8130,21 +8034,21 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
-      "missing": 30,
+      "missing": 26,
       "profile-subset-supported": 9,
-      "supported-profile": 90,
-      "unsupported-profile": 17
+      "supported-profile": 92,
+      "unsupported-profile": 19
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 6,
+      "blocked-follow-up-split": 7,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 6,
-      "closed-runtime-detached-table-adjudication": 11,
+      "closed-runtime-detached-table-adjudication": 12,
       "open-profile-accounting": 1,
-      "open-runtime-behavior": 30,
-      "supported-profile": 90
+      "open-runtime-behavior": 26,
+      "supported-profile": 92
     },
-    "nonSupportedFrontier": 56,
+    "nonSupportedFrontier": 54,
     "strictDenominator": 146
   }
 }

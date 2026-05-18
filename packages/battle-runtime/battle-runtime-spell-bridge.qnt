@@ -80,13 +80,17 @@ module battleRuntimeSpellBridge {
     | BattleRuntimeFalseLifeScalarBuff
     | BattleRuntimeLongstriderScalarBuff
     | BattleRuntimeShieldOfFaithScalarBuff
+    | BattleRuntimeBarkskinScalarBuff
     | BattleRuntimeHeroismScalarBuff
+    | BattleRuntimeAidScalarBuff
 
   type BattleRuntimeScalarBuffEffect =
     | BattleRuntimeLongstriderSpeedIncreaseEffect
     | BattleRuntimeShieldOfFaithArmorClassBonusEffect
+    | BattleRuntimeBarkskinArmorClassFloorEffect
     | BattleRuntimeHeroismFrightenedImmunityEffect
     | BattleRuntimeHeroismTurnStartTemporaryHitPointsEffect({ amount: int })
+    | BattleRuntimeAidHitPointMaximumIncreaseEffect({ amount: int })
 
   type BattleRuntimeDamageRiderSpellProfile =
     | BattleRuntimeDivineFavorWeaponDamageRider
@@ -358,7 +362,9 @@ module battleRuntimeSpellBridge {
       | BattleRuntimeFalseLifeScalarBuff => FalseLifeScalarBuffProfile
       | BattleRuntimeLongstriderScalarBuff => LongstriderScalarBuffProfile
       | BattleRuntimeShieldOfFaithScalarBuff => ShieldOfFaithScalarBuffProfile
+      | BattleRuntimeBarkskinScalarBuff => BarkskinScalarBuffProfile
       | BattleRuntimeHeroismScalarBuff => HeroismScalarBuffProfile
+      | BattleRuntimeAidScalarBuff => AidScalarBuffProfile
     }
 
   pure def battleRuntimeScalarBuffUsesBonusAction(profile: BattleRuntimeScalarBuffProfile): bool =
@@ -378,15 +384,18 @@ module battleRuntimeSpellBridge {
     match effect {
       | LongstriderSpeedIncreaseEffect => BattleRuntimeLongstriderSpeedIncreaseEffect
       | ShieldOfFaithArmorClassBonusEffect => BattleRuntimeShieldOfFaithArmorClassBonusEffect
+      | BarkskinArmorClassFloorEffect => BattleRuntimeBarkskinArmorClassFloorEffect
       | HeroismFrightenedImmunityEffect => BattleRuntimeHeroismFrightenedImmunityEffect
       | HeroismTurnStartTemporaryHitPointsEffect(data) => BattleRuntimeHeroismTurnStartTemporaryHitPointsEffect(data)
+      | AidHitPointMaximumIncreaseEffect(data) => BattleRuntimeAidHitPointMaximumIncreaseEffect(data)
     }
 
   pure def battleRuntimeScalarBuffEffects(
     profile: BattleRuntimeScalarBuffProfile,
-    spellcastingAbilityModifier: int
+    spellcastingAbilityModifier: int,
+    slotLevel: int,
   ): Set[BattleRuntimeScalarBuffEffect] =
-    scalarBuffEffects(battleRuntimeScalarBuffProfile(profile), spellcastingAbilityModifier)
+    scalarBuffEffects(battleRuntimeScalarBuffProfile(profile), spellcastingAbilityModifier, slotLevel)
       .map(battleRuntimeScalarBuffEffect)
 
   pure def battleRuntimeScalarBuffRequiresConcentration(profile: BattleRuntimeScalarBuffProfile): bool =
@@ -813,11 +822,15 @@ module battleRuntimeSpellBridge {
   run test_scalar_buff_profile_projection = {
     all {
       assert(battleRuntimeScalarBuffUsesBonusAction(BattleRuntimeShieldOfFaithScalarBuff)),
+      assert(battleRuntimeScalarBuffUsesBonusAction(BattleRuntimeBarkskinScalarBuff)),
       assert(not(battleRuntimeScalarBuffUsesBonusAction(BattleRuntimeLongstriderScalarBuff))),
       assert(battleRuntimeScalarBuffMaximumTargets(BattleRuntimeLongstriderScalarBuff, 3) == 3),
       assert(battleRuntimeScalarBuffTemporaryHitPoints(BattleRuntimeFalseLifeScalarBuff, 3, 4) == 18),
-      assert(battleRuntimeScalarBuffEffects(BattleRuntimeHeroismScalarBuff, 3) == Set(BattleRuntimeHeroismFrightenedImmunityEffect, BattleRuntimeHeroismTurnStartTemporaryHitPointsEffect({ amount: 3 }))),
+      assert(battleRuntimeScalarBuffEffects(BattleRuntimeHeroismScalarBuff, 3, 1) == Set(BattleRuntimeHeroismFrightenedImmunityEffect, BattleRuntimeHeroismTurnStartTemporaryHitPointsEffect({ amount: 3 }))),
+      assert(battleRuntimeScalarBuffEffects(BattleRuntimeBarkskinScalarBuff, 3, 2) == Set(BattleRuntimeBarkskinArmorClassFloorEffect)),
+      assert(battleRuntimeScalarBuffEffects(BattleRuntimeAidScalarBuff, 3, 3) == Set(BattleRuntimeAidHitPointMaximumIncreaseEffect({ amount: 10 }))),
       assert(battleRuntimeScalarBuffRequiresConcentration(BattleRuntimeHeroismScalarBuff)),
+      assert(not(battleRuntimeScalarBuffRequiresConcentration(BattleRuntimeBarkskinScalarBuff))),
     }
   }
 

@@ -85,6 +85,8 @@ export const monkUnarmoredMovementUnitId = "monk_unarmored_movement";
 
 export const baneUnitId = "bane";
 
+export const barkskinUnitId = "barkskin";
+
 export const blessUnitId = "bless";
 
 export const burningHandsUnitId = "burning_hands";
@@ -140,6 +142,8 @@ export const savageAttackerUnitId = "feat_savage_attacker";
 export const acidSplashUnitId = "acid_splash";
 
 export const animalFriendshipUnitId = "animal_friendship";
+
+export const aidUnitId = "aid";
 
 export const charmPersonUnitId = "charm_person";
 

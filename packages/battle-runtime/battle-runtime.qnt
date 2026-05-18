@@ -360,6 +360,10 @@ module battleRuntime {
   //   equal to the caster's spellcasting ability modifier at the start of each
   //   affected target's turns. The current runtime model only has a
   //   table-executable known-willing fact for self targets.
+  // - Spells/Descriptions-A-D.md lines 436-445, and UBIQUITOUS_LANGUAGE.md:
+  //   Barkskin is a level-2 Bonus Action Touch spell that targets a willing
+  //   creature and grants a one-hour Armor Class floor of 17 that does not lower
+  //   higher Armor Class values.
   // - Spells/Descriptions-A-D.md lines 85-97 and 692-703,
   //   Spells/Descriptions-M-P.md lines 907-918, and
   //   UBIQUITOUS_LANGUAGE.md: Animal Friendship is a Beast-only Wisdom-save

@@ -567,6 +567,16 @@ export type BattleActiveEffect =
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {
+      readonly kind: "spellArmorClassFloor";
+      readonly floor: ArmorClass;
+      readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "hitPointMaximumIncrease";
+      readonly amount: number;
+      readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleSpellEffectBase & {
       readonly kind: "spellBaseArmorClass";
       readonly base: number;
       readonly ability: "dex";
@@ -1916,6 +1926,7 @@ export type ScalarBuffSpellTargeting =
       readonly kind: "targetList";
       readonly minTargets: 1;
       readonly maxTargets: number;
+      readonly requiredTargetDisposition: "unrestricted" | "willing";
     };
 export type TargetListSpellInvocation =
   | Extract<
@@ -1970,13 +1981,26 @@ export type ScalarBuffSpellEffect =
       readonly kind: "activeEffect";
       readonly activeEffect: Extract<
         BattleActiveEffect,
-        { readonly kind: "speedDelta" | "spellArmorClassBonus" }
+        {
+          readonly kind:
+            | "speedDelta"
+            | "spellArmorClassBonus"
+            | "spellArmorClassFloor";
+        }
+      >;
+    }
+  | {
+      readonly kind: "hitPointMaximumIncrease";
+      readonly activeEffect: Extract<
+        BattleActiveEffect,
+        { readonly kind: "hitPointMaximumIncrease" }
       >;
     };
-export type RollModifierSpellTargeting = Extract<
-  ScalarBuffSpellTargeting,
-  { readonly kind: "targetList" }
->;
+export type RollModifierSpellTargeting = {
+  readonly kind: "targetList";
+  readonly minTargets: 1;
+  readonly maxTargets: number;
+};
 export type RollModifierSpellEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "d20RollModifier" }

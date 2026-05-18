@@ -3,6 +3,7 @@ import { Option } from "effect";
 // Content JSON is generated from the matching content/*.dhall source.
 // Keep authoring changes in Dhall, then regenerate JSON and trace output.
 import armorChainMailInput from "../../content/armor_chain_mail.json";
+import aidInput from "../../content/aid.json";
 import animalFriendshipInput from "../../content/animal_friendship.json";
 import backgroundSoldierInput from "../../content/background_soldier.json";
 import bardBardicInspirationInput from "../../content/bard_bardic_inspiration.json";
@@ -15,6 +16,7 @@ import barbarianFastMovementInput from "../../content/barbarian_fast_movement.js
 import barbarianRecklessAttackInput from "../../content/barbarian_reckless_attack.json";
 import barbarianUnarmoredDefenseInput from "../../content/barbarian_unarmored_defense.json";
 import barbarianWeaponMasteryInput from "../../content/barbarian_weapon_mastery.json";
+import barkskinInput from "../../content/barkskin.json";
 import baneInput from "../../content/bane.json";
 import blessInput from "../../content/bless.json";
 import burningHandsInput from "../../content/burning_hands.json";
@@ -385,7 +387,9 @@ export const srdUnitCollection = defineSrdUnitCollection({
     speciesGoliathPowerfulBuildInput,
     speciesTieflingDarkvisionInput,
     acidSplashInput,
+    aidInput,
     animalFriendshipInput,
+    barkskinInput,
     baneInput,
     blessInput,
     burningHandsInput,

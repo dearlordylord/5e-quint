@@ -73,31 +73,66 @@ module battleRuntimeRestorationAndBuffs {
   pure def scalarBuffMaximumTargets(invocation: ScalarBuffSpell, slotLevel: int): int =
     battleRuntimeScalarBuffMaximumTargets(battleRuntimeScalarBuffProfileForInvocation(invocation), slotLevel)
 
+  pure def scalarBuffTargetDispositionIsSatisfied(
+    invocation: ScalarBuffSpell,
+    targets: Set[Actor],
+    knownWillingTargets: Set[Actor],
+  ): bool =
+    if (invocation == BarkskinScalarBuff)
+      targets.forall(target => knownWillingTargets.contains(target))
+    else
+      true
+
   pure def scalarBuffTemporaryHitPoints(invocation: ScalarBuffSpell, slotLevel: int, rolledDice: int): int =
     battleRuntimeScalarBuffTemporaryHitPoints(battleRuntimeScalarBuffProfileForInvocation(invocation), slotLevel, rolledDice)
 
-  pure def scalarBuffActiveEffects(invocation: ScalarBuffSpell): Set[ActiveEffect] =
-    battleRuntimeScalarBuffEffects(battleRuntimeScalarBuffProfileForInvocation(invocation), 0)
+  pure def aidDurationTicks: int = 8 * 60 * 10
+  pure def barkskinDurationTicks: int = 1 * 60 * 10
+
+  pure def scalarBuffActiveEffects(invocation: ScalarBuffSpell, slotLevel: int): Set[ActiveEffect] =
+    battleRuntimeScalarBuffEffects(battleRuntimeScalarBuffProfileForInvocation(invocation), 0, slotLevel)
       .map(scalarBuffActiveEffect)
 
   pure def scalarBuffActiveEffect(effect: BattleRuntimeScalarBuffEffect): ActiveEffect =
     match effect {
       | BattleRuntimeLongstriderSpeedIncreaseEffect => LongstriderSpeedDelta
       | BattleRuntimeShieldOfFaithArmorClassBonusEffect => ShieldOfFaithArmorClassBonus
+      | BattleRuntimeBarkskinArmorClassFloorEffect => BarkskinArmorClassFloor({ durationTicks: barkskinDurationTicks })
       | BattleRuntimeHeroismFrightenedImmunityEffect => HeroismFrightenedImmunity
       | BattleRuntimeHeroismTurnStartTemporaryHitPointsEffect(data) => HeroismTurnStartTemporaryHitPoints(data)
+      | BattleRuntimeAidHitPointMaximumIncreaseEffect(data) => AidHitPointMaximumIncrease({ amount: data.amount, durationTicks: aidDurationTicks })
     }
+
+  pure def combatantWithAidHitPointMaximumIncrease(
+    combatant: Combatant,
+    effect: Set[ActiveEffect],
+  ): Combatant = {
+    val activeAmount = aidHitPointMaximumIncreaseAppliedAmount(combatant.activeEffects)
+    val activeEffects = combatant.activeEffects.union(effect)
+    val nextActiveAmount = aidHitPointMaximumIncreaseAppliedAmount(activeEffects)
+    val hpIncrease = nextActiveAmount - activeAmount
+    {
+      ...combatant,
+      hp: combatant.hp + hpIncrease,
+      maxHp: combatant.maxHp + hpIncrease,
+      activeEffects: activeEffects,
+    }
+  }
 
   pure def scalarBuffCombatant(
     combatant: Combatant,
     invocation: ScalarBuffSpell,
     slotLevel: int,
     rolledDice: int,
-  ): Combatant =
+  ): Combatant = {
+    val activeEffects = scalarBuffActiveEffects(invocation, slotLevel)
     if (invocation == FalseLifeScalarBuff)
       { ...combatant, tempHp: if (combatant.tempHp > scalarBuffTemporaryHitPoints(invocation, slotLevel, rolledDice)) combatant.tempHp else scalarBuffTemporaryHitPoints(invocation, slotLevel, rolledDice) }
+    else if (invocation == AidScalarBuff)
+      combatantWithAidHitPointMaximumIncrease(combatant, activeEffects)
     else
-      { ...combatant, activeEffects: combatant.activeEffects.union(scalarBuffActiveEffects(invocation)) }
+      { ...combatant, activeEffects: combatant.activeEffects.union(activeEffects) }
+  }
 
   pure def scalarBuffTargetedState(
     state: BattleState,
@@ -116,16 +151,19 @@ module battleRuntimeRestorationAndBuffs {
     state: BattleState,
     invocation: ScalarBuffSpell,
     targets: Set[Actor],
+    knownWillingTargets: Set[Actor],
     slotLevel: int,
     rolledDice: int,
   ): BattleState = {
     val actionCost = scalarBuffActionCost(invocation)
     val targetCount = targets.size()
     val validTargetCount = targetCount >= 1 and targetCount <= scalarBuffMaximumTargets(invocation, slotLevel)
+    val validTargetDisposition = scalarBuffTargetDispositionIsSatisfied(invocation, targets, knownWillingTargets)
     val canSpendActionCost = canSpendFighterSpellActionCost(state, actionCost)
     if (
       currentActor(state) == Fighter and
       validTargetCount and
+      validTargetDisposition and
       canSpendActionCost and
       canExpendSpellSlotThisTurn(state) and
       not(state.fighter.unconscious) and
@@ -176,7 +214,7 @@ module battleRuntimeRestorationAndBuffs {
         fighter: breakConcentration(state.fighter),
         goblin: { ...state.goblin, activeEffects: activeEffectsWithoutSpellEffectConcentration(state.goblin.activeEffects) },
       }
-      val heroismEffects = battleRuntimeScalarBuffEffects(BattleRuntimeHeroismScalarBuff, spellcastingAbilityModifier)
+      val heroismEffects = battleRuntimeScalarBuffEffects(BattleRuntimeHeroismScalarBuff, spellcastingAbilityModifier, slotLevel)
         .map(scalarBuffActiveEffect)
       val spent = spendFighterSpellActionCost(concentrationBase, SpellMagicAction)
       commitActorSpellSlotUse({

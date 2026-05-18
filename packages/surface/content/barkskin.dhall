@@ -39,10 +39,14 @@ let barkskin =
           , attachment =
               { kind = "hole"
               , holeId = "barkskin_target"
-              , label = "target"
+              , label = "willing target"
               , value =
                   { kind = "target"
-                  , selection = { mode = "one" }
+                  , selection =
+                      { mode = "one"
+                      , targetKinds = [ "creature" ]
+                      , disposition = "willing"
+                      }
                   }
               }
           , operations =

@@ -96,7 +96,10 @@ import {
   type OngoingFeatureSourceKey,
 } from "../battle-reducer.ts";
 import { battleStateInitIssue } from "./domain-helpers.ts";
-import { applyInitialZeroHpLifecycle } from "./damage-apply.ts";
+import {
+  applyInitialZeroHpLifecycle,
+  effectiveHitPointMaximum,
+} from "./damage-apply.ts";
 import { battleMovementBudgetForActor } from "./movement-speed.ts";
 import {
   combatantInvisibleBenefitDenied,
@@ -499,7 +502,7 @@ export function combatantSnapshot(
     side: combatant.side,
     origin: combatantOriginSnapshot(combatant),
     hp: combatant.hp,
-    maxHp: combatant.maxHp,
+    maxHp: effectiveHitPointMaximum(combatant),
     tempHp: combatant.tempHp,
     armorClass: currentArmorClass(activeEffectArmorClass(combatant)),
     size: combatant.size,
@@ -595,11 +598,28 @@ export function activeEffectArmorClass(
         ]
       : [],
   );
-  return spellArmorClassBonuses.length === 0
-    ? withBase
+  const withBonuses =
+    spellArmorClassBonuses.length === 0
+      ? withBase
+      : {
+          ...withBase,
+          bonuses: [...withBase.bonuses, ...spellArmorClassBonuses],
+        };
+  const spellArmorClassFloors = combatant.activeEffects.flatMap((effect) =>
+    effect.kind === "spellArmorClassFloor"
+      ? [
+          {
+            floor: effect.floor,
+            sourceUnitId: effect.sourceSpellId,
+          },
+        ]
+      : [],
+  );
+  return spellArmorClassFloors.length === 0
+    ? withBonuses
     : {
-        ...withBase,
-        bonuses: [...withBase.bonuses, ...spellArmorClassBonuses],
+        ...withBonuses,
+        floors: [...withBonuses.floors, ...spellArmorClassFloors],
       };
 }
 
