@@ -1923,60 +1923,15 @@
       "unitId": "rogue_thieves_cant"
     },
     {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
-      "sourceRecordPath": "packages/surface/content/scorching_ray.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Scorching Ray",
-          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_scorching_ray",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 289,
-            "lineStart": 289,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Scorching Ray",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_scorching_ray",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 226,
-            "lineStart": 226,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
-      "unitId": "scorching_ray"
-    },
-    {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT: Promote See Invisibility as a level-2 self spell that spends the Magic Action and Spell Slot, applies a one-hour self effect, and exposes observer-scoped sight facts that let only the caster see creatures and objects with the Invisible condition as visible and see Ethereal Plane facts through table-supplied plane, distance, cover, and sight-line witnesses, without granting full Truesight, Darkness, visual-illusion, or transformation behavior. Owner: battle-runtime spell invocation/effect lifecycle plus observer-sight witness boundary. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused battle-runtime tests, and promoted Quint/runtime parity for the self effect, duration cleanup, observer-scoped Invisible benefit denial, and Ethereal visibility witness facts without full Truesight behavior.",
       "sourceRecordPath": "packages/surface/content/see_invisibility.json",
       "sourceRows": [
         {
@@ -2016,62 +1971,9 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
       "unitId": "see_invisibility"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "table-spatial-derivation"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Shatter area membership and affected nonmagical unattended objects are table/spatial facts supplied at the battle-runtime boundary.",
-      "sourceRecordPath": "packages/surface/content/shatter.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Bard spell list Shatter",
-          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_shatter",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 208,
-            "lineStart": 208,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Shatter",
-          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_shatter",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 291,
-            "lineStart": 291,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Shatter",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_shatter",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 228,
-            "lineStart": 228,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "shatter"
     },
     {
       "catalogDisposition": {
@@ -2538,7 +2440,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 92,
+      "count": 94,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2616,7 +2518,9 @@
         "rogue_weapon_mastery",
         "sacred_flame",
         "sanctuary",
+        "scorching_ray",
         "searing_smite",
+        "shatter",
         "shield",
         "shield_of_faith",
         "shillelagh",
@@ -2637,7 +2541,7 @@
       ]
     },
     {
-      "count": 26,
+      "count": 24,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
@@ -2659,8 +2563,6 @@
         "prayer_of_healing",
         "protection_from_poison",
         "ray_of_enfeeblement",
-        "scorching_ray",
-        "see_invisibility",
         "shining_smite",
         "spider_climb",
         "spike_growth",
@@ -2689,7 +2591,7 @@
       ]
     },
     {
-      "count": 7,
+      "count": 8,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
@@ -2698,6 +2600,7 @@
         "druid_wild_shape",
         "monk_monks_focus",
         "monk_uncanny_metabolism",
+        "see_invisibility",
         "sorcerer_font_of_magic",
         "sorcerer_metamagic"
       ]
@@ -2723,25 +2626,17 @@
         "druid_druidic",
         "rogue_thieves_cant"
       ]
-    },
-    {
-      "count": 1,
-      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
-      "status": "open-profile-accounting",
-      "unitIds": [
-        "shatter"
-      ]
     }
   ],
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 473,
-      "percent": "85.1%",
+      "numerator": 470,
+      "percent": "84.5%",
       "rowsByStatus": {
-        "accepted": 304,
-        "accepted-no-battle-effect": 169,
-        "battle-runtime-required": 79,
+        "accepted": 306,
+        "accepted-no-battle-effect": 164,
+        "battle-runtime-required": 82,
         "owner-evidence-required": 4
       }
     },
@@ -2756,24 +2651,24 @@
       "percent": "23.9%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 92,
-      "numerator": 29,
-      "percent": "31.5%"
+      "denominator": 94,
+      "numerator": 30,
+      "percent": "31.9%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 146,
-      "numerator": 92,
-      "percent": "63%"
+      "numerator": 94,
+      "percent": "64.4%"
     },
     "strictTargetClosure": {
       "denominator": 146,
-      "numerator": 119,
-      "percent": "81.5%"
+      "numerator": 122,
+      "percent": "83.6%"
     }
   },
   "openFrontier": [
     {
-      "count": 26,
+      "count": 24,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
@@ -2795,22 +2690,12 @@
         "prayer_of_healing",
         "protection_from_poison",
         "ray_of_enfeeblement",
-        "scorching_ray",
-        "see_invisibility",
         "shining_smite",
         "spider_climb",
         "spike_growth",
         "spiritual_weapon",
         "warding_bond",
         "web"
-      ]
-    },
-    {
-      "count": 1,
-      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
-      "status": "open-profile-accounting",
-      "unitIds": [
-        "shatter"
       ]
     }
   ],
@@ -6265,9 +6150,9 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 92,
-        "numerator": 29,
-        "percent": "31.5%"
+        "denominator": 94,
+        "numerator": 30,
+        "percent": "31.9%"
       }
     },
     "units": [
@@ -6739,7 +6624,7 @@
           {
             "joinStatus": "unmapped",
             "obligations": [],
-            "profileId": "spell.invocation-beam-sequence",
+            "profileId": "spell.invocation-independent-attack-sequence",
             "profileKind": "spell-invocation"
           }
         ],
@@ -7676,11 +7561,42 @@
           {
             "joinStatus": "unmapped",
             "obligations": [],
+            "profileId": "spell.invocation-independent-attack-sequence",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "scorching_ray"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
             "profileId": "spell.invocation-after-hit-timed-damage-save",
             "profileKind": "spell-invocation"
           }
         ],
         "unitId": "searing_smite"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.invocation-damage-save-or-attack",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "shatter"
       },
       {
         "joinStatus": "covered",
@@ -8034,21 +7950,20 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
-      "missing": 26,
-      "profile-subset-supported": 9,
-      "supported-profile": 92,
-      "unsupported-profile": 19
+      "missing": 24,
+      "profile-subset-supported": 8,
+      "supported-profile": 94,
+      "unsupported-profile": 20
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 7,
+      "blocked-follow-up-split": 8,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 12,
-      "open-profile-accounting": 1,
-      "open-runtime-behavior": 26,
-      "supported-profile": 92
+      "open-runtime-behavior": 24,
+      "supported-profile": 94
     },
-    "nonSupportedFrontier": 54,
+    "nonSupportedFrontier": 52,
     "strictDenominator": 146
   }
 }

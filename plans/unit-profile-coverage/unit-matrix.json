@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 374,
-      "numerator": 146,
-      "percent": "39%"
+      "numerator": 148,
+      "percent": "39.6%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 446,
-      "numerator": 178,
-      "percent": "39.9%"
+      "numerator": 180,
+      "percent": "40.4%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 179
+      "value": 181
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 115,
-      "numerator": 115,
+      "denominator": 117,
+      "numerator": 117,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 179,
-      "numerator": 179,
+      "denominator": 181,
+      "numerator": 181,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -92,9 +92,9 @@
       "percent": "27.9%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 115,
-      "numerator": 40,
-      "percent": "34.8%"
+      "denominator": 117,
+      "numerator": 41,
+      "percent": "35%"
     },
     "runtimeMappingCoverage": {
       "denominator": 65,
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 115,
+      "denominator": 117,
       "numerator": 104,
-      "percent": "90.4%"
+      "percent": "88.9%"
     },
     "supportedProfileCoverage": {
-      "denominator": 147,
-      "numerator": 115,
-      "percent": "78.2%"
+      "denominator": 149,
+      "numerator": 117,
+      "percent": "78.5%"
     }
   },
   "metricSemantics": [
@@ -1881,7 +1881,7 @@
       ]
     },
     {
-      "id": "spell.invocation-beam-sequence",
+      "id": "spell.invocation-independent-attack-sequence",
       "profileKind": "spell-invocation",
       "qntOwners": [
         "packages/battle-runtime/battle-runtime.qnt"
@@ -1890,9 +1890,10 @@
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
       "taskRefs": [
-        "SRDINV39"
+        "SRDINV39",
+        "L12G-SPELL-SCORCHING-RAY"
       ],
-      "title": "Spell invocation resolves independent creature-or-object ranged spell attack beams",
+      "title": "Spell invocation resolves independent creature-or-object ranged spell attack sequences",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -1905,6 +1906,10 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-eldritch-blast.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scorching-ray.test.ts"
         },
         {
           "kind": "focused-mbt",
@@ -3011,7 +3016,7 @@
       {
         "joinStatus": "unmapped",
         "obligations": [],
-        "profileId": "spell.invocation-beam-sequence",
+        "profileId": "spell.invocation-independent-attack-sequence",
         "profileKind": "spell-invocation"
       },
       {
@@ -3255,9 +3260,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 115,
-          "numerator": 40,
-          "percent": "34.8%"
+          "denominator": 117,
+          "numerator": 41,
+          "percent": "35%"
         }
       },
       "units": [
@@ -3797,7 +3802,7 @@
             {
               "joinStatus": "unmapped",
               "obligations": [],
-              "profileId": "spell.invocation-beam-sequence",
+              "profileId": "spell.invocation-independent-attack-sequence",
               "profileKind": "spell-invocation"
             }
           ],
@@ -5031,11 +5036,42 @@
             {
               "joinStatus": "unmapped",
               "obligations": [],
+              "profileId": "spell.invocation-independent-attack-sequence",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "scorching_ray"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
               "profileId": "spell.invocation-after-hit-timed-damage-save",
               "profileKind": "spell-invocation"
             }
           ],
           "unitId": "searing_smite"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.invocation-damage-save-or-attack",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "shatter"
         },
         {
           "joinStatus": "covered",
@@ -6252,7 +6288,7 @@
       "claimKind": "qnt-proof",
       "note": "Promoted battle-runtime Quint facts for Eldritch Blast beam count scaling, Force damage, creature-or-object beam targeting holes, and cantrip slot behavior.",
       "profileIds": [
-        "spell.invocation-beam-sequence"
+        "spell.invocation-independent-attack-sequence"
       ],
       "taskId": "SRDINV39"
     },
@@ -6260,9 +6296,25 @@
       "claimKind": "completed-runtime-parity",
       "note": "Focused battle-runtime reducer tests and MBT cover Eldritch Blast beam target/attack/damage sequencing, creature and object targets, Concentration saves, spell damage reduction, zero-HP replacement, and attack-hit/after-damage reaction windows.",
       "profileIds": [
-        "spell.invocation-beam-sequence"
+        "spell.invocation-independent-attack-sequence"
       ],
       "taskId": "SRDINV39"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Scorching Ray as a spell-slot spell attack sequence with Fire damage, creature-or-object ray targeting, and one additional ray per slot above level 2.",
+      "profileIds": [
+        "spell.invocation-independent-attack-sequence"
+      ],
+      "taskId": "L12G-SPELL-SCORCHING-RAY"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime reducer tests cover Scorching Ray admission, level 2 and upcast ray counts, repeated and split creature targets, Fire damage, and Spell Slot expenditure.",
+      "profileIds": [
+        "spell.invocation-independent-attack-sequence"
+      ],
+      "taskId": "L12G-SPELL-SCORCHING-RAY"
     },
     {
       "claimKind": "qnt-proof",
@@ -15360,6 +15412,101 @@
       },
       "claim": {
         "profileIds": [
+          "spell.invocation-independent-attack-sequence"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scorching-ray.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-SPELL-SCORCHING-RAY"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-independent-attack-sequence",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV39",
+            "L12G-SPELL-SCORCHING-RAY"
+          ],
+          "title": "Spell invocation resolves independent creature-or-object ranged spell attack sequences",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-eldritch-blast.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scorching-ray.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/scorching_ray.json",
+      "unitId": "scorching_ray"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT",
+            "mechanic": "Promote See Invisibility as a level-2 self spell that spends the Magic Action and Spell Slot, applies a one-hour self effect, and exposes observer-scoped sight facts that let only the caster see creatures and objects with the Invisible condition as visible and see Ethereal Plane facts through table-supplied plane, distance, cover, and sight-line witnesses, without granting full Truesight, Darkness, visual-illusion, or transformation behavior.",
+            "owner": "battle-runtime spell invocation/effect lifecycle plus observer-sight witness boundary",
+            "requiredOutput": "Supported-profile Unit claim, deterministic admission/projection evidence, focused battle-runtime tests, and promoted Quint/runtime parity for the self effect, duration cleanup, observer-scoped Invisible benefit denial, and Ethereal visibility witness facts without full Truesight behavior.",
+            "title": "See Invisibility Observer Sight Runtime Support"
+          }
+        ],
+        "futureProfileOwner": "battle-runtime spell invocation/effect lifecycle plus observer-sight witness boundary",
+        "reason": "See Invisibility is authored and installed as an SRD Surface Spell Definition with catalog-level self sight-override metadata only. Runtime support remains blocked on an observer-scoped sight witness; Task 44 claims no battle-runtime profile, Invisible interaction support, or Ethereal Plane visibility execution.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/see_invisibility.json",
+      "unitId": "see_invisibility"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
           "spell.invocation-after-hit-timed-damage-save"
         ],
         "rawRequirementIds": [
@@ -16570,17 +16717,11 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "SRDINV66 table/spatial owner",
-              "reason": "Shatter area membership and affected nonmagical unattended objects are table/spatial facts supplied at the battle-runtime boundary."
-            },
-            "followUpTaskId": "SRDINV66",
-            "mechanic": "automatic area membership, line of effect, object inventory/material/magical/worn-carried discovery, and grid geometry derivation"
-          }
-        ],
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "table/spatial owner",
+          "reason": "Automatic Shatter area membership, line of effect, object inventory/material/magical/worn-carried discovery, and grid geometry derivation remain runtime-detached table/spatial derivations outside the Shatter runtime profile."
+        },
         "profileIds": [
           "spell.invocation-damage-save-or-attack"
         ],
@@ -16595,7 +16736,7 @@
           "Constructs have Disadvantage on the saving throw",
           "caller-supplied nonmagical unattended object damage facts emit Thunder object damage outcomes"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -16994,7 +17135,7 @@
       },
       "claim": {
         "profileIds": [
-          "spell.invocation-beam-sequence"
+          "spell.invocation-independent-attack-sequence"
         ],
         "rawRequirementIds": [
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
@@ -17018,7 +17159,7 @@
       "kind": "spell",
       "profiles": [
         {
-          "id": "spell.invocation-beam-sequence",
+          "id": "spell.invocation-independent-attack-sequence",
           "profileKind": "spell-invocation",
           "qntOwners": [
             "packages/battle-runtime/battle-runtime.qnt"
@@ -17027,9 +17168,10 @@
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
           "taskRefs": [
-            "SRDINV39"
+            "SRDINV39",
+            "L12G-SPELL-SCORCHING-RAY"
           ],
-          "title": "Spell invocation resolves independent creature-or-object ranged spell attack beams",
+          "title": "Spell invocation resolves independent creature-or-object ranged spell attack sequences",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -17042,6 +17184,10 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-eldritch-blast.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scorching-ray.test.ts"
             },
             {
               "kind": "focused-mbt",
@@ -21530,42 +21676,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/rogue_ability_score_improvement_l4.json",
       "unitId": "rogue_ability_score_improvement_l4"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/scorching_ray.json",
-      "unitId": "scorching_ray"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/see_invisibility.json",
-      "unitId": "see_invisibility"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

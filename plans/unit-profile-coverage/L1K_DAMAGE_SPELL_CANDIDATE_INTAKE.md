@@ -33,7 +33,7 @@ Generated coverage artifacts checked:
   has a supported or unsupported Unit claim.
 - `plans/unit-profile-coverage/profiles.jsonl`: existing relevant promoted
   profiles are `spell.invocation-damage-save-or-attack`,
-  `spell.invocation-beam-sequence`, and
+  `spell.invocation-independent-attack-sequence`, and
   `spell.invocation-chained-attack-damage`.
 - `packages/battle-runtime/src/battle-reducer.ts` and
   `packages/battle-runtime/src/battle-reducer/spells-profiles-save-gates.ts`:
@@ -66,7 +66,7 @@ Ubiquitous-language terms checked:
 | `cone_of_cold` | Action, Self, 60-foot Cone, Constitution Saving Throw, `8d8` Cold damage, half damage on success, slot scaling. A creature killed by the spell becomes a frozen statue until it thaws. | New profile need | The save-for-half damage procedure resembles `spell.invocation-damage-save-or-attack`, but the promoted self-origin Cone boundary is fixed at 15 feet. Cone of Cold requires a 60-foot self-origin Cone area witness or generalized Cone boundary before admission. Future admission should also defer the frozen-statue death aftermath explicitly or route it to a corpse/object-state owner. |
 | `blight` | Action, one visible creature within 30 feet, Constitution Saving Throw, `8d8` Necrotic damage, half damage on success, slot scaling. Plant creatures automatically fail; nonmagical noncreature plants wither and die instead of saving. | Existing damage profile fit | The ordinary creature damage procedure fits `spell.invocation-damage-save-or-attack` through the single-target save-for-half shape. Future admission must not claim exact full support unless Plant auto-fail and noncreature plant targeting are either modeled or explicitly deferred as a subset. |
 | `acid_arrow` | Action, ranged spell attack, Acid damage at the end of the target's next turn on hit, immediate half initial damage on miss, slot scaling for both initial and later damage. | New profile need | Existing attack-damage spell profiles resolve immediate hit damage and no miss damage. Acid Arrow needs a delayed target-end-turn damage lifecycle plus scaled half-on-miss damage. Keep it out of admission until the miss/delayed damage protocol is modeled. |
-| `scorching_ray` | Action, three independent ranged spell attacks at one target or several, `2d6` Fire per hit, plus one ray per slot level above 2. | New profile need | This resembles `spell.invocation-beam-sequence`, but that profile is Eldritch Blast-specific: character-level beam count, cantrip access, and creature-or-object targeting. Scorching Ray needs a slot-scaled independent ray sequence or a deliberate generalization of the beam profile. |
+| `scorching_ray` | Action, three independent ranged spell attacks at one target or several, `2d6` Fire per hit, plus one ray per slot level above 2. | Supported profile fit | `spell.invocation-independent-attack-sequence` now admits Scorching Ray through prepared Spell Slot access, slot-scaled independent ray count, repeated or split creature-or-object ray targets, and Fire damage. |
 | `shatter` | Action, point-origin 10-foot-radius Sphere, Constitution Saving Throw, `3d8` Thunder damage, half damage on success, slot scaling. Constructs have Disadvantage on the save; nonmagical unworn/un-carried objects in the area also take the damage. | New profile need | The creature damage core resembles a point-origin Sphere save-for-half shape, but the promoted point-origin Sphere boundary is fixed at 5 feet. Exact support also needs a 10-foot Sphere area witness, creature-type save roll mode, and area object damage. Do not claim exact support by dropping those clauses. |
 | `lightning_bolt` | Action, Self, 100-foot by 5-foot Line, Dexterity Saving Throw, `8d6` Lightning damage, half damage on success, slot scaling. | New profile need | The promoted save-gated damage profile admits point-origin Spheres/Cubes and self-origin Cones/Cubes, but no self-origin Line target-set boundary. Add a Line area witness before admitting this Spell Definition. |
 | `mind_spike` | Action, one visible creature within 120 feet, Wisdom Saving Throw, `3d8` Psychic damage, half damage on success, slot scaling. On a failed save, Concentration grants location knowledge, prevents the target from becoming hidden from the caster, and denies Invisible benefits against the caster while on the same plane. | Later expansion queue | The damage core is a single-target save-for-half fit, but the failed-save Concentration effect is detection/visibility state, not a damage profile. Route this to a detection/visibility follow-up or admit only a documented damage subset after the decider approves that loss of executable scope. |
@@ -84,14 +84,12 @@ Recommended future slices, in increasing runtime scope:
    corpse/object-state owner exists.
 3. Add a self-origin Line area boundary for `lightning_bolt`; keep table-owned
    area membership and Total Cover blocking as caller-supplied facts.
-4. Generalize independent spell-attack sequences for `scorching_ray` without
-   weakening the existing Eldritch Blast beam invariants.
-5. Add a 10-foot point-origin Sphere area boundary, area object damage, and
+4. Add a 10-foot point-origin Sphere area boundary, area object damage, and
    creature-type save roll-mode profile before claiming exact `shatter`
    support.
-6. Add a delayed attack-damage lifecycle for `acid_arrow`, including
+5. Add a delayed attack-damage lifecycle for `acid_arrow`, including
    end-of-target-next-turn timing and scaled half-on-miss damage.
-7. Route `mind_spike` to a detection/visibility effect owner before full
+6. Route `mind_spike` to a detection/visibility effect owner before full
    support; do not hide its Concentration effect behind a pure damage claim.
 
 ## Reviewer Loop

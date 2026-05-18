@@ -118,6 +118,7 @@ const requiredFirstVerticalUnitIds = [
   "healing_word",
   "shield",
   "shatter",
+  "see_invisibility",
   "sleep",
   "thunderwave",
   "eldritch_blast",
@@ -256,6 +257,30 @@ describe("SRD Unit catalog boundary", () => {
             },
           },
           onSuccess: { kind: "half_damage" },
+        },
+      ]);
+    }
+  });
+
+  test("keeps See Invisibility as a narrow sight override, not Truesight", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const seeInvisibility = result.catalog.requireUnit("see_invisibility");
+
+      expect(seeInvisibility.kind).toBe("spell");
+      if (
+        seeInvisibility.kind !== "spell" ||
+        seeInvisibility.mechanics.family !== "activation"
+      ) {
+        throw new Error("Expected See Invisibility to be an activation spell.");
+      }
+      expect(seeInvisibility.mechanics.phases).toMatchObject([
+        {
+          kind: "direct",
+          attachment: { kind: "self" },
+          effects: [{ kind: "see_invisible_and_ethereal" }],
         },
       ]);
     }

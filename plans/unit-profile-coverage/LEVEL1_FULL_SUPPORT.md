@@ -60,7 +60,7 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | `divine_favor` | unmapped | `spell.invocation-weapon-damage-rider` (unmapped: no obligation mapping) |
 | `divine_smite` | unmapped | `spell.invocation-after-hit-damage` (unmapped: no obligation mapping) |
 | `druid_primal_order` | unmapped | `character-creation.class-feature-option-projection` (unmapped: no obligation mapping) |
-| `eldritch_blast` | unmapped | `spell.invocation-beam-sequence` (unmapped: no obligation mapping) |
+| `eldritch_blast` | unmapped | `spell.invocation-independent-attack-sequence` (unmapped: no obligation mapping) |
 | `ensnaring_strike` | unmapped | `spell.invocation-after-hit-restraint-turn-start-damage` (unmapped: no obligation mapping) |
 | `entangle` | unmapped | `spell.invocation-condition-save` (unmapped: no obligation mapping) |
 | `expeditious_retreat` | unmapped | `spell.invocation-expeditious-retreat-dash` (unmapped: no obligation mapping) |

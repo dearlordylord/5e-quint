@@ -3640,7 +3640,7 @@
           {
             "joinStatus": "unmapped",
             "obligations": [],
-            "profileId": "spell.invocation-beam-sequence",
+            "profileId": "spell.invocation-independent-attack-sequence",
             "profileKind": "spell-invocation"
           }
         ],

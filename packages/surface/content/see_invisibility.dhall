@@ -6,18 +6,11 @@
 --    into the Ethereal Plane. Creatures and objects there appear
 --    ghostly."
 --
--- ZERO-WIDENING VALIDATION REFERENCE. The Ethereal Plane visibility
--- clause is DM agenda (planes are session / campaign). The primary
--- mechanical effect — perceiving Invisible creatures — is a
--- perception override that we currently model via the existing
--- grant_sense atom (with truesight as the closest match in the
--- SenseKind enum, which includes "see invisible" semantics in RAW).
---
--- DEFERRED (noted). SenseKind does NOT currently have a
--- "see_invisible" variant distinct from truesight. For this spell
--- the semantics overlap with truesight's "see through illusions and
--- Invisible" clause in the Rules Glossary. If a unit surfaces that
--- demands a strictly-narrower sense kind, widen SenseKind then.
+-- See Invisibility is not Truesight. It sees Invisible creatures and
+-- objects as visible and sees into the Ethereal Plane, but it does
+-- not grant Truesight's Darkness, visual-illusion, or transformation
+-- clauses. Keep this as a distinct sight override so runtime support
+-- cannot accidentally claim full Truesight behavior.
 
 let seeInvisibility =
       { kind = "spell"
@@ -48,11 +41,7 @@ let seeInvisibility =
               [ { kind = "direct"
                 , attachment = { kind = "self" }
                 , effects =
-                    [ { kind = "grant_sense"
-                      , sense = "truesight"
-                      , rangeFeet = 0
-                      }
-                    ]
+                    [ { kind = "see_invisible_and_ethereal" } ]
                 }
               ]
           }

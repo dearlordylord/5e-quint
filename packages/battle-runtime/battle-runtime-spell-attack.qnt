@@ -85,49 +85,62 @@ module battleRuntimeSpellAttack {
       | SorcerousBurstSpellAttack(_) => true
     }
 
-  pure def battleRuntimeSpellAttackBeamSequenceProfileForInvocation(
-    invocation: SpellAttackBeamSequenceInvocation
-  ): BattleRuntimeSpellAttackBeamSequenceProfile =
+  pure def battleRuntimeSpellAttackSequenceProfileForInvocation(
+    invocation: SpellAttackSequenceInvocation
+  ): BattleRuntimeSpellAttackSequenceProfile =
     match invocation {
       | EldritchBlastBeamSequence => BattleRuntimeEldritchBlastBeamSequence
+      | ScorchingRaySequence => BattleRuntimeScorchingRaySequence
     }
 
-  pure def spellAttackBeamSequenceDamageType(invocation: SpellAttackBeamSequenceInvocation): DamageType =
+  pure def spellAttackSequenceDamageType(invocation: SpellAttackSequenceInvocation): DamageType =
     damageTypeFromRuleDamageType(
-      battleRuntimeSpellAttackBeamSequenceDamageType(
-        battleRuntimeSpellAttackBeamSequenceProfileForInvocation(invocation),
+      battleRuntimeSpellAttackSequenceDamageType(
+        battleRuntimeSpellAttackSequenceProfileForInvocation(invocation),
       )
     )
 
   pure def eldritchBlastBeamCount(characterLevel: int): int =
-    battleRuntimeSpellAttackBeamSequenceBeamCount(
+    battleRuntimeSpellAttackSequenceAttackCount(
       BattleRuntimeEldritchBlastBeamSequence,
       characterLevel,
     )
 
-  pure def spellAttackBeamSequenceReplayHoles(
-    invocation: SpellAttackBeamSequenceInvocation,
+  pure def scorchingRayRayCount(slotLevel: int): int =
+    battleRuntimeSpellAttackSequenceAttackCount(
+      BattleRuntimeScorchingRaySequence,
+      slotLevel,
+    )
+
+  pure def spellAttackSequenceReplayHoles(
+    invocation: SpellAttackSequenceInvocation,
     canCastSpells: bool,
-    beamCount: int,
-    beamTargetsFilled: int,
-    beamAttackRollsFilled: int,
-    beamHits: int,
-    beamDamageRollsFilled: int,
-  ): Set[Hole] =
-    match battleRuntimeSpellAttackBeamSequenceNextStep(
-      battleRuntimeSpellAttackBeamSequenceProfileForInvocation(invocation),
+    attackCount: int,
+    targetsFilled: int,
+    attackRollsFilled: int,
+    hits: int,
+    damageRollsFilled: int,
+  ): Set[Hole] = {
+    val profile = battleRuntimeSpellAttackSequenceProfileForInvocation(invocation)
+    match battleRuntimeSpellAttackSequenceNextStep(
+      profile,
       canCastSpells,
-      beamCount,
-      beamTargetsFilled,
-      beamAttackRollsFilled,
-      beamHits,
-      beamDamageRollsFilled,
+      attackCount,
+      targetsFilled,
+      attackRollsFilled,
+      hits,
+      damageRollsFilled,
     ) {
-      | BattleRuntimeBeamSequenceNeedsTargets => Set(TargetChoice, ObjectTargetChoice)
-      | BattleRuntimeBeamSequenceNeedsAttackRoll => Set(AttackRoll)
-      | BattleRuntimeBeamSequenceNeedsDamageRoll => Set(SpellDamageRoll)
+      | BattleRuntimeSpellAttackSequenceNeedsTargets =>
+          if (battleRuntimeSpellAttackSequenceSupportsObjectTargets(profile))
+            Set(TargetChoice, ObjectTargetChoice)
+          else
+            Set(TargetChoice)
+      | BattleRuntimeSpellAttackSequenceNeedsAttackRoll => Set(AttackRoll)
+      | BattleRuntimeSpellAttackSequenceNeedsDamageRoll => Set(SpellDamageRoll)
       | _ => Set()
     }
+  }
 
   pure def objectHitPointDamageOutcome(
     object: ObjectTarget,
@@ -214,8 +227,8 @@ module battleRuntimeSpellAttack {
     else
       Set()
 
-  pure def spellAttackBeamSequenceObjectDamageOutcome(
-    invocation: SpellAttackBeamSequenceInvocation,
+  pure def spellAttackSequenceObjectDamageOutcome(
+    invocation: SpellAttackSequenceInvocation,
     object: ObjectTarget,
     damageRoll: int,
     disposition: ObjectDamageDisposition,
@@ -224,13 +237,13 @@ module battleRuntimeSpellAttack {
       | ObjectTableResolved =>
           ObjectTableResolvedDamage({
             object: object,
-            damageType: spellAttackBeamSequenceDamageType(invocation),
+            damageType: spellAttackSequenceDamageType(invocation),
             rolledDamage: damageRoll,
           })
       | ObjectHitPoints(fill) =>
           objectHitPointDamageOutcome(
             object,
-            spellAttackBeamSequenceDamageType(invocation),
+            spellAttackSequenceDamageType(invocation),
             damageRoll,
             fill.hitPoints,
             0,
@@ -238,7 +251,7 @@ module battleRuntimeSpellAttack {
       | ObjectHitPointsWithDamageThreshold(fill) =>
           objectHitPointDamageOutcome(
             object,
-            spellAttackBeamSequenceDamageType(invocation),
+            spellAttackSequenceDamageType(invocation),
             damageRoll,
             fill.hitPoints,
             fill.damageThreshold,

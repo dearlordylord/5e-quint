@@ -60,6 +60,7 @@ module battleRuntimeSpellInvocation {
       | StarryWisp => false
       | FireBolt => false
       | EldritchBlast => false
+      | ScorchingRay => true
       | SacredFlame => false
       | InflictWounds => true
       | BurningHands => true

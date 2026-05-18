@@ -30,6 +30,7 @@ export type ObjectAndBarrierEffectAtom = Extract<
       | "block_gases_and_gaseous_creatures"
       | "block_flying_movement"
       | "negate_named_effect"
+      | "see_invisible_and_ethereal"
       | "grant_sense"
       | "modify_sense_range"
       | "grant_language_understanding"
@@ -160,6 +161,17 @@ export function traceObjectAndBarrierEffectAtom(
         category: "effect",
         atomKind: "negate_named_effect",
         label: `negate_named_effect\n${e.spellId} (${e.scope})`,
+      });
+      return id;
+    }
+    case "see_invisible_and_ethereal": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "see_invisible_and_ethereal",
+        label:
+          "see_invisible_and_ethereal\nInvisible as visible\nEthereal Plane as ghostly",
       });
       return id;
     }

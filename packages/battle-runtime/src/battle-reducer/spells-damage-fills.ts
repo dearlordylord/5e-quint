@@ -80,6 +80,7 @@ import {
   THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_INSTANCE,
   THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
 } from "./domain-constants.ts";
+import { spellAttackSequencePartName } from "./spells-profile-shared.ts";
 
 const OBJECT_DAMAGE_IMMUNITIES = [
   "poison",
@@ -99,7 +100,7 @@ type SpellAttackDamageInvocationWithMaxDieAdditionalDiceLimit = Extract<
 type SpellObjectDamageInvocation =
   | Extract<
       SupportedSpellInvocation,
-      { readonly procedure: "heldLightHurl" | "spellAttackBeamSequence" }
+      { readonly procedure: "heldLightHurl" | "spellAttackSequence" }
     >
   | Extract<
       SupportedDamageSpellInvocation,
@@ -126,44 +127,45 @@ export function spellAttackRollHole(
   };
 }
 
-export function spellBeamAttackRollHole(
+export function spellAttackSequencePartAttackRollHole(
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "spellAttackBeamSequence" }
+    { readonly procedure: "spellAttackSequence" }
   >,
-  beamIndex: number,
+  partIndex: number,
   rollMode?: AttackRollMode,
 ): BattleSpellAttackRollHole {
-  const protocolId = spellBeamAttackRollProtocolId(invocation, beamIndex);
+  const protocolId = spellAttackSequencePartAttackRollProtocolId(invocation, partIndex);
+  const partName = spellAttackSequencePartName(invocation.spell);
   return {
     kind: "attackRoll",
     holeId: holeId(protocolId),
     holeInstanceKey: holeInstanceKey(protocolId),
-    label: `${invocation.spell.name} beam ${beamIndex + 1} spell attack roll`,
+    label: `${invocation.spell.name} ${partName} ${partIndex + 1} spell attack roll`,
     spell: invocation,
     attackBonus: invocation.attackBonus,
     ...(rollMode === undefined ? {} : { rollMode }),
   };
 }
 
-export function spellBeamAttackRollHoleId(
+export function spellAttackSequencePartAttackRollHoleId(
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "spellAttackBeamSequence" }
+    { readonly procedure: "spellAttackSequence" }
   >,
-  beamIndex: number,
+  partIndex: number,
 ): BattleHoleId {
-  return holeId(spellBeamAttackRollProtocolId(invocation, beamIndex));
+  return holeId(spellAttackSequencePartAttackRollProtocolId(invocation, partIndex));
 }
 
-function spellBeamAttackRollProtocolId(
+function spellAttackSequencePartAttackRollProtocolId(
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "spellAttackBeamSequence" }
+    { readonly procedure: "spellAttackSequence" }
   >,
-  beamIndex: number,
+  partIndex: number,
 ): string {
-  return `battle:spell:beam-attack-roll:${invocation.spell.id}:${beamIndex}`;
+  return `battle:spell:attack-sequence-part-attack-roll:${invocation.spell.id}:${partIndex}`;
 }
 
 export function spellObjectAttackRollHole(
@@ -424,7 +426,7 @@ export function spellDamageTypes(
     {
       readonly procedure:
         | "heldLightHurl"
-        | "spellAttackBeamSequence"
+        | "spellAttackSequence"
         | "spellAttackDamage";
     }
   >,
@@ -462,12 +464,12 @@ export function spellDamageHole(
   };
 }
 
-export function spellBeamDamageHole(
+export function spellAttackSequencePartDamageHole(
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "spellAttackBeamSequence" }
+    { readonly procedure: "spellAttackSequence" }
   >,
-  beamIndex: number,
+  partIndex: number,
   critical = false,
   spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
 ): BattleSpellDamageRollHole {
@@ -476,12 +478,13 @@ export function spellBeamDamageHole(
     critical,
     spellMarkedDamageRiders,
   );
-  const protocolId = spellBeamDamageProtocolId(invocation, beamIndex, critical);
+  const protocolId = spellAttackSequencePartDamageProtocolId(invocation, partIndex, critical);
+  const partName = spellAttackSequencePartName(invocation.spell);
   return {
     kind: "rolledDice",
     holeId: holeId(protocolId),
     holeInstanceKey: holeInstanceKey(protocolId),
-    label: `${invocation.spell.name} beam ${beamIndex + 1} damage (${expr})`,
+    label: `${invocation.spell.name} ${partName} ${partIndex + 1} damage (${expr})`,
     spell: invocation,
     critical,
     ...(spellMarkedDamageRiders.length === 0
@@ -490,26 +493,26 @@ export function spellBeamDamageHole(
   };
 }
 
-export function spellBeamDamageHoleId(
+export function spellAttackSequencePartDamageHoleId(
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "spellAttackBeamSequence" }
+    { readonly procedure: "spellAttackSequence" }
   >,
-  beamIndex: number,
+  partIndex: number,
   critical: boolean,
 ): BattleHoleId {
-  return holeId(spellBeamDamageProtocolId(invocation, beamIndex, critical));
+  return holeId(spellAttackSequencePartDamageProtocolId(invocation, partIndex, critical));
 }
 
-function spellBeamDamageProtocolId(
+function spellAttackSequencePartDamageProtocolId(
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "spellAttackBeamSequence" }
+    { readonly procedure: "spellAttackSequence" }
   >,
-  beamIndex: number,
+  partIndex: number,
   critical: boolean,
 ): string {
-  return `battle:spell:beam-damage:${invocation.spell.id}:${beamIndex}:${critical ? "critical" : "normal"}`;
+  return `battle:spell:attack-sequence-part-damage:${invocation.spell.id}:${partIndex}:${critical ? "critical" : "normal"}`;
 }
 
 export function spellBurstDamageHole(
@@ -831,10 +834,7 @@ export function savingThrowRollModeProjections(
     state,
     ability,
   );
-  const baseProjections = [
-    ...dodgeProjections,
-    ...passiveRollModeProjections,
-  ];
+  const baseProjections = [...dodgeProjections, ...passiveRollModeProjections];
   const saveRollModeRule = spellSaveRollMode?.invocation.saveRollModeRule;
   if (
     spellSaveRollMode !== undefined &&
@@ -908,7 +908,10 @@ function passiveSavingThrowRollModeProjection(
   target: BattleCreatureState,
   ability: Ability,
 ): BattleSavingThrowRollModeProjection | null {
-  if (target.origin.kind !== "character" || isIncapacitated(target.conditions)) {
+  if (
+    target.origin.kind !== "character" ||
+    isIncapacitated(target.conditions)
+  ) {
     return null;
   }
   const profile = [
@@ -1006,7 +1009,7 @@ export function validateSpellDamageFill(
         ? invocation.damage.expr.dice * invocation.targeting.repeatedEffectCount
         : invocation.damage.expr.dice *
           ((invocation.procedure === "heldLightHurl" ||
-            invocation.procedure === "spellAttackBeamSequence" ||
+            invocation.procedure === "spellAttackSequence" ||
             invocation.procedure === "spellAttackDamage" ||
             invocation.procedure === "attackBurstSaveDamage") &&
           critical
@@ -1084,28 +1087,28 @@ function validateMaxDieAdditionalDiceSequence(
   return null;
 }
 
-export function validateSpellBeamDamageFill(
+export function validateSpellAttackSequencePartDamageFill(
   fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "spellAttackBeamSequence" }
+    { readonly procedure: "spellAttackSequence" }
   >,
-  beamIndex: number,
+  partIndex: number,
   critical: boolean,
   spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
 ): string | null {
   if (
     fill.holeId !==
-    spellBeamDamageHole(
+    spellAttackSequencePartDamageHole(
       invocation,
-      beamIndex,
+      partIndex,
       critical,
       spellMarkedDamageRiders,
     ).holeId
   ) {
     return critical
-      ? "Critical hit spell beam damage must use the critical beam damage hole."
-      : "Spell beam damage must use the selected beam damage hole.";
+      ? "Critical hit spell attack sequence damage must use the critical damage hole."
+      : "Spell attack sequence damage must use the selected damage hole.";
   }
   if (spellMarkedDamageRiders.length > 0) {
     const components = spellDamageComponents(

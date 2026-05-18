@@ -63,6 +63,7 @@ import {
   supportedCantripWeaponAttackOverrideProfile,
   supportedPreparedAttackBurstSaveDamageProfile,
   supportedPreparedChainedSpellAttackDamageProfile,
+  supportedPreparedSpellAttackSequenceProfile,
   supportedPreparedSpellAttackProfile,
 } from "./spells-profiles-attack-damage.ts";
 export * from "./spells-profiles-attack-damage.ts";
@@ -165,6 +166,14 @@ export function supportedSpellActs(
   return [
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedSlotSpellProfile(spell, spellcasting.spellSlots),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedSpellAttackSequenceProfile(
+        spell,
+        spellcasting.spellSlots,
+        spellcasting.spellcastingAbilityModifier,
+        spellcasting.proficiencyBonus,
+      ),
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedSpellAttackProfile(

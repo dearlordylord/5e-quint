@@ -496,7 +496,7 @@ export function resolveThaumaturgyBoomingVoiceSpellAct(input: {
     input.fillSet.targetSpatialFacts.length > 0 ||
     input.fillSet.targetAllocation !== undefined ||
     input.fillSet.targetList !== undefined ||
-    input.fillSet.beamFills.length > 0 ||
+    input.fillSet.attackSequencePartFills.length > 0 ||
     input.fillSet.attackRoll !== undefined ||
     input.fillSet.savingThrowOutcomes !== undefined ||
     input.fillSet.skillChoice !== undefined ||

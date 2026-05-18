@@ -62,28 +62,29 @@ import {
   selectedAttackRollMissToHitReplacement,
 } from "./statblock-attacks.ts";
 import { spellAttackKindForRedirect } from "./spells-profiles.ts";
+import { spellAttackSequencePartName } from "./spells-profile-shared.ts";
 import {
   applySpellDamage,
-  spellBeamAttackRollHole,
-  spellBeamDamageHole,
+  spellAttackSequencePartAttackRollHole,
+  spellAttackSequencePartDamageHole,
   spellDamageByTypeForTarget,
   spellDamageTypes,
-  spellBeamTargetHole,
-  spellBeamObjectTargetHole,
+  spellAttackSequencePartTargetHole,
+  spellAttackSequencePartObjectTargetHole,
   spellObjectDamageOutcome,
   spellObjectTargetFact,
   spellObjectTargetSightFact,
   spellTargetIsLegal,
-  validateSpellBeamDamageFill,
+  validateSpellAttackSequencePartDamageFill,
 } from "./spells-holes-fills.ts";
 import type {
   SpellFillSet,
-  SpellBeamFillSet,
+  SpellAttackSequencePartFillSet,
 } from "./spells-resolve-fill-set.ts";
 import { spellFillSet } from "./spells-resolve-fill-set.ts";
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 
-type ResolvedSpellBeam = {
+type ResolvedSpellAttackSequencePart = {
   readonly tag: "resolved";
   readonly state: ActionSpellBattleResolutionInput["state"];
   readonly objectDamages: readonly BattleObjectDamageOutcome[];
@@ -91,12 +92,12 @@ type ResolvedSpellBeam = {
   readonly usedExtraFillHoleIds: readonly string[];
 };
 
-export function resolveSpellAttackBeamSequenceAct(input: {
+export function resolveSpellAttackSequenceAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "spellAttackBeamSequence" }
+    { readonly procedure: "spellAttackSequence" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
 }): BattleResolutionResult {
@@ -109,27 +110,27 @@ export function resolveSpellAttackBeamSequenceAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Eldritch Blast beams must use beam-indexed target, attack-roll, and damage fills.",
+      `${input.invocation.spell.name} spell attack sequence must use indexed target, attack-roll, and damage fills.`,
     );
   }
 
-  const missingTargetIndex = input.fillSet.beamFills.findIndex(
-    (beam) => beam.target === undefined,
+  const missingTargetIndex = input.fillSet.attackSequencePartFills.findIndex(
+    (partFill) => partFill.target === undefined,
   );
   if (missingTargetIndex >= 0) {
     return needsHolesResult(input.input.state, input.input.subject, [
-      spellBeamTargetHole(
+      spellAttackSequencePartTargetHole(
         input.input.state,
         input.actorId,
         input.invocation,
         missingTargetIndex,
       ),
-      spellBeamObjectTargetHole(input.invocation, missingTargetIndex),
+      spellAttackSequencePartObjectTargetHole(input.invocation, missingTargetIndex),
     ]);
   }
 
-  const targetIds = input.fillSet.beamFills.flatMap((beam) =>
-    beam.target?.kind === "combatant" ? [beam.target.targetId] : [],
+  const targetIds = input.fillSet.attackSequencePartFills.flatMap((partFill) =>
+    partFill.target?.kind === "combatant" ? [partFill.target.targetId] : [],
   );
   const spellCastReactionWindow = maybeOpenReactionWindow(
     input.input.state,
@@ -155,20 +156,20 @@ export function resolveSpellAttackBeamSequenceAct(input: {
   const objectDamages: BattleObjectDamageOutcome[] = [];
   const afterDamageEvents: BattleAfterDamageEvent[] = [];
   const usedExtraFillHoleIds = new Set<string>();
-  for (const [beamIndex, beam] of input.fillSet.beamFills.entries()) {
-    const resolved = resolveEldritchBlastBeam({
+  for (const [partIndex, partFill] of input.fillSet.attackSequencePartFills.entries()) {
+    const resolved = resolveSpellAttackSequencePart({
       state,
       input: input.input,
       actorId: input.actorId,
       invocation: input.invocation,
       fillSet: input.fillSet,
-      beam,
-      beamIndex,
+      partFill,
+      partIndex,
     });
     if (resolved.tag !== "resolved") {
       return resolved;
     }
-    if (!isResolvedSpellBeam(resolved)) {
+    if (!isResolvedSpellAttackSequencePart(resolved)) {
       return resolved;
     }
     state = resolved.state;
@@ -187,7 +188,7 @@ export function resolveSpellAttackBeamSequenceAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Spell beam damage lifecycle fill does not match a beam that currently needs it.",
+      "Spell attack sequence damage lifecycle fill does not match an attack that currently needs it.",
     );
   }
 
@@ -221,47 +222,49 @@ export function resolveSpellAttackBeamSequenceAct(input: {
   };
 }
 
-function resolveEldritchBlastBeam(input: {
+function resolveSpellAttackSequencePart(input: {
   readonly state: ActionSpellBattleResolutionInput["state"];
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "spellAttackBeamSequence" }
+    { readonly procedure: "spellAttackSequence" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-  readonly beam: SpellBeamFillSet;
-  readonly beamIndex: number;
-}): ResolvedSpellBeam | BattleResolutionResult {
-  const target = input.beam.target;
+  readonly partFill: SpellAttackSequencePartFillSet;
+  readonly partIndex: number;
+}): ResolvedSpellAttackSequencePart | BattleResolutionResult {
+  const target = input.partFill.target;
   if (target === undefined) {
+    const partName = spellAttackSequencePartName(input.invocation.spell);
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Eldritch Blast beam target was not filled.",
+      `${input.invocation.spell.name} ${partName} target was not filled.`,
     );
   }
-  return target.kind === "combatant"
-    ? resolveEldritchBlastCreatureBeam({ ...input, target })
-    : resolveEldritchBlastObjectBeam({ ...input, target });
+  if (target.kind === "combatant") {
+    return resolveSpellAttackSequenceCreaturePart({ ...input, target });
+  }
+  return resolveSpellAttackSequenceObjectPart({ ...input, target });
 }
 
-function resolveEldritchBlastCreatureBeam(input: {
+function resolveSpellAttackSequenceCreaturePart(input: {
   readonly state: ActionSpellBattleResolutionInput["state"];
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "spellAttackBeamSequence" }
+    { readonly procedure: "spellAttackSequence" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-  readonly beam: SpellBeamFillSet;
-  readonly beamIndex: number;
+  readonly partFill: SpellAttackSequencePartFillSet;
+  readonly partIndex: number;
   readonly target: Extract<
-    NonNullable<SpellBeamFillSet["target"]>,
+    NonNullable<SpellAttackSequencePartFillSet["target"]>,
     { readonly kind: "combatant" }
   >;
-}): ResolvedSpellBeam | BattleResolutionResult {
+}): ResolvedSpellAttackSequencePart | BattleResolutionResult {
   const target = input.state.combatants.get(input.target.targetId);
   if (
     target === undefined ||
@@ -273,10 +276,11 @@ function resolveEldritchBlastCreatureBeam(input: {
       input.target.spatialFacts,
     )
   ) {
+    const partName = spellAttackSequencePartName(input.invocation.spell);
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Eldritch Blast beam target must be a combatant within the selected spell's supported range.",
+      `${input.invocation.spell.name} ${partName} target must be a combatant within the selected spell's supported range.`,
     );
   }
   const requiredRollMode = requiredSpellAttackRollMode(
@@ -286,11 +290,11 @@ function resolveEldritchBlastCreatureBeam(input: {
     input.invocation,
     input.target.spatialFacts,
   );
-  const originalTargetHole = spellBeamTargetHole(
+  const originalTargetHole = spellAttackSequencePartTargetHole(
     input.state,
     input.actorId,
     input.invocation,
-    input.beamIndex,
+    input.partIndex,
   );
   const sanctuaryCheck = sanctuaryTargetingInterdictionCheck({
     state: input.state,
@@ -333,10 +337,11 @@ function resolveEldritchBlastCreatureBeam(input: {
         sanctuaryCheck.spatialFacts,
       )
     ) {
+      const partName = spellAttackSequencePartName(input.invocation.spell);
       return invalidResult(
         input.input.state,
         "invalidFill",
-        "Sanctuary replacement Eldritch Blast beam target must be legal for the selected spell.",
+        `Sanctuary replacement ${input.invocation.spell.name} ${partName} target must be legal for the selected spell.`,
       );
     }
     const originalTargetFill = input.input.fills.find(
@@ -345,10 +350,11 @@ function resolveEldritchBlastCreatureBeam(input: {
         fill.holeId === originalTargetHole.holeId,
     );
     if (originalTargetFill === undefined) {
+      const partName = spellAttackSequencePartName(input.invocation.spell);
       return invalidResult(
         input.input.state,
         "invalidFill",
-        "Sanctuary replacement requires the original Eldritch Blast beam target fill.",
+        `Sanctuary replacement requires the original ${input.invocation.spell.name} ${partName} target fill.`,
       );
     }
     const fills = input.input.fills
@@ -367,31 +373,31 @@ function resolveEldritchBlastCreatureBeam(input: {
     if (fillSet.tag === "invalid") {
       return invalidResult(input.input.state, "invalidFill", fillSet.message);
     }
-    return resolveSpellAttackBeamSequenceAct({
+    return resolveSpellAttackSequenceAct({
       input: { ...input.input, fills },
       actorId: input.actorId,
       invocation: input.invocation,
       fillSet,
     });
   }
-  if (input.beam.attackRoll === undefined) {
+  if (input.partFill.attackRoll === undefined) {
     return needsHolesResult(input.state, input.input.subject, [
-      spellBeamAttackRollHole(
+      spellAttackSequencePartAttackRollHole(
         input.invocation,
-        input.beamIndex,
+        input.partIndex,
         requiredRollMode,
       ),
     ]);
   }
-  const attackRollError = validateBeamAttackRoll(
-    input.beam.attackRoll,
+  const attackRollError = validateSpellAttackSequencePartAttackRoll(
+    input.partFill.attackRoll,
     requiredRollMode,
   );
   if (attackRollError !== null) {
     return invalidResult(input.input.state, "invalidFill", attackRollError);
   }
   const ordinaryHit = attackRollHits(
-    input.beam.attackRoll,
+    input.partFill.attackRoll,
     currentArmorClass(activeEffectArmorClass(target)),
   );
   const missToHitReplacement = selectedAttackRollMissToHitReplacement({
@@ -399,11 +405,11 @@ function resolveEldritchBlastCreatureBeam(input: {
     subject: input.input.subject,
     attackerId: input.actorId,
     targetId: target.combatantId,
-    attackRoll: input.beam.attackRoll,
+    attackRoll: input.partFill.attackRoll,
     ordinaryHit,
   });
   if (
-    input.beam.attackRoll.missToHitReplacementUnitId !== undefined &&
+    input.partFill.attackRoll.missToHitReplacementUnitId !== undefined &&
     missToHitReplacement === null
   ) {
     return invalidResult(
@@ -415,7 +421,7 @@ function resolveEldritchBlastCreatureBeam(input: {
     );
   }
   const hit = ordinaryHit || missToHitReplacement !== null;
-  const critical = attackRollIsCriticalHit(input.beam.attackRoll);
+  const critical = attackRollIsCriticalHit(input.partFill.attackRoll);
   const attackRolledState = recordAttackRollMissToHitReplacementUsed(
     consumeHelpAttackForAttackRoll(
       recordAttackRollOngoingFeatures(
@@ -432,7 +438,7 @@ function resolveEldritchBlastCreatureBeam(input: {
     {
       subject: input.input.subject,
       targetId: target.combatantId,
-      attackRoll: input.beam.attackRoll,
+      attackRoll: input.partFill.attackRoll,
     },
   );
   const spellMarkedDamageRiders = hit
@@ -448,7 +454,7 @@ function resolveEldritchBlastCreatureBeam(input: {
         trigger: "attackHit",
         attackerId: input.actorId,
         targetId: target.combatantId,
-        attackRoll: input.beam.attackRoll,
+        attackRoll: input.partFill.attackRoll,
         attackKind: spellAttackKindForRedirect(input.invocation.attackKind),
         attackHitTriggerKind: "otherAttack",
         damageTypes: [
@@ -469,11 +475,12 @@ function resolveEldritchBlastCreatureBeam(input: {
       return reactionWindow;
     }
   }
-  if (!hit && input.beam.damageRoll !== undefined) {
+  if (!hit && input.partFill.damageRoll !== undefined) {
+    const partName = spellAttackSequencePartName(input.invocation.spell);
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Eldritch Blast beam damage can only be filled after a hit.",
+      `${input.invocation.spell.name} ${partName} damage can only be filled after a hit.`,
     );
   }
   if (!hit) {
@@ -485,20 +492,20 @@ function resolveEldritchBlastCreatureBeam(input: {
       usedExtraFillHoleIds: [],
     };
   }
-  if (input.beam.damageRoll === undefined) {
+  if (input.partFill.damageRoll === undefined) {
     return needsHolesResult(attackRolledState, input.input.subject, [
-      spellBeamDamageHole(
+      spellAttackSequencePartDamageHole(
         input.invocation,
-        input.beamIndex,
+        input.partIndex,
         critical,
         spellMarkedDamageRiders,
       ),
     ]);
   }
-  const damageValidation = validateSpellBeamDamageFill(
-    input.beam.damageRoll,
+  const damageValidation = validateSpellAttackSequencePartDamageFill(
+    input.partFill.damageRoll,
     input.invocation,
-    input.beamIndex,
+    input.partIndex,
     critical,
     spellMarkedDamageRiders,
   );
@@ -508,22 +515,22 @@ function resolveEldritchBlastCreatureBeam(input: {
   const spellDamageByType = spellDamageByTypeForTarget(
     target,
     input.invocation,
-    input.beam.damageRoll,
+    input.partFill.damageRoll,
     "full",
     spellMarkedDamageRiders,
     critical,
   );
-  const spellReductionRollHoleForBeam = (reduction: SpellDamageReductionRoll) =>
-    spellBeamDamageReductionRollHole(
+  const spellReductionRollHoleForPart = (reduction: SpellDamageReductionRoll) =>
+    spellAttackSequencePartDamageReductionRollHole(
       input.invocation,
-      input.beamIndex,
+      input.partIndex,
       reduction,
     );
   const spellReductionCandidate = applyAvailableSpellDamageReduction(
     target,
     spellDamageByType,
     undefined,
-    spellReductionRollHoleForBeam,
+    spellReductionRollHoleForPart,
   );
   const spellReductionRoll =
     spellReductionCandidate.tag === "needsHoles"
@@ -535,7 +542,7 @@ function resolveEldritchBlastCreatureBeam(input: {
     target,
     spellDamageByType,
     spellReductionRoll,
-    spellReductionRollHoleForBeam,
+    spellReductionRollHoleForPart,
   );
   if (spellReduction.tag === "invalid") {
     return invalidResult(
@@ -560,9 +567,9 @@ function resolveEldritchBlastCreatureBeam(input: {
   const concentrationSave =
     concentrationSaveBase === null
       ? null
-      : spellBeamConcentrationSavingThrowHole(
+      : spellAttackSequencePartConcentrationSavingThrowHole(
           input.invocation,
-          input.beamIndex,
+          input.partIndex,
           concentrationSaveBase,
         );
   const concentrationFill =
@@ -578,9 +585,9 @@ function resolveEldritchBlastCreatureBeam(input: {
     ]);
   }
   const damageEventKey = String(
-    spellBeamDamageDispositionHoleKey(
+    spellAttackSequencePartDamageDispositionHoleKey(
       input.invocation,
-      input.beamIndex,
+      input.partIndex,
       spellReduction.target.combatantId,
     ).holeId,
   );
@@ -588,9 +595,9 @@ function resolveEldritchBlastCreatureBeam(input: {
     damageSourceId: input.actorId,
     target: spellReduction.target,
     damageAmount: spellDamageAmount,
-    holeKey: spellBeamDamageDispositionHoleKey(
+    holeKey: spellAttackSequencePartDamageDispositionHoleKey(
       input.invocation,
-      input.beamIndex,
+      input.partIndex,
       spellReduction.target.combatantId,
     ),
   });
@@ -651,7 +658,7 @@ function resolveEldritchBlastCreatureBeam(input: {
     attackRolledState,
     target.combatantId,
     input.invocation,
-    input.beam.damageRoll,
+    input.partFill.damageRoll,
     critical,
     {
       concentrationSavingThrow: concentrationFill,
@@ -662,7 +669,7 @@ function resolveEldritchBlastCreatureBeam(input: {
       ),
       spellMarkedDamageRiders,
       spellDamageReductionRoll: spellReductionRoll,
-      spellDamageReductionRollHoleForReduction: spellReductionRollHoleForBeam,
+      spellDamageReductionRollHoleForReduction: spellReductionRollHoleForPart,
       hideousLaughterDamageRepeatSaves:
         relevantHideousLaughterDamageRepeatSaves,
       hideousLaughterDamageRepeatSaveEventKey: damageEventKey,
@@ -698,27 +705,27 @@ function resolveEldritchBlastCreatureBeam(input: {
   };
 }
 
-function isResolvedSpellBeam(
+function isResolvedSpellAttackSequencePart(
   result:
     | Extract<BattleResolutionResult, { readonly tag: "resolved" }>
-    | ResolvedSpellBeam,
-): result is ResolvedSpellBeam {
+    | ResolvedSpellAttackSequencePart,
+): result is ResolvedSpellAttackSequencePart {
   return "afterDamageEvents" in result && "usedExtraFillHoleIds" in result;
 }
 
-function resolveEldritchBlastObjectBeam(input: {
+function resolveSpellAttackSequenceObjectPart(input: {
   readonly state: ActionSpellBattleResolutionInput["state"];
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "spellAttackBeamSequence" }
+    { readonly procedure: "spellAttackSequence" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-  readonly beam: SpellBeamFillSet;
-  readonly beamIndex: number;
+  readonly partFill: SpellAttackSequencePartFillSet;
+  readonly partIndex: number;
   readonly target: Extract<
-    NonNullable<SpellBeamFillSet["target"]>,
+    NonNullable<SpellAttackSequencePartFillSet["target"]>,
     { readonly kind: "object" }
   >;
 }):
@@ -744,10 +751,11 @@ function resolveEldritchBlastObjectBeam(input: {
     input.invocation,
   );
   if (objectFact === null) {
+    const partName = spellAttackSequencePartName(input.invocation.spell);
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Eldritch Blast object beam must include a matching table-supplied range and object Armor Class fact.",
+      `${input.invocation.spell.name} object ${partName} must include a matching table-supplied range and object Armor Class fact.`,
     );
   }
   const sightFact = spellObjectTargetSightFact(
@@ -767,10 +775,11 @@ function resolveEldritchBlastObjectBeam(input: {
     sightFact === null &&
     objectTargetAttackNeedsSightFact(input.state, input.target.objectId)
   ) {
+    const partName = spellAttackSequencePartName(input.invocation.spell);
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Eldritch Blast object beam must include a matching table-supplied object sight fact.",
+      `${input.invocation.spell.name} object ${partName} must include a matching table-supplied object sight fact.`,
     );
   }
   const requiredRollMode = requiredSpellObjectTargetAttackRollMode(
@@ -780,25 +789,25 @@ function resolveEldritchBlastObjectBeam(input: {
     input.target.objectId,
     sightFact?.attackerCanSeeObject,
   );
-  if (input.beam.attackRoll === undefined) {
+  if (input.partFill.attackRoll === undefined) {
     return needsHolesResult(input.state, input.input.subject, [
-      spellBeamAttackRollHole(
+      spellAttackSequencePartAttackRollHole(
         input.invocation,
-        input.beamIndex,
+        input.partIndex,
         requiredRollMode,
       ),
     ]);
   }
-  const attackRollError = validateBeamAttackRoll(
-    input.beam.attackRoll,
+  const attackRollError = validateSpellAttackSequencePartAttackRoll(
+    input.partFill.attackRoll,
     requiredRollMode,
   );
   if (attackRollError !== null) {
     return invalidResult(input.input.state, "invalidFill", attackRollError);
   }
   if (
-    input.beam.attackRoll.activatedOngoingFeatureUnitId !== undefined ||
-    input.beam.attackRoll.missToHitReplacementUnitId !== undefined
+    input.partFill.attackRoll.activatedOngoingFeatureUnitId !== undefined ||
+    input.partFill.attackRoll.missToHitReplacementUnitId !== undefined
   ) {
     return invalidResult(
       input.input.state,
@@ -806,8 +815,8 @@ function resolveEldritchBlastObjectBeam(input: {
       "Object-target spell attacks do not use combatant attack-roll feature selections.",
     );
   }
-  const hit = attackRollHits(input.beam.attackRoll, objectFact.armorClass);
-  const critical = attackRollIsCriticalHit(input.beam.attackRoll);
+  const hit = attackRollHits(input.partFill.attackRoll, objectFact.armorClass);
+  const critical = attackRollIsCriticalHit(input.partFill.attackRoll);
   const attackRolledState = consumeSelfAttackRollEffects(
     {
       ...input.state,
@@ -818,11 +827,11 @@ function resolveEldritchBlastObjectBeam(input: {
     },
     input.actorId,
   );
-  if (!hit && input.beam.damageRoll !== undefined) {
+  if (!hit && input.partFill.damageRoll !== undefined) {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Eldritch Blast beam damage can only be filled after a hit.",
+      "Spell attack sequence damage can only be filled after a hit.",
     );
   }
   if (!hit) {
@@ -834,15 +843,15 @@ function resolveEldritchBlastObjectBeam(input: {
       usedExtraFillHoleIds: [],
     };
   }
-  if (input.beam.damageRoll === undefined) {
+  if (input.partFill.damageRoll === undefined) {
     return needsHolesResult(attackRolledState, input.input.subject, [
-      spellBeamDamageHole(input.invocation, input.beamIndex, critical),
+      spellAttackSequencePartDamageHole(input.invocation, input.partIndex, critical),
     ]);
   }
-  const damageValidation = validateSpellBeamDamageFill(
-    input.beam.damageRoll,
+  const damageValidation = validateSpellAttackSequencePartDamageFill(
+    input.partFill.damageRoll,
     input.invocation,
-    input.beamIndex,
+    input.partIndex,
     critical,
   );
   if (damageValidation !== null) {
@@ -855,7 +864,7 @@ function resolveEldritchBlastObjectBeam(input: {
       spellObjectDamageOutcome({
         objectId: input.target.objectId,
         invocation: input.invocation,
-        damageRoll: input.beam.damageRoll,
+        damageRoll: input.partFill.damageRoll,
         critical,
         disposition: objectFact.damageDisposition,
       }),
@@ -865,8 +874,8 @@ function resolveEldritchBlastObjectBeam(input: {
   };
 }
 
-function validateBeamAttackRoll(
-  attackRoll: NonNullable<SpellBeamFillSet["attackRoll"]>,
+function validateSpellAttackSequencePartAttackRoll(
+  attackRoll: NonNullable<SpellAttackSequencePartFillSet["attackRoll"]>,
   requiredRollMode: Parameters<typeof attackRollModeMatches>[1],
 ): string | null {
   if (!attackRollResultIsValid(attackRoll)) {
@@ -878,71 +887,74 @@ function validateBeamAttackRoll(
   return null;
 }
 
-function spellBeamDamageReductionRollHole(
+function spellAttackSequencePartDamageReductionRollHole(
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "spellAttackBeamSequence" }
+    { readonly procedure: "spellAttackSequence" }
   >,
-  beamIndex: number,
+  partIndex: number,
   reduction: SpellDamageReductionRoll,
 ): BattleSpellDamageReductionRollHole {
   const base = spellDamageReductionRollHole(reduction);
   const protocolId = [
-    "battle:spell:beam-damage-reduction-roll",
+    "battle:spell:attack-sequence-part-damage-reduction-roll",
     invocation.spell.id,
-    beamIndex,
+    partIndex,
     reduction.sourceSpellId,
     reduction.sourceCombatantId,
     reduction.targetId,
     reduction.damageType,
   ].join(":");
+  const partName = spellAttackSequencePartName(invocation.spell);
   return {
     ...base,
     holeId: holeId(protocolId),
     holeInstanceKey: holeInstanceKey(protocolId),
-    label: `${invocation.spell.name} beam ${beamIndex + 1} damage reduction`,
+    label: `${invocation.spell.name} ${partName} ${partIndex + 1} damage reduction`,
   };
 }
 
-function spellBeamConcentrationSavingThrowHole(
+function spellAttackSequencePartConcentrationSavingThrowHole(
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "spellAttackBeamSequence" }
+    { readonly procedure: "spellAttackSequence" }
   >,
-  beamIndex: number,
+  partIndex: number,
   base: BattleConcentrationSavingThrowHole,
 ): BattleConcentrationSavingThrowHole {
   const protocolId = [
-    "battle:spell:beam-concentration-save",
+    "battle:spell:attack-sequence-part-concentration-save",
     invocation.spell.id,
-    beamIndex,
+    partIndex,
     base.combatantId,
   ].join(":");
+  const partName = spellAttackSequencePartName(invocation.spell);
   return {
     ...base,
     holeId: holeId(protocolId),
     holeInstanceKey: holeInstanceKey(protocolId),
-    label: `${invocation.spell.name} beam ${beamIndex + 1} Concentration Constitution Saving Throw`,
+    label: `${invocation.spell.name} ${partName} ${partIndex + 1} Concentration Constitution Saving Throw`,
   };
 }
 
-function spellBeamDamageDispositionHoleKey(
+function spellAttackSequencePartDamageDispositionHoleKey(
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "spellAttackBeamSequence" }
+    { readonly procedure: "spellAttackSequence" }
   >,
-  beamIndex: number,
+  partIndex: number,
   targetId: CombatantId,
 ) {
   const protocolId = [
-    "battle:spell:beam-damage-disposition",
+    "battle:spell:attack-sequence-part-damage-disposition",
     invocation.spell.id,
-    beamIndex,
+    partIndex,
     targetId,
   ].join(":");
+  const partName = spellAttackSequencePartName(invocation.spell);
   return {
     holeId: holeId(protocolId),
     holeInstanceKey: holeInstanceKey(protocolId),
-    label: `${invocation.spell.name} beam ${beamIndex + 1} damage disposition`,
+    label: `${invocation.spell.name} ${partName} ${partIndex + 1} damage disposition`,
   };
 }
