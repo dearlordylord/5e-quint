@@ -22882,6 +22882,28 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-WARDING-BOND-SURFACE-LIFECYCLE",
+            "mechanic": "Replace the partial Warding Bond Surface shape with a lossless linked-bond Spell Effect source shape that represents the willing target, paired platinum rings worn by caster and target for the duration, 60-foot range-gated target benefits, same-amount damage sharing to the caster, early ending when the caster drops to 0 Hit Points or the pair separates by more than 60 feet, and recast ending on either connected creature without encoding those lifecycle facts as prose-only comments.",
+            "owner": "surface Spell Definition authoring",
+            "requiredOutput": "Warding Bond Dhall and JSON content, plus schema/tracer support where required, make the coupled bond identity, range-gated projections, damage-sharing trigger, material/worn-ring witnesses, and early-end triggers executable source facts.",
+            "title": "Warding Bond Surface Linked Effect Lifecycle"
+          },
+          {
+            "id": "L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME",
+            "mechanic": "Promote Warding Bond as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, consumes caller-supplied willing-target, worn-ring/material, and 60-foot connection facts, records one paired-creature bond occurrence, projects +1 Armor Class, +1 Saving Throws, and all-damage Resistance only while the target is within 60 feet, applies the same amount to the caster after the target takes damage with the caster damage lifecycle handled by the runtime boundary, and cleans up on duration end, caster 0 Hit Points, separation beyond 60 feet, or recast on either connected creature.",
+            "owner": "battle-runtime spell invocation/effect lifecycle plus material and table/spatial witness boundary",
+            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for casting, Spell Slot spend, target projections, Resistance interaction, same-amount damage sharing, caster-0-HP cleanup, separation cleanup, recast cleanup, and duration cleanup without duplicating inventory or generic position state.",
+            "title": "Warding Bond Linked Effect Runtime"
+          }
+        ],
+        "futureProfileOwner": "surface linked-bond Spell Effect shape plus battle-runtime spell invocation/effect lifecycle",
+        "reason": "The local SRD 5.2.1 Warding Bond passage defines Magic Action level-2-or-higher Spell Slot casting, Touch range, a willing creature target, paired platinum rings worn by caster and target for the duration, a one-hour mystic connection, target-only +1 Armor Class and Saving Throw bonuses plus Resistance to all damage while the target remains within 60 feet of the caster, same-amount damage to the caster each time the target takes damage, and early ending when the caster drops to 0 Hit Points, the creatures separate by more than 60 feet, or the spell is cast again on either connected creature. RAW trace: .references/srd-5.2.1/Spells/Descriptions-S-Z.md:1219-1230; .references/srd-5.2.1/Classes/Cleric.md:197; .references/srd-5.2.1/Classes/Paladin.md:203. Task 50 claims no promoted battle-runtime profile yet because the Surface record marks the end triggers as partial, and runtime has no single paired-creature bond occurrence that keeps caster/target identity, range-gated target projections, same-amount post-damage sharing, recast cleanup, and worn-ring/material witnesses coupled without duplicating inventory or active-effect state.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",

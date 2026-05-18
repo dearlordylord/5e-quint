@@ -179,12 +179,12 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 469,
-      "percent": "84.4%",
+      "numerator": 467,
+      "percent": "84%",
       "rowsByStatus": {
         "accepted": 319,
-        "accepted-no-battle-effect": 150,
-        "battle-runtime-required": 77,
+        "accepted-no-battle-effect": 148,
+        "battle-runtime-required": 79,
         "partial-battle-runtime": 6,
         "owner-evidence-required": 4
       }
@@ -203,17 +203,17 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 330,
       "non-runtime": 24,
-      "catalog-only/dead-for-now": 121,
+      "catalog-only/dead-for-now": 119,
       "missing-authored-record": 58,
       "catalog-installed-owner-evidence-required": 14,
-      "catalog-authored-executable-follow-up": 9
+      "catalog-authored-executable-follow-up": 11
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 171,
-      "catalog-only/dead-for-now": 121,
+      "catalog-only/dead-for-now": 119,
       "missing-authored-record": 57,
       "catalog-installed-owner-evidence-required": 9,
-      "catalog-authored-executable-follow-up": 9
+      "catalog-authored-executable-follow-up": 11
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -8939,10 +8939,11 @@
         "state": "not-installed",
         "unitId": "warding_bond"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-WARDING-BOND-SURFACE-LIFECYCLE, L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME: L12G-FOLLOWUP-WARDING-BOND-SURFACE-LIFECYCLE owns Replace the partial Warding Bond Surface shape with a lossless linked-bond Spell Effect source shape that represents the willing target, paired platinum rings worn by caster and target for the duration, 60-foot range-gated target benefits, same-amount damage sharing to the caster, early ending when the caster drops to 0 Hit Points or the pair separates by more than 60 feet, and recast ending on either connected creature without encoding those lifecycle facts as prose-only comments. Required output: Warding Bond Dhall and JSON content, plus schema/tracer support where required, make the coupled bond identity, range-gated projections, damage-sharing trigger, material/worn-ring witnesses, and early-end triggers executable source facts.; L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME owns Promote Warding Bond as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, consumes caller-supplied willing-target, worn-ring/material, and 60-foot connection facts, records one paired-creature bond occurrence, projects +1 Armor Class, +1 Saving Throws, and all-damage Resistance only while the target is within 60 feet, applies the same amount to the caster after the target takes damage with the caster damage lifecycle handled by the runtime boundary, and cleans up on duration end, caster 0 Hit Points, separation beyond 60 feet, or recast on either connected creature. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for casting, Spell Slot spend, target projections, Resistance interaction, same-amount damage sharing, caster-0-HP cleanup, separation cleanup, recast cleanup, and duration cleanup without duplicating inventory or generic position state.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_zone_of_truth",
@@ -14776,10 +14777,11 @@
         "state": "not-installed",
         "unitId": "warding_bond"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-WARDING-BOND-SURFACE-LIFECYCLE, L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME: L12G-FOLLOWUP-WARDING-BOND-SURFACE-LIFECYCLE owns Replace the partial Warding Bond Surface shape with a lossless linked-bond Spell Effect source shape that represents the willing target, paired platinum rings worn by caster and target for the duration, 60-foot range-gated target benefits, same-amount damage sharing to the caster, early ending when the caster drops to 0 Hit Points or the pair separates by more than 60 feet, and recast ending on either connected creature without encoding those lifecycle facts as prose-only comments. Required output: Warding Bond Dhall and JSON content, plus schema/tracer support where required, make the coupled bond identity, range-gated projections, damage-sharing trigger, material/worn-ring witnesses, and early-end triggers executable source facts.; L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME owns Promote Warding Bond as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, consumes caller-supplied willing-target, worn-ring/material, and 60-foot connection facts, records one paired-creature bond occurrence, projects +1 Armor Class, +1 Saving Throws, and all-damage Resistance only while the target is within 60 feet, applies the same amount to the caster after the target takes damage with the caster damage lifecycle handled by the runtime boundary, and cleans up on duration end, caster 0 Hit Points, separation beyond 60 feet, or recast on either connected creature. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for casting, Spell Slot spend, target projections, Resistance interaction, same-amount damage sharing, caster-0-HP cleanup, separation cleanup, recast cleanup, and duration cleanup without duplicating inventory or generic position state.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/paladin:spell-level-2:spell-unit-pressure:paladin_spell_list_zone_of_truth",
