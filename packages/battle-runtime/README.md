@@ -1206,6 +1206,8 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
 - `battle-runtime-save-gated-spell.qnt` - save-gated damage and condition
   profile projection, attack-burst save helpers, save-gated active effects, and
   replay holes.
+- `battle-runtime-marked-riders.qnt` - Hunter's Mark and Hex durations,
+  transfer eligibility, marked damage riders, and marked Ability Check modes.
 - `battle-runtime.mbt.qnt` - package-local randomized model for the selected
   integrated promoted MBT path.
 
