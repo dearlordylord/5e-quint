@@ -1,0 +1,179 @@
+// -*- mode: Bluespec; -*-
+
+module battleRuntimeSpellInvocation {
+  import battleRuntimeFeatureBridge.* from "./battle-runtime-feature-bridge"
+  import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"
+  import battleRuntimeModel.* from "./battle-runtime-model"
+  import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
+
+  pure def battleTurnSpellSlotUseActor(slotUse: BattleTurnSpellSlotUse): Actor =
+    match slotUse {
+      | BattlePendingSpellSlotUse(actor) => actor
+      | BattleCommittedSpellSlotUse(actor) => actor
+    }
+
+  pure def battleActorHasSpellSlotUse(state: BattleState, actor: Actor): bool =
+    state.spellSlotUsesThisTurn.exists(slotUse => battleTurnSpellSlotUseActor(slotUse) == actor)
+
+  pure def battleActorHasCommittedSpellSlotUse(state: BattleState, actor: Actor): bool =
+    state.spellSlotUsesThisTurn.contains(BattleCommittedSpellSlotUse(actor))
+
+  pure def canActorExpendSpellSlotThisTurn(state: BattleState, actor: Actor): bool =
+    not(battleActorHasSpellSlotUse(state, actor))
+
+  pure def claimPendingActorSpellSlotUse(state: BattleState, actor: Actor): BattleState =
+    if (battleActorHasSpellSlotUse(state, actor))
+      state
+    else
+      { ...state, spellSlotUsesThisTurn: state.spellSlotUsesThisTurn.union(Set(BattlePendingSpellSlotUse(actor))) }
+
+  pure def releasePendingActorSpellSlotUse(state: BattleState, actor: Actor): BattleState =
+    { ...state, spellSlotUsesThisTurn: state.spellSlotUsesThisTurn.filter(slotUse => slotUse != BattlePendingSpellSlotUse(actor)) }
+
+  pure def commitActorSpellSlotUse(state: BattleState, actor: Actor): BattleState =
+    if (battleActorHasCommittedSpellSlotUse(state, actor))
+      state
+    else {
+      val released = releasePendingActorSpellSlotUse(state, actor)
+      {
+        ...released,
+        spellSlotUsesThisTurn: released.spellSlotUsesThisTurn.union(Set(BattleCommittedSpellSlotUse(actor))),
+      }
+    }
+
+  pure def expendedSlotsAfterInvocation(
+    invocation: SpellInvocation,
+    expendedSpellSlots: int,
+  ): int =
+    if (spellInvocationSpendsSpellSlot(invocation))
+      expendedSpellSlots + 1
+    else
+      expendedSpellSlots
+
+  pure def spellInvocationSpendsSpellSlot(invocation: SpellInvocation): bool =
+    match invocation {
+      | MagicMissile => true
+      | RayOfFrost => false
+      | AcidSplash => false
+      | PoisonSpray => false
+      | ChillTouch => false
+      | StarryWisp => false
+      | FireBolt => false
+      | EldritchBlast => false
+      | SacredFlame => false
+      | InflictWounds => true
+      | BurningHands => true
+      | Fireball => true
+      | ColorSpray => true
+      | Entangle => true
+      | EnsnaringStrike => true
+      | SearingSmite => true
+      | FaerieFire => true
+      | AnimalFriendship => true
+      | CharmPerson => true
+      | ProtectionFromEvilAndGood => true
+      | IceKnife => true
+      | HealingWord => true
+      | CureWounds => true
+      | MassHealingWord => true
+      | Shield => true
+      | Counterspell => true
+      | FalseLife => true
+      | Longstrider => true
+      | ShieldOfFaith => true
+      | Heroism => true
+      | Bane => true
+      | Bless => true
+      | Guidance => false
+      | Thaumaturgy => false
+      | DivineFavor => true
+      | DivineSmite => true
+      | HuntersMark => true
+      | Hex => true
+      | ShockingGrasp => false
+      | GuidingBolt => true
+      | RayOfSickness => true
+      | ViciousMockery => false
+      | ProduceFlame => false
+      | DancingLightsSpell => false
+      | Light => false
+      | TrueStrike => false
+      | Grease => true
+      | FogCloud => true
+      | Command => true
+      | DissonantWhispers => true
+      | FeatherFall => true
+      | HellishRebuke => true
+      | SorcerousBurst => false
+      | SpareTheDying => false
+      | HideousLaughter => true
+    }
+
+  pure def canExpendSpellSlotThisTurn(state: BattleState): bool =
+    canActorExpendSpellSlotThisTurn(state, currentActor(state))
+
+  pure def canDiscoverSpellActs(canCastSpells: bool, raging: bool): bool =
+    canCastSpells and not(battleRuntimeRagePreventsSpellcasting(raging))
+
+  pure def fighterRageDamageBonus(barbarianLevel: int): int =
+    battleRuntimeRageDamageBonus(barbarianLevel)
+
+  pure def spellAttackModifier(
+    spellcastingAbilityModifier: int,
+    proficiencyBonus: int,
+  ): int =
+    spellcastingAbilityModifier + proficiencyBonus
+
+  pure def innateSorceryAppliesToSpell(
+    innateSorceryActive: bool,
+    spellSourceClass: SpellSourceClass,
+  ): bool =
+    innateSorceryActive and spellSourceClass == SorcererSpellSource
+
+  pure def sorcererSpellSaveDcWithInnateSorcery(
+    baseDc: int,
+    innateSorceryActive: bool,
+    spellSourceClass: SpellSourceClass,
+  ): int =
+    baseDc + (if (innateSorceryAppliesToSpell(innateSorceryActive, spellSourceClass)) 1 else 0)
+
+  pure def sorcererSpellAttackRollModeWithInnateSorcery(
+    baseline: SpellAttackRollMode,
+    innateSorceryActive: bool,
+    spellSourceClass: SpellSourceClass,
+  ): SpellAttackRollMode =
+    if (innateSorceryAppliesToSpell(innateSorceryActive, spellSourceClass) and baseline == DisadvantageSpellAttackRoll)
+      NormalSpellAttackRoll
+    else if (innateSorceryAppliesToSpell(innateSorceryActive, spellSourceClass) and baseline == NormalSpellAttackRoll)
+      AdvantageSpellAttackRoll
+    else
+      baseline
+
+  pure def battleRuntimeScalarBuffProfileForInvocation(invocation: ScalarBuffSpell): BattleRuntimeScalarBuffProfile =
+    match invocation {
+      | FalseLifeScalarBuff => BattleRuntimeFalseLifeScalarBuff
+      | LongstriderScalarBuff => BattleRuntimeLongstriderScalarBuff
+      | ShieldOfFaithScalarBuff => BattleRuntimeShieldOfFaithScalarBuff
+    }
+
+  pure def magicMissileDartCount(slotLevel: int): int =
+    3 + (slotLevel - 1)
+
+  pure def magicMissileAllocatedDamage(
+    dieTotal: int,
+    dartCount: int,
+    flatPerDart: int,
+  ): int =
+    dieTotal + (dartCount * flatPerDart)
+
+  pure def magicMissileTargetDamage(
+    target: Combatant,
+    dieTotal: int,
+    dartCount: int,
+    flatPerDart: int,
+  ): int =
+    if (target.activeEffects.contains(ShieldArmorClassBonus))
+      0
+    else
+      magicMissileAllocatedDamage(dieTotal, dartCount, flatPerDart)
+}

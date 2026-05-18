@@ -1195,6 +1195,17 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
   eligibility, next-initiative calculation, and end-of-caster-next-turn timing.
 - `battle-runtime-damage-adjustments.qnt` - damage type projection,
   resistance/vulnerability/immunity adjustment, and Resistance spell reduction.
+- `battle-runtime-spell-invocation.qnt` - spell slot turn-use guards, spell
+  invocation slot classification, spellcasting gate helpers, Innate Sorcery
+  spell modifiers, scalar-buff profile projection, and Magic Missile helpers.
+- `battle-runtime-spell-attack.qnt` - spell attack profile projection, spell
+  attack active effects, object damage and ignition helpers, spell attack roll
+  modes, and Eldritch Blast beam replay holes.
+- `battle-runtime-chained-spell-attack.qnt` - Chromatic Orb chained attack
+  damage choices, d8 duplicate-face facts, leap legality, and replay holes.
+- `battle-runtime-save-gated-spell.qnt` - save-gated damage and condition
+  profile projection, attack-burst save helpers, save-gated active effects, and
+  replay holes.
 - `battle-runtime.mbt.qnt` - package-local randomized model for the selected
   integrated promoted MBT path.
 
