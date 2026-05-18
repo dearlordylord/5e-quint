@@ -122,6 +122,7 @@ import passWithoutTraceInput from "../../content/pass_without_trace.json";
 import poisonSprayInput from "../../content/poison_spray.json";
 import prayerOfHealingInput from "../../content/prayer_of_healing.json";
 import protectionFromEvilAndGoodInput from "../../content/protection_from_evil_and_good.json";
+import protectionFromPoisonInput from "../../content/protection_from_poison.json";
 import produceFlameInput from "../../content/produce_flame.json";
 import rangerDeftExplorerInput from "../../content/ranger_deft_explorer.json";
 import rangerExtraAttackInput from "../../content/ranger_extra_attack.json";
@@ -445,6 +446,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     poisonSprayInput,
     prayerOfHealingInput,
     protectionFromEvilAndGoodInput,
+    protectionFromPoisonInput,
     produceFlameInput,
     rayOfFrostInput,
     rayOfSicknessInput,

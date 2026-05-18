@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 379,
-      "numerator": 157,
-      "percent": "41.4%"
+      "numerator": 158,
+      "percent": "41.7%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 451,
-      "numerator": 189,
-      "percent": "41.9%"
+      "numerator": 190,
+      "percent": "42.1%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,62 +59,62 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 190
+      "value": 191
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 120,
-      "numerator": 120,
+      "denominator": 121,
+      "numerator": 121,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 190,
-      "numerator": 190,
+      "denominator": 191,
+      "numerator": 191,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 67,
-      "numerator": 67,
+      "denominator": 68,
+      "numerator": 68,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 67,
-      "numerator": 67,
+      "denominator": 68,
+      "numerator": 68,
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 88,
+      "denominator": 89,
       "numerator": 19,
-      "percent": "21.6%"
+      "percent": "21.3%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 88,
+      "denominator": 89,
       "numerator": 24,
-      "percent": "27.3%"
+      "percent": "27%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 120,
+      "denominator": 121,
       "numerator": 41,
-      "percent": "34.2%"
+      "percent": "33.9%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 67,
-      "numerator": 67,
+      "denominator": 68,
+      "numerator": 68,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 67,
-      "numerator": 67,
+      "denominator": 68,
+      "numerator": 68,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 120,
+      "denominator": 121,
       "numerator": 104,
-      "percent": "86.7%"
+      "percent": "86%"
     },
     "supportedProfileCoverage": {
-      "denominator": 158,
-      "numerator": 120,
-      "percent": "75.9%"
+      "denominator": 159,
+      "numerator": 121,
+      "percent": "76.1%"
     }
   },
   "metricSemantics": [
@@ -2571,20 +2571,45 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-misty-step.test.ts"
         }
       ]
+    },
+    {
+      "id": "spell.invocation-condition-removal-protection",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "sourceBoundary": "The runtime consumes authored direct condition-removal, damage Resistance, and condition-scoped Saving Throw Advantage facts on one touched creature. It spends the Magic Action and Spell Slot, removes the named condition and spell-owned active effects that directly apply it, records duration-bound target-side damage Resistance and condition-scoped Saving Throw roll-mode effects, applies damage Resistance through the normal target-side damage adjustment pipeline, and projects Advantage for Saving Throws to avoid or end the named condition.",
+      "taskRefs": [
+        "L12G-SPELL-PROTECTION-FROM-POISON"
+      ],
+      "title": "Spell invocation removes a condition and grants duration-bound damage Resistance plus condition-scoped Saving Throw Advantage",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 88,
+        "denominator": 89,
         "numerator": 19,
-        "percent": "21.6%"
+        "percent": "21.3%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 88,
+        "denominator": 89,
         "numerator": 24,
-        "percent": "27.3%"
+        "percent": "27%"
       }
     },
     "profileKinds": [
@@ -3315,6 +3340,12 @@
         "obligations": [],
         "profileId": "spell.invocation-self-teleport",
         "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-condition-removal-protection",
+        "profileKind": "spell-invocation"
       }
     ],
     "sourceArtifacts": {
@@ -3325,9 +3356,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 120,
+          "denominator": 121,
           "numerator": 41,
-          "percent": "34.2%"
+          "percent": "33.9%"
         }
       },
       "units": [
@@ -4800,6 +4831,18 @@
             }
           ],
           "unitId": "protection_from_evil_and_good"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-condition-removal-protection",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "protection_from_poison"
         },
         {
           "joinStatus": "unmapped",
@@ -7202,6 +7245,22 @@
         "spell.invocation-after-hit-damage-illumination"
       ],
       "taskId": "L12G-SPELL-SHINING-SMITE"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Protection from Poison's Magic Action and Spell Slot spend, cast-time Poisoned cleanup, one-hour Poisoned-saving-throw Advantage projection, and one-hour Poison damage Resistance projection.",
+      "profileIds": [
+        "spell.invocation-condition-removal-protection"
+      ],
+      "taskId": "L12G-SPELL-PROTECTION-FROM-POISON"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime reducer tests cover Protection from Poison catalog admission, touched-creature target fill, Magic Action and level-2 Spell Slot spend, Poisoned condition cleanup including spell-owned Poisoned effects, duration-bound Poison damage Resistance, condition-scoped Saving Throw Advantage to end Poisoned, successful save cleanup, and duration cleanup.",
+      "profileIds": [
+        "spell.invocation-condition-removal-protection"
+      ],
+      "taskId": "L12G-SPELL-PROTECTION-FROM-POISON"
     }
   ],
   "units": [
@@ -15373,6 +15432,70 @@
         "status": "installed"
       },
       "claim": {
+        "deferredMechanics": [],
+        "profileIds": [
+          "spell.invocation-condition-removal-protection"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action level-2-or-higher Spell Slot casting",
+          "one touched creature target",
+          "cast-time Poisoned condition removal including active spell-owned Poisoned effects",
+          "one-hour spell-owned Poison damage Resistance through the normal target-side damage adjustment pipeline",
+          "one-hour spell-owned Advantage on Saving Throws to avoid or end the Poisoned condition through condition-scoped save roll-mode projections",
+          "duration cleanup removes both ongoing protection effects"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-SPELL-PROTECTION-FROM-POISON"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-condition-removal-protection",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "The runtime consumes authored direct condition-removal, damage Resistance, and condition-scoped Saving Throw Advantage facts on one touched creature. It spends the Magic Action and Spell Slot, removes the named condition and spell-owned active effects that directly apply it, records duration-bound target-side damage Resistance and condition-scoped Saving Throw roll-mode effects, applies damage Resistance through the normal target-side damage adjustment pipeline, and projects Advantage for Saving Throws to avoid or end the named condition.",
+          "taskRefs": [
+            "L12G-SPELL-PROTECTION-FROM-POISON"
+          ],
+          "title": "Spell invocation removes a condition and grants duration-bound damage Resistance plus condition-scoped Saving Throw Advantage",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/protection_from_poison.json",
+      "unitId": "protection_from_poison"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "profileIds": [
           "spell.invocation-damage-save-or-attack",
           "spell.invocation-held-light-emitter"
@@ -22135,24 +22258,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/protection_from_energy.json",
       "unitId": "protection_from_energy"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/protection_from_poison.json",
-      "unitId": "protection_from_poison"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

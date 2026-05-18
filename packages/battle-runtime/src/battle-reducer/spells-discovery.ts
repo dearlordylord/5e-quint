@@ -794,6 +794,9 @@ export function spellInvocationCastSummary(
   if (invocation.procedure === "creatureTypeProtection") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
+  if (invocation.procedure === "conditionRemovalProtection") {
+    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+  }
   if (invocation.procedure === "damageReduction") {
     return `Cast ${invocation.spell.name} as a cantrip.`;
   }
@@ -1014,6 +1017,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "persistentArmorEffect" &&
     invocation.procedure !== "rollModifier" &&
     invocation.procedure !== "creatureTypeProtection" &&
+    invocation.procedure !== "conditionRemovalProtection" &&
     invocation.procedure !== "scalarBuff" &&
     invocation.procedure !== "weaponDamageRider" &&
     invocation.procedure !== "afterHitDamage" &&
@@ -1065,6 +1069,7 @@ export function readiedSpellAct(
     invocation.procedure === "heldLightHurl" ||
     invocation.procedure === "rollModifier" ||
     invocation.procedure === "creatureTypeProtection" ||
+    invocation.procedure === "conditionRemovalProtection" ||
     invocation.procedure === "attackBurstSaveDamage" ||
     invocation.procedure === "saveGatedCondition" ||
     invocation.procedure === "saveGatedAttackRollAdvantage" ||

@@ -26,6 +26,7 @@ import type {
   BattleState,
   ProtectionFromEvilAndGoodPreventedCondition,
 } from "../battle-reducer.ts";
+import { KnockedOutConditionState as KnockedOutConditionStateBrand } from "../battle-reducer.ts";
 import { battleCreatureType } from "./domain-helpers.ts";
 
 const HIDEOUS_LAUGHTER_CONDITIONS = [
@@ -87,6 +88,34 @@ export function conditionHadNonSpellSourceBeforeSpellEffect(
         effect.conditionHadNonSpellSource,
     )
   );
+}
+
+export function battleCreatureAfterConditionRemoval(
+  combatant: BattleCreatureState,
+  condition: Condition,
+): BattleCreatureState {
+  const activeEffects = combatant.activeEffects.filter(
+    (effect) => !activeEffectDirectlyAppliesCondition(effect, condition),
+  );
+  const conditions = conditionsAfterApplyingSpellConditionEffects(
+    removeCondition(combatant.conditions, condition),
+    activeEffects,
+  );
+  if (combatant.positiveHpUnconscious !== null) {
+    return {
+      ...combatant,
+      activeEffects,
+      conditions: KnockedOutConditionStateBrand(
+        applyCondition(conditions, "unconscious"),
+      ),
+    };
+  }
+
+  return {
+    ...combatant,
+    activeEffects,
+    conditions,
+  };
 }
 
 export function conditionApplicationPreventedByCreatureTypeProtection(

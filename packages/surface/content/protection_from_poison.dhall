@@ -7,15 +7,10 @@
 --    Poison damage."
 --
 -- Consolidated validation reference for:
---   • Composite effect bundling remove_condition (cast-time) +
+--   • Composite effect bundling remove_condition (cast-time),
+--     condition-scoped modify_roll_advantage (ongoing), and
 --     grant_resistance (ongoing). Uses the composite EffectAtom
 --     landed for Hypnotic Pattern.
---
--- DEFERRED. "Advantage on saving throws to avoid or end the Poisoned
--- condition" is a save-trigger narrow to a specific condition — the
--- skill/ability/condition-scoped roll filter covered by deferred
--- item A1 in plans/CONTENT_SURFACE_DEFERRED.md. Encoding just
--- "Advantage on saving_throw" would over-apply; omitted for now.
 
 let protectionFromPoison =
       { kind = "spell"
@@ -44,18 +39,36 @@ let protectionFromPoison =
                     = { kind : Text
                       , condition : Optional Text
                       , damageType : Optional Text
+                      , mode : Optional Text
+                      , on : Optional (List Text)
+                      , conditionFilter : Optional (List Text)
                       }
               let cleanse
                     : CompEffect
                     = { kind = "remove_condition"
                       , condition = Some "poisoned"
                       , damageType = None Text
+                      , mode = None Text
+                      , on = None (List Text)
+                      , conditionFilter = None (List Text)
+                      }
+              let saveAdvantage
+                    : CompEffect
+                    = { kind = "modify_roll_advantage"
+                      , condition = None Text
+                      , damageType = None Text
+                      , mode = Some "advantage"
+                      , on = Some [ "saving_throw" ]
+                      , conditionFilter = Some [ "poisoned" ]
                       }
               let resist
                     : CompEffect
                     = { kind = "grant_resistance"
                       , condition = None Text
                       , damageType = Some "poison"
+                      , mode = None Text
+                      , on = None (List Text)
+                      , conditionFilter = None (List Text)
                       }
               in  [ { kind = "direct"
                     , attachment =
@@ -69,7 +82,7 @@ let protectionFromPoison =
                         }
                     , effects =
                         [ { kind = "composite"
-                          , effects = [ cleanse, resist ]
+                          , effects = [ cleanse, saveAdvantage, resist ]
                           }
                         ]
                     }

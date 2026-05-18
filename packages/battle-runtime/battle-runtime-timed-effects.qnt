@@ -141,6 +141,12 @@ module battleRuntimeTimedEffects {
         | MageArmor(data) => MageArmor({
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
+        | ProtectionFromPoisonSavingThrowAdvantage(data) => ProtectionFromPoisonSavingThrowAdvantage({
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
+        | ProtectionFromPoisonPoisonResistance(data) => ProtectionFromPoisonPoisonResistance({
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
         | DivineFavorWeaponDamageRider(data) => DivineFavorWeaponDamageRider({
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
@@ -244,6 +250,8 @@ module battleRuntimeTimedEffects {
       })
       .filter(effect => match effect {
         | MageArmor(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | ProtectionFromPoisonSavingThrowAdvantage(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | ProtectionFromPoisonPoisonResistance(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | DivineFavorWeaponDamageRider(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | HuntersMarkDamageRider(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | HexDamageRider(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)

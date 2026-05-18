@@ -1897,73 +1897,6 @@
       "unitId": "prayer_of_healing"
     },
     {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
-      "sourceRecordPath": "packages/surface/content/protection_from_poison.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Cleric spell list Protection from Poison",
-          "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_protection_from_poison",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 194,
-            "lineStart": 194,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Druid spell list Protection from Poison",
-          "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_protection_from_poison",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 246,
-            "lineStart": 246,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Paladin spell list Protection from Poison",
-          "id": "srd521:classes/paladin:spell-level-2:spell-unit-pressure:paladin_spell_list_protection_from_poison",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 201,
-            "lineStart": 201,
-            "path": ".references/srd-5.2.1/Classes/Paladin.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Ranger spell list Protection from Poison",
-          "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_protection_from_poison",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 194,
-            "lineStart": 194,
-            "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
-        }
-      ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
-      "unitId": "protection_from_poison"
-    },
-    {
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
@@ -2580,7 +2513,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 97,
+      "count": 98,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2649,6 +2582,7 @@
         "poison_spray",
         "produce_flame",
         "protection_from_evil_and_good",
+        "protection_from_poison",
         "ranger_deft_explorer",
         "ranger_weapon_mastery",
         "ray_of_frost",
@@ -2684,7 +2618,7 @@
       ]
     },
     {
-      "count": 18,
+      "count": 17,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
@@ -2699,7 +2633,6 @@
         "lesser_restoration",
         "magic_weapon",
         "mind_spike",
-        "protection_from_poison",
         "ray_of_enfeeblement",
         "spider_climb",
         "spike_growth",
@@ -2779,42 +2712,42 @@
       "numerator": 470,
       "percent": "84.5%",
       "rowsByStatus": {
-        "accepted": 316,
-        "accepted-no-battle-effect": 154,
+        "accepted": 320,
+        "accepted-no-battle-effect": 150,
         "battle-runtime-required": 76,
         "owner-evidence-required": 4,
         "partial-battle-runtime": 6
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 69,
+      "denominator": 70,
       "numerator": 11,
-      "percent": "15.9%"
+      "percent": "15.7%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 69,
+      "denominator": 70,
       "numerator": 16,
-      "percent": "23.2%"
+      "percent": "22.9%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 97,
+      "denominator": 98,
       "numerator": 30,
-      "percent": "30.9%"
+      "percent": "30.6%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 151,
-      "numerator": 97,
-      "percent": "64.2%"
+      "numerator": 98,
+      "percent": "64.9%"
     },
     "strictTargetClosure": {
       "denominator": 151,
-      "numerator": 133,
-      "percent": "88.1%"
+      "numerator": 134,
+      "percent": "88.7%"
     }
   },
   "openFrontier": [
     {
-      "count": 18,
+      "count": 17,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
@@ -2829,7 +2762,6 @@
         "lesser_restoration",
         "magic_weapon",
         "mind_spike",
-        "protection_from_poison",
         "ray_of_enfeeblement",
         "spider_climb",
         "spike_growth",
@@ -6056,9 +5988,9 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 97,
+        "denominator": 98,
         "numerator": 30,
-        "percent": "30.9%"
+        "percent": "30.6%"
       }
     },
     "units": [
@@ -7241,6 +7173,18 @@
           {
             "joinStatus": "unmapped",
             "obligations": [],
+            "profileId": "spell.invocation-condition-removal-protection",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "protection_from_poison"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
             "profileId": "character-creation.skill-expertise-choice",
             "profileKind": "character-creation"
           }
@@ -7892,9 +7836,9 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
-      "missing": 18,
+      "missing": 17,
       "profile-subset-supported": 10,
-      "supported-profile": 97,
+      "supported-profile": 98,
       "unsupported-profile": 26
     },
     "groupsByStatus": {
@@ -7902,10 +7846,10 @@
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 14,
-      "open-runtime-behavior": 18,
-      "supported-profile": 97
+      "open-runtime-behavior": 17,
+      "supported-profile": 98
     },
-    "nonSupportedFrontier": 54,
+    "nonSupportedFrontier": 53,
     "strictDenominator": 151
   }
 }

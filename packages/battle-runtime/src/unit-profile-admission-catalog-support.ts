@@ -199,6 +199,8 @@ export const poisonSprayUnitId = "poison_spray";
 
 export const protectionFromEvilAndGoodUnitId = "protection_from_evil_and_good";
 
+export const protectionFromPoisonUnitId = "protection_from_poison";
+
 export const produceFlameUnitId = "produce_flame";
 
 export const resistanceUnitId = "resistance";

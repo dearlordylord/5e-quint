@@ -241,3 +241,4 @@
 {"unitId":"pass_without_trace","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-SPELL-PASS-WITHOUT-TRACE","ownerPath":"packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"}}
 {"unitId":"enhance_ability","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-MISSING-ENHANCE-ABILITY","ownerPath":"packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"}}
 {"unitId":"shining_smite","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-SPELL-SHINING-SMITE","ownerPath":"packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"}}
+{"unitId":"protection_from_poison","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-SPELL-PROTECTION-FROM-POISON","ownerPath":"packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"}}

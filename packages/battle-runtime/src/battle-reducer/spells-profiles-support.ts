@@ -39,6 +39,7 @@ import {
   type AfterHitDamageAndIlluminationSpellInvocation,
   type AfterHitTimedDamageAndSaveSpellInvocation,
   type ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation,
+  type ConditionRemovalProtectionSpellInvocation,
   type CreatureTypeProtectionSpellInvocation,
   type DamageReductionSpellInvocation,
   type D20RollModifierSpellEffect,
@@ -647,6 +648,127 @@ export function supportedPreparedCreatureTypeProtectionSpellProfile(
           },
         ],
   );
+}
+
+export function supportedPreparedConditionRemovalProtectionSpellProfile(
+  actorId: CombatantId,
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  const projection = conditionRemovalProtectionSpellProjection(actorId, spell);
+  if (projection === null) {
+    return [];
+  }
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] =>
+    Number(slot.spellLevel) < spell.mechanics.level
+      ? []
+      : [
+          {
+            access: { tag: "prepared" },
+            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+            procedure: "conditionRemovalProtection",
+            spell,
+            actionCost: "magicAction",
+            ...projection,
+          },
+        ],
+  );
+}
+
+export function conditionRemovalProtectionSpellProjection(
+  actorId: CombatantId,
+  spell: SpellRecord,
+): Pick<
+  ConditionRemovalProtectionSpellInvocation,
+  "protection" | "rangeFeet" | "targeting"
+> | null {
+  if (
+    spell.name !== "Protection from Poison" ||
+    spell.provenance.kind !== "srd-5.2.1" ||
+    spell.provenance.section !==
+      "Spells/Descriptions-M-P#Protection from Poison" ||
+    spell.mechanics.family !== "activation" ||
+    spell.mechanics.level !== 2 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "touch" ||
+    spell.mechanics.duration.kind !== "timed" ||
+    spell.mechanics.duration.value.unit !== "hour" ||
+    spell.mechanics.duration.value.amount !== 1 ||
+    spell.mechanics.phases.length !== 1
+  ) {
+    return null;
+  }
+  const phase = spell.mechanics.phases[0];
+  const composite =
+    phase?.kind === "direct" && phase.effects?.[0]?.kind === "composite"
+      ? phase.effects[0]
+      : null;
+  const effects = composite?.effects ?? [];
+  const conditionRemoval = effects.find(
+    (effect) => effect.kind === "remove_condition",
+  );
+  const conditionSaveRollMode = effects.find(
+    (effect) => effect.kind === "modify_roll_advantage",
+  );
+  const damageResistance = effects.find(
+    (effect) => effect.kind === "grant_resistance",
+  );
+  const expiresAt = scalarBuffActiveEffectExpiration(
+    actorId,
+    spell.mechanics.duration,
+  );
+  if (
+    phase?.kind !== "direct" ||
+    phase.attachment.kind !== "hole" ||
+    phase.attachment.value.kind !== "target" ||
+    phase.attachment.value.selection.mode !== "one" ||
+    composite === null ||
+    effects.length !== 3 ||
+    conditionRemoval?.kind !== "remove_condition" ||
+    conditionRemoval.condition !== "poisoned" ||
+    conditionSaveRollMode?.kind !== "modify_roll_advantage" ||
+    (conditionSaveRollMode.affects ?? "self_roll") !== "self_roll" ||
+    conditionSaveRollMode.mode !== "advantage" ||
+    !sameStringSet(conditionSaveRollMode.on, ["saving_throw"]) ||
+    conditionSaveRollMode.conditionFilter === undefined ||
+    !sameStringSet(conditionSaveRollMode.conditionFilter, ["poisoned"]) ||
+    conditionSaveRollMode.skillFilter !== undefined ||
+    conditionSaveRollMode.abilityFilter !== undefined ||
+    conditionSaveRollMode.saveAbilityFilter !== undefined ||
+    conditionSaveRollMode.saveSourceFilter !== undefined ||
+    conditionSaveRollMode.contextRangeFeet !== undefined ||
+    conditionSaveRollMode.spellSourceFilter !== undefined ||
+    conditionSaveRollMode.attackerTypeFilter !== undefined ||
+    conditionSaveRollMode.count !== undefined ||
+    conditionSaveRollMode.expiresOn !== undefined ||
+    damageResistance?.kind !== "grant_resistance" ||
+    damageResistance.damageType !== "poison" ||
+    damageResistance.sourceFilter !== undefined ||
+    expiresAt === null
+  ) {
+    return null;
+  }
+  return {
+    targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
+    protection: {
+      conditionSaveRollMode: {
+        kind: "conditionSavingThrowRollMode",
+        sourceSpellId: spell.id,
+        sourceCombatantId: actorId,
+        condition: "poisoned",
+        mode: "advantage",
+        expiresAt,
+      },
+      damageResistance: {
+        kind: "damageResistance",
+        sourceSpellId: spell.id,
+        sourceCombatantId: actorId,
+        damageType: "poison",
+        expiresAt,
+      },
+    },
+    rangeFeet: movementFeet(5),
+  };
 }
 
 export function creatureTypeProtectionSpellProjection(

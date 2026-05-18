@@ -31,7 +31,7 @@
     {
       "number": 41,
       "id": "L12G-SPELL-PROTECTION-FROM-POISON",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Protection From Poison Runtime Support"
     },
     {
@@ -365,7 +365,7 @@ Acceptance:
 
 ### Task 41 - L12G-SPELL-PROTECTION-FROM-POISON - Protection From Poison Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `protection_from_poison`. Gate task: 43 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 

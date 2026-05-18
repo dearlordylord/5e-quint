@@ -20,6 +20,7 @@ import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { spellHealingAmount } from "./spell-effects.ts";
 import {
+  applyConditionRemovalProtectionSpellEffect,
   applyConditionImmunityAndTurnStartTemporaryHitPointsEffects,
   applyCreatureTypeProtectionSpellEffect,
   applyDamageReductionSpellEffect,
@@ -49,6 +50,7 @@ import {
 import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
 
 import {
+  conditionRemovalProtectionSpellTargetSelection,
   conditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection,
   creatureTypeProtectionSpellTargetSelection,
   healingSpellTargetSelection,
@@ -689,6 +691,103 @@ export function resolveCreatureTypeProtectionSpellAct(input: {
       };
 }
 
+export function resolveConditionRemovalProtectionSpellAct(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "conditionRemovalProtection" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  if (
+    input.fillSet.objectTarget !== undefined ||
+    input.fillSet.attackRoll !== undefined ||
+    input.fillSet.targetAllocation !== undefined ||
+    input.fillSet.attackSequencePartFills.length > 0 ||
+    input.fillSet.damageRoll !== undefined ||
+    input.fillSet.attackBurstDamageRoll !== undefined ||
+    input.fillSet.healingRoll !== undefined ||
+    input.fillSet.skillChoice !== undefined ||
+    input.fillSet.abilityChoice !== undefined ||
+    input.fillSet.conditionChoice !== undefined ||
+    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.areaChoice !== undefined ||
+    input.fillSet.teleportDestination !== undefined ||
+    input.fillSet.dancingLightsPlacement !== undefined ||
+    input.fillSet.damageTypeChoice !== undefined ||
+    input.fillSet.savingThrowOutcomes !== undefined ||
+    input.fillSet.movement !== undefined ||
+    input.fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
+    input.fillSet.damageDispositions.length > 0 ||
+    input.fillSet.concentrationSavingThrows.length > 0 ||
+    input.fillSet.spellDamageReductionRolls.length > 0
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Condition-removal protection spells use one target fill.",
+    );
+  }
+
+  const targetSelection = conditionRemovalProtectionSpellTargetSelection(input);
+  if (targetSelection.tag === "needsHoles") {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      targetSelection.hole,
+    ]);
+  }
+  if (targetSelection.tag === "invalid") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      targetSelection.message,
+    );
+  }
+
+  const spellCastReactionWindow = maybeOpenReactionWindow(
+    input.input.state,
+    spellCastReactionFrame({
+      casterId: input.actorId,
+      invocation: input.invocation,
+      targetIds: targetSelection.targetIds,
+      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+      castingResource: { kind: "magicAction" },
+      continuation: {
+        kind: "replay",
+        subject: input.input.subject,
+        fills: input.input.fills,
+      },
+    }),
+    input.input.suppressedReactionTrigger,
+  );
+  if (spellCastReactionWindow !== null) {
+    return spellCastReactionWindow;
+  }
+
+  const concentrationBase = spellRequiresConcentration(input.invocation)
+    ? breakBattleConcentration(input.input.state, input.actorId)
+    : input.input.state;
+  const effected = applyConditionRemovalProtectionSpellEffect(
+    concentrationBase,
+    input.actorId,
+    targetSelection.targetIds,
+    input.invocation,
+  );
+  const resourced = spendSpellCastResources({
+    state: effected,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+  });
+  return resourced.tag === "invalid"
+    ? resourced
+    : {
+        tag: "resolved",
+        state: resourced.state,
+        snapshot: snapshotBattle(resourced.state),
+      };
+}
+
 export function resolveDamageReductionSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
@@ -899,7 +998,7 @@ export function resolveSelfTeleportSpellAct(input: {
     input.fillSet.objectTarget !== undefined ||
     input.fillSet.targetList !== undefined ||
     input.fillSet.targetSpatialFacts.length > 0 ||
-    input.fillSet.beamFills.length > 0 ||
+    input.fillSet.attackSequencePartFills.length > 0 ||
     input.fillSet.damageRoll !== undefined ||
     input.fillSet.attackBurstDamageRoll !== undefined ||
     input.fillSet.healingRoll !== undefined ||

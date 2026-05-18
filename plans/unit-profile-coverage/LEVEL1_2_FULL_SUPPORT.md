@@ -8,12 +8,12 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 
 | Metric | Covered |
 | --- | ---: |
-| Strict runtime/profile support | 97/151 (64.2%) |
-| Strict target closure | 133/151 (88.1%) |
+| Strict runtime/profile support | 98/151 (64.9%) |
+| Strict target closure | 134/151 (88.7%) |
 | Product readiness | 470/556 (84.5%) |
-| Rules-kernel profile join | 16/69 (23.2%) |
-| Rules-kernel covered profile join | 11/69 (15.9%) |
-| Supported Unit rules-kernel chain | 30/97 (30.9%) |
+| Rules-kernel profile join | 16/70 (22.9%) |
+| Rules-kernel covered profile join | 11/70 (15.7%) |
+| Supported Unit rules-kernel chain | 30/98 (30.6%) |
 
 ## Scope
 
@@ -24,14 +24,14 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | SRD pressure with no Unit matrix row | 33 |
 | Non-executable class containers | 12 |
 | Strict executable denominator | 151 |
-| Non-supported frontier | 54 |
+| Non-supported frontier | 53 |
 
 ## Status Groups
 
 | Status | Count | Units |
 | --- | ---: | --- |
-| supported-profile | 97 | `acid_splash`, `aid`, `animal_friendship`, `bane`, `barbarian_danger_sense`, `barbarian_rage`, `barbarian_reckless_attack`, `barbarian_unarmored_defense`, `bard_bardic_inspiration`, `bard_jack_of_all_trades`, `barkskin`, `bless`, `blindness_deafness`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_channel_divinity`, `cleric_divine_order`, `color_spray`, `command`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `druid_primal_order`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feather_fall`, `fighter_action_surge`, `fighter_fighting_style`, `fighter_second_wind`, `fighter_tactical_mind`, `fire_bolt`, `fog_cloud`, `grease`, `guidance`, `guiding_bolt`, `healing_word`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hunters_mark`, `ice_knife`, `inflict_wounds`, `jump`, `light`, `longstrider`, `mage_armor`, `magic_missile`, `misty_step`, `monk_martial_arts`, `monk_unarmored_defense`, `monk_unarmored_movement`, `paladin_lay_on_hands`, `paladin_paladins_smite`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `ranger_deft_explorer`, `ranger_weapon_mastery`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_cunning_action`, `rogue_expertise`, `rogue_sneak_attack`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `scorching_ray`, `searing_smite`, `shatter`, `shield`, `shield_of_faith`, `shillelagh`, `shining_smite`, `shocking_grasp`, `sleep`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `starry_wisp`, `thunderwave`, `true_strike`, `vicious_mockery`, `warlock_eldritch_invocations`, `warlock_magical_cunning`, `wizard_arcane_recovery`, `wizard_ritual_adept`, `wizard_scholar` |
-| open-runtime-behavior | 18 | `blur`, `continual_flame`, `find_steed`, `flame_blade`, `gentle_repose`, `heat_metal`, `hold_person`, `invisibility`, `lesser_restoration`, `magic_weapon`, `mind_spike`, `protection_from_poison`, `ray_of_enfeeblement`, `spider_climb`, `spike_growth`, `spiritual_weapon`, `warding_bond`, `web` |
+| supported-profile | 98 | `acid_splash`, `aid`, `animal_friendship`, `bane`, `barbarian_danger_sense`, `barbarian_rage`, `barbarian_reckless_attack`, `barbarian_unarmored_defense`, `bard_bardic_inspiration`, `bard_jack_of_all_trades`, `barkskin`, `bless`, `blindness_deafness`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_channel_divinity`, `cleric_divine_order`, `color_spray`, `command`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `druid_primal_order`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feather_fall`, `fighter_action_surge`, `fighter_fighting_style`, `fighter_second_wind`, `fighter_tactical_mind`, `fire_bolt`, `fog_cloud`, `grease`, `guidance`, `guiding_bolt`, `healing_word`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hunters_mark`, `ice_knife`, `inflict_wounds`, `jump`, `light`, `longstrider`, `mage_armor`, `magic_missile`, `misty_step`, `monk_martial_arts`, `monk_unarmored_defense`, `monk_unarmored_movement`, `paladin_lay_on_hands`, `paladin_paladins_smite`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `protection_from_poison`, `ranger_deft_explorer`, `ranger_weapon_mastery`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_cunning_action`, `rogue_expertise`, `rogue_sneak_attack`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `scorching_ray`, `searing_smite`, `shatter`, `shield`, `shield_of_faith`, `shillelagh`, `shining_smite`, `shocking_grasp`, `sleep`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `starry_wisp`, `thunderwave`, `true_strike`, `vicious_mockery`, `warlock_eldritch_invocations`, `warlock_magical_cunning`, `wizard_arcane_recovery`, `wizard_ritual_adept`, `wizard_scholar` |
+| open-runtime-behavior | 17 | `blur`, `continual_flame`, `find_steed`, `flame_blade`, `gentle_repose`, `heat_metal`, `hold_person`, `invisibility`, `lesser_restoration`, `magic_weapon`, `mind_spike`, `ray_of_enfeeblement`, `spider_climb`, `spike_growth`, `spiritual_weapon`, `warding_bond`, `web` |
 | blocked-follow-up-split | 14 | `acid_arrow`, `alter_self`, `dragons_breath`, `druid_wild_shape`, `enhance_ability`, `enlarge_reduce`, `enthrall`, `monk_monks_focus`, `monk_uncanny_metabolism`, `moonbeam`, `prayer_of_healing`, `see_invisibility`, `sorcerer_font_of_magic`, `sorcerer_metamagic` |
 | closed-runtime-detached-table-adjudication | 14 | `alarm`, `arcane_lock`, `charm_person`, `comprehend_languages`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `find_traps`, `identify`, `minor_illusion`, `pass_without_trace`, `silent_image`, `speak_with_animals`, `thaumaturgy` |
 | closed-later-level-only | 6 | `barbarian_weapon_mastery`, `bard_expertise`, `fighter_weapon_mastery`, `paladin_fighting_style`, `ranger_favored_enemy`, `ranger_fighting_style` |
@@ -41,7 +41,7 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 
 | Status | Count | Units |
 | --- | ---: | --- |
-| open-runtime-behavior | 18 | `blur`, `continual_flame`, `find_steed`, `flame_blade`, `gentle_repose`, `heat_metal`, `hold_person`, `invisibility`, `lesser_restoration`, `magic_weapon`, `mind_spike`, `protection_from_poison`, `ray_of_enfeeblement`, `spider_climb`, `spike_growth`, `spiritual_weapon`, `warding_bond`, `web` |
+| open-runtime-behavior | 17 | `blur`, `continual_flame`, `find_steed`, `flame_blade`, `gentle_repose`, `heat_metal`, `hold_person`, `invisibility`, `lesser_restoration`, `magic_weapon`, `mind_spike`, `ray_of_enfeeblement`, `spider_climb`, `spike_growth`, `spiritual_weapon`, `warding_bond`, `web` |
 
 ## Rules-Kernel Join
 
@@ -96,6 +96,7 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `paladin_weapon_mastery` | unmapped | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner)); `character-sheet.weapon-mastery-reselection` (unmapped: no obligation mapping) |
 | `produce_flame` | unmapped | `spell.invocation-held-light-emitter` (unmapped: no obligation mapping) |
 | `protection_from_evil_and_good` | unmapped | `spell.creature-type-protection-and-charm` (unmapped: no obligation mapping) |
+| `protection_from_poison` | unmapped | `spell.invocation-condition-removal-protection` (unmapped: no obligation mapping) |
 | `ranger_deft_explorer` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
 | `ranger_weapon_mastery` | unmapped | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner)); `character-sheet.weapon-mastery-reselection` (unmapped: no obligation mapping) |
 | `resistance` | unmapped | `spell.invocation-damage-reduction` (unmapped: no obligation mapping) |
@@ -159,7 +160,6 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `paladin_fighting_style` | closed-later-level-only | profile-subset-supported | installed | later-level-only | Blessed Warrior cantrip replacement only occurs on later Paladin level gains after the level-2 acquisition choice is complete. |
 | `pass_without_trace` | closed-runtime-detached-table-adjudication | profile-subset-supported | installed | outside-runtime-presentation-exploration | Pass without Trace's changing aura membership and non-caster chosen affected creatures depend on caller-supplied table/spatial facts at cast time, and leaving no tracks is pursuit/exploration state outside promoted battle runtime. |
 | `prayer_of_healing` | blocked-follow-up-split | unsupported-profile | installed | follow-up-split | L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST: Replace Prayer of Healing's partial mechanics with a lossless SRD Surface shape for 10-minute non-ritual casting, up-to-five recipients that remain within 30 feet for the entire casting, slot-scaled 2d8 plus 1d8 per slot above 2 Hit Point restoration, granted Short Rest benefits, and per-recipient immunity to being affected again until that creature finishes a Long Rest. Owner: surface Spell Definition authoring. Required output: Prayer of Healing Dhall and JSON content, with schema and tracer support where required, represent the Short Rest benefit and Long Rest recipient lockout as executable source facts instead of comments or prose-only description.; L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST: Apply Prayer of Healing after the completed 10-minute cast by spending the spell slot at completion, consuming caller-supplied recipient eligibility facts, granting each selected Character Sheet the existing Short Rest benefits without duplicating rest algorithms, applying the slot-scaled healing roll capped by Hit Point maximum, and recording/clearing the per-recipient Long Rest lockout from the same rest state owner. Owner: character-sheet-runtime plus spellcasting resource owner. Required output: Supported profile or profile-subset evidence, focused runtime tests, and owner evidence for Prayer of Healing's Character Sheet rest-benefit application, healing, Spell Slot spend timing, and Long Rest recipient lockout while leaving automatic range tracking and encounter-time casting interruption as caller/table facts. |
-| `protection_from_poison` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
 | `ranger_favored_enemy` | closed-later-level-only | profile-subset-supported | installed | later-level-only | The remaining Favored Enemy free-cast count changes occur only after level 1. |
 | `ranger_fighting_style` | closed-later-level-only | profile-subset-supported | installed | later-level-only | Druidic Warrior cantrip replacement only occurs on later Ranger level gains after the level-2 acquisition choice is complete. |
 | `ray_of_enfeeblement` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |

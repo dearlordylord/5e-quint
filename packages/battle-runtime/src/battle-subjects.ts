@@ -103,6 +103,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "scalarBuff",
   "conditionImmunityAndTurnStartTemporaryHitPoints",
   "creatureTypeProtection",
+  "conditionRemovalProtection",
   "weaponDamageRider",
   "afterHitDamage",
   "afterHitSaveGatedCondition",

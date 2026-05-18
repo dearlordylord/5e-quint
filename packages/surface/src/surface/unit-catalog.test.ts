@@ -117,6 +117,7 @@ const requiredFirstVerticalUnitIds = [
   "mass_cure_wounds",
   "healing_word",
   "prayer_of_healing",
+  "protection_from_poison",
   "shield",
   "shatter",
   "shining_smite",

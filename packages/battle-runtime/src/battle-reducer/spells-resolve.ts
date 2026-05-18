@@ -160,6 +160,7 @@ export {
   validateSavingThrowOutcomes,
 } from "./spells-resolve-save-gates.ts";
 export {
+  resolveConditionRemovalProtectionSpellAct,
   resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
   resolveCreatureTypeProtectionSpellAct,
   resolveDamageReductionSpellAct,
@@ -172,6 +173,7 @@ export {
   resolveThaumaturgyBoomingVoiceSpellAct,
 } from "./spells-resolve-support-effects.ts";
 export {
+  conditionRemovalProtectionSpellTargetSelection,
   conditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection,
   creatureTypeProtectionSpellTargetSelection,
   healingSpellTargetSelection,
@@ -179,6 +181,7 @@ export {
   rollModifierSpellEffectSelection,
   rollModifierSpellTargetSelection,
   scalarBuffSpellTargetSelection,
+  type ConditionRemovalProtectionSpellTargetSelection,
   type ConditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection,
   type CreatureTypeProtectionSpellTargetSelection,
   type HealingSpellTargetSelection,
@@ -189,6 +192,7 @@ export {
 } from "./spells-resolve-target-selection.ts";
 
 import {
+  resolveConditionRemovalProtectionSpellAct,
   resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
   resolveCreatureTypeProtectionSpellAct,
   resolveDamageReductionSpellAct,
@@ -603,6 +607,14 @@ export function resolveSpellAct(
   }
   if (invocation.procedure === "creatureTypeProtection") {
     return resolveCreatureTypeProtectionSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "conditionRemovalProtection") {
+    return resolveConditionRemovalProtectionSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

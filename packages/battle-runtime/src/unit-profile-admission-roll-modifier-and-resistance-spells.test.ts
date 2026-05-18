@@ -1,8 +1,9 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30B bane bless guidance
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-PASS-WITHOUT-TRACE pass_without_trace
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-MISSING-ENHANCE-ABILITY enhance_ability
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-PROTECTION-FROM-POISON protection_from_poison
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30F resistance
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-roll-modifier spell.invocation-damage-reduction
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-roll-modifier spell.invocation-damage-reduction spell.invocation-condition-removal-protection
 import { describe, expect, test } from "vitest";
 import {
   baneUnitId,
@@ -10,6 +11,8 @@ import {
   enhanceAbilityUnitId,
   guidanceUnitId,
   passWithoutTraceUnitId,
+  poisonSprayUnitId,
+  protectionFromPoisonUnitId,
   rayOfFrostUnitId,
   resistanceUnitId,
   spellCasterId,
@@ -40,9 +43,13 @@ import {
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
+  applyCondition,
+  battleCreatureStateWithKnockOutPreservedConditions,
   cantripSpellInvocationRef,
   combatantId,
+  elapsedTimeTicks,
   endTurn,
+  hasCondition,
   Hp,
   resolveBattleSubject,
   spellSlotInvocationRef,
@@ -52,6 +59,32 @@ import type {
   BattleSubject,
 } from "./unit-profile-admission-test-support.ts";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
+
+function withProtectionFromPoisonResistance(
+  state: BattleState,
+  targetId: typeof spellTargetId,
+): BattleState {
+  const target = requireCombatant(state, targetId);
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(targetId, {
+      ...target,
+      activeEffects: [
+        ...target.activeEffects,
+        {
+          kind: "damageResistance" as const,
+          sourceSpellId: protectionFromPoisonUnitId,
+          sourceCombatantId: spellCasterId,
+          damageType: "poison" as const,
+          expiresAt: {
+            kind: "duration" as const,
+            durationTicks: elapsedTimeTicks(600),
+          },
+        },
+      ],
+    }),
+  };
+}
 
 describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
   test("bless is admitted as a concentration d4 bonus with slot-scaled targets", () => {
@@ -995,5 +1028,355 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         usedThisTurn: true,
       }),
     );
+  });
+});
+
+describe("L12G Protection from Poison deterministic Spell Unit admission", () => {
+  test("protection_from_poison removes Poisoned and stores condition-save Advantage plus poison Resistance", () => {
+    const spell = spellRecord(protectionFromPoisonUnitId);
+    const baseState = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const target = requireCombatant(baseState, spellTargetId);
+    const state: BattleState = {
+      ...baseState,
+      combatants: new Map(baseState.combatants).set(
+        spellTargetId,
+        battleCreatureStateWithKnockOutPreservedConditions(
+          {
+            ...target,
+            activeEffects: [
+              ...target.activeEffects,
+              {
+                kind: "spellCondition" as const,
+                sourceSpellId: poisonSprayUnitId,
+                sourceCombatantId: spellCasterId,
+                condition: "poisoned" as const,
+                conditionHadNonSpellSource: true,
+                escape: null,
+                turnStartDamage: null,
+                expiresAt: {
+                  kind: "duration" as const,
+                  durationTicks: elapsedTimeTicks(600),
+                },
+              },
+            ],
+          },
+          applyCondition(target.conditions, "poisoned"),
+        ),
+      ),
+    };
+    const act = spellAct({
+      state,
+      spellId: protectionFromPoisonUnitId,
+      slotLevel: 2,
+    });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(
+        protectionFromPoisonUnitId,
+        2,
+        "conditionRemovalProtection",
+      ),
+      mode: { tag: "cast" },
+    });
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(
+          targetHole,
+          protectionFromPoisonUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Protection from Poison to resolve.");
+    }
+    const protectedTarget = requireCombatant(resolved.state, spellTargetId);
+    expect(hasCondition(protectedTarget.conditions, "poisoned")).toBe(false);
+    expect(
+      protectedTarget.activeEffects.some(
+        (effect) =>
+          effect.kind === "spellCondition" && effect.condition === "poisoned",
+      ),
+    ).toBe(false);
+    expect(protectedTarget.activeEffects).toContainEqual(
+      expect.objectContaining({
+        kind: "conditionSavingThrowRollMode",
+        sourceSpellId: protectionFromPoisonUnitId,
+        sourceCombatantId: spellCasterId,
+        condition: "poisoned",
+        mode: "advantage",
+        expiresAt: {
+          kind: "duration",
+          durationTicks: elapsedTimeTicks(600),
+        },
+      }),
+    );
+    expect(protectedTarget.activeEffects).toContainEqual(
+      expect.objectContaining({
+        kind: "damageResistance",
+        sourceSpellId: protectionFromPoisonUnitId,
+        sourceCombatantId: spellCasterId,
+        damageType: "poison",
+        expiresAt: {
+          kind: "duration",
+          durationTicks: elapsedTimeTicks(600),
+        },
+      }),
+    );
+  });
+
+  test("protection_from_poison poison Resistance halves poison damage only", () => {
+    const poisonSpell = spellRecord(poisonSprayUnitId);
+    const poisonBase = spellBattle({
+      cantrips: [poisonSpell],
+      spellSlots: [],
+    });
+    const poisonState = withProtectionFromPoisonResistance(
+      poisonBase,
+      spellTargetId,
+    );
+    const act = spellAct({ state: poisonState, spellId: poisonSprayUnitId });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const targetFill = spellTargetFill(
+      targetHole,
+      poisonSprayUnitId,
+      spellCasterId,
+      spellTargetId,
+    );
+    const attack = requireResultHole(
+      resolveBattleSubject({
+        state: poisonState,
+        subject: act.subject,
+        fills: [targetFill],
+      }),
+      "attackRoll",
+    );
+    const attackFill = attackRollFill(attack, {
+      total: 18,
+      naturalD20: 12,
+    });
+    const damage = requireResultHole(
+      resolveBattleSubject({
+        state: poisonState,
+        subject: act.subject,
+        fills: [targetFill, attackFill],
+      }),
+      "rolledDice",
+    );
+    const poisonResolved = resolveBattleSubject({
+      state: poisonState,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        attackFill,
+        damageRollFillWithGroups(damage, [[5]]),
+      ],
+    });
+    expect(poisonResolved).toMatchObject({ tag: "resolved" });
+    if (poisonResolved.tag !== "resolved") {
+      throw new Error("Expected resisted poison damage to resolve.");
+    }
+    expect(poisonResolved.state.combatants.get(spellTargetId)?.hp).toBe(
+      Hp(Number(requireCombatant(poisonBase, spellTargetId).hp) - 2),
+    );
+
+    const weaponBase = spellBattle({
+      attack: zeroAbilityWeaponAttack("weapon_longsword"),
+      spellSlots: [],
+    });
+    const weaponState = withProtectionFromPoisonResistance(
+      weaponBase,
+      spellTargetId,
+    );
+    const weaponAttack = completedWeaponDamageInput(weaponState);
+    const weaponResolved = resolveBattleSubject({
+      state: weaponState,
+      subject: weaponAttack.subject,
+      fills: weaponAttack.fills,
+    });
+    expect(weaponResolved).toMatchObject({ tag: "resolved" });
+    if (weaponResolved.tag !== "resolved") {
+      throw new Error("Expected non-poison weapon damage to resolve.");
+    }
+    expect(weaponResolved.state.combatants.get(spellTargetId)?.hp).toBe(
+      Hp(Number(requireCombatant(weaponBase, spellTargetId).hp) - 4),
+    );
+  });
+
+  test("protection_from_poison projects Advantage on Poisoned end-condition saves", () => {
+    const baseState = spellBattle({ spellSlots: [] });
+    const target = requireCombatant(baseState, spellTargetId);
+    const state: BattleState = {
+      ...baseState,
+      combatants: new Map(baseState.combatants).set(
+        spellTargetId,
+        battleCreatureStateWithKnockOutPreservedConditions(
+          {
+            ...target,
+            activeEffects: [
+              ...target.activeEffects,
+              {
+                kind: "spellConditionEndTurnSave" as const,
+                sourceSpellId: poisonSprayUnitId,
+                sourceCombatantId: spellCasterId,
+                condition: "poisoned" as const,
+                conditionHadNonSpellSource: false,
+                save: {
+                  ability: "con" as const,
+                  dc: { kind: "caster_spell_save_dc" as const },
+                },
+                expiresAt: {
+                  kind: "duration" as const,
+                  durationTicks: elapsedTimeTicks(600),
+                },
+              },
+              {
+                kind: "conditionSavingThrowRollMode" as const,
+                sourceSpellId: protectionFromPoisonUnitId,
+                sourceCombatantId: spellCasterId,
+                condition: "poisoned" as const,
+                mode: "advantage" as const,
+                expiresAt: {
+                  kind: "duration" as const,
+                  durationTicks: elapsedTimeTicks(600),
+                },
+              },
+            ],
+          },
+          applyCondition(target.conditions, "poisoned"),
+        ),
+      ),
+    };
+    const targetTurn = endTurn({ state, actorId: spellCasterId });
+    expect(targetTurn).toMatchObject({ tag: "resolved" });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected caster turn to end.");
+    }
+
+    const awaitingSave = endTurn({
+      state: targetTurn.state,
+      actorId: spellTargetId,
+    });
+    const save = requireResultHole(awaitingSave, "savingThrowOutcome");
+    expect(save).toMatchObject({
+      spellConditionEndTurnSave: {
+        targetId: spellTargetId,
+        condition: "poisoned",
+      },
+      ability: "con",
+      targetRollModes: [{ targetId: spellTargetId, rollMode: "advantage" }],
+    });
+
+    const saved = endTurn({
+      state: targetTurn.state,
+      actorId: spellTargetId,
+      fills: [
+        savingThrowOutcomeFill(save, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
+      ],
+    });
+    expect(saved).toMatchObject({ tag: "resolved" });
+    if (saved.tag !== "resolved") {
+      throw new Error("Expected Poisoned end-condition save to resolve.");
+    }
+    const savedTarget = requireCombatant(saved.state, spellTargetId);
+    expect(hasCondition(savedTarget.conditions, "poisoned")).toBe(false);
+    expect(
+      savedTarget.activeEffects.some(
+        (effect) => effect.kind === "spellConditionEndTurnSave",
+      ),
+    ).toBe(false);
+  });
+
+  test("protection_from_poison protection expires after duration cleanup", () => {
+    const spell = spellRecord(protectionFromPoisonUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = spellAct({
+      state,
+      spellId: protectionFromPoisonUnitId,
+      slotLevel: 2,
+    });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(
+          targetHole,
+          protectionFromPoisonUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+      ],
+    });
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Protection from Poison to resolve.");
+    }
+
+    const protectedTarget = requireCombatant(resolved.state, spellTargetId);
+    const expiringTarget = {
+      ...protectedTarget,
+      activeEffects: protectedTarget.activeEffects.map((effect) =>
+        (effect.kind === "conditionSavingThrowRollMode" ||
+          effect.kind === "damageResistance") &&
+        effect.sourceSpellId === protectionFromPoisonUnitId
+          ? {
+              ...effect,
+              expiresAt: {
+                kind: "duration" as const,
+                durationTicks: elapsedTimeTicks(1),
+              },
+            }
+          : effect,
+      ),
+    };
+    const oneRoundRemaining: BattleState = {
+      ...resolved.state,
+      combatants: new Map(resolved.state.combatants).set(
+        spellTargetId,
+        expiringTarget,
+      ),
+    };
+    const targetTurn = endTurn({
+      state: oneRoundRemaining,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected Protection from Poison caster turn to end.");
+    }
+    const nextRound = endTurn({
+      state: targetTurn.state,
+      actorId: spellTargetId,
+    });
+    expect(nextRound).toMatchObject({ tag: "resolved" });
+    if (nextRound.tag !== "resolved") {
+      throw new Error("Expected Protection from Poison duration tick.");
+    }
+    const expiredTarget = requireCombatant(nextRound.state, spellTargetId);
+    expect(
+      expiredTarget.activeEffects.some(
+        (effect) =>
+          (effect.kind === "conditionSavingThrowRollMode" ||
+            effect.kind === "damageResistance") &&
+          effect.sourceSpellId === protectionFromPoisonUnitId,
+      ),
+    ).toBe(false);
   });
 });
