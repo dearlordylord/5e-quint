@@ -7,6 +7,7 @@ module battleRuntimeSleepHideousLaughter {
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
   import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
+  import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
 
   pure def actorHasTurnLaterThisRound(state: BattleState, actor: Actor): bool =
     actor != currentActor(state) and state.initiative.stillToAct.length() > 1
@@ -286,4 +287,32 @@ module battleRuntimeSleepHideousLaughter {
       | HideousLaughterEffect(_) => true
       | _ => false
     })
+
+  pure def endTurnWithSleepRepeatSave(state: BattleState, savingThrowSucceeded: bool): BattleState =
+    match currentActor(state) {
+      | Fighter =>
+        if (sleepRepeatSaveDue(state.fighter.activeEffects, Fighter, state.initiative.round))
+          endTurn({ ...state, fighter: sleepRepeatSaveTarget(state.fighter, Fighter, state.initiative.round, savingThrowSucceeded) })
+        else
+          endTurn(state)
+      | Goblin =>
+        if (sleepRepeatSaveDue(state.goblin.activeEffects, Goblin, state.initiative.round))
+          endTurn({ ...state, goblin: sleepRepeatSaveTarget(state.goblin, Goblin, state.initiative.round, savingThrowSucceeded) })
+        else
+          endTurn(state)
+    }
+
+  pure def endTurnWithHideousLaughterRepeatSave(state: BattleState, savingThrowSucceeded: bool): BattleState =
+    match currentActor(state) {
+      | Fighter =>
+        if (hideousLaughterRepeatSaveDue(state.fighter.activeEffects, Fighter) and savingThrowSucceeded)
+          endTurn({ ...state, fighter: combatantWithoutHideousLaughter(state.fighter, Goblin, Fighter) })
+        else
+          endTurn(state)
+      | Goblin =>
+        if (hideousLaughterRepeatSaveDue(state.goblin.activeEffects, Goblin) and savingThrowSucceeded)
+          endTurn({ ...state, goblin: combatantWithoutHideousLaughter(state.goblin, Fighter, Goblin) })
+        else
+          endTurn(state)
+    }
 }
