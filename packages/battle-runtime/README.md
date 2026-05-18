@@ -1170,6 +1170,21 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
   Uncanny Dodge projections through public battle-runtime reducer APIs.
 - `battle-runtime.qnt` - canonical package-local spec for the implemented
   subset.
+- `battle-runtime-model.qnt` - shared package-local QNT vocabulary and state
+  model used by the canonical spec and focused QNT verification lanes.
+- `battle-runtime-find-familiar.qnt` - Find Familiar lifecycle and permission
+  helpers imported by the canonical spec.
+- `battle-runtime-light.qnt` - light-source duration, illumination, sight
+  obscurement, and spell light projection helpers imported by the canonical
+  spec.
+- `battle-runtime-creature-type-protection.qnt` - Protection from Evil and Good
+  creature-type scoping, condition prevention, and possession prevention
+  helpers imported by the canonical spec.
+- `battle-runtime-armor-class.qnt` - Armor Class and Mage Armor projection
+  helpers imported by the canonical spec.
+- `battle-runtime-thaumaturgy.qnt` - Thaumaturgy Booming Voice active effect,
+  one-minute effect count, and self ability-check Advantage helpers imported by
+  the canonical spec.
 - `battle-runtime.mbt.qnt` - package-local randomized model for the selected
   integrated promoted MBT path.
 

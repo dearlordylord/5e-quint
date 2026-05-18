@@ -2,6 +2,7 @@
 
 module battleRuntimeEldritchBlastMbt {
   import battleRuntime.* from "./battle-runtime"
+  import battleRuntimeModel.* from "./battle-runtime-model"
 
   var qActionAvailable: bool
   var qTargetHp: int
