@@ -100,6 +100,7 @@ import monkMartialArtsInput from "../../content/monk_martial_arts.json";
 import monkMonksFocusInput from "../../content/monk_monks_focus.json";
 import monkUnarmoredDefenseInput from "../../content/monk_unarmored_defense.json";
 import monkUnarmoredMovementInput from "../../content/monk_unarmored_movement.json";
+import monkUncannyMetabolismInput from "../../content/monk_uncanny_metabolism.json";
 import orcAdrenalineRushInput from "../../content/orc_adrenaline_rush.json";
 import orcDarkvisionInput from "../../content/species_orc_darkvision.json";
 import orcRelentlessEnduranceInput from "../../content/orc_relentless_endurance.json";
@@ -331,6 +332,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     monkMonksFocusInput,
     monkUnarmoredDefenseInput,
     monkUnarmoredMovementInput,
+    monkUncannyMetabolismInput,
     monkDeflectAttacksInput,
     rangerFavoredEnemyInput,
     rogueCunningActionInput,

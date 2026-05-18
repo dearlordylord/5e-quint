@@ -91,7 +91,7 @@
     {
       "number": 15,
       "id": "L12G-AUTHOR-MONK-UNCANNY-METABOLISM",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Monk Uncanny Metabolism Authoring And Support"
     },
     {
@@ -483,6 +483,18 @@
       "id": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS",
       "status": "ready-for-research",
       "title": "Monk's Focus Battle Option Execution"
+    },
+    {
+      "number": 81,
+      "id": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS",
+      "status": "ready-for-research",
+      "title": "Monk Uncanny Metabolism Character Facts And Use State"
+    },
+    {
+      "number": 82,
+      "id": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Monk Uncanny Metabolism Initiative Recovery Runtime"
     }
   ]
 }
@@ -575,7 +587,8 @@ use the repository MBT scarcity protocol.
 ## Included Work
 
 Loop A owns Tasks 10-42 after the split, Task 12's concrete follow-up split
-tasks 76-78, and Task 13's concrete follow-up split tasks 79-80. Tasks 1-9 are already done. Tasks 43-75 are owned by
+tasks 76-78, Task 13's concrete follow-up split tasks 79-80, and Task 15's
+concrete follow-up split tasks 81-82. Tasks 1-9 are already done. Tasks 43-75 are owned by
 `plans/LEVEL2_RALPH_LOOP_B_BIG_FRONTIER.md` and stay `deferred` here so Loop A
 cannot pick them. Keep this lane out of Loop D's level-1 recursive frontier and
 Loop L's language-access frontier.
@@ -662,6 +675,8 @@ Loop L's language-access frontier.
 | 78 | 12b | `L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME` | `druid_wild_shape` |
 | 79 | 14a | `L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS` | `monk_monks_focus` |
 | 80 | 14b | `L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS` | `monk_monks_focus` |
+| 81 | 16a | `L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS` | `monk_uncanny_metabolism` |
+| 82 | 16b | `L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME` | `monk_uncanny_metabolism` |
 
 ## Follow-Up Dependencies
 
@@ -672,6 +687,8 @@ Loop L's language-access frontier.
 | `L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME` | `L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS` | Shape-shifting runtime should consume the projected Wild Shape resource, duration, and known-form facts instead of duplicating class progression state. |
 | `L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS` | `L12G-AUTHOR-MONK-MONKS-FOCUS`, `L12G-AUTHOR-MONK-UNARMORED-MOVEMENT`, `L12G-AUTHOR-MONK-UNCANNY-METABOLISM` | Monk level-2 admission should retain the full level-2 feature grant set before projecting Focus Point resources from the authored Monk's Focus record. |
 | `L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS` | `L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS` | Battle option execution should consume the projected shared Focus Point resource instead of creating per-feature pools. |
+| `L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS` | `L12G-AUTHOR-MONK-UNCANNY-METABOLISM`, `L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS` | Uncanny Metabolism use-state projection should retain the authored feature and link to the already-owned shared Focus Point resource and Martial Arts die source. |
+| `L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME` | `L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS`, `L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS` | Initiative-window recovery should consume the projected once-per-Long-Rest use state and shared Focus Point battle handoff instead of creating a per-feature pool. |
 
 ## Task Details
 
@@ -1058,7 +1075,7 @@ Acceptance:
 
 ### Task 15 - L12G-AUTHOR-MONK-UNCANNY-METABOLISM - Monk Uncanny Metabolism Authoring And Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `monk_uncanny_metabolism`. Gate task: 16 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -2851,4 +2868,65 @@ Acceptance:
 
 - the battle-option execution portion of `monk_monks_focus` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
 - runtime behavior traces to SRD Monk's Focus without homebrew extensions and consumes projected Focus Point facts instead of duplicating class progression state;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.
+
+### Task 81 - L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS - Monk Uncanny Metabolism Character Facts And Use State
+
+Status: `ready-for-research`
+
+Unit: `monk_uncanny_metabolism`. Follow-up split from Task 15.
+
+Dependency: Task 15 (`L12G-AUTHOR-MONK-UNCANNY-METABOLISM`) and Task 79 (`L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS`) done.
+
+Inputs:
+
+- `packages/surface/content/monk_uncanny_metabolism.json`;
+- `packages/surface/content/monk_monks_focus.json`;
+- the `monk_uncanny_metabolism` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Classes/Monk.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- character-creation and character-sheet retained-feature and use-state owner evidence.
+
+Outputs:
+
+- owner evidence for the retained Uncanny Metabolism feature ref, once-per-Long-Rest use state, and links to the shared Focus Point resource and existing Martial Arts die source;
+- use-state projection derives from the retained Surface feature and Monk progression without duplicating Focus Point, Martial Arts die, or class progression state;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the character-facts/use-state portion of `monk_uncanny_metabolism` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no Initiative-window choice execution, self-healing runtime, or battle-runtime Focus Point recovery is implemented in this task;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 82 - L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME - Monk Uncanny Metabolism Initiative Recovery Runtime
+
+Status: `ready-for-research`
+
+Unit: `monk_uncanny_metabolism`. Follow-up split from Task 15.
+
+Dependency: Task 80 (`L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS`) and Task 81 (`L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS`) done.
+
+Inputs:
+
+- `packages/surface/content/monk_uncanny_metabolism.json`;
+- the `monk_uncanny_metabolism` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Classes/Monk.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- battle-runtime, character-battle-runtime resource handoff, Unit profile, owner-evidence, and focused tests for Initiative-window recovery and self-healing execution.
+
+Outputs:
+
+- supported runtime profile and owner evidence for optional Initiative-window Focus Point recovery, self-healing, and Long Rest recharge;
+- Quint/runtime parity updates if promoted battle-runtime behavior changes;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the runtime execution portion of `monk_uncanny_metabolism` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- runtime behavior traces to SRD Uncanny Metabolism without homebrew extensions and consumes projected shared Focus Point, once-per-Long-Rest use, and Martial Arts die facts instead of duplicating class progression or die-table state;
 - focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.

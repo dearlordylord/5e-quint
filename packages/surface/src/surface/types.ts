@@ -599,6 +599,9 @@ export type ClassFeatureAcquisitionChoiceMechanics = Schema.Schema.Type<
 export type ClassFeatureResourceContainerMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.ClassFeatureResourceContainerMechanicsSchema
 >;
+export type MonkInitiativeFocusRecoveryMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.MonkInitiativeFocusRecoveryMechanicsSchema
+>;
 export type FeatureChoiceMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.FeatureChoiceMechanicsSchema
 >;

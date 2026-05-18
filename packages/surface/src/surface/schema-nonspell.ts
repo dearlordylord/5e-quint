@@ -67,19 +67,23 @@ const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.greaterThanOrEqualTo(1),
 );
 
-const NON_FIGHTER_NON_WIZARD_NON_WARLOCK_CLASS_NAMES = CLASS_NAMES.filter(
+const GENERAL_CLASS_FEATURE_RECORD_CLASS_NAMES = CLASS_NAMES.filter(
   (
     className,
-  ): className is Exclude<ClassName, "fighter" | "wizard" | "warlock"> =>
+  ): className is Exclude<
+    ClassName,
+    "fighter" | "monk" | "wizard" | "warlock"
+  > =>
     className !== "fighter" &&
+    className !== "monk" &&
     className !== "wizard" &&
     className !== "warlock",
   // Brands and literal unions are erased at runtime; the filter above removes
   // exactly the excluded class names, and Schema.Literal requires a non-empty
   // tuple rather than a narrowed readonly array.
 ) as unknown as readonly [
-  Exclude<ClassName, "fighter" | "wizard" | "warlock">,
-  ...Array<Exclude<ClassName, "fighter" | "wizard" | "warlock">>,
+  Exclude<ClassName, "fighter" | "monk" | "wizard" | "warlock">,
+  ...Array<Exclude<ClassName, "fighter" | "monk" | "wizard" | "warlock">>,
 ];
 
 const CLASS_CONTAINER_WITHOUT_SPELL_ACCESS_CLASS_NAMES = [
@@ -574,6 +578,27 @@ export const FailedAbilityCheckResourceBoostMechanicsSchema = Schema.Struct({
   refundSpendOnStillFailed: Schema.Literal(true),
 });
 
+const MonkUncannyMetabolismHealingAmountSchema = Schema.Struct({
+  kind: Schema.Literal("monk_martial_arts_die_plus_monk_level"),
+  martialArtsUnitId: Schema.Literal("monk_martial_arts"),
+});
+
+export const MonkInitiativeFocusRecoveryMechanicsSchema = Schema.Struct({
+  family: Schema.Literal("initiative_focus_recovery"),
+  trigger: Schema.Struct({ kind: Schema.Literal("roll_initiative") }),
+  optional: Schema.Literal(true),
+  recovery: Schema.Struct({
+    kind: Schema.Literal("recover_all_expended_uses"),
+    resourceUnitId: Schema.Literal("monk_monks_focus"),
+  }),
+  healing: Schema.Struct({
+    kind: Schema.Literal("heal_hp"),
+    target: Schema.Literal("self"),
+    amount: MonkUncannyMetabolismHealingAmountSchema,
+  }),
+  resetCadence: Schema.Struct({ kind: Schema.Literal("long_rest") }),
+});
+
 export const WeaponMasteryChoiceMechanicsSchema = Schema.Struct({
   family: Schema.Literal("weapon_mastery_choice"),
   choose: PositiveIntegerSchema,
@@ -606,6 +631,7 @@ export const ClassFeatureMechanicsSchema = Schema.Union(
   SpellbookRitualAccessMechanicsSchema,
   RestSpellSlotRecoveryMechanicsSchema,
   FailedAbilityCheckResourceBoostMechanicsSchema,
+  MonkInitiativeFocusRecoveryMechanicsSchema,
 );
 
 export const ClassGeneralFeatureMechanicsSchema = Schema.Union(
@@ -623,6 +649,11 @@ export const WizardClassFeatureMechanicsSchema = Schema.Union(
 
 export const FighterClassFeatureMechanicsSchema =
   FailedAbilityCheckResourceBoostMechanicsSchema;
+
+export const MonkClassFeatureMechanicsSchema = Schema.Union(
+  ClassGeneralFeatureMechanicsSchema,
+  MonkInitiativeFocusRecoveryMechanicsSchema,
+);
 
 export const MasteryTriggerSchema = Schema.Union(
   strictStruct({ kind: Schema.Literal("weapon_hit") }),
@@ -2332,6 +2363,12 @@ export const FighterClassFeatureRecordSchema = Schema.Struct({
   ),
 });
 
+export const MonkClassFeatureRecordSchema = Schema.Struct({
+  ...ClassFeatureRecordBaseFields,
+  className: Schema.Literal("monk"),
+  mechanics: MonkClassFeatureMechanicsSchema,
+});
+
 export const WarlockClassFeatureRecordSchema = Schema.Struct({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literal("warlock"),
@@ -2344,13 +2381,14 @@ export const WarlockClassFeatureRecordSchema = Schema.Struct({
 
 export const OtherClassFeatureRecordSchema = Schema.Struct({
   ...ClassFeatureRecordBaseFields,
-  className: Schema.Literal(...NON_FIGHTER_NON_WIZARD_NON_WARLOCK_CLASS_NAMES),
+  className: Schema.Literal(...GENERAL_CLASS_FEATURE_RECORD_CLASS_NAMES),
   mechanics: ClassGeneralFeatureMechanicsSchema,
 });
 
 export const ClassFeatureRecordSchema = Schema.Union(
   WizardClassFeatureRecordSchema,
   FighterClassFeatureRecordSchema,
+  MonkClassFeatureRecordSchema,
   WarlockClassFeatureRecordSchema,
   OtherClassFeatureRecordSchema,
 );

@@ -130,6 +130,8 @@ export function traceClassFeatureMechanics(
       });
       return [tacticalId];
     }
+    case "initiative_focus_recovery":
+      return [traceInitiativeFocusRecoveryMechanics(m, nodes, edges, ids)];
     case "composite":
       return m.parts.map((part) => {
         switch (part.family) {
@@ -164,6 +166,55 @@ export function traceClassFeatureMechanics(
       );
     }
   }
+}
+
+export function traceInitiativeFocusRecoveryMechanics(
+  m: Extract<
+    ClassFeatureMechanics,
+    { readonly family: "initiative_focus_recovery" }
+  >,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const triggerId = ids("initiative");
+  nodes.push({
+    id: triggerId,
+    category: "window",
+    atomKind: "initiative_focus_recovery_window",
+    label: `initiative_focus_recovery\n${m.trigger.kind}\noptional ${m.optional}`,
+  });
+
+  const recoveryId = ids("focus");
+  nodes.push({
+    id: recoveryId,
+    category: "resource",
+    atomKind: m.recovery.kind,
+    label: `${m.recovery.kind}\n${m.recovery.resourceUnitId}`,
+  });
+  edges.push({ from: triggerId, to: recoveryId, relation: "recovers" });
+
+  const healingId = ids("heal");
+  nodes.push({
+    id: healingId,
+    category: "effect",
+    atomKind: m.healing.kind,
+    label:
+      `${m.healing.kind}\n${m.healing.target}\n` +
+      `${m.healing.amount.kind}\n${m.healing.amount.martialArtsUnitId}`,
+  });
+  edges.push({ from: recoveryId, to: healingId, relation: "also_grants" });
+
+  const resetId = ids("reset");
+  nodes.push({
+    id: resetId,
+    category: "resource",
+    atomKind: "reset_cadence",
+    label: `reset_cadence\n${m.resetCadence.kind}`,
+  });
+  edges.push({ from: triggerId, to: resetId, relation: "recovers_on" });
+
+  return triggerId;
 }
 
 export function traceFeatureChoiceMechanics(

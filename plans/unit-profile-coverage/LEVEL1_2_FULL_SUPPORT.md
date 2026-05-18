@@ -8,8 +8,8 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 
 | Metric | Covered |
 | --- | ---: |
-| Strict runtime/profile support | 88/140 (62.9%) |
-| Strict target closure | 108/140 (77.1%) |
+| Strict runtime/profile support | 88/141 (62.4%) |
+| Strict target closure | 109/141 (77.3%) |
 | Product readiness | 473/556 (85.1%) |
 
 ## Scope
@@ -18,10 +18,10 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | --- | ---: |
 | Candidate Unit ids before exclusions | 197 |
 | Companion-worktree exclusions | 1 |
-| SRD pressure with no Unit matrix row | 44 |
+| SRD pressure with no Unit matrix row | 43 |
 | Non-executable class containers | 12 |
-| Strict executable denominator | 140 |
-| Non-supported frontier | 52 |
+| Strict executable denominator | 141 |
+| Non-supported frontier | 53 |
 
 ## Status Groups
 
@@ -31,7 +31,7 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | open-runtime-behavior | 31 | `acid_arrow`, `aid`, `alter_self`, `arcane_lock`, `barkskin`, `blindness_deafness`, `blur`, `continual_flame`, `find_steed`, `flame_blade`, `gentle_repose`, `heat_metal`, `hold_person`, `invisibility`, `lesser_restoration`, `magic_weapon`, `mind_spike`, `misty_step`, `moonbeam`, `pass_without_trace`, `prayer_of_healing`, `protection_from_poison`, `ray_of_enfeeblement`, `scorching_ray`, `see_invisibility`, `shining_smite`, `spider_climb`, `spike_growth`, `spiritual_weapon`, `warding_bond`, `web` |
 | closed-runtime-detached-table-adjudication | 11 | `alarm`, `charm_person`, `comprehend_languages`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `identify`, `minor_illusion`, `silent_image`, `speak_with_animals`, `thaumaturgy` |
 | closed-later-level-only | 5 | `barbarian_weapon_mastery`, `bard_expertise`, `fighter_weapon_mastery`, `paladin_fighting_style`, `ranger_favored_enemy` |
-| blocked-follow-up-split | 2 | `druid_wild_shape`, `monk_monks_focus` |
+| blocked-follow-up-split | 3 | `druid_wild_shape`, `monk_monks_focus`, `monk_uncanny_metabolism` |
 | closed-character-fact-and-runtime-detached-split | 2 | `druid_druidic`, `rogue_thieves_cant` |
 | open-profile-accounting | 1 | `shatter` |
 
@@ -78,6 +78,7 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `minor_illusion` | closed-runtime-detached-table-adjudication | unsupported-profile | installed | outside-runtime-presentation-exploration | Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are illusion/exploration state outside promoted battle runtime. |
 | `misty_step` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
 | `monk_monks_focus` | blocked-follow-up-split | unsupported-profile | installed | follow-up-split | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS: Admit Monk level-2 progression after sibling Monk level-2 grants can be retained, then project Focus Point count, Short or Long Rest reset, initial Focus feature option names, and the authored Focus save DC fact without duplicating class progression or option execution state. Owner: character-creation-runtime plus character-sheet-runtime. Required output: Owner evidence for CharacterBuild or Character Sheet Focus Point resource, Focus save DC, and retained Monk level-2 feature refs.; L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS: Execute Flurry of Blows, Patient Defense, and Step of the Wind option modes, including Bonus Action economy, Focus Point spending where RAW requires it, Dodge and jump-distance effects, and shared Focus Point spending for later Focus spenders instead of synthetic per-feature pools. Owner: battle-runtime plus character-battle-runtime resource handoff. Required output: Supported runtime profile and owner evidence for Monk's Focus option execution and a single shared Focus Point resource consumed by Focus-spending Monk features. |
+| `monk_uncanny_metabolism` | blocked-follow-up-split | unsupported-profile | installed | follow-up-split | L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS: Retain the Uncanny Metabolism feature ref with Monk level-2 progression after the sibling Monk's Focus character-facts task owns the shared Focus Point resource, then project only Uncanny Metabolism's once-per-Long-Rest use state and source links to Focus Points and the existing Martial Arts die without duplicating either table. Owner: character-creation-runtime plus character-sheet-runtime. Required output: Owner evidence for CharacterBuild or Character Sheet retained Uncanny Metabolism feature ref, once-per-Long-Rest use state, and links to the shared Focus Point resource and existing Martial Arts die source.; L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME: Offer the optional Uncanny Metabolism choice when the Monk rolls Initiative, recover all expended shared Focus Points, roll the Martial Arts die from the existing Monk Martial Arts source, restore Hit Points equal to Monk level plus that die roll, and spend the once-per-Long-Rest feature use. Owner: battle-runtime plus character-battle-runtime resource handoff. Required output: Supported runtime profile and owner evidence for Initiative-window Focus Point recovery, self-healing, and Long Rest recharge using the shared Focus Point resource and existing Martial Arts die source. |
 | `moonbeam` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
 | `paladin_fighting_style` | closed-later-level-only | profile-subset-supported | installed | later-level-only | Blessed Warrior cantrip replacement only occurs on later Paladin level gains after the level-2 acquisition choice is complete. |
 | `pass_without_trace` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
@@ -159,7 +160,6 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `mending` | 5 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/mending.md` | Bard spell list Mending; Cleric spell list Mending; Druid spell list Mending; Sorcerer spell list Mending; Wizard spell list Mending |
 | `message` | 4 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/message.md` | Bard spell list Message; Druid spell list Message; Sorcerer spell list Message; Wizard spell list Message |
 | `mirror_image` | 4 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Bard spell list Mirror Image; Sorcerer spell list Mirror Image; Warlock spell list Mirror Image; Wizard spell list Mirror Image |
-| `monk_uncanny_metabolism` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Monk Uncanny Metabolism |
 | `prestidigitation` | 4 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/prestidigitation.md` | Bard spell list Prestidigitation; Sorcerer spell list Prestidigitation; Warlock spell list Prestidigitation; Wizard spell list Prestidigitation |
 | `purify_food_and_drink` | 3 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/purify_food_and_drink.md` | Cleric spell list Purify Food and Drink; Druid spell list Purify Food and Drink; Paladin spell list Purify Food and Drink |
 | `ranger_deft_explorer` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Ranger Deft Explorer |

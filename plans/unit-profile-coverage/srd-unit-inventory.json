@@ -193,15 +193,15 @@
     "levelTwoRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 12,
       "non-runtime": 12,
-      "missing-authored-record": 7,
-      "catalog-installed-owner-evidence-required": 2
+      "missing-authored-record": 6,
+      "catalog-installed-owner-evidence-required": 3
     },
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 299,
       "non-runtime": 24,
       "catalog-only/dead-for-now": 150,
-      "missing-authored-record": 81,
-      "catalog-installed-owner-evidence-required": 2
+      "missing-authored-record": 80,
+      "catalog-installed-owner-evidence-required": 3
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 143,
@@ -12846,15 +12846,29 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "monk_uncanny_metabolism",
+        "sourceRecordPath": "packages/surface/content/monk_uncanny_metabolism.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "monk_uncanny_metabolism"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit monk_uncanny_metabolism is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime plus character-sheet-runtime; battle-runtime plus character-battle-runtime resource handoff",
+          "evidence": "Promote follow-up split L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME: L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS owns Retain the Uncanny Metabolism feature ref with Monk level-2 progression after the sibling Monk's Focus character-facts task owns the shared Focus Point resource, then project only Uncanny Metabolism's once-per-Long-Rest use state and source links to Focus Points and the existing Martial Arts die without duplicating either table. Required output: Owner evidence for CharacterBuild or Character Sheet retained Uncanny Metabolism feature ref, once-per-Long-Rest use state, and links to the shared Focus Point resource and existing Martial Arts die source.; L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME owns Offer the optional Uncanny Metabolism choice when the Monk rolls Initiative, recover all expended shared Focus Points, roll the Martial Arts die from the existing Monk Martial Arts source, restore Hit Points equal to Monk level plus that die roll, and spend the once-per-Long-Rest feature use. Required output: Supported runtime profile and owner evidence for Initiative-window Focus Point recovery, self-healing, and Long Rest recharge using the shared Focus Point resource and existing Martial Arts die source.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME: L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS owns Retain the Uncanny Metabolism feature ref with Monk level-2 progression after the sibling Monk's Focus character-facts task owns the shared Focus Point resource, then project only Uncanny Metabolism's once-per-Long-Rest use state and source links to Focus Points and the existing Martial Arts die without duplicating either table. Required output: Owner evidence for CharacterBuild or Character Sheet retained Uncanny Metabolism feature ref, once-per-Long-Rest use state, and links to the shared Focus Point resource and existing Martial Arts die source.; L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME owns Offer the optional Uncanny Metabolism choice when the Monk rolls Initiative, recover all expended shared Focus Points, roll the Martial Arts die from the existing Monk Martial Arts source, restore Hit Points equal to Monk level plus that die roll, and spend the once-per-Long-Rest feature use. Required output: Supported runtime profile and owner evidence for Initiative-window Focus Point recovery, self-healing, and Long Rest recharge using the shared Focus Point resource and existing Martial Arts die source.",
       "battleReadinessStatus": "owner-evidence-required"
     },
     {

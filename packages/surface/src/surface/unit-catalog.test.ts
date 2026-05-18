@@ -1647,6 +1647,43 @@ describe("SRD Unit catalog boundary", () => {
     );
   });
 
+  test("keeps Monk Uncanny Metabolism as catalog initiative recovery metadata", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("monk_uncanny_metabolism")).toMatchObject(
+      {
+        acquiredAtLevel: 2,
+        className: "monk",
+        kind: "class_feature",
+        mechanics: {
+          family: "initiative_focus_recovery",
+          healing: {
+            amount: {
+              kind: "monk_martial_arts_die_plus_monk_level",
+              martialArtsUnitId: "monk_martial_arts",
+            },
+            kind: "heal_hp",
+            target: "self",
+          },
+          optional: true,
+          recovery: {
+            kind: "recover_all_expended_uses",
+            resourceUnitId: "monk_monks_focus",
+          },
+          resetCadence: { kind: "long_rest" },
+          trigger: { kind: "roll_initiative" },
+        },
+        provenance: {
+          kind: "srd-5.2.1",
+          section: "Classes/Monk.md:30-48,96-100",
+        },
+      },
+    );
+  });
+
   test("installs expressible SRD level-1 class feature records", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 
