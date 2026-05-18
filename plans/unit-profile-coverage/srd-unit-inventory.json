@@ -179,12 +179,12 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 472,
-      "percent": "84.9%",
+      "numerator": 470,
+      "percent": "84.5%",
       "rowsByStatus": {
         "accepted": 316,
-        "accepted-no-battle-effect": 156,
-        "battle-runtime-required": 74,
+        "accepted-no-battle-effect": 154,
+        "battle-runtime-required": 76,
         "partial-battle-runtime": 6,
         "owner-evidence-required": 4
       }
@@ -203,16 +203,16 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 327,
       "non-runtime": 24,
-      "catalog-only/dead-for-now": 127,
+      "catalog-only/dead-for-now": 125,
       "missing-authored-record": 58,
-      "catalog-installed-owner-evidence-required": 14,
+      "catalog-installed-owner-evidence-required": 16,
       "catalog-authored-executable-follow-up": 6
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 168,
-      "catalog-only/dead-for-now": 127,
+      "catalog-only/dead-for-now": 125,
       "missing-authored-record": 57,
-      "catalog-installed-owner-evidence-required": 9,
+      "catalog-installed-owner-evidence-required": 11,
       "catalog-authored-executable-follow-up": 6
     },
     "levelOneRowsByCategory": {
@@ -8813,13 +8813,25 @@
         "sourceRecordPath": "packages/surface/content/prayer_of_healing.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "prayer_of_healing"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit prayer_of_healing is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "surface Spell Definition authoring; character-sheet-runtime plus spellcasting resource owner",
+          "evidence": "Promote follow-up split L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST, L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST: L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST owns Replace Prayer of Healing's partial mechanics with a lossless SRD Surface shape for 10-minute non-ritual casting, up-to-five recipients that remain within 30 feet for the entire casting, slot-scaled 2d8 plus 1d8 per slot above 2 Hit Point restoration, granted Short Rest benefits, and per-recipient immunity to being affected again until that creature finishes a Long Rest. Required output: Prayer of Healing Dhall and JSON content, with schema and tracer support where required, represent the Short Rest benefit and Long Rest recipient lockout as executable source facts instead of comments or prose-only description.; L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST owns Apply Prayer of Healing after the completed 10-minute cast by spending the spell slot at completion, consuming caller-supplied recipient eligibility facts, granting each selected Character Sheet the existing Short Rest benefits without duplicating rest algorithms, applying the slot-scaled healing roll capped by Hit Point maximum, and recording/clearing the per-recipient Long Rest lockout from the same rest state owner. Required output: Supported profile or profile-subset evidence, focused runtime tests, and owner evidence for Prayer of Healing's Character Sheet rest-benefit application, healing, Spell Slot spend timing, and Long Rest recipient lockout while leaving automatic range tracking and encounter-time casting interruption as caller/table facts.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST, L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST: L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST owns Replace Prayer of Healing's partial mechanics with a lossless SRD Surface shape for 10-minute non-ritual casting, up-to-five recipients that remain within 30 feet for the entire casting, slot-scaled 2d8 plus 1d8 per slot above 2 Hit Point restoration, granted Short Rest benefits, and per-recipient immunity to being affected again until that creature finishes a Long Rest. Required output: Prayer of Healing Dhall and JSON content, with schema and tracer support where required, represent the Short Rest benefit and Long Rest recipient lockout as executable source facts instead of comments or prose-only description.; L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST owns Apply Prayer of Healing after the completed 10-minute cast by spending the spell slot at completion, consuming caller-supplied recipient eligibility facts, granting each selected Character Sheet the existing Short Rest benefits without duplicating rest algorithms, applying the slot-scaled healing roll capped by Hit Point maximum, and recording/clearing the per-recipient Long Rest lockout from the same rest state owner. Required output: Supported profile or profile-subset evidence, focused runtime tests, and owner evidence for Prayer of Healing's Character Sheet rest-benefit application, healing, Spell Slot spend timing, and Long Rest recipient lockout while leaving automatic range tracking and encounter-time casting interruption as caller/table facts.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_protection_from_poison",
@@ -14660,13 +14672,25 @@
         "sourceRecordPath": "packages/surface/content/prayer_of_healing.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "prayer_of_healing"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit prayer_of_healing is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "surface Spell Definition authoring; character-sheet-runtime plus spellcasting resource owner",
+          "evidence": "Promote follow-up split L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST, L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST: L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST owns Replace Prayer of Healing's partial mechanics with a lossless SRD Surface shape for 10-minute non-ritual casting, up-to-five recipients that remain within 30 feet for the entire casting, slot-scaled 2d8 plus 1d8 per slot above 2 Hit Point restoration, granted Short Rest benefits, and per-recipient immunity to being affected again until that creature finishes a Long Rest. Required output: Prayer of Healing Dhall and JSON content, with schema and tracer support where required, represent the Short Rest benefit and Long Rest recipient lockout as executable source facts instead of comments or prose-only description.; L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST owns Apply Prayer of Healing after the completed 10-minute cast by spending the spell slot at completion, consuming caller-supplied recipient eligibility facts, granting each selected Character Sheet the existing Short Rest benefits without duplicating rest algorithms, applying the slot-scaled healing roll capped by Hit Point maximum, and recording/clearing the per-recipient Long Rest lockout from the same rest state owner. Required output: Supported profile or profile-subset evidence, focused runtime tests, and owner evidence for Prayer of Healing's Character Sheet rest-benefit application, healing, Spell Slot spend timing, and Long Rest recipient lockout while leaving automatic range tracking and encounter-time casting interruption as caller/table facts.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST, L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST: L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST owns Replace Prayer of Healing's partial mechanics with a lossless SRD Surface shape for 10-minute non-ritual casting, up-to-five recipients that remain within 30 feet for the entire casting, slot-scaled 2d8 plus 1d8 per slot above 2 Hit Point restoration, granted Short Rest benefits, and per-recipient immunity to being affected again until that creature finishes a Long Rest. Required output: Prayer of Healing Dhall and JSON content, with schema and tracer support where required, represent the Short Rest benefit and Long Rest recipient lockout as executable source facts instead of comments or prose-only description.; L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST owns Apply Prayer of Healing after the completed 10-minute cast by spending the spell slot at completion, consuming caller-supplied recipient eligibility facts, granting each selected Character Sheet the existing Short Rest benefits without duplicating rest algorithms, applying the slot-scaled healing roll capped by Hit Point maximum, and recording/clearing the per-recipient Long Rest lockout from the same rest state owner. Required output: Supported profile or profile-subset evidence, focused runtime tests, and owner evidence for Prayer of Healing's Character Sheet rest-benefit application, healing, Spell Slot spend timing, and Long Rest recipient lockout while leaving automatic range tracking and encounter-time casting interruption as caller/table facts.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/paladin:spell-level-2:spell-unit-pressure:paladin_spell_list_protection_from_poison",

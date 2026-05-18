@@ -25,7 +25,7 @@
     {
       "number": 40,
       "id": "L12G-SPELL-PRAYER-OF-HEALING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Prayer Of Healing Runtime Support Or Closure"
     },
     {
@@ -129,12 +129,24 @@
       "id": "L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER",
       "status": "ready-for-research",
       "title": "Moonbeam Shape-Shifting Rider Runtime"
+    },
+    {
+      "number": 93,
+      "id": "L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST",
+      "status": "ready-for-research",
+      "title": "Prayer Of Healing Surface Rest Shape"
+    },
+    {
+      "number": 94,
+      "id": "L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST",
+      "status": "ready-for-research",
+      "title": "Prayer Of Healing Character Sheet Rest Runtime"
     }
   ]
 }
 -->
 
-This is the third level-2 execution lane split from Loop A tail work. Loop C owns Tasks 37-42 and follow-up Tasks 76-87 and 90-92 only.
+This is the third level-2 execution lane split from Loop A tail work. Loop C owns Tasks 37-42 and follow-up Tasks 76-87 and 90-94 only.
 
 ## Worktree Safety Prefix
 
@@ -189,7 +201,7 @@ use the repository MBT scarcity protocol.
 
 ## Included Work
 
-Loop C contains 21 atomic tasks: the remaining Loop A spell tail from Misty Step through Ray of Enfeeblement, Druid/Monk/Sorcerer follow-up profile/runtime work moved out of Loop A, and the Moonbeam follow-up split discovered by Task 38.
+Loop C contains 23 atomic tasks: the remaining Loop A spell tail from Misty Step through Ray of Enfeeblement, Druid/Monk/Sorcerer follow-up profile/runtime work moved out of Loop A, the Moonbeam follow-up split discovered by Task 38, and the Prayer of Healing follow-up split discovered by Task 40.
 
 It excludes Loop A Tasks 22-36 and 88-89, Loop B Tasks 43-58, Loop D Tasks 59-75, all level-1 Loop D/L work, companion autonomous-control, familiar autonomous-control, and Counterspell work. Wild Companion work in this lane is only the table-choice/source-link boundary; no autonomous companion decision engine belongs here.
 
@@ -216,6 +228,8 @@ It excludes Loop A Tasks 22-36 and 88-89, Loop B Tasks 43-58, Loop D Tasks 59-75
 | 90 | 38 follow-up | `L12G-FOLLOWUP-MOONBEAM-SURFACE-LIFECYCLE` | `moonbeam` |
 | 91 | 38 follow-up | `L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME` | `moonbeam` |
 | 92 | 38 follow-up | `L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER` | `moonbeam` |
+| 93 | 40 follow-up | `L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST` | `prayer_of_healing` |
+| 94 | 40 follow-up | `L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST` | `prayer_of_healing` |
 
 ## Follow-Up Dependencies
 
@@ -236,6 +250,8 @@ It excludes Loop A Tasks 22-36 and 88-89, Loop B Tasks 43-58, Loop D Tasks 59-75
 | `L12G-FOLLOWUP-MOONBEAM-SURFACE-LIFECYCLE` | `L12G-SPELL-MOONBEAM` | Moonbeam Surface authoring must capture the RAW movable Cylinder, Dim Light, recurring save, once-per-turn, slot-scaling, and shape-shift rider facts before runtime owners consume them. |
 | `L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME` | `L12G-FOLLOWUP-MOONBEAM-SURFACE-LIFECYCLE` | Runtime zone execution should consume the repaired Moonbeam Spell Definition facts and caller-supplied table/spatial witnesses instead of duplicating area membership or geometry derivation. |
 | `L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER` | `L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME`, `L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME` | The failed-save rider should attach to Moonbeam save results and consume a promoted shape-shifted/true-form state instead of creating Moonbeam-local shape-shifting state. |
+| `L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST` | `L12G-SPELL-PRAYER-OF-HEALING` | Prayer of Healing Surface authoring must capture the Short Rest benefit, per-recipient Long Rest lockout, completed 10-minute casting boundary, and slot-scaled healing facts before Character Sheet runtime consumes them. |
+| `L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST` | `L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST` | Character Sheet runtime should consume repaired Spell Definition facts and existing rest/spell-slot owners instead of duplicating Short Rest algorithms, Hit Point maximum capping, or Spell Slot recovery state. |
 
 ## Task Details
 
@@ -322,7 +338,7 @@ Acceptance:
 
 ### Task 40 - L12G-SPELL-PRAYER-OF-HEALING - Prayer Of Healing Runtime Support Or Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `prayer_of_healing`. Gate task: 42 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -868,3 +884,67 @@ Acceptance:
 - runtime behavior traces to SRD Moonbeam and Shape-Shifting rules without homebrew extensions and does not create Moonbeam-local duplicate shape-shifting state;
 - automatic area membership derivation remains table/spatial owned;
 - focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.
+
+### Task 93 - L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST - Prayer Of Healing Surface Rest Shape
+
+Status: `ready-for-research`
+
+Unit: `prayer_of_healing`. Follow-up split from Task 40.
+
+Dependency: Task 40 (`L12G-SPELL-PRAYER-OF-HEALING`) done.
+
+Inputs:
+
+- `packages/surface/content/prayer_of_healing.dhall`;
+- `packages/surface/content/prayer_of_healing.json`;
+- the `prayer_of_healing` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Spells/Descriptions-M-P.md`, `.references/srd-5.2.1/Spells/Gaining-and-Casting.md`, and `.references/srd-5.2.1/Playing-the-Game.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- Surface Spell Definition schema, tracer, and catalog admission code for spell mechanics.
+
+Outputs:
+
+- Prayer of Healing Dhall and JSON content represent 10-minute non-ritual casting, up-to-five recipients that remain within 30 feet for the entire casting, slot-scaled 2d8 plus 1d8 per slot above 2 Hit Point restoration, granted Short Rest benefits, and per-recipient immunity to being affected again until that creature finishes a Long Rest;
+- schema and tracer support are updated where required so Short Rest benefits, the Long Rest lockout, and completed-casting eligibility are executable source facts rather than comments or prose-only description;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the Surface authoring portion of `prayer_of_healing` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no Character Sheet rest execution, Spell Slot spending, range tracking, or encounter-time casting interruption runtime is implemented in this task;
+- authored facts trace to SRD Prayer of Healing, Longer Casting Times, Healing, Short Rest, and Long Rest text without homebrew extensions;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 94 - L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST - Prayer Of Healing Character Sheet Rest Runtime
+
+Status: `ready-for-research`
+
+Unit: `prayer_of_healing`. Follow-up split from Task 40.
+
+Dependency: Task 93 (`L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST`) done.
+
+Inputs:
+
+- `packages/surface/content/prayer_of_healing.json`;
+- the `prayer_of_healing` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Spells/Descriptions-M-P.md`, `.references/srd-5.2.1/Spells/Gaining-and-Casting.md`, and `.references/srd-5.2.1/Playing-the-Game.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- character-sheet-runtime rest application, spellcasting resource owner evidence, Unit profile evidence, and focused tests for Prayer of Healing execution.
+
+Outputs:
+
+- supported profile or profile-subset evidence, focused runtime tests, and owner evidence for applying Prayer of Healing after the completed 10-minute cast;
+- execution spends the Spell Slot at completion, consumes caller-supplied recipient eligibility facts, grants each selected Character Sheet the existing Short Rest benefits without duplicating rest algorithms, applies the slot-scaled healing roll capped by Hit Point maximum, and records/clears the per-recipient Long Rest lockout from the same rest state owner;
+- automatic range tracking and encounter-time casting interruption remain caller/table facts rather than Character Sheet state;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the Character Sheet rest-runtime portion of `prayer_of_healing` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- runtime behavior traces to SRD Prayer of Healing, Longer Casting Times, Healing, Short Rest, and Long Rest text without homebrew extensions and consumes existing rest and Spell Slot owners instead of duplicating their state;
+- no automatic spatial range tracking, encounter-time concentration interruption, or battle-runtime-only spell invocation behavior is implemented in this task;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if battle-runtime behavior changes, and reviewer-loop convergence are complete.

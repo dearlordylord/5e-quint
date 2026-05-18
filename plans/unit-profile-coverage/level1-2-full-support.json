@@ -1856,17 +1856,15 @@
       "unitId": "pass_without_trace"
     },
     {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST: Replace Prayer of Healing's partial mechanics with a lossless SRD Surface shape for 10-minute non-ritual casting, up-to-five recipients that remain within 30 feet for the entire casting, slot-scaled 2d8 plus 1d8 per slot above 2 Hit Point restoration, granted Short Rest benefits, and per-recipient immunity to being affected again until that creature finishes a Long Rest. Owner: surface Spell Definition authoring. Required output: Prayer of Healing Dhall and JSON content, with schema and tracer support where required, represent the Short Rest benefit and Long Rest recipient lockout as executable source facts instead of comments or prose-only description.; L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST: Apply Prayer of Healing after the completed 10-minute cast by spending the spell slot at completion, consuming caller-supplied recipient eligibility facts, granting each selected Character Sheet the existing Short Rest benefits without duplicating rest algorithms, applying the slot-scaled healing roll capped by Hit Point maximum, and recording/clearing the per-recipient Long Rest lockout from the same rest state owner. Owner: character-sheet-runtime plus spellcasting resource owner. Required output: Supported profile or profile-subset evidence, focused runtime tests, and owner evidence for Prayer of Healing's Character Sheet rest-benefit application, healing, Spell Slot spend timing, and Long Rest recipient lockout while leaving automatic range tracking and encounter-time casting interruption as caller/table facts.",
       "sourceRecordPath": "packages/surface/content/prayer_of_healing.json",
       "sourceRows": [
         {
@@ -1894,8 +1892,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
       "unitId": "prayer_of_healing"
     },
     {
@@ -2686,7 +2684,7 @@
       ]
     },
     {
-      "count": 19,
+      "count": 18,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
@@ -2701,7 +2699,6 @@
         "lesser_restoration",
         "magic_weapon",
         "mind_spike",
-        "prayer_of_healing",
         "protection_from_poison",
         "ray_of_enfeeblement",
         "spider_climb",
@@ -2709,6 +2706,27 @@
         "spiritual_weapon",
         "warding_bond",
         "web"
+      ]
+    },
+    {
+      "count": 14,
+      "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
+      "status": "blocked-follow-up-split",
+      "unitIds": [
+        "acid_arrow",
+        "alter_self",
+        "dragons_breath",
+        "druid_wild_shape",
+        "enhance_ability",
+        "enlarge_reduce",
+        "enthrall",
+        "monk_monks_focus",
+        "monk_uncanny_metabolism",
+        "moonbeam",
+        "prayer_of_healing",
+        "see_invisibility",
+        "sorcerer_font_of_magic",
+        "sorcerer_metamagic"
       ]
     },
     {
@@ -2730,26 +2748,6 @@
         "silent_image",
         "speak_with_animals",
         "thaumaturgy"
-      ]
-    },
-    {
-      "count": 13,
-      "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
-      "status": "blocked-follow-up-split",
-      "unitIds": [
-        "acid_arrow",
-        "alter_self",
-        "dragons_breath",
-        "druid_wild_shape",
-        "enhance_ability",
-        "enlarge_reduce",
-        "enthrall",
-        "monk_monks_focus",
-        "monk_uncanny_metabolism",
-        "moonbeam",
-        "see_invisibility",
-        "sorcerer_font_of_magic",
-        "sorcerer_metamagic"
       ]
     },
     {
@@ -2778,12 +2776,12 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 472,
-      "percent": "84.9%",
+      "numerator": 470,
+      "percent": "84.5%",
       "rowsByStatus": {
         "accepted": 316,
-        "accepted-no-battle-effect": 156,
-        "battle-runtime-required": 74,
+        "accepted-no-battle-effect": 154,
+        "battle-runtime-required": 76,
         "owner-evidence-required": 4,
         "partial-battle-runtime": 6
       }
@@ -2810,13 +2808,13 @@
     },
     "strictTargetClosure": {
       "denominator": 151,
-      "numerator": 132,
-      "percent": "87.4%"
+      "numerator": 133,
+      "percent": "88.1%"
     }
   },
   "openFrontier": [
     {
-      "count": 19,
+      "count": 18,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
@@ -2831,7 +2829,6 @@
         "lesser_restoration",
         "magic_weapon",
         "mind_spike",
-        "prayer_of_healing",
         "protection_from_poison",
         "ray_of_enfeeblement",
         "spider_climb",
@@ -7895,17 +7892,17 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
-      "missing": 19,
+      "missing": 18,
       "profile-subset-supported": 10,
       "supported-profile": 97,
-      "unsupported-profile": 25
+      "unsupported-profile": 26
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 13,
+      "blocked-follow-up-split": 14,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 14,
-      "open-runtime-behavior": 19,
+      "open-runtime-behavior": 18,
       "supported-profile": 97
     },
     "nonSupportedFrontier": 54,

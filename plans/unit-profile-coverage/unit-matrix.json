@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 379,
-      "numerator": 156,
-      "percent": "41.2%"
+      "numerator": 157,
+      "percent": "41.4%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 451,
-      "numerator": 188,
-      "percent": "41.7%"
+      "numerator": 189,
+      "percent": "41.9%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 189
+      "value": 190
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 120,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 189,
-      "numerator": 189,
+      "denominator": 190,
+      "numerator": 190,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "86.7%"
     },
     "supportedProfileCoverage": {
-      "denominator": 157,
+      "denominator": 158,
       "numerator": 120,
-      "percent": "76.4%"
+      "percent": "75.9%"
     }
   },
   "metricSemantics": [
@@ -15263,6 +15263,41 @@
         "status": "installed"
       },
       "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST",
+            "mechanic": "Replace Prayer of Healing's partial mechanics with a lossless SRD Surface shape for 10-minute non-ritual casting, up-to-five recipients that remain within 30 feet for the entire casting, slot-scaled 2d8 plus 1d8 per slot above 2 Hit Point restoration, granted Short Rest benefits, and per-recipient immunity to being affected again until that creature finishes a Long Rest.",
+            "owner": "surface Spell Definition authoring",
+            "requiredOutput": "Prayer of Healing Dhall and JSON content, with schema and tracer support where required, represent the Short Rest benefit and Long Rest recipient lockout as executable source facts instead of comments or prose-only description.",
+            "title": "Prayer Of Healing Surface Rest Shape"
+          },
+          {
+            "id": "L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST",
+            "mechanic": "Apply Prayer of Healing after the completed 10-minute cast by spending the spell slot at completion, consuming caller-supplied recipient eligibility facts, granting each selected Character Sheet the existing Short Rest benefits without duplicating rest algorithms, applying the slot-scaled healing roll capped by Hit Point maximum, and recording/clearing the per-recipient Long Rest lockout from the same rest state owner.",
+            "owner": "character-sheet-runtime plus spellcasting resource owner",
+            "requiredOutput": "Supported profile or profile-subset evidence, focused runtime tests, and owner evidence for Prayer of Healing's Character Sheet rest-benefit application, healing, Spell Slot spend timing, and Long Rest recipient lockout while leaving automatic range tracking and encounter-time casting interruption as caller/table facts.",
+            "title": "Prayer Of Healing Character Sheet Rest Runtime"
+          }
+        ],
+        "futureProfileOwner": "surface Spell Definition authoring plus character-sheet-runtime rest application plus spellcasting resource owner",
+        "reason": "Prayer of Healing is authored and installed as an SRD Surface Spell Definition with its 10-minute spell shell, fixed up-to-five target count, and slot-scaled 2d8 Hit Point restoration only. The local SRD 5.2.1 passage additionally grants each recipient the benefits of a Short Rest and prevents that creature from being affected by the spell again until it finishes a Long Rest. Task 40 claims no battle-runtime support and leaves the row blocked by the concrete follow-up split listed on this claim.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/prayer_of_healing.json",
+      "unitId": "prayer_of_healing"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "deferredMechanics": [],
         "profileIds": [
           "spell.creature-type-protection-and-charm"
@@ -22064,24 +22099,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/power_word_stun.json",
       "unitId": "power_word_stun"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/prayer_of_healing.json",
-      "unitId": "prayer_of_healing"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
