@@ -714,6 +714,35 @@
     },
     {
       "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "companion-control-boundary"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "Wild Companion delegates familiar lifecycle behavior to the existing Find Familiar Unit; unsupported companion control remains under SRDINV86, while Wild Shape resource reset, known-form, duration, and shape-shifting execution stay under the Druid Wild Shape follow-up split.",
+      "sourceRecordPath": "packages/surface/content/druid_wild_companion.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Druid Wild Companion",
+          "id": "srd521:classes/druid:level-2:class-feature-grant:druid_wild_companion",
+          "levelBand": "level-2",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 129,
+            "lineStart": 124,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        }
+      ],
+      "status": "closed-companion-control-boundary",
+      "strictTargetClosed": true,
+      "unitId": "druid_wild_companion"
+    },
+    {
+      "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
         "follow-up-split"
@@ -721,7 +750,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "L12G-AUTHOR-DRUID-WILD-COMPANION: Admit Druid level-2 progression only after Wild Companion can spend a spell slot or Wild Shape use to cast Find Familiar without Material components and close companion execution separately. Owner: character-creation-runtime plus companion boundary. Required output: Character Creation can retain both Druid level-2 feature refs without treating companion execution as Wild Shape support.; L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS: Project Wild Shape use count, partial Short Rest/full Long Rest reset, rounded-down duration, learned Beast forms, and one known-form replacement on Long Rest from the retained feature without duplicating class progression state. Owner: character-creation-runtime plus character-sheet-runtime. Required output: Owner evidence for CharacterBuild or Character Sheet Wild Shape resource, rounded-down duration, known-form roster, and Long Rest known-form replacement facts.; L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME: Execute Beast form choice, game-statistic replacement and retained facts, Temporary Hit Points, no spellcasting, equipment choice/effects, and reversion triggers. Owner: stat-block-control shape-shifting runtime. Required output: Supported runtime profile and owner evidence for Wild Shape shape-shifting execution.",
+      "reason": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS: Project Wild Shape use count, partial Short Rest/full Long Rest reset, rounded-down duration, learned Beast forms, and one known-form replacement on Long Rest from the retained feature without duplicating class progression state. Owner: character-creation-runtime plus character-sheet-runtime. Required output: Owner evidence for CharacterBuild or Character Sheet Wild Shape resource, rounded-down duration, known-form roster, and Long Rest known-form replacement facts.; L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME: Execute Beast form choice, game-statistic replacement and retained facts, Temporary Hit Points, no spellcasting, equipment choice/effects, and reversion triggers. Owner: stat-block-control shape-shifting runtime. Required output: Supported runtime profile and owner evidence for Wild Shape shape-shifting execution.",
       "sourceRecordPath": "packages/surface/content/druid_wild_shape.json",
       "sourceRows": [
         {
@@ -2686,18 +2715,26 @@
         "druid_druidic",
         "rogue_thieves_cant"
       ]
+    },
+    {
+      "count": 1,
+      "description": "Companion lifecycle and control residuals are closed at the companion control boundary.",
+      "status": "closed-companion-control-boundary",
+      "unitIds": [
+        "druid_wild_companion"
+      ]
     }
   ],
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 466,
-      "percent": "83.8%",
+      "numerator": 467,
+      "percent": "84%",
       "rowsByStatus": {
-        "accepted": 331,
+        "accepted": 332,
         "accepted-no-battle-effect": 135,
         "battle-runtime-required": 80,
-        "owner-evidence-required": 4,
+        "owner-evidence-required": 3,
         "partial-battle-runtime": 6
       }
     },
@@ -2717,14 +2754,14 @@
       "percent": "29.7%"
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 153,
+      "denominator": 154,
       "numerator": 101,
-      "percent": "66%"
+      "percent": "65.6%"
     },
     "strictTargetClosure": {
-      "denominator": 153,
-      "numerator": 144,
-      "percent": "94.1%"
+      "denominator": 154,
+      "numerator": 145,
+      "percent": "94.2%"
     }
   },
   "openFrontier": [
@@ -3110,24 +3147,6 @@
           }
         ],
         "unitId": "disguise_self"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
-            "concept": "Druid Wild Companion",
-            "id": "srd521:classes/druid:level-2:class-feature-grant:druid_wild_companion",
-            "levelBand": "level-2",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 129,
-              "lineStart": 124,
-              "path": ".references/srd-5.2.1/Classes/Druid.md"
-            }
-          }
-        ],
-        "unitId": "druid_wild_companion"
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/druidcraft.md",
@@ -7751,19 +7770,20 @@
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
       "missing": 9,
-      "profile-subset-supported": 11,
+      "profile-subset-supported": 12,
       "supported-profile": 101,
       "unsupported-profile": 32
     },
     "groupsByStatus": {
       "blocked-follow-up-split": 20,
       "closed-character-fact-and-runtime-detached-split": 2,
+      "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 15,
       "open-runtime-behavior": 9,
       "supported-profile": 101
     },
-    "nonSupportedFrontier": 52,
-    "strictDenominator": 153
+    "nonSupportedFrontier": 53,
+    "strictDenominator": 154
   }
 }

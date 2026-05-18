@@ -49,6 +49,7 @@ import divineFavorInput from "../../content/divine_favor.json";
 import divineSmiteInput from "../../content/divine_smite.json";
 import druidDruidicInput from "../../content/druid_druidic.json";
 import druidPrimalOrderInput from "../../content/druid_primal_order.json";
+import druidWildCompanionInput from "../../content/druid_wild_companion.json";
 import druidWildShapeInput from "../../content/druid_wild_shape.json";
 import eldritchBlastInput from "../../content/eldritch_blast.json";
 import enhanceAbilityInput from "../../content/enhance_ability.json";
@@ -352,6 +353,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     druidDruidicInput,
     druidPrimalOrderInput,
     druidWildShapeInput,
+    druidWildCompanionInput,
     monkMartialArtsInput,
     monkMonksFocusInput,
     monkUnarmoredDefenseInput,

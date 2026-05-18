@@ -163,6 +163,7 @@ const battleRuntimeRelevantFeatureUnitIds = new Set([
   "barbarian_danger_sense",
   "barbarian_weapon_mastery",
   "bard_bardic_inspiration",
+  "druid_wild_companion",
   "druid_wild_shape",
   "fighter_fighting_style",
   "fighter_weapon_mastery",

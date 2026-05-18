@@ -503,6 +503,76 @@ describe("SRD Unit catalog boundary", () => {
     }
   });
 
+  test("keeps Druid Wild Companion as a Find Familiar casting boundary", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const druid = result.catalog.requireUnit("class_druid");
+      const wildCompanion = result.catalog.requireUnit("druid_wild_companion");
+
+      expect(druid.kind).toBe("class");
+      if (druid.kind !== "class") {
+        throw new Error("Expected Druid to be a class record.");
+      }
+      expect(druid.featureGrants).toEqual(
+        expect.arrayContaining([
+          { level: 2, unitId: "druid_wild_shape" },
+          { level: 2, unitId: "druid_wild_companion" },
+        ]),
+      );
+      expect(druid.spellcasting?.kind).toBe(
+        "list_prepared_spellcasting_progression_creation",
+      );
+      if (
+        druid.spellcasting?.kind !==
+        "list_prepared_spellcasting_progression_creation"
+      ) {
+        throw new Error("Expected Druid level-scaled spellcasting facts.");
+      }
+      expect(druid.spellcasting.spellcastingProgression).toEqual(
+        expect.arrayContaining([
+          {
+            atLevel: 2,
+            cantripCount: 2,
+            preparedSpellCount: 5,
+            spellSlots: [{ spellLevel: 1, count: 3 }],
+          },
+        ]),
+      );
+
+      expect(wildCompanion.kind).toBe("class_feature");
+      if (
+        wildCompanion.kind !== "class_feature" ||
+        wildCompanion.mechanics.family !== "druid_wild_companion_spell_cast"
+      ) {
+        throw new Error(
+          "Expected Wild Companion to be a Druid spell-casting feature.",
+        );
+      }
+      expect(wildCompanion.className).toBe("druid");
+      expect(wildCompanion.acquiredAtLevel).toBe(2);
+      expect(wildCompanion.mechanics).toEqual({
+        family: "druid_wild_companion_spell_cast",
+        activationCost: { kind: "standard_action", action: "magic" },
+        spellId: "find_familiar",
+        spendOptions: [
+          { kind: "spell_slot" },
+          {
+            kind: "one_class_feature_use",
+            resourceUnitId: "druid_wild_shape",
+          },
+        ],
+        componentOverride: { material: "not_required" },
+        spellModeOverride: {
+          kind: "fixed_creature_type_mode_option",
+          optionId: "fey",
+        },
+        familiarDismissal: { kind: "caster_finishes_long_rest" },
+      });
+    }
+  });
+
   test("keeps first-slice weapon mastery choices on Sap, not Vex", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 

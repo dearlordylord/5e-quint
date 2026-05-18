@@ -70,6 +70,12 @@ const strictStatusDefinitions = [
       "Character facts are owned while only runtime-detached adjudication remains.",
   },
   {
+    status: "closed-companion-control-boundary",
+    strictTargetClosed: true,
+    description:
+      "Companion lifecycle and control residuals are closed at the companion control boundary.",
+  },
+  {
     status: "closed-later-level-only",
     strictTargetClosed: true,
     description:
@@ -111,6 +117,8 @@ const runtimeDetachedClosureKinds = new Set([
 const durableSocialKnowledgeClosureKind =
   battleReadinessClosureKind.socialKnowledgeEffect;
 const laterLevelOnlyClosureKind = battleReadinessClosureKind.laterLevelOnly;
+const companionControlBoundaryClosureKind =
+  battleReadinessClosureKind.companionControlBoundary;
 const characterFactRuntimeDetachedSplitClosureKind =
   battleReadinessClosureKind.characterFactRuntimeDetachedSplit;
 const d20RollModeResidualTerms = [
@@ -261,6 +269,18 @@ function hasOnlyLaterLevelResiduals(claim) {
   );
 }
 
+function hasOnlyCompanionControlBoundaryResiduals(claim) {
+  return (
+    claim?.tag === "profile-subset-supported" &&
+    claim.deferredMechanics.length > 0 &&
+    claim.deferredMechanics.every(
+      (entry) =>
+        entry.battleReadinessClosure?.kind ===
+        companionControlBoundaryClosureKind,
+    )
+  );
+}
+
 function hasCharacterFactRuntimeDetachedSplit(claim) {
   if (claim?.tag === "profile-subset-supported") {
     return claim.deferredMechanics.some(
@@ -307,6 +327,14 @@ function strictStatusForUnit(unit) {
       reason:
         closureReasonForClaim(claim) ||
         "The remaining profile subset residuals occur only after level 1.",
+    };
+  }
+  if (hasOnlyCompanionControlBoundaryResiduals(claim)) {
+    return {
+      status: "closed-companion-control-boundary",
+      reason:
+        closureReasonForClaim(claim) ||
+        "The remaining profile subset residuals are closed at the companion control boundary.",
     };
   }
   if (

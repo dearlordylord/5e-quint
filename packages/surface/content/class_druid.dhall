@@ -6,14 +6,21 @@ let StartingEquipmentOption : Type =
 
 let ClassSpellAccess : Type = { spellId : Text, spellLevel : Natural }
 
+let SpellSlot : Type = { count : Natural, spellLevel : Natural }
+
+let SpellcastingProgressionRow : Type =
+      { atLevel : Natural, cantripCount : Natural, preparedSpellCount : Natural, spellSlots : List SpellSlot }
+
 
 let druid =
       { armorTraining = { categories = [ "light", "shield" ], kind = "trained" }
       , className = "druid"
-      , description = "SRD Druid class creation facts for a level-1 character, including class-list prepared Spell Access, Spell Slots, and spellcasting focus facts."
+      , description = "SRD Druid class creation and early progression facts for a level 1-2 character, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, and level 1-2 class feature grants."
       , featureGrants =
         [ { level = 1, unitId = "druid_druidic" }
         , { level = 1, unitId = "druid_primal_order" }
+        , { level = 2, unitId = "druid_wild_shape" }
+        , { level = 2, unitId = "druid_wild_companion" }
         ]
       , hitPointDie = 8
       , id = "class_druid"
@@ -27,12 +34,12 @@ let druid =
           }
       , name = "Druid"
       , primaryAbilities = { abilities = [ "wis" ], kind = "all_of" }
-      , provenance = { kind = "srd-5.2.1", section = "Classes/Druid.md:3-25,30-32,57-79" }
+      , provenance = { kind = "srd-5.2.1", section = "Classes/Druid.md:3-33,57-79" }
       , savingThrowProficiencies = [ "int", "wis" ]
       , skillProficiencyChoice =
         { choose = 2, options = [ "animal_handling", "arcana", "insight", "medicine", "nature", "perception", "religion", "survival" ] }
       , spellcasting =
-          { kind = "list_prepared_spellcasting_creation"
+          { kind = "list_prepared_spellcasting_progression_creation"
           , featureLevel = 1
           , spellcastingAbility = "wis"
           , cantripAccess =
@@ -47,6 +54,7 @@ let druid =
               , spells =
                 [ { spellId = "animal_friendship", spellLevel = 1 }
                 , { spellId = "cure_wounds", spellLevel = 1 }
+                , { spellId = "entangle", spellLevel = 1 }
                 , { spellId = "faerie_fire", spellLevel = 1 }
                 , { spellId = "thunderwave", spellLevel = 1 }
                 ] : List ClassSpellAccess
@@ -57,6 +65,18 @@ let druid =
               , slots = [ { spellLevel = 1, count = 2 } ]
               , resetCadence = { kind = "long_rest" }
               }
+          , spellcastingProgression =
+              [ { atLevel = 1
+                , cantripCount = 2
+                , preparedSpellCount = 4
+                , spellSlots = [ { spellLevel = 1, count = 2 } ]
+                }
+              , { atLevel = 2
+                , cantripCount = 2
+                , preparedSpellCount = 5
+                , spellSlots = [ { spellLevel = 1, count = 3 } ]
+                }
+              ] : List SpellcastingProgressionRow
           , spellcastingFocus = "druidic_focus"
           }
       , subclassChoices = [] : List { level : Natural, options : List Text }

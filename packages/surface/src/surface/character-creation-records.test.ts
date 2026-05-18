@@ -389,21 +389,39 @@ describe("character-creation Surface records", () => {
         input: classDruidInput,
         className: "druid",
         hitPointDie: 8,
-        spellcasting: listPreparedSpellcasting({
-          className: "druid",
-          spellcastingAbility: "wis",
-          spellcastingFocus: "druidic_focus",
-          preparedChangeOn: "long_rest",
-          preparedReplacementCount: "any",
-          preparedCount: 4,
-          preparedSpells: [
-            "animal_friendship",
-            "cure_wounds",
-            "faerie_fire",
-            "thunderwave",
+        spellcasting: {
+          ...listPreparedSpellcasting({
+            className: "druid",
+            spellcastingAbility: "wis",
+            spellcastingFocus: "druidic_focus",
+            preparedChangeOn: "long_rest",
+            preparedReplacementCount: "any",
+            preparedCount: 4,
+            preparedSpells: [
+              "animal_friendship",
+              "cure_wounds",
+              "entangle",
+              "faerie_fire",
+              "thunderwave",
+            ],
+            cantrips: ["druidcraft", "produce_flame"],
+          }),
+          kind: "list_prepared_spellcasting_progression_creation",
+          spellcastingProgression: [
+            {
+              atLevel: 1,
+              cantripCount: 2,
+              preparedSpellCount: 4,
+              spellSlots: [{ spellLevel: 1, count: 2 }],
+            },
+            {
+              atLevel: 2,
+              cantripCount: 2,
+              preparedSpellCount: 5,
+              spellSlots: [{ spellLevel: 1, count: 3 }],
+            },
           ],
-          cantrips: ["druidcraft", "produce_flame"],
-        }),
+        },
       },
       { input: classMonkInput, className: "monk", hitPointDie: 8 },
       {

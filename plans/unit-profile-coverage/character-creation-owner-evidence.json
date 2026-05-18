@@ -2409,6 +2409,28 @@
         "packages/character-creation-runtime/src/index.test.ts:accepts Cleric 2 Channel Divinity as a class resource container"
       ]
     },
+    "srd521:classes/druid:level-2:class-feature-grant:druid_wild_companion": {
+      "taskId": "L12G-AUTHOR-DRUID-WILD-COMPANION",
+      "profile": "character-creation.class-feature-advancement-replacement support profile",
+      "summary": "Druid Wild Companion is retained from the level-2 Druid class feature grant alongside Wild Shape; Character Creation admits same-class Druid level 2, projects level-2 Druid prepared-spell and Spell Slot table facts from the class record, and retains both sibling feature Unit refs without projecting a Wild Shape CharacterBuild resource or claiming companion lifecycle or Wild Shape shape-shifting execution.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverInitialDraftHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds",
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildUnitRefs",
+        "packages/character-creation-runtime/src/finalization.ts:finalizedBuildSpellcastingSource"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:accepts Druid 2 Wild Shape and Wild Companion as sibling feature refs"
+      ]
+    },
     "srd521:classes/druid:level-1:class-feature-grant:druid_druidic": {
       "taskId": "SRDINV18",
       "profile": "level-1 Druid class-feature support profile",

@@ -80,8 +80,9 @@ const GENERAL_CLASS_FEATURE_RECORD_CLASS_NAMES = CLASS_NAMES.filter(
     className,
   ): className is Exclude<
     ClassName,
-    "fighter" | "monk" | "sorcerer" | "wizard" | "warlock"
+    "druid" | "fighter" | "monk" | "sorcerer" | "wizard" | "warlock"
   > =>
+    className !== "druid" &&
     className !== "fighter" &&
     className !== "monk" &&
     className !== "sorcerer" &&
@@ -91,9 +92,15 @@ const GENERAL_CLASS_FEATURE_RECORD_CLASS_NAMES = CLASS_NAMES.filter(
   // exactly the excluded class names, and Schema.Literal requires a non-empty
   // tuple rather than a narrowed readonly array.
 ) as unknown as readonly [
-  Exclude<ClassName, "fighter" | "monk" | "sorcerer" | "wizard" | "warlock">,
+  Exclude<
+    ClassName,
+    "druid" | "fighter" | "monk" | "sorcerer" | "wizard" | "warlock"
+  >,
   ...Array<
-    Exclude<ClassName, "fighter" | "monk" | "sorcerer" | "wizard" | "warlock">
+    Exclude<
+      ClassName,
+      "druid" | "fighter" | "monk" | "sorcerer" | "wizard" | "warlock"
+    >
   >,
 ];
 
@@ -765,6 +772,56 @@ export const ClassSpellcastingProjectionMechanicsSchema = Schema.Struct({
   spellcastingKind: Schema.Literal("pact_magic_spellcasting_creation"),
 });
 
+const DruidWildCompanionSpendOptionSchema = Schema.Union(
+  Schema.Struct({ kind: Schema.Literal("spell_slot") }),
+  Schema.Struct({
+    kind: Schema.Literal("one_class_feature_use"),
+    resourceUnitId: Schema.Literal("druid_wild_shape"),
+  }),
+);
+
+const druidWildCompanionSpendOptionsMatchSrd = (
+  spendOptions: readonly Schema.Schema.Type<
+    typeof DruidWildCompanionSpendOptionSchema
+  >[],
+): boolean =>
+  spendOptions.length === 2 &&
+  spendOptions.some((option) => option.kind === "spell_slot") &&
+  spendOptions.some(
+    (option) =>
+      option.kind === "one_class_feature_use" &&
+      option.resourceUnitId === "druid_wild_shape",
+  );
+
+const DruidWildCompanionSpendOptionsSchema = Schema.NonEmptyArray(
+  DruidWildCompanionSpendOptionSchema,
+).pipe(
+  Schema.filter(druidWildCompanionSpendOptionsMatchSrd, {
+    message: () =>
+      "Druid Wild Companion spend options must be exactly one Spell Slot option and one Wild Shape use option.",
+  }),
+);
+
+export const DruidWildCompanionSpellCastMechanicsSchema = Schema.Struct({
+  family: Schema.Literal("druid_wild_companion_spell_cast"),
+  activationCost: Schema.Struct({
+    kind: Schema.Literal("standard_action"),
+    action: Schema.Literal("magic"),
+  }),
+  spellId: Schema.Literal("find_familiar"),
+  spendOptions: DruidWildCompanionSpendOptionsSchema,
+  componentOverride: Schema.Struct({
+    material: Schema.Literal("not_required"),
+  }),
+  spellModeOverride: Schema.Struct({
+    kind: Schema.Literal("fixed_creature_type_mode_option"),
+    optionId: Schema.Literal("fey"),
+  }),
+  familiarDismissal: Schema.Struct({
+    kind: Schema.Literal("caster_finishes_long_rest"),
+  }),
+});
+
 export const WarlockPactSlotRecoveryMechanicsSchema = Schema.Struct({
   family: Schema.Literal("pact_slot_recovery"),
   activationCost: Schema.Struct({
@@ -881,6 +938,7 @@ export const ClassFeatureMechanicsSchema = Schema.Union(
   WeaponMasteryChoiceMechanicsSchema,
   SpellbookRitualAccessMechanicsSchema,
   RestSpellSlotRecoveryMechanicsSchema,
+  DruidWildCompanionSpellCastMechanicsSchema,
   WarlockPactSlotRecoveryMechanicsSchema,
   FailedAbilityCheckResourceBoostMechanicsSchema,
   MonkInitiativeFocusRecoveryMechanicsSchema,
@@ -893,6 +951,11 @@ export const ClassGeneralFeatureMechanicsSchema = Schema.Union(
   ClassFeatureResourceContainerMechanicsSchema,
   ClassFeatureResourcePoolMechanicsSchema,
   WeaponMasteryChoiceMechanicsSchema,
+);
+
+export const DruidClassFeatureMechanicsSchema = Schema.Union(
+  ClassGeneralFeatureMechanicsSchema,
+  DruidWildCompanionSpellCastMechanicsSchema,
 );
 
 export const WizardClassFeatureMechanicsSchema = Schema.Union(
@@ -2628,6 +2691,12 @@ export const FighterClassFeatureRecordSchema = Schema.Struct({
   ),
 });
 
+export const DruidClassFeatureRecordSchema = Schema.Struct({
+  ...ClassFeatureRecordBaseFields,
+  className: Schema.Literal("druid"),
+  mechanics: DruidClassFeatureMechanicsSchema,
+});
+
 export const MonkClassFeatureRecordSchema = Schema.Struct({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literal("monk"),
@@ -2655,6 +2724,7 @@ export const OtherClassFeatureRecordSchema = Schema.Struct({
 export const ClassFeatureRecordSchema = Schema.Union(
   WizardClassFeatureRecordSchema,
   FighterClassFeatureRecordSchema,
+  DruidClassFeatureRecordSchema,
   MonkClassFeatureRecordSchema,
   SorcererClassFeatureRecordSchema,
   WarlockClassFeatureRecordSchema,

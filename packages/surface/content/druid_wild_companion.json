@@ -1,0 +1,39 @@
+{
+  "acquiredAtLevel": 2,
+  "className": "druid",
+  "description": "As a Magic action, expend a spell slot or one Wild Shape use to cast Find Familiar without Material components. The familiar is Fey and disappears when you finish a Long Rest.",
+  "id": "druid_wild_companion",
+  "kind": "class_feature",
+  "mechanics": {
+    "activationCost": {
+      "action": "magic",
+      "kind": "standard_action"
+    },
+    "componentOverride": {
+      "material": "not_required"
+    },
+    "familiarDismissal": {
+      "kind": "caster_finishes_long_rest"
+    },
+    "family": "druid_wild_companion_spell_cast",
+    "spellId": "find_familiar",
+    "spellModeOverride": {
+      "kind": "fixed_creature_type_mode_option",
+      "optionId": "fey"
+    },
+    "spendOptions": [
+      {
+        "kind": "spell_slot"
+      },
+      {
+        "kind": "one_class_feature_use",
+        "resourceUnitId": "druid_wild_shape"
+      }
+    ]
+  },
+  "name": "Wild Companion",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Druid.md:124-128"
+  }
+}
