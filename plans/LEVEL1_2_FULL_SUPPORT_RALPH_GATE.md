@@ -628,7 +628,7 @@ owner.
 | ---: | --- | --- | --- | --- |
 | 10 | `L12G-AUTHOR-BARD-EXPERTISE` | `bard_expertise` | Character Creation Expertise choice; likely shares Rogue Expertise vocabulary but with Bard level-2 source | SRD-provenance Surface record, choice support/evidence, or precise blocker |
 | 11 | `L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY` | `cleric_channel_divinity` | class resource container for Channel Divinity options; keep option execution separate | authored record and resource/profile evidence or split into option-owned tasks |
-| 12 | `L12G-AUTHOR-DRUID-WILD-SHAPE` | `druid_wild_shape` | transformation resource/profile boundary; do not collapse into companion support | authored record plus exact support/closure split for shape, stat projection, and runtime state |
+| 12 | `L12G-AUTHOR-DRUID-WILD-SHAPE` | `druid_wild_shape` | transformation resource/profile boundary; do not collapse into companion support | authored record plus explicit follow-up split: `L12G-AUTHOR-DRUID-WILD-COMPANION`, `L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS`, and `L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME` |
 | 13 | `L12G-AUTHOR-DRUID-WILD-COMPANION` | `druid_wild_companion` | Find Familiar spending Wild Shape resource; companion worktree boundary likely owns execution | companion exclusion/handoff or non-companion access/resource support with metric-visible closure |
 | 14 | `L12G-AUTHOR-MONK-MONKS-FOCUS` | `monk_monks_focus` | Focus Point pool and option grant container | authored record and resource/profile evidence or option-level split |
 | 15 | `L12G-AUTHOR-MONK-UNARMORED-MOVEMENT` | `monk_unarmored_movement` | Character Sheet Speed derivation while not wearing armor or wielding Shield if RAW requires it | authored record and Speed projection evidence |
@@ -638,6 +638,16 @@ owner.
 | 19 | `L12G-AUTHOR-SORCERER-FONT-OF-MAGIC` | `sorcerer_font_of_magic` | Sorcery Point pool plus Spell Slot conversion rules | authored record and resource/conversion support or split by conversion direction |
 | 20 | `L12G-AUTHOR-SORCERER-METAMAGIC` | `sorcerer_metamagic` | Metamagic option selection and option-specific spell-invocation modifiers | authored record plus choice container and option split |
 | 21 | `L12G-AUTHOR-WARLOCK-MAGICAL-CUNNING` | `warlock_magical_cunning` | class feature recovery of Pact Slots after expenditure condition | authored record and Character Sheet rest/resource evidence |
+
+### Task 12 Follow-Up Split
+
+Task 12 stops at SRD Surface catalog authoring for `druid_wild_shape`. The remaining executable owners are separate tasks rather than prose backlog:
+
+| Task | Owner | Required output |
+| --- | --- | --- |
+| `L12G-AUTHOR-DRUID-WILD-COMPANION` | character-creation-runtime plus companion boundary | Admit Druid level-2 progression only after Wild Companion can spend a spell slot or Wild Shape use to cast Find Familiar without Material components and close companion execution separately. |
+| `L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS` | character-creation-runtime plus character-sheet-runtime | Project Wild Shape use count, partial Short Rest/full Long Rest reset, rounded-down duration, learned Beast forms, and one known-form replacement on Long Rest from the retained feature without duplicating class progression state. |
+| `L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME` | stat-block-control shape-shifting runtime | Execute Beast form choice, game-statistic replacement and retained facts, Temporary Hit Points, no spellcasting, equipment choice/effects, and reversion triggers. |
 
 ## Authored Spell Admission And Strict Support Tasks
 

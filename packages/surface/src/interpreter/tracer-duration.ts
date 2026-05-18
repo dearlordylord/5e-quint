@@ -1,4 +1,4 @@
-import type { Duration } from "../surface/types.ts";
+import type { ClassFeatureDuration, Duration } from "../surface/types.ts";
 import type { TraceEdge, TraceNode } from "./tracer-model.ts";
 import {
   describeDurationValue,
@@ -7,7 +7,7 @@ import {
 import type { IdGen } from "./tracer-rule-labels.ts";
 
 export function traceDuration(
-  d: Duration,
+  d: Duration | ClassFeatureDuration,
   procId: string,
   nodes: TraceNode[],
   edges: TraceEdge[],

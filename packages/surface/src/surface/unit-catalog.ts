@@ -44,6 +44,7 @@ import divineFavorInput from "../../content/divine_favor.json";
 import divineSmiteInput from "../../content/divine_smite.json";
 import druidDruidicInput from "../../content/druid_druidic.json";
 import druidPrimalOrderInput from "../../content/druid_primal_order.json";
+import druidWildShapeInput from "../../content/druid_wild_shape.json";
 import eldritchBlastInput from "../../content/eldritch_blast.json";
 import ensnaringStrikeInput from "../../content/ensnaring_strike.json";
 import entangleInput from "../../content/entangle.json";
@@ -323,6 +324,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     clericDivineOrderInput,
     druidDruidicInput,
     druidPrimalOrderInput,
+    druidWildShapeInput,
     monkMartialArtsInput,
     monkUnarmoredDefenseInput,
     monkDeflectAttacksInput,

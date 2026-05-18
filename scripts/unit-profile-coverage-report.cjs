@@ -573,6 +573,16 @@ function renderProfileSubsetDeferredMechanics(claim) {
     .join("; ");
 }
 
+function renderFollowUpTasks(claim) {
+  const tasks = Array.isArray(claim?.followUpTasks) ? claim.followUpTasks : [];
+  return tasks
+    .map(
+      (task) =>
+        `${task.id}: ${task.mechanic} (owner: ${task.owner}; output: ${task.requiredOutput})`,
+    )
+    .join("; ");
+}
+
 const installedNonRuntimeAuthoredDataKinds = new Set([
   "armor",
   "shield",
@@ -594,6 +604,10 @@ function installedNonRuntimeAuthoredDataDisposition(unit) {
 function renderClaimPressureDetail(claim) {
   if (claim?.tag === "profile-subset-supported") {
     return `supported subset: ${claim.supportedMechanics.join("; ")}; deferred: ${renderProfileSubsetDeferredMechanics(claim)}`;
+  }
+  const followUpTasks = renderFollowUpTasks(claim);
+  if (followUpTasks.length > 0) {
+    return `${claim?.reason ?? ""} Follow-up split: ${followUpTasks}`.trim();
   }
   return claim?.reason ?? claim?.issue ?? claim?.assumptionId ?? "";
 }

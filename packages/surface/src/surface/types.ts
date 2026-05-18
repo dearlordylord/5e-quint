@@ -167,6 +167,9 @@ export type DurationUpcastTier = Schema.Schema.Type<
 export type TimeSpanDurationValue = Schema.Schema.Type<
   typeof SurfaceSchema.TimeSpanDurationValueSchema
 >;
+export type HalfClassLevelRoundedDownHoursDurationValue = Schema.Schema.Type<
+  typeof SurfaceSchema.HalfClassLevelRoundedDownHoursDurationValueSchema
+>;
 export type DurationValue = Schema.Schema.Type<
   typeof SurfaceSchema.DurationValueSchema
 >;
@@ -219,6 +222,9 @@ export type DiceExprDelta = Schema.Schema.Type<
 >;
 export type DiceAmount = Schema.Schema.Type<
   typeof SurfaceSchema.DiceAmountSchema
+>;
+export type ClassLevelChoiceCount = Schema.Schema.Type<
+  typeof SurfaceSchema.ClassLevelChoiceCountSchema
 >;
 export type LinkedSpeed = Schema.Schema.Type<
   typeof SurfaceSchema.LinkedSpeedSchema
@@ -488,17 +494,17 @@ export type CreatureControl = Schema.Schema.Type<
 export type CreatureDismissal = Schema.Schema.Type<
   typeof SurfaceSchema.CreatureDismissalSchema
 >;
-export type PolymorphFormSource = Schema.Schema.Type<
-  typeof SurfaceSchema.PolymorphFormSourceSchema
+export type ShapeShiftFormSource = Schema.Schema.Type<
+  typeof SurfaceSchema.ShapeShiftFormSourceSchema
 >;
-export type PolymorphRetainedField = Schema.Schema.Type<
-  typeof SurfaceSchema.PolymorphRetainedFieldSchema
+export type ShapeShiftRetainedField = Schema.Schema.Type<
+  typeof SurfaceSchema.ShapeShiftRetainedFieldSchema
 >;
-export type PolymorphActionRestriction = Schema.Schema.Type<
-  typeof SurfaceSchema.PolymorphActionRestrictionSchema
+export type ShapeShiftActionRestriction = Schema.Schema.Type<
+  typeof SurfaceSchema.ShapeShiftActionRestrictionSchema
 >;
-export type PolymorphRevertTrigger = Schema.Schema.Type<
-  typeof SurfaceSchema.PolymorphRevertTriggerSchema
+export type ShapeShiftRevertTrigger = Schema.Schema.Type<
+  typeof SurfaceSchema.ShapeShiftRevertTriggerSchema
 >;
 export type TemplatedCapacity = Schema.Schema.Type<
   typeof SurfaceSchema.TemplatedCapacitySchema
@@ -565,6 +571,9 @@ export type TimeResetCadence = Schema.Schema.Type<
 >;
 export type ResetCadence = Schema.Schema.Type<
   typeof SurfaceSchema.ResetCadenceSchema
+>;
+export type ClassFeatureDuration = Schema.Schema.Type<
+  typeof SurfaceSchema.ClassFeatureDurationSchema
 >;
 export type ActivatedAbilityMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.ActivatedAbilityMechanicsSchema

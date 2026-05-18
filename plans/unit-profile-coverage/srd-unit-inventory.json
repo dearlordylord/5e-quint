@@ -181,8 +181,8 @@
       "rowsByStatus": {
         "accepted": 293,
         "accepted-no-battle-effect": 179,
-        "battle-runtime-required": 74,
-        "owner-evidence-required": 10
+        "battle-runtime-required": 75,
+        "owner-evidence-required": 9
       }
     },
     "levelOneClassContainers": 12,
@@ -193,13 +193,15 @@
     "levelTwoRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 11,
       "non-runtime": 12,
-      "missing-authored-record": 10
+      "missing-authored-record": 9,
+      "catalog-installed-owner-evidence-required": 1
     },
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 298,
       "non-runtime": 24,
       "catalog-only/dead-for-now": 150,
-      "missing-authored-record": 84
+      "missing-authored-record": 83,
+      "catalog-installed-owner-evidence-required": 1
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 143,
@@ -9530,16 +9532,30 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "druid_wild_shape",
+        "sourceRecordPath": "packages/surface/content/druid_wild_shape.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "druid_wild_shape"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit druid_wild_shape is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime plus companion boundary; character-creation-runtime plus character-sheet-runtime; stat-block-control shape-shifting runtime",
+          "evidence": "Promote follow-up split L12G-AUTHOR-DRUID-WILD-COMPANION, L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS, L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME: L12G-AUTHOR-DRUID-WILD-COMPANION owns Admit Druid level-2 progression only after Wild Companion can spend a spell slot or Wild Shape use to cast Find Familiar without Material components and close companion execution separately. Required output: Character Creation can retain both Druid level-2 feature refs without treating companion execution as Wild Shape support.; L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS owns Project Wild Shape use count, partial Short Rest/full Long Rest reset, rounded-down duration, learned Beast forms, and one known-form replacement on Long Rest from the retained feature without duplicating class progression state. Required output: Owner evidence for CharacterBuild or Character Sheet Wild Shape resource, rounded-down duration, known-form roster, and Long Rest known-form replacement facts.; L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME owns Execute Beast form choice, game-statistic replacement and retained facts, Temporary Hit Points, no spellcasting, equipment choice/effects, and reversion triggers. Required output: Supported runtime profile and owner evidence for Wild Shape shape-shifting execution.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L12G-AUTHOR-DRUID-WILD-COMPANION, L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS, L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME: L12G-AUTHOR-DRUID-WILD-COMPANION owns Admit Druid level-2 progression only after Wild Companion can spend a spell slot or Wild Shape use to cast Find Familiar without Material components and close companion execution separately. Required output: Character Creation can retain both Druid level-2 feature refs without treating companion execution as Wild Shape support.; L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS owns Project Wild Shape use count, partial Short Rest/full Long Rest reset, rounded-down duration, learned Beast forms, and one known-form replacement on Long Rest from the retained feature without duplicating class progression state. Required output: Owner evidence for CharacterBuild or Character Sheet Wild Shape resource, rounded-down duration, known-form roster, and Long Rest known-form replacement facts.; L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME owns Execute Beast form choice, game-statistic replacement and retained facts, Temporary Hit Points, no spellcasting, equipment choice/effects, and reversion triggers. Required output: Supported runtime profile and owner evidence for Wild Shape shape-shifting execution.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/druid:level-2:class-table-summary:druid_level_2_feature_table_row",

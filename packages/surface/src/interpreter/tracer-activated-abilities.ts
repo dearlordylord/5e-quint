@@ -62,6 +62,10 @@ export function traceActivatedAbility(
 
   traceUsageLimit(m.usageLimit, procId, "consumes", nodes, edges, ids);
 
+  if (m.duration !== undefined) {
+    traceDuration(m.duration, procId, nodes, edges, ids);
+  }
+
   // Phases — iterate in sequence, threading branches_on_completion
   // edges like spell activations.
   const ctx: SpellCtx = {

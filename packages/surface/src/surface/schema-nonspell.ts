@@ -16,6 +16,7 @@ import {
   DamageTypeSchema,
   DiceAmountSchema,
   FeatCategorySchema,
+  HalfClassLevelRoundedDownHoursDurationValueSchema,
   HeavyArmorAcFormulaSchema,
   LIST_PREPARED_SPELLCASTING_CLASS_NAMES,
   LevelAxisSchema,
@@ -44,6 +45,7 @@ import {
   CreatureDismissalSchema,
   CreatureModeSchema,
   DcSourceSchema,
+  DurationEndTriggerSchema,
   DurationSchema,
   EffectAtomSchema,
   OngoingPredicateSchema,
@@ -334,6 +336,15 @@ export const PassiveOperationSchema = Schema.Struct({
   effect: EffectAtomSchema,
 });
 
+export const ClassFeatureDurationSchema = Schema.Union(
+  DurationSchema,
+  Schema.Struct({
+    kind: Schema.Literal("timed"),
+    value: HalfClassLevelRoundedDownHoursDurationValueSchema,
+    earlyEnd: exactOptional(Schema.NonEmptyArray(DurationEndTriggerSchema)),
+  }),
+);
+
 const ActivatedAbilityBaseFields = {
   condition: exactOptional(EquipmentPredicateSchema),
   range: exactOptional(RangeSchema),
@@ -345,7 +356,7 @@ const ResourceActivatedAbilityFields = {
   ...ActivatedAbilityBaseFields,
   resource: ActivationResourceSchema,
   resetCadence: ResetCadenceSchema,
-  duration: exactOptional(DurationSchema),
+  duration: exactOptional(ClassFeatureDurationSchema),
 };
 const ResourceOngoingFeatureAbilityFields = {
   ...ActivatedAbilityBaseFields,
@@ -390,7 +401,7 @@ export const TriggeredReactionAbilityMechanicsSchema = Schema.Struct({
   condition: exactOptional(EquipmentPredicateSchema),
   resource: ActivationResourceSchema,
   resetCadence: ResetCadenceSchema,
-  duration: exactOptional(DurationSchema),
+  duration: exactOptional(ClassFeatureDurationSchema),
   usageLimit: exactOptional(
     Schema.Struct({ kind: Schema.Literal("once_per_turn") }),
   ),

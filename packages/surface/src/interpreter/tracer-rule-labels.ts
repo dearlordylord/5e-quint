@@ -15,6 +15,7 @@ import type {
   Attachment,
   AttachmentRangeOrigin,
   CastingTime,
+  ClassLevelChoiceCount,
   ClassFeatureMechanics,
   DamageTypeRef,
   DcSource,
@@ -26,6 +27,7 @@ import type {
   EffectAtom,
   GrantedSpellDurationOverride,
   GrantedSpellTargetRestriction,
+  HalfClassLevelRoundedDownHoursDurationValue,
   LinkedSpeed,
   MarkTransfer,
   ObjectFilter,
@@ -40,6 +42,7 @@ import type {
   SpellAccessMode,
   SpellMechanics,
   TargetSelection,
+  TimeSpanDurationValue,
   ThresholdTiers,
   ToolProficiencyGrant,
   ToolProficiencyGrantSubject,
@@ -422,6 +425,7 @@ export function describeModifyAcSetBase(
 }
 
 export type SurfaceChoiceCount =
+  | ClassLevelChoiceCount
   | Extract<
       ClassFeatureMechanics,
       { readonly family: "feature_choice" }
@@ -656,14 +660,12 @@ export function describeRange(r: Range): string {
   }
 }
 
-export function describeDurationValue(d: {
-  readonly unit: string;
-  readonly amount: number;
-  readonly upcastTiers?: ReadonlyArray<{
-    readonly atSlot: number;
-    readonly amount: number;
-  }>;
-}): string {
+export function describeDurationValue(
+  d: TimeSpanDurationValue | HalfClassLevelRoundedDownHoursDurationValue,
+): string {
+  if ("kind" in d) {
+    return "half class level rounded down hours";
+  }
   const duration = timeSpanDuration(d);
   const base = Either.isRight(duration)
     ? formatTimeSpanDuration(duration.right)

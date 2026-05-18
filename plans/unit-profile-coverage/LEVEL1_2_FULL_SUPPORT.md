@@ -8,8 +8,8 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 
 | Metric | Covered |
 | --- | ---: |
-| Strict runtime/profile support | 87/137 (63.5%) |
-| Strict target closure | 105/137 (76.6%) |
+| Strict runtime/profile support | 87/138 (63%) |
+| Strict target closure | 106/138 (76.8%) |
 | Product readiness | 472/556 (84.9%) |
 
 ## Scope
@@ -18,10 +18,10 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | --- | ---: |
 | Candidate Unit ids before exclusions | 197 |
 | Companion-worktree exclusions | 1 |
-| SRD pressure with no Unit matrix row | 47 |
+| SRD pressure with no Unit matrix row | 46 |
 | Non-executable class containers | 12 |
-| Strict executable denominator | 137 |
-| Non-supported frontier | 50 |
+| Strict executable denominator | 138 |
+| Non-supported frontier | 51 |
 
 ## Status Groups
 
@@ -32,6 +32,7 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | closed-runtime-detached-table-adjudication | 11 | `alarm`, `charm_person`, `comprehend_languages`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `identify`, `minor_illusion`, `silent_image`, `speak_with_animals`, `thaumaturgy` |
 | closed-later-level-only | 5 | `barbarian_weapon_mastery`, `bard_expertise`, `fighter_weapon_mastery`, `paladin_fighting_style`, `ranger_favored_enemy` |
 | closed-character-fact-and-runtime-detached-split | 2 | `druid_druidic`, `rogue_thieves_cant` |
+| blocked-follow-up-split | 1 | `druid_wild_shape` |
 | open-profile-accounting | 1 | `shatter` |
 
 ## Open Frontier
@@ -62,6 +63,7 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `detect_magic` | closed-runtime-detached-table-adjudication | unsupported-profile | installed | outside-runtime-presentation-exploration | Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime. |
 | `detect_poison_and_disease` | closed-runtime-detached-table-adjudication | unsupported-profile | installed | outside-runtime-presentation-exploration | Poison, disease, creature-kind sensing, occlusion, and identification are exploration/detection state outside promoted battle runtime. |
 | `druid_druidic` | closed-character-fact-and-runtime-detached-split | unsupported-profile | installed | character-fact-and-runtime-detached-split | Druidic hidden-message spotting, Investigation adjudication, and deciphering are runtime-detached table adjudication outside promoted battle runtime; Druidic language and always-prepared Speak with Animals Spell Access remain character-owned CharacterBuild facts derived from authored Surface content. |
+| `druid_wild_shape` | blocked-follow-up-split | unsupported-profile | installed | follow-up-split | L12G-AUTHOR-DRUID-WILD-COMPANION: Admit Druid level-2 progression only after Wild Companion can spend a spell slot or Wild Shape use to cast Find Familiar without Material components and close companion execution separately. Owner: character-creation-runtime plus companion boundary. Required output: Character Creation can retain both Druid level-2 feature refs without treating companion execution as Wild Shape support.; L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS: Project Wild Shape use count, partial Short Rest/full Long Rest reset, rounded-down duration, learned Beast forms, and one known-form replacement on Long Rest from the retained feature without duplicating class progression state. Owner: character-creation-runtime plus character-sheet-runtime. Required output: Owner evidence for CharacterBuild or Character Sheet Wild Shape resource, rounded-down duration, known-form roster, and Long Rest known-form replacement facts.; L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME: Execute Beast form choice, game-statistic replacement and retained facts, Temporary Hit Points, no spellcasting, equipment choice/effects, and reversion triggers. Owner: stat-block-control shape-shifting runtime. Required output: Supported runtime profile and owner evidence for Wild Shape shape-shifting execution. |
 | `fighter_weapon_mastery` | closed-later-level-only | profile-subset-supported | installed | later-level-only | The remaining Fighter Weapon Mastery selected-weapon count increases occur only after level 1. |
 | `find_steed` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
 | `flame_blade` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
@@ -136,7 +138,6 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `disguise_self` | 3 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/disguise_self.md` | Bard spell list Disguise Self; Sorcerer spell list Disguise Self; Wizard spell list Disguise Self |
 | `dragons_breath` | 2 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Sorcerer spell list Dragon's Breath; Wizard spell list Dragon's Breath |
 | `druid_wild_companion` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Druid Wild Companion |
-| `druid_wild_shape` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Druid Wild Shape |
 | `druidcraft` | 1 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/druidcraft.md` | Druid spell list Druidcraft |
 | `elementalism` | 3 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/elementalism.md` | Druid spell list Elementalism; Sorcerer spell list Elementalism; Wizard spell list Elementalism |
 | `enhance_ability` | 6 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Bard spell list Enhance Ability; Cleric spell list Enhance Ability; Druid spell list Enhance Ability; Ranger spell list Enhance Ability; Sorcerer spell list Enhance Ability; Wizard spell list Enhance Ability |

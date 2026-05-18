@@ -893,6 +893,35 @@
     },
     {
       "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "L12G-AUTHOR-DRUID-WILD-COMPANION: Admit Druid level-2 progression only after Wild Companion can spend a spell slot or Wild Shape use to cast Find Familiar without Material components and close companion execution separately. Owner: character-creation-runtime plus companion boundary. Required output: Character Creation can retain both Druid level-2 feature refs without treating companion execution as Wild Shape support.; L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS: Project Wild Shape use count, partial Short Rest/full Long Rest reset, rounded-down duration, learned Beast forms, and one known-form replacement on Long Rest from the retained feature without duplicating class progression state. Owner: character-creation-runtime plus character-sheet-runtime. Required output: Owner evidence for CharacterBuild or Character Sheet Wild Shape resource, rounded-down duration, known-form roster, and Long Rest known-form replacement facts.; L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME: Execute Beast form choice, game-statistic replacement and retained facts, Temporary Hit Points, no spellcasting, equipment choice/effects, and reversion triggers. Owner: stat-block-control shape-shifting runtime. Required output: Supported runtime profile and owner evidence for Wild Shape shape-shifting execution.",
+      "sourceRecordPath": "packages/surface/content/druid_wild_shape.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Druid Wild Shape",
+          "id": "srd521:classes/druid:level-2:class-feature-grant:druid_wild_shape",
+          "levelBand": "level-2",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 123,
+            "lineStart": 95,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        }
+      ],
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
+      "unitId": "druid_wild_shape"
+    },
+    {
+      "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
         "later-level-only"
@@ -2649,6 +2678,14 @@
     },
     {
       "count": 1,
+      "description": "The Unit claim records concrete smaller follow-up tasks for the remaining executable owner work.",
+      "status": "blocked-follow-up-split",
+      "unitIds": [
+        "druid_wild_shape"
+      ]
+    },
+    {
+      "count": 1,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
@@ -2664,19 +2701,19 @@
       "rowsByStatus": {
         "accepted": 293,
         "accepted-no-battle-effect": 179,
-        "battle-runtime-required": 74,
-        "owner-evidence-required": 10
+        "battle-runtime-required": 75,
+        "owner-evidence-required": 9
       }
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 137,
+      "denominator": 138,
       "numerator": 87,
-      "percent": "63.5%"
+      "percent": "63%"
     },
     "strictTargetClosure": {
-      "denominator": 137,
-      "numerator": 105,
-      "percent": "76.6%"
+      "denominator": 138,
+      "numerator": 106,
+      "percent": "76.8%"
     }
   },
   "openFrontier": [
@@ -3140,24 +3177,6 @@
           }
         ],
         "unitId": "druid_wild_companion"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
-            "concept": "Druid Wild Shape",
-            "id": "srd521:classes/druid:level-2:class-feature-grant:druid_wild_shape",
-            "levelBand": "level-2",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 123,
-              "lineStart": 95,
-              "path": ".references/srd-5.2.1/Classes/Druid.md"
-            }
-          }
-        ],
-        "unitId": "druid_wild_shape"
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/druidcraft.md",
@@ -6360,9 +6379,10 @@
       "missing": 31,
       "profile-subset-supported": 8,
       "supported-profile": 87,
-      "unsupported-profile": 11
+      "unsupported-profile": 12
     },
     "groupsByStatus": {
+      "blocked-follow-up-split": 1,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 5,
       "closed-runtime-detached-table-adjudication": 11,
@@ -6370,7 +6390,7 @@
       "open-runtime-behavior": 31,
       "supported-profile": 87
     },
-    "nonSupportedFrontier": 50,
-    "strictDenominator": 137
+    "nonSupportedFrontier": 51,
+    "strictDenominator": 138
   }
 }

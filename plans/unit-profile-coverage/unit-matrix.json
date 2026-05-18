@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 365,
-      "numerator": 135,
-      "percent": "37%"
+      "denominator": 366,
+      "numerator": 136,
+      "percent": "37.2%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 437,
-      "numerator": 167,
-      "percent": "38.2%"
+      "denominator": 438,
+      "numerator": 168,
+      "percent": "38.4%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 168
+      "value": 169
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 110,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 168,
-      "numerator": 168,
+      "denominator": 169,
+      "numerator": 169,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -97,9 +97,9 @@
       "percent": "94.5%"
     },
     "supportedProfileCoverage": {
-      "denominator": 136,
+      "denominator": 137,
       "numerator": 110,
-      "percent": "80.9%"
+      "percent": "80.3%"
     }
   },
   "metricSemantics": [
@@ -5776,6 +5776,48 @@
       ],
       "sourceRecordPath": "packages/surface/content/druid_primal_order.json",
       "unitId": "druid_primal_order"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-AUTHOR-DRUID-WILD-COMPANION",
+            "mechanic": "Admit Druid level-2 progression only after Wild Companion can spend a spell slot or Wild Shape use to cast Find Familiar without Material components and close companion execution separately.",
+            "owner": "character-creation-runtime plus companion boundary",
+            "requiredOutput": "Character Creation can retain both Druid level-2 feature refs without treating companion execution as Wild Shape support.",
+            "title": "Druid Wild Companion Companion Boundary"
+          },
+          {
+            "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
+            "mechanic": "Project Wild Shape use count, partial Short Rest/full Long Rest reset, rounded-down duration, learned Beast forms, and one known-form replacement on Long Rest from the retained feature without duplicating class progression state.",
+            "owner": "character-creation-runtime plus character-sheet-runtime",
+            "requiredOutput": "Owner evidence for CharacterBuild or Character Sheet Wild Shape resource, rounded-down duration, known-form roster, and Long Rest known-form replacement facts.",
+            "title": "Druid Wild Shape Character Facts And Resource Projection"
+          },
+          {
+            "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME",
+            "mechanic": "Execute Beast form choice, game-statistic replacement and retained facts, Temporary Hit Points, no spellcasting, equipment choice/effects, and reversion triggers.",
+            "owner": "stat-block-control shape-shifting runtime",
+            "requiredOutput": "Supported runtime profile and owner evidence for Wild Shape shape-shifting execution.",
+            "title": "Druid Wild Shape Shape-Shifting Runtime"
+          }
+        ],
+        "futureProfileOwner": "character-creation-runtime plus stat-block-control shape-shifting runtime",
+        "reason": "Druid Wild Shape is authored and installed as an SRD Surface class-feature record with catalog-level activation, resource, and shape-shifting metadata only. It remains blocked by the concrete follow-up split listed on this claim; no resource-projection or runtime Unit profile is claimed in Task 12.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/druid_wild_shape.json",
+      "unitId": "druid_wild_shape"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

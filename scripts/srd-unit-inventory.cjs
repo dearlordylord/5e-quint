@@ -163,6 +163,7 @@ const battleRuntimeRelevantFeatureUnitIds = new Set([
   "barbarian_danger_sense",
   "barbarian_weapon_mastery",
   "bard_bardic_inspiration",
+  "druid_wild_shape",
   "fighter_fighting_style",
   "fighter_weapon_mastery",
   "monk_martial_arts",
@@ -333,6 +334,25 @@ function isBattleReadinessClosure(value) {
     typeof value.owner === "string" &&
     value.owner.length > 0
   );
+}
+
+function claimFollowUpTasks(claim) {
+  return Array.isArray(claim?.followUpTasks) ? claim.followUpTasks : [];
+}
+
+function followUpTaskOwners(tasks) {
+  return [...new Set(tasks.map((task) => task.owner))].join("; ");
+}
+
+function followUpTaskRequirement(tasks) {
+  return `Promote follow-up split ${tasks
+    .map((task) => task.id)
+    .join(", ")}: ${tasks
+    .map(
+      (task) =>
+        `${task.id} owns ${task.mechanic} Required output: ${task.requiredOutput}`,
+    )
+    .join("; ")}`;
 }
 
 function isAuthoredSpellUnitCatalogOnlyClosure(row) {
@@ -752,6 +772,17 @@ function installedLevelTwoClassFeatureOwnerClassification(
   const characterCreationEvidence = ownerEvidenceSources.characterCreation.get(
     row.id,
   );
+  const followUpTasks = claimFollowUpTasks(claim);
+  if (
+    claim?.tag === "unsupported-profile" &&
+    followUpTasks.length > 0
+  ) {
+    return {
+      kind: "evidence-required",
+      owner: followUpTaskOwners(followUpTasks),
+      requirement: followUpTaskRequirement(followUpTasks),
+    };
+  }
   if (
     characterCreationEvidence &&
     claimUsesOnlyProfilePrefix(claim, characterCreationProfileIdPrefix)

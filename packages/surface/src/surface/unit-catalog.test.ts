@@ -257,6 +257,100 @@ describe("SRD Unit catalog boundary", () => {
     }
   });
 
+  test("keeps Druid Wild Shape as catalog-only shape-shifting metadata", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const wildShape = result.catalog.requireUnit("druid_wild_shape");
+
+      expect(wildShape.kind).toBe("class_feature");
+      if (
+        wildShape.kind !== "class_feature" ||
+        wildShape.mechanics.family !== "activation"
+      ) {
+        throw new Error("Expected Wild Shape to be an activation feature.");
+      }
+      expect(wildShape.className).toBe("druid");
+      expect(wildShape.acquiredAtLevel).toBe(2);
+      expect(wildShape.mechanics.activationCost).toEqual({
+        kind: "bonus_action",
+      });
+      expect(wildShape.mechanics.resource).toEqual({
+        kind: "use_count",
+        cap: {
+          kind: "threshold_tiers",
+          axis: "class",
+          base: 2,
+          tiers: [
+            { atLevel: 6, value: 3 },
+            { atLevel: 17, value: 4 },
+          ],
+        },
+      });
+      expect(wildShape.mechanics.resetCadence).toEqual({
+        kind: "partial_short_full_long",
+        shortRestRefill: 1,
+      });
+      expect(wildShape.mechanics.duration).toEqual({
+        kind: "timed",
+        value: { kind: "half_class_level_rounded_down_hours" },
+      });
+      expect(wildShape.mechanics.phases).toMatchObject([
+        {
+          kind: "direct",
+          attachment: { kind: "self" },
+          effects: [
+            {
+              kind: "transform_target",
+              actionRestriction: "no_spellcasting",
+              newForm: {
+                kind: "known_forms_roster",
+                creatureType: "beast",
+                knownForms: {
+                  kind: "class_level_total_choices",
+                  levels: [
+                    { atLevel: 2, total: 4 },
+                    { atLevel: 4, total: 6 },
+                    { atLevel: 8, total: 8 },
+                  ],
+                },
+                knownFormChange: { kind: "long_rest", replacementCount: 1 },
+                maxChallengeRating: {
+                  kind: "threshold_tiers",
+                  axis: "class",
+                  base: 0.25,
+                  tiers: [
+                    { atLevel: 4, value: 0.5 },
+                    { atLevel: 8, value: 1 },
+                  ],
+                },
+                flySpeed: { kind: "allowed_at_class_level", atLevel: 8 },
+              },
+              revertTriggers: [
+                { kind: "duration_expires" },
+                { kind: "source_used_again" },
+                { kind: "condition_active", condition: "incapacitated" },
+                { kind: "death" },
+                { kind: "dismissed_by_target", action: "bonus_action" },
+              ],
+            },
+            {
+              kind: "grant_temp_hp",
+              amount: {
+                kind: "linear_per_level",
+                axis: "class",
+                base: { dice: 0, dieSize: 1, flat: 1 },
+                perLevel: { flat: 1 },
+                startingAtLevel: 1,
+              },
+            },
+          ],
+        },
+      ]);
+    }
+  });
+
   test("keeps first-slice weapon mastery choices on Sap, not Vex", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 
