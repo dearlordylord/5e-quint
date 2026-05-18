@@ -1204,8 +1204,8 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
 - `battle-runtime-chained-spell-attack.qnt` - Chromatic Orb chained attack
   damage choices, d8 duplicate-face facts, leap legality, and replay holes.
 - `battle-runtime-save-gated-spell.qnt` - save-gated damage and condition
-  profile projection, attack-burst save helpers, save-gated active effects, and
-  replay holes.
+  profile projection, attack-burst save helpers, save-gated active effects,
+  replay holes, and save/attack-burst spell reducers.
 - `battle-runtime-marked-riders.qnt` - Hunter's Mark and Hex durations,
   transfer eligibility, marked damage riders, and marked Ability Check modes.
 - `battle-runtime-marked-spells.qnt` - Hunter's Mark, Favored Enemy Hunter's
