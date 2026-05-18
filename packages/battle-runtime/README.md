@@ -1208,6 +1208,9 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
   replay holes.
 - `battle-runtime-marked-riders.qnt` - Hunter's Mark and Hex durations,
   transfer eligibility, marked damage riders, and marked Ability Check modes.
+- `battle-runtime-reaction-window.qnt` - Reaction trigger matching, window
+  opening, reactor availability, Shield and Counterspell reaction helpers, and
+  Hellish Rebuke admission facts.
 - `battle-runtime.mbt.qnt` - package-local randomized model for the selected
   integrated promoted MBT path.
 
