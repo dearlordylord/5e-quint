@@ -115,19 +115,19 @@
     {
       "number": 19,
       "id": "L12G-AUTHOR-SORCERER-METAMAGIC",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Sorcerer Metamagic Authoring And Support"
     },
     {
       "number": 20,
       "id": "L12G-AUTHOR-WARLOCK-MAGICAL-CUNNING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Warlock Magical Cunning Authoring And Support"
     },
     {
       "number": 21,
       "id": "L12G-SPELL-ACID-ARROW",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Acid Arrow Runtime Support"
     },
     {
@@ -513,6 +513,30 @@
       "id": "L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS",
       "status": "ready-for-research",
       "title": "Sorcerer Font Of Magic Sorcery Points To Spell Slot"
+    },
+    {
+      "number": 86,
+      "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS",
+      "status": "ready-for-research",
+      "title": "Sorcerer Metamagic Character Facts And Option Projection"
+    },
+    {
+      "number": 87,
+      "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION",
+      "status": "ready-for-research",
+      "title": "Sorcerer Metamagic Cast-Time Option Execution"
+    },
+    {
+      "number": 88,
+      "id": "L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE",
+      "status": "ready-for-research",
+      "title": "Acid Arrow Surface Damage Shape"
+    },
+    {
+      "number": 89,
+      "id": "L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT",
+      "status": "ready-for-research",
+      "title": "Acid Arrow Delayed Runtime Support"
     }
   ]
 }
@@ -606,8 +630,10 @@ use the repository MBT scarcity protocol.
 
 Loop A owns Tasks 10-42 after the split, Task 12's concrete follow-up split
 tasks 76-78, Task 13's concrete follow-up split tasks 79-80, Task 15's
-concrete follow-up split tasks 81-82, and Task 18's concrete follow-up split
-tasks 83-85. Tasks 1-9 are already done. Tasks 43-75 are owned by
+concrete follow-up split tasks 81-82, Task 18's concrete follow-up split
+tasks 83-85, Task 19's concrete follow-up split tasks 86-87, and Task 21's
+concrete follow-up split tasks 88-89. Tasks 1-9 are already done. Tasks 43-75
+are owned by
 `plans/LEVEL2_RALPH_LOOP_B_BIG_FRONTIER.md` and stay `deferred` here so Loop A
 cannot pick them. Keep this lane out of Loop D's level-1 recursive frontier and
 Loop L's language-access frontier.
@@ -699,6 +725,10 @@ Loop L's language-access frontier.
 | 83 | 19a | `L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS` | `sorcerer_font_of_magic` |
 | 84 | 19b | `L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS` | `sorcerer_font_of_magic` |
 | 85 | 19c | `L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS` | `sorcerer_font_of_magic` |
+| 86 | 20a | `L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS` | `sorcerer_metamagic` |
+| 87 | 20b | `L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION` | `sorcerer_metamagic` |
+| 88 | 22a | `L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE` | `acid_arrow` |
+| 89 | 22b | `L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT` | `acid_arrow` |
 
 ## Follow-Up Dependencies
 
@@ -714,6 +744,10 @@ Loop L's language-access frontier.
 | `L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS` | `L12G-AUTHOR-SORCERER-FONT-OF-MAGIC`, `L12G-AUTHOR-SORCERER-METAMAGIC` | Sorcerer level-2 admission should retain the full level-2 feature grant set before projecting the shared Sorcery Point resource from Font of Magic. |
 | `L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS` | `L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS` | Spell Slot to Sorcery Point conversion should consume existing Spell Slot state and the projected shared Sorcery Point resource instead of creating per-feature resource state. |
 | `L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS` | `L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS` | Sorcery Point to temporary Spell Slot creation should consume the projected shared Sorcery Point resource and own the temporary slot lifecycle without duplicating class progression state. |
+| `L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS` | `L12G-AUTHOR-SORCERER-METAMAGIC`, `L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS` | Metamagic option projection should retain the authored Metamagic feature and link known option facts to the shared Sorcery Point resource projected from Font of Magic instead of duplicating point-pool state. |
+| `L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION` | `L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS`, `L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS` | Cast-time Metamagic execution should consume known-option and shared Sorcery Point resource facts rather than creating a Metamagic-local point pool. |
+| `L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE` | `L12G-SPELL-ACID-ARROW` | Acid Arrow runtime support needs a lossless Spell Definition shape for initial, later, miss-only, and slot-scaling damage facts before runtime projection can consume the authored record. |
+| `L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT` | `L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE` | Delayed runtime support should consume the repaired Acid Arrow Spell Definition rather than duplicating or reinterpreting lossy authored damage state. |
 
 ## Task Details
 
@@ -1208,7 +1242,7 @@ Acceptance:
 
 ### Task 19 - L12G-AUTHOR-SORCERER-METAMAGIC - Sorcerer Metamagic Authoring And Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `sorcerer_metamagic`. Gate task: 20 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -1236,7 +1270,7 @@ Acceptance:
 
 ### Task 20 - L12G-AUTHOR-WARLOCK-MAGICAL-CUNNING - Warlock Magical Cunning Authoring And Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `warlock_magical_cunning`. Gate task: 21 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -1263,7 +1297,7 @@ Acceptance:
 
 ### Task 21 - L12G-SPELL-ACID-ARROW - Acid Arrow Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `acid_arrow`. Gate task: 22 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -3051,4 +3085,136 @@ Acceptance:
 - the Sorcery Point to temporary Spell Slot conversion portion of `sorcerer_font_of_magic` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
 - no Spell Slot to Sorcery Point conversion or Metamagic option execution is implemented in this task;
 - runtime behavior traces to SRD Font of Magic without homebrew extensions and consumes projected shared Sorcery Point facts instead of duplicating class progression or spellcasting resource state;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.
+
+### Task 86 - L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS - Sorcerer Metamagic Character Facts And Option Projection
+
+Status: `ready-for-research`
+
+Unit: `sorcerer_metamagic`. Follow-up split from Task 19.
+
+Dependency: Task 19 (`L12G-AUTHOR-SORCERER-METAMAGIC`) and Task 83 (`L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS`) done.
+
+Inputs:
+
+- `packages/surface/content/sorcerer_metamagic.json`;
+- `packages/surface/content/class_sorcerer.json`;
+- `packages/surface/content/sorcerer_font_of_magic.json`;
+- the `sorcerer_metamagic` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Classes/Sorcerer.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- character-creation and character-sheet retained-feature, choice, and resource-reference owner evidence.
+
+Outputs:
+
+- owner evidence for retaining the Metamagic feature ref with Sorcerer level-2 progression;
+- chosen Metamagic option count, Sorcerer-level replacement lifecycle, unique known-option roster, option costs, stacking facts, and source link to the shared Font of Magic Sorcery Point resource derive from authored Surface records without duplicating class progression or Sorcery Point pool state;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the character-facts and option-projection portion of `sorcerer_metamagic` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no cast-time Metamagic option execution or Font of Magic Spell Slot conversion execution is implemented in this task;
+- owner evidence links Metamagic option facts to the shared Font of Magic Sorcery Point resource instead of creating a Metamagic-local point pool;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 87 - L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION - Sorcerer Metamagic Cast-Time Option Execution
+
+Status: `ready-for-research`
+
+Unit: `sorcerer_metamagic`. Follow-up split from Task 19.
+
+Dependency: Task 86 (`L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS`) and Task 83 (`L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS`) done.
+
+Inputs:
+
+- `packages/surface/content/sorcerer_metamagic.json`;
+- `packages/surface/content/sorcerer_font_of_magic.json`;
+- the `sorcerer_metamagic` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Classes/Sorcerer.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- character-battle-runtime, battle-runtime spell invocation hooks, Unit profile, owner-evidence, and focused tests for known Metamagic option execution.
+
+Outputs:
+
+- supported runtime profile and owner evidence for known Metamagic option execution at spell-cast time;
+- execution spends the shared Sorcery Point resource projected from Font of Magic, enforces the one-option-per-spell rule plus Empowered Spell and Seeking Spell stacking exceptions, enforces Quickened Spell level-1-plus spell turn limits, and applies the option-specific spell modifications for Careful, Distant, Empowered, Extended, Heightened, Quickened, Seeking, Subtle, Transmuted, and Twinned Spell;
+- Quint/runtime parity updates if promoted battle-runtime behavior changes;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the cast-time execution portion of `sorcerer_metamagic` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- runtime behavior traces to SRD Metamagic without homebrew extensions and consumes projected shared Sorcery Point facts instead of duplicating Font of Magic resource state;
+- no Font of Magic Spell Slot conversion behavior is implemented in this task;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.
+
+### Task 88 - L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE - Acid Arrow Surface Damage Shape
+
+Status: `ready-for-research`
+
+Unit: `acid_arrow`. Follow-up split from Task 21.
+
+Dependency: Task 21 (`L12G-SPELL-ACID-ARROW`) done.
+
+Inputs:
+
+- `packages/surface/content/acid_arrow.json`;
+- `packages/surface/content/acid_arrow.dhall`;
+- the `acid_arrow` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Spells/Descriptions-A-D.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- Surface spell schema, Dhall generation, tracer, and focused tests for spell damage shapes.
+
+Outputs:
+
+- Acid Arrow authored content represents the RAW initial hit damage, later end-of-target-next-turn damage, miss-only immediate half-of-initial damage, and slot scaling for both initial and later damage as lossless executable Spell Definition facts;
+- the miss branch is derived from the initial damage relationship rather than stored as an independently fixed 2d4 approximation;
+- schema/tracer support is updated only if the current Surface shape cannot represent those facts;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the Surface damage-shape portion of `acid_arrow` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no battle-runtime Acid Arrow invocation/effect execution is implemented in this task;
+- authored facts trace to SRD Acid Arrow without duplicating Spell Invocation or Spell Effect state;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 89 - L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT - Acid Arrow Delayed Runtime Support
+
+Status: `ready-for-research`
+
+Unit: `acid_arrow`. Follow-up split from Task 21.
+
+Dependency: Task 88 (`L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE`) done.
+
+Inputs:
+
+- `packages/surface/content/acid_arrow.json`;
+- the `acid_arrow` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Spells/Descriptions-A-D.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- battle-runtime, spell invocation/effect lifecycle, Unit profile, owner-evidence, and focused tests for Acid Arrow execution.
+
+Outputs:
+
+- supported runtime profile and owner evidence for Acid Arrow as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot;
+- runtime resolves a ranged Spell Attack, applies immediate Acid damage on hit, stores the Acid Spell Effect that applies at the end of the target's next turn on hit, applies immediate half-of-initial Acid damage on miss only, and scales RAW damage amounts by slot level;
+- runtime consumes the repaired Spell Definition facts from Task 88 rather than duplicating or reinterpreting authored damage state;
+- Quint/runtime parity updates if promoted battle-runtime behavior changes;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the delayed runtime support portion of `acid_arrow` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- runtime behavior traces to SRD Acid Arrow without homebrew extensions and consumes projected Spell Definition facts rather than storing redundant damage formulas;
+- no unrelated level-1 Loop D/L spell frontier work is implemented in this task;
 - focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.

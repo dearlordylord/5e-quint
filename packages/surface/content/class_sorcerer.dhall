@@ -10,21 +10,24 @@ let ClassSpellAccess : Type = { spellId : Text, spellLevel : Natural }
 let sorcerer =
       { armorTraining = { kind = "none" }
       , className = "sorcerer"
-      , description = "SRD Sorcerer class creation facts for a level-1 character, including class-list prepared Spell Access, Spell Slots, and spellcasting focus facts."
+      , description = "SRD Sorcerer class creation and early progression facts for level-1 and level-2 characters, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, and level-1 and level-2 class feature grants."
       , featureGrants =
-        [ { level = 1, unitId = "sorcerer_innate_sorcery" } ]
+        [ { level = 1, unitId = "sorcerer_innate_sorcery" }
+        , { level = 2, unitId = "sorcerer_font_of_magic" }
+        , { level = 2, unitId = "sorcerer_metamagic" }
+        ]
       , hitPointDie = 6
       , id = "class_sorcerer"
       , kind = "class"
       , multiclassProficiencies = { kind = "none" }
       , name = "Sorcerer"
       , primaryAbilities = { abilities = [ "cha" ], kind = "all_of" }
-      , provenance = { kind = "srd-5.2.1", section = "Classes/Sorcerer.md:3-24,33-35,56-76" }
+      , provenance = { kind = "srd-5.2.1", section = "Classes/Sorcerer.md:3-24,33-76" }
       , savingThrowProficiencies = [ "con", "cha" ]
       , skillProficiencyChoice =
         { choose = 2, options = [ "arcana", "deception", "insight", "intimidation", "persuasion", "religion" ] }
       , spellcasting =
-          { kind = "list_prepared_spellcasting_creation"
+          { kind = "list_prepared_spellcasting_progression_creation"
           , featureLevel = 1
           , spellcastingAbility = "cha"
           , cantripAccess =
@@ -44,6 +47,8 @@ let sorcerer =
               , spells =
                 [ { spellId = "burning_hands", spellLevel = 1 }
                 , { spellId = "detect_magic", spellLevel = 1 }
+                , { spellId = "chromatic_orb", spellLevel = 1 }
+                , { spellId = "thunderwave", spellLevel = 1 }
                 ] : List ClassSpellAccess
               , changeOn = { kind = "class_level", replacementCount = 1 }
               }
@@ -52,6 +57,18 @@ let sorcerer =
               , slots = [ { spellLevel = 1, count = 2 } ]
               , resetCadence = { kind = "long_rest" }
               }
+          , spellcastingProgression =
+            [ { atLevel = 1
+              , cantripCount = 4
+              , preparedSpellCount = 2
+              , spellSlots = [ { spellLevel = 1, count = 2 } ]
+              }
+            , { atLevel = 2
+              , cantripCount = 4
+              , preparedSpellCount = 4
+              , spellSlots = [ { spellLevel = 1, count = 3 } ]
+              }
+            ]
           , spellcastingFocus = "arcane_focus"
           }
       , subclassChoices = [] : List { level : Natural, options : List Text }

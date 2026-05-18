@@ -1,0 +1,121 @@
+{
+  "acquiredAtLevel": 2,
+  "className": "sorcerer",
+  "description": "SRD Sorcerer level 2 Metamagic option-grant source facts. A Sorcerer chooses two Metamagic options at level 2, can replace one known option with an unknown option whenever they gain a Sorcerer level, gains two more choices at Sorcerer levels 10 and 17, and spends the Sorcery Point cost of a known option from the shared Font of Magic Sorcery Point pool when modifying a spell.",
+  "id": "sorcerer_metamagic",
+  "kind": "class_feature",
+  "mechanics": {
+    "changeOn": {
+      "count": 1,
+      "kind": "class_level",
+      "replacement": "one_known_option_with_one_unknown_option"
+    },
+    "choiceCount": {
+      "kind": "class_level_total_choices",
+      "levels": [
+        {
+          "atLevel": 2,
+          "total": 2
+        },
+        {
+          "atLevel": 10,
+          "total": 4
+        },
+        {
+          "atLevel": 17,
+          "total": 6
+        }
+      ]
+    },
+    "choiceKey": "sorcerer_metamagic_options",
+    "family": "metamagic_options",
+    "options": [
+      {
+        "displayName": "Careful Spell",
+        "effectKind": "saving_throw_protection",
+        "id": "sorcerer_careful_spell",
+        "sorceryPointCost": 1,
+        "stackingMode": "one_per_spell"
+      },
+      {
+        "displayName": "Distant Spell",
+        "effectKind": "spell_range_increase",
+        "id": "sorcerer_distant_spell",
+        "sorceryPointCost": 1,
+        "stackingMode": "one_per_spell"
+      },
+      {
+        "displayName": "Empowered Spell",
+        "effectKind": "damage_dice_reroll",
+        "id": "sorcerer_empowered_spell",
+        "sorceryPointCost": 1,
+        "stackingMode": "can_combine_with_different_metamagic"
+      },
+      {
+        "displayName": "Extended Spell",
+        "effectKind": "duration_extension_and_concentration_save_advantage",
+        "id": "sorcerer_extended_spell",
+        "sorceryPointCost": 1,
+        "stackingMode": "one_per_spell"
+      },
+      {
+        "displayName": "Heightened Spell",
+        "effectKind": "saving_throw_disadvantage",
+        "id": "sorcerer_heightened_spell",
+        "sorceryPointCost": 2,
+        "stackingMode": "one_per_spell"
+      },
+      {
+        "displayName": "Quickened Spell",
+        "effectKind": "action_casting_time_to_bonus_action_with_spell_turn_limit",
+        "id": "sorcerer_quickened_spell",
+        "sorceryPointCost": 2,
+        "stackingMode": "one_per_spell"
+      },
+      {
+        "displayName": "Seeking Spell",
+        "effectKind": "missed_spell_attack_reroll",
+        "id": "sorcerer_seeking_spell",
+        "sorceryPointCost": 1,
+        "stackingMode": "can_combine_with_different_metamagic"
+      },
+      {
+        "displayName": "Subtle Spell",
+        "effectKind": "component_suppression",
+        "id": "sorcerer_subtle_spell",
+        "sorceryPointCost": 1,
+        "stackingMode": "one_per_spell"
+      },
+      {
+        "displayName": "Transmuted Spell",
+        "effectKind": "damage_type_substitution",
+        "id": "sorcerer_transmuted_spell",
+        "sorceryPointCost": 1,
+        "stackingMode": "one_per_spell"
+      },
+      {
+        "displayName": "Twinned Spell",
+        "effectKind": "effective_spell_level_increase_for_extra_target",
+        "id": "sorcerer_twinned_spell",
+        "sorceryPointCost": 1,
+        "stackingMode": "one_per_spell"
+      }
+    ],
+    "selectionRepeatability": {
+      "kind": "unique"
+    },
+    "spends": {
+      "kind": "class_feature_point_pool",
+      "resourceUnitId": "sorcerer_font_of_magic"
+    },
+    "spellUseLimit": {
+      "kind": "one_per_spell_unless_option_allows_stacking"
+    },
+    "timing": "class_feature_acquisition"
+  },
+  "name": "Metamagic",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Sorcerer.md:33-54,111-117,145-214"
+  }
+}

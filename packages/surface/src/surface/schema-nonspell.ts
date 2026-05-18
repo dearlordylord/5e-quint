@@ -80,18 +80,21 @@ const GENERAL_CLASS_FEATURE_RECORD_CLASS_NAMES = CLASS_NAMES.filter(
     className,
   ): className is Exclude<
     ClassName,
-    "fighter" | "monk" | "wizard" | "warlock"
+    "fighter" | "monk" | "sorcerer" | "wizard" | "warlock"
   > =>
     className !== "fighter" &&
     className !== "monk" &&
+    className !== "sorcerer" &&
     className !== "wizard" &&
     className !== "warlock",
   // Brands and literal unions are erased at runtime; the filter above removes
   // exactly the excluded class names, and Schema.Literal requires a non-empty
   // tuple rather than a narrowed readonly array.
 ) as unknown as readonly [
-  Exclude<ClassName, "fighter" | "monk" | "wizard" | "warlock">,
-  ...Array<Exclude<ClassName, "fighter" | "monk" | "wizard" | "warlock">>,
+  Exclude<ClassName, "fighter" | "monk" | "sorcerer" | "wizard" | "warlock">,
+  ...Array<
+    Exclude<ClassName, "fighter" | "monk" | "sorcerer" | "wizard" | "warlock">
+  >,
 ];
 
 const CLASS_CONTAINER_WITHOUT_SPELL_ACCESS_CLASS_NAMES = [
@@ -586,10 +589,196 @@ export const FeatureChoiceMechanicsSchema = Schema.Union(
   }),
 );
 
+const MetamagicChoiceLevelSchema = Schema.Struct({
+  atLevel: PositiveIntegerSchema,
+  total: PositiveIntegerSchema,
+});
+
+const METAMAGIC_CHOICE_LEVELS = [
+  { atLevel: 2, total: 2 },
+  { atLevel: 10, total: 4 },
+  { atLevel: 17, total: 6 },
+] as const satisfies ReadonlyArray<
+  Schema.Schema.Type<typeof MetamagicChoiceLevelSchema>
+>;
+
+const metamagicChoiceCountMatchesSorcererTable = (
+  choiceCount: Schema.Schema.Type<typeof ClassLevelChoiceCountSchema>,
+): boolean =>
+  choiceCount.kind === "class_level_total_choices" &&
+  choiceCount.levels.length === METAMAGIC_CHOICE_LEVELS.length &&
+  METAMAGIC_CHOICE_LEVELS.every(
+    (expected, index) =>
+      choiceCount.levels[index]?.atLevel === expected.atLevel &&
+      choiceCount.levels[index]?.total === expected.total,
+  );
+
+const MetamagicChoiceCountSchema = ClassLevelChoiceCountSchema.pipe(
+  Schema.filter(metamagicChoiceCountMatchesSorcererTable, {
+    message: () =>
+      "Sorcerer Metamagic option totals must match the SRD Sorcerer Features table.",
+  }),
+);
+
+const METAMAGIC_OPTION_IDS = [
+  "sorcerer_careful_spell",
+  "sorcerer_distant_spell",
+  "sorcerer_empowered_spell",
+  "sorcerer_extended_spell",
+  "sorcerer_heightened_spell",
+  "sorcerer_quickened_spell",
+  "sorcerer_seeking_spell",
+  "sorcerer_subtle_spell",
+  "sorcerer_transmuted_spell",
+  "sorcerer_twinned_spell",
+] as const;
+type MetamagicOptionId = (typeof METAMAGIC_OPTION_IDS)[number];
+
+const distinctCompleteMetamagicOptionSet = (
+  options: readonly { readonly id: MetamagicOptionId }[],
+): boolean => {
+  const ids = new Set(options.map((option) => option.id));
+  return (
+    options.length === METAMAGIC_OPTION_IDS.length &&
+    ids.size === METAMAGIC_OPTION_IDS.length &&
+    METAMAGIC_OPTION_IDS.every((optionId) => ids.has(optionId))
+  );
+};
+
+const OnePerSpellMetamagicStackingSchema = Schema.Literal("one_per_spell");
+const CanCombineMetamagicStackingSchema = Schema.Literal(
+  "can_combine_with_different_metamagic",
+);
+
+const MetamagicOptionSchema = Schema.Union(
+  Schema.Struct({
+    id: Schema.Literal("sorcerer_careful_spell"),
+    displayName: Schema.Literal("Careful Spell"),
+    sorceryPointCost: Schema.Literal(1),
+    stackingMode: OnePerSpellMetamagicStackingSchema,
+    effectKind: Schema.Literal("saving_throw_protection"),
+  }),
+  Schema.Struct({
+    id: Schema.Literal("sorcerer_distant_spell"),
+    displayName: Schema.Literal("Distant Spell"),
+    sorceryPointCost: Schema.Literal(1),
+    stackingMode: OnePerSpellMetamagicStackingSchema,
+    effectKind: Schema.Literal("spell_range_increase"),
+  }),
+  Schema.Struct({
+    id: Schema.Literal("sorcerer_empowered_spell"),
+    displayName: Schema.Literal("Empowered Spell"),
+    sorceryPointCost: Schema.Literal(1),
+    stackingMode: CanCombineMetamagicStackingSchema,
+    effectKind: Schema.Literal("damage_dice_reroll"),
+  }),
+  Schema.Struct({
+    id: Schema.Literal("sorcerer_extended_spell"),
+    displayName: Schema.Literal("Extended Spell"),
+    sorceryPointCost: Schema.Literal(1),
+    stackingMode: OnePerSpellMetamagicStackingSchema,
+    effectKind: Schema.Literal(
+      "duration_extension_and_concentration_save_advantage",
+    ),
+  }),
+  Schema.Struct({
+    id: Schema.Literal("sorcerer_heightened_spell"),
+    displayName: Schema.Literal("Heightened Spell"),
+    sorceryPointCost: Schema.Literal(2),
+    stackingMode: OnePerSpellMetamagicStackingSchema,
+    effectKind: Schema.Literal("saving_throw_disadvantage"),
+  }),
+  Schema.Struct({
+    id: Schema.Literal("sorcerer_quickened_spell"),
+    displayName: Schema.Literal("Quickened Spell"),
+    sorceryPointCost: Schema.Literal(2),
+    stackingMode: OnePerSpellMetamagicStackingSchema,
+    effectKind: Schema.Literal(
+      "action_casting_time_to_bonus_action_with_spell_turn_limit",
+    ),
+  }),
+  Schema.Struct({
+    id: Schema.Literal("sorcerer_seeking_spell"),
+    displayName: Schema.Literal("Seeking Spell"),
+    sorceryPointCost: Schema.Literal(1),
+    stackingMode: CanCombineMetamagicStackingSchema,
+    effectKind: Schema.Literal("missed_spell_attack_reroll"),
+  }),
+  Schema.Struct({
+    id: Schema.Literal("sorcerer_subtle_spell"),
+    displayName: Schema.Literal("Subtle Spell"),
+    sorceryPointCost: Schema.Literal(1),
+    stackingMode: OnePerSpellMetamagicStackingSchema,
+    effectKind: Schema.Literal("component_suppression"),
+  }),
+  Schema.Struct({
+    id: Schema.Literal("sorcerer_transmuted_spell"),
+    displayName: Schema.Literal("Transmuted Spell"),
+    sorceryPointCost: Schema.Literal(1),
+    stackingMode: OnePerSpellMetamagicStackingSchema,
+    effectKind: Schema.Literal("damage_type_substitution"),
+  }),
+  Schema.Struct({
+    id: Schema.Literal("sorcerer_twinned_spell"),
+    displayName: Schema.Literal("Twinned Spell"),
+    sorceryPointCost: Schema.Literal(1),
+    stackingMode: OnePerSpellMetamagicStackingSchema,
+    effectKind: Schema.Literal(
+      "effective_spell_level_increase_for_extra_target",
+    ),
+  }),
+);
+
+const MetamagicOptionsSchema = Schema.NonEmptyArray(MetamagicOptionSchema).pipe(
+  Schema.filter(distinctCompleteMetamagicOptionSet, {
+    message: () =>
+      "Sorcerer Metamagic must author each SRD Metamagic option exactly once.",
+  }),
+);
+
+export const SorcererMetamagicMechanicsSchema = Schema.Struct({
+  family: Schema.Literal("metamagic_options"),
+  choiceKey: Schema.Literal("sorcerer_metamagic_options"),
+  timing: Schema.Literal("class_feature_acquisition"),
+  choiceCount: MetamagicChoiceCountSchema,
+  changeOn: Schema.Struct({
+    kind: Schema.Literal("class_level"),
+    count: Schema.Literal(1),
+    replacement: Schema.Literal("one_known_option_with_one_unknown_option"),
+  }),
+  selectionRepeatability: Schema.Struct({
+    kind: Schema.Literal("unique"),
+  }),
+  spends: Schema.Struct({
+    kind: Schema.Literal("class_feature_point_pool"),
+    resourceUnitId: Schema.Literal("sorcerer_font_of_magic"),
+  }),
+  spellUseLimit: Schema.Struct({
+    kind: Schema.Literal("one_per_spell_unless_option_allows_stacking"),
+  }),
+  options: MetamagicOptionsSchema,
+});
+
 export const ClassSpellcastingProjectionMechanicsSchema = Schema.Struct({
   family: Schema.Literal("class_spellcasting_projection"),
   source: Schema.Literal("class_record_spellcasting"),
   spellcastingKind: Schema.Literal("pact_magic_spellcasting_creation"),
+});
+
+export const WarlockPactSlotRecoveryMechanicsSchema = Schema.Struct({
+  family: Schema.Literal("pact_slot_recovery"),
+  activationCost: Schema.Struct({
+    kind: Schema.Literal("one_minute_rite"),
+  }),
+  resource: Schema.Struct({
+    kind: Schema.Literal("pact_slots"),
+    source: Schema.Literal("class_record_pact_magic"),
+  }),
+  requiresExpendedSlots: Schema.Literal(true),
+  recoveryCap: Schema.Struct({
+    kind: Schema.Literal("half_maximum_rounded_up"),
+  }),
+  resetCadence: Schema.Struct({ kind: Schema.Literal("long_rest") }),
 });
 
 export const ClassFeatureComponentMechanicsSchema = Schema.Union(
@@ -687,10 +876,12 @@ export const ClassFeatureMechanicsSchema = Schema.Union(
   ClassFeatureAcquisitionChoiceMechanicsSchema,
   ClassFeatureResourceContainerMechanicsSchema,
   ClassFeatureResourcePoolMechanicsSchema,
+  SorcererMetamagicMechanicsSchema,
   ClassSpellcastingProjectionMechanicsSchema,
   WeaponMasteryChoiceMechanicsSchema,
   SpellbookRitualAccessMechanicsSchema,
   RestSpellSlotRecoveryMechanicsSchema,
+  WarlockPactSlotRecoveryMechanicsSchema,
   FailedAbilityCheckResourceBoostMechanicsSchema,
   MonkInitiativeFocusRecoveryMechanicsSchema,
 );
@@ -715,6 +906,18 @@ export const FighterClassFeatureMechanicsSchema =
 export const MonkClassFeatureMechanicsSchema = Schema.Union(
   ClassGeneralFeatureMechanicsSchema,
   MonkInitiativeFocusRecoveryMechanicsSchema,
+);
+
+export const SorcererClassFeatureMechanicsSchema = Schema.Union(
+  ClassGeneralFeatureMechanicsSchema,
+  SorcererMetamagicMechanicsSchema,
+);
+
+export const WarlockClassFeatureMechanicsSchema = Schema.Union(
+  ClassGeneralFeatureMechanicsSchema,
+  FeatureChoiceMechanicsSchema,
+  ClassSpellcastingProjectionMechanicsSchema,
+  WarlockPactSlotRecoveryMechanicsSchema,
 );
 
 export const MasteryTriggerSchema = Schema.Union(
@@ -2431,14 +2634,16 @@ export const MonkClassFeatureRecordSchema = Schema.Struct({
   mechanics: MonkClassFeatureMechanicsSchema,
 });
 
+export const SorcererClassFeatureRecordSchema = Schema.Struct({
+  ...ClassFeatureRecordBaseFields,
+  className: Schema.Literal("sorcerer"),
+  mechanics: SorcererClassFeatureMechanicsSchema,
+});
+
 export const WarlockClassFeatureRecordSchema = Schema.Struct({
   ...ClassFeatureRecordBaseFields,
   className: Schema.Literal("warlock"),
-  mechanics: Schema.Union(
-    ClassGeneralFeatureMechanicsSchema,
-    FeatureChoiceMechanicsSchema,
-    ClassSpellcastingProjectionMechanicsSchema,
-  ),
+  mechanics: WarlockClassFeatureMechanicsSchema,
 });
 
 export const OtherClassFeatureRecordSchema = Schema.Struct({
@@ -2451,6 +2656,7 @@ export const ClassFeatureRecordSchema = Schema.Union(
   WizardClassFeatureRecordSchema,
   FighterClassFeatureRecordSchema,
   MonkClassFeatureRecordSchema,
+  SorcererClassFeatureRecordSchema,
   WarlockClassFeatureRecordSchema,
   OtherClassFeatureRecordSchema,
 );

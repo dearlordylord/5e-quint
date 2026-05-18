@@ -33,6 +33,7 @@ import {
   characterSheetSpellInvocation,
   characterSheetSpellSlots,
   completeLongRest,
+  completeMagicalCunningRite,
   completeShortRest,
   createFreshCharacterSheet as createFreshCharacterSheetCore,
   characterSheetId,
@@ -50,9 +51,11 @@ import {
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.spellbook-ritual-invocation
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.weapon-mastery-reselection
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.ability-check-proficiency-bonus
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.pact-slot-recovery
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B barbarian_unarmored_defense monk_unarmored_defense paladin_lay_on_hands wizard_arcane_recovery wizard_ritual_adept
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-04 fighter_weapon_mastery barbarian_weapon_mastery paladin_weapon_mastery ranger_weapon_mastery rogue_weapon_mastery
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-CLASS-BARD-JACK-OF-ALL-TRADES bard_jack_of_all_trades
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-AUTHOR-WARLOCK-MAGICAL-CUNNING warlock_magical_cunning
 
 const build = armorClassBuild({ startingClass: "class_fighter" });
 
@@ -1105,8 +1108,7 @@ describe("Character Sheet runtime", () => {
         build: bardJackOfAllTradesBuild({ totalLevel: 5 }),
         unitLibrary,
         skill: "performance",
-        otherProficiencyBonus:
-          CHARACTER_SHEET_OTHER_PROFICIENCY_BONUS_APPLIES,
+        otherProficiencyBonus: CHARACTER_SHEET_OTHER_PROFICIENCY_BONUS_APPLIES,
       }),
     );
 
@@ -1795,6 +1797,120 @@ describe("Character Sheet runtime", () => {
     });
   });
 
+  test("Magical Cunning recovers half rounded up expended Pact Slots once per Long Rest", () => {
+    const sheet = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:magical-cunning"),
+        build: warlockMagicalCunningBuild({
+          warlockAdvancements: 1,
+          pactSlotCount: 2,
+          pactSlotLevel: 1,
+        }),
+        maximumHp: Hp(14),
+        currentHp: Hp(14),
+        tempHp: Hp(0),
+        unitLibrary,
+        pactSlots: {
+          slotLevel: spellSlotLevel(1),
+          count: resourceCount(2),
+          expended: resourceCount(2),
+        },
+      }),
+    );
+
+    const recovered = requireRight(
+      completeMagicalCunningRite({ sheet, unitLibrary }),
+    );
+
+    expect(characterSheetPactSlots(recovered)).toEqual({
+      slotLevel: 1,
+      count: 2,
+      expended: 1,
+    });
+    expect(recovered.restFeatureUses).toEqual([
+      { tag: "magicalCunning", usedSinceLongRest: true },
+    ]);
+    expect(
+      completeMagicalCunningRite({ sheet: recovered, unitLibrary }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: "Magical Cunning cannot be used again until a Long Rest.",
+      },
+    });
+
+    const rested = requireRight(completeLongRest({ sheet: recovered }));
+
+    expect(characterSheetPactSlots(rested)).toEqual({
+      slotLevel: 1,
+      count: 2,
+      expended: 0,
+    });
+    expect(rested.restFeatureUses).toEqual([]);
+  });
+
+  test("Magical Cunning rounds a three-slot Pact Magic maximum up", () => {
+    const sheet = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:magical-cunning-round-up"),
+        build: warlockMagicalCunningBuild({
+          warlockAdvancements: 10,
+          pactSlotCount: 3,
+          pactSlotLevel: 5,
+        }),
+        maximumHp: Hp(70),
+        currentHp: Hp(70),
+        tempHp: Hp(0),
+        unitLibrary,
+        pactSlots: {
+          slotLevel: spellSlotLevel(5),
+          count: resourceCount(3),
+          expended: resourceCount(3),
+        },
+      }),
+    );
+
+    const recovered = requireRight(
+      completeMagicalCunningRite({ sheet, unitLibrary }),
+    );
+
+    expect(characterSheetPactSlots(recovered)).toEqual({
+      slotLevel: 5,
+      count: 3,
+      expended: 1,
+    });
+  });
+
+  test("Magical Cunning requires Warlock level 2 feature ownership", () => {
+    const sheet = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:magical-cunning-level-one"),
+        build: warlockMagicalCunningBuild({
+          warlockAdvancements: 0,
+          pactSlotCount: 1,
+          pactSlotLevel: 1,
+        }),
+        maximumHp: Hp(10),
+        currentHp: Hp(10),
+        tempHp: Hp(0),
+        unitLibrary,
+        pactSlots: {
+          slotLevel: spellSlotLevel(1),
+          count: resourceCount(1),
+          expended: resourceCount(1),
+        },
+      }),
+    );
+
+    expect(completeMagicalCunningRite({ sheet, unitLibrary })).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Magical Cunning requires the Warlock Magical Cunning feature.",
+      },
+    });
+  });
+
   test(ritualAdeptAdmitsSpellbookRitualTestName, () => {
     const sheet = spellbookRitualSheet({
       characterIdText: "character:wizard-ritual",
@@ -2140,6 +2256,41 @@ function warlockSpellcastingWithCantrips(
         kind: "pactMagic",
         slotLevel: 1,
         count: 1,
+      },
+    },
+  };
+}
+
+function warlockMagicalCunningBuild(input: {
+  readonly warlockAdvancements: number;
+  readonly pactSlotCount: number;
+  readonly pactSlotLevel: number;
+}): CharacterBuild {
+  return {
+    ...armorClassBuild({
+      startingClass: "class_warlock",
+      advancements: Array.from(
+        { length: input.warlockAdvancements },
+        () => "class_warlock",
+      ),
+    }),
+    spellcasting: {
+      sources: [
+        {
+          sourceUnitId: "class_warlock",
+          spellcastingAbility: "cha",
+          cantrips: [],
+          spellbook: [],
+          preparedSpells: [],
+          spellcastingFocuses: ["arcane_focus"],
+        },
+      ],
+      slotPools: {
+        pactMagic: {
+          kind: "pactMagic",
+          slotLevel: input.pactSlotLevel,
+          count: input.pactSlotCount,
+        },
       },
     },
   };
