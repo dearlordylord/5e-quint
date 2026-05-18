@@ -157,7 +157,7 @@
     {
       "number": 26,
       "id": "L12G-SPELL-BLINDNESS-DEAFNESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Blindness Deafness Runtime Support"
     },
     {
@@ -1460,7 +1460,7 @@ Acceptance:
 
 ### Task 26 - L12G-SPELL-BLINDNESS-DEAFNESS - Blindness Deafness Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `blindness_deafness`. Gate task: 27 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
