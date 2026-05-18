@@ -1254,11 +1254,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE: Replace Heat Metal's lossy ongoing-effect encoding with a lossless SRD Surface shape for manufactured metal object targeting, object-contact creature recipients, immediate cast damage plus the same holding/wearing Constitution Saving Throw, later-turn Bonus Action repeat damage gated by object range, and conditional drop-if-possible or Disadvantage fallback until the caster's next turn. The shape must not encode drop and Disadvantage as an unconditional composite or omit the cast-time save. Owner: surface Spell Definition authoring. Required output: Heat Metal Dhall/JSON content, with schema and tracer support where required, represents object-contact propagation and drop-or-fallback semantics as executable source facts rather than comments or prose-only description.; L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME: Promote the Heat Metal damage lifecycle after the Surface shape exists: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration up to 1 minute, caller-supplied manufactured-metal object identity and contact-creature witnesses, immediate 2d8 Fire damage with slot scaling, later-turn Bonus Action repeat damage on caster turns when caller supplies object-within-range and contact witnesses, damage disposition and Concentration-save integration, and cleanup when Concentration or duration ends. Owner: battle-runtime spell invocation/effect lifecycle plus table object-contact witness boundary. Required output: Profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the object-contact damage lifecycle without the holding/wearing penalty if that remains in the separate follow-up.; L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY: Promote the holding/wearing penalty for creatures that take Heat Metal damage from the object: caller-supplied held-or-worn object facts, Constitution Saving Throw against caster Spell Save DC, drop-if-possible through the existing dropped-object outcome boundary without introducing inventory simulation, fallback Disadvantage on Attack Rolls and Ability Checks until the start of the caster's next turn when the object is not dropped, and cleanup/replacement behavior tied to the same Heat Metal spell occurrence. Owner: battle-runtime object holding/wearing drop boundary plus D20 roll-mode projection. Required output: Supported-profile or profile-subset-supported Unit claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the save, drop outcome, fallback roll-mode projection, caster-turn-start expiry, and Concentration cleanup.",
       "sourceRecordPath": "packages/surface/content/heat_metal.json",
       "sourceRows": [
         {
@@ -1286,8 +1289,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
       "unitId": "heat_metal"
     },
     {
@@ -2630,7 +2633,7 @@
       ]
     },
     {
-      "count": 20,
+      "count": 21,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
@@ -2644,6 +2647,7 @@
         "enthrall",
         "flame_blade",
         "gust_of_wind",
+        "heat_metal",
         "monk_monks_focus",
         "monk_uncanny_metabolism",
         "moonbeam",
@@ -2679,12 +2683,11 @@
       ]
     },
     {
-      "count": 9,
+      "count": 8,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
         "find_steed",
-        "heat_metal",
         "hold_person",
         "invisibility",
         "lesser_restoration",
@@ -2728,12 +2731,12 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 467,
-      "percent": "84%",
+      "numerator": 465,
+      "percent": "83.6%",
       "rowsByStatus": {
         "accepted": 332,
-        "accepted-no-battle-effect": 135,
-        "battle-runtime-required": 80,
+        "accepted-no-battle-effect": 133,
+        "battle-runtime-required": 82,
         "owner-evidence-required": 3,
         "partial-battle-runtime": 6
       }
@@ -2760,18 +2763,17 @@
     },
     "strictTargetClosure": {
       "denominator": 154,
-      "numerator": 145,
-      "percent": "94.2%"
+      "numerator": 146,
+      "percent": "94.8%"
     }
   },
   "openFrontier": [
     {
-      "count": 9,
+      "count": 8,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
         "find_steed",
-        "heat_metal",
         "hold_person",
         "invisibility",
         "lesser_restoration",
@@ -7769,18 +7771,18 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
-      "missing": 9,
+      "missing": 8,
       "profile-subset-supported": 12,
       "supported-profile": 101,
-      "unsupported-profile": 32
+      "unsupported-profile": 33
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 20,
+      "blocked-follow-up-split": 21,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 15,
-      "open-runtime-behavior": 9,
+      "open-runtime-behavior": 8,
       "supported-profile": 101
     },
     "nonSupportedFrontier": 53,

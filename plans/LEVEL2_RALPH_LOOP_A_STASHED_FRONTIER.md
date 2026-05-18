@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L12G-SPELL-HEAT-METAL",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Heat Metal Runtime Support"
     },
     {
@@ -135,6 +135,24 @@
       "id": "L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT",
       "status": "blocked",
       "title": "Flame Blade Runtime Support"
+    },
+    {
+      "number": 23,
+      "id": "L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE",
+      "status": "ready-for-research",
+      "title": "Heat Metal Surface Contact Escape Shape"
+    },
+    {
+      "number": 24,
+      "id": "L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME",
+      "status": "blocked",
+      "title": "Heat Metal Contact Damage Runtime"
+    },
+    {
+      "number": 25,
+      "id": "L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY",
+      "status": "blocked",
+      "title": "Heat Metal Holding Wearing Penalty Runtime"
     }
   ]
 }
@@ -202,7 +220,7 @@ Do not run battle-runtime MBT unless the task changes promoted battle-runtime be
 
 | # | Task | Status | Depends On | Notes |
 | ---: | --- | --- | --- | --- |
-| 1 | L12G-SPELL-HEAT-METAL - Heat Metal Runtime Support | ready-for-research | completed baseline | Original backlog task 31; Unit `heat_metal`. |
+| 1 | L12G-SPELL-HEAT-METAL - Heat Metal Runtime Support | done | completed baseline | Original backlog task 31; Unit `heat_metal`. |
 | 2 | L12G-SPELL-HOLD-PERSON - Hold Person Runtime Support | ready-for-research | completed baseline | Original backlog task 32; Unit `hold_person`. |
 | 3 | L12G-SPELL-INVISIBILITY - Invisibility Runtime Support | ready-for-research | completed baseline | Original backlog task 33; Unit `invisibility`. |
 | 4 | L12G-SPELL-LESSER-RESTORATION - Lesser Restoration Runtime Support | ready-for-research | completed baseline | Original backlog task 34; Unit `lesser_restoration`. |
@@ -224,12 +242,15 @@ Do not run battle-runtime MBT unless the task changes promoted battle-runtime be
 | 20 | L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL - Continual Flame Dispel And Suppression Removal | ready-for-research | completed baseline | Original backlog task 93; Unit `continual_flame`. |
 | 21 | L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE - Flame Blade Surface Lifecycle Shape | ready-for-research | completed baseline | Original backlog task 94; Unit `flame_blade`. |
 | 22 | L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT - Flame Blade Runtime Support | blocked | L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE | Original backlog task 95; Unit `flame_blade`. |
+| 23 | L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE - Heat Metal Surface Contact Escape Shape | ready-for-research | completed baseline | Follow-up split from Task 1; Unit `heat_metal`. |
+| 24 | L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME - Heat Metal Contact Damage Runtime | blocked | L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE | Follow-up split from Task 1; Unit `heat_metal`. |
+| 25 | L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY - Heat Metal Holding Wearing Penalty Runtime | blocked | L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE, L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME | Follow-up split from Task 1; Unit `heat_metal`. |
 
 ## Task Details
 
 ### Task 1 - L12G-SPELL-HEAT-METAL - Heat Metal Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Original backlog task: `Task 31 - L12G-SPELL-HEAT-METAL - Heat Metal Runtime Support`.
 Unit: `heat_metal`.
@@ -960,3 +981,101 @@ Acceptance:
 - focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence complete;
 - package typechecks are run for touched packages when dependencies are available;
 - MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
+
+### Task 23 - L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE - Heat Metal Surface Contact Escape Shape
+
+Status: `ready-for-research`
+
+Follow-up split from Task 1 (`L12G-SPELL-HEAT-METAL`).
+Unit: `heat_metal`.
+Source: Heat Metal Unit claim follow-up `L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE`.
+
+Inputs:
+
+- `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Spells/Descriptions-E-L.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Heat Metal Surface content in `packages/surface/content/heat_metal.dhall` and `packages/surface/content/heat_metal.json`;
+- Surface schema, tracer, and content tests touched by ongoing-effect Spell Definition shapes.
+
+Outputs:
+
+- replace Heat Metal's lossy ongoing-effect encoding with a lossless SRD Surface shape for manufactured metal object targeting;
+- represent object-contact creature recipients, immediate cast damage plus the same holding/wearing Constitution Saving Throw, later-turn Bonus Action repeat damage gated by object range, and conditional drop-if-possible or Disadvantage fallback until the caster's next turn;
+- do not encode drop and Disadvantage as an unconditional composite, and do not omit the cast-time save;
+- update generated coverage artifacts after the Surface shape changes.
+
+Acceptance:
+
+- Heat Metal Dhall/JSON content, with schema and tracer support where required, represents object-contact propagation and drop-or-fallback semantics as executable source facts rather than comments or prose-only description;
+- RAW and ubiquitous-language checks are performed before modeling;
+- focused Surface tests, package typecheck for touched packages when dependencies are available, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence complete;
+- MBT is not run unless promoted battle-runtime behavior changes.
+
+### Task 24 - L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME - Heat Metal Contact Damage Runtime
+
+Status: `blocked`
+
+Follow-up split from Task 1 (`L12G-SPELL-HEAT-METAL`).
+Unit: `heat_metal`.
+Source: Heat Metal Unit claim follow-up `L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME`.
+
+Local dependency: `L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE` must be `done` before this task starts.
+
+Inputs:
+
+- the completed Heat Metal Surface contact/drop shape;
+- `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Spells/Descriptions-E-L.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing battle-runtime spell invocation/effect lifecycle, damage, Concentration, and Spell Slot support.
+
+Outputs:
+
+- promote the Heat Metal damage lifecycle: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration up to 1 minute, caller-supplied manufactured-metal object identity and contact-creature witnesses, immediate 2d8 Fire damage with slot scaling, later-turn Bonus Action repeat damage on caster turns when caller supplies object-within-range and contact witnesses, damage disposition and Concentration-save integration, and cleanup when Concentration or duration ends;
+- leave the holding/wearing penalty to `L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY` if it remains separate;
+- update Unit claim/evidence and generated coverage artifacts.
+
+Acceptance:
+
+- Heat Metal has a `profile-subset-supported` Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the object-contact damage lifecycle;
+- RAW and ubiquitous-language checks are performed before modeling;
+- focused package tests, package typecheck for touched packages when dependencies are available, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence complete;
+- battle-runtime MBT is used only under the repository scarcity protocol if focused tests cannot cover the promoted boundary.
+
+### Task 25 - L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY - Heat Metal Holding Wearing Penalty Runtime
+
+Status: `blocked`
+
+Follow-up split from Task 1 (`L12G-SPELL-HEAT-METAL`).
+Unit: `heat_metal`.
+Source: Heat Metal Unit claim follow-up `L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY`.
+
+Local dependency: `L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE` and `L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME` must be `done` before this task starts.
+
+Inputs:
+
+- the completed Heat Metal Surface contact/drop shape;
+- the promoted Heat Metal contact damage lifecycle;
+- `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Spells/Descriptions-E-L.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing battle-runtime object drop outcome boundaries and D20 roll-mode projection support.
+
+Outputs:
+
+- promote the holding/wearing penalty for creatures that take Heat Metal damage from the object: caller-supplied held-or-worn object facts, Constitution Saving Throw against caster Spell Save DC, drop-if-possible through the existing dropped-object outcome boundary without introducing inventory simulation, fallback Disadvantage on Attack Rolls and Ability Checks until the start of the caster's next turn when the object is not dropped, and cleanup/replacement behavior tied to the same Heat Metal spell occurrence;
+- update the Heat Metal Unit claim/evidence and generated coverage artifacts.
+
+Acceptance:
+
+- Heat Metal has a supported-profile or profile-subset-supported Unit claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the save, drop outcome, fallback roll-mode projection, caster-turn-start expiry, and Concentration cleanup;
+- RAW and ubiquitous-language checks are performed before modeling;
+- focused package tests, package typecheck for touched packages when dependencies are available, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence complete;
+- battle-runtime MBT is used only under the repository scarcity protocol if focused tests cannot cover the promoted boundary.
