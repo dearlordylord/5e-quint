@@ -340,6 +340,9 @@ Inputs:
 - local RAW under `.references/srd-5.2.1/`;
 - `UBIQUITOUS_LANGUAGE.md`;
 - existing Surface content, Unit claims, owner evidence, and focused tests for `scorching_ray`.
+- continuation WIP, if still available, on branch `backup/level2-b-task-43-scorching-ray-wip-20260518-121151`
+  at commit `c9b0cb72be980577800e685dd16fb67863d56a2f`; inspect and cherry-pick/rework it only
+  if it still matches RAW, ubiquitous language, architecture, and the task output contract.
 
 Outputs:
 
