@@ -182,8 +182,8 @@
       "numerator": 473,
       "percent": "85.1%",
       "rowsByStatus": {
-        "accepted": 302,
-        "accepted-no-battle-effect": 171,
+        "accepted": 304,
+        "accepted-no-battle-effect": 169,
         "battle-runtime-required": 79,
         "owner-evidence-required": 4
       }
@@ -200,16 +200,16 @@
       "catalog-installed-owner-evidence-required": 5
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 307,
+      "catalog-installed-owner-evidence-present": 309,
       "non-runtime": 24,
-      "catalog-only/dead-for-now": 142,
+      "catalog-only/dead-for-now": 140,
       "missing-authored-record": 75,
       "catalog-installed-owner-evidence-required": 5,
       "catalog-authored-executable-follow-up": 3
     },
     "spellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 148,
-      "catalog-only/dead-for-now": 142,
+      "catalog-installed-owner-evidence-present": 150,
+      "catalog-only/dead-for-now": 140,
       "missing-authored-record": 74,
       "catalog-authored-executable-follow-up": 3
     },
@@ -10921,13 +10921,25 @@
         "sourceRecordPath": "packages/surface/content/barkskin.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "barkskin"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit barkskin is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-SPELL-BARKSKIN at packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_continual_flame",
@@ -15987,13 +15999,25 @@
         "sourceRecordPath": "packages/surface/content/barkskin.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "barkskin"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit barkskin is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-SPELL-BARKSKIN at packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_darkvision",

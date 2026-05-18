@@ -598,11 +598,28 @@ export function activeEffectArmorClass(
         ]
       : [],
   );
-  return spellArmorClassBonuses.length === 0
-    ? withBase
+  const withBonuses =
+    spellArmorClassBonuses.length === 0
+      ? withBase
+      : {
+          ...withBase,
+          bonuses: [...withBase.bonuses, ...spellArmorClassBonuses],
+        };
+  const spellArmorClassFloors = combatant.activeEffects.flatMap((effect) =>
+    effect.kind === "spellArmorClassFloor"
+      ? [
+          {
+            floor: effect.floor,
+            sourceUnitId: effect.sourceSpellId,
+          },
+        ]
+      : [],
+  );
+  return spellArmorClassFloors.length === 0
+    ? withBonuses
     : {
-        ...withBase,
-        bonuses: [...withBase.bonuses, ...spellArmorClassBonuses],
+        ...withBonuses,
+        floors: [...withBonuses.floors, ...spellArmorClassFloors],
       };
 }
 

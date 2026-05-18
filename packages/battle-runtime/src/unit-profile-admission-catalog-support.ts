@@ -85,6 +85,8 @@ export const monkUnarmoredMovementUnitId = "monk_unarmored_movement";
 
 export const baneUnitId = "bane";
 
+export const barkskinUnitId = "barkskin";
+
 export const blessUnitId = "bless";
 
 export const burningHandsUnitId = "burning_hands";

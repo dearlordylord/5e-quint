@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 374,
-      "numerator": 145,
-      "percent": "38.8%"
+      "numerator": 146,
+      "percent": "39%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 446,
-      "numerator": 177,
-      "percent": "39.7%"
+      "numerator": 178,
+      "percent": "39.9%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 178
+      "value": 179
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 114,
-      "numerator": 114,
+      "denominator": 115,
+      "numerator": 115,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 178,
-      "numerator": 178,
+      "denominator": 179,
+      "numerator": 179,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 114,
+      "denominator": 115,
       "numerator": 104,
-      "percent": "91.2%"
+      "percent": "90.4%"
     },
     "supportedProfileCoverage": {
-      "denominator": 146,
-      "numerator": 114,
-      "percent": "78.1%"
+      "denominator": 147,
+      "numerator": 115,
+      "percent": "78.2%"
     }
   },
   "metricSemantics": [
@@ -2114,9 +2114,10 @@
       ],
       "taskRefs": [
         "SRDINV30A",
-        "L12G-SPELL-AID"
+        "L12G-SPELL-AID",
+        "L12G-SPELL-BARKSKIN"
       ],
-      "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class, or Hit Point maximum effects",
+      "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class bonus/floor, or Hit Point maximum effects",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -2993,6 +2994,22 @@
         "spell.scalar-buff"
       ],
       "taskId": "L12G-SPELL-AID"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Barkskin's Bonus Action scalar buff profile, non-Concentration one-hour Armor Class floor active effect, floor derivation, no lowering higher Armor Class values, and duration cleanup.",
+      "profileIds": [
+        "spell.scalar-buff"
+      ],
+      "taskId": "L12G-SPELL-BARKSKIN"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover Barkskin catalog admission, known-willing touched-creature target gate, Spell Slot spend, Armor Class floor 17 derivation, no lowering higher Armor Class values, and duration cleanup.",
+      "profileIds": [
+        "spell.scalar-buff"
+      ],
+      "taskId": "L12G-SPELL-BARKSKIN"
     },
     {
       "claimKind": "qnt-proof",
@@ -8806,9 +8823,10 @@
           ],
           "taskRefs": [
             "SRDINV30A",
-            "L12G-SPELL-AID"
+            "L12G-SPELL-AID",
+            "L12G-SPELL-BARKSKIN"
           ],
-          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class, or Hit Point maximum effects",
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class bonus/floor, or Hit Point maximum effects",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -8888,6 +8906,69 @@
       ],
       "sourceRecordPath": "packages/surface/content/animal_friendship.json",
       "unitId": "animal_friendship"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "spell.scalar-buff"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Bonus Action level-2 Spell Slot casting",
+          "one touched willing-creature target through the known-willing scalar-buff target boundary",
+          "one-hour source-owned Armor Class floor of 17 derived through ArmorClassState floors",
+          "Armor Class floor composes after base Armor Class and bonuses and does not lower higher Armor Class values",
+          "maximum-duration expiration removes the Armor Class floor without duplicating Armor Class state"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-SPELL-BARKSKIN"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.scalar-buff",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV30A",
+            "L12G-SPELL-AID",
+            "L12G-SPELL-BARKSKIN"
+          ],
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class bonus/floor, or Hit Point maximum effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/barkskin.json",
+      "unitId": "barkskin"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -10345,9 +10426,10 @@
           ],
           "taskRefs": [
             "SRDINV30A",
-            "L12G-SPELL-AID"
+            "L12G-SPELL-AID",
+            "L12G-SPELL-BARKSKIN"
           ],
-          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class, or Hit Point maximum effects",
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class bonus/floor, or Hit Point maximum effects",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -11573,9 +11655,10 @@
           ],
           "taskRefs": [
             "SRDINV30A",
-            "L12G-SPELL-AID"
+            "L12G-SPELL-AID",
+            "L12G-SPELL-BARKSKIN"
           ],
-          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class, or Hit Point maximum effects",
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class bonus/floor, or Hit Point maximum effects",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -13568,9 +13651,10 @@
           ],
           "taskRefs": [
             "SRDINV30A",
-            "L12G-SPELL-AID"
+            "L12G-SPELL-AID",
+            "L12G-SPELL-BARKSKIN"
           ],
-          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class, or Hit Point maximum effects",
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class bonus/floor, or Hit Point maximum effects",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -15315,24 +15399,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/bard_words_of_creation.json",
       "unitId": "bard_words_of_creation"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/barkskin.json",
-      "unitId": "barkskin"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

@@ -81,6 +81,7 @@ module battleRuntimeSpellInvocation {
       | FalseLife => true
       | Longstrider => true
       | ShieldOfFaith => true
+      | Barkskin => true
       | Heroism => true
       | Aid => true
       | Bane => true
@@ -155,6 +156,7 @@ module battleRuntimeSpellInvocation {
       | FalseLifeScalarBuff => BattleRuntimeFalseLifeScalarBuff
       | LongstriderScalarBuff => BattleRuntimeLongstriderScalarBuff
       | ShieldOfFaithScalarBuff => BattleRuntimeShieldOfFaithScalarBuff
+      | BarkskinScalarBuff => BattleRuntimeBarkskinScalarBuff
       | AidScalarBuff => BattleRuntimeAidScalarBuff
     }
 

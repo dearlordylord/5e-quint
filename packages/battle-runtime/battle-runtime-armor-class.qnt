@@ -40,6 +40,7 @@ module battleRuntimeArmorClass {
         | ShieldArmorClassBonus => false
         | LongstriderSpeedDelta => false
         | ShieldOfFaithArmorClassBonus => false
+        | BarkskinArmorClassFloor(_) => false
         | AidHitPointMaximumIncrease(_) => false
         | HeroismFrightenedImmunity => false
         | HeroismTurnStartTemporaryHitPoints(_) => false
@@ -85,6 +86,11 @@ module battleRuntimeArmorClass {
       })) 13 + dexMod else baseAc
       val shieldBonus = if (effects.contains(ShieldArmorClassBonus)) 5 else 0
       val shieldOfFaithBonus = if (effects.contains(ShieldOfFaithArmorClassBonus)) 2 else 0
-      base + shieldBonus + shieldOfFaithBonus
+      val withBonuses = base + shieldBonus + shieldOfFaithBonus
+      val barkskinFloor = if (effects.exists(effect => match effect {
+        | BarkskinArmorClassFloor(_) => true
+        | _ => false
+      })) 17 else 0
+      if (withBonuses < barkskinFloor) barkskinFloor else withBonuses
     }
 }

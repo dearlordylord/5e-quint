@@ -1,6 +1,7 @@
 // Support, defensive, and rider spell profile projections extracted from spells-profiles.ts.
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
+import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import type { CreatureType } from "@dnd/shared/game-facts";
 import {
   movementDeltaFeet,
@@ -18,6 +19,7 @@ import type {
   DamageType,
   DiceExpr,
   EffectAtom,
+  OngoingEffect,
   Skill,
   SkillFilter,
   SpellRecord,
@@ -390,22 +392,8 @@ export function supportedPreparedScalarBuffSpellProfile(
   spell: SpellRecord,
   spellSlots: CharacterBattleSpellcastingState["spellSlots"],
 ): readonly SupportedSpellInvocation[] {
-  if (spell.mechanics.family !== "activation") {
-    return [];
-  }
-  const phase = spell.mechanics.phases[0];
-  const effect = phase?.kind === "direct" ? phase.effects?.[0] : undefined;
-  const actionCost = scalarBuffSpellActionCost(spell.mechanics.castingTime);
-  const rangeFeet = scalarBuffSpellRangeFeet(spell.mechanics.range);
-  if (
-    actionCost === null ||
-    rangeFeet === null ||
-    spell.mechanics.phases.length !== 1 ||
-    phase?.kind !== "direct" ||
-    phase.effects?.length !== 1 ||
-    effect === undefined ||
-    !isEffectAtom(effect)
-  ) {
+  const projection = scalarBuffSpellProjection(spell);
+  if (projection === null) {
     return [];
   }
 
@@ -414,15 +402,15 @@ export function supportedPreparedScalarBuffSpellProfile(
       return [];
     }
     const targeting = scalarBuffSpellTargeting(
-      phase.attachment,
+      projection.attachment,
       spell.mechanics.level,
       slot.spellLevel,
     );
     const scalarEffect = scalarBuffSpellEffect(
       actorId,
       spell,
-      effect,
-      spell.mechanics.duration,
+      projection.effect,
+      projection.duration,
       spell.mechanics.level,
       slot.spellLevel,
     );
@@ -434,13 +422,66 @@ export function supportedPreparedScalarBuffSpellProfile(
             resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
             procedure: "scalarBuff",
             spell,
-            actionCost,
+            actionCost: projection.actionCost,
             targeting,
             effect: scalarEffect,
-            rangeFeet,
+            rangeFeet: projection.rangeFeet,
           },
         ];
   });
+}
+
+function scalarBuffSpellProjection(spell: SpellRecord): {
+  readonly actionCost: HealingSpellActionCost;
+  readonly rangeFeet: MovementFeet;
+  readonly attachment: Attachment;
+  readonly duration: SpellRecord["mechanics"]["duration"];
+  readonly effect: EffectAtom | OngoingEffect;
+} | null {
+  const actionCost = scalarBuffSpellActionCost(spell.mechanics.castingTime);
+  const rangeFeet = scalarBuffSpellRangeFeet(spell.mechanics.range);
+  if (actionCost === null || rangeFeet === null) {
+    return null;
+  }
+
+  if (spell.mechanics.family === "activation") {
+    const phase = spell.mechanics.phases[0];
+    const effect = phase?.kind === "direct" ? phase.effects?.[0] : undefined;
+    return spell.mechanics.phases.length !== 1 ||
+      phase?.kind !== "direct" ||
+      phase.effects?.length !== 1 ||
+      effect === undefined ||
+      !isEffectAtom(effect)
+      ? null
+      : {
+          actionCost,
+          rangeFeet,
+          attachment: phase.attachment,
+          duration: spell.mechanics.duration,
+          effect,
+        };
+  }
+
+  if (spell.mechanics.family !== "ongoing_effect") {
+    return null;
+  }
+
+  const operation = spell.mechanics.operations[0];
+  return spell.mechanics.initialPhase !== undefined ||
+    spell.mechanics.operations.length !== 1 ||
+    operation === undefined ||
+    operation.trigger.kind !== "passive" ||
+    operation.predicate !== undefined ||
+    operation.targetLimit !== undefined ||
+    operation.usageLimit !== undefined
+    ? null
+    : {
+        actionCost,
+        rangeFeet,
+        attachment: spell.mechanics.attachment,
+        duration: spell.mechanics.duration,
+        effect: operation.effect,
+      };
 }
 
 export function supportedPreparedRollModifierSpellProfile(
@@ -1660,13 +1701,31 @@ export function scalarBuffSpellTargeting(
   );
   return targetCount === null
     ? null
-    : { kind: "targetList", minTargets: 1, maxTargets: targetCount };
+    : {
+        kind: "targetList",
+        minTargets: 1,
+        maxTargets: targetCount,
+        requiredTargetDisposition: scalarBuffRequiredTargetDisposition(
+          attachment.value.selection,
+        ),
+      };
+}
+
+function scalarBuffRequiredTargetDisposition(
+  selection: TargetSelection,
+): Extract<
+  ScalarBuffSpellTargeting,
+  { readonly kind: "targetList" }
+>["requiredTargetDisposition"] {
+  return "disposition" in selection && selection.disposition === "willing"
+    ? "willing"
+    : "unrestricted";
 }
 
 export function scalarBuffSpellEffect(
   actorId: CombatantId,
   spell: SpellRecord,
-  effect: EffectAtom,
+  effect: EffectAtom | OngoingEffect,
   duration: SpellRecord["mechanics"]["duration"],
   spellLevel: number,
   slotLevel: SpellSlotLevel,
@@ -1711,6 +1770,22 @@ export function scalarBuffSpellEffect(
         sourceCombatantId: actorId,
         bonus: effect.delta.dice,
         negatedSpellIds: [],
+        expiresAt,
+      },
+    };
+  }
+  if (
+    effect.kind === "modify_ac_set_floor" &&
+    Number.isInteger(effect.const) &&
+    effect.const > 0
+  ) {
+    return {
+      kind: "activeEffect",
+      activeEffect: {
+        kind: "spellArmorClassFloor",
+        sourceSpellId: spell.id,
+        sourceCombatantId: actorId,
+        floor: armorClass(effect.const),
         expiresAt,
       },
     };

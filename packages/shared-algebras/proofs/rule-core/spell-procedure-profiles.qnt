@@ -111,12 +111,14 @@ module spellProcedureProfiles {
     | FalseLifeScalarBuffProfile
     | LongstriderScalarBuffProfile
     | ShieldOfFaithScalarBuffProfile
+    | BarkskinScalarBuffProfile
     | HeroismScalarBuffProfile
     | AidScalarBuffProfile
 
   type ScalarBuffEffect =
     | LongstriderSpeedIncreaseEffect
     | ShieldOfFaithArmorClassBonusEffect
+    | BarkskinArmorClassFloorEffect
     | HeroismFrightenedImmunityEffect
     | HeroismTurnStartTemporaryHitPointsEffect({ amount: int })
     | AidHitPointMaximumIncreaseEffect({ amount: int })
@@ -513,7 +515,7 @@ module spellProcedureProfiles {
     profile == CharmPersonSaveConditionProfile and targetIsHostile
 
   pure def scalarBuffSpellAction(profile: ScalarBuffSpellProfile): SpellInvocationAction =
-    if (profile == ShieldOfFaithScalarBuffProfile) BonusActionSpellInvocation else ActionTimeSpellInvocation
+    if (profile == ShieldOfFaithScalarBuffProfile or profile == BarkskinScalarBuffProfile) BonusActionSpellInvocation else ActionTimeSpellInvocation
 
   pure def scalarBuffMaximumTargets(profile: ScalarBuffSpellProfile, slotLevel: int): int =
     if (profile == LongstriderScalarBuffProfile) slotLevel
@@ -536,6 +538,7 @@ module spellProcedureProfiles {
       | FalseLifeScalarBuffProfile => Set()
       | LongstriderScalarBuffProfile => Set(LongstriderSpeedIncreaseEffect)
       | ShieldOfFaithScalarBuffProfile => Set(ShieldOfFaithArmorClassBonusEffect)
+      | BarkskinScalarBuffProfile => Set(BarkskinArmorClassFloorEffect)
       | HeroismScalarBuffProfile => Set(
           HeroismFrightenedImmunityEffect,
           HeroismTurnStartTemporaryHitPointsEffect({ amount: spellcastingAbilityModifier }),
@@ -1277,18 +1280,22 @@ module spellProcedureProfiles {
   run test_scalar_buff_profiles_project_action_targets_effects_and_temporary_hit_points = {
     all {
       assert(scalarBuffSpellAction(ShieldOfFaithScalarBuffProfile) == BonusActionSpellInvocation),
+      assert(scalarBuffSpellAction(BarkskinScalarBuffProfile) == BonusActionSpellInvocation),
       assert(scalarBuffSpellAction(LongstriderScalarBuffProfile) == ActionTimeSpellInvocation),
       assert(scalarBuffMaximumTargets(LongstriderScalarBuffProfile, 3) == 3),
       assert(scalarBuffMaximumTargets(AidScalarBuffProfile, 3) == 3),
+      assert(scalarBuffMaximumTargets(BarkskinScalarBuffProfile, 3) == 1),
       assert(scalarBuffMaximumTargets(FalseLifeScalarBuffProfile, 3) == 1),
       assert(scalarBuffTemporaryHitPoints(FalseLifeScalarBuffProfile, 1, 4) == 8),
       assert(scalarBuffTemporaryHitPoints(FalseLifeScalarBuffProfile, 3, 4) == 18),
       assert(scalarBuffEffects(LongstriderScalarBuffProfile, 3, 1) == Set(LongstriderSpeedIncreaseEffect)),
       assert(scalarBuffEffects(ShieldOfFaithScalarBuffProfile, 3, 1) == Set(ShieldOfFaithArmorClassBonusEffect)),
+      assert(scalarBuffEffects(BarkskinScalarBuffProfile, 3, 2) == Set(BarkskinArmorClassFloorEffect)),
       assert(scalarBuffEffects(HeroismScalarBuffProfile, 3, 1) == Set(HeroismFrightenedImmunityEffect, HeroismTurnStartTemporaryHitPointsEffect({ amount: 3 }))),
       assert(scalarBuffEffects(AidScalarBuffProfile, 3, 3) == Set(AidHitPointMaximumIncreaseEffect({ amount: 10 }))),
       assert(scalarBuffRequiresConcentration(ShieldOfFaithScalarBuffProfile)),
       assert(scalarBuffRequiresConcentration(HeroismScalarBuffProfile)),
+      assert(not(scalarBuffRequiresConcentration(BarkskinScalarBuffProfile))),
       assert(not(scalarBuffRequiresConcentration(LongstriderScalarBuffProfile))),
     }
   }

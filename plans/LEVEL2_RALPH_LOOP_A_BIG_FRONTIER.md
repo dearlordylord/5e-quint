@@ -151,7 +151,7 @@
     {
       "number": 25,
       "id": "L12G-SPELL-BARKSKIN",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Barkskin Runtime Support"
     },
     {
@@ -1433,7 +1433,7 @@ Acceptance:
 
 ### Task 25 - L12G-SPELL-BARKSKIN - Barkskin Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `barkskin`. Gate task: 26 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 

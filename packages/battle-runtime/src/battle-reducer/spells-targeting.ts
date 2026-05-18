@@ -357,7 +357,13 @@ export function spellTargetIsLegal(
   facts: readonly BattleTargetSpatialFact[],
 ): boolean {
   if (
-    !spellTargetHasNonSpatialPrerequisites(state, actorId, targetId, invocation)
+    !spellTargetHasNonSpatialPrerequisites(
+      state,
+      actorId,
+      targetId,
+      invocation,
+      facts,
+    )
   ) {
     return false;
   }
@@ -495,12 +501,13 @@ export function spellTargetHasNonSpatialPrerequisites(
   actorId: CombatantId,
   targetId: CombatantId,
   invocation: SupportedSpellInvocation,
+  facts: readonly BattleTargetSpatialFact[] = [],
 ): boolean {
   const target = state.combatants.get(targetId);
   if (
     spellInvocationRequiresKnownWillingTarget(invocation) &&
     invocation.procedure !== "creatureTypeProtection" &&
-    !spellTargetIsKnownWilling(actorId, targetId)
+    !spellTargetIsKnownWilling(actorId, targetId, invocation, facts)
   ) {
     return false;
   }
@@ -702,6 +709,9 @@ export function spellInvocationRequiresKnownWillingTarget(
     invocation.procedure === "creatureTypeProtection" ||
     invocation.procedure ===
       "conditionImmunityAndTurnStartTemporaryHitPoints" ||
+    (invocation.procedure === "scalarBuff" &&
+      invocation.targeting.kind === "targetList" &&
+      invocation.targeting.requiredTargetDisposition === "willing") ||
     (invocation.procedure === "damageReduction" &&
       KNOWN_WILLING_TARGET_DAMAGE_REDUCTION_SPELL_IDS.includes(
         invocation.spell.id,

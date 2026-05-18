@@ -113,6 +113,7 @@
 {"unitId":"protection_from_evil_and_good","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV60A","ownerPath":"packages/battle-runtime/src/unit-profile-admission-protection-from-evil-and-good.test.ts"}}
 {"unitId":"protection_from_evil_and_good","evidence":{"tag":"selected-identity-mbt","taskId":"L1H-PROTECTION-EVIL-GOOD","ownerPath":"packages/battle-runtime/src/creature-type-protection-and-charm-selected-identity.mbt.test.ts"}}
 {"unitId":"aid","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-SPELL-AID","ownerPath":"packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"}}
+{"unitId":"barkskin","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-SPELL-BARKSKIN","ownerPath":"packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"}}
 {"unitId":"false_life","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV30A","ownerPath":"packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"}}
 {"unitId":"false_life","evidence":{"tag":"selected-identity-mbt","taskId":"L1E-FALSE-LIFE","ownerPath":"packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts"}}
 {"unitId":"heroism","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV30D","ownerPath":"packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"}}

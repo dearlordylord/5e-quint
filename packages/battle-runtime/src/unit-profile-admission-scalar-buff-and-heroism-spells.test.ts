@@ -1,10 +1,13 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30A false_life longstrider shield_of_faith
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30D heroism
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-AID aid
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-BARKSKIN barkskin
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.scalar-buff spell.invocation-condition-immunity-turn-start-temporary-hit-points
+import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { describe, expect, test } from "vitest";
 import {
   aidUnitId,
+  barkskinUnitId,
   falseLifeUnitId,
   heroismUnitId,
   longstriderUnitId,
@@ -19,6 +22,7 @@ import {
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   bonusSpellAct,
+  knownWillingSpellTargetFill,
   spellAct,
   spellHoleInvocation,
   spellTargetFill,
@@ -360,6 +364,181 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
           expect.objectContaining({
             combatantId: spellTargetId,
             armorClass: 12,
+          }),
+        ],
+      },
+    });
+  });
+
+  test("barkskin is admitted as a Bonus Action timed willing-target Armor Class floor", () => {
+    const spell = spellRecord(barkskinUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = bonusSpellAct({ state, spellId: barkskinUnitId });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+
+    expect(act.subject).toEqual({
+      tag: "bonusActionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(barkskinUnitId, 2, "scalarBuff"),
+      mode: { tag: "cast" },
+    });
+    expect(targetHole.choices).toEqual([spellCasterId]);
+
+    const unwillingTarget = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(
+          targetHole,
+          barkskinUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+      ],
+    });
+    expect(unwillingTarget).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          targetHole,
+          barkskinUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+      ],
+    });
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.objectContaining({
+            combatantId: spellCasterId,
+            concentrating: false,
+          }),
+          expect.objectContaining({
+            combatantId: spellTargetId,
+            armorClass: 17,
+          }),
+        ],
+      },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Barkskin to resolve.");
+    }
+
+    const target = resolved.state.combatants.get(spellTargetId);
+    if (target === undefined) {
+      throw new Error("Expected Barkskin target.");
+    }
+    expect(
+      target.activeEffects.filter(
+        (effect) =>
+          effect.kind === "spellArmorClassFloor" &&
+          effect.sourceSpellId === barkskinUnitId,
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        sourceCombatantId: spellCasterId,
+        floor: 17,
+        expiresAt: expect.objectContaining({ kind: "duration" }),
+      }),
+    ]);
+    const nearlyExpiredTarget = {
+      ...target,
+      activeEffects: target.activeEffects.map((effect) =>
+        effect.kind === "spellArmorClassFloor" &&
+        effect.sourceSpellId === barkskinUnitId
+          ? {
+              ...effect,
+              expiresAt: {
+                kind: "duration" as const,
+                durationTicks: elapsedTimeTicks(1),
+              },
+            }
+          : effect,
+      ),
+    };
+    const oneRoundRemaining: BattleState = {
+      ...resolved.state,
+      combatants: new Map(resolved.state.combatants).set(
+        spellTargetId,
+        nearlyExpiredTarget,
+      ),
+    };
+    const targetTurn = endTurn({
+      state: oneRoundRemaining,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected Barkskin caster end turn to resolve.");
+    }
+    const nextRound = endTurn({
+      state: targetTurn.state,
+      actorId: spellTargetId,
+    });
+
+    expect(nextRound).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.anything(),
+          expect.objectContaining({
+            combatantId: spellTargetId,
+            armorClass: 10,
+          }),
+        ],
+      },
+    });
+  });
+
+  test("barkskin does not lower a target whose Armor Class is already 17 or higher", () => {
+    const spell = spellRecord(barkskinUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      targetArmorClass: {
+        ...defaultArmorClassState(),
+        base: {
+          kind: "armor",
+          category: "heavy",
+          formula: { kind: "heavy_fixed", ac: 18 },
+        },
+        armorTraining: new Set(["heavy" as const]),
+      },
+    });
+    const act = bonusSpellAct({ state, spellId: barkskinUnitId });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          targetHole,
+          barkskinUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.anything(),
+          expect.objectContaining({
+            combatantId: spellTargetId,
+            armorClass: 18,
           }),
         ],
       },

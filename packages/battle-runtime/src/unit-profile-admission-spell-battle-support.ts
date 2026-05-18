@@ -57,6 +57,10 @@ export function spellBattle(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["attack"];
+  readonly targetArmorClass?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["armorClass"];
   readonly targetResources?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -120,6 +124,9 @@ export function spellBattle(input: {
         ...(input.targetAttack === undefined
           ? {}
           : { attack: input.targetAttack }),
+        ...(input.targetArmorClass === undefined
+          ? {}
+          : { armorClass: input.targetArmorClass }),
         ...(input.targetHp === undefined ? {} : { currentHp: input.targetHp }),
         ...(input.targetMaxHp === undefined
           ? {}

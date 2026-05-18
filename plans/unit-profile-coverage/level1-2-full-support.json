@@ -230,49 +230,6 @@
       "executableMechanics": true,
       "kind": "spell",
       "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
-      "sourceRecordPath": "packages/surface/content/barkskin.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Druid spell list Barkskin",
-          "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_barkskin",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 230,
-            "lineStart": 230,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Ranger spell list Barkskin",
-          "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_barkskin",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 184,
-            "lineStart": 184,
-            "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
-        }
-      ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
-      "unitId": "barkskin"
-    },
-    {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
       "sourceRecordPath": "packages/surface/content/blindness_deafness.json",
       "sourceRows": [
         {
@@ -2581,7 +2538,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 91,
+      "count": 92,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2595,6 +2552,7 @@
         "barbarian_unarmored_defense",
         "bard_bardic_inspiration",
         "bard_jack_of_all_trades",
+        "barkskin",
         "bless",
         "burning_hands",
         "chill_touch",
@@ -2679,11 +2637,10 @@
       ]
     },
     {
-      "count": 27,
+      "count": 26,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
-        "barkskin",
         "blindness_deafness",
         "blur",
         "continual_flame",
@@ -2782,30 +2739,29 @@
       "numerator": 473,
       "percent": "85.1%",
       "rowsByStatus": {
-        "accepted": 302,
-        "accepted-no-battle-effect": 171,
+        "accepted": 304,
+        "accepted-no-battle-effect": 169,
         "battle-runtime-required": 79,
         "owner-evidence-required": 4
       }
     },
     "strictRuntimeProfileSupport": {
       "denominator": 146,
-      "numerator": 91,
-      "percent": "62.3%"
+      "numerator": 92,
+      "percent": "63%"
     },
     "strictTargetClosure": {
       "denominator": 146,
-      "numerator": 118,
-      "percent": "80.8%"
+      "numerator": 119,
+      "percent": "81.5%"
     }
   },
   "openFrontier": [
     {
-      "count": 27,
+      "count": 26,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
-        "barkskin",
         "blindness_deafness",
         "blur",
         "continual_flame",
@@ -6311,9 +6267,9 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
-      "missing": 27,
+      "missing": 26,
       "profile-subset-supported": 9,
-      "supported-profile": 91,
+      "supported-profile": 92,
       "unsupported-profile": 19
     },
     "groupsByStatus": {
@@ -6322,10 +6278,10 @@
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 12,
       "open-profile-accounting": 1,
-      "open-runtime-behavior": 27,
-      "supported-profile": 91
+      "open-runtime-behavior": 26,
+      "supported-profile": 92
     },
-    "nonSupportedFrontier": 55,
+    "nonSupportedFrontier": 54,
     "strictDenominator": 146
   }
 }

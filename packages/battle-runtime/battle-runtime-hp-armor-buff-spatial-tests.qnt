@@ -461,7 +461,7 @@ module battleRuntimeHpArmorBuffSpatialTests {
   }
 
   run test_scalar_buff_longstrider_targets_selected_creature = {
-    val result = resolveScalarBuffSpell(initialState, LongstriderScalarBuff, Set(Goblin), 1, 0)
+    val result = resolveScalarBuffSpell(initialState, LongstriderScalarBuff, Set(Goblin), Set(), 1, 0)
     all {
       assert(not(result.fighter.activeEffects.contains(LongstriderSpeedDelta))),
       assert(result.goblin.activeEffects.contains(LongstriderSpeedDelta)),
@@ -470,7 +470,7 @@ module battleRuntimeHpArmorBuffSpatialTests {
   }
 
   run test_scalar_buff_shield_of_faith_targets_selected_creature_and_uses_concentration = {
-    val result = resolveScalarBuffSpell(initialState, ShieldOfFaithScalarBuff, Set(Goblin), 1, 0)
+    val result = resolveScalarBuffSpell(initialState, ShieldOfFaithScalarBuff, Set(Goblin), Set(), 1, 0)
     all {
       assert(result.fighter.concentrating),
       assert(not(result.fighter.activeEffects.contains(ShieldOfFaithArmorClassBonus))),
@@ -479,8 +479,62 @@ module battleRuntimeHpArmorBuffSpatialTests {
     }
   }
 
+  run test_scalar_buff_barkskin_targets_known_willing_creature_and_applies_armor_class_floor = {
+    val result = resolveScalarBuffSpell(initialState, BarkskinScalarBuff, Set(Goblin), Set(Goblin), 2, 0)
+    all {
+      assert(not(result.fighter.concentrating)),
+      assert(not(result.fighter.activeEffects.exists(effect => match effect {
+        | BarkskinArmorClassFloor(_) => true
+        | _ => false
+      }))),
+      assert(result.goblin.activeEffects.contains(BarkskinArmorClassFloor({ durationTicks: barkskinDurationTicks }))),
+      assert(combatantArmorClass(result.goblin) == 17),
+    }
+  }
+
+  run test_scalar_buff_barkskin_rejects_non_willing_target = {
+    val result = resolveScalarBuffSpell(initialState, BarkskinScalarBuff, Set(Goblin), Set(Fighter), 2, 0)
+    all {
+      assert(result == initialState),
+      assert(not(result.goblin.activeEffects.exists(effect => match effect {
+        | BarkskinArmorClassFloor(_) => true
+        | _ => false
+      }))),
+    }
+  }
+
+  run test_scalar_buff_barkskin_does_not_lower_higher_armor_class = {
+    val highArmorClassState = {
+      ...initialState,
+      goblin: { ...initialState.goblin, ac: 18 },
+    }
+    val result = resolveScalarBuffSpell(highArmorClassState, BarkskinScalarBuff, Set(Goblin), Set(Goblin), 2, 0)
+    all {
+      assert(result.goblin.activeEffects.contains(BarkskinArmorClassFloor({ durationTicks: barkskinDurationTicks }))),
+      assert(combatantArmorClass(result.goblin) == 18),
+    }
+  }
+
+  run test_scalar_buff_barkskin_expiration_removes_armor_class_floor = {
+    val barkskinned = {
+      ...initialState,
+      fighter: {
+        ...initialState.fighter,
+        activeEffects: Set(BarkskinArmorClassFloor({ durationTicks: 1 })),
+      },
+    }
+    val nextRound = endTurn(endTurn(barkskinned))
+    all {
+      assert(combatantArmorClass(nextRound.fighter) == initialState.fighter.ac),
+      assert(not(nextRound.fighter.activeEffects.exists(effect => match effect {
+        | BarkskinArmorClassFloor(_) => true
+        | _ => false
+      }))),
+    }
+  }
+
   run test_scalar_buff_aid_increases_hit_point_maximum_and_current_hit_points = {
-    val result = resolveScalarBuffSpell(initialState, AidScalarBuff, Set(Fighter, Goblin), 3, 0)
+    val result = resolveScalarBuffSpell(initialState, AidScalarBuff, Set(Fighter, Goblin), Set(), 3, 0)
     all {
       assert(result.fighter.hp == 22),
       assert(result.fighter.maxHp == 22),
@@ -519,7 +573,7 @@ module battleRuntimeHpArmorBuffSpatialTests {
         activeEffects: Set(AidHitPointMaximumIncrease({ amount: 10, durationTicks: 1 })),
       },
     }
-    val result = resolveScalarBuffSpell(aided, AidScalarBuff, Set(Goblin), 2, 0)
+    val result = resolveScalarBuffSpell(aided, AidScalarBuff, Set(Goblin), Set(), 2, 0)
     val nextRound = endTurn(endTurn(result))
     all {
       assert(result.goblin.hp == 20),

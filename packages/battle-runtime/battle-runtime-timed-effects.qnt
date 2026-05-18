@@ -175,6 +175,9 @@ module battleRuntimeTimedEffects {
             amount: data.amount,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
+        | BarkskinArmorClassFloor(data) => BarkskinArmorClassFloor({
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
         | DancingLightsEffect(data) => DancingLightsEffect({
             combined: data.combined,
             lightCount: data.lightCount,
@@ -238,6 +241,7 @@ module battleRuntimeTimedEffects {
         | AnimalFriendshipCharmed(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | CharmPersonCharmed(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | AidHitPointMaximumIncrease(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | BarkskinArmorClassFloor(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | DancingLightsEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | ProduceFlameHeldLight(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | ShillelaghWeaponAttackOverride(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)

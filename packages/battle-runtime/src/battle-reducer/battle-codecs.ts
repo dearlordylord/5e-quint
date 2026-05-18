@@ -1428,6 +1428,7 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
           kind: Schema.Literal("targetList"),
           minTargets: Schema.Literal(1),
           maxTargets: Schema.Number,
+          requiredTargetDisposition: Schema.Literal("unrestricted", "willing"),
         }),
       ),
       effect: Schema.Union(
