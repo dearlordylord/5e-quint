@@ -36,6 +36,7 @@ module battleRuntimeLightConcentrationMovementReactionTests {
   import battleRuntimeWeaponHitSpellRiders.* from "./battle-runtime-weapon-hit-spell-riders"
   import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
+  import battleRuntimeAttackFacts.* from "./battle-runtime-attack-facts"
 
   run test_produce_flame_held_light_spends_bonus_action_and_records_light = {
     val result = resolveProduceFlameHeldLight(initialState)

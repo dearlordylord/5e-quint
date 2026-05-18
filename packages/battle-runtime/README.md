@@ -1232,6 +1232,10 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
 - `battle-runtime-timed-effects.qnt` - end-turn, start-turn, and round-duration
   active-effect cleanup, including timed Concentration and Hideous Laughter
   restoration.
+- `battle-runtime-attack-facts.qnt` - Attack hit and Critical Hit facts,
+  Fighter critical range, weapon/spell attack damage roll constructors, Sneak
+  Attack eligibility, weapon mastery DCs, and reaction damage-reduction
+  arithmetic.
 - `battle-runtime-*-tests.qnt` - package-local QNT self-tests split by domain
   so the canonical integration spec stays focused on reducer behavior.
 - `battle-runtime-self-tests.qnt` - import-only QNT self-test suite used by the

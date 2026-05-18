@@ -36,6 +36,7 @@ module battleRuntimeHpArmorBuffSpatialTests {
   import battleRuntimeWeaponHitSpellRiders.* from "./battle-runtime-weapon-hit-spell-riders"
   import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
+  import battleRuntimeAttackFacts.* from "./battle-runtime-attack-facts"
 
   run test_evasion_style_save_damage_replacement = {
     all {
