@@ -37,7 +37,7 @@
     {
       "number": 64,
       "id": "L12G-MISSING-FLAMING-SPHERE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Flaming Sphere Definition And Runtime Support"
     },
     {
@@ -381,7 +381,7 @@ Acceptance:
 
 ### Task 64 - L12G-MISSING-FLAMING-SPHERE - Flaming Sphere Definition And Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `flaming_sphere`. Gate task: 66 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
