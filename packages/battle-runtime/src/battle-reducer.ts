@@ -418,6 +418,8 @@ export const BATTLE_SPECIAL_SPEED_KINDS = [
   "climb",
   "swim",
 ] as const satisfies ReadonlyArray<Exclude<BattleMovementSpeedKind, "walk">>;
+export type BattleSpecialSpeedKind =
+  (typeof BATTLE_SPECIAL_SPEED_KINDS)[number];
 export const BATTLE_D20_ROLL_MODIFIER_KINDS = [
   "ability_check",
   "attack_roll",
@@ -560,6 +562,11 @@ export type BattleActiveEffect =
   | (BattleSpellEffectBase & {
       readonly kind: "speedDelta";
       readonly deltaFeet: MovementDeltaFeet;
+      readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "specialSpeedGrant";
+      readonly speedKind: BattleSpecialSpeedKind;
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {
@@ -2063,6 +2070,7 @@ export type ScalarBuffSpellEffect =
         {
           readonly kind:
             | "speedDelta"
+            | "specialSpeedGrant"
             | "spellArmorClassBonus"
             | "spellArmorClassFloor";
         }

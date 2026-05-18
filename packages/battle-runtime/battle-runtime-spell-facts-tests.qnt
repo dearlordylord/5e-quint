@@ -357,6 +357,7 @@ module battleRuntimeSpellFactsTests {
       assert(spellInvocationSpendsSpellSlot(EnhanceAbility)),
       assert(spellInvocationSpendsSpellSlot(FogCloud)),
       assert(spellInvocationSpendsSpellSlot(ScorchingRay)),
+      assert(spellInvocationSpendsSpellSlot(SpiderClimb)),
       assert(fighterDivineFavorDamage(3, Set(DivineFavorWeaponDamageRider({ durationTicks: 1 }))) == 3),
       assert(fighterDivineFavorDamage(3, Set()) == 0),
       assert(divineSmiteDamageDice(1, HumanoidCreature) == 2),

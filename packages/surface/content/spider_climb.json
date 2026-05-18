@@ -25,7 +25,7 @@
         "attachment": {
           "holeId": "spider_climb_target",
           "kind": "hole",
-          "label": "target",
+          "label": "willing target",
           "value": {
             "kind": "target",
             "selection": {
@@ -35,7 +35,11 @@
                 "kind": "linear",
                 "perSlotAboveBase": 1
               },
-              "mode": "choose_up_to"
+              "disposition": "willing",
+              "mode": "choose_up_to",
+              "targetKinds": [
+                "creature"
+              ]
             }
           }
         },

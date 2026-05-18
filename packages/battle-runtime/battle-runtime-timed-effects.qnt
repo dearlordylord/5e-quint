@@ -166,6 +166,9 @@ module battleRuntimeTimedEffects {
         | ShiningSmiteIllumination(data) => ShiningSmiteIllumination({
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
+        | SpiderClimbClimbSpeedGrant(data) => SpiderClimbClimbSpeedGrant({
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
         | AnimalFriendshipCharmed(data) => AnimalFriendshipCharmed({
             source: data.source,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
@@ -250,6 +253,7 @@ module battleRuntimeTimedEffects {
         | ThaumaturgyBoomingVoice(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | SearingSmiteBurning(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | ShiningSmiteIllumination(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | SpiderClimbClimbSpeedGrant(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | AnimalFriendshipCharmed(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | CharmPersonCharmed(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | BlindnessDeafnessBlinded(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)

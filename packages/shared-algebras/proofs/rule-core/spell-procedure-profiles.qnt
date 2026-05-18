@@ -115,6 +115,7 @@ module spellProcedureProfiles {
     | FalseLifeScalarBuffProfile
     | LongstriderScalarBuffProfile
     | ShieldOfFaithScalarBuffProfile
+    | SpiderClimbScalarBuffProfile
     | BarkskinScalarBuffProfile
     | HeroismScalarBuffProfile
     | AidScalarBuffProfile
@@ -122,6 +123,7 @@ module spellProcedureProfiles {
   type ScalarBuffEffect =
     | LongstriderSpeedIncreaseEffect
     | ShieldOfFaithArmorClassBonusEffect
+    | SpiderClimbClimbSpeedGrantEffect
     | BarkskinArmorClassFloorEffect
     | HeroismFrightenedImmunityEffect
     | HeroismTurnStartTemporaryHitPointsEffect({ amount: int })
@@ -532,6 +534,7 @@ module spellProcedureProfiles {
 
   pure def scalarBuffMaximumTargets(profile: ScalarBuffSpellProfile, slotLevel: int): int =
     if (profile == LongstriderScalarBuffProfile) slotLevel
+    else if (profile == SpiderClimbScalarBuffProfile) 1 + (if (slotLevel > 2) slotLevel - 2 else 0)
     else if (profile == AidScalarBuffProfile) 3
     else 1
 
@@ -551,6 +554,7 @@ module spellProcedureProfiles {
       | FalseLifeScalarBuffProfile => Set()
       | LongstriderScalarBuffProfile => Set(LongstriderSpeedIncreaseEffect)
       | ShieldOfFaithScalarBuffProfile => Set(ShieldOfFaithArmorClassBonusEffect)
+      | SpiderClimbScalarBuffProfile => Set(SpiderClimbClimbSpeedGrantEffect)
       | BarkskinScalarBuffProfile => Set(BarkskinArmorClassFloorEffect)
       | HeroismScalarBuffProfile => Set(
           HeroismFrightenedImmunityEffect,
@@ -560,7 +564,7 @@ module spellProcedureProfiles {
     }
 
   pure def scalarBuffRequiresConcentration(profile: ScalarBuffSpellProfile): bool =
-    profile == ShieldOfFaithScalarBuffProfile or profile == HeroismScalarBuffProfile
+    profile == ShieldOfFaithScalarBuffProfile or profile == SpiderClimbScalarBuffProfile or profile == HeroismScalarBuffProfile
 
   pure def damageRiderSpellAction(profile: DamageRiderSpellProfile): SpellInvocationAction =
     BonusActionSpellInvocation
@@ -1330,7 +1334,9 @@ module spellProcedureProfiles {
       assert(scalarBuffSpellAction(ShieldOfFaithScalarBuffProfile) == BonusActionSpellInvocation),
       assert(scalarBuffSpellAction(BarkskinScalarBuffProfile) == BonusActionSpellInvocation),
       assert(scalarBuffSpellAction(LongstriderScalarBuffProfile) == ActionTimeSpellInvocation),
+      assert(scalarBuffSpellAction(SpiderClimbScalarBuffProfile) == ActionTimeSpellInvocation),
       assert(scalarBuffMaximumTargets(LongstriderScalarBuffProfile, 3) == 3),
+      assert(scalarBuffMaximumTargets(SpiderClimbScalarBuffProfile, 3) == 2),
       assert(scalarBuffMaximumTargets(AidScalarBuffProfile, 3) == 3),
       assert(scalarBuffMaximumTargets(BarkskinScalarBuffProfile, 3) == 1),
       assert(scalarBuffMaximumTargets(FalseLifeScalarBuffProfile, 3) == 1),
@@ -1338,10 +1344,12 @@ module spellProcedureProfiles {
       assert(scalarBuffTemporaryHitPoints(FalseLifeScalarBuffProfile, 3, 4) == 18),
       assert(scalarBuffEffects(LongstriderScalarBuffProfile, 3, 1) == Set(LongstriderSpeedIncreaseEffect)),
       assert(scalarBuffEffects(ShieldOfFaithScalarBuffProfile, 3, 1) == Set(ShieldOfFaithArmorClassBonusEffect)),
+      assert(scalarBuffEffects(SpiderClimbScalarBuffProfile, 3, 1) == Set(SpiderClimbClimbSpeedGrantEffect)),
       assert(scalarBuffEffects(BarkskinScalarBuffProfile, 3, 2) == Set(BarkskinArmorClassFloorEffect)),
       assert(scalarBuffEffects(HeroismScalarBuffProfile, 3, 1) == Set(HeroismFrightenedImmunityEffect, HeroismTurnStartTemporaryHitPointsEffect({ amount: 3 }))),
       assert(scalarBuffEffects(AidScalarBuffProfile, 3, 3) == Set(AidHitPointMaximumIncreaseEffect({ amount: 10 }))),
       assert(scalarBuffRequiresConcentration(ShieldOfFaithScalarBuffProfile)),
+      assert(scalarBuffRequiresConcentration(SpiderClimbScalarBuffProfile)),
       assert(scalarBuffRequiresConcentration(HeroismScalarBuffProfile)),
       assert(not(scalarBuffRequiresConcentration(BarkskinScalarBuffProfile))),
       assert(not(scalarBuffRequiresConcentration(LongstriderScalarBuffProfile))),

@@ -31,7 +31,7 @@
     {
       "number": 47,
       "id": "L12G-SPELL-SPIDER-CLIMB",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Spider Climb Runtime Support"
     },
     {
@@ -457,9 +457,18 @@ Acceptance:
 
 ### Task 47 - L12G-SPELL-SPIDER-CLIMB - Spider Climb Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `spider_climb`. Gate task: 49 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Result: Spider Climb is a `supported-profile` Unit for Magic Action casting
+with a level-2-or-higher Spell Slot, caller-supplied known-willing touched
+creature targets, one additional willing target per slot level above 2,
+Concentration cleanup, and a Climb Speed grant equal to the target's effective
+Speed. Automatic vertical-surface and ceiling path legality, hands-free
+traversal presentation, collision/pathfinding, and final-position derivation
+remain caller/table-owned spatial movement facts outside the promoted runtime
+profile.
 
 Inputs:
 

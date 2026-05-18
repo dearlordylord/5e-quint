@@ -402,7 +402,7 @@ export function spellTargetListFill(
   };
 }
 
-export function jumpSpellTargetListFill(
+export function knownWillingSpellTargetListFill(
   hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
   casterId: CombatantId,
   spellId: string,
@@ -427,6 +427,15 @@ export function jumpSpellTargetListFill(
       },
     ]),
   };
+}
+
+export function jumpSpellTargetListFill(
+  hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
+  casterId: CombatantId,
+  spellId: string,
+  targetIds: readonly CombatantId[],
+): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
+  return knownWillingSpellTargetListFill(hole, casterId, spellId, targetIds);
 }
 
 export function savingThrowOutcomeFill(

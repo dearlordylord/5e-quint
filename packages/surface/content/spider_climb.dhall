@@ -50,7 +50,7 @@ let spiderClimb =
                 , attachment =
                     { kind = "hole"
                     , holeId = "spider_climb_target"
-                    , label = "target"
+                    , label = "willing target"
                     , value =
                         { kind = "target"
                         , selection =
@@ -61,6 +61,8 @@ let spiderClimb =
                                 , perSlotAboveBase = 1
                                 , baseLevel = 2
                                 }
+                            , targetKinds = [ "creature" ]
+                            , disposition = "willing"
                             }
                         }
                     }

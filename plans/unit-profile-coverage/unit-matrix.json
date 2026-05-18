@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 379,
-      "numerator": 156,
-      "percent": "41.2%"
+      "numerator": 157,
+      "percent": "41.4%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 451,
-      "numerator": 188,
-      "percent": "41.7%"
+      "numerator": 189,
+      "percent": "41.9%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 189
+      "value": 190
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 120,
-      "numerator": 120,
+      "denominator": 121,
+      "numerator": 121,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 189,
-      "numerator": 189,
+      "denominator": 190,
+      "numerator": 190,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -92,9 +92,9 @@
       "percent": "27.3%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 120,
+      "denominator": 121,
       "numerator": 41,
-      "percent": "34.2%"
+      "percent": "33.9%"
     },
     "runtimeMappingCoverage": {
       "denominator": 67,
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 120,
+      "denominator": 121,
       "numerator": 104,
-      "percent": "86.7%"
+      "percent": "86%"
     },
     "supportedProfileCoverage": {
-      "denominator": 157,
-      "numerator": 120,
-      "percent": "76.4%"
+      "denominator": 158,
+      "numerator": 121,
+      "percent": "76.6%"
     }
   },
   "metricSemantics": [
@@ -3325,9 +3325,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 120,
+          "denominator": 121,
           "numerator": 41,
-          "percent": "34.2%"
+          "percent": "33.9%"
         }
       },
       "units": [
@@ -5321,6 +5321,18 @@
             }
           ],
           "unitId": "spare_the_dying"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.scalar-buff",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "spider_climb"
         },
         {
           "joinStatus": "covered",
@@ -17572,6 +17584,74 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "table-spatial-derivation",
+          "owner": "table/spatial movement owner",
+          "reason": "Automatic vertical-surface and ceiling path legality, hands-free traversal presentation, collision/pathfinding, and final-position derivation remain caller/table-owned; battle runtime owns the Spider Climb spell effect and Speed projection."
+        },
+        "profileIds": [
+          "spell.scalar-buff"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action level-2-or-higher Spell Slot casting",
+          "caller-supplied known-willing touched creature target admission with one additional target per Spell Slot level above 2",
+          "Concentration-owned Climb Speed grant equal to the target's effective Speed for up to 1 hour",
+          "granted Climb Speed appears in movement and Dash budgets while the spell effect remains active",
+          "Concentration cleanup removes the granted Climb Speed"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-SPELL-SPIDER-CLIMB"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.scalar-buff",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV30A",
+            "L12G-SPELL-AID",
+            "L12G-SPELL-BARKSKIN"
+          ],
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class bonus/floor, or Hit Point maximum effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/spider_climb.json",
+      "unitId": "spider_climb"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
           "owner": "table/spatial owner",
           "reason": "Push geometry, collision/pathfinding, final-position derivation, broad object inventory simulation, and sound propagation simulation remain runtime-detached table/spatial derivations outside the Thunderwave runtime profile."
         },
@@ -22386,24 +22466,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/speak_with_animals.json",
       "unitId": "speak_with_animals"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/spider_climb.json",
-      "unitId": "spider_climb"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

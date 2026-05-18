@@ -2346,61 +2346,6 @@
       "executableMechanics": true,
       "kind": "spell",
       "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
-      "sourceRecordPath": "packages/surface/content/spider_climb.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Spider Climb",
-          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_spider_climb",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 292,
-            "lineStart": 292,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Warlock spell list Spider Climb",
-          "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_spider_climb",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 373,
-            "lineStart": 373,
-            "path": ".references/srd-5.2.1/Classes/Warlock.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Spider Climb",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_spider_climb",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 229,
-            "lineStart": 229,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
-      "unitId": "spider_climb"
-    },
-    {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
       "sourceRecordPath": "packages/surface/content/spike_growth.json",
       "sourceRows": [
         {
@@ -2582,7 +2527,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 97,
+      "count": 98,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2674,6 +2619,7 @@
         "sorcerer_innate_sorcery",
         "sorcerous_burst",
         "spare_the_dying",
+        "spider_climb",
         "starry_wisp",
         "thunderwave",
         "true_strike",
@@ -2686,7 +2632,7 @@
       ]
     },
     {
-      "count": 19,
+      "count": 18,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
@@ -2704,7 +2650,6 @@
         "prayer_of_healing",
         "protection_from_poison",
         "ray_of_enfeeblement",
-        "spider_climb",
         "spike_growth",
         "spiritual_weapon",
         "warding_bond",
@@ -2781,8 +2726,8 @@
       "numerator": 472,
       "percent": "84.9%",
       "rowsByStatus": {
-        "accepted": 316,
-        "accepted-no-battle-effect": 156,
+        "accepted": 319,
+        "accepted-no-battle-effect": 153,
         "battle-runtime-required": 74,
         "owner-evidence-required": 4,
         "partial-battle-runtime": 6
@@ -2799,24 +2744,24 @@
       "percent": "23.2%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 97,
+      "denominator": 98,
       "numerator": 30,
-      "percent": "30.9%"
+      "percent": "30.6%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 151,
-      "numerator": 97,
-      "percent": "64.2%"
+      "numerator": 98,
+      "percent": "64.9%"
     },
     "strictTargetClosure": {
       "denominator": 151,
-      "numerator": 132,
-      "percent": "87.4%"
+      "numerator": 133,
+      "percent": "88.1%"
     }
   },
   "openFrontier": [
     {
-      "count": 19,
+      "count": 18,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
@@ -2834,7 +2779,6 @@
         "prayer_of_healing",
         "protection_from_poison",
         "ray_of_enfeeblement",
-        "spider_climb",
         "spike_growth",
         "spiritual_weapon",
         "warding_bond",
@@ -6059,9 +6003,9 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 97,
+        "denominator": 98,
         "numerator": 30,
-        "percent": "30.9%"
+        "percent": "30.6%"
       }
     },
     "units": [
@@ -7692,6 +7636,18 @@
         "unitId": "spare_the_dying"
       },
       {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.scalar-buff",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "spider_climb"
+      },
+      {
         "joinStatus": "covered",
         "profiles": [
           {
@@ -7895,9 +7851,9 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
-      "missing": 19,
+      "missing": 18,
       "profile-subset-supported": 10,
-      "supported-profile": 97,
+      "supported-profile": 98,
       "unsupported-profile": 25
     },
     "groupsByStatus": {
@@ -7905,10 +7861,10 @@
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 14,
-      "open-runtime-behavior": 19,
-      "supported-profile": 97
+      "open-runtime-behavior": 18,
+      "supported-profile": 98
     },
-    "nonSupportedFrontier": 54,
+    "nonSupportedFrontier": 53,
     "strictDenominator": 151
   }
 }

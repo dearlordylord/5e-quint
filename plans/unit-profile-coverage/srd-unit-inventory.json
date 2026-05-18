@@ -182,8 +182,8 @@
       "numerator": 472,
       "percent": "84.9%",
       "rowsByStatus": {
-        "accepted": 316,
-        "accepted-no-battle-effect": 156,
+        "accepted": 319,
+        "accepted-no-battle-effect": 153,
         "battle-runtime-required": 74,
         "partial-battle-runtime": 6,
         "owner-evidence-required": 4
@@ -201,16 +201,16 @@
       "catalog-installed-owner-evidence-required": 5
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 327,
+      "catalog-installed-owner-evidence-present": 330,
       "non-runtime": 24,
-      "catalog-only/dead-for-now": 127,
+      "catalog-only/dead-for-now": 124,
       "missing-authored-record": 58,
       "catalog-installed-owner-evidence-required": 14,
       "catalog-authored-executable-follow-up": 6
     },
     "spellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 168,
-      "catalog-only/dead-for-now": 127,
+      "catalog-installed-owner-evidence-present": 171,
+      "catalog-only/dead-for-now": 124,
       "missing-authored-record": 57,
       "catalog-installed-owner-evidence-required": 9,
       "catalog-authored-executable-follow-up": 6
@@ -20414,13 +20414,31 @@
         "sourceRecordPath": "packages/surface/content/spider_climb.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "spider_climb"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial movement owner",
+        "reason": "Automatic vertical-surface and ceiling path legality, hands-free traversal presentation, collision/pathfinding, and final-position derivation remain caller/table-owned; battle runtime owns the Spider Climb spell effect and Speed projection."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit spider_climb is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-SPELL-SPIDER-CLIMB at packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_suggestion",
@@ -22192,13 +22210,31 @@
         "sourceRecordPath": "packages/surface/content/spider_climb.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "spider_climb"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial movement owner",
+        "reason": "Automatic vertical-surface and ceiling path legality, hands-free traversal presentation, collision/pathfinding, and final-position derivation remain caller/table-owned; battle runtime owns the Spider Climb spell effect and Speed projection."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit spider_climb is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-SPELL-SPIDER-CLIMB at packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_suggestion",
@@ -25836,13 +25872,31 @@
         "sourceRecordPath": "packages/surface/content/spider_climb.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "spider_climb"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial movement owner",
+        "reason": "Automatic vertical-surface and ceiling path legality, hands-free traversal presentation, collision/pathfinding, and final-position derivation remain caller/table-owned; battle runtime owns the Spider Climb spell effect and Speed projection."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit spider_climb is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-SPELL-SPIDER-CLIMB at packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_suggestion",
