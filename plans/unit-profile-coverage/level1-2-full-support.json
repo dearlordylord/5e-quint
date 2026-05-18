@@ -2341,11 +2341,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME: Promote Spike Growth's battle-visible hazard: Magic Action and level-2-or-higher Spell Slot spend, caster-owned Concentration up to 10 minutes, caller-supplied point-origin ground-area identity, active Difficult Terrain movement-cost facts for movement through the area, Movement-triggered 2d4 Piercing damage per 5-foot increment traveled into or within the area from caller-supplied path-distance facts, damage disposition and Concentration interactions, and cleanup when Concentration or duration ends. Owner: battle-runtime spell invocation/effect lifecycle plus table/spatial movement owner. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Spike Growth movement damage, Difficult Terrain movement cost, resource spending, Concentration ownership, and cleanup without automatic geometry or pathfinding derivation.; L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION: Represent and close the camouflaged terrain recognition rule: whether a creature could see the area when the spell was cast, Search action spend before entering for creatures that did not see it, Wisdom (Perception or Survival) check against the caster's spell save DC, recognition state or explicit table-owned witness used before movement into the area, and cleanup with the hazard. Owner: surface Spell Definition authoring plus table/Search action owner. Required output: Surface schema/content support or accepted runtime-detached closure for Spike Growth hazard recognition, with focused tests and coverage disposition that either promotes the Search recognition boundary or closes it with an explicit table-owned reason.",
       "sourceRecordPath": "packages/surface/content/spike_growth.json",
       "sourceRows": [
         {
@@ -2373,8 +2376,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
       "unitId": "spike_growth"
     },
     {
@@ -2632,7 +2635,7 @@
       ]
     },
     {
-      "count": 18,
+      "count": 17,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
@@ -2650,10 +2653,30 @@
         "prayer_of_healing",
         "protection_from_poison",
         "ray_of_enfeeblement",
-        "spike_growth",
         "spiritual_weapon",
         "warding_bond",
         "web"
+      ]
+    },
+    {
+      "count": 14,
+      "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
+      "status": "blocked-follow-up-split",
+      "unitIds": [
+        "acid_arrow",
+        "alter_self",
+        "dragons_breath",
+        "druid_wild_shape",
+        "enhance_ability",
+        "enlarge_reduce",
+        "enthrall",
+        "monk_monks_focus",
+        "monk_uncanny_metabolism",
+        "moonbeam",
+        "see_invisibility",
+        "sorcerer_font_of_magic",
+        "sorcerer_metamagic",
+        "spike_growth"
       ]
     },
     {
@@ -2675,26 +2698,6 @@
         "silent_image",
         "speak_with_animals",
         "thaumaturgy"
-      ]
-    },
-    {
-      "count": 13,
-      "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
-      "status": "blocked-follow-up-split",
-      "unitIds": [
-        "acid_arrow",
-        "alter_self",
-        "dragons_breath",
-        "druid_wild_shape",
-        "enhance_ability",
-        "enlarge_reduce",
-        "enthrall",
-        "monk_monks_focus",
-        "monk_uncanny_metabolism",
-        "moonbeam",
-        "see_invisibility",
-        "sorcerer_font_of_magic",
-        "sorcerer_metamagic"
       ]
     },
     {
@@ -2723,12 +2726,12 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 472,
-      "percent": "84.9%",
+      "numerator": 470,
+      "percent": "84.5%",
       "rowsByStatus": {
         "accepted": 319,
-        "accepted-no-battle-effect": 153,
-        "battle-runtime-required": 74,
+        "accepted-no-battle-effect": 151,
+        "battle-runtime-required": 76,
         "owner-evidence-required": 4,
         "partial-battle-runtime": 6
       }
@@ -2755,13 +2758,13 @@
     },
     "strictTargetClosure": {
       "denominator": 151,
-      "numerator": 133,
-      "percent": "88.1%"
+      "numerator": 134,
+      "percent": "88.7%"
     }
   },
   "openFrontier": [
     {
-      "count": 18,
+      "count": 17,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
@@ -2779,7 +2782,6 @@
         "prayer_of_healing",
         "protection_from_poison",
         "ray_of_enfeeblement",
-        "spike_growth",
         "spiritual_weapon",
         "warding_bond",
         "web"
@@ -7851,17 +7853,17 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
-      "missing": 18,
+      "missing": 17,
       "profile-subset-supported": 10,
       "supported-profile": 98,
-      "unsupported-profile": 25
+      "unsupported-profile": 26
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 13,
+      "blocked-follow-up-split": 14,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 14,
-      "open-runtime-behavior": 18,
+      "open-runtime-behavior": 17,
       "supported-profile": 98
     },
     "nonSupportedFrontier": 53,

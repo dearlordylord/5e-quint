@@ -22478,6 +22478,28 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME",
+            "mechanic": "Promote Spike Growth's battle-visible hazard: Magic Action and level-2-or-higher Spell Slot spend, caster-owned Concentration up to 10 minutes, caller-supplied point-origin ground-area identity, active Difficult Terrain movement-cost facts for movement through the area, Movement-triggered 2d4 Piercing damage per 5-foot increment traveled into or within the area from caller-supplied path-distance facts, damage disposition and Concentration interactions, and cleanup when Concentration or duration ends.",
+            "owner": "battle-runtime spell invocation/effect lifecycle plus table/spatial movement owner",
+            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Spike Growth movement damage, Difficult Terrain movement cost, resource spending, Concentration ownership, and cleanup without automatic geometry or pathfinding derivation.",
+            "title": "Spike Growth Movement Hazard Runtime"
+          },
+          {
+            "id": "L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION",
+            "mechanic": "Represent and close the camouflaged terrain recognition rule: whether a creature could see the area when the spell was cast, Search action spend before entering for creatures that did not see it, Wisdom (Perception or Survival) check against the caster's spell save DC, recognition state or explicit table-owned witness used before movement into the area, and cleanup with the hazard.",
+            "owner": "surface Spell Definition authoring plus table/Search action owner",
+            "requiredOutput": "Surface schema/content support or accepted runtime-detached closure for Spike Growth hazard recognition, with focused tests and coverage disposition that either promotes the Search recognition boundary or closes it with an explicit table-owned reason.",
+            "title": "Spike Growth Hazard Recognition Boundary"
+          }
+        ],
+        "futureProfileOwner": "battle-runtime spell invocation/effect lifecycle plus table/spatial movement and Search recognition boundary",
+        "reason": "Spike Growth is authored as an SRD Surface Spell Definition with Magic Action Spell Slot casting, Concentration up to 10 minutes, a point-origin 20-foot-radius Sphere, Difficult Terrain, and 2d4 Piercing damage per 5 feet a creature moves into or within the area. Task 48 claims no promoted battle-runtime profile yet because the runtime has Grease-specific ground-hazard Difficult Terrain movement facts but no spell-neutral ground hazard identity, no Movement-triggered damage procedure proportional to table-supplied distance, and no Search action recognition boundary for camouflaged terrain that distinguishes creatures that could see the area when the spell was cast.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",

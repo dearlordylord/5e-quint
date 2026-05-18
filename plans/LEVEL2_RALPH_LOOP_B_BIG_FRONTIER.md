@@ -37,7 +37,7 @@
     {
       "number": 48,
       "id": "L12G-SPELL-SPIKE-GROWTH",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Spike Growth Runtime Support Or Closure"
     },
     {
@@ -105,6 +105,18 @@
       "id": "L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT",
       "status": "ready-for-research",
       "title": "See Invisibility Observer Sight Runtime Support"
+    },
+    {
+      "number": 91,
+      "id": "L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Spike Growth Movement Hazard Runtime"
+    },
+    {
+      "number": 92,
+      "id": "L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION",
+      "status": "ready-for-research",
+      "title": "Spike Growth Hazard Recognition Boundary"
     },
     {
       "number": 59,
@@ -287,8 +299,8 @@ use the repository MBT scarcity protocol.
 
 ## Included Work
 
-Loop B contains 17 atomic tasks: Tasks 43-58, from Scorching Ray through
-Detect Thoughts, plus Task 90 for the See Invisibility follow-up split. Tasks
+Loop B contains 19 atomic tasks: Tasks 43-58, from Scorching Ray through
+Detect Thoughts, plus Tasks 90-92 for the See Invisibility and Spike Growth follow-up splits. Tasks
 59-75 have moved to Loop D. The historical manifest rows for Tasks 59-75 remain
 below, but they stay `deferred` here so Loop B cannot pick them. It excludes all
 level-1, Loop D/L, companion/familiar boundary, and Counterspell work.
@@ -312,6 +324,8 @@ level-1, Loop D/L, companion/familiar boundary, and Counterspell work.
 | 57 | 59 | `L12G-MISSING-DARKVISION` | `darkvision` |
 | 58 | 60 | `L12G-MISSING-DETECT-THOUGHTS` | `detect_thoughts` |
 | 90 | 46 | `L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT` | `see_invisibility` |
+| 91 | 50 | `L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME` | `spike_growth` |
+| 92 | 50 | `L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION` | `spike_growth` |
 | 59 | 61 | `L12G-MISSING-DRAGONS-BREATH` | `dragons_breath` |
 | 60 | 62 | `L12G-MISSING-ENHANCE-ABILITY` | `enhance_ability` |
 | 61 | 63 | `L12G-MISSING-ENLARGE-REDUCE` | `enlarge_reduce` |
@@ -493,9 +507,15 @@ Acceptance:
 
 ### Task 48 - L12G-SPELL-SPIKE-GROWTH - Spike Growth Runtime Support Or Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `spike_growth`. Gate task: 50 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Result: Spike Growth remains an `unsupported-profile` Unit in Task 48. Runtime
+work is split into Task 91 for the battle-visible movement hazard and Task 92
+for the camouflaged terrain recognition/Search boundary, rather than treating
+catalog admission or Grease-specific ground-hazard facts as Spike Growth
+runtime support.
 
 Inputs:
 
@@ -1275,5 +1295,63 @@ Acceptance:
 
 - See Invisibility support does not grant Truesight, Darkness sight, visual-illusion handling, or transformation detection;
 - observer-scoped Invisible benefit denial and Ethereal visibility witness facts are covered by focused runtime tests and the relevant promoted Quint/runtime parity checks;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 91 - L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME - Spike Growth Movement Hazard Runtime
+
+Status: `ready-for-research`
+
+Unit: `spike_growth`. Gate task: 50 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- Task 48's `unsupported-profile` Unit claim and follow-up split;
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Spike Growth Surface content, Unit claims, Grease ground-hazard movement facts, Spell Invocation, Spell Effect, damage, Concentration, and movement/event tests.
+
+Outputs:
+
+- promote Spike Growth's battle-visible hazard: Magic Action and level-2-or-higher Spell Slot spend, caster-owned Concentration up to 10 minutes, caller-supplied point-origin ground-area identity, active Difficult Terrain movement-cost facts for movement through the area, Movement-triggered 2d4 Piercing damage per 5-foot increment traveled into or within the area from caller-supplied path-distance facts, damage disposition and Concentration interactions, and cleanup when Concentration or duration ends;
+- supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Spike Growth movement damage, Difficult Terrain movement cost, resource spending, Concentration ownership, and cleanup.
+
+Acceptance:
+
+- automatic geometry, pathfinding, and area-membership derivation remain table/spatial-owner responsibilities rather than hidden Spike Growth runtime behavior;
+- Difficult Terrain movement-cost facts and Movement-triggered damage use one active spell/hazard source rather than duplicated parallel state;
+- the level 1-2 metric row for `spike_growth` is supported or precisely narrowed to any remaining accepted closure;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 92 - L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION - Spike Growth Hazard Recognition Boundary
+
+Status: `ready-for-research`
+
+Unit: `spike_growth`. Gate task: 50 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- Task 48's `unsupported-profile` Unit claim and follow-up split;
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Spike Growth Surface content, Unit claims, Search action, spell save DC, observer/sight witness, table-recognition, and terrain-hazard owner decisions.
+
+Outputs:
+
+- represent or close the camouflaged terrain recognition rule: whether a creature could see the area when the spell was cast, Search action spend before entering for creatures that did not see it, Wisdom (Perception or Survival) check against the caster's spell save DC, recognition state or explicit table-owned witness used before movement into the area, and cleanup with the hazard;
+- Surface schema/content support or accepted runtime-detached closure for Spike Growth hazard recognition, with focused tests and coverage disposition that either promotes the Search recognition boundary or closes it with an explicit table-owned reason.
+
+Acceptance:
+
+- the implementation does not infer sight, visibility, terrain discovery, or hidden-hazard recognition from battle-runtime geometry unless that owner has an explicit executable witness boundary;
+- Perception/Survival Search action handling traces to local RAW and ubiquitous language without adding a second spell save DC or duplicate recognition state;
+- the level 1-2 metric row for `spike_growth` is supported, accepted-closed, or precisely blocked only by a smaller queued follow-up;
 - no level-1 Loop D/L or companion boundary work is pulled into this lane;
 - focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
