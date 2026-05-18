@@ -185,6 +185,130 @@ export function applyTemporaryHitPoints(
   };
 }
 
+type HitPointMaximumIncreaseEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "hitPointMaximumIncrease" }
+>;
+
+export function effectiveHitPointMaximum(
+  combatant: BattleCreatureState,
+): Hp {
+  return Hp(
+    Number(combatant.maxHp) +
+      appliedHitPointMaximumIncreaseAmount(combatant.activeEffects),
+  );
+}
+
+export function applyHitPointMaximumIncrease(
+  combatant: BattleCreatureState,
+  effect: HitPointMaximumIncreaseEffect,
+): BattleCreatureState {
+  const amount = hitPointMaximumIncreaseAmount(effect);
+  if (amount <= 0 || zeroHpLifecycleIsTerminal(combatant)) {
+    return combatant;
+  }
+  const activeAmount = appliedHitPointMaximumIncreaseAmount(
+    combatant.activeEffects,
+  );
+  const activeEffects = [...combatant.activeEffects, effect];
+  const nextActiveAmount =
+    appliedHitPointMaximumIncreaseAmount(activeEffects);
+  const currentHitPointIncrease = nextActiveAmount - activeAmount;
+  if (currentHitPointIncrease <= 0) {
+    return { ...combatant, activeEffects };
+  }
+  return applyCurrentHitPointIncrease(
+    {
+      ...combatant,
+      activeEffects,
+    },
+    currentHitPointIncrease,
+  );
+}
+
+export function applyHitPointMaximumIncreaseExpiration(
+  combatant: BattleCreatureState,
+  expiring: readonly BattleActiveEffect[],
+): BattleCreatureState {
+  const amount =
+    appliedHitPointMaximumIncreaseAmount([
+      ...combatant.activeEffects,
+      ...expiring,
+    ]) - appliedHitPointMaximumIncreaseAmount(combatant.activeEffects);
+  if (amount <= 0 || zeroHpLifecycleIsTerminal(combatant)) {
+    return combatant;
+  }
+  const nextHp = Hp(Math.max(0, Number(combatant.hp) - amount));
+  const updated = battleCreatureStateWithoutKnockOut(
+    combatant,
+    nextHp,
+    combatant.conditions,
+  );
+  return Number(nextHp) > 0 ? updated : applyInitialZeroHpLifecycle(updated);
+}
+
+function appliedHitPointMaximumIncreaseAmount(
+  effects: readonly BattleActiveEffect[],
+): number {
+  const highestAmountBySpell = new Map<string, number>();
+  for (const effect of effects) {
+    if (effect.kind !== "hitPointMaximumIncrease") {
+      continue;
+    }
+    const amount = hitPointMaximumIncreaseAmount(effect);
+    const activeAmount = highestAmountBySpell.get(effect.sourceSpellId) ?? 0;
+    if (amount > activeAmount) {
+      highestAmountBySpell.set(effect.sourceSpellId, amount);
+    }
+  }
+  return [...highestAmountBySpell.values()].reduce(
+    (total, amount) => total + amount,
+    0,
+  );
+}
+
+function hitPointMaximumIncreaseAmount(
+  effect: HitPointMaximumIncreaseEffect,
+): number {
+  return Math.max(0, Math.floor(effect.amount));
+}
+
+function applyCurrentHitPointIncrease(
+  combatant: BattleCreatureState,
+  amount: number,
+): BattleCreatureState {
+  const currentHp = Number(combatant.hp);
+  const nextHp = Hp(currentHp + amount);
+  if (currentHp <= 0 && Number(nextHp) > 0) {
+    return {
+      ...battleCreatureStateWithoutKnockOut(
+        combatant,
+        nextHp,
+        removeCondition(combatant.conditions, "unconscious"),
+      ),
+      zeroHpLifecycle:
+        combatant.zeroHpLifecycle.policy === "usesDeathSavingThrows"
+          ? {
+              ...combatant.zeroHpLifecycle,
+              deathSaves: resetDeathSaveRuntimeState(),
+            }
+          : combatant.zeroHpLifecycle,
+    };
+  }
+  if (combatant.positiveHpUnconscious !== null) {
+    return battleCreatureStateWithoutKnockOut(
+      combatant,
+      nextHp,
+      removeCondition(combatant.conditions, "unconscious"),
+    );
+  }
+  return battleCreatureStateWithoutKnockOut(
+    combatant,
+    nextHp,
+    combatant.conditions,
+  );
+}
+
 export function applyBattleHitPointDamage(input: {
   readonly state: BattleState;
   readonly target: BattleCreatureState;
@@ -645,7 +769,7 @@ export function hpDamageProjection(
     massiveDamageKills:
       hpDamage > 0 &&
       (currentHp <= 0 ? hpDamage : hpDamage - currentHp) >=
-        Number(combatant.maxHp),
+        Number(effectiveHitPointMaximum(combatant)),
   };
 }
 
@@ -749,7 +873,10 @@ export function applyHpHealing(
 
   const currentHp = Number(combatant.hp);
   const nextHp = Hp(
-    Math.min(Number(combatant.maxHp), currentHp + effectiveHealing),
+    Math.min(
+      Number(effectiveHitPointMaximum(combatant)),
+      currentHp + effectiveHealing,
+    ),
   );
   const regainedHitPoints = Number(nextHp) > currentHp;
   if (currentHp <= 0 && Number(nextHp) > 0) {
@@ -1084,7 +1211,7 @@ export function breakCombatantConcentration(
       const activeEffects = combatant.activeEffects.filter(
         (effect) => !expiring.includes(effect),
       );
-      const nextCombatant =
+      const nextCombatantBase =
         combatant.positiveHpUnconscious === null
           ? {
               ...combatant,
@@ -1103,6 +1230,10 @@ export function breakCombatantConcentration(
                 id === combatantId ? null : combatant.concentration,
               activeEffects,
             };
+      const nextCombatant = applyHitPointMaximumIncreaseExpiration(
+        nextCombatantBase,
+        expiring,
+      );
       return [id, nextCombatant];
     }),
   );

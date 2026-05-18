@@ -3,6 +3,7 @@ import { Option } from "effect";
 // Content JSON is generated from the matching content/*.dhall source.
 // Keep authoring changes in Dhall, then regenerate JSON and trace output.
 import armorChainMailInput from "../../content/armor_chain_mail.json";
+import aidInput from "../../content/aid.json";
 import animalFriendshipInput from "../../content/animal_friendship.json";
 import backgroundSoldierInput from "../../content/background_soldier.json";
 import bardBardicInspirationInput from "../../content/bard_bardic_inspiration.json";
@@ -385,6 +386,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     speciesGoliathPowerfulBuildInput,
     speciesTieflingDarkvisionInput,
     acidSplashInput,
+    aidInput,
     animalFriendshipInput,
     baneInput,
     blessInput,

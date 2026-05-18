@@ -82,6 +82,7 @@ module battleRuntimeSpellInvocation {
       | Longstrider => true
       | ShieldOfFaith => true
       | Heroism => true
+      | Aid => true
       | Bane => true
       | Bless => true
       | Guidance => false
@@ -154,6 +155,7 @@ module battleRuntimeSpellInvocation {
       | FalseLifeScalarBuff => BattleRuntimeFalseLifeScalarBuff
       | LongstriderScalarBuff => BattleRuntimeLongstriderScalarBuff
       | ShieldOfFaithScalarBuff => BattleRuntimeShieldOfFaithScalarBuff
+      | AidScalarBuff => BattleRuntimeAidScalarBuff
     }
 
   pure def magicMissileDartCount(slotLevel: int): int =

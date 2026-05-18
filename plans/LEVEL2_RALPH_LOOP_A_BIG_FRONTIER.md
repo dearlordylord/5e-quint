@@ -133,7 +133,7 @@
     {
       "number": 22,
       "id": "L12G-SPELL-AID",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Aid Runtime Support"
     },
     {
@@ -1327,7 +1327,7 @@ Acceptance:
 
 ### Task 22 - L12G-SPELL-AID - Aid Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `aid`. Gate task: 23 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 

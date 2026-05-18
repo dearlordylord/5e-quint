@@ -479,6 +479,66 @@ module battleRuntimeHpArmorBuffSpatialTests {
     }
   }
 
+  run test_scalar_buff_aid_increases_hit_point_maximum_and_current_hit_points = {
+    val result = resolveScalarBuffSpell(initialState, AidScalarBuff, Set(Fighter, Goblin), 3, 0)
+    all {
+      assert(result.fighter.hp == 22),
+      assert(result.fighter.maxHp == 22),
+      assert(result.fighter.activeEffects.contains(AidHitPointMaximumIncrease({ amount: 10, durationTicks: aidDurationTicks }))),
+      assert(result.goblin.hp == 20),
+      assert(result.goblin.maxHp == 20),
+      assert(result.goblin.activeEffects.contains(AidHitPointMaximumIncrease({ amount: 10, durationTicks: aidDurationTicks }))),
+    }
+  }
+
+  run test_scalar_buff_aid_expiration_removes_hit_point_maximum_and_current_hit_point_increase = {
+    val aided = {
+      ...initialState,
+      goblin: {
+        ...initialState.goblin,
+        hp: 15,
+        maxHp: 15,
+        activeEffects: Set(AidHitPointMaximumIncrease({ amount: 5, durationTicks: 1 })),
+      },
+    }
+    val nextRound = endTurn(endTurn(aided))
+    all {
+      assert(nextRound.goblin.hp == 10),
+      assert(nextRound.goblin.maxHp == 10),
+      assert(not(nextRound.goblin.activeEffects.contains(AidHitPointMaximumIncrease({ amount: 5, durationTicks: 1 })))),
+    }
+  }
+
+  run test_scalar_buff_aid_lower_slot_recast_waits_under_more_potent_effect = {
+    val aided = {
+      ...initialState,
+      goblin: {
+        ...initialState.goblin,
+        hp: 20,
+        maxHp: 20,
+        activeEffects: Set(AidHitPointMaximumIncrease({ amount: 10, durationTicks: 1 })),
+      },
+    }
+    val result = resolveScalarBuffSpell(aided, AidScalarBuff, Set(Goblin), 2, 0)
+    val nextRound = endTurn(endTurn(result))
+    all {
+      assert(result.goblin.hp == 20),
+      assert(result.goblin.maxHp == 20),
+      assert(result.goblin.activeEffects.contains(AidHitPointMaximumIncrease({ amount: 10, durationTicks: 1 }))),
+      assert(result.goblin.activeEffects.contains(AidHitPointMaximumIncrease({ amount: 5, durationTicks: aidDurationTicks }))),
+      assert(nextRound.goblin.hp == 15),
+      assert(nextRound.goblin.maxHp == 15),
+      assert(nextRound.goblin.activeEffects.exists(effect => match effect {
+        | AidHitPointMaximumIncrease(data) => data.amount == 5
+        | _ => false
+      })),
+      assert(not(nextRound.goblin.activeEffects.exists(effect => match effect {
+        | AidHitPointMaximumIncrease(data) => data.amount == 10
+        | _ => false
+      }))),
+    }
+  }
+
   run test_heroism_stores_distinct_immunity_and_turn_start_temporary_hit_points = {
     val result = resolveHeroismSpell(initialState, Set(Fighter), 1, 3)
     all {

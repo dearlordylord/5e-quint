@@ -1441,6 +1441,10 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
           kind: Schema.Literal("activeEffect"),
           activeEffect: BattleRuntimeObjectSchema,
         }),
+        Schema.Struct({
+          kind: Schema.Literal("hitPointMaximumIncrease"),
+          activeEffect: BattleRuntimeObjectSchema,
+        }),
       ),
       rangeFeet: MovementFeet,
     }),

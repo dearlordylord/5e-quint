@@ -141,6 +141,8 @@ export const acidSplashUnitId = "acid_splash";
 
 export const animalFriendshipUnitId = "animal_friendship";
 
+export const aidUnitId = "aid";
+
 export const charmPersonUnitId = "charm_person";
 
 export const chillTouchUnitId = "chill_touch";

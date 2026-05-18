@@ -566,6 +566,11 @@ export type BattleActiveEffect =
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {
+      readonly kind: "hitPointMaximumIncrease";
+      readonly amount: number;
+      readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleSpellEffectBase & {
       readonly kind: "spellBaseArmorClass";
       readonly base: number;
       readonly ability: "dex";
@@ -1970,6 +1975,13 @@ export type ScalarBuffSpellEffect =
       readonly activeEffect: Extract<
         BattleActiveEffect,
         { readonly kind: "speedDelta" | "spellArmorClassBonus" }
+      >;
+    }
+  | {
+      readonly kind: "hitPointMaximumIncrease";
+      readonly activeEffect: Extract<
+        BattleActiveEffect,
+        { readonly kind: "hitPointMaximumIncrease" }
       >;
     };
 export type RollModifierSpellTargeting = Extract<

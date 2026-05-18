@@ -96,7 +96,10 @@ import {
   type OngoingFeatureSourceKey,
 } from "../battle-reducer.ts";
 import { battleStateInitIssue } from "./domain-helpers.ts";
-import { applyInitialZeroHpLifecycle } from "./damage-apply.ts";
+import {
+  applyInitialZeroHpLifecycle,
+  effectiveHitPointMaximum,
+} from "./damage-apply.ts";
 import { battleMovementBudgetForActor } from "./movement-speed.ts";
 import {
   combatantInvisibleBenefitDenied,
@@ -499,7 +502,7 @@ export function combatantSnapshot(
     side: combatant.side,
     origin: combatantOriginSnapshot(combatant),
     hp: combatant.hp,
-    maxHp: combatant.maxHp,
+    maxHp: effectiveHitPointMaximum(combatant),
     tempHp: combatant.tempHp,
     armorClass: currentArmorClass(activeEffectArmorClass(combatant)),
     size: combatant.size,

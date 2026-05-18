@@ -1715,6 +1715,25 @@ export function scalarBuffSpellEffect(
       },
     };
   }
+  if (effect.kind === "modify_max_hp" && effect.direction === "increase") {
+    const amount = supportedHitPointMaximumIncreaseAmount(
+      effect.delta,
+      spellLevel,
+      slotLevel,
+    );
+    return amount === null
+      ? null
+      : {
+          kind: "hitPointMaximumIncrease",
+          activeEffect: {
+            kind: "hitPointMaximumIncrease",
+            sourceSpellId: spell.id,
+            sourceCombatantId: actorId,
+            amount,
+            expiresAt,
+          },
+        };
+  }
   return null;
 }
 
@@ -1992,4 +2011,52 @@ export function supportedTemporaryHitPointsAmountExpr(
     dieSize: amount.base.dieSize,
     flat: (amount.base.flat ?? 0) + (amount.perLevel?.flat ?? 0) * slotDelta,
   };
+}
+
+function supportedHitPointMaximumIncreaseAmount(
+  amount: SurfaceDiceAmount,
+  spellLevel: number,
+  slotLevel: SpellSlotLevel,
+): number | null {
+  if (amount.kind === "fixed") {
+    return deterministicFlatDiceExprAmount(amount.expr);
+  }
+  if (
+    amount.kind !== "linear_per_level" ||
+    amount.axis !== "slot" ||
+    amount.startingAtLevel !== spellLevel
+  ) {
+    return null;
+  }
+  const base = deterministicFlatDiceExprAmount(amount.base);
+  const perLevel = deterministicFlatDiceExprDeltaAmount(amount.perLevel);
+  if (base === null || perLevel === null) {
+    return null;
+  }
+  const slotDelta = Math.max(0, Number(slotLevel) - amount.startingAtLevel);
+  return base + perLevel * slotDelta;
+}
+
+function deterministicFlatDiceExprAmount(expr: DiceExpr): number | null {
+  if (
+    expr.dice !== 0 ||
+    expr.dieSize !== 1 ||
+    expr.spellcastingMod === true ||
+    expr.abilityModifier !== undefined
+  ) {
+    return null;
+  }
+  return expr.flat ?? 0;
+}
+
+function deterministicFlatDiceExprDeltaAmount(
+  expr: Extract<
+    SurfaceDiceAmount,
+    { readonly kind: "linear_per_level" }
+  >["perLevel"],
+): number | null {
+  if ((expr.dice ?? 0) !== 0 || (expr.dieSize ?? 1) !== 1) {
+    return null;
+  }
+  return expr.flat ?? 0;
 }

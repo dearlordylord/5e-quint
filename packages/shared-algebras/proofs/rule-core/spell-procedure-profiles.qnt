@@ -15,7 +15,7 @@ module spellProcedureProfiles {
   // - Spells/Gaining-and-Casting.md: Spell Slots, cantrips, Casting Time,
   //   targets, Saving Throws, Attack Rolls, and spell effects.
   // - Rules-Glossary.md: Ready, Magic, Concentration, Spell Attack, Target.
-  // - Spells/Descriptions-A-D.md: Acid Splash and Cure Wounds.
+  // - Spells/Descriptions-A-D.md: Acid Splash, Aid, and Cure Wounds.
   // - Spells/Descriptions-E-L.md: Healing Word.
   // - Spells/Descriptions-M-P.md: Mage Armor, Magic Missile, Mass Cure
   //   Wounds, and Mass Healing Word.
@@ -112,12 +112,14 @@ module spellProcedureProfiles {
     | LongstriderScalarBuffProfile
     | ShieldOfFaithScalarBuffProfile
     | HeroismScalarBuffProfile
+    | AidScalarBuffProfile
 
   type ScalarBuffEffect =
     | LongstriderSpeedIncreaseEffect
     | ShieldOfFaithArmorClassBonusEffect
     | HeroismFrightenedImmunityEffect
     | HeroismTurnStartTemporaryHitPointsEffect({ amount: int })
+    | AidHitPointMaximumIncreaseEffect({ amount: int })
 
   type DamageRiderSpellProfile =
     | DivineFavorWeaponDamageRiderProfile
@@ -514,15 +516,21 @@ module spellProcedureProfiles {
     if (profile == ShieldOfFaithScalarBuffProfile) BonusActionSpellInvocation else ActionTimeSpellInvocation
 
   pure def scalarBuffMaximumTargets(profile: ScalarBuffSpellProfile, slotLevel: int): int =
-    if (profile == LongstriderScalarBuffProfile) slotLevel else 1
+    if (profile == LongstriderScalarBuffProfile) slotLevel
+    else if (profile == AidScalarBuffProfile) 3
+    else 1
 
   pure def scalarBuffTemporaryHitPoints(profile: ScalarBuffSpellProfile, slotLevel: int, rolledDice: int): int =
     if (profile == FalseLifeScalarBuffProfile) rolledDice + 4 + ((if (slotLevel > 1) slotLevel - 1 else 0) * 5)
     else 0
 
+  pure def scalarBuffAidHitPointMaximumIncrease(slotLevel: int): int =
+    5 + ((if (slotLevel > 2) slotLevel - 2 else 0) * 5)
+
   pure def scalarBuffEffects(
     profile: ScalarBuffSpellProfile,
-    spellcastingAbilityModifier: int
+    spellcastingAbilityModifier: int,
+    slotLevel: int,
   ): Set[ScalarBuffEffect] =
     match profile {
       | FalseLifeScalarBuffProfile => Set()
@@ -532,6 +540,7 @@ module spellProcedureProfiles {
           HeroismFrightenedImmunityEffect,
           HeroismTurnStartTemporaryHitPointsEffect({ amount: spellcastingAbilityModifier }),
         )
+      | AidScalarBuffProfile => Set(AidHitPointMaximumIncreaseEffect({ amount: scalarBuffAidHitPointMaximumIncrease(slotLevel) }))
     }
 
   pure def scalarBuffRequiresConcentration(profile: ScalarBuffSpellProfile): bool =
@@ -1270,12 +1279,14 @@ module spellProcedureProfiles {
       assert(scalarBuffSpellAction(ShieldOfFaithScalarBuffProfile) == BonusActionSpellInvocation),
       assert(scalarBuffSpellAction(LongstriderScalarBuffProfile) == ActionTimeSpellInvocation),
       assert(scalarBuffMaximumTargets(LongstriderScalarBuffProfile, 3) == 3),
+      assert(scalarBuffMaximumTargets(AidScalarBuffProfile, 3) == 3),
       assert(scalarBuffMaximumTargets(FalseLifeScalarBuffProfile, 3) == 1),
       assert(scalarBuffTemporaryHitPoints(FalseLifeScalarBuffProfile, 1, 4) == 8),
       assert(scalarBuffTemporaryHitPoints(FalseLifeScalarBuffProfile, 3, 4) == 18),
-      assert(scalarBuffEffects(LongstriderScalarBuffProfile, 3) == Set(LongstriderSpeedIncreaseEffect)),
-      assert(scalarBuffEffects(ShieldOfFaithScalarBuffProfile, 3) == Set(ShieldOfFaithArmorClassBonusEffect)),
-      assert(scalarBuffEffects(HeroismScalarBuffProfile, 3) == Set(HeroismFrightenedImmunityEffect, HeroismTurnStartTemporaryHitPointsEffect({ amount: 3 }))),
+      assert(scalarBuffEffects(LongstriderScalarBuffProfile, 3, 1) == Set(LongstriderSpeedIncreaseEffect)),
+      assert(scalarBuffEffects(ShieldOfFaithScalarBuffProfile, 3, 1) == Set(ShieldOfFaithArmorClassBonusEffect)),
+      assert(scalarBuffEffects(HeroismScalarBuffProfile, 3, 1) == Set(HeroismFrightenedImmunityEffect, HeroismTurnStartTemporaryHitPointsEffect({ amount: 3 }))),
+      assert(scalarBuffEffects(AidScalarBuffProfile, 3, 3) == Set(AidHitPointMaximumIncreaseEffect({ amount: 10 }))),
       assert(scalarBuffRequiresConcentration(ShieldOfFaithScalarBuffProfile)),
       assert(scalarBuffRequiresConcentration(HeroismScalarBuffProfile)),
       assert(not(scalarBuffRequiresConcentration(LongstriderScalarBuffProfile))),

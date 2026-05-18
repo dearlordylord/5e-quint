@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 374,
-      "numerator": 144,
-      "percent": "38.5%"
+      "numerator": 145,
+      "percent": "38.8%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 446,
-      "numerator": 176,
-      "percent": "39.5%"
+      "numerator": 177,
+      "percent": "39.7%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 177
+      "value": 178
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 113,
-      "numerator": 113,
+      "denominator": 114,
+      "numerator": 114,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 177,
-      "numerator": 177,
+      "denominator": 178,
+      "numerator": 178,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 113,
+      "denominator": 114,
       "numerator": 104,
-      "percent": "92%"
+      "percent": "91.2%"
     },
     "supportedProfileCoverage": {
-      "denominator": 145,
-      "numerator": 113,
-      "percent": "77.9%"
+      "denominator": 146,
+      "numerator": 114,
+      "percent": "78.1%"
     }
   },
   "metricSemantics": [
@@ -2113,9 +2113,10 @@
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
       "taskRefs": [
-        "SRDINV30A"
+        "SRDINV30A",
+        "L12G-SPELL-AID"
       ],
-      "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, or Armor Class effects",
+      "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class, or Hit Point maximum effects",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -2971,7 +2972,7 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Promoted battle-runtime Quint facts for scalar buff spells: self Temporary Hit Points, timed Speed increase, and concentration Armor Class bonus.",
+      "note": "Promoted battle-runtime Quint facts for scalar buff spells: self Temporary Hit Points, timed Speed increase, concentration Armor Class bonus, and timed Hit Point maximum increase.",
       "profileIds": [
         "spell.scalar-buff"
       ],
@@ -2979,11 +2980,19 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime admission and reducer tests for False Life, Longstrider, and Shield of Faith scalar buff spells.",
+      "note": "Focused battle-runtime admission and reducer tests for False Life, Longstrider, Shield of Faith, and Aid scalar buff spells.",
       "profileIds": [
         "spell.scalar-buff"
       ],
       "taskId": "SRDINV30A"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests for Aid's up-to-three target timed Hit Point maximum and current Hit Point increase, slot scaling, and duration cleanup.",
+      "profileIds": [
+        "spell.scalar-buff"
+      ],
+      "taskId": "L12G-SPELL-AID"
     },
     {
       "claimKind": "qnt-proof",
@@ -8768,6 +8777,61 @@
       },
       "claim": {
         "profileIds": [
+          "spell.scalar-buff"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-SPELL-AID"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.scalar-buff",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV30A",
+            "L12G-SPELL-AID"
+          ],
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class, or Hit Point maximum effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/aid.json",
+      "unitId": "aid"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
           "spell.creature-type-protection-and-charm"
         ],
         "rawRequirementIds": [
@@ -10280,9 +10344,10 @@
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
           "taskRefs": [
-            "SRDINV30A"
+            "SRDINV30A",
+            "L12G-SPELL-AID"
           ],
-          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, or Armor Class effects",
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class, or Hit Point maximum effects",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -11507,9 +11572,10 @@
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
           "taskRefs": [
-            "SRDINV30A"
+            "SRDINV30A",
+            "L12G-SPELL-AID"
           ],
-          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, or Armor Class effects",
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class, or Hit Point maximum effects",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -13501,9 +13567,10 @@
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
           "taskRefs": [
-            "SRDINV30A"
+            "SRDINV30A",
+            "L12G-SPELL-AID"
           ],
-          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, or Armor Class effects",
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class, or Hit Point maximum effects",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -14599,24 +14666,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/acid_arrow.json",
       "unitId": "acid_arrow"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/aid.json",
-      "unitId": "aid"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

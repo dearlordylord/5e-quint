@@ -171,6 +171,10 @@ module battleRuntimeTimedEffects {
             source: data.source,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
+        | AidHitPointMaximumIncrease(data) => AidHitPointMaximumIncrease({
+            amount: data.amount,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
         | DancingLightsEffect(data) => DancingLightsEffect({
             combined: data.combined,
             lightCount: data.lightCount,
@@ -233,6 +237,7 @@ module battleRuntimeTimedEffects {
         | SearingSmiteBurning(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | AnimalFriendshipCharmed(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | CharmPersonCharmed(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | AidHitPointMaximumIncrease(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | DancingLightsEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | ProduceFlameHeldLight(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | ShillelaghWeaponAttackOverride(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
@@ -258,6 +263,18 @@ module battleRuntimeTimedEffects {
           not(battleRuntimeTimedSpellEffectRemainsActive(battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks)))
       | _ => false
     })
+
+  pure def combatantAfterAidDurationTick(target: Combatant, tickedEffects: Set[ActiveEffect]): Combatant = {
+    val activeAmount = aidHitPointMaximumIncreaseAppliedAmount(target.activeEffects)
+    val nextActiveAmount = aidHitPointMaximumIncreaseAppliedAmount(tickedEffects)
+    val expiringAmount = activeAmount - nextActiveAmount
+    val nextHp = target.hp - expiringAmount
+    {
+      ...target,
+      hp: if (nextHp > 0) nextHp else 0,
+      maxHp: target.maxHp - expiringAmount,
+    }
+  }
 
   pure def combatantAfterHideousLaughterDurationTick(target: Combatant, tickedEffects: Set[ActiveEffect]): Combatant = {
     val expiring = hideousLaughterEffectsExpiringAfterRoundTick(target.activeEffects)
@@ -305,12 +322,12 @@ module battleRuntimeTimedEffects {
       ...state,
       lightEmitters: tickDurationLightEmitters(state.lightEmitters),
       fighter: {
-        ...combatantAfterHideousLaughterDurationTick(state.fighter, fighterEffects),
+        ...combatantAfterHideousLaughterDurationTick(combatantAfterAidDurationTick(state.fighter, fighterEffects), fighterEffects),
         concentrating: state.fighter.concentrating
           and (not(fighterTimedConcentrationBefore) or fighterTimedConcentrationAfter),
       },
       goblin: {
-        ...combatantAfterHideousLaughterDurationTick(state.goblin, goblinEffects),
+        ...combatantAfterHideousLaughterDurationTick(combatantAfterAidDurationTick(state.goblin, goblinEffects), goblinEffects),
         concentrating: state.goblin.concentrating
           and (not(goblinTimedConcentrationBefore) or goblinTimedConcentrationAfter),
       },

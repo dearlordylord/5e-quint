@@ -40,6 +40,7 @@ module battleRuntimeArmorClass {
         | ShieldArmorClassBonus => false
         | LongstriderSpeedDelta => false
         | ShieldOfFaithArmorClassBonus => false
+        | AidHitPointMaximumIncrease(_) => false
         | HeroismFrightenedImmunity => false
         | HeroismTurnStartTemporaryHitPoints(_) => false
         | BaneD20RollPenalty => false

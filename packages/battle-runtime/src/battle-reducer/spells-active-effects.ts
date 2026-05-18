@@ -18,6 +18,7 @@ import type { CombatantId } from "../identity.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state.ts";
 import {
+  applyHitPointMaximumIncrease,
   applyTemporaryHitPoints,
   breakBattleConcentration,
 } from "./damage-apply.ts";
@@ -1836,19 +1837,24 @@ export function applyScalarBuffSpellEffect(
                 temporaryHitPointsRoll,
               ),
             )
-        : battleCreatureWithSpellActiveEffects(target, [
-            ...target.activeEffects.filter(
-              (effect) =>
-                !(
-                  effect.kind === scalarEffect.activeEffect.kind &&
-                  effect.sourceSpellId === invocation.spell.id
-                ),
-            ),
-            {
+        : scalarEffect.kind === "hitPointMaximumIncrease"
+          ? applyHitPointMaximumIncrease(target, {
               ...scalarEffect.activeEffect,
               sourceCombatantId: actorId,
-            },
-          ]);
+            })
+          : battleCreatureWithSpellActiveEffects(target, [
+              ...target.activeEffects.filter(
+                (effect) =>
+                  !(
+                    effect.kind === scalarEffect.activeEffect.kind &&
+                    effect.sourceSpellId === invocation.spell.id
+                  ),
+              ),
+              {
+                ...scalarEffect.activeEffect,
+                sourceCombatantId: actorId,
+              },
+            ]);
     return {
       ...nextState,
       combatants: new Map(nextState.combatants).set(targetId, nextTarget),
