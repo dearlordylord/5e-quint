@@ -115,7 +115,7 @@
     {
       "number": 19,
       "id": "L12G-AUTHOR-SORCERER-METAMAGIC",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Sorcerer Metamagic Authoring And Support"
     },
     {
@@ -513,6 +513,18 @@
       "id": "L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS",
       "status": "ready-for-research",
       "title": "Sorcerer Font Of Magic Sorcery Points To Spell Slot"
+    },
+    {
+      "number": 86,
+      "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS",
+      "status": "ready-for-research",
+      "title": "Sorcerer Metamagic Character Facts And Option Projection"
+    },
+    {
+      "number": 87,
+      "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION",
+      "status": "ready-for-research",
+      "title": "Sorcerer Metamagic Cast-Time Option Execution"
     }
   ]
 }
@@ -607,7 +619,8 @@ use the repository MBT scarcity protocol.
 Loop A owns Tasks 10-42 after the split, Task 12's concrete follow-up split
 tasks 76-78, Task 13's concrete follow-up split tasks 79-80, Task 15's
 concrete follow-up split tasks 81-82, and Task 18's concrete follow-up split
-tasks 83-85. Tasks 1-9 are already done. Tasks 43-75 are owned by
+tasks 83-85, and Task 19's concrete follow-up split tasks 86-87. Tasks 1-9
+are already done. Tasks 43-75 are owned by
 `plans/LEVEL2_RALPH_LOOP_B_BIG_FRONTIER.md` and stay `deferred` here so Loop A
 cannot pick them. Keep this lane out of Loop D's level-1 recursive frontier and
 Loop L's language-access frontier.
@@ -699,6 +712,8 @@ Loop L's language-access frontier.
 | 83 | 19a | `L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS` | `sorcerer_font_of_magic` |
 | 84 | 19b | `L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS` | `sorcerer_font_of_magic` |
 | 85 | 19c | `L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS` | `sorcerer_font_of_magic` |
+| 86 | 20a | `L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS` | `sorcerer_metamagic` |
+| 87 | 20b | `L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION` | `sorcerer_metamagic` |
 
 ## Follow-Up Dependencies
 
@@ -714,6 +729,8 @@ Loop L's language-access frontier.
 | `L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS` | `L12G-AUTHOR-SORCERER-FONT-OF-MAGIC`, `L12G-AUTHOR-SORCERER-METAMAGIC` | Sorcerer level-2 admission should retain the full level-2 feature grant set before projecting the shared Sorcery Point resource from Font of Magic. |
 | `L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS` | `L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS` | Spell Slot to Sorcery Point conversion should consume existing Spell Slot state and the projected shared Sorcery Point resource instead of creating per-feature resource state. |
 | `L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS` | `L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS` | Sorcery Point to temporary Spell Slot creation should consume the projected shared Sorcery Point resource and own the temporary slot lifecycle without duplicating class progression state. |
+| `L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS` | `L12G-AUTHOR-SORCERER-METAMAGIC`, `L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS` | Metamagic option projection should retain the authored Metamagic feature and link known option facts to the shared Sorcery Point resource projected from Font of Magic instead of duplicating point-pool state. |
+| `L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION` | `L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS`, `L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS` | Cast-time Metamagic execution should consume known-option and shared Sorcery Point resource facts rather than creating a Metamagic-local point pool. |
 
 ## Task Details
 
@@ -1208,7 +1225,7 @@ Acceptance:
 
 ### Task 19 - L12G-AUTHOR-SORCERER-METAMAGIC - Sorcerer Metamagic Authoring And Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `sorcerer_metamagic`. Gate task: 20 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -3051,4 +3068,70 @@ Acceptance:
 - the Sorcery Point to temporary Spell Slot conversion portion of `sorcerer_font_of_magic` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
 - no Spell Slot to Sorcery Point conversion or Metamagic option execution is implemented in this task;
 - runtime behavior traces to SRD Font of Magic without homebrew extensions and consumes projected shared Sorcery Point facts instead of duplicating class progression or spellcasting resource state;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.
+
+### Task 86 - L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS - Sorcerer Metamagic Character Facts And Option Projection
+
+Status: `ready-for-research`
+
+Unit: `sorcerer_metamagic`. Follow-up split from Task 19.
+
+Dependency: Task 19 (`L12G-AUTHOR-SORCERER-METAMAGIC`) and Task 83 (`L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS`) done.
+
+Inputs:
+
+- `packages/surface/content/sorcerer_metamagic.json`;
+- `packages/surface/content/class_sorcerer.json`;
+- `packages/surface/content/sorcerer_font_of_magic.json`;
+- the `sorcerer_metamagic` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Classes/Sorcerer.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- character-creation and character-sheet retained-feature, choice, and resource-reference owner evidence.
+
+Outputs:
+
+- owner evidence for retaining the Metamagic feature ref with Sorcerer level-2 progression;
+- chosen Metamagic option count, Sorcerer-level replacement lifecycle, unique known-option roster, option costs, stacking facts, and source link to the shared Font of Magic Sorcery Point resource derive from authored Surface records without duplicating class progression or Sorcery Point pool state;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the character-facts and option-projection portion of `sorcerer_metamagic` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no cast-time Metamagic option execution or Font of Magic Spell Slot conversion execution is implemented in this task;
+- owner evidence links Metamagic option facts to the shared Font of Magic Sorcery Point resource instead of creating a Metamagic-local point pool;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 87 - L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION - Sorcerer Metamagic Cast-Time Option Execution
+
+Status: `ready-for-research`
+
+Unit: `sorcerer_metamagic`. Follow-up split from Task 19.
+
+Dependency: Task 86 (`L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS`) and Task 83 (`L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS`) done.
+
+Inputs:
+
+- `packages/surface/content/sorcerer_metamagic.json`;
+- `packages/surface/content/sorcerer_font_of_magic.json`;
+- the `sorcerer_metamagic` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Classes/Sorcerer.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- character-battle-runtime, battle-runtime spell invocation hooks, Unit profile, owner-evidence, and focused tests for known Metamagic option execution.
+
+Outputs:
+
+- supported runtime profile and owner evidence for known Metamagic option execution at spell-cast time;
+- execution spends the shared Sorcery Point resource projected from Font of Magic, enforces the one-option-per-spell rule plus Empowered Spell and Seeking Spell stacking exceptions, enforces Quickened Spell level-1-plus spell turn limits, and applies the option-specific spell modifications for Careful, Distant, Empowered, Extended, Heightened, Quickened, Seeking, Subtle, Transmuted, and Twinned Spell;
+- Quint/runtime parity updates if promoted battle-runtime behavior changes;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the cast-time execution portion of `sorcerer_metamagic` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- runtime behavior traces to SRD Metamagic without homebrew extensions and consumes projected shared Sorcery Point facts instead of duplicating Font of Magic resource state;
+- no Font of Magic Spell Slot conversion behavior is implemented in this task;
 - focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.

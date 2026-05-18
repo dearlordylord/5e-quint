@@ -2305,6 +2305,35 @@
       "unitId": "sorcerer_font_of_magic"
     },
     {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS: Retain the Metamagic feature ref with Sorcerer level-2 progression, then project chosen Metamagic option count, Sorcerer-level replacement, unique known-option roster, option costs, stacking exceptions, and the source link to the shared Font of Magic Sorcery Point resource without duplicating class progression or Sorcery Point pool state. Owner: character-creation-runtime plus character-sheet-runtime. Required output: Owner evidence for CharacterBuild or Character Sheet retained Metamagic feature ref, known Metamagic options, replacement lifecycle, option costs, stacking facts, and reference to the shared Font of Magic Sorcery Point resource.; L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION: Execute known Metamagic options at spell-cast time by spending the shared Sorcery Point resource projected from Font of Magic, enforcing the one-option-per-spell rule plus Empowered and Seeking stacking exceptions, Quickened level-1-plus spell turn limits, and the option-specific spell modifications for Careful, Distant, Empowered, Extended, Heightened, Quickened, Seeking, Subtle, Transmuted, and Twinned Spell. Owner: character-battle-runtime plus battle-runtime spell invocation hooks. Required output: Supported runtime profile and owner evidence for Metamagic option execution that consumes the shared Sorcery Point resource rather than a synthetic Metamagic-local point pool.",
+      "sourceRecordPath": "packages/surface/content/sorcerer_metamagic.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Sorcerer Metamagic",
+          "id": "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_metamagic",
+          "levelBand": "level-2",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 118,
+            "lineStart": 111,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        }
+      ],
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
+      "unitId": "sorcerer_metamagic"
+    },
+    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -2787,14 +2816,15 @@
       ]
     },
     {
-      "count": 4,
+      "count": 5,
       "description": "The Unit claim records concrete smaller follow-up tasks for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
         "druid_wild_shape",
         "monk_monks_focus",
         "monk_uncanny_metabolism",
-        "sorcerer_font_of_magic"
+        "sorcerer_font_of_magic",
+        "sorcerer_metamagic"
       ]
     },
     {
@@ -2828,14 +2858,14 @@
       }
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 144,
+      "denominator": 145,
       "numerator": 89,
-      "percent": "61.8%"
+      "percent": "61.4%"
     },
     "strictTargetClosure": {
-      "denominator": 144,
-      "numerator": 112,
-      "percent": "77.8%"
+      "denominator": 145,
+      "numerator": 113,
+      "percent": "77.9%"
     }
   },
   "openFrontier": [
@@ -4365,24 +4395,6 @@
           }
         ],
         "unitId": "silence"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
-            "concept": "Sorcerer Metamagic",
-            "id": "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_metamagic",
-            "levelBand": "level-2",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 118,
-              "lineStart": 111,
-              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-            }
-          }
-        ],
-        "unitId": "sorcerer_metamagic"
       },
       {
         "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
@@ -6393,10 +6405,10 @@
       "missing": 31,
       "profile-subset-supported": 9,
       "supported-profile": 89,
-      "unsupported-profile": 15
+      "unsupported-profile": 16
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 4,
+      "blocked-follow-up-split": 5,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 11,
@@ -6404,7 +6416,7 @@
       "open-runtime-behavior": 31,
       "supported-profile": 89
     },
-    "nonSupportedFrontier": 55,
-    "strictDenominator": 144
+    "nonSupportedFrontier": 56,
+    "strictDenominator": 145
   }
 }

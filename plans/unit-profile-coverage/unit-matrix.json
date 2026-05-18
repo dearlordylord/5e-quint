@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 372,
-      "numerator": 142,
-      "percent": "38.2%"
+      "denominator": 373,
+      "numerator": 143,
+      "percent": "38.3%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 444,
-      "numerator": 174,
-      "percent": "39.2%"
+      "denominator": 445,
+      "numerator": 175,
+      "percent": "39.3%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 175
+      "value": 176
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 112,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 175,
-      "numerator": 175,
+      "denominator": 176,
+      "numerator": 176,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -97,9 +97,9 @@
       "percent": "92.9%"
     },
     "supportedProfileCoverage": {
-      "denominator": 143,
+      "denominator": 144,
       "numerator": 112,
-      "percent": "78.3%"
+      "percent": "77.8%"
     }
   },
   "metricSemantics": [
@@ -6830,6 +6830,41 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/sorcerer_font_of_magic.json",
       "unitId": "sorcerer_font_of_magic"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS",
+            "mechanic": "Retain the Metamagic feature ref with Sorcerer level-2 progression, then project chosen Metamagic option count, Sorcerer-level replacement, unique known-option roster, option costs, stacking exceptions, and the source link to the shared Font of Magic Sorcery Point resource without duplicating class progression or Sorcery Point pool state.",
+            "owner": "character-creation-runtime plus character-sheet-runtime",
+            "requiredOutput": "Owner evidence for CharacterBuild or Character Sheet retained Metamagic feature ref, known Metamagic options, replacement lifecycle, option costs, stacking facts, and reference to the shared Font of Magic Sorcery Point resource.",
+            "title": "Sorcerer Metamagic Character Facts And Option Projection"
+          },
+          {
+            "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION",
+            "mechanic": "Execute known Metamagic options at spell-cast time by spending the shared Sorcery Point resource projected from Font of Magic, enforcing the one-option-per-spell rule plus Empowered and Seeking stacking exceptions, Quickened level-1-plus spell turn limits, and the option-specific spell modifications for Careful, Distant, Empowered, Extended, Heightened, Quickened, Seeking, Subtle, Transmuted, and Twinned Spell.",
+            "owner": "character-battle-runtime plus battle-runtime spell invocation hooks",
+            "requiredOutput": "Supported runtime profile and owner evidence for Metamagic option execution that consumes the shared Sorcery Point resource rather than a synthetic Metamagic-local point pool.",
+            "title": "Sorcerer Metamagic Cast-Time Option Execution"
+          }
+        ],
+        "futureProfileOwner": "character-creation-runtime plus character-sheet-runtime plus character-battle-runtime spell invocation resource handoff",
+        "reason": "Metamagic is authored and installed as an SRD Surface class-feature record with catalog-level option grant, option cost, replacement, stacking, and shared Font of Magic Sorcery Point resource-reference metadata only. It remains blocked by the concrete follow-up split listed on this claim; Task 19 claims no CharacterBuild option projection or cast-time Metamagic execution profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/sorcerer_metamagic.json",
+      "unitId": "sorcerer_metamagic"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

@@ -86,6 +86,8 @@ export function traceClassFeatureMechanics(
       return [traceResourceContainerMechanics(m, nodes, edges, ids)];
     case "resource_pool":
       return [traceResourcePoolMechanics(m, nodes, edges, ids)];
+    case "metamagic_options":
+      return [traceMetamagicOptionsMechanics(m, nodes, edges, ids)];
     case "class_spellcasting_projection": {
       const spellcastingId = ids("spellcasting");
       nodes.push({
@@ -302,6 +304,40 @@ export function traceResourcePoolMechanics(
   }
 
   return containerId;
+}
+
+export function traceMetamagicOptionsMechanics(
+  m: Extract<ClassFeatureMechanics, { readonly family: "metamagic_options" }>,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const metamagicId = ids("metamagic");
+  const resourceId = ids("metamagic-resource-ref");
+  const options = m.options
+    .map(
+      (option) =>
+        `${option.displayName} (${option.sorceryPointCost} SP, ${option.stackingMode})`,
+    )
+    .join(" | ");
+  nodes.push({
+    id: metamagicId,
+    category: "procedure",
+    atomKind: "metamagic_options",
+    label:
+      `metamagic_options\n${m.choiceKey}\n${describeClassLevelChoiceCount(
+        m.choiceCount,
+      )}\n` +
+      `${m.changeOn.count} replacement on ${m.changeOn.kind}\n${options}`,
+  });
+  nodes.push({
+    id: resourceId,
+    category: "resource",
+    atomKind: "class_feature_point_pool_ref",
+    label: `class_feature_point_pool_ref\n${m.spends.resourceUnitId}`,
+  });
+  edges.push({ from: metamagicId, to: resourceId, relation: "spends" });
+  return metamagicId;
 }
 
 type ResourcePoolOperation = Extract<

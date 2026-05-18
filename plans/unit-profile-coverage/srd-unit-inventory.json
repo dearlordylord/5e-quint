@@ -195,15 +195,15 @@
     "levelTwoRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 14,
       "non-runtime": 12,
-      "missing-authored-record": 3,
-      "catalog-installed-owner-evidence-required": 4
+      "missing-authored-record": 2,
+      "catalog-installed-owner-evidence-required": 5
     },
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 301,
       "non-runtime": 24,
       "catalog-only/dead-for-now": 150,
-      "missing-authored-record": 77,
-      "catalog-installed-owner-evidence-required": 4
+      "missing-authored-record": 76,
+      "catalog-installed-owner-evidence-required": 5
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 143,
@@ -17694,15 +17694,29 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "sorcerer_metamagic",
+        "sourceRecordPath": "packages/surface/content/sorcerer_metamagic.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "sorcerer_metamagic"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit sorcerer_metamagic is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime plus character-sheet-runtime; character-battle-runtime plus battle-runtime spell invocation hooks",
+          "evidence": "Promote follow-up split L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION: L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS owns Retain the Metamagic feature ref with Sorcerer level-2 progression, then project chosen Metamagic option count, Sorcerer-level replacement, unique known-option roster, option costs, stacking exceptions, and the source link to the shared Font of Magic Sorcery Point resource without duplicating class progression or Sorcery Point pool state. Required output: Owner evidence for CharacterBuild or Character Sheet retained Metamagic feature ref, known Metamagic options, replacement lifecycle, option costs, stacking facts, and reference to the shared Font of Magic Sorcery Point resource.; L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION owns Execute known Metamagic options at spell-cast time by spending the shared Sorcery Point resource projected from Font of Magic, enforcing the one-option-per-spell rule plus Empowered and Seeking stacking exceptions, Quickened level-1-plus spell turn limits, and the option-specific spell modifications for Careful, Distant, Empowered, Extended, Heightened, Quickened, Seeking, Subtle, Transmuted, and Twinned Spell. Required output: Supported runtime profile and owner evidence for Metamagic option execution that consumes the shared Sorcery Point resource rather than a synthetic Metamagic-local point pool.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION: L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS owns Retain the Metamagic feature ref with Sorcerer level-2 progression, then project chosen Metamagic option count, Sorcerer-level replacement, unique known-option roster, option costs, stacking exceptions, and the source link to the shared Font of Magic Sorcery Point resource without duplicating class progression or Sorcery Point pool state. Required output: Owner evidence for CharacterBuild or Character Sheet retained Metamagic feature ref, known Metamagic options, replacement lifecycle, option costs, stacking facts, and reference to the shared Font of Magic Sorcery Point resource.; L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION owns Execute known Metamagic options at spell-cast time by spending the shared Sorcery Point resource projected from Font of Magic, enforcing the one-option-per-spell rule plus Empowered and Seeking stacking exceptions, Quickened level-1-plus spell turn limits, and the option-specific spell modifications for Careful, Distant, Empowered, Extended, Heightened, Quickened, Seeking, Subtle, Transmuted, and Twinned Spell. Required output: Supported runtime profile and owner evidence for Metamagic option execution that consumes the shared Sorcery Point resource rather than a synthetic Metamagic-local point pool.",
       "battleReadinessStatus": "owner-evidence-required"
     },
     {

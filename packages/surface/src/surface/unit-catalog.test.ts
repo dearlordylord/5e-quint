@@ -5,6 +5,7 @@ import { describe, expect, test } from "vitest";
 
 import findFamiliarInput from "../../content/find_familiar.json";
 import sorcererFontOfMagicInput from "../../content/sorcerer_font_of_magic.json";
+import sorcererMetamagicInput from "../../content/sorcerer_metamagic.json";
 import {
   ActivationPhaseSchema,
   AudibleEffectSchema,
@@ -1666,6 +1667,142 @@ describe("SRD Unit catalog boundary", () => {
         section: "Classes/Sorcerer.md:33-54,87-109",
       },
     });
+  });
+
+  test("installs Sorcerer Metamagic as shared Sorcery Point option metadata", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("class_sorcerer")).toMatchObject({
+      featureGrants: expect.arrayContaining([
+        { level: 2, unitId: "sorcerer_font_of_magic" },
+        { level: 2, unitId: "sorcerer_metamagic" },
+      ]),
+      kind: "class",
+      spellcasting: expect.objectContaining({
+        kind: "list_prepared_spellcasting_progression_creation",
+        spellcastingProgression: expect.arrayContaining([
+          expect.objectContaining({
+            atLevel: 2,
+            cantripCount: 4,
+            preparedSpellCount: 4,
+            spellSlots: [{ spellLevel: 1, count: 3 }],
+          }),
+        ]),
+      }),
+    });
+    expect(result.catalog.requireUnit("sorcerer_metamagic")).toMatchObject({
+      acquiredAtLevel: 2,
+      className: "sorcerer",
+      kind: "class_feature",
+      mechanics: {
+        changeOn: {
+          count: 1,
+          kind: "class_level",
+          replacement: "one_known_option_with_one_unknown_option",
+        },
+        choiceCount: {
+          kind: "class_level_total_choices",
+          levels: [
+            { atLevel: 2, total: 2 },
+            { atLevel: 10, total: 4 },
+            { atLevel: 17, total: 6 },
+          ],
+        },
+        choiceKey: "sorcerer_metamagic_options",
+        family: "metamagic_options",
+        options: expect.arrayContaining([
+          expect.objectContaining({
+            displayName: "Careful Spell",
+            id: "sorcerer_careful_spell",
+            sorceryPointCost: 1,
+            stackingMode: "one_per_spell",
+          }),
+          expect.objectContaining({
+            displayName: "Heightened Spell",
+            id: "sorcerer_heightened_spell",
+            sorceryPointCost: 2,
+            stackingMode: "one_per_spell",
+          }),
+          expect.objectContaining({
+            displayName: "Empowered Spell",
+            id: "sorcerer_empowered_spell",
+            sorceryPointCost: 1,
+            stackingMode: "can_combine_with_different_metamagic",
+          }),
+          expect.objectContaining({
+            displayName: "Seeking Spell",
+            id: "sorcerer_seeking_spell",
+            sorceryPointCost: 1,
+            stackingMode: "can_combine_with_different_metamagic",
+          }),
+        ]),
+        selectionRepeatability: { kind: "unique" },
+        spends: {
+          kind: "class_feature_point_pool",
+          resourceUnitId: "sorcerer_font_of_magic",
+        },
+        spellUseLimit: {
+          kind: "one_per_spell_unless_option_allows_stacking",
+        },
+        timing: "class_feature_acquisition",
+      },
+      provenance: {
+        kind: "srd-5.2.1",
+        section: "Classes/Sorcerer.md:33-54,111-117,145-214",
+      },
+    });
+  });
+
+  test("rejects incomplete or duplicated Sorcerer Metamagic option sets", () => {
+    const metamagic = decodeUnitRecordSync(sorcererMetamagicInput);
+    if (
+      metamagic.kind !== "class_feature" ||
+      metamagic.mechanics.family !== "metamagic_options"
+    ) {
+      throw new Error("Expected Metamagic option metadata fixture.");
+    }
+
+    const malformedMetamagic = {
+      ...metamagic,
+      mechanics: {
+        ...metamagic.mechanics,
+        options: metamagic.mechanics.options.filter(
+          (option) => option.id !== "sorcerer_twinned_spell",
+        ),
+      },
+    };
+    const firstMetamagicOption = metamagic.mechanics.options.find(
+      (option) => option.id === "sorcerer_careful_spell",
+    );
+    if (firstMetamagicOption === undefined) {
+      throw new Error("Expected Careful Spell option metadata fixture.");
+    }
+
+    const duplicatedMetamagic = {
+      ...metamagic,
+      mechanics: {
+        ...metamagic.mechanics,
+        options: [...metamagic.mechanics.options, firstMetamagicOption],
+      },
+    };
+
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(ClassFeatureRecordSchema)(
+          malformedMetamagic,
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(ClassFeatureRecordSchema)(
+          duplicatedMetamagic,
+        ),
+      ),
+    ).toBe(true);
   });
 
   test("rejects Font of Magic created Spell Slot options above level 5", () => {
