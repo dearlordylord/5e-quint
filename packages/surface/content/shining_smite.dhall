@@ -29,6 +29,7 @@ let Effect : Type =
       , brightRadiusFeet : Optional Natural
       , mode : Optional Text
       , on : Optional (List Text)
+      , affects : Optional Text
       , condition : Optional Text
       }
 
@@ -47,6 +48,7 @@ let smiteDamage : Effect =
       , brightRadiusFeet = None Natural
       , mode = None Text
       , on = None (List Text)
+      , affects = None Text
       , condition = None Text
       }
 
@@ -57,6 +59,7 @@ let brightLight : Effect =
       , brightRadiusFeet = Some 5
       , mode = None Text
       , on = None (List Text)
+      , affects = None Text
       , condition = None Text
       }
 
@@ -67,6 +70,7 @@ let attackAdvantage : Effect =
       , brightRadiusFeet = None Natural
       , mode = Some "advantage"
       , on = Some [ "attack_roll" ]
+      , affects = Some "rolls_against_self"
       , condition = None Text
       }
 
@@ -77,6 +81,7 @@ let suppressInvisible : Effect =
       , brightRadiusFeet = None Natural
       , mode = None Text
       , on = None (List Text)
+      , affects = None Text
       , condition = Some "invisible"
       }
 

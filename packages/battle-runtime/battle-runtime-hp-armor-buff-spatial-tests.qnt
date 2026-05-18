@@ -735,6 +735,30 @@ module battleRuntimeHpArmorBuffSpatialTests {
     }
   }
 
+  run test_shining_smite_after_hit_illuminates_and_concentration_cleanup_removes_light = {
+    val shone = resolveShiningSmiteAfterMeleeHit(initialState, 3, 6, false, true)
+    val broken = breakConcentrationSpellEffects(shone, Fighter)
+    val shiningEffect = ShiningSmiteIllumination({
+      durationTicks: shiningSmiteDurationTicks,
+    })
+    all {
+      assert(shone.goblin.hp == initialState.goblin.hp - 6),
+      assert(shone.goblin.activeEffects.contains(shiningEffect)),
+      assert(shone.fighter.concentrating),
+      assert(not(shone.bonusActionAvailable)),
+      assert(battleActorHasCommittedSpellSlotUse(shone, Fighter)),
+      assert(shiningSmiteDamageDiceForSlot(1) == 0),
+      assert(shiningSmiteDamageDiceForSlot(3) == 3),
+      assert(activeEffectsContainShiningSmite(shone.goblin.activeEffects)),
+      assert(activeEffectsDenyInvisibleBenefit(shone.goblin.activeEffects)),
+      assert(spellAttackRollModeFromActiveEffects(Set(), shone.goblin.activeEffects, true) == AdvantageSpellAttackRoll),
+      assert(spellAttackRollModeFromActiveEffects(Set(), shone.goblin.activeEffects, false) == AdvantageSpellAttackRoll),
+      assert(battleRuntimeLightEmitters(shone).contains(shiningSmiteBrightLightEmitter(Goblin))),
+      assert(not(activeEffectsContainShiningSmite(broken.goblin.activeEffects))),
+      assert(not(battleRuntimeLightEmitters(broken).contains(shiningSmiteBrightLightEmitter(Goblin)))),
+    }
+  }
+
   run test_searing_smite_burn_expires_after_duration_tick = {
     val burning = {
       ...initialState,

@@ -69,6 +69,7 @@ module battleRuntimeSpellInvocation {
       | Entangle => true
       | EnsnaringStrike => true
       | SearingSmite => true
+      | ShiningSmite => true
       | FaerieFire => true
       | AnimalFriendship => true
       | CharmPerson => true

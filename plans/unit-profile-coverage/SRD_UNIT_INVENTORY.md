@@ -31,8 +31,8 @@ This is the default `%` for level-1 plus level-2 readiness questions. It uses th
 
 #### Level 1-2 Battle Readiness by Status
 
-- accepted: 299
-- accepted-no-battle-effect: 173
+- accepted: 300
+- accepted-no-battle-effect: 172
 - battle-runtime-required: 80
 - owner-evidence-required: 4
 
@@ -65,9 +65,9 @@ This is the default `%` for level-1 plus level-2 readiness questions. It uses th
 ### Spell Unit Pressure by Disposition
 
 - catalog-authored-executable-follow-up: 1
-- catalog-installed-owner-evidence-present: 145
+- catalog-installed-owner-evidence-present: 146
 - catalog-installed-owner-evidence-required: 3
-- catalog-only/dead-for-now: 144
+- catalog-only/dead-for-now: 143
 - missing-authored-record: 74
 
 ## Recommended Ralph Batches

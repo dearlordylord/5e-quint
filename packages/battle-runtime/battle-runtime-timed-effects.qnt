@@ -163,6 +163,9 @@ module battleRuntimeTimedEffects {
             damageDice: data.damageDice,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
+        | ShiningSmiteIllumination(data) => ShiningSmiteIllumination({
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
         | AnimalFriendshipCharmed(data) => AnimalFriendshipCharmed({
             source: data.source,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
@@ -231,6 +234,7 @@ module battleRuntimeTimedEffects {
         | HexDamageRider(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | ThaumaturgyBoomingVoice(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | SearingSmiteBurning(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | ShiningSmiteIllumination(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | AnimalFriendshipCharmed(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | CharmPersonCharmed(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | DancingLightsEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)

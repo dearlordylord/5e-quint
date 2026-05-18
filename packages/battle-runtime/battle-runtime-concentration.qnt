@@ -32,6 +32,7 @@ module battleRuntimeConcentration {
         | HeroismTurnStartTemporaryHitPoints(_) => false
         | EnsnaringStrikeRestrained(_) => false
         | SearingSmiteBurning(_) => false
+        | ShiningSmiteIllumination(_) => false
         | FogCloudObscurement(_) => false
         | ResistanceDamageReduction(_) => false
         | SleepPendingRepeatSave(_) => false

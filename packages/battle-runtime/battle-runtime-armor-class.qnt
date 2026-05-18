@@ -61,6 +61,7 @@ module battleRuntimeArmorClass {
         | EntangleRestrained => false
         | EnsnaringStrikeRestrained(_) => false
         | SearingSmiteBurning(_) => false
+        | ShiningSmiteIllumination(_) => false
         | FaerieFireOutline => false
         | AnimalFriendshipCharmed(_) => false
         | CharmPersonCharmed(_) => false

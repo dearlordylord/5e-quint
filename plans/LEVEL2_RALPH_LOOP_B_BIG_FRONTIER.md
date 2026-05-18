@@ -25,7 +25,7 @@
     {
       "number": 46,
       "id": "L12G-SPELL-SHINING-SMITE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Shining Smite Runtime Support"
     },
     {
@@ -430,7 +430,7 @@ Acceptance:
 
 ### Task 46 - L12G-SPELL-SHINING-SMITE - Shining Smite Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `shining_smite`. Gate task: 48 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 

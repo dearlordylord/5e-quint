@@ -63,7 +63,9 @@ import { HIDEOUS_LAUGHTER_DURATION_TICKS } from "./domain-constants.ts";
 export const FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND = 60;
 export const FAERIE_FIRE_DIM_LIGHT_RADIUS_FEET = movementFeet(10);
 export const DANCING_LIGHTS_DIM_LIGHT_RADIUS_FEET = movementFeet(10);
+export const SHINING_SMITE_BRIGHT_LIGHT_RADIUS_FEET = movementFeet(5);
 export const PERCEPTION_LIGHTLY_OBSCURED_ROLL_MODE = "disadvantage" as const;
+const SHINING_SMITE_DIM_ADDITIONAL_RADIUS_FEET = movementFeet(0);
 type DancingLightsActiveEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "dancingLights" }
@@ -208,46 +210,53 @@ export function battleLightEmitters(
                   effect,
                 ),
               ]
-            : effect.kind === "heldLight"
+            : effect.kind === "shiningSmiteIllumination"
               ? [
-                  {
-                    kind: "spellLightEmitter",
-                    sourceSpellId: effect.sourceSpellId,
-                    sourceCombatantId: effect.sourceCombatantId,
-                    attachment: {
-                      kind: "combatant",
-                      combatantId: combatant.combatantId,
-                    },
-                    emission: {
-                      kind: "brightAndDim",
-                      brightRadiusFeet: effect.brightRadiusFeet,
-                      dimAdditionalFeet: effect.dimAdditionalFeet,
-                    },
-                    opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
-                    expiresAt: effect.expiresAt,
-                  },
+                  shiningSmiteCombatantBrightLightEmitter(
+                    combatant.combatantId,
+                    effect,
+                  ),
                 ]
-              : effect.kind === "dancingLights"
-                ? dancingLightsFromEffect(effect).map((light) => ({
-                    kind: "spellLightEmitter" as const,
-                    sourceSpellId: effect.sourceSpellId,
-                    sourceCombatantId: effect.sourceCombatantId,
-                    attachment: {
-                      kind: "dancingLight" as const,
-                      lightId: light.lightId,
-                      positionId: light.positionId,
-                      form: effect.form,
+              : effect.kind === "heldLight"
+                ? [
+                    {
+                      kind: "spellLightEmitter",
+                      sourceSpellId: effect.sourceSpellId,
+                      sourceCombatantId: effect.sourceCombatantId,
+                      attachment: {
+                        kind: "combatant",
+                        combatantId: combatant.combatantId,
+                      },
+                      emission: {
+                        kind: "brightAndDim",
+                        brightRadiusFeet: effect.brightRadiusFeet,
+                        dimAdditionalFeet: effect.dimAdditionalFeet,
+                      },
+                      opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
+                      expiresAt: effect.expiresAt,
                     },
-                    emission: {
-                      kind: "dim" as const,
-                      radiusFeet: DANCING_LIGHTS_DIM_LIGHT_RADIUS_FEET,
-                    },
-                    opaqueCoverInteraction: {
-                      kind: "doesNotBlockEmission" as const,
-                    },
-                    expiresAt: effect.expiresAt,
-                  }))
-                : [],
+                  ]
+                : effect.kind === "dancingLights"
+                  ? dancingLightsFromEffect(effect).map((light) => ({
+                      kind: "spellLightEmitter" as const,
+                      sourceSpellId: effect.sourceSpellId,
+                      sourceCombatantId: effect.sourceCombatantId,
+                      attachment: {
+                        kind: "dancingLight" as const,
+                        lightId: light.lightId,
+                        positionId: light.positionId,
+                        form: effect.form,
+                      },
+                      emission: {
+                        kind: "dim" as const,
+                        radiusFeet: DANCING_LIGHTS_DIM_LIGHT_RADIUS_FEET,
+                      },
+                      opaqueCoverInteraction: {
+                        kind: "doesNotBlockEmission" as const,
+                      },
+                      expiresAt: effect.expiresAt,
+                    }))
+                  : [],
       ),
   );
   return [
@@ -432,6 +441,28 @@ function faerieFireCombatantDimLightEmitter(
     emission: {
       kind: "dim",
       radiusFeet: FAERIE_FIRE_DIM_LIGHT_RADIUS_FEET,
+    },
+    opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
+    expiresAt: effect.expiresAt,
+  };
+}
+
+function shiningSmiteCombatantBrightLightEmitter(
+  combatantId: CombatantId,
+  effect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "shiningSmiteIllumination" }
+  >,
+): BattleLightEmitter {
+  return {
+    kind: "spellLightEmitter",
+    sourceSpellId: effect.sourceSpellId,
+    sourceCombatantId: effect.sourceCombatantId,
+    attachment: { kind: "combatant", combatantId },
+    emission: {
+      kind: "brightAndDim",
+      brightRadiusFeet: SHINING_SMITE_BRIGHT_LIGHT_RADIUS_FEET,
+      dimAdditionalFeet: SHINING_SMITE_DIM_ADDITIONAL_RADIUS_FEET,
     },
     opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
     expiresAt: effect.expiresAt,
@@ -1318,6 +1349,37 @@ export function applyAfterHitTimedDamageAndSaveSpellEffect(
   const replacing = target.activeEffects.filter(
     (effect) =>
       effect.kind === "spellTurnStartDamageAndSave" &&
+      effect.sourceSpellId === invocation.spell.id &&
+      effect.sourceCombatantId === invocation.activeEffect.sourceCombatantId,
+  );
+  const activeEffects = [
+    ...target.activeEffects.filter((effect) => !replacing.includes(effect)),
+    invocation.activeEffect,
+  ];
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(targetId, {
+      ...target,
+      activeEffects,
+    }),
+  };
+}
+
+export function applyAfterHitDamageAndIlluminationSpellEffect(
+  state: BattleState,
+  targetId: CombatantId,
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "afterHitDamageAndIllumination" }
+  >,
+): BattleState {
+  const target = state.combatants.get(targetId);
+  if (target === undefined) {
+    return state;
+  }
+  const replacing = target.activeEffects.filter(
+    (effect) =>
+      effect.kind === "shiningSmiteIllumination" &&
       effect.sourceSpellId === invocation.spell.id &&
       effect.sourceCombatantId === invocation.activeEffect.sourceCombatantId,
   );

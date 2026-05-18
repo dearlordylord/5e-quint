@@ -64,6 +64,9 @@ module battleRuntimeLight {
 
   pure def faerieFireDimLightRadiusFeet: int = 10
 
+  pure def shiningSmiteLightEmitterBrightRadiusFeet: int =
+    battleRuntimeShiningSmiteBrightLightRadiusFeet
+
   pure def lightBrightLightRadiusFeet: int = 20
 
   pure def lightDimLightAdditionalFeet: int = 20
@@ -376,6 +379,27 @@ module battleRuntimeLight {
       })
       .fold(Set(), (emitters, emitterSet) => emitters.union(emitterSet))
 
+  pure def shiningSmiteBrightLightEmitter(actor: Actor): LightEmitter =
+    SpellLightEmitter({
+      source: Fighter,
+      sourceSpell: ShiningSmite,
+      attachment: CombatantLightEmitter({ actor: actor }),
+      emission: BrightAndDimLightEmission({
+        brightRadiusFeet: shiningSmiteLightEmitterBrightRadiusFeet,
+        dimAdditionalFeet: 0,
+      }),
+      opaqueCoverInteraction: LightEmitterDoesNotBlockOpaqueCover,
+      expiresAt: ConcentrationLightEmitterExpiration({ actor: Fighter }),
+    })
+
+  pure def shiningSmiteCombatantBrightLightEmitters(actor: Actor, effects: Set[ActiveEffect]): Set[LightEmitter] =
+    effects
+      .map(effect => match effect {
+        | ShiningSmiteIllumination(_) => Set(shiningSmiteBrightLightEmitter(actor))
+        | _ => Set()
+      })
+      .fold(Set(), (emitters, emitterSet) => emitters.union(emitterSet))
+
   pure def faerieFireObjectDimLightEmitters(outlines: Set[ObjectOutline]): Set[LightEmitter] =
     outlines.map(outline => match outline {
       | FaerieFireObjectOutline(data) => SpellLightEmitter({
@@ -394,6 +418,8 @@ module battleRuntimeLight {
       .union(dancingLightsActiveEffectEmitters(state.fighter.activeEffects))
       .union(faerieFireCombatantDimLightEmitters(Fighter, state.fighter.activeEffects))
       .union(faerieFireCombatantDimLightEmitters(Goblin, state.goblin.activeEffects))
+      .union(shiningSmiteCombatantBrightLightEmitters(Fighter, state.fighter.activeEffects))
+      .union(shiningSmiteCombatantBrightLightEmitters(Goblin, state.goblin.activeEffects))
       .union(faerieFireObjectDimLightEmitters(state.objectOutlines))
 
   pure def fighterWithoutProduceFlameHeldLight(state: BattleState): Combatant =

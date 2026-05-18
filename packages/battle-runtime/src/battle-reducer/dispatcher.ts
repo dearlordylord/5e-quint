@@ -1,10 +1,9 @@
 // Battle dispatcher/orchestration extracted from ../battle-reducer.ts.
 // Owns subject resolution, reaction windows, interrupted-procedure replay,
-// turn snapshots, and reaction-choice orchestration. Mechanical move; no
-// behavior change intended.
+// turn snapshots, and reaction-choice orchestration.
 
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-feather-fall-mitigation spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage-illumination spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-feather-fall-mitigation spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
 import {
   canSpendAction,
@@ -131,6 +130,7 @@ import { expendSpellSlot } from "./spell-effects.ts";
 import { spellRequiresVerbal } from "./spells-discovery.ts";
 
 import {
+  applyAfterHitDamageAndIlluminationSpellEffect,
   applyAfterHitTimedDamageAndSaveSpellEffect,
   applyFailedSaveSpellConditionEffects,
   battleLightEmitters,
@@ -2360,7 +2360,8 @@ type AttackHitBonusActionSpellInvocation = Extract<
     readonly procedure:
       | "afterHitDamage"
       | "afterHitSaveGatedCondition"
-      | "afterHitTimedDamageAndSave";
+      | "afterHitTimedDamageAndSave"
+      | "afterHitDamageAndIllumination";
   }
 >;
 type AttackHitSaveGatedConditionInvocation = Extract<
@@ -2388,7 +2389,8 @@ export function resolveCastAttackHitBonusActionSpellCommand(
           (candidate) =>
             (candidate.procedure === "afterHitDamage" ||
               candidate.procedure === "afterHitSaveGatedCondition" ||
-              candidate.procedure === "afterHitTimedDamageAndSave") &&
+              candidate.procedure === "afterHitTimedDamageAndSave" ||
+              candidate.procedure === "afterHitDamageAndIllumination") &&
             supportedSpellInvocationMatchesRef(
               candidate,
               input.subject.invocation,
@@ -2412,7 +2414,8 @@ export function resolveCastAttackHitBonusActionSpellCommand(
     actor?.origin.kind !== "character" ||
     (invocation?.procedure !== "afterHitDamage" &&
       invocation?.procedure !== "afterHitSaveGatedCondition" &&
-      invocation?.procedure !== "afterHitTimedDamageAndSave")
+      invocation?.procedure !== "afterHitTimedDamageAndSave" &&
+      invocation?.procedure !== "afterHitDamageAndIllumination")
   ) {
     return invalidResult(
       input.state,
@@ -2529,34 +2532,20 @@ export function resolveCastAttackHitBonusActionSpellCommand(
       fillValidation.fillSet,
     );
   }
-  const spentBonusAction = spendActivationResource(
-    input.state.currentTurnResources,
-    { kind: "bonusAction" },
-  );
-  if (Either.isLeft(spentBonusAction)) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Bonus Action spell is no longer available for the current actor.",
-    );
-  }
   const resourced =
+    invocation.procedure === "afterHitDamage" &&
     invocation.resource.tag === "classFeatureFreeCast"
-      ? spendClassFeatureFreeCastResource(
-          {
-            ...input.state,
-            currentTurnResources: spentBonusAction.right,
-          },
+      ? spendAfterHitDamageFreeCastResource(
+          input.state,
           input.subject.casterId,
           invocation.resource.resourceUnitId,
-          input.state,
         )
-      : spendAttackHitSpellSlot(
-          input.state,
-          input.subject.casterId,
-          spentBonusAction.right,
-          invocation.resource.slotLevel,
-        );
+      : spendSpellCastResources({
+          state: input.state,
+          actorId: input.subject.casterId,
+          invocation,
+          errorState: input.state,
+        });
   if (resourced.tag === "invalid") {
     return resourced;
   }
@@ -2604,7 +2593,13 @@ export function resolveCastAttackHitBonusActionSpellCommand(
           target.combatantId,
           invocation,
         )
-      : resourced.state;
+      : invocation.procedure === "afterHitDamageAndIllumination"
+        ? applyAfterHitDamageAndIlluminationSpellEffect(
+            resourced.state,
+            target.combatantId,
+            invocation,
+          )
+        : resourced.state;
   const nextState = {
     ...effected,
     interruptStack: [
@@ -2630,34 +2625,30 @@ export function resolveCastAttackHitBonusActionSpellCommand(
   };
 }
 
-function spendAttackHitSpellSlot(
+function spendAfterHitDamageFreeCastResource(
   state: BattleState,
   casterId: CombatantId,
-  spentBonusAction: BattleTurnResources,
-  slotLevel: SpellSlotInvocationResource["slotLevel"],
+  resourceUnitId: string,
 ): SpellCastResourceSpendResult {
-  const nextTurnResources = markSpellSlotExpendedThisTurn(
-    spentBonusAction,
-    casterId,
-  );
-  if (Either.isLeft(nextTurnResources)) {
+  const spentBonusAction = spendActivationResource(state.currentTurnResources, {
+    kind: "bonusAction",
+  });
+  if (Either.isLeft(spentBonusAction)) {
     return invalidResult(
       state,
       "staleSubject",
-      "This turn has already expended a Spell Slot.",
+      "Bonus Action spell is no longer available for the current actor.",
     );
   }
-  return {
-    tag: "resolved",
-    state: expendSpellSlot(
-      {
-        ...state,
-        currentTurnResources: nextTurnResources.right,
-      },
-      casterId,
-      slotLevel,
-    ),
-  };
+  return spendClassFeatureFreeCastResource(
+    {
+      ...state,
+      currentTurnResources: spentBonusAction.right,
+    },
+    casterId,
+    resourceUnitId,
+    state,
+  );
 }
 
 function maybeOpenPostCastReadySpellCastWindow(input: {
@@ -2924,14 +2915,16 @@ function afterHitSpellMatchesAttackTrigger(
       readonly procedure:
         | "afterHitDamage"
         | "afterHitSaveGatedCondition"
-        | "afterHitTimedDamageAndSave";
+        | "afterHitTimedDamageAndSave"
+        | "afterHitDamageAndIllumination";
     }
   >,
   triggerKind: BattleAttackHitTriggerKind,
 ): boolean {
   if (
     invocation.procedure === "afterHitDamage" ||
-    invocation.procedure === "afterHitTimedDamageAndSave"
+    invocation.procedure === "afterHitTimedDamageAndSave" ||
+    invocation.procedure === "afterHitDamageAndIllumination"
   ) {
     return triggerKind === "meleeWeapon" || triggerKind === "unarmedStrike";
   }
@@ -4092,7 +4085,8 @@ export function attackHitBonusActionSpellReactionChoices(
       if (
         (invocation.procedure !== "afterHitDamage" &&
           invocation.procedure !== "afterHitSaveGatedCondition" &&
-          invocation.procedure !== "afterHitTimedDamageAndSave") ||
+          invocation.procedure !== "afterHitTimedDamageAndSave" &&
+          invocation.procedure !== "afterHitDamageAndIllumination") ||
         !afterHitSpellMatchesAttackTrigger(
           invocation,
           frame.attackHitTriggerKind,

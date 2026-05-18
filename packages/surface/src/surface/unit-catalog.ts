@@ -149,6 +149,7 @@ import shieldInput from "../../content/shield.json";
 import shieldOfFaithInput from "../../content/shield_of_faith.json";
 import shatterInput from "../../content/shatter.json";
 import shillelaghInput from "../../content/shillelagh.json";
+import shiningSmiteInput from "../../content/shining_smite.json";
 import shockingGraspInput from "../../content/shocking_grasp.json";
 import sleepInput from "../../content/sleep.json";
 import sacredFlameInput from "../../content/sacred_flame.json";
@@ -451,6 +452,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     shieldOfFaithInput,
     shatterInput,
     shillelaghInput,
+    shiningSmiteInput,
     sleepInput,
     thunderwaveInput,
     trueStrikeInput,

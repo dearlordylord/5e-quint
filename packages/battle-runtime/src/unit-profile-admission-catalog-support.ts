@@ -107,6 +107,8 @@ export const jumpUnitId = "jump";
 
 export const searingSmiteUnitId = "searing_smite";
 
+export const shiningSmiteUnitId = "shining_smite";
+
 export const trueStrikeUnitId = "true_strike";
 
 export const iceKnifeUnitId = "ice_knife";

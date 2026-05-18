@@ -19,7 +19,14 @@ module battleRuntimeCreatureTypeProtection {
   ): SpellAttackRollMode = {
     val hasAdvantage =
       targetEffects.contains(GuidingBoltNextAttackAdvantage)
-      or (attackerCanSeeTarget and targetEffects.contains(FaerieFireOutline))
+      or targetEffects.exists(effect => match effect {
+        | ShiningSmiteIllumination(_) => true
+        | _ => false
+      })
+      or (
+        attackerCanSeeTarget
+          and targetEffects.contains(FaerieFireOutline)
+      )
     val hasDisadvantage =
       attackerEffects.contains(ViciousMockeryNextAttackDisadvantage)
       or attackerEffects.exists(effect => match effect { | WeaponMasterySapNextAttackDisadvantage(_) => true | _ => false })

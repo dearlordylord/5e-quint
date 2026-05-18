@@ -47,6 +47,7 @@ module battleRuntimeSpellFactsTests {
 
   run test_spell_invocation_executable_spell_facts = {
     val animalFriendshipCharmed = AnimalFriendshipCharmed({ source: Fighter, durationTicks: 24 * 60 })
+    val shiningSmiteIllumination = ShiningSmiteIllumination({ durationTicks: 10 })
     all {
       assert(rollModifierMaximumTargets(BlessRollModifier, 2) == 4),
       assert(rollModifierMaximumTargets(BaneRollModifier, 3) == 5),
@@ -239,6 +240,7 @@ module battleRuntimeSpellFactsTests {
       assert(saveGatedAttackRollAdvantageTargeting(FaerieFireSaveGate) == AreaSaveTargets),
       assert(saveGatedAttackRollAdvantageFailedSaveActiveEffects(FaerieFireSaveGate) == Set(FaerieFireOutline)),
       assert(activeEffectsDenyInvisibleBenefit(Set(FaerieFireOutline))),
+      assert(activeEffectsDenyInvisibleBenefit(Set(shiningSmiteIllumination))),
       assert(activeEffectsDenyInvisibleBenefit(Set(StarryWispInvisibleBenefitDenied({ source: Fighter, expiresAtRound: 2 })))),
       assert(not(activeEffectsDenyInvisibleBenefit(Set(GuidingBoltNextAttackAdvantage)))),
       assert(saveGatedConditionTargeting(AnimalFriendshipSaveGate) == TargetListSaveTargets({ minTargets: 1, baseSlotLevel: 1, baseTargets: 1, additionalTargetsPerSlotLevel: 1 })),
@@ -266,13 +268,18 @@ module battleRuntimeSpellFactsTests {
       assert(spellAttackRollModeFromActiveEffects(Set(), Set(GuidingBoltNextAttackAdvantage), false) == AdvantageSpellAttackRoll),
       assert(spellAttackRollModeFromActiveEffects(Set(), Set(FaerieFireOutline), true) == AdvantageSpellAttackRoll),
       assert(spellAttackRollModeFromActiveEffects(Set(), Set(FaerieFireOutline), false) == NormalSpellAttackRoll),
+      assert(spellAttackRollModeFromActiveEffects(Set(), Set(shiningSmiteIllumination), true) == AdvantageSpellAttackRoll),
+      assert(spellAttackRollModeFromActiveEffects(Set(), Set(shiningSmiteIllumination), false) == AdvantageSpellAttackRoll),
       assert(spellAttackRollModeFromActiveEffects(Set(ViciousMockeryNextAttackDisadvantage), Set(), true) == DisadvantageSpellAttackRoll),
       assert(spellAttackRollModeFromActiveEffects(Set(ViciousMockeryNextAttackDisadvantage), Set(GuidingBoltNextAttackAdvantage), true) == NormalSpellAttackRoll),
       assert(spellAttackRollModeFromActiveEffects(Set(ViciousMockeryNextAttackDisadvantage), Set(FaerieFireOutline), true) == NormalSpellAttackRoll),
+      assert(spellAttackRollModeFromActiveEffects(Set(ViciousMockeryNextAttackDisadvantage), Set(shiningSmiteIllumination), true) == NormalSpellAttackRoll),
       assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(ProtectionFromEvilAndGoodCreatureTypeProtection), true) == DisadvantageSpellAttackRoll),
       assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(GuidingBoltNextAttackAdvantage, ProtectionFromEvilAndGoodCreatureTypeProtection), false) == NormalSpellAttackRoll),
       assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(FaerieFireOutline, ProtectionFromEvilAndGoodCreatureTypeProtection), true) == NormalSpellAttackRoll),
       assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(FaerieFireOutline, ProtectionFromEvilAndGoodCreatureTypeProtection), false) == DisadvantageSpellAttackRoll),
+      assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(shiningSmiteIllumination, ProtectionFromEvilAndGoodCreatureTypeProtection), true) == NormalSpellAttackRoll),
+      assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(shiningSmiteIllumination, ProtectionFromEvilAndGoodCreatureTypeProtection), false) == NormalSpellAttackRoll),
       assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(HumanoidCreature, Set(), Set(ProtectionFromEvilAndGoodCreatureTypeProtection), true) == NormalSpellAttackRoll),
       assert(protectionFromEvilAndGoodPreventsConditionFromCreatureType(UndeadCreature, Set(ProtectionFromEvilAndGoodCreatureTypeProtection), PreventedCharmed)),
       assert(protectionFromEvilAndGoodPreventsConditionFromCreatureType(FeyCreature, Set(ProtectionFromEvilAndGoodCreatureTypeProtection), PreventedFrightened)),
@@ -321,6 +328,7 @@ module battleRuntimeSpellFactsTests {
       assert(spellInvocationSpendsSpellSlot(ProtectionFromEvilAndGood)),
       assert(spellInvocationSpendsSpellSlot(DivineFavor)),
       assert(spellInvocationSpendsSpellSlot(DivineSmite)),
+      assert(spellInvocationSpendsSpellSlot(ShiningSmite)),
       assert(spellInvocationSpendsSpellSlot(HuntersMark)),
       assert(spellInvocationSpendsSpellSlot(Hex)),
       assert(spellInvocationSpendsSpellSlot(FogCloud)),

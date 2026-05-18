@@ -277,19 +277,35 @@ module battleRuntimeSpellAttack {
     else
       Set()
 
+  pure def targetEffectsGrantAttackRollAdvantage(
+    targetEffects: Set[ActiveEffect],
+    attackerCanSeeTarget: bool,
+  ): bool =
+    targetEffects.contains(GuidingBoltNextAttackAdvantage)
+      or targetEffects.exists(effect => match effect {
+        | ShiningSmiteIllumination(_) => true
+        | _ => false
+      })
+      or (
+        attackerCanSeeTarget
+          and targetEffects.contains(FaerieFireOutline)
+      )
+
   pure def spellAttackRollModeFromActiveEffects(
     attackerEffects: Set[ActiveEffect],
     targetEffects: Set[ActiveEffect],
     attackerCanSeeTarget: bool,
-  ): SpellAttackRollMode =
-    if ((attackerEffects.contains(ViciousMockeryNextAttackDisadvantage) or attackerEffects.exists(effect => match effect { | WeaponMasterySapNextAttackDisadvantage(_) => true | _ => false })) and (targetEffects.contains(GuidingBoltNextAttackAdvantage) or (attackerCanSeeTarget and targetEffects.contains(FaerieFireOutline))))
+  ): SpellAttackRollMode = {
+    val targetAdvantage = targetEffectsGrantAttackRollAdvantage(targetEffects, attackerCanSeeTarget)
+    if ((attackerEffects.contains(ViciousMockeryNextAttackDisadvantage) or attackerEffects.exists(effect => match effect { | WeaponMasterySapNextAttackDisadvantage(_) => true | _ => false })) and targetAdvantage)
       NormalSpellAttackRoll
-    else if (targetEffects.contains(GuidingBoltNextAttackAdvantage) or (attackerCanSeeTarget and targetEffects.contains(FaerieFireOutline)))
+    else if (targetAdvantage)
       AdvantageSpellAttackRoll
     else if (attackerEffects.contains(ViciousMockeryNextAttackDisadvantage) or attackerEffects.exists(effect => match effect { | WeaponMasterySapNextAttackDisadvantage(_) => true | _ => false }))
       DisadvantageSpellAttackRoll
     else
       NormalSpellAttackRoll
+  }
 
   pure def objectOutlinesGrantAttackRollAdvantage(
     outlines: Set[ObjectOutline],
@@ -318,6 +334,7 @@ module battleRuntimeSpellAttack {
   pure def activeEffectsDenyInvisibleBenefit(effects: Set[ActiveEffect]): bool =
     effects.contains(FaerieFireOutline) or effects.exists(effect => match effect {
       | StarryWispInvisibleBenefitDenied(_) => true
+      | ShiningSmiteIllumination(_) => true
       | _ => false
     })
 

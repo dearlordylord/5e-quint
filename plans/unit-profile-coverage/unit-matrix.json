@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 374,
-      "numerator": 146,
-      "percent": "39%"
+      "numerator": 147,
+      "percent": "39.3%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 446,
-      "numerator": 178,
-      "percent": "39.9%"
+      "numerator": 179,
+      "percent": "40.1%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,47 +59,47 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 179
+      "value": 180
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 115,
-      "numerator": 115,
+      "denominator": 116,
+      "numerator": 116,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 179,
-      "numerator": 179,
+      "denominator": 180,
+      "numerator": 180,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 65,
-      "numerator": 65,
+      "denominator": 66,
+      "numerator": 66,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 65,
-      "numerator": 65,
+      "denominator": 66,
+      "numerator": 66,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 65,
-      "numerator": 65,
+      "denominator": 66,
+      "numerator": 66,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 65,
-      "numerator": 65,
+      "denominator": 66,
+      "numerator": 66,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 115,
+      "denominator": 116,
       "numerator": 104,
-      "percent": "90.4%"
+      "percent": "89.7%"
     },
     "supportedProfileCoverage": {
-      "denominator": 147,
-      "numerator": 115,
-      "percent": "78.2%"
+      "denominator": 148,
+      "numerator": 116,
+      "percent": "78.4%"
     }
   },
   "metricSemantics": [
@@ -1060,6 +1060,32 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "spell.invocation-after-hit-damage-illumination",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts"
+      ],
+      "sourceBoundary": "Runtime consumes the authored Shining Smite after-hit trigger, Spell Slot level, struck target identity from the attack-hit frame, and ordinary sight/emitter projection facts; automatic geometry, line-of-sight derivation, and visual presentation remain caller/table-owned.",
+      "taskRefs": [
+        "L12G-SPELL-SHINING-SMITE"
+      ],
+      "title": "Spell invocation spends a Bonus Action and Spell Slot after an eligible melee hit to add damage and attach concentration-owned target illumination",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"
         }
       ]
     },
@@ -4103,6 +4129,22 @@
         "character-sheet.pact-slot-recovery"
       ],
       "taskId": "L12G-AUTHOR-WARLOCK-MAGICAL-CUNNING"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Shining Smite's after-hit Bonus Action and Spell Slot spend, Radiant damage scaling, concentration-owned target illumination, attack-roll Advantage against the illuminated target, Invisible-benefit denial, and Bright Light emitter projection.",
+      "profileIds": [
+        "spell.invocation-after-hit-damage-illumination"
+      ],
+      "taskId": "L12G-SPELL-SHINING-SMITE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime reducer tests cover Shining Smite admission, melee weapon or Unarmed Strike trigger, resource spend, replay continuation, Radiant damage scaling, target illumination effect, attack Advantage, Invisible suppression, light emitter projection, and concentration cleanup.",
+      "profileIds": [
+        "spell.invocation-after-hit-damage-illumination"
+      ],
+      "taskId": "L12G-SPELL-SHINING-SMITE"
     }
   ],
   "units": [
@@ -13806,6 +13848,76 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "table/sight and light projection owner",
+          "reason": "Automatic line-of-sight, map geometry, and Bright Light presentation/color rendering remain caller/table-owned; battle runtime consumes explicit sight and light-projection witness facts and owns the Shining Smite spell effect and mechanical projections."
+        },
+        "profileIds": [
+          "spell.invocation-after-hit-damage-illumination"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Bonus Action spell casting only from the attack-hit continuation for a Melee weapon or Unarmed Strike hit",
+          "level-2-or-higher Spell Slot spend and same-turn Spell Slot ledger",
+          "Radiant damage added to the triggering attack, with +1d6 per slot level above 2",
+          "Concentration-owned target illumination effect until the spell ends",
+          "attack rolls against the illuminated target have Advantage, with ordinary Disadvantage sources still canceling through aggregate roll-mode rules",
+          "the illuminated target cannot benefit from the Invisible condition while the spell effect remains active",
+          "the illuminated target emits a 5-foot Bright Light emitter from the active Spell Effect"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-SPELL-SHINING-SMITE"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-after-hit-damage-illumination",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts"
+          ],
+          "sourceBoundary": "Runtime consumes the authored Shining Smite after-hit trigger, Spell Slot level, struck target identity from the attack-hit frame, and ordinary sight/emitter projection facts; automatic geometry, line-of-sight derivation, and visual presentation remain caller/table-owned.",
+          "taskRefs": [
+            "L12G-SPELL-SHINING-SMITE"
+          ],
+          "title": "Spell invocation spends a Bonus Action and Spell Slot after an eligible melee hit to add damage and attach concentration-owned target illumination",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-shining-smite.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/shining_smite.json",
+      "unitId": "shining_smite"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "profileIds": [
           "spell.invocation-sleep-target-admission",
           "spell.invocation-sleep-repeat-save-lifecycle"
@@ -18616,24 +18728,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/sequester.json",
       "unitId": "sequester"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/shining_smite.json",
-      "unitId": "shining_smite"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

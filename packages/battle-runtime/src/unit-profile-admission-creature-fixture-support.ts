@@ -500,6 +500,10 @@ export function attackTargetFill(
   actorId: CombatantId,
   targetId: CombatantId,
   attackName = "Unarmed Strike",
+  extraSpatialFacts: Extract<
+    BattleFill,
+    { readonly kind: "targetChoice" }
+  >["spatialFacts"] = [],
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   return {
     kind: "targetChoice",
@@ -520,6 +524,7 @@ export function attackTargetFill(
             targetId,
             attackName,
           },
+      ...extraSpatialFacts,
     ],
   };
 }
