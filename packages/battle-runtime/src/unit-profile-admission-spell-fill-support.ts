@@ -366,6 +366,28 @@ export function spellObjectLightTargetFill(input: {
   };
 }
 
+export function spellTouchedObjectTargetFill(input: {
+  readonly hole: Extract<BattleHole, { readonly kind: "objectTargetChoice" }>;
+  readonly objectId?: ObjectTargetChoiceFill["value"];
+  readonly spellId: string;
+  readonly casterId: CombatantId;
+}): ObjectTargetChoiceFill {
+  const objectId = input.objectId ?? battleObjectId("touched-object");
+  return {
+    kind: "objectTargetChoice",
+    holeId: input.hole.holeId,
+    value: objectId,
+    spatialFacts: [
+      {
+        kind: "spellTouchedObjectTarget",
+        casterId: input.casterId,
+        objectId,
+        spellId: input.spellId,
+      },
+    ],
+  };
+}
+
 export function spellTargetListFill(
   hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
   casterId: CombatantId,

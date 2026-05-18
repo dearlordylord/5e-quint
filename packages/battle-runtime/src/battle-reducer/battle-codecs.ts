@@ -744,6 +744,12 @@ const BattleTargetSpatialFactSchema = Schema.Union(
     ),
   }),
   Schema.Struct({
+    kind: Schema.Literal("spellTouchedObjectTarget"),
+    casterId: CombatantId,
+    objectId: BattleObjectId,
+    spellId: Schema.String,
+  }),
+  Schema.Struct({
     kind: Schema.Literal("spellLeapTargetWithinRange"),
     previousTargetId: CombatantId,
     targetId: CombatantId,
@@ -1028,7 +1034,29 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       actionCost: Schema.Literal("magicAction"),
       targeting: Schema.Struct({
         kind: Schema.Literal("singleObject"),
-        maxSize: SizeSchema,
+        object: Schema.Struct({
+          kind: Schema.Literal("lightCantripObject"),
+          maxSize: SizeSchema,
+        }),
+      }),
+      light: Schema.Struct({
+        kind: Schema.Literal("brightAndDim"),
+        brightRadiusFeet: MovementFeet,
+        dimAdditionalFeet: MovementFeet,
+      }),
+      expiresAt: BattleRuntimeObjectSchema,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("objectLight"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      targeting: Schema.Struct({
+        kind: Schema.Literal("singleObject"),
+        object: Schema.Struct({
+          kind: Schema.Literal("touchedObject"),
+        }),
       }),
       light: Schema.Struct({
         kind: Schema.Literal("brightAndDim"),
@@ -2510,6 +2538,12 @@ type BattleFillEncoded =
                   readonly relation: "worn" | "carried";
                 };
           }
+        | {
+            readonly kind: "spellTouchedObjectTarget";
+            readonly casterId: string;
+            readonly objectId: string;
+            readonly spellId: string;
+          }
       )[];
     }
   | {
@@ -2983,6 +3017,12 @@ export const BattleFillSchema: Schema.Schema<
                 relation: Schema.Literal("worn", "carried"),
               }),
             ),
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("spellTouchedObjectTarget"),
+            casterId: CombatantId,
+            objectId: BattleObjectId,
+            spellId: Schema.String,
           }),
         ),
       ),

@@ -462,10 +462,13 @@ export type BattleActiveEffectExpiration =
   | {
       readonly kind: "duration";
       readonly durationTicks: ElapsedTimeTicks;
+    }
+  | {
+      readonly kind: "untilDispelled";
     };
-type TurnAnchoredBattleActiveEffectExpiration = Exclude<
+type TurnAnchoredBattleActiveEffectExpiration = Extract<
   BattleActiveEffectExpiration,
-  { readonly kind: "concentration" } | { readonly kind: "duration" }
+  { readonly kind: "startOfTurn" } | { readonly kind: "endOfTurn" }
 >;
 export type BattleSpellEffectEarlyEnd =
   | { readonly kind: "targetDonsArmor" }
@@ -1612,6 +1615,12 @@ export type BattleTargetSpatialFact =
           };
     }
   | {
+      readonly kind: "spellTouchedObjectTarget";
+      readonly casterId: CombatantId;
+      readonly objectId: BattleObjectId;
+      readonly spellId: SpellRecord["id"];
+    }
+  | {
       readonly kind: "spellLeapTargetWithinRange";
       readonly previousTargetId: CombatantId;
       readonly targetId: CombatantId;
@@ -2369,22 +2378,43 @@ export type HeldLightSpellInvocation = {
   };
   readonly expiresAt: BattleActiveEffectExpiration;
 };
-export type ObjectLightSpellInvocation = {
+type ObjectLightSpellCantripSource = {
   readonly access: ClassCantripSpellAccess;
   readonly resource: NoSpellInvocationResource;
+  readonly targeting: {
+    readonly kind: "singleObject";
+    readonly object: {
+      readonly kind: "lightCantripObject";
+      readonly maxSize: Size;
+    };
+  };
+};
+type ObjectLightSpellSlotSource = {
+  readonly access: PreparedSpellAccess;
+  readonly resource: SpellSlotInvocationResource;
+  readonly targeting: {
+    readonly kind: "singleObject";
+    readonly object: {
+      readonly kind: "touchedObject";
+    };
+  };
+};
+type ObjectLightSpellSource =
+  | ObjectLightSpellCantripSource
+  | ObjectLightSpellSlotSource;
+type ObjectLightSpellInvocationBase = {
   readonly procedure: "objectLight";
   readonly spell: SpellRecord;
   readonly actionCost: "magicAction";
-  readonly targeting: {
-    readonly kind: "singleObject";
-    readonly maxSize: Size;
-  };
   readonly light: Extract<
     BattleLightEmission,
     { readonly kind: "brightAndDim" }
   >;
   readonly expiresAt: BattleActiveEffectExpiration;
 };
+export type ObjectLightSpellInvocation =
+  ObjectLightSpellInvocationBase &
+  ObjectLightSpellSource;
 export type HeldLightHurlSpellInvocation = DamageSpellSource & {
   readonly access: ClassCantripSpellAccess;
   readonly resource: NoSpellInvocationResource;
@@ -4302,6 +4332,7 @@ export type BattleFill =
         {
           readonly kind:
             | "spellObjectLightTarget"
+            | "spellTouchedObjectTarget"
             | "spellObjectIgnition"
             | "spellObjectTarget"
             | "spellObjectTargetSight";

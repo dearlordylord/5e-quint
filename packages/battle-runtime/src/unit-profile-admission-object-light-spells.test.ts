@@ -1,7 +1,9 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV70B light
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-CONTINUAL-FLAME continual_flame
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-object-light
 import { describe, expect, test } from "vitest";
 import {
+  continualFlameUnitId,
   lightUnitId,
   spellCasterId,
   spellTargetId,
@@ -11,6 +13,7 @@ import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   spellAct,
   spellObjectLightTargetFill,
+  spellTouchedObjectTargetFill,
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
@@ -24,6 +27,7 @@ import {
   elapsedTimeTicks,
   movementFeet,
   resolveBattleSubject,
+  spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
 import type { BattleState } from "./unit-profile-admission-test-support.ts";
 
@@ -107,6 +111,122 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
         (use) => use.kind === "committed",
       ),
     ).toBe(false);
+    expect(resolved.state.combatants.get(spellCasterId)?.activeEffects).toEqual(
+      [],
+    );
+    expect(resolved.state.combatants.get(spellTargetId)?.activeEffects).toEqual(
+      [],
+    );
+  });
+
+  test("continual flame is admitted as a Magic action spell slot object emitter", () => {
+    const spell = spellRecord(continualFlameUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = spellAct({
+      state,
+      spellId: continualFlameUnitId,
+      slotLevel: 2,
+    });
+    const targetHole = requireHole(act.initialHoles, "objectTargetChoice");
+    const objectId = battleObjectId("unit-profile-continual-flame-object");
+
+    expect(act).toEqual(
+      expect.objectContaining({
+        subject: {
+          tag: "actionSpell",
+          actorId: spellCasterId,
+          invocation: spellSlotInvocationRef(
+            continualFlameUnitId,
+            2,
+            "objectLight",
+          ),
+          mode: { tag: "cast" },
+        },
+        initialHoles: [
+          expect.objectContaining({
+            kind: "objectTargetChoice",
+            label: "Continual Flame object target",
+            requiresTableSpatialFact: true,
+          }),
+        ],
+      }),
+    );
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTouchedObjectTargetFill({
+          hole: targetHole,
+          objectId,
+          spellId: continualFlameUnitId,
+          casterId: spellCasterId,
+        }),
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      state: {
+        lightEmitters: [
+          {
+            sourceSpellId: continualFlameUnitId,
+            sourceCombatantId: spellCasterId,
+            attachment: { kind: "object", objectId },
+            emission: {
+              kind: "brightAndDim",
+              brightRadiusFeet: movementFeet(20),
+              dimAdditionalFeet: movementFeet(20),
+            },
+            expiresAt: { kind: "untilDispelled" },
+          },
+        ],
+      },
+      snapshot: {
+        turn: {
+          spellSlotUsesThisTurn: [
+            { kind: "committed", combatantId: spellCasterId },
+          ],
+        },
+        lightEmitters: [
+          expect.objectContaining({
+            sourceSpellId: continualFlameUnitId,
+            attachment: { kind: "object", objectId },
+          }),
+        ],
+      },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Continual Flame to resolve.");
+    }
+    const emitter = resolved.snapshot.lightEmitters[0];
+    if (emitter === undefined) {
+      throw new Error("Expected Continual Flame emitter.");
+    }
+    expect(
+      battleLightEmitterProjection(emitter, {
+        kind: "object",
+        objectId,
+        distanceFeet: movementFeet(20),
+        opaqueCover: false,
+      }),
+    ).toEqual({ emitter, illumination: "brightLight" });
+    expect(
+      battleIlluminationFromLightEmitters(resolved.snapshot.lightEmitters, [
+        {
+          kind: "object",
+          objectId,
+          distanceFeet: movementFeet(40),
+          opaqueCover: false,
+        },
+      ]),
+    ).toBe("dimLight");
+    expect(canSpendAction(resolved.state.currentTurnResources, "magic")).toBe(
+      false,
+    );
     expect(resolved.state.combatants.get(spellCasterId)?.activeEffects).toEqual(
       [],
     );
@@ -323,6 +443,71 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
     expect(resolved.state.lightEmitters).toHaveLength(1);
   });
 
+  test("continual flame does not replace the caster's prior continual flame emitter", () => {
+    const spell = spellRecord(continualFlameUnitId);
+    const priorObjectId = battleObjectId("unit-profile-continual-flame-prior");
+    const nextObjectId = battleObjectId("unit-profile-continual-flame-next");
+    const state: BattleState = {
+      ...spellBattle({
+        preparedSpells: [spell],
+        spellSlots: [{ spellLevel: 2, count: 1 }],
+      }),
+      lightEmitters: [
+        {
+          kind: "spellLightEmitter",
+          sourceSpellId: continualFlameUnitId,
+          sourceCombatantId: spellCasterId,
+          attachment: { kind: "object", objectId: priorObjectId },
+          emission: {
+            kind: "brightAndDim",
+            brightRadiusFeet: movementFeet(20),
+            dimAdditionalFeet: movementFeet(20),
+          },
+          opaqueCoverInteraction: { kind: "blocksEmission" },
+          expiresAt: { kind: "untilDispelled" },
+        },
+      ],
+    };
+    const act = spellAct({
+      state,
+      spellId: continualFlameUnitId,
+      slotLevel: 2,
+    });
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTouchedObjectTargetFill({
+          hole: requireHole(act.initialHoles, "objectTargetChoice"),
+          objectId: nextObjectId,
+          spellId: continualFlameUnitId,
+          casterId: spellCasterId,
+        }),
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      state: {
+        lightEmitters: expect.arrayContaining([
+          expect.objectContaining({
+            sourceSpellId: continualFlameUnitId,
+            attachment: { kind: "object", objectId: priorObjectId },
+          }),
+          expect.objectContaining({
+            sourceSpellId: continualFlameUnitId,
+            attachment: { kind: "object", objectId: nextObjectId },
+          }),
+        ]),
+      },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Continual Flame recast to resolve.");
+    }
+    expect(resolved.state.lightEmitters).toHaveLength(2);
+  });
+
   test("light object emitter expires on its timed duration", () => {
     const spell = spellRecord(lightUnitId);
     const state = spellBattle({ cantrips: [spell] });
@@ -377,6 +562,64 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
       tag: "resolved",
       state: { lightEmitters: [] },
       snapshot: { lightEmitters: [] },
+    });
+  });
+
+  test("continual flame object emitter remains until dispelled", () => {
+    const state = spellBattle({});
+    const objectId = battleObjectId("unit-profile-continual-flame-persistent");
+    const ongoingFlame: BattleState = {
+      ...state,
+      lightEmitters: [
+        {
+          kind: "spellLightEmitter",
+          sourceSpellId: continualFlameUnitId,
+          sourceCombatantId: spellCasterId,
+          attachment: { kind: "object", objectId },
+          emission: {
+            kind: "brightAndDim",
+            brightRadiusFeet: movementFeet(20),
+            dimAdditionalFeet: movementFeet(20),
+          },
+          opaqueCoverInteraction: { kind: "blocksEmission" },
+          expiresAt: { kind: "untilDispelled" },
+        },
+      ],
+    };
+
+    const sameRound = resolveBattleSubject({
+      state: ongoingFlame,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellCasterId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+    if (sameRound.tag !== "resolved") {
+      throw new Error("Expected Continual Flame caster end turn to resolve.");
+    }
+    const nextRound = resolveBattleSubject({
+      state: sameRound.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellTargetId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+
+    expect(nextRound).toMatchObject({
+      tag: "resolved",
+      state: {
+        lightEmitters: [
+          expect.objectContaining({
+            sourceSpellId: continualFlameUnitId,
+            attachment: { kind: "object", objectId },
+            expiresAt: { kind: "untilDispelled" },
+          }),
+        ],
+      },
     });
   });
 });

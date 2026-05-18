@@ -173,6 +173,14 @@ export function supportedSpellInvocationRef(
     };
   }
   if (invocation.procedure === "objectLight") {
+    if (invocation.resource.tag === "spellSlot") {
+      return {
+        tag: "spellSlot",
+        spellId: spellId(invocation.spell.id),
+        slotLevel: invocation.resource.slotLevel,
+        procedure: "objectLight",
+      };
+    }
     return {
       tag: "cantrip",
       spellId: spellId(invocation.spell.id),

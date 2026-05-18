@@ -784,7 +784,9 @@ export function spellInvocationCastSummary(
     return `Move ${invocation.spell.name} with a Bonus Action.`;
   }
   if (invocation.procedure === "objectLight") {
-    return `Cast ${invocation.spell.name} as a cantrip.`;
+    return invocation.resource.tag === "spellSlot"
+      ? `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`
+      : `Cast ${invocation.spell.name} as a cantrip.`;
   }
   if (invocation.procedure === "heldLightHurl") {
     return `Take a Magic action to hurl ${invocation.spell.name}.`;

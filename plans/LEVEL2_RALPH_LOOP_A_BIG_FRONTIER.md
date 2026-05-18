@@ -169,7 +169,7 @@
     {
       "number": 28,
       "id": "L12G-SPELL-CONTINUAL-FLAME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Continual Flame Runtime-Detached Or Light Support"
     },
     {
@@ -555,6 +555,12 @@
       "id": "L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME",
       "status": "ready-for-research",
       "title": "Alter Self Natural Weapons Runtime"
+    },
+    {
+      "number": 93,
+      "id": "L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL",
+      "status": "ready-for-research",
+      "title": "Continual Flame Dispel And Suppression Removal"
     }
   ]
 }
@@ -650,8 +656,8 @@ use the repository MBT scarcity protocol.
 
 ## Included Work
 
-Loop A owns Tasks 22-36, Acid Arrow follow-up Tasks 88-89, and Alter Self
-follow-up Tasks 90-92.
+Loop A owns Tasks 22-36, Acid Arrow follow-up Tasks 88-89, Alter Self
+follow-up Tasks 90-92, and Continual Flame follow-up Task 93.
 Tasks 1-21 are already done in this lane. Tasks 37-42 and 76-87 moved to
 `plans/LEVEL2_RALPH_LOOP_C_BIG_FRONTIER.md`, Tasks 43-58 moved to
 `plans/LEVEL2_RALPH_LOOP_B_BIG_FRONTIER.md`, and Tasks 59-75 moved to
@@ -754,6 +760,7 @@ language-access frontier.
 | 90 | 24a | `L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE` | `alter_self` |
 | 91 | 24b | `L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME` | `alter_self` |
 | 92 | 24c | `L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME` | `alter_self` |
+| 93 | 29a | `L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL` | `continual_flame` |
 
 ## Follow-Up Dependencies
 
@@ -776,6 +783,7 @@ language-access frontier.
 | `L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE` | `L12G-SPELL-ALTER-SELF` | Alter Self runtime support needs a lossless Spell Definition option shape for Aquatic Adaptation, Change Appearance, and the Natural Weapons growth and damage-type choices before runtime projection can consume the authored record. |
 | `L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME` | `L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE` | Aquatic Adaptation runtime should consume spell-owned option state, linked Speed projection, and Concentration cleanup from the repaired option shape rather than copying creature Speed into parallel spell state. |
 | `L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME` | `L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE`, `L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME` | Natural Weapons should build on the shared Alter Self mode-replacement and cleanup runtime while consuming the lossless Natural Weapons option facts instead of duplicating Unarmed Strike state. |
+| `L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL` | `L12G-SPELL-CONTINUAL-FLAME` | Generic dispel or suppression cleanup should consume until-dispelled spell-effect markers such as Continual Flame object emitters instead of adding per-spell removal registries. |
 
 ## Task Details
 
@@ -1514,7 +1522,7 @@ Acceptance:
 
 ### Task 28 - L12G-SPELL-CONTINUAL-FLAME - Continual Flame Runtime-Detached Or Light Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `continual_flame`. Gate task: 29 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -3346,4 +3354,37 @@ Acceptance:
 - the Natural Weapons runtime portion of `alter_self` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
 - no unrelated Aquatic Adaptation, Change Appearance, or level-1 Loop D/L spell frontier work is implemented in this task;
 - runtime behavior traces to SRD Alter Self and Unarmed Strike terminology without homebrew extensions and consumes projected Spell Definition facts rather than storing redundant Unarmed Strike formulas;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.
+
+### Task 93 - L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL - Continual Flame Dispel And Suppression Removal
+
+Status: `ready-for-research`
+
+Unit: `continual_flame`. Follow-up split from Task 28.
+
+Dependency: Task 28 (`L12G-SPELL-CONTINUAL-FLAME`) done.
+
+Inputs:
+
+- `packages/surface/content/continual_flame.json`;
+- the `continual_flame` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Spells/Descriptions-A-D.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- promoted battle-runtime light emitter lifecycle, spell-effect removal or suppression owners, Unit profile evidence, and focused tests for until-dispelled object light cleanup.
+
+Outputs:
+
+- supported runtime profile and owner evidence for removing or suppressing object-attached until-dispelled spell occurrences through a generic spell-effect removal or suppression owner;
+- Continual Flame object emitters are consumed through the generic owner rather than a Continual Flame-specific removal registry;
+- Dispel Magic, antimagic, or the selected suppression/removal procedure remains the owner of the triggering removal semantics;
+- Quint/runtime parity updates if promoted battle-runtime behavior changes;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- Continual Flame cleanup through the generic until-dispelled spell-effect removal or suppression owner is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no presentation-only flame appearance, heat/fuel, covering/hiding, smothering, quenching, or costly Material component inventory behavior is implemented in this task;
+- runtime behavior traces to SRD Continual Flame and the selected removal or suppression RAW without homebrew extensions and consumes existing until-dispelled spell-effect markers instead of duplicating emitter ownership;
 - focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.

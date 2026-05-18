@@ -366,17 +366,15 @@
       "unitId": "comprehend_languages"
     },
     {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL: Consume until-dispelled spell-effect markers such as Continual Flame object emitters from Dispel Magic, antimagic, or another promoted spell-suppression/removal procedure without making each spell maintain a parallel removal registry. Owner: battle-runtime generic dispel/suppression spell-effect lifecycle. Required output: Supported runtime profile and owner evidence for removing or suppressing object-attached until-dispelled spell occurrences, with focused tests and promoted Quint/runtime parity for Continual Flame cleanup through the generic dispel/suppression owner.",
       "sourceRecordPath": "packages/surface/content/continual_flame.json",
       "sourceRows": [
         {
@@ -416,8 +414,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
       "unitId": "continual_flame"
     },
     {
@@ -2644,11 +2642,10 @@
       ]
     },
     {
-      "count": 18,
+      "count": 17,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
-        "continual_flame",
         "find_steed",
         "flame_blade",
         "gentle_repose",
@@ -2670,6 +2667,27 @@
     },
     {
       "count": 14,
+      "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
+      "status": "blocked-follow-up-split",
+      "unitIds": [
+        "acid_arrow",
+        "alter_self",
+        "continual_flame",
+        "dragons_breath",
+        "druid_wild_shape",
+        "enhance_ability",
+        "enlarge_reduce",
+        "enthrall",
+        "monk_monks_focus",
+        "monk_uncanny_metabolism",
+        "moonbeam",
+        "see_invisibility",
+        "sorcerer_font_of_magic",
+        "sorcerer_metamagic"
+      ]
+    },
+    {
+      "count": 14,
       "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
@@ -2687,26 +2705,6 @@
         "silent_image",
         "speak_with_animals",
         "thaumaturgy"
-      ]
-    },
-    {
-      "count": 13,
-      "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
-      "status": "blocked-follow-up-split",
-      "unitIds": [
-        "acid_arrow",
-        "alter_self",
-        "dragons_breath",
-        "druid_wild_shape",
-        "enhance_ability",
-        "enlarge_reduce",
-        "enthrall",
-        "monk_monks_focus",
-        "monk_uncanny_metabolism",
-        "moonbeam",
-        "see_invisibility",
-        "sorcerer_font_of_magic",
-        "sorcerer_metamagic"
       ]
     },
     {
@@ -2738,8 +2736,8 @@
       "numerator": 472,
       "percent": "84.9%",
       "rowsByStatus": {
-        "accepted": 318,
-        "accepted-no-battle-effect": 154,
+        "accepted": 321,
+        "accepted-no-battle-effect": 151,
         "battle-runtime-required": 74,
         "owner-evidence-required": 4,
         "partial-battle-runtime": 6
@@ -2767,17 +2765,16 @@
     },
     "strictTargetClosure": {
       "denominator": 151,
-      "numerator": 133,
-      "percent": "88.1%"
+      "numerator": 134,
+      "percent": "88.7%"
     }
   },
   "openFrontier": [
     {
-      "count": 18,
+      "count": 17,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
-        "continual_flame",
         "find_steed",
         "flame_blade",
         "gentle_repose",
@@ -7863,17 +7860,17 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
-      "missing": 18,
-      "profile-subset-supported": 10,
+      "missing": 17,
+      "profile-subset-supported": 11,
       "supported-profile": 98,
       "unsupported-profile": 25
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 13,
+      "blocked-follow-up-split": 14,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 14,
-      "open-runtime-behavior": 18,
+      "open-runtime-behavior": 17,
       "supported-profile": 98
     },
     "nonSupportedFrontier": 53,

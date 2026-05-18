@@ -156,6 +156,7 @@
 {"unitId":"starry_wisp","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV59B","ownerPath":"packages/battle-runtime/src/unit-profile-admission-candidate-narrowing-spells.test.ts"}}
 {"unitId":"starry_wisp","evidence":{"tag":"selected-identity-mbt","taskId":"level1-damage-spell-selected-identity","ownerPath":"packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts"}}
 {"unitId":"light","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV70B","ownerPath":"packages/battle-runtime/src/unit-profile-admission-object-light-spells.test.ts"}}
+{"unitId":"continual_flame","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-SPELL-CONTINUAL-FLAME","ownerPath":"packages/battle-runtime/src/unit-profile-admission-object-light-spells.test.ts"}}
 {"unitId":"light","evidence":{"tag":"selected-identity-mbt","taskId":"level1-spatial-witness","ownerPath":"packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts"}}
 {"unitId":"sleep","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV38A","ownerPath":"packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts"}}
 {"unitId":"sleep","evidence":{"tag":"selected-identity-mbt","taskId":"condition-saving-throw-lifecycle","ownerPath":"packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts"}}

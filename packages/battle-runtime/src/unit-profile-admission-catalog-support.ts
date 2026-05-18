@@ -99,6 +99,8 @@ export const chromaticOrbUnitId = "chromatic_orb";
 
 export const colorSprayUnitId = "color_spray";
 
+export const continualFlameUnitId = "continual_flame";
+
 export const counterspellUnitId = "counterspell";
 
 export const entangleUnitId = "entangle";

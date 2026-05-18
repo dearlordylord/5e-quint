@@ -1844,16 +1844,20 @@ export function applyObjectLightSpellEffect(
     { readonly procedure: "objectLight" }
   >,
 ): BattleState {
+  const retainedEmitters =
+    invocation.targeting.object.kind === "lightCantripObject"
+      ? state.lightEmitters.filter(
+          (emitter) =>
+            !(
+              emitter.sourceSpellId === invocation.spell.id &&
+              emitter.sourceCombatantId === actorId
+            ),
+        )
+      : state.lightEmitters;
   return {
     ...state,
     lightEmitters: [
-      ...state.lightEmitters.filter(
-        (emitter) =>
-          !(
-            emitter.sourceSpellId === invocation.spell.id &&
-            emitter.sourceCombatantId === actorId
-          ),
-      ),
+      ...retainedEmitters,
       {
         kind: "spellLightEmitter",
         sourceSpellId: invocation.spell.id,
