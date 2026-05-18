@@ -223,37 +223,37 @@
     {
       "number": 37,
       "id": "L12G-SPELL-MISTY-STEP",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Misty Step Runtime Support"
     },
     {
       "number": 38,
       "id": "L12G-SPELL-MOONBEAM",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Moonbeam Runtime Support Or Closure"
     },
     {
       "number": 39,
       "id": "L12G-SPELL-PASS-WITHOUT-TRACE",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Pass Without Trace Runtime Support Or Closure"
     },
     {
       "number": 40,
       "id": "L12G-SPELL-PRAYER-OF-HEALING",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Prayer Of Healing Runtime Support Or Closure"
     },
     {
       "number": 41,
       "id": "L12G-SPELL-PROTECTION-FROM-POISON",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Protection From Poison Runtime Support"
     },
     {
       "number": 42,
       "id": "L12G-SPELL-RAY-OF-ENFEEBLEMENT",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Ray Of Enfeeblement Runtime Support"
     },
     {
@@ -457,73 +457,73 @@
     {
       "number": 76,
       "id": "L12G-AUTHOR-DRUID-WILD-COMPANION",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Druid Wild Companion Boundary Closure"
     },
     {
       "number": 77,
       "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Druid Wild Shape Character Facts And Resource Projection"
     },
     {
       "number": 78,
       "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Druid Wild Shape Shape-Shifting Runtime"
     },
     {
       "number": 79,
       "id": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Monk's Focus Character Facts And Resource Projection"
     },
     {
       "number": 80,
       "id": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Monk's Focus Battle Option Execution"
     },
     {
       "number": 81,
       "id": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Monk Uncanny Metabolism Character Facts And Use State"
     },
     {
       "number": 82,
       "id": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Monk Uncanny Metabolism Initiative Recovery Runtime"
     },
     {
       "number": 83,
       "id": "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Sorcerer Font Of Magic Sorcery Point Resource Facts"
     },
     {
       "number": 84,
       "id": "L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Sorcerer Font Of Magic Spell Slot To Sorcery Points"
     },
     {
       "number": 85,
       "id": "L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Sorcerer Font Of Magic Sorcery Points To Spell Slot"
     },
     {
       "number": 86,
       "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Sorcerer Metamagic Character Facts And Option Projection"
     },
     {
       "number": 87,
       "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION",
-      "status": "ready-for-research",
+      "status": "deferred",
       "title": "Sorcerer Metamagic Cast-Time Option Execution"
     },
     {
@@ -543,15 +543,19 @@
 -->
 
 This is the level-2 execution lane prepared from
-`plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`. It is running as Loop A. Tasks 43-75 were split into Loop B and are intentionally non-runnable here.
+`plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`. It is running as Loop A. Tasks
+37-42 and 76-87 were split into Loop C, Tasks 43-58 were split into Loop B,
+and Tasks 59-75 were split into Loop D. Only tasks with status
+`ready-for-research` in this file are runnable.
 
 This lane deliberately excludes:
 
 - level-1-only work already owned by Loop D or Loop L;
 - `counterspell`, because strict runtime/profile support is already complete
   and any remaining selected-identity accounting belongs to Loop D;
-- companion/familiar runtime execution: `find_steed`, plus any `druid_wild_companion`
-  companion execution beyond the Task 76 boundary/closure follow-up;
+- all companion/familiar runtime execution, including `find_steed` and
+  `druid_wild_companion`; the Wild Companion table-choice boundary moved to
+  Loop C;
 - any generated metric row already accepted, ignored, or outside the current
   level-2 frontier.
 
@@ -628,15 +632,14 @@ use the repository MBT scarcity protocol.
 
 ## Included Work
 
-Loop A owns Tasks 10-42 after the split, Task 12's concrete follow-up split
-tasks 76-78, Task 13's concrete follow-up split tasks 79-80, Task 15's
-concrete follow-up split tasks 81-82, Task 18's concrete follow-up split
-tasks 83-85, Task 19's concrete follow-up split tasks 86-87, and Task 21's
-concrete follow-up split tasks 88-89. Tasks 1-9 are already done. Tasks 43-75
-are owned by
-`plans/LEVEL2_RALPH_LOOP_B_BIG_FRONTIER.md` and stay `deferred` here so Loop A
-cannot pick them. Keep this lane out of Loop D's level-1 recursive frontier and
-Loop L's language-access frontier.
+Loop A owns active/ready Tasks 22-36 and Acid Arrow follow-up Tasks 88-89.
+Tasks 1-21 are already done in this lane. Tasks 37-42 and 76-87 moved to
+`plans/LEVEL2_RALPH_LOOP_C_BIG_FRONTIER.md`, Tasks 43-58 moved to
+`plans/LEVEL2_RALPH_LOOP_B_BIG_FRONTIER.md`, and Tasks 59-75 moved to
+`plans/LEVEL2_RALPH_LOOP_D_BIG_FRONTIER.md`. The historical manifest rows for
+sibling lanes remain below, but they stay `deferred` here so Loop A cannot pick
+them. Keep this lane out of Loop D's level-1 recursive frontier and Loop L's
+language-access frontier.
 
 | Lane | Gate | Task | Unit |
 | ---: | ---: | --- | --- |
@@ -1729,7 +1732,7 @@ Acceptance:
 
 ### Task 37 - L12G-SPELL-MISTY-STEP - Misty Step Runtime Support
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `misty_step`. Gate task: 39 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -1756,7 +1759,7 @@ Acceptance:
 
 ### Task 38 - L12G-SPELL-MOONBEAM - Moonbeam Runtime Support Or Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `moonbeam`. Gate task: 40 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -1783,7 +1786,7 @@ Acceptance:
 
 ### Task 39 - L12G-SPELL-PASS-WITHOUT-TRACE - Pass Without Trace Runtime Support Or Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `pass_without_trace`. Gate task: 41 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -1810,7 +1813,7 @@ Acceptance:
 
 ### Task 40 - L12G-SPELL-PRAYER-OF-HEALING - Prayer Of Healing Runtime Support Or Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `prayer_of_healing`. Gate task: 42 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -1837,7 +1840,7 @@ Acceptance:
 
 ### Task 41 - L12G-SPELL-PROTECTION-FROM-POISON - Protection From Poison Runtime Support
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `protection_from_poison`. Gate task: 43 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -1864,7 +1867,7 @@ Acceptance:
 
 ### Task 42 - L12G-SPELL-RAY-OF-ENFEEBLEMENT - Ray Of Enfeeblement Runtime Support
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `ray_of_enfeeblement`. Gate task: 44 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -2782,7 +2785,7 @@ Acceptance:
 
 ### Task 76 - L12G-AUTHOR-DRUID-WILD-COMPANION - Druid Wild Companion Boundary Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `druid_wild_companion`. Gate task: 13 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -2811,7 +2814,7 @@ Acceptance:
 
 ### Task 77 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS - Druid Wild Shape Character Facts And Resource Projection
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `druid_wild_shape`. Follow-up split from Task 12.
 
@@ -2841,7 +2844,7 @@ Acceptance:
 
 ### Task 78 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME - Druid Wild Shape Shape-Shifting Runtime
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `druid_wild_shape`. Follow-up split from Task 12.
 
@@ -2871,7 +2874,7 @@ Acceptance:
 
 ### Task 79 - L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS - Monk's Focus Character Facts And Resource Projection
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `monk_monks_focus`. Follow-up split from Task 13.
 
@@ -2901,7 +2904,7 @@ Acceptance:
 
 ### Task 80 - L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS - Monk's Focus Battle Option Execution
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `monk_monks_focus`. Follow-up split from Task 13.
 
@@ -2932,7 +2935,7 @@ Acceptance:
 
 ### Task 81 - L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS - Monk Uncanny Metabolism Character Facts And Use State
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `monk_uncanny_metabolism`. Follow-up split from Task 15.
 
@@ -2963,7 +2966,7 @@ Acceptance:
 
 ### Task 82 - L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME - Monk Uncanny Metabolism Initiative Recovery Runtime
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `monk_uncanny_metabolism`. Follow-up split from Task 15.
 
@@ -2993,7 +2996,7 @@ Acceptance:
 
 ### Task 83 - L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS - Sorcerer Font Of Magic Sorcery Point Resource Facts
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `sorcerer_font_of_magic`. Follow-up split from Task 18.
 
@@ -3024,7 +3027,7 @@ Acceptance:
 
 ### Task 84 - L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS - Sorcerer Font Of Magic Spell Slot To Sorcery Points
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `sorcerer_font_of_magic`. Follow-up split from Task 18.
 
@@ -3056,7 +3059,7 @@ Acceptance:
 
 ### Task 85 - L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS - Sorcerer Font Of Magic Sorcery Points To Spell Slot
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `sorcerer_font_of_magic`. Follow-up split from Task 18.
 
@@ -3089,7 +3092,7 @@ Acceptance:
 
 ### Task 86 - L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS - Sorcerer Metamagic Character Facts And Option Projection
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `sorcerer_metamagic`. Follow-up split from Task 19.
 
@@ -3122,7 +3125,7 @@ Acceptance:
 
 ### Task 87 - L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION - Sorcerer Metamagic Cast-Time Option Execution
 
-Status: `ready-for-research`
+Status: `deferred`
 
 Unit: `sorcerer_metamagic`. Follow-up split from Task 19.
 
