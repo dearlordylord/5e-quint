@@ -6658,13 +6658,13 @@
         "state": "installed",
         "unitId": "shatter"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV66 table/spatial owner",
-        "reason": "Shatter area membership and affected nonmagical unattended objects are table/spatial facts supplied at the battle-runtime boundary."
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial owner",
+        "reason": "Automatic Shatter area membership, line of effect, object inventory/material/magical/worn-carried discovery, and grid geometry derivation remain runtime-detached table/spatial derivations outside the Shatter runtime profile."
       },
       "ownerEvidence": [
         {
@@ -19984,13 +19984,13 @@
         "state": "installed",
         "unitId": "shatter"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV66 table/spatial owner",
-        "reason": "Shatter area membership and affected nonmagical unattended objects are table/spatial facts supplied at the battle-runtime boundary."
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial owner",
+        "reason": "Automatic Shatter area membership, line of effect, object inventory/material/magical/worn-carried discovery, and grid geometry derivation remain runtime-detached table/spatial derivations outside the Shatter runtime profile."
       },
       "ownerEvidence": [
         {
@@ -25305,13 +25305,13 @@
         "state": "installed",
         "unitId": "shatter"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "battleReadinessClosure": {
-        "source": "deferred-mechanics",
-        "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "SRDINV66 table/spatial owner",
-        "reason": "Shatter area membership and affected nonmagical unattended objects are table/spatial facts supplied at the battle-runtime boundary."
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial owner",
+        "reason": "Automatic Shatter area membership, line of effect, object inventory/material/magical/worn-carried discovery, and grid geometry derivation remain runtime-detached table/spatial derivations outside the Shatter runtime profile."
       },
       "ownerEvidence": [
         {

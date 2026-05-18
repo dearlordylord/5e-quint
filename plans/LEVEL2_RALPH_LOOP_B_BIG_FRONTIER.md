@@ -19,7 +19,7 @@
     {
       "number": 45,
       "id": "L12G-SPELL-SHATTER",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Shatter Runtime Support"
     },
     {
@@ -396,9 +396,16 @@ Acceptance:
 
 ### Task 45 - L12G-SPELL-SHATTER - Shatter Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `shatter`. Gate task: 47 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Result: Shatter is a `supported-profile` Unit for save-gated Thunder damage,
+Construct save Disadvantage, slot scaling, and caller-supplied nonmagical
+unattended object damage facts. Automatic area membership, line of effect,
+object inventory/material/magical/worn-carried discovery, and grid geometry
+remain runtime-detached table/spatial derivations outside the Shatter runtime
+profile.
 
 Inputs:
 

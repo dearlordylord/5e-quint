@@ -62,8 +62,8 @@
       "value": 179
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 114,
-      "numerator": 114,
+      "denominator": 115,
+      "numerator": 115,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 114,
+      "denominator": 115,
       "numerator": 104,
-      "percent": "91.2%"
+      "percent": "90.4%"
     },
     "supportedProfileCoverage": {
       "denominator": 147,
-      "numerator": 114,
-      "percent": "77.6%"
+      "numerator": 115,
+      "percent": "78.2%"
     }
   },
   "metricSemantics": [
@@ -13642,17 +13642,11 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "battleReadinessClosure": {
-              "kind": "table-spatial-derivation",
-              "owner": "SRDINV66 table/spatial owner",
-              "reason": "Shatter area membership and affected nonmagical unattended objects are table/spatial facts supplied at the battle-runtime boundary."
-            },
-            "followUpTaskId": "SRDINV66",
-            "mechanic": "automatic area membership, line of effect, object inventory/material/magical/worn-carried discovery, and grid geometry derivation"
-          }
-        ],
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "table/spatial owner",
+          "reason": "Automatic Shatter area membership, line of effect, object inventory/material/magical/worn-carried discovery, and grid geometry derivation remain runtime-detached table/spatial derivations outside the Shatter runtime profile."
+        },
         "profileIds": [
           "spell.invocation-damage-save-or-attack"
         ],
@@ -13667,7 +13661,7 @@
           "Constructs have Disadvantage on the saving throw",
           "caller-supplied nonmagical unattended object damage facts emit Thunder object damage outcomes"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [

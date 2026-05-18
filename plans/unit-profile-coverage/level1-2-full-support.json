@@ -2092,59 +2092,6 @@
       "unitId": "see_invisibility"
     },
     {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "table-spatial-derivation"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Shatter area membership and affected nonmagical unattended objects are table/spatial facts supplied at the battle-runtime boundary.",
-      "sourceRecordPath": "packages/surface/content/shatter.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Bard spell list Shatter",
-          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_shatter",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 208,
-            "lineStart": 208,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Shatter",
-          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_shatter",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 291,
-            "lineStart": 291,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Shatter",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_shatter",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 228,
-            "lineStart": 228,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "shatter"
-    },
-    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -2609,7 +2556,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 91,
+      "count": 92,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2687,6 +2634,7 @@
         "sanctuary",
         "scorching_ray",
         "searing_smite",
+        "shatter",
         "shield",
         "shield_of_faith",
         "shillelagh",
@@ -2794,14 +2742,6 @@
         "druid_druidic",
         "rogue_thieves_cant"
       ]
-    },
-    {
-      "count": 1,
-      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
-      "status": "open-profile-accounting",
-      "unitIds": [
-        "shatter"
-      ]
     }
   ],
   "metrics": {
@@ -2818,13 +2758,13 @@
     },
     "strictRuntimeProfileSupport": {
       "denominator": 146,
-      "numerator": 91,
-      "percent": "62.3%"
+      "numerator": 92,
+      "percent": "63%"
     },
     "strictTargetClosure": {
       "denominator": 146,
-      "numerator": 117,
-      "percent": "80.1%"
+      "numerator": 118,
+      "percent": "80.8%"
     }
   },
   "openFrontier": [
@@ -2861,14 +2801,6 @@
         "spiritual_weapon",
         "warding_bond",
         "web"
-      ]
-    },
-    {
-      "count": 1,
-      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
-      "status": "open-profile-accounting",
-      "unitIds": [
-        "shatter"
       ]
     }
   ],
@@ -6341,8 +6273,8 @@
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
       "missing": 28,
-      "profile-subset-supported": 9,
-      "supported-profile": 91,
+      "profile-subset-supported": 8,
+      "supported-profile": 92,
       "unsupported-profile": 18
     },
     "groupsByStatus": {
@@ -6350,11 +6282,10 @@
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 11,
-      "open-profile-accounting": 1,
       "open-runtime-behavior": 28,
-      "supported-profile": 91
+      "supported-profile": 92
     },
-    "nonSupportedFrontier": 55,
+    "nonSupportedFrontier": 54,
     "strictDenominator": 146
   }
 }
