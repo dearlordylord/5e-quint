@@ -1056,11 +1056,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE: Replace the lossy Flame Blade mechanics with a lossless SRD Surface shape for the spell-created held blade: Bonus Action creation and re-evocation, free-hand requirement, let-go disappearance, Concentration up to 10 minutes, self-attached held Bright Light 10 feet plus Dim Light for an additional 10 feet, active-blade-gated Magic Action melee spell attack, Fire damage equal to 3d6 plus the caster's spellcasting ability modifier, and +1d6 per slot level above 2. Owner: surface Spell Definition authoring. Required output: Flame Blade Dhall/JSON content, and schema/tracer support if needed, represent the held spell-created object lifecycle and active-blade-gated attack as executable facts that can be projected by battle-runtime without relying on prose or runtime constants.; L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT: Promote Flame Blade as a level-2-or-higher prepared spell: Bonus Action Spell Slot spend, caster-owned Concentration, caller-supplied free-hand and holding witnesses, active spell-created blade state, source-owned held light emitter, Magic Action melee spell attack while the blade is active, Fire damage slot scaling with spellcasting ability modifier, Concentration and duration cleanup, let-go cleanup, and Bonus Action re-evocation from the same active spell occurrence without a second Spell Slot spend while the spell lasts. Owner: battle-runtime spell-created held object lifecycle plus promoted Quint parity. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial creation, active attack, light projection, cleanup, and re-evocation.",
       "sourceRecordPath": "packages/surface/content/flame_blade.json",
       "sourceRows": [
         {
@@ -1088,8 +1091,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
       "unitId": "flame_blade"
     },
     {
@@ -2642,12 +2645,11 @@
       ]
     },
     {
-      "count": 17,
+      "count": 16,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
         "find_steed",
-        "flame_blade",
         "gentle_repose",
         "heat_metal",
         "hold_person",
@@ -2666,7 +2668,7 @@
       ]
     },
     {
-      "count": 14,
+      "count": 15,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
@@ -2678,6 +2680,7 @@
         "enhance_ability",
         "enlarge_reduce",
         "enthrall",
+        "flame_blade",
         "monk_monks_focus",
         "monk_uncanny_metabolism",
         "moonbeam",
@@ -2733,12 +2736,12 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 472,
-      "percent": "84.9%",
+      "numerator": 470,
+      "percent": "84.5%",
       "rowsByStatus": {
         "accepted": 321,
-        "accepted-no-battle-effect": 151,
-        "battle-runtime-required": 74,
+        "accepted-no-battle-effect": 149,
+        "battle-runtime-required": 76,
         "owner-evidence-required": 4,
         "partial-battle-runtime": 6
       }
@@ -2765,18 +2768,17 @@
     },
     "strictTargetClosure": {
       "denominator": 151,
-      "numerator": 134,
-      "percent": "88.7%"
+      "numerator": 135,
+      "percent": "89.4%"
     }
   },
   "openFrontier": [
     {
-      "count": 17,
+      "count": 16,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
         "find_steed",
-        "flame_blade",
         "gentle_repose",
         "heat_metal",
         "hold_person",
@@ -7860,17 +7862,17 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
-      "missing": 17,
+      "missing": 16,
       "profile-subset-supported": 11,
       "supported-profile": 98,
-      "unsupported-profile": 25
+      "unsupported-profile": 26
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 14,
+      "blocked-follow-up-split": 15,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 14,
-      "open-runtime-behavior": 17,
+      "open-runtime-behavior": 16,
       "supported-profile": 98
     },
     "nonSupportedFrontier": 53,

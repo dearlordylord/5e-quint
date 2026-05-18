@@ -20098,6 +20098,28 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE",
+            "mechanic": "Replace the lossy Flame Blade mechanics with a lossless SRD Surface shape for the spell-created held blade: Bonus Action creation and re-evocation, free-hand requirement, let-go disappearance, Concentration up to 10 minutes, self-attached held Bright Light 10 feet plus Dim Light for an additional 10 feet, active-blade-gated Magic Action melee spell attack, Fire damage equal to 3d6 plus the caster's spellcasting ability modifier, and +1d6 per slot level above 2.",
+            "owner": "surface Spell Definition authoring",
+            "requiredOutput": "Flame Blade Dhall/JSON content, and schema/tracer support if needed, represent the held spell-created object lifecycle and active-blade-gated attack as executable facts that can be projected by battle-runtime without relying on prose or runtime constants.",
+            "title": "Flame Blade Surface Lifecycle Shape"
+          },
+          {
+            "id": "L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT",
+            "mechanic": "Promote Flame Blade as a level-2-or-higher prepared spell: Bonus Action Spell Slot spend, caster-owned Concentration, caller-supplied free-hand and holding witnesses, active spell-created blade state, source-owned held light emitter, Magic Action melee spell attack while the blade is active, Fire damage slot scaling with spellcasting ability modifier, Concentration and duration cleanup, let-go cleanup, and Bonus Action re-evocation from the same active spell occurrence without a second Spell Slot spend while the spell lasts.",
+            "owner": "battle-runtime spell-created held object lifecycle plus promoted Quint parity",
+            "requiredOutput": "Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial creation, active attack, light projection, cleanup, and re-evocation.",
+            "title": "Flame Blade Runtime Support"
+          }
+        ],
+        "futureProfileOwner": "surface Spell Definition held-created-object shape plus battle-runtime spell-created held object lifecycle and promoted Quint parity",
+        "reason": "Flame Blade is authored as an SRD Surface Spell Definition, but the authored executable shape records only the light rider and Magic Action attack while explicitly deferring the held spell-created blade lifecycle. Task 29 claims no promoted battle-runtime profile because the RAW spell-created blade must appear in a free hand, disappear when let go, be evoked again as a Bonus Action while the spell lasts, emit self-held light, and gate repeat Magic Action melee spell attacks on the active blade. Existing Produce Flame held-light/hurl and Shillelagh held-weapon profiles do not model that spell-created held melee object lifecycle.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",

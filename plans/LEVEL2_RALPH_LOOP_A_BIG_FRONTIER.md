@@ -175,7 +175,7 @@
     {
       "number": 29,
       "id": "L12G-SPELL-FLAME-BLADE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Flame Blade Runtime Support"
     },
     {
@@ -561,6 +561,18 @@
       "id": "L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL",
       "status": "ready-for-research",
       "title": "Continual Flame Dispel And Suppression Removal"
+    },
+    {
+      "number": 94,
+      "id": "L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE",
+      "status": "ready-for-research",
+      "title": "Flame Blade Surface Lifecycle Shape"
+    },
+    {
+      "number": 95,
+      "id": "L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT",
+      "status": "ready-for-research",
+      "title": "Flame Blade Runtime Support"
     }
   ]
 }
@@ -657,7 +669,8 @@ use the repository MBT scarcity protocol.
 ## Included Work
 
 Loop A owns Tasks 22-36, Acid Arrow follow-up Tasks 88-89, Alter Self
-follow-up Tasks 90-92, and Continual Flame follow-up Task 93.
+follow-up Tasks 90-92, Continual Flame follow-up Task 93, and Flame Blade
+follow-up Tasks 94-95.
 Tasks 1-21 are already done in this lane. Tasks 37-42 and 76-87 moved to
 `plans/LEVEL2_RALPH_LOOP_C_BIG_FRONTIER.md`, Tasks 43-58 moved to
 `plans/LEVEL2_RALPH_LOOP_B_BIG_FRONTIER.md`, and Tasks 59-75 moved to
@@ -761,6 +774,8 @@ language-access frontier.
 | 91 | 24b | `L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME` | `alter_self` |
 | 92 | 24c | `L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME` | `alter_self` |
 | 93 | 29a | `L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL` | `continual_flame` |
+| 94 | 31a | `L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE` | `flame_blade` |
+| 95 | 31b | `L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT` | `flame_blade` |
 
 ## Follow-Up Dependencies
 
@@ -784,6 +799,8 @@ language-access frontier.
 | `L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME` | `L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE` | Aquatic Adaptation runtime should consume spell-owned option state, linked Speed projection, and Concentration cleanup from the repaired option shape rather than copying creature Speed into parallel spell state. |
 | `L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME` | `L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE`, `L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME` | Natural Weapons should build on the shared Alter Self mode-replacement and cleanup runtime while consuming the lossless Natural Weapons option facts instead of duplicating Unarmed Strike state. |
 | `L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL` | `L12G-SPELL-CONTINUAL-FLAME` | Generic dispel or suppression cleanup should consume until-dispelled spell-effect markers such as Continual Flame object emitters instead of adding per-spell removal registries. |
+| `L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE` | `L12G-SPELL-FLAME-BLADE` | Flame Blade runtime support needs a lossless Spell Definition shape for the spell-created held blade lifecycle before runtime projection can consume the authored record. |
+| `L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT` | `L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE` | Runtime support should consume the repaired held-created-object shape rather than duplicating free-hand creation, let-go disappearance, re-evocation, light, attack, and damage-scaling facts. |
 
 ## Task Details
 
@@ -1549,7 +1566,7 @@ Acceptance:
 
 ### Task 29 - L12G-SPELL-FLAME-BLADE - Flame Blade Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `flame_blade`. Gate task: 31 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -3387,4 +3404,69 @@ Acceptance:
 - Continual Flame cleanup through the generic until-dispelled spell-effect removal or suppression owner is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
 - no presentation-only flame appearance, heat/fuel, covering/hiding, smothering, quenching, or costly Material component inventory behavior is implemented in this task;
 - runtime behavior traces to SRD Continual Flame and the selected removal or suppression RAW without homebrew extensions and consumes existing until-dispelled spell-effect markers instead of duplicating emitter ownership;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.
+
+### Task 94 - L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE - Flame Blade Surface Lifecycle Shape
+
+Status: `ready-for-research`
+
+Unit: `flame_blade`. Follow-up split from Task 29.
+
+Dependency: Task 29 (`L12G-SPELL-FLAME-BLADE`) done.
+
+Inputs:
+
+- `packages/surface/content/flame_blade.json`;
+- `packages/surface/content/flame_blade.dhall`;
+- the `flame_blade` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Spells/Descriptions-E-L.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- Surface spell schema, Dhall generation, tracer, and focused tests for spell-created held objects and action-gated spell attacks.
+
+Outputs:
+
+- Flame Blade authored content represents Bonus Action creation and re-evocation, free-hand requirement, let-go disappearance, Concentration up to 10 minutes, self-attached held Bright Light 10 feet plus Dim Light for an additional 10 feet, active-blade-gated Magic Action melee spell attack, Fire damage equal to 3d6 plus the caster's spellcasting ability modifier, and +1d6 per slot level above 2 as lossless executable Spell Definition facts;
+- schema/tracer support is updated only if the current Surface shape cannot represent those facts;
+- battle-runtime Flame Blade invocation, active blade state, attacks, cleanup, and re-evocation are not implemented in this task;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the Surface lifecycle-shape portion of `flame_blade` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- authored facts trace to SRD Flame Blade without duplicating Spell Invocation, Spell Effect, held-object runtime, light-emitter runtime, attack-roll runtime, or Spell Slot state;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 95 - L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT - Flame Blade Runtime Support
+
+Status: `ready-for-research`
+
+Unit: `flame_blade`. Follow-up split from Task 29.
+
+Dependency: Task 94 (`L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE`) must be done before implementation.
+
+Inputs:
+
+- `packages/surface/content/flame_blade.json`;
+- the `flame_blade` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Spells/Descriptions-E-L.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- battle-runtime spell-created held object lifecycle, spell invocation/effect lifecycle, light emitter projection, melee Spell Attack execution, Unit profile, owner-evidence, and promoted Quint parity tests for Flame Blade execution.
+
+Outputs:
+
+- supported runtime profile and owner evidence for Flame Blade as a level-2-or-higher prepared spell that spends a Bonus Action and Spell Slot, starts caster-owned Concentration, consumes caller-supplied free-hand and holding witnesses, creates active spell-created blade state, projects source-owned held light, and cleans up on Concentration, duration, or let-go events;
+- runtime permits Magic Action melee spell attacks only while the blade is active, applies Fire damage with slot scaling and spellcasting ability modifier, and supports Bonus Action re-evocation from the same active spell occurrence without a second Spell Slot spend while the spell lasts;
+- runtime consumes the repaired Flame Blade Spell Definition facts from Task 94 rather than duplicating free-hand, let-go, re-evocation, light, attack, or damage constants;
+- Quint/runtime parity updates if promoted battle-runtime behavior changes;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- Flame Blade runtime support is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- runtime behavior traces to SRD Flame Blade without homebrew extensions and consumes projected Spell Definition facts rather than storing redundant spell-created blade formulas;
+- no unrelated level-1 Loop D/L spell frontier, companion boundary, or object inventory behavior is implemented in this task;
 - focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.
