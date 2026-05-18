@@ -145,7 +145,7 @@
     {
       "number": 24,
       "id": "L12G-SPELL-ARCANE-LOCK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Arcane Lock Runtime-Detached Closure"
     },
     {
@@ -1406,7 +1406,7 @@ Acceptance:
 
 ### Task 24 - L12G-SPELL-ARCANE-LOCK - Arcane Lock Runtime-Detached Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `arcane_lock`. Gate task: 25 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
