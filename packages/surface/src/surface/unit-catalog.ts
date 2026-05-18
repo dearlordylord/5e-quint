@@ -81,10 +81,12 @@ import fireBoltInput from "../../content/fire_bolt.json";
 import fireballInput from "../../content/fireball.json";
 import findFamiliarInput from "../../content/find_familiar.json";
 import findTrapsInput from "../../content/find_traps.json";
+import flamingSphereInput from "../../content/flaming_sphere.json";
 import fogCloudInput from "../../content/fog_cloud.json";
 import guidanceInput from "../../content/guidance.json";
 import greaseInput from "../../content/grease.json";
 import guidingBoltInput from "../../content/guiding_bolt.json";
+import gustOfWindInput from "../../content/gust_of_wind.json";
 import healingWordInput from "../../content/healing_word.json";
 import hellishRebukeInput from "../../content/hellish_rebuke.json";
 import heroismInput from "../../content/heroism.json";
@@ -434,10 +436,12 @@ export const srdUnitCollection = defineSrdUnitCollection({
     fireballInput,
     findFamiliarInput,
     findTrapsInput,
+    flamingSphereInput,
     fogCloudInput,
     guidanceInput,
     greaseInput,
     guidingBoltInput,
+    gustOfWindInput,
     heroismInput,
     hexInput,
     huntersMarkInput,

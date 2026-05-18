@@ -9,6 +9,8 @@
 // surface types only. Consumers are K (discovery), P (holes/fills), L
 // (resolve), and F (turn).
 
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram
+
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import {
   elapsedTimeTicksFromHours,
@@ -67,6 +69,21 @@ import {
   supportedPreparedSpellAttackProfile,
 } from "./spells-profiles-attack-damage.ts";
 export * from "./spells-profiles-attack-damage.ts";
+
+type OngoingOperationEffect = Extract<
+  SpellRecord["mechanics"],
+  { readonly family: "ongoing_effect" }
+>["operations"][number]["effect"];
+type OngoingSaveGateEffect = Extract<
+  OngoingOperationEffect,
+  { readonly kind: "save_gate" }
+>;
+type FlamingSphereSaveEffect = OngoingSaveGateEffect & {
+  readonly onFail: Extract<
+    OngoingSaveGateEffect["onFail"],
+    { readonly kind: "damage" }
+  >;
+};
 import {
   supportedCantripDamageReductionSpellProfile,
   supportedCantripRollModifierSpellProfile,
@@ -249,6 +266,9 @@ export function supportedSpellActs(
         spell,
         spellcasting.spellSlots,
       ),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedFlamingSphereProfile(spell, spellcasting.spellSlots),
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedCommandProfile(spell, spellcasting.spellSlots),
@@ -877,6 +897,160 @@ export function supportedPreparedFogCloudObscurementProfile(
       },
     ];
   });
+}
+
+export function supportedPreparedFlamingSphereProfile(
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  const sphere = flamingSphereSpell(spell);
+  if (sphere === null) {
+    return [];
+  }
+
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    const damageExpr = supportedDamageAmountExpr({
+      amount: sphere.damageAmount,
+      spellLevel: spell.mechanics.level,
+      slotLevel: slot.spellLevel,
+    });
+    if (damageExpr === null) {
+      return [];
+    }
+    return [
+      {
+        access: { tag: "prepared" },
+        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+        procedure: "flamingSphere",
+        spell,
+        ability: "dex",
+        dc: { kind: "caster_spell_save_dc" },
+        targeting: {
+          kind: "pointOriginSphereDiameter",
+          diameterFeet: movementFeet(sphere.diameterFeet),
+        },
+        durationTicks: sphere.durationTicks,
+        rangeFeet: movementFeet(60),
+        ramMaxMoveFeet: movementFeet(sphere.ramMaxMoveFeet),
+        damage: { expr: damageExpr, damageType: "fire" },
+      },
+    ];
+  });
+}
+
+function flamingSphereSpell(spell: SpellRecord) {
+  if (spell.mechanics.family !== "ongoing_effect") {
+    return null;
+  }
+  const durationTicks =
+    spell.mechanics.duration.kind === "concentration"
+      ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.upTo)
+      : null;
+  const attachment = spell.mechanics.attachment;
+  const sphereHole =
+    attachment.kind === "hole" && attachment.value.kind === "area"
+      ? attachment
+      : null;
+  const sphereArea = sphereHole?.value ?? null;
+  const endTurnOperation = spell.mechanics.operations.find(
+    (operation) =>
+      operation.trigger.kind ===
+        "on_creature_ends_turn_within_distance_of_area" &&
+      operation.trigger.distanceFeet === 5,
+  );
+  const ramOperation = spell.mechanics.operations.find(
+    (operation) =>
+      operation.trigger.kind === "on_area_moves_into_creature_space",
+  );
+  const repositionOperation = spell.mechanics.operations.find(
+    (operation) =>
+      operation.trigger.kind === "on_caster_spends_action" &&
+      operation.trigger.cost.kind === "bonus_action" &&
+      operation.effect.kind === "reposition_attachment",
+  );
+  const igniteOperation = spell.mechanics.operations.find(
+    (operation) =>
+      operation.trigger.kind === "passive" &&
+      operation.effect.kind === "ignite_objects",
+  );
+  const lightOperation = spell.mechanics.operations.find(
+    (operation) =>
+      operation.trigger.kind === "passive" &&
+      operation.effect.kind === "emit_light",
+  );
+
+  if (
+    spell.name !== "Flaming Sphere" ||
+    spell.provenance.kind !== "srd-5.2.1" ||
+    spell.provenance.section !== "Spells/Descriptions-E-L#Flaming Sphere" ||
+    spell.mechanics.level !== 2 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "point" ||
+    spell.mechanics.range.feet !== 60 ||
+    spell.mechanics.duration.kind !== "concentration" ||
+    spell.mechanics.duration.upTo.unit !== "minute" ||
+    spell.mechanics.duration.upTo.amount !== 1 ||
+    spell.mechanics.operations.length !== 5 ||
+    durationTicks === null ||
+    Either.isLeft(durationTicks) ||
+    sphereHole?.holeId !== "flaming_sphere_area" ||
+    sphereArea?.kind !== "area" ||
+    sphereArea?.origin.kind !== "point_within_range" ||
+    sphereArea.shape.kind !== "sphere" ||
+    sphereArea.shape.radiusFeet !== 2.5 ||
+    !isFlamingSphereSaveEffect(endTurnOperation?.effect, sphereHole?.holeId) ||
+    !isFlamingSphereSaveEffect(ramOperation?.effect, sphereHole?.holeId) ||
+    repositionOperation?.effect.kind !== "reposition_attachment" ||
+    repositionOperation.effect.maxMoveFeet !== 30 ||
+    igniteOperation?.effect.kind !== "ignite_objects" ||
+    igniteOperation.effect.filter.material !== "flammable" ||
+    igniteOperation.effect.filter.heldOrWorn !== "forbidden" ||
+    lightOperation?.effect.kind !== "emit_light" ||
+    lightOperation.effect.brightRadiusFeet !== 20 ||
+    lightOperation.effect.dimAdditionalFeet !== 20
+  ) {
+    return null;
+  }
+  return {
+    durationTicks: durationTicks.right,
+    diameterFeet: 5,
+    ramMaxMoveFeet: repositionOperation.effect.maxMoveFeet,
+    damageAmount: endTurnOperation.effect.onFail.amount,
+  };
+}
+
+function isFlamingSphereSaveEffect(
+  effect: OngoingOperationEffect | undefined,
+  areaHoleId: string | undefined,
+): effect is FlamingSphereSaveEffect {
+  if (effect?.kind !== "save_gate") {
+    return false;
+  }
+  const amount = effect.onFail.kind === "damage" ? effect.onFail.amount : null;
+  return (
+    areaHoleId !== undefined &&
+    effect.attachment?.kind === "hole" &&
+    effect.attachment.holeId === areaHoleId &&
+    effect.attachment.value.kind === "area" &&
+    effect.attachment.value.origin.kind === "point_within_range" &&
+    effect.attachment.value.shape.kind === "sphere" &&
+    effect.attachment.value.shape.radiusFeet === 2.5 &&
+    effect.ability === "dex" &&
+    effect.dc.kind === "caster_spell_save_dc" &&
+    effect.onSuccess.kind === "half_damage" &&
+    effect.onFail.kind === "damage" &&
+    effect.onFail.damageType === "fire" &&
+    amount?.kind === "linear_per_level" &&
+    amount.axis === "slot" &&
+    amount.startingAtLevel === 2 &&
+    amount.base.dice === 2 &&
+    amount.base.dieSize === 6 &&
+    amount.perLevel.dice === 1 &&
+    amount.perLevel.dieSize === 6
+  );
 }
 
 function spareTheDyingRangeFeet(

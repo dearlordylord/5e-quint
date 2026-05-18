@@ -1495,6 +1495,25 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("flamingSphere"),
+      spell: BattleRuntimeObjectSchema,
+      ability: Schema.Literal("dex"),
+      dc: DcSourceSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("pointOriginSphereDiameter"),
+        diameterFeet: MovementFeet,
+      }),
+      durationTicks: BattleRuntimeObjectSchema,
+      rangeFeet: MovementFeet,
+      ramMaxMoveFeet: MovementFeet,
+      damage: Schema.Struct({
+        expr: BattleRuntimeObjectSchema,
+        damageType: Schema.Literal("fire"),
+      }),
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("command"),
       spell: BattleRuntimeObjectSchema,
       actionCost: Schema.Literal("magicAction"),
@@ -2040,6 +2059,12 @@ export const BattleHoleSchema = Schema.Union(
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("rolledDice"),
+    flamingSphere: BattleRuntimeObjectSchema,
+    critical: Schema.Literal(false),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("rolledDice"),
     spell: SupportedSpellInvocationSchema,
   }),
   Schema.Struct({
@@ -2098,10 +2123,16 @@ export const BattleHoleSchema = Schema.Union(
     kind: Schema.Literal("spellAreaChoice"),
     label: Schema.String,
     spell: SupportedSpellInvocationSchema,
-    area: Schema.Struct({
-      kind: Schema.Literal("pointOriginSphere"),
-      radiusFeet: MovementFeet,
-    }),
+    area: Schema.Union(
+      Schema.Struct({
+        kind: Schema.Literal("pointOriginSphere"),
+        radiusFeet: MovementFeet,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("pointOriginSphereDiameter"),
+        diameterFeet: MovementFeet,
+      }),
+    ),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2186,6 +2217,35 @@ export const BattleHoleSchema = Schema.Union(
         rollMode: Schema.Literal(...ATTACK_ROLL_MODES),
       }),
     ),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("savingThrowOutcome"),
+    label: Schema.String,
+    flamingSphere: BattleRuntimeObjectSchema,
+    ability: Schema.Literal("dex"),
+    dc: DcSourceSchema,
+    areaChoices: Schema.Array(BattleRuntimeObjectSchema),
+    targetRollModes: Schema.Array(
+      Schema.Struct({
+        targetId: CombatantId,
+        rollMode: Schema.Literal(...ATTACK_ROLL_MODES),
+      }),
+    ),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("flamingSphereRamMovement"),
+    label: Schema.String,
+    flamingSphere: BattleRuntimeObjectSchema,
+    requiresTableSpatialFact: Schema.Literal(true),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("flamingSphereRepositionMovement"),
+    label: Schema.String,
+    flamingSphere: BattleRuntimeObjectSchema,
+    requiresTableSpatialFact: Schema.Literal(true),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2576,9 +2636,28 @@ type BattleFillEncoded =
   | {
       readonly kind: "spellAreaChoice";
       readonly holeId: string;
+      readonly value:
+        | {
+            readonly kind: "fogCloudArea";
+            readonly areaId: string;
+          }
+        | {
+            readonly kind: "flamingSphereArea";
+            readonly areaId: string;
+          };
+    }
+  | {
+      readonly kind: "flamingSphereRamMovement";
+      readonly holeId: string;
       readonly value: {
-        readonly kind: "fogCloudArea";
-        readonly areaId: string;
+        readonly moveFeet: number;
+      };
+    }
+  | {
+      readonly kind: "flamingSphereRepositionMovement";
+      readonly holeId: string;
+      readonly value: {
+        readonly moveFeet: number;
       };
     }
   | {
@@ -3129,9 +3208,29 @@ export const BattleFillSchema: Schema.Schema<
     Schema.Struct({
       kind: Schema.Literal("spellAreaChoice"),
       holeId: BattleHoleIdSchema,
+      value: Schema.Union(
+        Schema.Struct({
+          kind: Schema.Literal("fogCloudArea"),
+          areaId: Schema.String,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("flamingSphereArea"),
+          areaId: Schema.String,
+        }),
+      ),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("flamingSphereRamMovement"),
+      holeId: BattleHoleIdSchema,
       value: Schema.Struct({
-        kind: Schema.Literal("fogCloudArea"),
-        areaId: Schema.String,
+        moveFeet: MovementFeet,
+      }),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("flamingSphereRepositionMovement"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Struct({
+        moveFeet: MovementFeet,
       }),
     }),
     Schema.Struct({

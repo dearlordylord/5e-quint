@@ -118,9 +118,15 @@ import {
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 
 import { resolveChainedSpellAttackDamageAct } from "./spells-resolve-chained.ts";
-import { resolveFogCloudObscurementSpellAct } from "./spells-resolve-area-effects.ts";
+import {
+  resolveFlamingSphereSpellAct,
+  resolveFogCloudObscurementSpellAct,
+} from "./spells-resolve-area-effects.ts";
 import { resolveSpellAttackSequenceAct } from "./spells-resolve-attack-sequence.ts";
-export { resolveFogCloudObscurementSpellAct } from "./spells-resolve-area-effects.ts";
+export {
+  resolveFlamingSphereSpellAct,
+  resolveFogCloudObscurementSpellAct,
+} from "./spells-resolve-area-effects.ts";
 export { resolveAttackBurstSaveDamageSpellAct } from "./spells-resolve-attack-burst.ts";
 export {
   applyChainedSpellDamage,
@@ -384,6 +390,7 @@ export function resolveSpellAct(
       invocation.procedure === "hideousLaughter" ||
       invocation.procedure === "command" ||
       invocation.procedure === "fogCloudObscurement" ||
+      invocation.procedure === "flamingSphere" ||
       invocation.procedure === "sanctuaryTargetingInterdiction" ||
       invocation.procedure === "spellAttackSequence")
   ) {
@@ -554,6 +561,14 @@ export function resolveSpellAct(
   }
   if (invocation.procedure === "fogCloudObscurement") {
     return resolveFogCloudObscurementSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "flamingSphere") {
+    return resolveFlamingSphereSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

@@ -13,8 +13,8 @@ import {
   type BattleAttackRollResult,
   type BattleCommandOption,
   type BattleFill,
-  type BattleFogCloudAreaChoice,
   type BattleHoleId,
+  type BattleSpellAreaIdentityChoice,
   type BattleSpellSavingThrowOutcomeValue,
   type BattleSpellTargetAllocation,
   type BattleSpellTargetAllocationSpatialFact,
@@ -131,11 +131,11 @@ export type SpellFillSet =
         | Extract<
             BattleFill,
             { readonly kind: "thaumaturgyActiveOneMinuteEffectCount" }
-          >
+      >
         | undefined;
       readonly commandOptionChoice: BattleCommandOption | undefined;
       readonly conditionChoice: Condition | undefined;
-      readonly areaChoice: BattleFogCloudAreaChoice | undefined;
+      readonly areaChoice: BattleSpellAreaIdentityChoice | undefined;
       readonly teleportDestination:
         | Extract<BattleFill, { readonly kind: "teleportDestination" }>
         | undefined;
@@ -232,7 +232,7 @@ export function spellFillSet(
     | undefined;
   let commandOptionChoice: BattleCommandOption | undefined;
   let conditionChoice: Condition | undefined;
-  let areaChoice: BattleFogCloudAreaChoice | undefined;
+  let areaChoice: BattleSpellAreaIdentityChoice | undefined;
   let teleportDestination:
     | Extract<BattleFill, { readonly kind: "teleportDestination" }>
     | undefined;
@@ -433,7 +433,10 @@ export function spellFillSet(
     }
 
     if (fill.kind === "spellAreaChoice") {
-      if (invocation.procedure !== "fogCloudObscurement") {
+      if (
+        invocation.procedure !== "fogCloudObscurement" &&
+        invocation.procedure !== "flamingSphere"
+      ) {
         return {
           tag: "invalid",
           message: "Spell area choice does not match this spell act.",

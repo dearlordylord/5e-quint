@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 379,
-      "numerator": 161,
-      "percent": "42.5%"
+      "denominator": 381,
+      "numerator": 163,
+      "percent": "42.8%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 451,
-      "numerator": 193,
-      "percent": "42.8%"
+      "denominator": 453,
+      "numerator": 195,
+      "percent": "43%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 194
+      "value": 196
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 123,
-      "numerator": 123,
+      "denominator": 124,
+      "numerator": 124,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 194,
-      "numerator": 194,
+      "denominator": 196,
+      "numerator": 196,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -82,19 +82,19 @@
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 90,
+      "denominator": 91,
       "numerator": 19,
-      "percent": "21.1%"
+      "percent": "20.9%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 90,
+      "denominator": 91,
       "numerator": 24,
-      "percent": "26.7%"
+      "percent": "26.4%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 123,
+      "denominator": 124,
       "numerator": 41,
-      "percent": "33.3%"
+      "percent": "33.1%"
     },
     "runtimeMappingCoverage": {
       "denominator": 69,
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 123,
+      "denominator": 124,
       "numerator": 104,
-      "percent": "84.6%"
+      "percent": "83.9%"
     },
     "supportedProfileCoverage": {
-      "denominator": 162,
-      "numerator": 123,
-      "percent": "75.9%"
+      "denominator": 164,
+      "numerator": 124,
+      "percent": "75.6%"
     }
   },
   "metricSemantics": [
@@ -1385,6 +1385,37 @@
       ]
     },
     {
+      "id": "spell.invocation-flaming-sphere-hazard-ram",
+      "profileKind": "table-caller",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-subjects.ts"
+      ],
+      "sourceBoundary": "The runtime consumes a typed table-supplied 5-foot-diameter sphere area identity, table-triggered end-within-5-feet witnesses, and table-supplied positive movement-distance witnesses capped at 30 feet for non-damaging reposition and ram movement into a creature's space. Runtime owns Magic Action and level-2+ Spell Slot spending, caster-owned Concentration lifecycle, one-minute duration cleanup, Dexterity save-gated Fire damage with half damage on success, slot-scaled damage dice, and Bonus Action spending for reposition and ram commands. Automatic area membership, unoccupied-space validation, pathfinding, barrier/pit traversal, sphere stop-position tracking, object ignition, light rendering, and map geometry remain runtime-detached table adjudication or presentation outside this profile.",
+      "taskRefs": [
+        "L12G-MISSING-FLAMING-SPHERE"
+      ],
+      "title": "Spell invocation creates a movable Flaming Sphere fire hazard with reposition, end-within-5-feet, and ram saves",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-flaming-sphere.test.ts"
+        }
+      ]
+    },
+    {
       "id": "spell.invocation-held-light-emitter",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -2628,14 +2659,14 @@
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 90,
+        "denominator": 91,
         "numerator": 19,
-        "percent": "21.1%"
+        "percent": "20.9%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 90,
+        "denominator": 91,
         "numerator": 24,
-        "percent": "26.7%"
+        "percent": "26.4%"
       }
     },
     "profileKinds": [
@@ -3002,6 +3033,12 @@
         "obligations": [],
         "profileId": "spell.invocation-object-light",
         "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-flaming-sphere-hazard-ram",
+        "profileKind": "table-caller"
       },
       {
         "joinStatus": "unmapped",
@@ -3388,9 +3425,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 123,
+          "denominator": 124,
           "numerator": 41,
-          "percent": "33.3%"
+          "percent": "33.1%"
         }
       },
       "units": [
@@ -4213,6 +4250,18 @@
             }
           ],
           "unitId": "fire_bolt"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-flaming-sphere-hazard-ram",
+              "profileKind": "table-caller"
+            }
+          ],
+          "unitId": "flaming_sphere"
         },
         {
           "joinStatus": "unmapped",
@@ -6999,6 +7048,22 @@
         "spell.invocation-fog-cloud-obscurement"
       ],
       "taskId": "SRDINV84E"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Flaming Sphere's level-2+ cast, caster-owned Concentration hazard, 5-foot-diameter table-supplied area identity, one-minute duration, Dexterity save-gated Fire damage with half damage on success, slot scaling, Bonus Action non-damaging reposition, and Bonus Action ram distance cap.",
+      "profileIds": [
+        "spell.invocation-flaming-sphere-hazard-ram"
+      ],
+      "taskId": "L12G-MISSING-FLAMING-SPHERE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover Flaming Sphere catalog admission, spell-area fill admission, active effect projection, end-within-5-feet save damage before turn end, duplicate end-turn Concentration fill rejection, non-damaging Bonus Action reposition movement, ram movement witness validation, ram save damage, Bonus Action spending, subject identity, and explicit table/presentation residuals for geometry, object ignition, and light rendering.",
+      "profileIds": [
+        "spell.invocation-flaming-sphere-hazard-ram"
+      ],
+      "taskId": "L12G-MISSING-FLAMING-SPHERE"
     },
     {
       "claimKind": "qnt-proof",
@@ -14371,6 +14436,82 @@
         "battleReadinessClosure": {
           "kind": "table-spatial-derivation",
           "owner": "table/spatial owner",
+          "reason": "Automatic unoccupied-space validation, area membership, pathfinding, barrier and pit traversal, sphere stop-position tracking, touched-object ignition, Bright/Dim light projection, and map rendering remain runtime-detached table or presentation derivations outside the Flaming Sphere hazard/reposition/ram profile."
+        },
+        "profileIds": [
+          "spell.invocation-flaming-sphere-hazard-ram"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action Spell Slot casting at level 2 or higher",
+          "caller-supplied 5-foot-diameter sphere area identity",
+          "one-minute caster-owned Concentration hazard lifecycle",
+          "Dexterity save-gated Fire damage for table-triggered end-within-5-feet events with half damage on successful saves",
+          "Bonus Action non-ram reposition command using a positive caller-supplied movement-distance witness capped at 30 feet without save or damage",
+          "Bonus Action ram command using a positive caller-supplied movement-distance witness into a creature's space capped at 30 feet with the same save and damage",
+          "slot-scaled Fire damage dice",
+          "Surface records unattended flammable-object ignition and Bright/Dim light facts for table/presentation consumers"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-flaming-sphere.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-MISSING-FLAMING-SPHERE"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-flaming-sphere-hazard-ram",
+          "profileKind": "table-caller",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+            "packages/battle-runtime/src/battle-subjects.ts"
+          ],
+          "sourceBoundary": "The runtime consumes a typed table-supplied 5-foot-diameter sphere area identity, table-triggered end-within-5-feet witnesses, and table-supplied positive movement-distance witnesses capped at 30 feet for non-damaging reposition and ram movement into a creature's space. Runtime owns Magic Action and level-2+ Spell Slot spending, caster-owned Concentration lifecycle, one-minute duration cleanup, Dexterity save-gated Fire damage with half damage on success, slot-scaled damage dice, and Bonus Action spending for reposition and ram commands. Automatic area membership, unoccupied-space validation, pathfinding, barrier/pit traversal, sphere stop-position tracking, object ignition, light rendering, and map geometry remain runtime-detached table adjudication or presentation outside this profile.",
+          "taskRefs": [
+            "L12G-MISSING-FLAMING-SPHERE"
+          ],
+          "title": "Spell invocation creates a movable Flaming Sphere fire hazard with reposition, end-within-5-feet, and ram saves",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-flaming-sphere.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/flaming_sphere.json",
+      "unitId": "flaming_sphere"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "table/spatial owner",
           "reason": "Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain runtime-detached table/spatial derivations outside the Fog Cloud runtime profile."
         },
         "profileIds": [
@@ -14688,6 +14829,41 @@
       ],
       "sourceRecordPath": "packages/surface/content/guiding_bolt.json",
       "unitId": "guiding_bolt"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME",
+            "mechanic": "Promote Gust of Wind's battle-visible Line profile: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied self-origin Line area identity and direction, initial and end-turn Strength Saving Throws for caller-supplied creatures in the Line, failed-save 15-foot push facts away from the caster along the Line, active 2-for-1 Movement cost when a creature in the Line moves closer to the caster using table-supplied movement facts, Bonus Action Line direction replacement, and cleanup when Concentration or duration ends.",
+            "owner": "battle-runtime spell invocation/effect lifecycle plus table/spatial area and movement-cost witness boundary",
+            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the Line save, push, movement-cost, direction-change, and cleanup subset without automatic geometry or pathfinding.",
+            "title": "Gust of Wind Line Runtime Support"
+          },
+          {
+            "id": "L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE",
+            "mechanic": "Decide whether Gust of Wind's strong-wind gas or vapor dispersal should execute against promoted Fog Cloud, Stinking Cloud, Cloudkill, or other active gas/vapor areas, and close or support the candle, unprotected-flame, protected-flame dancing, and 50 percent protected-flame extinguishing clauses without adding a duplicate environmental state model.",
+            "owner": "table/spatial presentation and environmental-effect interaction owner",
+            "requiredOutput": "Focused Surface/runtime owner decision with tests or accepted runtime-detached closure for gas/vapor dispersal and flame presentation, reusing the authored area_has_strong_wind fact rather than duplicating wind state.",
+            "title": "Gust of Wind Gas And Flame Presentation Closure"
+          }
+        ],
+        "futureProfileOwner": "battle-runtime spell invocation/effect lifecycle plus table/spatial area and movement-cost witness boundary",
+        "reason": "Gust of Wind is authored and installed as an SRD Surface Spell Definition with a self-origin 60-foot by 10-foot Line, Magic Action Spell Slot casting, caster-owned Concentration up to 1 minute, initial and end-turn Strength Saving Throws, failed-save 15-foot push away from the caster along the Line, directional 2-for-1 Movement cost when a creature in the Line moves closer to the caster, strong-wind gas or vapor dispersal, flame presentation clauses, and a later-turn Bonus Action direction change. Task 65 claims no promoted battle-runtime profile yet because runtime has no persistent self-origin Line direction state, no repeated area-save force-move profile without damage, no directional Movement cost witness keyed to moving closer to the source, no Bonus Action Line reorientation owner, and no gas/vapor plus flame-presentation owner.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/gust_of_wind.json",
+      "unitId": "gust_of_wind"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

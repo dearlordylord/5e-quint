@@ -37,116 +37,32 @@
     {
       "number": 64,
       "id": "L12G-MISSING-FLAMING-SPHERE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Flaming Sphere Definition And Runtime Support"
     },
     {
       "number": 65,
       "id": "L12G-MISSING-GUST-OF-WIND",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Gust Of Wind Definition And Support Or Closure"
     },
     {
-      "number": 66,
-      "id": "L12G-MISSING-KNOCK",
-      "status": "ready-for-research",
-      "title": "Knock Definition And Closure"
+      "number": 96,
+      "id": "L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME",
+      "status": "deferred",
+      "title": "Gust Of Wind Line Runtime Support"
     },
     {
-      "number": 67,
-      "id": "L12G-MISSING-LEVITATE",
-      "status": "ready-for-research",
-      "title": "Levitate Definition And Support Or Closure"
-    },
-    {
-      "number": 68,
-      "id": "L12G-MISSING-LOCATE-ANIMALS-OR-PLANTS",
-      "status": "ready-for-research",
-      "title": "Locate Animals Or Plants Definition And Closure"
-    },
-    {
-      "number": 69,
-      "id": "L12G-MISSING-LOCATE-OBJECT",
-      "status": "ready-for-research",
-      "title": "Locate Object Definition And Closure"
-    },
-    {
-      "number": 70,
-      "id": "L12G-MISSING-MAGIC-MOUTH",
-      "status": "ready-for-research",
-      "title": "Magic Mouth Definition And Closure"
-    },
-    {
-      "number": 71,
-      "id": "L12G-MISSING-MIRROR-IMAGE",
-      "status": "ready-for-research",
-      "title": "Mirror Image Definition And Runtime Support"
-    },
-    {
-      "number": 72,
-      "id": "L12G-MISSING-ROPE-TRICK",
-      "status": "ready-for-research",
-      "title": "Rope Trick Definition And Closure"
-    },
-    {
-      "number": 73,
-      "id": "L12G-MISSING-SILENCE",
-      "status": "ready-for-research",
-      "title": "Silence Definition And Support Or Closure"
-    },
-    {
-      "number": 74,
-      "id": "L12G-MISSING-SUGGESTION",
-      "status": "ready-for-research",
-      "title": "Suggestion Definition And Closure"
-    },
-    {
-      "number": 75,
-      "id": "L12G-MISSING-ZONE-OF-TRUTH",
-      "status": "ready-for-research",
-      "title": "Zone Of Truth Definition And Closure"
-    },
-    {
-      "number": 90,
-      "id": "L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST",
-      "status": "ready-for-research",
-      "title": "Dragon's Breath Initial Cast And Effect State"
-    },
-    {
-      "number": 91,
-      "id": "L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION",
-      "status": "ready-for-research",
-      "title": "Dragon's Breath Granted Magic Action"
-    },
-    {
-      "number": 92,
-      "id": "L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES",
-      "status": "ready-for-research",
-      "title": "Enhance Ability Upcast Per-Target Ability Choices"
-    },
-    {
-      "number": 93,
-      "id": "L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME",
-      "status": "ready-for-research",
-      "title": "Enlarge Reduce Creature Runtime Support"
-    },
-    {
-      "number": 94,
-      "id": "L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH",
-      "status": "ready-for-research",
-      "title": "Enlarge Reduce Object Branch"
-    },
-    {
-      "number": 95,
-      "id": "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME",
-      "status": "ready-for-research",
-      "title": "Enthrall Perception Penalty Runtime Support"
+      "number": 97,
+      "id": "L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE",
+      "status": "deferred",
+      "title": "Gust Of Wind Gas And Flame Presentation Closure"
     }
   ]
 }
 -->
 
-This is the fourth level-2 execution lane split from Loop B tail work. Loop D owns Tasks 59-75 plus follow-up Tasks 90-95 only.
+This is the fourth level-2 execution lane split from Loop B tail work. Loop D owns Tasks 59-75 plus follow-up Tasks 90-97, with Tasks 96-97 recorded as deferred split work from Task 65 during lane wrap-up.
 
 ## Worktree Safety Prefix
 
@@ -230,6 +146,8 @@ It excludes Loop A Tasks 22-36 and 88-89, Loop B Tasks 43-58, Loop C Tasks 37-42
 | 93 | 63 follow-up | `L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME` | `enlarge_reduce` |
 | 94 | 63 follow-up | `L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH` | `enlarge_reduce` |
 | 95 | 64 follow-up | `L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME` | `enthrall` |
+| 96 | 67 follow-up | `L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME` | `gust_of_wind` |
+| 97 | 67 follow-up | `L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE` | `gust_of_wind` |
 
 ## Follow-Up Dependencies
 
@@ -241,8 +159,16 @@ It excludes Loop A Tasks 22-36 and 88-89, Loop B Tasks 43-58, Loop C Tasks 37-42
 | `L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME` | `L12G-MISSING-ENLARGE-REDUCE` | Creature-branch runtime support should consume the authored SRD Surface spell definition rather than duplicating Enlarge/Reduce spell facts in battle-runtime code. |
 | `L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH` | `L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME` | Object and item size lifecycle work needs the creature branch's active-effect representation before adding object-target behavior and worn/carried/dropped/thrown item normalization. |
 | `L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME` | `L12G-MISSING-ENTHRALL` | Runtime support should consume the authored SRD Surface spell definition and preserve the table-supplied fighting-caster-or-companions auto-success boundary before promoting the Perception penalty. |
+| `L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME` | `L12G-MISSING-GUST-OF-WIND` | Runtime support should consume the authored SRD Surface spell definition and its self-origin Line, save, push, movement-cost, and direction-change facts rather than duplicating Gust of Wind spell facts in battle-runtime code. |
+| `L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE` | `L12G-MISSING-GUST-OF-WIND` | Gas, vapor, and flame presentation closure should consume the authored strong-wind fact from Gust of Wind and decide ownership without creating duplicate environmental wind state. |
 
 ## Task Details
+
+## Wrap-Up Directive
+
+This lane is in organic shutdown mode. Complete only Task 65 - L12G-MISSING-GUST-OF-WIND - Gust Of Wind Definition And Support Or Closure, run reviewer-loop convergence, merge the completed task through this integration branch, and then stop. Do not start another task from this file.
+
+All other unfinished tasks from this lane were moved to `plans/LEVEL2_RALPH_WRAPUP_BACKLOG.md`. That backlog is storage for future orchestration, not active work for this lane.
 
 ### Task 59 - L12G-MISSING-DRAGONS-BREATH - Dragons Breath Definition And Runtime Support
 
@@ -381,7 +307,7 @@ Acceptance:
 
 ### Task 64 - L12G-MISSING-FLAMING-SPHERE - Flaming Sphere Definition And Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `flaming_sphere`. Gate task: 66 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -408,7 +334,7 @@ Acceptance:
 
 ### Task 65 - L12G-MISSING-GUST-OF-WIND - Gust Of Wind Definition And Support Or Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `gust_of_wind`. Gate task: 67 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -433,465 +359,63 @@ Acceptance:
 - no level-1 Loop D/L or companion boundary work is pulled into this lane;
 - focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
 
-### Task 66 - L12G-MISSING-KNOCK - Knock Definition And Closure
+### Task 96 - L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME - Gust Of Wind Line Runtime Support
 
-Status: `ready-for-research`
+Status: `deferred`
 
-Unit: `knock`. Gate task: 68 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+Dependency: Task 65 (`L12G-MISSING-GUST-OF-WIND`) done.
+
+Unit: `gust_of_wind`. Gate task: 67 follow-up in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
 Inputs:
 
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- the authored SRD Surface record for `gust_of_wind`;
+- the matching Gate 67 row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
 - `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
 - `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
 - local RAW under `.references/srd-5.2.1/`;
 - `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `knock`.
+- existing battle-runtime spell invocation, Concentration, force-move, movement-cost, and area witness owners.
 
 Outputs:
 
-- one concrete end state from the Task Output Contract for `knock`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
+- supported-profile or profile-subset-supported Unit claim for Gust of Wind's battle-visible Line subset;
+- deterministic admission/projection evidence;
+- focused runtime tests and promoted Quint/runtime parity for Line save, push, movement-cost, direction-change, and cleanup behavior without automatic geometry or pathfinding.
 
 Acceptance:
 
-- the level 1-2 metric row for `knock` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+- Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied self-origin Line area identity and direction, initial and end-turn Strength Saving Throws for caller-supplied creatures in the Line, failed-save 15-foot push away from the caster along the Line, active 2-for-1 Movement cost when a creature in the Line moves closer to the caster using table-supplied movement facts, Bonus Action Line direction replacement, and cleanup when Concentration or duration ends are either supported or precisely closed as a subset boundary;
+- battle-runtime consumes the authored Surface facts rather than duplicating Gust of Wind constants;
+- promoted Quint/runtime parity and focused verification are complete.
 
-### Task 67 - L12G-MISSING-LEVITATE - Levitate Definition And Support Or Closure
+### Task 97 - L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE - Gust Of Wind Gas And Flame Presentation Closure
 
-Status: `ready-for-research`
+Status: `deferred`
 
-Unit: `levitate`. Gate task: 69 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+Dependency: Task 65 (`L12G-MISSING-GUST-OF-WIND`) done.
+
+Unit: `gust_of_wind`. Gate task: 67 follow-up in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
 Inputs:
 
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- the authored SRD Surface record for `gust_of_wind`;
+- existing `area_has_strong_wind` Surface effect facts;
+- the matching Gate 67 row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
 - `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
 - `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
 - local RAW under `.references/srd-5.2.1/`;
 - `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `levitate`.
+- existing Fog Cloud, Stinking Cloud, Cloudkill, environmental flame, and table/spatial presentation ownership evidence.
 
 Outputs:
 
-- one concrete end state from the Task Output Contract for `levitate`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
+- focused Surface/runtime owner decision for gas or vapor dispersal and flame presentation;
+- tests or accepted runtime-detached closure for gas/vapor and flame clauses;
+- updated Unit claim and coverage artifacts when the owner decision changes the profile disposition.
 
 Acceptance:
 
-- the level 1-2 metric row for `levitate` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 68 - L12G-MISSING-LOCATE-ANIMALS-OR-PLANTS - Locate Animals Or Plants Definition And Closure
-
-Status: `ready-for-research`
-
-Unit: `locate_animals_or_plants`. Gate task: 70 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `locate_animals_or_plants`.
-
-Outputs:
-
-- one concrete end state from the Task Output Contract for `locate_animals_or_plants`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the level 1-2 metric row for `locate_animals_or_plants` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 69 - L12G-MISSING-LOCATE-OBJECT - Locate Object Definition And Closure
-
-Status: `ready-for-research`
-
-Unit: `locate_object`. Gate task: 71 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `locate_object`.
-
-Outputs:
-
-- one concrete end state from the Task Output Contract for `locate_object`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the level 1-2 metric row for `locate_object` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 70 - L12G-MISSING-MAGIC-MOUTH - Magic Mouth Definition And Closure
-
-Status: `ready-for-research`
-
-Unit: `magic_mouth`. Gate task: 72 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `magic_mouth`.
-
-Outputs:
-
-- one concrete end state from the Task Output Contract for `magic_mouth`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the level 1-2 metric row for `magic_mouth` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 71 - L12G-MISSING-MIRROR-IMAGE - Mirror Image Definition And Runtime Support
-
-Status: `ready-for-research`
-
-Unit: `mirror_image`. Gate task: 73 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `mirror_image`.
-
-Outputs:
-
-- one concrete end state from the Task Output Contract for `mirror_image`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the level 1-2 metric row for `mirror_image` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 72 - L12G-MISSING-ROPE-TRICK - Rope Trick Definition And Closure
-
-Status: `ready-for-research`
-
-Unit: `rope_trick`. Gate task: 74 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `rope_trick`.
-
-Outputs:
-
-- one concrete end state from the Task Output Contract for `rope_trick`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the level 1-2 metric row for `rope_trick` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 73 - L12G-MISSING-SILENCE - Silence Definition And Support Or Closure
-
-Status: `ready-for-research`
-
-Unit: `silence`. Gate task: 75 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `silence`.
-
-Outputs:
-
-- one concrete end state from the Task Output Contract for `silence`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the level 1-2 metric row for `silence` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 74 - L12G-MISSING-SUGGESTION - Suggestion Definition And Closure
-
-Status: `ready-for-research`
-
-Unit: `suggestion`. Gate task: 76 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `suggestion`.
-
-Outputs:
-
-- one concrete end state from the Task Output Contract for `suggestion`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the level 1-2 metric row for `suggestion` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 75 - L12G-MISSING-ZONE-OF-TRUTH - Zone Of Truth Definition And Closure
-
-Status: `ready-for-research`
-
-Unit: `zone_of_truth`. Gate task: 77 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `zone_of_truth`.
-
-Outputs:
-
-- one concrete end state from the Task Output Contract for `zone_of_truth`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the level 1-2 metric row for `zone_of_truth` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 90 - L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST - Dragon's Breath Initial Cast And Effect State
-
-Status: `ready-for-research`
-
-Unit: `dragons_breath`. Follow-up split from Task 59.
-
-Dependency: Task 59 (`L12G-MISSING-DRAGONS-BREATH`) done.
-
-Inputs:
-
-- `packages/surface/content/dragons_breath.json`;
-- `packages/surface/content/dragons_breath.dhall`;
-- the `dragons_breath` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/Spells/Descriptions-A-D.md`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- battle-runtime spell invocation/effect lifecycle, owner evidence, and focused tests for Dragon's Breath initial casting.
-
-Outputs:
-
-- supported runtime owner evidence for the Bonus Action spell invocation that spends a level-2-or-higher Spell Slot, chooses Acid, Cold, Fire, Lightning, or Poison once at cast time, targets one willing touched creature, starts caster-owned Concentration for up to 1 minute, and stores a target-attached active effect;
-- active effect state retains the chosen damage type, caster spell save DC, original slot level, willing target attachment, Concentration expiry, and cleanup facts without duplicating Spell Access state or reauthoring the damage type options;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the initial-cast/effect-state portion of `dragons_breath` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no target-granted Magic action execution is implemented in this task;
-- runtime behavior traces to SRD Dragon's Breath without homebrew extensions and consumes the authored Spell Definition facts rather than duplicating spell mechanics in runtime code;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.
-
-### Task 91 - L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION - Dragon's Breath Granted Magic Action
-
-Status: `ready-for-research`
-
-Unit: `dragons_breath`. Follow-up split from Task 59.
-
-Dependency: Task 90 (`L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST`) done.
-
-Inputs:
-
-- `packages/surface/content/dragons_breath.json`;
-- the `dragons_breath` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/Spells/Descriptions-A-D.md`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- battle-runtime target-granted action lifecycle, promoted Quint parity, Unit profile, owner evidence, and focused tests for Dragon's Breath target action execution.
-
-Outputs:
-
-- supported-profile Unit claim, deterministic admission/projection evidence, and focused runtime tests for discovering and executing the attached target's Magic action while Dragon's Breath remains active;
-- target action execution spends the attached target's Magic action and uses the stored caster spell save DC, chosen damage type, original slot level, and table-supplied area membership to resolve a 15-foot Cone Dexterity save for half damage;
-- promoted Quint/runtime parity updates cover target-side action discovery, action economy spending, area membership input, save-for-half damage, slot scaling, and expiry behavior;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the granted-action execution portion of `dragons_breath` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- runtime behavior traces to SRD Dragon's Breath without homebrew extensions and consumes Task 90 effect state rather than creating a parallel spell-action owner;
-- no unrelated level-1 Loop D/L spell frontier work is implemented in this task;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.
-
-### Task 92 - L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES - Enhance Ability Upcast Per-Target Ability Choices
-
-Status: `ready-for-research`
-
-Unit: `enhance_ability`. Follow-up split from Task 60.
-
-Dependency: Task 60 (`L12G-MISSING-ENHANCE-ABILITY`) done.
-
-Inputs:
-
-- `packages/surface/content/enhance_ability.json`;
-- `packages/surface/content/enhance_ability.dhall`;
-- the `enhance_ability` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/Spells/Descriptions-E-L.md`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- battle-runtime roll-modifier spell invocation target-list fills, chosen-ability active effects, promoted Quint parity, and focused tests for Enhance Ability.
-
-Outputs:
-
-- supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for level 3+ Enhance Ability casts that can target one additional creature per spell slot level above 2;
-- target-list ability-choice fills retain a distinct Strength, Dexterity, Intelligence, Wisdom, or Charisma choice for each selected target, without allowing Constitution and without sharing one cast-level ability choice across all targets;
-- each affected target receives only its own chosen Ability Check Advantage effect, with normal Advantage/Disadvantage cancellation and Concentration cleanup, without duplicating Spell Access or spell-slot state.
-
-Acceptance:
-
-- the upcast per-target ability-choice portion of `enhance_ability` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- runtime behavior traces to SRD Enhance Ability without reintroducing 2014 Bear/Bull/Constitution effects absent from SRD 5.2.1;
-- no unrelated level-1 Loop D/L spell frontier work is implemented in this task;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.
-
-### Task 93 - L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME - Enlarge Reduce Creature Runtime Support
-
-Status: `ready-for-research`
-
-Unit: `enlarge_reduce`. Follow-up split from Task 61.
-
-Dependency: Task 61 (`L12G-MISSING-ENLARGE-REDUCE`) done.
-
-Inputs:
-
-- `packages/surface/content/enlarge_reduce.json`;
-- `packages/surface/content/enlarge_reduce.dhall`;
-- the `enlarge_reduce` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/Spells/Descriptions-E-L.md`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- battle-runtime spell invocation/effect lifecycle, promoted Quint parity, Unit profile, owner evidence, and focused tests for Enlarge/Reduce creature targets.
-
-Outputs:
-
-- supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the Enlarge/Reduce creature branch without object-target behavior;
-- Magic Action and level-2+ Spell Slot spending, caster-owned Concentration, willing target application, unwilling target Constitution save gate, and cast-time Enlarge/Reduce mode choice consume the authored Surface spell definition rather than duplicating spell facts;
-- active creature effects project one-step size-category changes, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage with normal cancellation, Enlarge +1d4 and Reduce -1d4 minimum 1 damage for attacks with affected weapons or Unarmed Strikes, and cleanup when Concentration or duration ends.
-
-Acceptance:
-
-- the creature-branch portion of `enlarge_reduce` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no object-target behavior, object size lifecycle, or worn/carried/dropped/thrown item normalization is implemented in this task;
-- runtime behavior traces to SRD Enlarge/Reduce without homebrew extensions and consumes the authored Spell Definition facts rather than duplicating spell mechanics in runtime code;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.
-
-### Task 94 - L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH - Enlarge Reduce Object Branch
-
-Status: `ready-for-research`
-
-Unit: `enlarge_reduce`. Follow-up split from Task 61.
-
-Dependency: Task 93 (`L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME`) done.
-
-Inputs:
-
-- `packages/surface/content/enlarge_reduce.json`;
-- `packages/surface/content/enlarge_reduce.dhall`;
-- the `enlarge_reduce` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/Spells/Descriptions-E-L.md`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- Task 93 creature-branch active-effect representation;
-- surface target selection plus battle-runtime object and item lifecycle owner evidence and focused tests.
-
-Outputs:
-
-- Surface schema/content support for the Enlarge/Reduce object target constraint, runtime object/item lifecycle owner decision, focused tests, and coverage disposition that either supports the object branch or closes it with an accepted runtime-boundary reason;
-- object-target behavior represents a target object that is neither worn nor carried, object size-category change and cleanup, and any promoted object lifecycle facts without weakening the creature-branch target type;
-- item lifecycle handling covers carried/worn item size changes while the creature branch is active, dropped item normalization, and thrown weapon/ammunition normalization immediately after hit or miss only if those lifecycle facts belong to promoted runtime.
-
-Acceptance:
-
-- the object-branch and item-lifecycle portion of `enlarge_reduce` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- runtime behavior traces to SRD Enlarge/Reduce without inventing object inventory, dropped-item, or thrown-item state outside accepted runtime owners;
-- no unrelated level-1 Loop D/L spell frontier work is implemented in this task;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.
-
-### Task 95 - L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME - Enthrall Perception Penalty Runtime Support
-
-Status: `ready-for-research`
-
-Unit: `enthrall`. Follow-up split from Task 62.
-
-Dependency: Task 62 (`L12G-MISSING-ENTHRALL`) done.
-
-Inputs:
-
-- `packages/surface/content/enthrall.json`;
-- `packages/surface/content/enthrall.dhall`;
-- the `enthrall` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/Spells/Descriptions-E-L.md` and `.references/srd-5.2.1/Rules-Glossary.md`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- battle-runtime spell invocation/effect lifecycle, promoted Quint parity, Unit profile, owner evidence, and focused tests for Enthrall's Perception penalty.
-
-Outputs:
-
-- supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Enthrall's Perception penalty without modeling social attention state;
-- Magic Action and level-2+ Spell Slot spending, caster-owned Concentration, caller-supplied eligible creature target list, Wisdom save, failed-save active -10 modifier to Wisdom (Perception) Ability Checks, derived Passive Perception consequence, and cleanup when Concentration or duration ends consume the authored Surface spell definition rather than duplicating spell facts;
-- the fighting-caster-or-companions auto-success predicate remains a table/allegiance boundary input, so runtime support only accepts eligible target facts after that predicate has been applied.
-
-Acceptance:
-
-- the Perception-penalty portion of `enthrall` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- runtime behavior traces to SRD Enthrall and Passive Perception without inventing social attention or allegiance state outside accepted runtime owners;
-- no unrelated level-1 Loop D/L spell frontier work is implemented in this task;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.
+- the task decides whether Gust of Wind's strong-wind gas or vapor dispersal should execute against promoted Fog Cloud, Stinking Cloud, Cloudkill, or other active gas/vapor areas;
+- candle, unprotected-flame, protected-flame dancing, and 50 percent protected-flame extinguishing clauses are supported or accepted-closed without adding duplicate environmental wind state;
+- any supported behavior reuses the authored `area_has_strong_wind` fact, and verification plus reviewer-loop convergence are complete.

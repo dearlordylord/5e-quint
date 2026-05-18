@@ -3,7 +3,7 @@
 // Mechanical move; no behavior change intended.
 
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.martial-arts-attack-projection unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-fog-cloud-obscurement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.martial-arts-attack-projection unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-flaming-sphere-hazard-ram spell.invocation-fog-cloud-obscurement spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 import type {
   ActionEconomyState,
   RuntimeActionResource,
@@ -102,6 +102,9 @@ import {
 
 import {
   greaseGroundHazardSavingThrowOutcomeHole,
+  flamingSphereRamMovementHole,
+  flamingSphereRepositionMovementHole,
+  flamingSphereSavingThrowOutcomeHole,
   canonicalHeldObjectIdsForActor,
   commandDropHeldObjectFactsHole,
   commandPendingEffectsForActor,
@@ -109,6 +112,7 @@ import {
   readiedSpellInitialHoles,
   standFromProneCostFeet,
   type GreaseGroundHazardEffect,
+  type FlamingSphereEffect,
 } from "./turn-end-movement.ts";
 
 import { supportedUnitFeatureActs } from "./unit-features.ts";
@@ -232,6 +236,7 @@ export function discoverBattleActs(
   }
   if (state.currentTurnResources.commandHalt !== null) {
     acts.push(...greaseGroundHazardEndTurnActs(state, actorId));
+    acts.push(...flamingSphereEndTurnSaveActs(state, actorId));
     acts.push(...fogCloudStrongWindDispersalActs(state, actorId));
     acts.push(endTurnAct(actorId));
     acts.push(...readiedSpellReleaseActs(state, actorId));
@@ -275,6 +280,7 @@ export function discoverBattleActs(
   if (hasOpenStatBlockMultiattackDispatch) {
     acts.push(...movementActs(state, actorId));
     acts.push(...greaseGroundHazardEndTurnActs(state, actorId));
+    acts.push(...flamingSphereEndTurnSaveActs(state, actorId));
     acts.push({
       subject: { tag: "runtimeCommand", actorId, command: "endTurn" },
       label: "End Turn",
@@ -506,6 +512,8 @@ export function discoverBattleActs(
   if (combatantCanTakeActions(state.combatants.get(actorId))) {
     acts.push(...discoverSupportedSpellInvocations(state, actorId));
   }
+  acts.push(...flamingSphereRepositionActs(state, actorId));
+  acts.push(...flamingSphereRamActs(state, actorId));
   acts.push(...movementActs(state, actorId));
   acts.push(...greaseGroundHazardEntrySaveActs(state, actorId));
   acts.push(...protectionRelevantEffectSaveActs(state, actorId));
@@ -518,6 +526,7 @@ export function discoverBattleActs(
     });
   }
   acts.push(...greaseGroundHazardEndTurnActs(state, actorId));
+  acts.push(...flamingSphereEndTurnSaveActs(state, actorId));
   acts.push(...fogCloudStrongWindDispersalActs(state, actorId));
   acts.push(endTurnAct(actorId));
   acts.push(...readiedSpellReleaseActs(state, actorId));
@@ -666,6 +675,143 @@ function greaseGroundHazardSaveAct(
         : "Resolve the table-supplied Grease end-turn Dexterity Saving Throw.",
     initialHoles: [
       greaseGroundHazardSavingThrowOutcomeHole(state, actorId, effect, trigger),
+    ],
+  };
+}
+
+function flamingSphereEndTurnSaveActs(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly AvailableBattleAct[] {
+  return activeFlamingSphereEffects(state).map((effect) =>
+    flamingSphereSaveAct(state, actorId, effect),
+  );
+}
+
+function flamingSphereRamActs(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly AvailableBattleAct[] {
+  if (
+    !state.currentTurnResources.currentHasBonusAction ||
+    !combatantCanTakeActions(state.combatants.get(actorId))
+  ) {
+    return [];
+  }
+  return activeFlamingSphereEffects(state).flatMap((effect) =>
+    effect.sourceCombatantId === actorId
+      ? [...state.combatants.keys()].map((targetId) =>
+          flamingSphereRamAct(state, actorId, targetId, effect),
+        )
+      : [],
+  );
+}
+
+function flamingSphereRepositionActs(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly AvailableBattleAct[] {
+  if (
+    !state.currentTurnResources.currentHasBonusAction ||
+    !combatantCanTakeActions(state.combatants.get(actorId))
+  ) {
+    return [];
+  }
+  return activeFlamingSphereEffects(state).flatMap((effect) =>
+    effect.sourceCombatantId === actorId
+      ? [flamingSphereRepositionAct(actorId, effect)]
+      : [],
+  );
+}
+
+function activeFlamingSphereEffects(
+  state: BattleState,
+): readonly FlamingSphereEffect[] {
+  return [...state.combatants.values()].flatMap((combatant) =>
+    combatant.activeEffects.filter(
+      (effect): effect is FlamingSphereEffect =>
+        effect.kind === "flamingSphere",
+    ),
+  );
+}
+
+function flamingSphereSaveAct(
+  state: BattleState,
+  actorId: CombatantId,
+  effect: FlamingSphereEffect,
+): AvailableBattleAct {
+  return {
+    subject: {
+      tag: "runtimeCommand",
+      actorId,
+      command: "flamingSphereSave",
+      sourceCombatantId: effect.sourceCombatantId,
+      sourceSpellId: spellId(effect.sourceSpellId),
+      areaId: effect.areaId,
+      trigger: "endsTurnWithinFiveFeetOfSphere",
+    },
+    label: "End Turn within 5 feet of Flaming Sphere",
+    summary:
+      "Resolve the table-supplied Flaming Sphere end-within-5-feet Dexterity Saving Throw and damage.",
+    initialHoles: [
+      flamingSphereSavingThrowOutcomeHole(
+        state,
+        actorId,
+        effect,
+        "endsTurnWithinFiveFeetOfSphere",
+      ),
+    ],
+  };
+}
+
+function flamingSphereRepositionAct(
+  actorId: CombatantId,
+  effect: FlamingSphereEffect,
+): AvailableBattleAct {
+  return {
+    subject: {
+      tag: "runtimeCommand",
+      actorId,
+      command: "flamingSphereReposition",
+      sourceCombatantId: effect.sourceCombatantId,
+      sourceSpellId: spellId(effect.sourceSpellId),
+      areaId: effect.areaId,
+    },
+    label: "Move Flaming Sphere",
+    summary:
+      "Spend a Bonus Action using table-supplied Flaming Sphere movement that does not enter a creature's space.",
+    initialHoles: [flamingSphereRepositionMovementHole(effect)],
+  };
+}
+
+function flamingSphereRamAct(
+  state: BattleState,
+  actorId: CombatantId,
+  targetId: CombatantId,
+  effect: FlamingSphereEffect,
+): AvailableBattleAct {
+  return {
+    subject: {
+      tag: "runtimeCommand",
+      actorId,
+      command: "flamingSphereRam",
+      targetId,
+      sourceCombatantId: effect.sourceCombatantId,
+      sourceSpellId: spellId(effect.sourceSpellId),
+      areaId: effect.areaId,
+      trigger: "rammedBySphere",
+    },
+    label: "Ram with Flaming Sphere",
+    summary:
+      "Spend a Bonus Action using table-supplied Flaming Sphere movement into the target's space and resolve its save and damage.",
+    initialHoles: [
+      flamingSphereRamMovementHole(targetId, effect),
+      flamingSphereSavingThrowOutcomeHole(
+        state,
+        targetId,
+        effect,
+        "rammedBySphere",
+      ),
     ],
   };
 }

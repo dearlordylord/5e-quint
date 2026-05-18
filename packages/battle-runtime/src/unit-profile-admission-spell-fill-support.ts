@@ -27,9 +27,11 @@ import type {
   BonusActionSpellAct,
 } from "./unit-profile-admission-catalog-support.ts";
 import {
+  flamingSphereAreaId,
   greaseAreaId,
   resistanceUnitId,
   spellCasterId,
+  spellTargetId,
   thunderwaveObjectId,
 } from "./unit-profile-admission-catalog-support.ts";
 import { requireCombatant } from "./unit-profile-admission-creature-fixture-support.ts";
@@ -595,6 +597,45 @@ export function greaseSavingThrowOutcomeFill(
   };
 }
 
+export function flamingSphereAreaFill(
+  hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>,
+  areaId = flamingSphereAreaId,
+): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
+  return {
+    kind: "spellAreaChoice",
+    holeId: hole.holeId,
+    value: { kind: "flamingSphereArea", areaId },
+  };
+}
+
+export function flamingSphereRamMovementFill(
+  hole: Extract<BattleHole, { readonly kind: "flamingSphereRamMovement" }>,
+  moveFeet = 30,
+): Extract<BattleFill, { readonly kind: "flamingSphereRamMovement" }> {
+  return {
+    kind: "flamingSphereRamMovement",
+    holeId: hole.holeId,
+    value: { moveFeet: movementFeet(moveFeet) },
+  };
+}
+
+export function flamingSphereRepositionMovementFill(
+  hole: Extract<
+    BattleHole,
+    { readonly kind: "flamingSphereRepositionMovement" }
+  >,
+  moveFeet = 30,
+): Extract<
+  BattleFill,
+  { readonly kind: "flamingSphereRepositionMovement" }
+> {
+  return {
+    kind: "flamingSphereRepositionMovement",
+    holeId: hole.holeId,
+    value: { moveFeet: movementFeet(moveFeet) },
+  };
+}
+
 export function singleTargetSavingThrowOutcomeFill(
   hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
   targetId: CombatantId,
@@ -695,6 +736,113 @@ export function greaseGroundHazardEndTurnAct(
   actorId: CombatantId,
 ): ReturnType<typeof greaseGroundHazardSaveAct> {
   return greaseGroundHazardSaveAct(state, actorId, "endsTurnInArea");
+}
+
+export function flamingSphereEndTurnAct(
+  state: BattleState,
+  actorId: CombatantId = spellTargetId,
+): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "flamingSphereSave";
+    }
+  >;
+} {
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "flamingSphereSave";
+        }
+      >;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "flamingSphereSave" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.areaId === flamingSphereAreaId,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Flaming Sphere end-turn save act.");
+  }
+  return act;
+}
+
+export function flamingSphereRepositionAct(
+  state: BattleState,
+  actorId: CombatantId = spellCasterId,
+): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "flamingSphereReposition";
+    }
+  >;
+} {
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "flamingSphereReposition";
+        }
+      >;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "flamingSphereReposition" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.areaId === flamingSphereAreaId,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Flaming Sphere reposition act.");
+  }
+  return act;
+}
+
+export function flamingSphereRamAct(
+  state: BattleState,
+  actorId: CombatantId = spellCasterId,
+  targetId: CombatantId = spellTargetId,
+): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "flamingSphereRam";
+    }
+  >;
+} {
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "flamingSphereRam";
+        }
+      >;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "flamingSphereRam" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.targetId === targetId &&
+      candidate.subject.areaId === flamingSphereAreaId,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Flaming Sphere ram act.");
+  }
+  return act;
 }
 
 export function skillChoiceFill(

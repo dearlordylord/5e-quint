@@ -1,0 +1,180 @@
+{
+  "description": "A 5-foot-diameter sphere of fire appears in an unoccupied space on the ground within range and lasts for the duration. A creature that ends its turn within 5 feet of the sphere makes a Dexterity saving throw, taking Fire damage on a failed save or half as much damage on a successful one. As a Bonus Action, you can move the sphere up to 30 feet along the ground; if you move it into a creature's space, that creature makes the save and the sphere stops moving for the turn. Flammable unattended objects touched by the sphere start burning, and it sheds Bright Light and Dim Light. Using a Higher-Level Spell Slot increases the damage by 1d6 for each slot level above 2.",
+  "id": "flaming_sphere",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "holeId": "flaming_sphere_area",
+      "kind": "hole",
+      "label": "sphere area",
+      "value": {
+        "kind": "area",
+        "origin": {
+          "kind": "point_within_range"
+        },
+        "shape": {
+          "kind": "sphere",
+          "radiusFeet": 2.5
+        }
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a ball of wax",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "level": 2,
+    "operations": [
+      {
+        "effect": {
+          "ability": "dex",
+          "attachment": {
+            "holeId": "flaming_sphere_area",
+            "kind": "hole",
+            "label": "sphere area",
+            "value": {
+              "kind": "area",
+              "origin": {
+                "kind": "point_within_range"
+              },
+              "shape": {
+                "kind": "sphere",
+                "radiusFeet": 2.5
+              }
+            }
+          },
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "kind": "save_gate",
+          "onFail": {
+            "amount": {
+              "axis": "slot",
+              "base": {
+                "dice": 2,
+                "dieSize": 6
+              },
+              "kind": "linear_per_level",
+              "perLevel": {
+                "dice": 1,
+                "dieSize": 6
+              },
+              "startingAtLevel": 2
+            },
+            "damageType": "fire",
+            "kind": "damage"
+          },
+          "onSuccess": {
+            "kind": "half_damage"
+          }
+        },
+        "trigger": {
+          "distanceFeet": 5,
+          "kind": "on_creature_ends_turn_within_distance_of_area"
+        }
+      },
+      {
+        "effect": {
+          "kind": "reposition_attachment",
+          "maxMoveFeet": 30
+        },
+        "trigger": {
+          "cost": {
+            "kind": "bonus_action"
+          },
+          "kind": "on_caster_spends_action"
+        }
+      },
+      {
+        "effect": {
+          "ability": "dex",
+          "attachment": {
+            "holeId": "flaming_sphere_area",
+            "kind": "hole",
+            "label": "sphere area",
+            "value": {
+              "kind": "area",
+              "origin": {
+                "kind": "point_within_range"
+              },
+              "shape": {
+                "kind": "sphere",
+                "radiusFeet": 2.5
+              }
+            }
+          },
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "kind": "save_gate",
+          "onFail": {
+            "amount": {
+              "axis": "slot",
+              "base": {
+                "dice": 2,
+                "dieSize": 6
+              },
+              "kind": "linear_per_level",
+              "perLevel": {
+                "dice": 1,
+                "dieSize": 6
+              },
+              "startingAtLevel": 2
+            },
+            "damageType": "fire",
+            "kind": "damage"
+          },
+          "onSuccess": {
+            "kind": "half_damage"
+          }
+        },
+        "trigger": {
+          "kind": "on_area_moves_into_creature_space"
+        }
+      },
+      {
+        "effect": {
+          "filter": {
+            "heldOrWorn": "forbidden",
+            "material": "flammable"
+          },
+          "kind": "ignite_objects"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "brightRadiusFeet": 20,
+          "dimAdditionalFeet": 20,
+          "kind": "emit_light"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      }
+    ],
+    "range": {
+      "feet": 60,
+      "kind": "point"
+    },
+    "school": "conjuration"
+  },
+  "name": "Flaming Sphere",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Flaming Sphere"
+  }
+}

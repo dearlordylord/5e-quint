@@ -177,6 +177,8 @@ export const falseLifeUnitId = "false_life";
 
 export const faerieFireUnitId = "faerie_fire";
 
+export const flamingSphereUnitId = "flaming_sphere";
+
 export const guidingBoltUnitId = "guiding_bolt";
 
 export const guidanceUnitId = "guidance";
@@ -283,6 +285,8 @@ export const ensnaringStrikeHelperId = combatantId(
 );
 
 export const greaseAreaId = "unit-profile-grease-ground-area";
+
+export const flamingSphereAreaId = "unit-profile-flaming-sphere-area";
 
 export const thunderwaveObjectId = battleObjectId(
   "unit-profile-thunderwave-object",
