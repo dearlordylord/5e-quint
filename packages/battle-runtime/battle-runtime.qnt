@@ -76,6 +76,7 @@ module battleRuntime {
   import battleRuntimeMovement.* from "./battle-runtime-movement"
   import battleRuntimeRestorationAndBuffs.* from "./battle-runtime-restoration-and-buffs"
   import battleRuntimeSleepHideousLaughter.* from "./battle-runtime-sleep-hideous-laughter"
+  import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
 
   // SRD traceability for this canonical battle runtime spec:
   // - Playing-the-Game.md lines 479-495: combat proceeds in rounds and turns
@@ -434,60 +435,6 @@ module battleRuntime {
       | AttackReplayComplete => Set()
     }
 
-  pure def endTurn(state: BattleState): BattleState = {
-    val featureChecked = normalizeFighterEarlyEndedOngoingFeatures(expireFighterEndOfTurnOngoingFeatures(expireEndOfTurnSpellEffects(state)))
-    val advancedInitiative = nextInitiative(featureChecked.initiative)
-    val nextActor = advancedInitiative.stillToAct[0]
-    val featureAdvanced = applyStartOfTurnSpellEffects(expireStartOfTurnSpellEffects(expireFighterStartOfTurnOngoingFeatures(featureChecked, nextActor), nextActor), nextActor)
-    val spellDurationAdvanced = if (advancedInitiative.round > featureChecked.initiative.round)
-      tickRoundDurationSpellEffects(featureAdvanced)
-    else
-      featureAdvanced
-    val turnAdvanced = { ...spellDurationAdvanced, initiative: advancedInitiative }
-    val nextActorStep =
-      if (nextActor == Fighter)
-        battleRuntimeStartTurn(movementProjectionForFighter(turnAdvanced, WalkSpeedKind))
-      else
-        battleRuntimeStartTurn(movementProjectionForGrappledGoblin(turnAdvanced))
-    {
-      ...spellDurationAdvanced,
-      initiative: advancedInitiative,
-      actionAvailable: nextActorStep.actionAvailable,
-      bonusActionAvailable: nextActorStep.bonusActionAvailable,
-      spellSlotUsesThisTurn: Set(),
-      attackRollMadeThisTurn: false,
-      dashMovementBonus: nextActorStep.dashMovementBonus,
-      disengaged: nextActorStep.disengaged,
-      lightWeaponAttackMade: false,
-      fighterReadiedSpellHeld: if (spellDurationAdvanced.fighterReadiedSpellHeld and nextActor == Fighter) false else spellDurationAdvanced.fighterReadiedSpellHeld,
-      fighterReadiedMovementHeld: if (nextActor == Fighter) nextActorStep.readiedMovementHeld else spellDurationAdvanced.fighterReadiedMovementHeld,
-      fighterHelpAttackGoblinForGoblin: if (nextActor == Fighter) nextActorStep.helpAttackHeld else spellDurationAdvanced.fighterHelpAttackGoblinForGoblin,
-      fighter: if (nextActor == Fighter)
-        { ...spellDurationAdvanced.fighter, reactionAvailable: nextActorStep.reactionAvailable, movementSpent: nextActorStep.movementSpentFeet, dodging: nextActorStep.dodging }
-      else
-        spellDurationAdvanced.fighter,
-      goblin: if (nextActor == Goblin)
-        { ...spellDurationAdvanced.goblin, reactionAvailable: nextActorStep.reactionAvailable, movementSpent: nextActorStep.movementSpentFeet, dodging: nextActorStep.dodging }
-      else
-        spellDurationAdvanced.goblin,
-      goblinLegendaryUsesRemaining: if (nextActor == Goblin) 2 else spellDurationAdvanced.goblinLegendaryUsesRemaining,
-      goblinMultiattackDispatchesRemaining: 0,
-      lastTurnActor: if (currentActor(featureChecked) == Fighter) LastTurnFighter else LastTurnGoblin,
-      legendaryActionWindowConsumed: false,
-      fighterSneakAttackUsedThisTurn: false,
-      fighterExtraAttackSlotsRemaining: battleRuntimeExtraAttackSlotsAfterEndTurn(spellDurationAdvanced.fighterExtraAttackSlotsRemaining),
-      fighterCleaveExtraAttackUsedThisTurn: false,
-    }
-  }
-
-  pure def endTurnWithGoblinRechargeRoll(state: BattleState, roll: int): BattleState = {
-    val advanced = endTurn(state)
-    if (currentActor(advanced) == Goblin and not(advanced.goblinRechargeAvailable))
-      { ...advanced, goblinRechargeAvailable: battleRuntimeRechargeAvailableAfterRoll(advanced.goblinRechargeAvailable, 5, roll) }
-    else
-      advanced
-  }
-
   pure def goblinLegendaryActionWindowOpen(state: BattleState): bool =
     state.lastTurnActor == LastTurnFighter and currentActor(state) != Goblin and not(state.legendaryActionWindowConsumed)
 
@@ -723,15 +670,6 @@ module battleRuntime {
       | ResumeCommandFleeMovement(movement) => followCommandFlee(state, movement.speedKind, movement.movementCost, false)
       | ResumeDissonantWhispersMovementThenAfterDamage(_) => openDissonantWhispersAfterDamageSequence(state)
     }
-
-  pure def endTurnWithDeathSave(state: BattleState, deathSaveRoll: int): BattleState = {
-    val advanced = endTurn(state)
-
-    if (currentActor(advanced) == Fighter)
-      { ...advanced, fighter: applyStartTurnDeathSave(advanced.fighter, deathSaveRoll) }
-    else
-      advanced
-  }
 
   pure def spendFighterAttackActionOrExtraAttackSlot(state: BattleState): BattleState =
     if (state.fighterExtraAttackSlotsRemaining > 0)

@@ -42,6 +42,7 @@ module battleRuntimeCoreCombatTests {
   import battleRuntimeMovement.* from "./battle-runtime-movement"
   import battleRuntimeRestorationAndBuffs.* from "./battle-runtime-restoration-and-buffs"
   import battleRuntimeSleepHideousLaughter.* from "./battle-runtime-sleep-hideous-laughter"
+  import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
 
   run test_initial_holes_cover_attack_target = {
     assert(openHoles(initialState).contains(TargetChoice))

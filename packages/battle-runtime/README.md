@@ -1249,6 +1249,8 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
 - `battle-runtime-sleep-hideous-laughter.qnt` - Sleep and Hideous Laughter
   target admission, repeat-save holes, cleanup, and damage-triggered repeat
   save helpers.
+- `battle-runtime-turn-advancement.qnt` - End Turn advancement, start-turn
+  reset, recharge roll, and start-turn Death Saving Throw wrappers.
 - `battle-runtime-*-tests.qnt` - package-local QNT self-tests split by domain
   so the canonical integration spec stays focused on reducer behavior.
 - `battle-runtime-self-tests.qnt` - import-only QNT self-test suite used by the
