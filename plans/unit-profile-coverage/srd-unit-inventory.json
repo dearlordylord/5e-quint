@@ -179,12 +179,12 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 475,
-      "percent": "85.4%",
+      "numerator": 473,
+      "percent": "85.1%",
       "rowsByStatus": {
         "accepted": 302,
-        "accepted-no-battle-effect": 173,
-        "battle-runtime-required": 77,
+        "accepted-no-battle-effect": 171,
+        "battle-runtime-required": 79,
         "owner-evidence-required": 4
       }
     },
@@ -202,16 +202,16 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 307,
       "non-runtime": 24,
-      "catalog-only/dead-for-now": 144,
+      "catalog-only/dead-for-now": 142,
       "missing-authored-record": 75,
       "catalog-installed-owner-evidence-required": 5,
-      "catalog-authored-executable-follow-up": 1
+      "catalog-authored-executable-follow-up": 3
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 148,
-      "catalog-only/dead-for-now": 144,
+      "catalog-only/dead-for-now": 142,
       "missing-authored-record": 74,
-      "catalog-authored-executable-follow-up": 1
+      "catalog-authored-executable-follow-up": 3
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -19378,10 +19378,11 @@
         "state": "not-installed",
         "unitId": "alter_self"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE, L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME, L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME: L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE owns Replace the lossy Natural Weapons placeholder with a lossless SRD Surface shape for claws, fangs, horns, and hooves, preserving the Slashing, Piercing, and Bludgeoning cast-time damage-type choice and the spellcasting-ability attack and damage replacement facts without duplicating Unarmed Strike state. Required output: Alter Self Dhall/JSON content, and schema/tracer support if needed, represent Aquatic Adaptation, Change Appearance, and Natural Weapons as executable option facts, with Natural Weapons carrying the chosen natural growth, damage type, d6 damage die, and spellcasting-ability replacement facts.; L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME owns Promote the spell-owned Alter Self option state, Magic-action mode replacement, Concentration cleanup, Aquatic Adaptation water breathing, and linked Swim Speed equal to Speed without copying creature Speed into parallel spell state; keep Change Appearance as runtime-detached presentation facts with no statistic mutation. Required output: Profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Alter Self casting, mode replacement, water breathing, linked Swim Speed projection, Concentration cleanup, Change Appearance closure, and a separate Natural Weapons runtime task.; L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME owns After the Surface option shape and shared mode-replacement runtime are present, promote Natural Weapons as a spell-owned Unarmed Strike override that uses the chosen damage type, deals 1d6 damage instead of the normal Unarmed Strike damage, uses the caster's spellcasting ability for attack and damage rolls, and cleans up on Concentration end. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Natural Weapons Unarmed Strike attack and damage projection, damage-type choice, spellcasting-ability replacement, mode replacement, and cleanup.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_blindness_deafness",
@@ -24406,10 +24407,11 @@
         "state": "not-installed",
         "unitId": "alter_self"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE, L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME, L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME: L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE owns Replace the lossy Natural Weapons placeholder with a lossless SRD Surface shape for claws, fangs, horns, and hooves, preserving the Slashing, Piercing, and Bludgeoning cast-time damage-type choice and the spellcasting-ability attack and damage replacement facts without duplicating Unarmed Strike state. Required output: Alter Self Dhall/JSON content, and schema/tracer support if needed, represent Aquatic Adaptation, Change Appearance, and Natural Weapons as executable option facts, with Natural Weapons carrying the chosen natural growth, damage type, d6 damage die, and spellcasting-ability replacement facts.; L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME owns Promote the spell-owned Alter Self option state, Magic-action mode replacement, Concentration cleanup, Aquatic Adaptation water breathing, and linked Swim Speed equal to Speed without copying creature Speed into parallel spell state; keep Change Appearance as runtime-detached presentation facts with no statistic mutation. Required output: Profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Alter Self casting, mode replacement, water breathing, linked Swim Speed projection, Concentration cleanup, Change Appearance closure, and a separate Natural Weapons runtime task.; L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME owns After the Surface option shape and shared mode-replacement runtime are present, promote Natural Weapons as a spell-owned Unarmed Strike override that uses the chosen damage type, deals 1d6 damage instead of the normal Unarmed Strike damage, uses the caster's spellcasting ability for attack and damage rolls, and cleans up on Concentration end. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Natural Weapons Unarmed Strike attack and damage projection, damage-type choice, spellcasting-ability replacement, mode replacement, and cleanup.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_arcane_lock",

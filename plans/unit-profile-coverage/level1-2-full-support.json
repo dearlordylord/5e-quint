@@ -87,11 +87,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE: Replace the lossy Natural Weapons placeholder with a lossless SRD Surface shape for claws, fangs, horns, and hooves, preserving the Slashing, Piercing, and Bludgeoning cast-time damage-type choice and the spellcasting-ability attack and damage replacement facts without duplicating Unarmed Strike state. Owner: surface Spell Definition authoring. Required output: Alter Self Dhall/JSON content, and schema/tracer support if needed, represent Aquatic Adaptation, Change Appearance, and Natural Weapons as executable option facts, with Natural Weapons carrying the chosen natural growth, damage type, d6 damage die, and spellcasting-ability replacement facts.; L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME: Promote the spell-owned Alter Self option state, Magic-action mode replacement, Concentration cleanup, Aquatic Adaptation water breathing, and linked Swim Speed equal to Speed without copying creature Speed into parallel spell state; keep Change Appearance as runtime-detached presentation facts with no statistic mutation. Owner: battle-runtime self-transformation spell invocation/effect lifecycle. Required output: Profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Alter Self casting, mode replacement, water breathing, linked Swim Speed projection, Concentration cleanup, Change Appearance closure, and a separate Natural Weapons runtime task.; L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME: After the Surface option shape and shared mode-replacement runtime are present, promote Natural Weapons as a spell-owned Unarmed Strike override that uses the chosen damage type, deals 1d6 damage instead of the normal Unarmed Strike damage, uses the caster's spellcasting ability for attack and damage rolls, and cleans up on Concentration end. Owner: battle-runtime self-transformation spell invocation/effect lifecycle plus character-battle-runtime Unarmed Strike projection. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Natural Weapons Unarmed Strike attack and damage projection, damage-type choice, spellcasting-ability replacement, mode replacement, and cleanup.",
       "sourceRecordPath": "packages/surface/content/alter_self.json",
       "sourceRows": [
         {
@@ -119,8 +122,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
       "unitId": "alter_self"
     },
     {
@@ -2673,11 +2676,10 @@
       ]
     },
     {
-      "count": 29,
+      "count": 28,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
-        "alter_self",
         "arcane_lock",
         "barkskin",
         "blindness_deafness",
@@ -2727,11 +2729,12 @@
       ]
     },
     {
-      "count": 6,
+      "count": 7,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
         "acid_arrow",
+        "alter_self",
         "druid_wild_shape",
         "monk_monks_focus",
         "monk_uncanny_metabolism",
@@ -2773,12 +2776,12 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 475,
-      "percent": "85.4%",
+      "numerator": 473,
+      "percent": "85.1%",
       "rowsByStatus": {
         "accepted": 302,
-        "accepted-no-battle-effect": 173,
-        "battle-runtime-required": 77,
+        "accepted-no-battle-effect": 171,
+        "battle-runtime-required": 79,
         "owner-evidence-required": 4
       }
     },
@@ -2789,17 +2792,16 @@
     },
     "strictTargetClosure": {
       "denominator": 146,
-      "numerator": 116,
-      "percent": "79.5%"
+      "numerator": 117,
+      "percent": "80.1%"
     }
   },
   "openFrontier": [
     {
-      "count": 29,
+      "count": 28,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
-        "alter_self",
         "arcane_lock",
         "barkskin",
         "blindness_deafness",
@@ -6307,18 +6309,18 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
-      "missing": 29,
+      "missing": 28,
       "profile-subset-supported": 9,
       "supported-profile": 91,
-      "unsupported-profile": 17
+      "unsupported-profile": 18
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 6,
+      "blocked-follow-up-split": 7,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 11,
       "open-profile-accounting": 1,
-      "open-runtime-behavior": 29,
+      "open-runtime-behavior": 28,
       "supported-profile": 91
     },
     "nonSupportedFrontier": 55,
