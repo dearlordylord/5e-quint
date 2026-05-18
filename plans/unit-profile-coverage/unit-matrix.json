@@ -22536,6 +22536,28 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-SPIRITUAL-WEAPON-SURFACE-PROXY-SHAPE",
+            "mechanic": "Replace or verify the Spiritual Weapon Surface shape so it represents the RAW spectral force as a spell-owned proxy/effect, not a creature companion or ordinary object; preserve Bonus Action casting, Concentration up to 1 minute, 60-foot placement, immediate attack target within 5 feet of the force, slot-scaled Force damage, and a later-turn single Bonus Action operation that may move the force up to 20 feet and repeat the attack.",
+            "owner": "surface Spell Definition authoring",
+            "requiredOutput": "Spiritual Weapon Dhall and JSON content, plus schema/tracer support where required, make the coupled force placement, later movement, repeat attack, Concentration, and slot scaling executable source facts without representing movement and repeat attack as two separately spendable Bonus Action operations.",
+            "title": "Spiritual Weapon Proxy Surface Shape"
+          },
+          {
+            "id": "L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME",
+            "mechanic": "Promote Spiritual Weapon as a level-2 prepared Spell Invocation that spends the Bonus Action and Spell Slot, starts caster-owned Concentration up to 1 minute, consumes caller-supplied force placement and target-adjacency facts, resolves the immediate melee Spell Attack, applies slot-scaled Force damage, records the spell-owned attack proxy, offers a later-turn Bonus Action to move the proxy up to 20 feet from caller-supplied destination facts and repeat the attack, and cleans up on Concentration or duration end without introducing companion actions, object Hit Points, or duplicated proxy state.",
+            "owner": "battle-runtime spell invocation/effect lifecycle plus table/spatial owner",
+            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial casting, Spell Slot spend, Concentration ownership, proxy placement, immediate attack, later Bonus Action movement and repeat attack, slot scaling, and cleanup while leaving automatic geometry and adjacency derivation table-owned.",
+            "title": "Spiritual Weapon Persistent Attack Runtime"
+          }
+        ],
+        "futureProfileOwner": "surface Spell Definition proxy shape plus battle-runtime spell invocation/effect lifecycle and table/spatial owner",
+        "reason": "The local SRD 5.2.1 Spiritual Weapon passage defines Bonus Action level-2-or-higher Spell Slot casting, Concentration up to 1 minute, a floating spectral force placed within 60 feet, an immediate melee Spell Attack against one creature within 5 feet of the force, Force damage equal to 1d8 plus the spellcasting ability modifier with +1d8 per slot level above 2, and later-turn Bonus Action movement up to 20 feet plus a repeat attack. Task 49 claims no promoted battle-runtime profile yet because runtime has no spell-owned attack-proxy active effect, no table-spatial witness boundary for proxy placement, movement, and target adjacency, and no later-turn Bonus Action repeat-attack lifecycle tied to that proxy without treating it as a companion or ordinary object.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",

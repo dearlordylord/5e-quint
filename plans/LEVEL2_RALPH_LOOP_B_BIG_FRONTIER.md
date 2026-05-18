@@ -43,7 +43,7 @@
     {
       "number": 49,
       "id": "L12G-SPELL-SPIRITUAL-WEAPON",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Spiritual Weapon Runtime Support"
     },
     {
@@ -117,6 +117,18 @@
       "id": "L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION",
       "status": "ready-for-research",
       "title": "Spike Growth Hazard Recognition Boundary"
+    },
+    {
+      "number": 93,
+      "id": "L12G-FOLLOWUP-SPIRITUAL-WEAPON-SURFACE-PROXY-SHAPE",
+      "status": "ready-for-research",
+      "title": "Spiritual Weapon Proxy Surface Shape"
+    },
+    {
+      "number": 94,
+      "id": "L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Spiritual Weapon Persistent Attack Runtime"
     },
     {
       "number": 59,
@@ -224,7 +236,7 @@
 }
 -->
 
-This is the second level-2 execution lane. Loop B owns Tasks 43-58 and Task 90 only. Loop D owns Tasks 59-75. Loop A owns Tasks 22-36 and 88-89; Loop C owns Tasks 37-42 and 76-87. Do not implement or re-open sibling-lane tasks from this lane.
+This is the second level-2 execution lane. Loop B owns Tasks 43-58 and Tasks 90-94. Loop D owns Tasks 59-75. Loop A owns Tasks 22-36 and 88-89; Loop C owns Tasks 37-42 and 76-87. Do not implement or re-open sibling-lane tasks from this lane.
 
 ## Worktree Safety Prefix
 
@@ -299,8 +311,8 @@ use the repository MBT scarcity protocol.
 
 ## Included Work
 
-Loop B contains 19 atomic tasks: Tasks 43-58, from Scorching Ray through
-Detect Thoughts, plus Tasks 90-92 for the See Invisibility and Spike Growth follow-up splits. Tasks
+Loop B contains 21 atomic tasks: Tasks 43-58, from Scorching Ray through
+Detect Thoughts, plus Tasks 90-94 for the See Invisibility, Spike Growth, and Spiritual Weapon follow-up splits. Tasks
 59-75 have moved to Loop D. The historical manifest rows for Tasks 59-75 remain
 below, but they stay `deferred` here so Loop B cannot pick them. It excludes all
 level-1, Loop D/L, companion/familiar boundary, and Counterspell work.
@@ -326,6 +338,8 @@ level-1, Loop D/L, companion/familiar boundary, and Counterspell work.
 | 90 | 46 | `L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT` | `see_invisibility` |
 | 91 | 50 | `L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME` | `spike_growth` |
 | 92 | 50 | `L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION` | `spike_growth` |
+| 93 | 51 | `L12G-FOLLOWUP-SPIRITUAL-WEAPON-SURFACE-PROXY-SHAPE` | `spiritual_weapon` |
+| 94 | 51 | `L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME` | `spiritual_weapon` |
 | 59 | 61 | `L12G-MISSING-DRAGONS-BREATH` | `dragons_breath` |
 | 60 | 62 | `L12G-MISSING-ENHANCE-ABILITY` | `enhance_ability` |
 | 61 | 63 | `L12G-MISSING-ENLARGE-REDUCE` | `enlarge_reduce` |
@@ -540,9 +554,20 @@ Acceptance:
 
 ### Task 49 - L12G-SPELL-SPIRITUAL-WEAPON - Spiritual Weapon Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `spiritual_weapon`. Gate task: 51 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Result: Spiritual Weapon remains an `unsupported-profile` Unit in Task 49.
+Runtime work is split into Task 93 for the spell-owned proxy Surface shape and
+Task 94 for the battle-visible persistent attack runtime, rather than treating
+catalog admission, a generic object, or a companion-like controller as
+Spiritual Weapon support. Local SRD 5.2.1 text requires Bonus Action casting,
+Concentration up to 1 minute, a floating spectral force placed within range,
+an immediate melee Spell Attack, later Bonus Action force movement plus repeat
+attack, Force damage, and higher-slot damage scaling.
+RAW trace: `.references/srd-5.2.1/Spells/Descriptions-S-Z.md:512` through
+`:525`, with the Cleric list entry at `.references/srd-5.2.1/Classes/Cleric.md:196`.
 
 Inputs:
 
@@ -1353,5 +1378,65 @@ Acceptance:
 - the implementation does not infer sight, visibility, terrain discovery, or hidden-hazard recognition from battle-runtime geometry unless that owner has an explicit executable witness boundary;
 - Perception/Survival Search action handling traces to local RAW and ubiquitous language without adding a second spell save DC or duplicate recognition state;
 - the level 1-2 metric row for `spike_growth` is supported, accepted-closed, or precisely blocked only by a smaller queued follow-up;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 93 - L12G-FOLLOWUP-SPIRITUAL-WEAPON-SURFACE-PROXY-SHAPE - Spiritual Weapon Proxy Surface Shape
+
+Status: `ready-for-research`
+
+Unit: `spiritual_weapon`. Gate task: 51 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- Task 49's `unsupported-profile` Unit claim and follow-up split;
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Spiritual Weapon Dhall/JSON Surface content, schema/tracer support, and spell-ongoing/proxy authoring patterns.
+
+Outputs:
+
+- replace or verify the Spiritual Weapon Surface shape so it represents the RAW spectral force as a spell-owned proxy/effect, not a creature companion or ordinary object;
+- preserve Bonus Action casting, Concentration up to 1 minute, 60-foot placement, immediate attack target within 5 feet of the force, slot-scaled Force damage, and a later-turn single Bonus Action operation that may move the force up to 20 feet and repeat the attack.
+
+Acceptance:
+
+- the Surface shape does not encode the later move and repeat attack as two separately spendable Bonus Action operations;
+- Concentration and slot scaling remain source facts on the Spell Definition rather than duplicated runtime metadata;
+- the result leaves Task 94 unblocked with executable source facts for a spell-owned attack proxy;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 94 - L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME - Spiritual Weapon Persistent Attack Runtime
+
+Status: `ready-for-research`
+
+Unit: `spiritual_weapon`. Gate task: 51 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- Task 49's `unsupported-profile` Unit claim and follow-up split;
+- Task 93's executable Spiritual Weapon proxy Surface shape;
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Spell Invocation, Spell Attack, Spell Effect, Concentration, Bonus Action, table-spatial witness, and active-effect cleanup tests.
+
+Outputs:
+
+- promote Spiritual Weapon as a level-2 prepared Spell Invocation that spends the Bonus Action and Spell Slot, starts caster-owned Concentration up to 1 minute, consumes caller-supplied force placement and target-adjacency facts, resolves the immediate melee Spell Attack, applies slot-scaled Force damage, records the spell-owned attack proxy, offers a later-turn Bonus Action to move the proxy up to 20 feet from caller-supplied destination facts and repeat the attack, and cleans up on Concentration or duration end;
+- supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial casting, Spell Slot spend, Concentration ownership, proxy placement, immediate attack, later Bonus Action movement and repeat attack, slot scaling, and cleanup.
+
+Acceptance:
+
+- automatic geometry, position derivation, line of effect, and target adjacency are table/spatial-owner responsibilities consumed through explicit witness facts;
+- the spell-owned proxy is not modeled as a creature companion, ordinary object with Hit Points, or duplicated object state;
+- Bonus Action economy, the one Spell Slot per turn rule, Concentration cleanup, and slot-scaled damage are covered by focused tests and promoted Quint/runtime parity;
+- the level 1-2 metric row for `spiritual_weapon` is supported or precisely narrowed to any remaining accepted closure;
 - no level-1 Loop D/L or companion boundary work is pulled into this lane;
 - focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.

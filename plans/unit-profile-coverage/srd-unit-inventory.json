@@ -179,12 +179,12 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 470,
-      "percent": "84.5%",
+      "numerator": 469,
+      "percent": "84.4%",
       "rowsByStatus": {
         "accepted": 319,
-        "accepted-no-battle-effect": 151,
-        "battle-runtime-required": 76,
+        "accepted-no-battle-effect": 150,
+        "battle-runtime-required": 77,
         "partial-battle-runtime": 6,
         "owner-evidence-required": 4
       }
@@ -203,17 +203,17 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 330,
       "non-runtime": 24,
-      "catalog-only/dead-for-now": 122,
+      "catalog-only/dead-for-now": 121,
       "missing-authored-record": 58,
       "catalog-installed-owner-evidence-required": 14,
-      "catalog-authored-executable-follow-up": 8
+      "catalog-authored-executable-follow-up": 9
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 171,
-      "catalog-only/dead-for-now": 122,
+      "catalog-only/dead-for-now": 121,
       "missing-authored-record": 57,
       "catalog-installed-owner-evidence-required": 9,
-      "catalog-authored-executable-follow-up": 8
+      "catalog-authored-executable-follow-up": 9
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -8907,10 +8907,11 @@
         "state": "not-installed",
         "unitId": "spiritual_weapon"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-SPIRITUAL-WEAPON-SURFACE-PROXY-SHAPE, L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME: L12G-FOLLOWUP-SPIRITUAL-WEAPON-SURFACE-PROXY-SHAPE owns Replace or verify the Spiritual Weapon Surface shape so it represents the RAW spectral force as a spell-owned proxy/effect, not a creature companion or ordinary object; preserve Bonus Action casting, Concentration up to 1 minute, 60-foot placement, immediate attack target within 5 feet of the force, slot-scaled Force damage, and a later-turn single Bonus Action operation that may move the force up to 20 feet and repeat the attack. Required output: Spiritual Weapon Dhall and JSON content, plus schema/tracer support where required, make the coupled force placement, later movement, repeat attack, Concentration, and slot scaling executable source facts without representing movement and repeat attack as two separately spendable Bonus Action operations.; L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME owns Promote Spiritual Weapon as a level-2 prepared Spell Invocation that spends the Bonus Action and Spell Slot, starts caster-owned Concentration up to 1 minute, consumes caller-supplied force placement and target-adjacency facts, resolves the immediate melee Spell Attack, applies slot-scaled Force damage, records the spell-owned attack proxy, offers a later-turn Bonus Action to move the proxy up to 20 feet from caller-supplied destination facts and repeat the attack, and cleans up on Concentration or duration end without introducing companion actions, object Hit Points, or duplicated proxy state. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial casting, Spell Slot spend, Concentration ownership, proxy placement, immediate attack, later Bonus Action movement and repeat attack, slot scaling, and cleanup while leaving automatic geometry and adjacency derivation table-owned.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_warding_bond",

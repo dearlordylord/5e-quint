@@ -2387,11 +2387,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "L12G-FOLLOWUP-SPIRITUAL-WEAPON-SURFACE-PROXY-SHAPE: Replace or verify the Spiritual Weapon Surface shape so it represents the RAW spectral force as a spell-owned proxy/effect, not a creature companion or ordinary object; preserve Bonus Action casting, Concentration up to 1 minute, 60-foot placement, immediate attack target within 5 feet of the force, slot-scaled Force damage, and a later-turn single Bonus Action operation that may move the force up to 20 feet and repeat the attack. Owner: surface Spell Definition authoring. Required output: Spiritual Weapon Dhall and JSON content, plus schema/tracer support where required, make the coupled force placement, later movement, repeat attack, Concentration, and slot scaling executable source facts without representing movement and repeat attack as two separately spendable Bonus Action operations.; L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME: Promote Spiritual Weapon as a level-2 prepared Spell Invocation that spends the Bonus Action and Spell Slot, starts caster-owned Concentration up to 1 minute, consumes caller-supplied force placement and target-adjacency facts, resolves the immediate melee Spell Attack, applies slot-scaled Force damage, records the spell-owned attack proxy, offers a later-turn Bonus Action to move the proxy up to 20 feet from caller-supplied destination facts and repeat the attack, and cleans up on Concentration or duration end without introducing companion actions, object Hit Points, or duplicated proxy state. Owner: battle-runtime spell invocation/effect lifecycle plus table/spatial owner. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial casting, Spell Slot spend, Concentration ownership, proxy placement, immediate attack, later Bonus Action movement and repeat attack, slot scaling, and cleanup while leaving automatic geometry and adjacency derivation table-owned.",
       "sourceRecordPath": "packages/surface/content/spiritual_weapon.json",
       "sourceRows": [
         {
@@ -2407,8 +2410,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
       "unitId": "spiritual_weapon"
     },
     {
@@ -2635,7 +2638,7 @@
       ]
     },
     {
-      "count": 17,
+      "count": 16,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
@@ -2653,13 +2656,12 @@
         "prayer_of_healing",
         "protection_from_poison",
         "ray_of_enfeeblement",
-        "spiritual_weapon",
         "warding_bond",
         "web"
       ]
     },
     {
-      "count": 14,
+      "count": 15,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
@@ -2676,7 +2678,8 @@
         "see_invisibility",
         "sorcerer_font_of_magic",
         "sorcerer_metamagic",
-        "spike_growth"
+        "spike_growth",
+        "spiritual_weapon"
       ]
     },
     {
@@ -2726,12 +2729,12 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 470,
-      "percent": "84.5%",
+      "numerator": 469,
+      "percent": "84.4%",
       "rowsByStatus": {
         "accepted": 319,
-        "accepted-no-battle-effect": 151,
-        "battle-runtime-required": 76,
+        "accepted-no-battle-effect": 150,
+        "battle-runtime-required": 77,
         "owner-evidence-required": 4,
         "partial-battle-runtime": 6
       }
@@ -2758,13 +2761,13 @@
     },
     "strictTargetClosure": {
       "denominator": 151,
-      "numerator": 134,
-      "percent": "88.7%"
+      "numerator": 135,
+      "percent": "89.4%"
     }
   },
   "openFrontier": [
     {
-      "count": 17,
+      "count": 16,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
@@ -2782,7 +2785,6 @@
         "prayer_of_healing",
         "protection_from_poison",
         "ray_of_enfeeblement",
-        "spiritual_weapon",
         "warding_bond",
         "web"
       ]
@@ -7853,17 +7855,17 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
-      "missing": 17,
+      "missing": 16,
       "profile-subset-supported": 10,
       "supported-profile": 98,
-      "unsupported-profile": 26
+      "unsupported-profile": 27
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 14,
+      "blocked-follow-up-split": 15,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 14,
-      "open-runtime-behavior": 17,
+      "open-runtime-behavior": 16,
       "supported-profile": 98
     },
     "nonSupportedFrontier": 53,
