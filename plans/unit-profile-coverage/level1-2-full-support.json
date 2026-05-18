@@ -7,11 +7,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE: Replace the current lossy Acid Arrow mechanics with a lossless SRD Surface shape for the spell's initial hit damage, later damage at the end of the target's next turn, immediate half-of-initial miss damage only, and slot scaling for both initial and later damage without storing the miss branch as an independently fixed 2d4 approximation. Owner: surface Spell Definition authoring. Required output: Acid Arrow Dhall/JSON content, and schema/tracer support if needed, represent the RAW initial/later/miss damage relationships as executable facts that can be projected by battle-runtime without duplicating or reinterpreting spell damage state.; L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT: Promote Acid Arrow as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, resolves a ranged Spell Attack, applies immediate Acid damage on hit, stores the Acid damage Spell Effect that applies at the end of the target's next turn on hit, applies immediate half-of-initial Acid damage on miss only, and scales all RAW damage amounts by slot level. Owner: battle-runtime spell invocation/effect lifecycle. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Acid Arrow hit, miss, delayed target-turn damage, slot scaling, and resource spending.",
       "sourceRecordPath": "packages/surface/content/acid_arrow.json",
       "sourceRows": [
         {
@@ -27,8 +30,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
       "unitId": "acid_arrow"
     },
     {
@@ -2748,11 +2751,10 @@
       ]
     },
     {
-      "count": 31,
+      "count": 30,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
-        "acid_arrow",
         "aid",
         "alter_self",
         "arcane_lock",
@@ -2805,6 +2807,19 @@
     },
     {
       "count": 6,
+      "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
+      "status": "blocked-follow-up-split",
+      "unitIds": [
+        "acid_arrow",
+        "druid_wild_shape",
+        "monk_monks_focus",
+        "monk_uncanny_metabolism",
+        "sorcerer_font_of_magic",
+        "sorcerer_metamagic"
+      ]
+    },
+    {
+      "count": 6,
       "description": "The in-scope behavior is complete and every remaining residual is outside this strict accounting scope.",
       "status": "closed-later-level-only",
       "unitIds": [
@@ -2814,18 +2829,6 @@
         "paladin_fighting_style",
         "ranger_favored_enemy",
         "ranger_fighting_style"
-      ]
-    },
-    {
-      "count": 5,
-      "description": "The Unit claim records concrete smaller follow-up tasks for the remaining executable owner work.",
-      "status": "blocked-follow-up-split",
-      "unitIds": [
-        "druid_wild_shape",
-        "monk_monks_focus",
-        "monk_uncanny_metabolism",
-        "sorcerer_font_of_magic",
-        "sorcerer_metamagic"
       ]
     },
     {
@@ -2849,12 +2852,12 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 476,
-      "percent": "85.6%",
+      "numerator": 475,
+      "percent": "85.4%",
       "rowsByStatus": {
         "accepted": 297,
-        "accepted-no-battle-effect": 179,
-        "battle-runtime-required": 76,
+        "accepted-no-battle-effect": 178,
+        "battle-runtime-required": 77,
         "owner-evidence-required": 4
       }
     },
@@ -2865,17 +2868,16 @@
     },
     "strictTargetClosure": {
       "denominator": 146,
-      "numerator": 114,
-      "percent": "78.1%"
+      "numerator": 115,
+      "percent": "78.8%"
     }
   },
   "openFrontier": [
     {
-      "count": 31,
+      "count": 30,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
-        "acid_arrow",
         "aid",
         "alter_self",
         "arcane_lock",
@@ -6385,18 +6387,18 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
-      "missing": 31,
+      "missing": 30,
       "profile-subset-supported": 9,
       "supported-profile": 90,
-      "unsupported-profile": 16
+      "unsupported-profile": 17
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 5,
+      "blocked-follow-up-split": 6,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 11,
       "open-profile-accounting": 1,
-      "open-runtime-behavior": 31,
+      "open-runtime-behavior": 30,
       "supported-profile": 90
     },
     "nonSupportedFrontier": 56,
