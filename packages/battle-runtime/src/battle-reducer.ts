@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-dancing-lights-movable-dim-light spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-object-light spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-self-ability-check-advantage spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-independent-attack-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-dancing-lights-movable-dim-light spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-object-light spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-self-ability-check-advantage spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 import type {
   ActionEconomyState,
   RuntimeActionResource,
@@ -125,6 +125,7 @@ import {
   type EldritchBlastBeamCount,
   HUNTERS_MARK_FINDING_SKILLS,
   PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS,
+  type ScorchingRayRayCount,
   SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS,
   THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
 } from "./battle-reducer/domain-constants.ts";
@@ -2274,10 +2275,19 @@ export type SpellAttackDamageTargeting = Extract<
   SpellTargeting,
   { readonly kind: "singleCombatant" | "singleCreatureOrObject" }
 >;
-export type SpellAttackBeamSequenceTargeting = {
-  readonly kind: "beamSequenceCreatureOrObject";
-  readonly beamCount: EldritchBlastBeamCount;
+export type CantripSpellAttackSequenceTargeting = {
+  readonly kind: "spellAttackSequenceCreatureOrObject";
+  readonly countSource: "characterLevel";
+  readonly attackCount: EldritchBlastBeamCount;
 };
+export type PreparedSpellAttackSequenceTargeting = {
+  readonly kind: "spellAttackSequenceCreatureOrObject";
+  readonly countSource: "spellSlotLevel";
+  readonly attackCount: ScorchingRayRayCount;
+};
+export type SpellAttackSequenceTargeting =
+  | CantripSpellAttackSequenceTargeting
+  | PreparedSpellAttackSequenceTargeting;
 export type SpellHostedWeaponAttackInvocation = {
   readonly access: ClassCantripSpellAccess;
   readonly resource: NoSpellInvocationResource;
@@ -2415,12 +2425,10 @@ export type SupportedSpellInvocation =
       readonly postDamageRiders: readonly SpellPostDamageRider[];
       readonly objectHitEffect: SpellObjectHitEffect;
     })
-  | {
-      readonly access: ClassCantripSpellAccess;
-      readonly resource: NoSpellInvocationResource;
-      readonly procedure: "spellAttackBeamSequence";
+  | (ClassCantripDamageSpellSource & {
+      readonly procedure: "spellAttackSequence";
       readonly spell: SpellRecord;
-      readonly targeting: SpellAttackBeamSequenceTargeting;
+      readonly targeting: CantripSpellAttackSequenceTargeting;
       readonly damage: {
         readonly expr: DiceExpr;
         readonly damageType: DamageType;
@@ -2428,7 +2436,19 @@ export type SupportedSpellInvocation =
       readonly rangeFeet: MovementFeet;
       readonly attackKind: Extract<SpellAttackKind, "ranged_spell_attack">;
       readonly attackBonus: AttackBonus;
-    }
+    })
+  | (PreparedDamageSpellSource & {
+      readonly procedure: "spellAttackSequence";
+      readonly spell: SpellRecord;
+      readonly targeting: PreparedSpellAttackSequenceTargeting;
+      readonly damage: {
+        readonly expr: DiceExpr;
+        readonly damageType: DamageType;
+      };
+      readonly rangeFeet: MovementFeet;
+      readonly attackKind: Extract<SpellAttackKind, "ranged_spell_attack">;
+      readonly attackBonus: AttackBonus;
+    })
   | (PreparedDamageSpellSource & {
       readonly procedure: "chainedSpellAttackDamage";
       readonly spell: SpellRecord;
@@ -3410,7 +3430,7 @@ export type BattleSpellDamageRollHole = Extract<
         | "heldLightHurl"
         | "repeatedDamageAllocation"
         | "saveGatedDamage"
-        | "spellAttackBeamSequence"
+        | "spellAttackSequence"
         | "spellAttackDamage";
     }
   >;

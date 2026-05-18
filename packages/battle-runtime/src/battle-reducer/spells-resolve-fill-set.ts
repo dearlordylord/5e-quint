@@ -29,10 +29,10 @@ import { validateUniqueAttackSightFacts } from "./attack-fill-set.ts";
 import { isHideousLaughterDamageRepeatSaveFill } from "./hideous-laughter-repeat-save.ts";
 import {
   spellBurstDamageHole,
-  spellBeamAttackRollHoleId,
-  spellBeamDamageHoleId,
-  spellBeamObjectTargetHoleId,
-  spellBeamTargetHoleId,
+  spellAttackSequencePartAttackRollHoleId,
+  spellAttackSequencePartDamageHoleId,
+  spellAttackSequencePartObjectTargetHoleId,
+  spellAttackSequencePartTargetHoleId,
   commandOptionChoiceHoleId,
   spellDamageHole,
   spellDamageTypeChoiceHole,
@@ -47,7 +47,7 @@ import {
 import { spellDancingLightsPlacementHoleId } from "./spells-targeting.ts";
 import { THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID } from "./domain-constants.ts";
 
-export type SpellBeamTargetFill =
+export type SpellAttackSequencePartTargetFill =
   | {
       readonly kind: "combatant";
       readonly targetId: CombatantId;
@@ -62,8 +62,8 @@ export type SpellBeamTargetFill =
       >[];
     };
 
-export type SpellBeamFillSet = {
-  readonly target: SpellBeamTargetFill | undefined;
+export type SpellAttackSequencePartFillSet = {
+  readonly target: SpellAttackSequencePartTargetFill | undefined;
   readonly attackRoll: BattleAttackRollResult | undefined;
   readonly damageRoll:
     | Extract<BattleFill, { readonly kind: "rolledDice" }>
@@ -114,7 +114,7 @@ export type SpellFillSet =
             readonly spatialFacts: readonly BattleSpellTargetListSpatialFact[];
           }
         | undefined;
-      readonly beamFills: readonly SpellBeamFillSet[];
+      readonly attackSequencePartFills: readonly SpellAttackSequencePartFillSet[];
       readonly attackRoll: BattleAttackRollResult | undefined;
       readonly savingThrowOutcomes:
         | BattleSpellSavingThrowOutcomeValue
@@ -202,9 +202,9 @@ export function spellFillSet(
       }
     | undefined;
   let attackRoll: AttackRollResult | undefined;
-  const beamFills: SpellBeamFillSet[] =
-    invocation.procedure === "spellAttackBeamSequence"
-      ? Array.from({ length: invocation.targeting.beamCount }, () => ({
+  const attackSequencePartFills: SpellAttackSequencePartFillSet[] =
+    invocation.procedure === "spellAttackSequence"
+      ? Array.from({ length: invocation.targeting.attackCount }, () => ({
           target: undefined,
           attackRoll: undefined,
           damageRoll: undefined,
@@ -297,32 +297,32 @@ export function spellFillSet(
 
     if (
       fill.kind === "targetChoice" &&
-      invocation.procedure === "spellAttackBeamSequence"
+      invocation.procedure === "spellAttackSequence"
     ) {
-      const beamIndex = spellBeamIndexForHole(
+      const partIndex = spellAttackSequencePartIndexForHole(
         invocation,
         fill.holeId,
         "target",
       );
-      if (beamIndex !== null) {
-        const beamFill = beamFills[beamIndex];
-        if (beamFill === undefined) {
+      if (partIndex !== null) {
+        const attackSequencePartFill = attackSequencePartFills[partIndex];
+        if (attackSequencePartFill === undefined) {
           return {
             tag: "invalid",
-            message: "Spell beam target is outside this spell act.",
+            message: "Spell attack sequence target is outside this spell act.",
           };
         }
-        if (beamFill.target !== undefined) {
+        if (attackSequencePartFill.target !== undefined) {
           return {
             tag: "invalid",
-            message: "Spell beam target was filled twice.",
+            message: "Spell attack sequence target was filled twice.",
           };
         }
         const spatialFacts = fill.spatialFacts ?? [];
         const sightFactValidation = attackSightFactValidation(spatialFacts);
         if (sightFactValidation !== null) return sightFactValidation;
-        beamFills[beamIndex] = {
-          ...beamFill,
+        attackSequencePartFills[partIndex] = {
+          ...attackSequencePartFill,
           target: {
             kind: "combatant",
             targetId: fill.value,
@@ -334,28 +334,28 @@ export function spellFillSet(
     }
 
     if (fill.kind === "objectTargetChoice") {
-      if (invocation.procedure === "spellAttackBeamSequence") {
-        const beamIndex = spellBeamIndexForHole(
+      if (invocation.procedure === "spellAttackSequence") {
+        const partIndex = spellAttackSequencePartIndexForHole(
           invocation,
           fill.holeId,
           "object",
         );
-        if (beamIndex !== null) {
-          const beamFill = beamFills[beamIndex];
-          if (beamFill === undefined) {
+        if (partIndex !== null) {
+          const attackSequencePartFill = attackSequencePartFills[partIndex];
+          if (attackSequencePartFill === undefined) {
             return {
               tag: "invalid",
-              message: "Spell beam object target is outside this spell act.",
+              message: "Spell attack sequence object target is outside this spell act.",
             };
           }
-          if (beamFill.target !== undefined) {
+          if (attackSequencePartFill.target !== undefined) {
             return {
               tag: "invalid",
-              message: "Spell beam target was filled twice.",
+              message: "Spell attack sequence target was filled twice.",
             };
           }
-          beamFills[beamIndex] = {
-            ...beamFill,
+          attackSequencePartFills[partIndex] = {
+            ...attackSequencePartFill,
             target: {
               kind: "object",
               objectId: fill.value,
@@ -565,28 +565,28 @@ export function spellFillSet(
 
     if (
       fill.kind === "attackRoll" &&
-      invocation.procedure === "spellAttackBeamSequence"
+      invocation.procedure === "spellAttackSequence"
     ) {
-      const beamIndex = spellBeamIndexForHole(
+      const partIndex = spellAttackSequencePartIndexForHole(
         invocation,
         fill.holeId,
         "attackRoll",
       );
-      if (beamIndex !== null) {
-        const beamFill = beamFills[beamIndex];
-        if (beamFill === undefined) {
+      if (partIndex !== null) {
+        const attackSequencePartFill = attackSequencePartFills[partIndex];
+        if (attackSequencePartFill === undefined) {
           return {
             tag: "invalid",
-            message: "Spell beam attack roll is outside this spell act.",
+            message: "Spell attack sequence attack roll is outside this spell act.",
           };
         }
-        if (beamFill.attackRoll !== undefined) {
+        if (attackSequencePartFill.attackRoll !== undefined) {
           return {
             tag: "invalid",
-            message: "Spell beam attack roll was filled twice.",
+            message: "Spell attack sequence attack roll was filled twice.",
           };
         }
-        beamFills[beamIndex] = { ...beamFill, attackRoll: fill.value };
+        attackSequencePartFills[partIndex] = { ...attackSequencePartFill, attackRoll: fill.value };
         continue;
       }
     }
@@ -810,27 +810,27 @@ export function spellFillSet(
     }
 
     if (fill.kind === "rolledDice") {
-      if (invocation.procedure === "spellAttackBeamSequence") {
-        const beamIndex = spellBeamIndexForHole(
+      if (invocation.procedure === "spellAttackSequence") {
+        const partIndex = spellAttackSequencePartIndexForHole(
           invocation,
           fill.holeId,
           "damage",
         );
-        if (beamIndex !== null) {
-          const beamFill = beamFills[beamIndex];
-          if (beamFill === undefined) {
+        if (partIndex !== null) {
+          const attackSequencePartFill = attackSequencePartFills[partIndex];
+          if (attackSequencePartFill === undefined) {
             return {
               tag: "invalid",
-              message: "Spell beam damage is outside this spell act.",
+              message: "Spell attack sequence damage is outside this spell act.",
             };
           }
-          if (beamFill.damageRoll !== undefined) {
+          if (attackSequencePartFill.damageRoll !== undefined) {
             return {
               tag: "invalid",
-              message: "Spell beam damage was filled twice.",
+              message: "Spell attack sequence damage was filled twice.",
             };
           }
-          beamFills[beamIndex] = { ...beamFill, damageRoll: fill };
+          attackSequencePartFills[partIndex] = { ...attackSequencePartFill, damageRoll: fill };
           continue;
         }
       }
@@ -965,7 +965,7 @@ export function spellFillSet(
     reactionSpellTargetFacts,
     targetAllocation,
     targetList,
-    beamFills,
+    attackSequencePartFills,
     attackRoll,
     savingThrowOutcomes,
     skillChoice,
@@ -996,11 +996,11 @@ export function spellFillSetContainsOnlySpellCastReactionFacts(
     fillSet.targetSpatialFacts.length === 0 &&
     fillSet.targetAllocation === undefined &&
     fillSet.targetList === undefined &&
-    fillSet.beamFills.every(
-      (beamFill) =>
-        beamFill.target === undefined &&
-        beamFill.attackRoll === undefined &&
-        beamFill.damageRoll === undefined,
+    fillSet.attackSequencePartFills.every(
+      (attackSequencePartFill) =>
+        attackSequencePartFill.target === undefined &&
+        attackSequencePartFill.attackRoll === undefined &&
+        attackSequencePartFill.damageRoll === undefined,
     ) &&
     fillSet.attackRoll === undefined &&
     (options.allowSavingThrowOutcomes === true ||
@@ -1075,31 +1075,32 @@ export function spellFillSetSavingThrowTargeting(
       : { kind: "singleCombatant" };
 }
 
-function spellBeamIndexForHole(
+function spellAttackSequencePartIndexForHole(
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "spellAttackBeamSequence" }
+    { readonly procedure: "spellAttackSequence" }
   >,
   holeId: BattleHoleId,
   kind: "attackRoll" | "damage" | "object" | "target",
 ): number | null {
   for (
-    let beamIndex = 0;
-    beamIndex < invocation.targeting.beamCount;
-    beamIndex += 1
+    let partIndex = 0;
+    partIndex < invocation.targeting.attackCount;
+    partIndex += 1
   ) {
     if (
       (kind === "target" &&
-        spellBeamTargetHoleId(invocation, beamIndex) === holeId) ||
+        spellAttackSequencePartTargetHoleId(invocation, partIndex) === holeId) ||
       (kind === "object" &&
-        spellBeamObjectTargetHoleId(invocation, beamIndex) === holeId) ||
+        invocation.targeting.kind === "spellAttackSequenceCreatureOrObject" &&
+        spellAttackSequencePartObjectTargetHoleId(invocation, partIndex) === holeId) ||
       (kind === "attackRoll" &&
-        spellBeamAttackRollHoleId(invocation, beamIndex) === holeId) ||
+        spellAttackSequencePartAttackRollHoleId(invocation, partIndex) === holeId) ||
       (kind === "damage" &&
-        (spellBeamDamageHoleId(invocation, beamIndex, false) === holeId ||
-          spellBeamDamageHoleId(invocation, beamIndex, true) === holeId))
+        (spellAttackSequencePartDamageHoleId(invocation, partIndex, false) === holeId ||
+          spellAttackSequencePartDamageHoleId(invocation, partIndex, true) === holeId))
     ) {
-      return beamIndex;
+      return partIndex;
     }
   }
   return null;

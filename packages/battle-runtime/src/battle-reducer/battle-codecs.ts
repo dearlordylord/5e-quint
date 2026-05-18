@@ -76,6 +76,7 @@ import {
   BATTLE_ATTACK_RANGE_BANDS,
   COMMAND_OPTIONS,
   ELDRITCH_BLAST_BEAM_COUNTS,
+  SCORCHING_RAY_RAY_COUNTS,
   SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS,
   THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
 } from "./domain-constants.ts";
@@ -591,6 +592,26 @@ const SpellAttackDamageTargetingSchema = Schema.Union(
   SingleCreatureOrObjectSpellTargetingSchema,
 );
 
+const CantripSpellAttackSequenceAttackCountSchema = Schema.Literal(
+  ...ELDRITCH_BLAST_BEAM_COUNTS,
+);
+
+const PreparedSpellAttackSequenceAttackCountSchema = Schema.Literal(
+  ...SCORCHING_RAY_RAY_COUNTS,
+);
+
+const CantripSpellAttackSequenceTargetingSchema = Schema.Struct({
+  kind: Schema.Literal("spellAttackSequenceCreatureOrObject"),
+  countSource: Schema.Literal("characterLevel"),
+  attackCount: CantripSpellAttackSequenceAttackCountSchema,
+});
+
+const PreparedSpellAttackSequenceTargetingSchema = Schema.Struct({
+  kind: Schema.Literal("spellAttackSequenceCreatureOrObject"),
+  countSource: Schema.Literal("spellSlotLevel"),
+  attackCount: PreparedSpellAttackSequenceAttackCountSchema,
+});
+
 const SpellAttackDamagePayloadSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("fixedSpellAttackDamage"),
@@ -1031,23 +1052,36 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       }),
       activeEffect: BattleRuntimeObjectSchema,
     }),
-    Schema.Struct({
-      access: ClassCantripSpellAccessSchema,
-      resource: NoSpellInvocationResourceSchema,
-      procedure: Schema.Literal("spellAttackBeamSequence"),
-      spell: BattleRuntimeObjectSchema,
-      targeting: Schema.Struct({
-        kind: Schema.Literal("beamSequenceCreatureOrObject"),
-        beamCount: Schema.Literal(...ELDRITCH_BLAST_BEAM_COUNTS),
+    Schema.Union(
+      Schema.Struct({
+        access: ClassCantripSpellAccessSchema,
+        resource: NoSpellInvocationResourceSchema,
+        procedure: Schema.Literal("spellAttackSequence"),
+        spell: BattleRuntimeObjectSchema,
+        targeting: CantripSpellAttackSequenceTargetingSchema,
+        damage: Schema.Struct({
+          expr: BattleRuntimeObjectSchema,
+          damageType: DamageTypeSchema,
+        }),
+        rangeFeet: MovementFeet,
+        attackKind: Schema.Literal("ranged_spell_attack"),
+        attackBonus: AttackBonus,
       }),
-      damage: Schema.Struct({
-        expr: BattleRuntimeObjectSchema,
-        damageType: DamageTypeSchema,
+      Schema.Struct({
+        access: PreparedSpellAccessSchema,
+        resource: SpellSlotInvocationResourceSchema,
+        procedure: Schema.Literal("spellAttackSequence"),
+        spell: BattleRuntimeObjectSchema,
+        targeting: PreparedSpellAttackSequenceTargetingSchema,
+        damage: Schema.Struct({
+          expr: BattleRuntimeObjectSchema,
+          damageType: DamageTypeSchema,
+        }),
+        rangeFeet: MovementFeet,
+        attackKind: Schema.Literal("ranged_spell_attack"),
+        attackBonus: AttackBonus,
       }),
-      rangeFeet: MovementFeet,
-      attackKind: Schema.Literal("ranged_spell_attack"),
-      attackBonus: AttackBonus,
-    }),
+    ),
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,

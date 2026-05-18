@@ -191,6 +191,8 @@ export const resistanceUnitId = "resistance";
 
 export const sacredFlameUnitId = "sacred_flame";
 
+export const scorchingRayUnitId = "scorching_ray";
+
 export const shillelaghUnitId = "shillelagh";
 
 export const sorcerousBurstUnitId = "sorcerous_burst";

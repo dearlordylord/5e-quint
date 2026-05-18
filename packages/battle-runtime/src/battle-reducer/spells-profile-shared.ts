@@ -1,8 +1,13 @@
 import type { SpellSlotLevel } from "@dnd/shared/types";
 import type {
   DiceExpr,
+  SpellRecord,
   TargetSelection,
 } from "@dnd/surface/surface/types";
+import {
+  ELDRITCH_BLAST_SPELL_ID,
+  SCORCHING_RAY_SPELL_ID,
+} from "./domain-constants.ts";
 
 export function sameStringSet(
   left: readonly string[],
@@ -23,16 +28,35 @@ export function sameDiceExpr(left: DiceExpr, right: DiceExpr): boolean {
   );
 }
 
+export function spellAttackSequencePartName(
+  spell: Pick<SpellRecord, "id">,
+): "attack" | "beam" | "ray" {
+  if (spell.id === ELDRITCH_BLAST_SPELL_ID) {
+    return "beam";
+  }
+  if (spell.id === SCORCHING_RAY_SPELL_ID) {
+    return "ray";
+  }
+  return "attack";
+}
+
 export function scalarBuffSpellTargetCount(
   selection: TargetSelection,
   spellLevel: number,
   slotLevel: SpellSlotLevel,
 ): number | null {
-  const countBySlot = scalarBuffSpellTargetCountBySlot(selection, spellLevel);
+  const countBySlot = targetCountBySlot(selection, spellLevel);
   return countBySlot === null ? null : countBySlot(slotLevel);
 }
 
 export function scalarBuffSpellTargetCountBySlot(
+  selection: TargetSelection,
+  spellLevel: number,
+): ((slotLevel: SpellSlotLevel) => number) | null {
+  return targetCountBySlot(selection, spellLevel);
+}
+
+export function targetCountBySlot(
   selection: TargetSelection,
   spellLevel: number,
 ): ((slotLevel: SpellSlotLevel) => number) | null {

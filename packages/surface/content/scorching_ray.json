@@ -25,73 +25,15 @@
           "value": {
             "kind": "target",
             "selection": {
-              "mode": "one"
-            }
-          }
-        },
-        "attackKind": "ranged_spell_attack",
-        "kind": "attack_roll",
-        "onHit": [
-          {
-            "amount": {
-              "expr": {
-                "dice": 2,
-                "dieSize": 6
+              "count": {
+                "base": 3,
+                "baseLevel": 2,
+                "kind": "linear",
+                "perSlotAboveBase": 1
               },
-              "kind": "fixed"
-            },
-            "damageType": "fire",
-            "kind": "damage"
-          }
-        ],
-        "onMiss": [
-          {
-            "kind": "none"
-          }
-        ]
-      },
-      {
-        "attachment": {
-          "holeId": "scorching_ray_target",
-          "kind": "hole",
-          "label": "ray target",
-          "value": {
-            "kind": "target",
-            "selection": {
-              "mode": "one"
-            }
-          }
-        },
-        "attackKind": "ranged_spell_attack",
-        "kind": "attack_roll",
-        "onHit": [
-          {
-            "amount": {
-              "expr": {
-                "dice": 2,
-                "dieSize": 6
-              },
-              "kind": "fixed"
-            },
-            "damageType": "fire",
-            "kind": "damage"
-          }
-        ],
-        "onMiss": [
-          {
-            "kind": "none"
-          }
-        ]
-      },
-      {
-        "attachment": {
-          "holeId": "scorching_ray_target",
-          "kind": "hole",
-          "label": "ray target",
-          "value": {
-            "kind": "target",
-            "selection": {
-              "mode": "one"
+              "mode": "choose_up_to",
+              "repeatsAllowed": true,
+              "targetKinds": ["creature", "object"]
             }
           }
         },
@@ -126,6 +68,6 @@
   "name": "Scorching Ray",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Spells/Descriptions-Q-Z#Scorching Ray"
+    "section": "Spells/Descriptions-S-Z#Scorching Ray"
   }
 }

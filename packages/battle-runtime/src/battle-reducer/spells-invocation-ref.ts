@@ -101,11 +101,19 @@ export function supportedSpellInvocationRef(
       procedure: "command",
     };
   }
-  if (invocation.procedure === "spellAttackBeamSequence") {
+  if (invocation.procedure === "spellAttackSequence") {
+    if (invocation.resource.tag === "spellSlot") {
+      return {
+        tag: "spellSlot",
+        spellId: spellId(invocation.spell.id),
+        slotLevel: invocation.resource.slotLevel,
+        procedure: "spellAttackSequence",
+      };
+    }
     return {
       tag: "cantrip",
       spellId: spellId(invocation.spell.id),
-      procedure: "spellAttackBeamSequence",
+      procedure: "spellAttackSequence",
     };
   }
   if (invocation.procedure === "expeditiousRetreatDash") {
@@ -330,7 +338,7 @@ export function damageSpellInvocationRef(
     {
       readonly procedure:
         | "heldLightHurl"
-        | "spellAttackBeamSequence"
+        | "spellAttackSequence"
         | "spellAttackDamage"
         | "saveGatedDamage";
     }

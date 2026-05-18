@@ -75,7 +75,7 @@ describe("battle runtime: Eldritch Blast", () => {
       actorId: wizardId,
       invocation: cantripSpellInvocationRef(
         "eldritch_blast",
-        "spellAttackBeamSequence",
+        "spellAttackSequence",
       ),
       mode: { tag: "cast" },
     });
@@ -114,7 +114,11 @@ describe("battle runtime: Eldritch Blast", () => {
     expect(firstAttackRoll).toMatchObject({
       label: "Eldritch Blast beam 1 spell attack roll",
       spell: expect.objectContaining({
-        targeting: { kind: "beamSequenceCreatureOrObject", beamCount: 2 },
+        targeting: {
+          kind: "spellAttackSequenceCreatureOrObject",
+          countSource: "characterLevel",
+          attackCount: 2,
+        },
         damage: {
           expr: { dice: 1, dieSize: 10 },
           damageType: "force",

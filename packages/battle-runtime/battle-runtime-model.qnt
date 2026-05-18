@@ -12,11 +12,12 @@ module battleRuntimeModel {
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
   type Ability = StrAbility | DexAbility | ConAbility | IntAbility | WisAbility | ChaAbility
 
-  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | FireBolt | EldritchBlast | SacredFlame | InflictWounds | BurningHands | Fireball | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | Counterspell | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | Thaumaturgy | DivineFavor | DivineSmite | HuntersMark | Hex | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | DancingLightsSpell | Light | TrueStrike | Grease | FogCloud | Command | DissonantWhispers | FeatherFall | HellishRebuke | SorcerousBurst | SpareTheDying | HideousLaughter
+  type SpellInvocation = MagicMissile | RayOfFrost | AcidSplash | PoisonSpray | ChillTouch | StarryWisp | FireBolt | EldritchBlast | ScorchingRay | SacredFlame | InflictWounds | BurningHands | Fireball | ColorSpray | Entangle | EnsnaringStrike | SearingSmite | FaerieFire | AnimalFriendship | CharmPerson | ProtectionFromEvilAndGood | IceKnife | HealingWord | CureWounds | MassHealingWord | Shield | Counterspell | FalseLife | Longstrider | ShieldOfFaith | Heroism | Bane | Bless | Guidance | Thaumaturgy | DivineFavor | DivineSmite | HuntersMark | Hex | ShockingGrasp | GuidingBolt | RayOfSickness | ViciousMockery | ProduceFlame | DancingLightsSpell | Light | TrueStrike | Grease | FogCloud | Command | DissonantWhispers | FeatherFall | HellishRebuke | SorcerousBurst | SpareTheDying | HideousLaughter
   type SpellAttackDamageInvocation = RayOfFrostSpellAttack | PoisonSpraySpellAttack | ChillTouchSpellAttack | StarryWispSpellAttack | FireBoltSpellAttack | ShockingGraspSpellAttack | GuidingBoltSpellAttack | RayOfSicknessSpellAttack | ProduceFlameHurlSpellAttack | SorcerousBurstSpellAttack({ damageTypeChoice: BattleRuntimeSorcerousBurstDamageTypeChoice, spellcastingAbilityModifier: int, characterLevel: int })
   type FixedSpellAttackDamageInvocation = RayOfFrostFixedSpellAttack | PoisonSprayFixedSpellAttack | ChillTouchFixedSpellAttack | StarryWispFixedSpellAttack | FireBoltFixedSpellAttack | ShockingGraspFixedSpellAttack | GuidingBoltFixedSpellAttack | RayOfSicknessFixedSpellAttack | ProduceFlameHurlFixedSpellAttack
-  type SpellAttackBeamSequenceInvocation =
+  type SpellAttackSequenceInvocation =
     | EldritchBlastBeamSequence
+    | ScorchingRaySequence
   type ChainedSpellAttackDamageInvocation =
     | ChromaticOrbChainedSpellAttack
   type ChromaticOrbDamageTypeChoice = ChromaticOrbAcid | ChromaticOrbCold | ChromaticOrbFire | ChromaticOrbLightning | ChromaticOrbPoison | ChromaticOrbThunder
@@ -115,6 +116,7 @@ module battleRuntimeModel {
     | StarryWispObjectTarget
     | ChillTouchObjectTarget
     | EldritchBlastObjectTarget
+    | ScorchingRayObjectTarget
     | FireBoltObjectTarget
     | FireballObjectTarget
     | ProduceFlameObjectTarget

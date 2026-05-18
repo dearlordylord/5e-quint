@@ -1,5 +1,5 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV39 eldritch_blast
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-beam-sequence
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-independent-attack-sequence
 import { describe, expect, test } from "vitest";
 import {
   eldritchBlastUnitId,
@@ -45,7 +45,7 @@ describe("SRDINV39 deterministic Eldritch Blast Spell Unit admission", () => {
       actorId: spellCasterId,
       invocation: cantripSpellInvocationRef(
         eldritchBlastUnitId,
-        "spellAttackBeamSequence",
+        "spellAttackSequence",
       ),
       mode: { tag: "cast" },
     });
@@ -88,9 +88,13 @@ describe("SRDINV39 deterministic Eldritch Blast Spell Unit admission", () => {
     );
     expect(spellHoleInvocation([attackRoll])).toEqual(
       expect.objectContaining({
-        procedure: "spellAttackBeamSequence",
+        procedure: "spellAttackSequence",
         spell,
-        targeting: { kind: "beamSequenceCreatureOrObject", beamCount: 2 },
+        targeting: {
+          kind: "spellAttackSequenceCreatureOrObject",
+          countSource: "characterLevel",
+          attackCount: 2,
+        },
         damage: {
           expr: { dice: 1, dieSize: 10 },
           damageType: "force",

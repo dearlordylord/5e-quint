@@ -119,7 +119,7 @@ import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 
 import { resolveChainedSpellAttackDamageAct } from "./spells-resolve-chained.ts";
 import { resolveFogCloudObscurementSpellAct } from "./spells-resolve-area-effects.ts";
-import { resolveSpellAttackBeamSequenceAct } from "./spells-resolve-beam-sequence.ts";
+import { resolveSpellAttackSequenceAct } from "./spells-resolve-attack-sequence.ts";
 export { resolveFogCloudObscurementSpellAct } from "./spells-resolve-area-effects.ts";
 export { resolveAttackBurstSaveDamageSpellAct } from "./spells-resolve-attack-burst.ts";
 export {
@@ -253,7 +253,7 @@ function isSupportedDamageSpellInvocation(
     invocation.procedure === "repeatedDamageAllocation" ||
     (invocation.procedure === "spellAttackDamage" &&
       invocation.damage.kind !== "sorcerousBurstDamageTypeChoice") ||
-    invocation.procedure === "spellAttackBeamSequence" ||
+    invocation.procedure === "spellAttackSequence" ||
     invocation.procedure === "saveGatedDamage" ||
     invocation.procedure === "attackBurstSaveDamage"
   );
@@ -375,7 +375,7 @@ export function resolveSpellAct(
       invocation.procedure === "command" ||
       invocation.procedure === "fogCloudObscurement" ||
       invocation.procedure === "sanctuaryTargetingInterdiction" ||
-      invocation.procedure === "spellAttackBeamSequence")
+      invocation.procedure === "spellAttackSequence")
   ) {
     return invalidResult(
       input.state,
@@ -451,8 +451,8 @@ export function resolveSpellAct(
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
-  if (invocation.procedure === "spellAttackBeamSequence") {
-    return resolveSpellAttackBeamSequenceAct({
+  if (invocation.procedure === "spellAttackSequence") {
+    return resolveSpellAttackSequenceAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

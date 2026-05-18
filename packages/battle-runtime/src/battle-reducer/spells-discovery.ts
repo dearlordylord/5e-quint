@@ -30,14 +30,15 @@ import {
   spellHasAvailableSpend,
   supportedSpellActs,
 } from "./spells-profiles.ts";
+import { spellAttackSequencePartName } from "./spells-profile-shared.ts";
 import { representedMovementSpeedKinds } from "./movement-speed.ts";
 import {
   scalarBuffInitialHoles,
   commandOptionChoiceHole,
   spellAbilityChoiceHole,
   spellDamageTypeChoiceHole,
-  spellBeamObjectTargetHole,
-  spellBeamTargetHole,
+  spellAttackSequencePartObjectTargetHole,
+  spellAttackSequencePartTargetHole,
   spellObjectTargetHole,
   spellAreaChoiceHole,
   spellRollModifierSkillChoiceHole,
@@ -514,12 +515,12 @@ export function discoverSupportedSpellInvocations(
               ];
         return castActs;
       }
-      if (invocation.procedure === "spellAttackBeamSequence") {
+      if (invocation.procedure === "spellAttackSequence") {
         const initialHoles = Array.from(
-          { length: invocation.targeting.beamCount },
-          (_, beamIndex) => [
-            spellBeamTargetHole(state, actorId, invocation, beamIndex),
-            spellBeamObjectTargetHole(invocation, beamIndex),
+          { length: invocation.targeting.attackCount },
+          (_, partIndex) => [
+            spellAttackSequencePartTargetHole(state, actorId, invocation, partIndex),
+            spellAttackSequencePartObjectTargetHole(invocation, partIndex),
           ],
         ).flat();
         return [
@@ -819,8 +820,13 @@ export function spellInvocationCastSummary(
   if (invocation.procedure === "spellAttackDamage") {
     return spellActivationInvocationCastSummary(invocation);
   }
-  if (invocation.procedure === "spellAttackBeamSequence") {
-    return `Cast ${invocation.spell.name} as a cantrip, resolving ${invocation.targeting.beamCount} beams.`;
+  if (invocation.procedure === "spellAttackSequence") {
+    const partName = spellAttackSequencePartName(invocation.spell);
+    const resource =
+      invocation.resource.tag === "spellSlot"
+        ? `using a level ${invocation.resource.slotLevel} Spell Slot`
+        : "as a cantrip";
+    return `Cast ${invocation.spell.name} ${resource}, resolving ${invocation.targeting.attackCount} ${partName}${invocation.targeting.attackCount === 1 ? "" : "s"}.`;
   }
   if (invocation.procedure === "chainedSpellAttackDamage") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
@@ -974,7 +980,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "command" &&
     invocation.procedure !== "greaseGroundHazard" &&
     invocation.procedure !== "fogCloudObscurement" &&
-    invocation.procedure !== "spellAttackBeamSequence" &&
+    invocation.procedure !== "spellAttackSequence" &&
     invocation.procedure !== "shieldReaction"
   );
 }
@@ -998,7 +1004,7 @@ export function readiedSpellAct(
     invocation.procedure === "jumpMovementReplacement" ||
     invocation.procedure === "sanctuaryTargetingInterdiction" ||
     invocation.procedure === "afterHitDamage" ||
-    invocation.procedure === "spellAttackBeamSequence" ||
+    invocation.procedure === "spellAttackSequence" ||
     invocation.procedure === "afterHitSaveGatedCondition" ||
     invocation.procedure === "afterHitTimedDamageAndSave" ||
     invocation.procedure === "heldLight" ||

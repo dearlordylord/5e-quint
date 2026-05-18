@@ -267,9 +267,12 @@ flowchart TD
   without deriving fall distance or geometry. `chromatic_orb` is a separate chained spell attack profile with one
   cast-local damage-type choice, step-scoped target/attack/damage holes,
   duplicate-d8 leap gating, target uniqueness, and previous-target range facts.
-  `eldritch_blast` is a separate beam-sequence cantrip profile with one Magic
-  action spend, character-level beam count, beam-indexed creature-or-object
-  target choices, separate attack rolls, and Force damage on each hit.
+  `eldritch_blast` and `scorching_ray` share an independent spell-attack
+  sequence profile with one Magic action spend, spell-specific attack count,
+  sequence-part creature-or-object target choices, separate attack rolls, and
+  per-spell damage on each hit. Eldritch Blast uses character-level beam
+  scaling and cantrip access; Scorching Ray uses Spell Slot level ray scaling
+  and prepared-spell access.
   `vicious_mockery` adds an attack-roll-only Disadvantage effect on failed
   saves.
   `sleep` has a separate admission profile for caller-supplied point-origin

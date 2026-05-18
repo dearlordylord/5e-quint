@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 374,
-      "numerator": 144,
-      "percent": "38.5%"
+      "numerator": 145,
+      "percent": "38.8%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 446,
-      "numerator": 176,
-      "percent": "39.5%"
+      "numerator": 177,
+      "percent": "39.7%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 177
+      "value": 178
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 113,
-      "numerator": 113,
+      "denominator": 114,
+      "numerator": 114,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 177,
-      "numerator": 177,
+      "denominator": 178,
+      "numerator": 178,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 113,
+      "denominator": 114,
       "numerator": 104,
-      "percent": "92%"
+      "percent": "91.2%"
     },
     "supportedProfileCoverage": {
-      "denominator": 145,
-      "numerator": 113,
-      "percent": "77.9%"
+      "denominator": 146,
+      "numerator": 114,
+      "percent": "78.1%"
     }
   },
   "metricSemantics": [
@@ -1842,7 +1842,7 @@
       ]
     },
     {
-      "id": "spell.invocation-beam-sequence",
+      "id": "spell.invocation-independent-attack-sequence",
       "profileKind": "spell-invocation",
       "qntOwners": [
         "packages/battle-runtime/battle-runtime.qnt"
@@ -1851,9 +1851,10 @@
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
       "taskRefs": [
-        "SRDINV39"
+        "SRDINV39",
+        "L12G-SPELL-SCORCHING-RAY"
       ],
-      "title": "Spell invocation resolves independent creature-or-object ranged spell attack beams",
+      "title": "Spell invocation resolves independent creature-or-object ranged spell attack sequences",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -1866,6 +1867,10 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-eldritch-blast.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scorching-ray.test.ts"
         },
         {
           "kind": "focused-mbt",
@@ -3333,7 +3338,7 @@
       "claimKind": "qnt-proof",
       "note": "Promoted battle-runtime Quint facts for Eldritch Blast beam count scaling, Force damage, creature-or-object beam targeting holes, and cantrip slot behavior.",
       "profileIds": [
-        "spell.invocation-beam-sequence"
+        "spell.invocation-independent-attack-sequence"
       ],
       "taskId": "SRDINV39"
     },
@@ -3341,9 +3346,25 @@
       "claimKind": "completed-runtime-parity",
       "note": "Focused battle-runtime reducer tests and MBT cover Eldritch Blast beam target/attack/damage sequencing, creature and object targets, Concentration saves, spell damage reduction, zero-HP replacement, and attack-hit/after-damage reaction windows.",
       "profileIds": [
-        "spell.invocation-beam-sequence"
+        "spell.invocation-independent-attack-sequence"
       ],
       "taskId": "SRDINV39"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Scorching Ray as a spell-slot spell attack sequence with Fire damage, creature-or-object ray targeting, and one additional ray per slot above level 2.",
+      "profileIds": [
+        "spell.invocation-independent-attack-sequence"
+      ],
+      "taskId": "L12G-SPELL-SCORCHING-RAY"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime reducer tests cover Scorching Ray admission, level 2 and upcast ray counts, repeated and split creature targets, Fire damage, and Spell Slot expenditure.",
+      "profileIds": [
+        "spell.invocation-independent-attack-sequence"
+      ],
+      "taskId": "L12G-SPELL-SCORCHING-RAY"
     },
     {
       "claimKind": "qnt-proof",
@@ -12318,6 +12339,73 @@
       },
       "claim": {
         "profileIds": [
+          "spell.invocation-independent-attack-sequence"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scorching-ray.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-SPELL-SCORCHING-RAY"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-independent-attack-sequence",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV39",
+            "L12G-SPELL-SCORCHING-RAY"
+          ],
+          "title": "Spell invocation resolves independent creature-or-object ranged spell attack sequences",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-eldritch-blast.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scorching-ray.test.ts"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/scorching_ray.json",
+      "unitId": "scorching_ray"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
           "spell.invocation-after-hit-timed-damage-save"
         ],
         "rawRequirementIds": [
@@ -13950,7 +14038,7 @@
       },
       "claim": {
         "profileIds": [
-          "spell.invocation-beam-sequence"
+          "spell.invocation-independent-attack-sequence"
         ],
         "rawRequirementIds": [
           "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
@@ -13974,7 +14062,7 @@
       "kind": "spell",
       "profiles": [
         {
-          "id": "spell.invocation-beam-sequence",
+          "id": "spell.invocation-independent-attack-sequence",
           "profileKind": "spell-invocation",
           "qntOwners": [
             "packages/battle-runtime/battle-runtime.qnt"
@@ -13983,9 +14071,10 @@
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
           "taskRefs": [
-            "SRDINV39"
+            "SRDINV39",
+            "L12G-SPELL-SCORCHING-RAY"
           ],
-          "title": "Spell invocation resolves independent creature-or-object ranged spell attack beams",
+          "title": "Spell invocation resolves independent creature-or-object ranged spell attack sequences",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -13998,6 +14087,10 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-eldritch-blast.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scorching-ray.test.ts"
             },
             {
               "kind": "focused-mbt",
@@ -18483,24 +18576,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/rogue_ability_score_improvement_l4.json",
       "unitId": "rogue_ability_score_improvement_l4"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/scorching_ray.json",
-      "unitId": "scorching_ray"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
