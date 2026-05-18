@@ -20,9 +20,10 @@ let allSkills =
 let bard =
       { armorTraining = { categories = [ "light" ], kind = "trained" }
       , className = "bard"
-      , description = "SRD Bard class creation and early progression facts, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, and level 1-2 class feature grants."
+      , description = "SRD Bard class creation and early progression facts, including level 1-2 class-list prepared Spell Access, Spell Slots, spellcasting focus facts, and level 1-2 class feature grants."
       , featureGrants =
         [ { level = 1, unitId = "bard_bardic_inspiration" }
+        , { level = 2, unitId = "bard_expertise" }
         , { level = 2, unitId = "bard_jack_of_all_trades" }
         ]
       , hitPointDie = 8
@@ -69,11 +70,11 @@ let bard =
           }
       , name = "Bard"
       , primaryAbilities = { abilities = [ "cha" ], kind = "all_of" }
-      , provenance = { kind = "srd-5.2.1", section = "Classes/Bard.md:3-25,34-37,69-91,99-103" }
+      , provenance = { kind = "srd-5.2.1", section = "Classes/Bard.md:3-26,34-37,69-103" }
       , savingThrowProficiencies = [ "dex", "cha" ]
       , skillProficiencyChoice = { choose = 3, options = allSkills }
       , spellcasting =
-          { kind = "list_prepared_spellcasting_creation"
+          { kind = "list_prepared_spellcasting_progression_creation"
           , featureLevel = 1
           , spellcastingAbility = "cha"
           , cantripAccess =
@@ -90,6 +91,7 @@ let bard =
                 , { spellId = "color_spray", spellLevel = 1 }
                 , { spellId = "dissonant_whispers", spellLevel = 1 }
                 , { spellId = "healing_word", spellLevel = 1 }
+                , { spellId = "thunderwave", spellLevel = 1 }
                 ] : List ClassSpellAccess
               , changeOn = { kind = "class_level", replacementCount = 1 }
               }
@@ -98,6 +100,18 @@ let bard =
               , slots = [ { spellLevel = 1, count = 2 } ]
               , resetCadence = { kind = "long_rest" }
               }
+          , spellcastingProgression =
+            [ { atLevel = 1
+              , cantripCount = 2
+              , preparedSpellCount = 4
+              , spellSlots = [ { spellLevel = 1, count = 2 } ]
+              }
+            , { atLevel = 2
+              , cantripCount = 2
+              , preparedSpellCount = 5
+              , spellSlots = [ { spellLevel = 1, count = 3 } ]
+              }
+            ]
           , spellcastingFocus = "musical_instrument"
           }
       , subclassChoices = [] : List { level : Natural, options : List Text }

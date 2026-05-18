@@ -264,6 +264,10 @@ export const TimeSpanDurationValueSchema = Schema.Struct({
   upcastTiers: exactOptional(ReadonlyNonEmptyArrayDurationUpcastTierSchema),
 });
 
+export const HalfClassLevelRoundedDownHoursDurationValueSchema = Schema.Struct({
+  kind: Schema.Literal("half_class_level_rounded_down_hours"),
+});
+
 export const DurationValueSchema = TimeSpanDurationValueSchema;
 
 export const SkillSchema = Schema.Literal(...SURFACE_SKILLS);

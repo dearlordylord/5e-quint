@@ -1,0 +1,155 @@
+{
+  "acquiredAtLevel": 2,
+  "className": "druid",
+  "description": "As a Bonus Action, expend one Wild Shape use to shape-shift into a learned Beast form for a number of hours equal to half your Druid level, rounded down. You retain the SRD-listed character facts, cannot cast spells, gain Temporary Hit Points equal to your Druid level, and revert when the duration expires, you use Wild Shape again, you have the Incapacitated condition, you die, or you dismiss the form as a Bonus Action.",
+  "id": "druid_wild_shape",
+  "kind": "class_feature",
+  "mechanics": {
+    "activationCost": {
+      "kind": "bonus_action"
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "kind": "half_class_level_rounded_down_hours"
+      }
+    },
+    "family": "activation",
+    "phases": [
+      {
+        "attachment": {
+          "kind": "self"
+        },
+        "effects": [
+          {
+            "actionRestriction": "no_spellcasting",
+            "kind": "transform_target",
+            "newForm": {
+              "creatureType": "beast",
+              "flySpeed": {
+                "atLevel": 8,
+                "kind": "allowed_at_class_level"
+              },
+              "kind": "known_forms_roster",
+              "knownForms": {
+                "kind": "class_level_total_choices",
+                "levels": [
+                  {
+                    "atLevel": 2,
+                    "total": 4
+                  },
+                  {
+                    "atLevel": 4,
+                    "total": 6
+                  },
+                  {
+                    "atLevel": 8,
+                    "total": 8
+                  }
+                ]
+              },
+              "knownFormChange": {
+                "kind": "long_rest",
+                "replacementCount": 1
+              },
+              "maxChallengeRating": {
+                "axis": "class",
+                "base": 0.25,
+                "kind": "threshold_tiers",
+                "tiers": [
+                  {
+                    "atLevel": 4,
+                    "value": 0.5
+                  },
+                  {
+                    "atLevel": 8,
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "retainedFields": [
+              "personality",
+              "memories",
+              "speech",
+              "creature_type",
+              "hit_points",
+              "hit_point_dice",
+              "intelligence",
+              "wisdom",
+              "charisma",
+              "class_features",
+              "languages",
+              "feats",
+              "skill_proficiencies",
+              "saving_throw_proficiencies"
+            ],
+            "revertTriggers": [
+              {
+                "kind": "duration_expires"
+              },
+              {
+                "kind": "source_used_again"
+              },
+              {
+                "condition": "incapacitated",
+                "kind": "condition_active"
+              },
+              {
+                "kind": "death"
+              },
+              {
+                "action": "bonus_action",
+                "kind": "dismissed_by_target"
+              }
+            ]
+          },
+          {
+            "amount": {
+              "axis": "class",
+              "base": {
+                "dice": 0,
+                "dieSize": 1,
+                "flat": 1
+              },
+              "kind": "linear_per_level",
+              "perLevel": {
+                "flat": 1
+              },
+              "startingAtLevel": 1
+            },
+            "kind": "grant_temp_hp"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "resetCadence": {
+      "kind": "partial_short_full_long",
+      "shortRestRefill": 1
+    },
+    "resource": {
+      "cap": {
+        "axis": "class",
+        "base": 2,
+        "kind": "threshold_tiers",
+        "tiers": [
+          {
+            "atLevel": 6,
+            "value": 3
+          },
+          {
+            "atLevel": 17,
+            "value": 4
+          }
+        ]
+      },
+      "kind": "use_count"
+    }
+  },
+  "name": "Wild Shape",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Druid.md:30-49,95-122"
+  }
+}

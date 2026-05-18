@@ -1175,8 +1175,8 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
 - `battle-runtime-find-familiar.qnt` - Find Familiar lifecycle and permission
   helpers imported by the canonical spec.
 - `battle-runtime-light.qnt` - light-source duration, illumination, sight
-  obscurement, and spell light projection helpers imported by the canonical
-  spec.
+  obscurement, spell light projection, and Light/Dancing Lights/Produce
+  Flame/Shillelagh reducers imported by the canonical spec.
 - `battle-runtime-creature-type-protection.qnt` - Protection from Evil and Good
   creature-type scoping, condition prevention, and possession prevention
   helpers imported by the canonical spec.
@@ -1185,6 +1185,81 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
 - `battle-runtime-thaumaturgy.qnt` - Thaumaturgy Booming Voice active effect,
   one-minute effect count, and self ability-check Advantage helpers imported by
   the canonical spec.
+- `battle-runtime-bardic-inspiration.qnt` - Bardic Inspiration and Cutting
+  Words d20-test helpers imported by the canonical spec and focused Bardic
+  selected-identity lane.
+- `battle-runtime-hit-points.qnt` - Hit Point damage, healing, stabilization,
+  zero-Hit-Point, Knock Out, drop-to-zero, and Death Saving Throw lifecycle
+  helpers imported by the canonical spec and focused death-save lane.
+- `battle-runtime-turn-order.qnt` - initiative turn ownership, attack-turn
+  eligibility, next-initiative calculation, and end-of-caster-next-turn timing.
+- `battle-runtime-damage-adjustments.qnt` - damage type projection,
+  resistance/vulnerability/immunity adjustment, and Resistance spell reduction.
+- `battle-runtime-spell-invocation.qnt` - spell slot turn-use guards, spell
+  invocation slot classification, spellcasting gate helpers, Innate Sorcery
+  spell modifiers, scalar-buff profile projection, and Magic Missile helpers.
+- `battle-runtime-spell-attack.qnt` - spell attack profile projection, spell
+  attack active effects, object damage and ignition helpers, spell attack roll
+  modes, Eldritch Blast beam replay holes, and spell attack reducers.
+- `battle-runtime-chained-spell-attack.qnt` - Chromatic Orb chained attack
+  damage choices, d8 duplicate-face facts, leap legality, and replay holes.
+- `battle-runtime-save-gated-spell.qnt` - save-gated damage and condition
+  profile projection, attack-burst save helpers, save-gated active effects,
+  replay holes, and save/attack-burst spell reducers.
+- `battle-runtime-marked-riders.qnt` - Hunter's Mark and Hex durations,
+  transfer eligibility, marked damage riders, and marked Ability Check modes.
+- `battle-runtime-marked-spells.qnt` - Hunter's Mark, Favored Enemy Hunter's
+  Mark, Hex, and marked-rider transfer spell reducers.
+- `battle-runtime-reaction-window.qnt` - Reaction trigger matching, window
+  opening, reactor availability, Shield and Counterspell reaction helpers, and
+  Hellish Rebuke admission facts.
+- `battle-runtime-combatant-side.qnt` - actor side, damage-source side, ally,
+  and enemy relation helpers used by Concentration and Rage procedures.
+- `battle-runtime-concentration.qnt` - Concentration Saving Throw DCs,
+  Concentration-breaking active-effect cleanup, Sleep cleanup, and damage-ended
+  Charm cleanup helpers.
+- `battle-runtime-actor-combatants.qnt` - actor-to-combatant projection helpers
+  for reducer procedures that update a selected creature in `BattleState`.
+- `battle-runtime-sanctuary.qnt` - Sanctuary ward active-effect lifecycle and
+  targeting-interdiction outcome helpers.
+- `battle-runtime-feather-fall.qnt` - Feather Fall reaction admission,
+  mitigation active-effect projection, and landing cleanup outcomes.
+- `battle-runtime-jump-movement.qnt` - Jump movement-replacement slot scaling,
+  landing facts, and per-target use tracking helpers.
+- `battle-runtime-weapon-hit-spell-riders.qnt` - Divine Favor, Divine Smite,
+  Ensnaring Strike, and Searing Smite damage/effect rider projections and
+  after-hit spell reducers.
+- `battle-runtime-fighter-ongoing-features.qnt` - Fighter Rage and Reckless
+  Attack ongoing-feature lifecycle, extension, resistance, and attack-roll
+  hooks.
+- `battle-runtime-timed-effects.qnt` - end-turn, start-turn, and round-duration
+  active-effect cleanup, including timed Concentration and Hideous Laughter
+  restoration.
+- `battle-runtime-attack-facts.qnt` - Attack hit and Critical Hit facts,
+  Fighter critical range, weapon/spell attack damage roll constructors, Sneak
+  Attack eligibility, weapon mastery DCs, and reaction damage-reduction
+  arithmetic.
+- `battle-runtime-hidden.qnt` - Hidden execution facts, Hide-hole admission,
+  Search DC projection, and reveal helpers.
+- `battle-runtime-movement.qnt` - Movement projection, Dash/Disengage/Dodge,
+  Grapple/Escape, forced movement, Opportunity Attack movement windows, light
+  weapon bonus attacks, and movement-backed action-cost spending.
+- `battle-runtime-restoration-and-buffs.qnt` - direct Hit Point restoration,
+  scalar buffs, Heroism, and their movement-backed spell action costs.
+- `battle-runtime-sleep-hideous-laughter.qnt` - Sleep and Hideous Laughter
+  target admission, repeat-save holes, cleanup, and damage-triggered repeat
+  save helpers.
+- `battle-runtime-turn-advancement.qnt` - End Turn advancement, start-turn
+  reset, recharge roll, and start-turn Death Saving Throw wrappers.
+- `battle-runtime-ground-command.qnt` - Grease and Fog Cloud ground/obscurement
+  reducers plus Command pending-effect follow-up procedures.
+- `battle-runtime-weapon-attacks.qnt` - Fighter weapon attack, True Strike
+  hosted weapon attack, Stat Block attack, Multiattack, and Opportunity Attack
+  reducers.
+- `battle-runtime-*-tests.qnt` - package-local QNT self-tests split by domain
+  so the canonical integration spec stays focused on reducer behavior.
+- `battle-runtime-self-tests.qnt` - import-only QNT self-test suite used by the
+  Vitest harness so split test modules run in one Quint invocation.
 - `battle-runtime.mbt.qnt` - package-local randomized model for the selected
   integrated promoted MBT path.
 

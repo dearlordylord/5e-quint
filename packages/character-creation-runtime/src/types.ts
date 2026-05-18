@@ -117,6 +117,7 @@ export const UNIT_CHOICE_KEYS = [
   "divine_order",
   "primal_order",
   "paladin_fighting_style",
+  "ranger_fighting_style",
   "bard_multiclass_skill_proficiency",
   "bard_multiclass_musical_instrument_proficiency",
   "ranger_multiclass_skill_proficiency",
@@ -1113,7 +1114,11 @@ export type CharacterBuildSpellcastingFocus =
   | CharacterBuildBookOfShadowsSpellAccess["spellcastingFocus"]
   | Extract<
       ClassSpellcastingCreation,
-      { readonly kind: "list_prepared_spellcasting_creation" }
+      {
+        readonly kind:
+          | "list_prepared_spellcasting_creation"
+          | "list_prepared_spellcasting_progression_creation";
+      }
     >["spellcastingFocus"]
   | Extract<
       ClassSpellcastingCreation,

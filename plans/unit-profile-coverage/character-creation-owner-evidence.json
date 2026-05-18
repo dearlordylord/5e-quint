@@ -959,6 +959,61 @@
         "packages/character-creation-runtime/src/index.test.ts:fills and finalizes Paladin level 2 Fighting Style branches through the supported workflow"
       ]
     },
+    "srd521:classes/ranger:level-2:class-feature-grant:ranger_deft_explorer": {
+      "taskId": "L12G-AUTHOR-RANGER-FIGHTING-STYLE",
+      "profile": "level-2 Ranger Deft Explorer support profile",
+      "summary": "Ranger Deft Explorer is discovered from the owned-skill grant-expertise and language-choice Surface grants, finalized from one selected owned skill proficiency plus two Character Creation language-table selections, and projected into CharacterBuild Expertise and classFeatureLanguages while Ranger level-2 progression retains both sibling level-2 feature refs.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:classFeatureGrantChoiceHoles",
+        "packages/character-creation-runtime/src/discovery.ts:eligibleExpertiseSkills",
+        "packages/character-creation-runtime/src/discovery.ts:languageGrantChoiceHole"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:supportedFinalizationChoiceHoles",
+        "packages/character-creation-runtime/src/finalization.ts:expertiseSubjectsForSelection",
+        "packages/character-creation-runtime/src/finalization.ts:finalizedClassFeatureLanguages"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildProficiencies",
+        "packages/character-creation-runtime/src/finalization.ts:buildCharacterBuild"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:models Ranger level 2 Deft Explorer and Fighting Style acquisition choices",
+        "packages/character-creation-runtime/src/index.test.ts:fills and finalizes Ranger level 2 Deft Explorer and Fighting Style branches through the supported workflow"
+      ]
+    },
+    "srd521:classes/ranger:level-2:class-feature-grant:ranger_fighting_style": {
+      "taskId": "L12G-AUTHOR-RANGER-FIGHTING-STYLE",
+      "profile": "character-creation Ranger Fighting Style branch and grant-selection support profile",
+      "summary": "Ranger Fighting Style is discovered from the Surface class-feature acquisition choice, fill-gated to Fighting Style feat or Druidic Warrior, finalized through the selected branch's downstream feat or cantrip choices, and projected without duplicating selected feat or cantrip behavior on the Ranger feature Unit.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:classFeatureGrantChoiceHoles",
+        "packages/character-creation-runtime/src/discovery.ts:selectedClassFeatureAcquisitionGrantChoiceHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey",
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:supportedFinalizationChoiceHoles",
+        "packages/character-creation-runtime/src/finalization.ts:buildCharacterBuild"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:finalizedClassChoiceFeaturesForSupportedChoices",
+        "packages/character-creation-runtime/src/finalization.ts:finalizedBuildSpellcastingSource",
+        "packages/character-creation-runtime/src/finalization.ts:selectedClassFeatureAcquisitionCantripUnitRefs",
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:models Ranger level 2 Deft Explorer and Fighting Style acquisition choices",
+        "packages/character-creation-runtime/src/index.test.ts:fills and finalizes Ranger level 2 Deft Explorer and Fighting Style branches through the supported workflow"
+      ]
+    },
     "srd521:classes/ranger:level-1:mastery-pressure:ranger_weapon_mastery": {
       "taskId": "SRDINV20",
       "profile": "level-1 Ranger Weapon Mastery support profile",
@@ -2284,6 +2339,31 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
+    "srd521:classes/bard:level-2:class-feature-grant:bard_expertise": {
+      "taskId": "L12G-AUTHOR-BARD-EXPERTISE",
+      "profile": "level-2 Bard Expertise support profile",
+      "summary": "Bard Expertise is discovered from the owned-skill grant-expertise acquisition choice, finalized from two selected skills that are owned and not already Expertise, and projected into CharacterBuild Expertise evidence while Bard level-2 spellcasting projects its level-scaled prepared spell and Spell Slot facts.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:classFeatureGrantChoiceHoles",
+        "packages/character-creation-runtime/src/discovery.ts:eligibleExpertiseSkills"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:supportedFinalizationChoiceHoles",
+        "packages/character-creation-runtime/src/finalization.ts:expertiseSubjectsForSelection",
+        "packages/character-creation-runtime/src/list-prepared-spellcasting.ts:listPreparedSpellcastingCreationAtLevel"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildProficiencies"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/bard-expertise.test.ts:finalizes two owned skills as Bard level-2 Expertise",
+        "packages/character-creation-runtime/src/bard-expertise.test.ts:rejects Bard Expertise choices that are not owned skill proficiencies"
+      ]
+    },
     "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order": {
       "taskId": "AT-L1-06",
       "profile": "character-creation.class-feature-option-projection support profile",
@@ -2306,6 +2386,27 @@
       ],
       "tests": [
         "packages/character-creation-runtime/src/index.test.ts:finalizes supported level-1 class-feature acquisition choices"
+      ]
+    },
+    "srd521:classes/cleric:level-2:class-feature-grant:cleric_channel_divinity": {
+      "taskId": "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY",
+      "profile": "character-creation.class-feature-resource-projection support profile",
+      "summary": "Cleric Channel Divinity is retained from the level-2 Cleric class feature grant and projected into CharacterBuild resource facts from the authored Surface resource container, while Divine Spark and Turn Undead option execution remains option-owned.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverInitialDraftHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds",
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildResources"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:accepts Cleric 2 Channel Divinity as a class resource container"
       ]
     },
     "srd521:classes/druid:level-1:class-feature-grant:druid_druidic": {

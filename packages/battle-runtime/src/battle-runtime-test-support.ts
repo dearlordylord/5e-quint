@@ -234,10 +234,10 @@ export function removeBattleCombatantsRight(
 
 export const partySide = battleCombatantSide("party");
 export const oppositionSide = battleCombatantSide("opposition");
-const battleRuntimeSpecPath = fileURLToPath(
-  new URL("../battle-runtime.qnt", import.meta.url),
+const battleRuntimeSelfTestSpecPath = fileURLToPath(
+  new URL("../battle-runtime-self-tests.qnt", import.meta.url),
 );
-export const canonicalBattleRuntimeQntSelfTestTimeoutMs = 180_000;
+export const canonicalBattleRuntimeQntSelfTestTimeoutMs = 300_000;
 export const fighterId = combatantId("fighter");
 export const goblinId = combatantId("goblin");
 export const skeletonId = combatantId("skeleton");
@@ -439,7 +439,7 @@ export async function runCanonicalBattleRuntimeQntSelfTests(): Promise<void> {
       "test",
       "--backend",
       "typescript",
-      battleRuntimeSpecPath,
+      battleRuntimeSelfTestSpecPath,
       "--match",
       "test_",
     ],

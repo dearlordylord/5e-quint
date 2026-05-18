@@ -1,0 +1,51 @@
+{
+  "acquiredAtLevel": 2,
+  "className": "monk",
+  "description": "SRD Monk level 2 Focus Point resource container. A Monk's Focus Points equal Monk level, return after a Short or Long Rest, and can fuel Flurry of Blows, Patient Defense, and Step of the Wind.",
+  "id": "monk_monks_focus",
+  "kind": "class_feature",
+  "mechanics": {
+    "effectSaveDc": {
+      "ability": "wis",
+      "base": 8,
+      "kind": "class_feature_ability_save_dc"
+    },
+    "family": "resource_container",
+    "optionSet": {
+      "choiceKey": "monk_focus_point_feature",
+      "initialOptions": [
+        {
+          "displayName": "Flurry of Blows",
+          "id": "monk_flurry_of_blows"
+        },
+        {
+          "displayName": "Patient Defense",
+          "id": "monk_patient_defense"
+        },
+        {
+          "displayName": "Step of the Wind",
+          "id": "monk_step_of_the_wind"
+        }
+      ],
+      "timing": "resource_use"
+    },
+    "resetCadence": {
+      "kind": "short_or_long_rest"
+    },
+    "resource": {
+      "cap": {
+        "axis": "class",
+        "base": 2,
+        "kind": "linear_per_level",
+        "perLevel": 1,
+        "startingAtLevel": 2
+      },
+      "kind": "use_count"
+    }
+  },
+  "name": "Monk's Focus",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Monk.md:30-33,76-90"
+  }
+}

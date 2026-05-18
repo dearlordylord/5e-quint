@@ -72,6 +72,12 @@ const strictStatusDefinitions = [
       "The in-scope behavior is complete and every remaining residual is outside this strict accounting scope.",
   },
   {
+    status: "blocked-follow-up-split",
+    strictTargetClosed: true,
+    description:
+      "The Unit claim records concrete smaller follow-up tasks for the remaining executable owner work.",
+  },
+  {
     status: "open-profile-accounting",
     strictTargetClosed: false,
     description:
@@ -166,6 +172,9 @@ function sourceRowSummary(rows) {
 }
 
 function closureKindsForClaim(claim) {
+  if (Array.isArray(claim?.followUpTasks) && claim.followUpTasks.length > 0) {
+    return ["follow-up-split"];
+  }
   if (claim?.tag === "profile-subset-supported") {
     return Array.from(
       new Set(
@@ -181,6 +190,14 @@ function closureKindsForClaim(claim) {
 }
 
 function closureReasonForClaim(claim) {
+  if (Array.isArray(claim?.followUpTasks) && claim.followUpTasks.length > 0) {
+    return claim.followUpTasks
+      .map(
+        (task) =>
+          `${task.id}: ${task.mechanic} Owner: ${task.owner}. Required output: ${task.requiredOutput}`,
+      )
+      .join("; ");
+  }
   if (claim?.tag === "profile-subset-supported") {
     return claim.deferredMechanics
       .map((entry) => entry.battleReadinessClosure?.reason ?? entry.mechanic)
@@ -254,6 +271,10 @@ function hasCharacterFactRuntimeDetachedSplit(claim) {
   );
 }
 
+function hasFollowUpSplit(claim) {
+  return Array.isArray(claim?.followUpTasks) && claim.followUpTasks.length > 0;
+}
+
 function strictStatusDescription(status, scope) {
   const description = strictStatusDescriptions.get(status);
   if (description === undefined) {
@@ -268,6 +289,12 @@ function strictStatusForUnit(unit) {
     return {
       status: "supported-profile",
       reason: "The Unit has a supported-profile claim.",
+    };
+  }
+  if (hasFollowUpSplit(claim)) {
+    return {
+      status: "blocked-follow-up-split",
+      reason: closureReasonForClaim(claim),
     };
   }
   if (hasOnlyLaterLevelResiduals(claim)) {

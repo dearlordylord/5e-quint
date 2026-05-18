@@ -3,6 +3,7 @@
 // Cluster S (movement_speed). Mechanical extraction — no behavior change.
 // Reads creature-state-leaves.ts to avoid cycling back into G.
 
+import { Match } from "effect";
 import {
   difficultyClass,
   movementDeltaFeet,
@@ -31,6 +32,7 @@ import {
   PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
   PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE,
   PASSIVE_SPEED_KIND_GRANT_KINDS,
+  type PassiveSpeedBonusCondition,
   type PassiveSpeedKindGrantKind,
 } from "../unit-feature-support.ts";
 import {
@@ -56,7 +58,9 @@ import {
 import { attackActionOptionsForActor } from "./attack-damage-apply.ts";
 import {
   combatantCanSee,
+  combatantWearingArmor,
   combatantHandUses,
+  combatantWieldingShield,
   combatantWearingArmorCategory,
   currentActorId,
   grappledBy,
@@ -307,23 +311,39 @@ export function speedBonusDeltaForProfile(
   profile: BattlePassiveSpeedProfile,
 ): readonly number[] {
   const condition = profileSpeedBonusCondition(profile);
-  return condition.kind === "notWearingArmor" &&
-    !condition.categories.some((category) =>
-      combatantWearingArmorCategory(combatant, category),
-    )
+  return passiveSpeedBonusConditionApplies(combatant, condition)
     ? [Number(profileSpeedBonusDeltaFeet(profile))]
     : [];
 }
 
 export function profileSpeedBonusCondition(
   profile: BattlePassiveSpeedProfile,
-): {
-  readonly kind: "notWearingArmor";
-  readonly categories: readonly ["heavy"];
-} {
+): PassiveSpeedBonusCondition {
   return profile.kind === PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE
     ? profile.speed.condition
     : profile.condition;
+}
+
+function passiveSpeedBonusConditionApplies(
+  combatant: BattleCreatureState,
+  condition: PassiveSpeedBonusCondition,
+): boolean {
+  return Match.value(condition).pipe(
+    Match.when(
+      { kind: "notWearingArmor" },
+      ({ categories }) =>
+        !categories.some((category) =>
+          combatantWearingArmorCategory(combatant, category),
+        ),
+    ),
+    Match.when(
+      { kind: "unarmoredUnshielded" },
+      () =>
+        !combatantWearingArmor(combatant) &&
+        !combatantWieldingShield(combatant),
+    ),
+    Match.exhaustive,
+  );
 }
 
 export function profileSpeedBonusDeltaFeet(

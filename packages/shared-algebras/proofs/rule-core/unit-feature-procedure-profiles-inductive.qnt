@@ -572,11 +572,13 @@ module unitFeatureProcedureProfilesInductive {
   }
 
   action doFastMovementSpeedBonus = {
-    nondet wearingHeavyArmor = Set(true, false).oneOf()
+    nondet armorWorn = Set(NoArmorWorn, HeavyArmorWorn).oneOf()
     nondet movementSpentFeet = 0.to(10).oneOf()
-    val result = resolveFastMovementDash(qTurn, {
+    val result = resolvePassiveSpeedBonusDash(qTurn, {
       baseSpeedFeet: 30,
-      wearingHeavyArmor: wearingHeavyArmor,
+      gate: NotWearingHeavyArmorSpeedBonusGate,
+      armorWorn: armorWorn,
+      wieldingShield: false,
       movementSpentFeet: movementSpentFeet,
     })
     all {

@@ -4,9 +4,11 @@ import { Either, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import findFamiliarInput from "../../content/find_familiar.json";
+import sorcererFontOfMagicInput from "../../content/sorcerer_font_of_magic.json";
 import {
   ActivationPhaseSchema,
   AudibleEffectSchema,
+  ClassFeatureRecordSchema,
   decodeUnitRecordEither,
   decodeUnitRecordSync,
   EffectAtomSchema,
@@ -71,11 +73,13 @@ const requiredFirstVerticalUnitIds = [
   "fighter_improved_critical",
   "barbarian_danger_sense",
   "barbarian_fast_movement",
+  "bard_expertise",
   "bard_jack_of_all_trades",
   ...task183ClassFeatureUnitIds,
   ...task184WeaponMasteryUnitIds,
   "paladin_fighting_style",
   "paladin_paladins_smite",
+  "ranger_fighting_style",
   "subclass_fighter_champion",
   "subclass_wizard_evoker",
   "rogue_evasion",
@@ -251,6 +255,100 @@ describe("SRD Unit catalog boundary", () => {
             },
           },
           onSuccess: { kind: "half_damage" },
+        },
+      ]);
+    }
+  });
+
+  test("keeps Druid Wild Shape as catalog-only shape-shifting metadata", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const wildShape = result.catalog.requireUnit("druid_wild_shape");
+
+      expect(wildShape.kind).toBe("class_feature");
+      if (
+        wildShape.kind !== "class_feature" ||
+        wildShape.mechanics.family !== "activation"
+      ) {
+        throw new Error("Expected Wild Shape to be an activation feature.");
+      }
+      expect(wildShape.className).toBe("druid");
+      expect(wildShape.acquiredAtLevel).toBe(2);
+      expect(wildShape.mechanics.activationCost).toEqual({
+        kind: "bonus_action",
+      });
+      expect(wildShape.mechanics.resource).toEqual({
+        kind: "use_count",
+        cap: {
+          kind: "threshold_tiers",
+          axis: "class",
+          base: 2,
+          tiers: [
+            { atLevel: 6, value: 3 },
+            { atLevel: 17, value: 4 },
+          ],
+        },
+      });
+      expect(wildShape.mechanics.resetCadence).toEqual({
+        kind: "partial_short_full_long",
+        shortRestRefill: 1,
+      });
+      expect(wildShape.mechanics.duration).toEqual({
+        kind: "timed",
+        value: { kind: "half_class_level_rounded_down_hours" },
+      });
+      expect(wildShape.mechanics.phases).toMatchObject([
+        {
+          kind: "direct",
+          attachment: { kind: "self" },
+          effects: [
+            {
+              kind: "transform_target",
+              actionRestriction: "no_spellcasting",
+              newForm: {
+                kind: "known_forms_roster",
+                creatureType: "beast",
+                knownForms: {
+                  kind: "class_level_total_choices",
+                  levels: [
+                    { atLevel: 2, total: 4 },
+                    { atLevel: 4, total: 6 },
+                    { atLevel: 8, total: 8 },
+                  ],
+                },
+                knownFormChange: { kind: "long_rest", replacementCount: 1 },
+                maxChallengeRating: {
+                  kind: "threshold_tiers",
+                  axis: "class",
+                  base: 0.25,
+                  tiers: [
+                    { atLevel: 4, value: 0.5 },
+                    { atLevel: 8, value: 1 },
+                  ],
+                },
+                flySpeed: { kind: "allowed_at_class_level", atLevel: 8 },
+              },
+              revertTriggers: [
+                { kind: "duration_expires" },
+                { kind: "source_used_again" },
+                { kind: "condition_active", condition: "incapacitated" },
+                { kind: "death" },
+                { kind: "dismissed_by_target", action: "bonus_action" },
+              ],
+            },
+            {
+              kind: "grant_temp_hp",
+              amount: {
+                kind: "linear_per_level",
+                axis: "class",
+                base: { dice: 0, dieSize: 1, flat: 1 },
+                perLevel: { flat: 1 },
+                startingAtLevel: 1,
+              },
+            },
+          ],
         },
       ]);
     }
@@ -1474,6 +1572,212 @@ describe("SRD Unit catalog boundary", () => {
     }
   });
 
+  test("keeps Monk's Focus as catalog Focus Point metadata", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("monk_monks_focus")).toMatchObject({
+      acquiredAtLevel: 2,
+      className: "monk",
+      kind: "class_feature",
+      mechanics: {
+        effectSaveDc: {
+          ability: "wis",
+          base: 8,
+          kind: "class_feature_ability_save_dc",
+        },
+        family: "resource_container",
+        optionSet: {
+          choiceKey: "monk_focus_point_feature",
+          initialOptions: [
+            { id: "monk_flurry_of_blows", displayName: "Flurry of Blows" },
+            { id: "monk_patient_defense", displayName: "Patient Defense" },
+            { id: "monk_step_of_the_wind", displayName: "Step of the Wind" },
+          ],
+          timing: "resource_use",
+        },
+        resetCadence: { kind: "short_or_long_rest" },
+        resource: {
+          cap: {
+            axis: "class",
+            base: 2,
+            kind: "linear_per_level",
+            perLevel: 1,
+            startingAtLevel: 2,
+          },
+          kind: "use_count",
+        },
+      },
+      provenance: {
+        kind: "srd-5.2.1",
+        section: "Classes/Monk.md:30-33,76-90",
+      },
+    });
+  });
+
+  test("keeps Sorcerer Font of Magic as point-pool conversion metadata", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("sorcerer_font_of_magic")).toMatchObject({
+      acquiredAtLevel: 2,
+      className: "sorcerer",
+      kind: "class_feature",
+      mechanics: {
+        family: "resource_pool",
+        operations: [
+          {
+            activationCost: { kind: "free" },
+            kind: "spell_slot_to_point_pool",
+            pointGain: { kind: "equal_to_spell_slot_level" },
+          },
+          {
+            activationCost: { kind: "bonus_action" },
+            createdSlotExpiry: { kind: "long_rest" },
+            kind: "point_pool_to_spell_slot",
+            options: [
+              { minimumClassLevel: 2, pointCost: 2, spellSlotLevel: 1 },
+              { minimumClassLevel: 3, pointCost: 3, spellSlotLevel: 2 },
+              { minimumClassLevel: 5, pointCost: 5, spellSlotLevel: 3 },
+              { minimumClassLevel: 7, pointCost: 6, spellSlotLevel: 4 },
+              { minimumClassLevel: 9, pointCost: 7, spellSlotLevel: 5 },
+            ],
+          },
+        ],
+        resetCadence: { kind: "long_rest" },
+        resource: {
+          cap: {
+            axis: "class",
+            base: 2,
+            kind: "linear_per_level",
+            perLevel: 1,
+            startingAtLevel: 2,
+          },
+          kind: "point_pool",
+          poolId: "sorcery_points",
+        },
+      },
+      provenance: {
+        kind: "srd-5.2.1",
+        section: "Classes/Sorcerer.md:33-54,87-109",
+      },
+    });
+  });
+
+  test("rejects Font of Magic created Spell Slot options above level 5", () => {
+    const fontOfMagic = decodeUnitRecordSync(sorcererFontOfMagicInput);
+    if (
+      fontOfMagic.kind !== "class_feature" ||
+      fontOfMagic.mechanics.family !== "resource_pool"
+    ) {
+      throw new Error("Expected Font of Magic resource-pool fixture.");
+    }
+
+    const malformedFontOfMagic = {
+      ...fontOfMagic,
+      mechanics: {
+        ...fontOfMagic.mechanics,
+        operations: fontOfMagic.mechanics.operations.map((operation) =>
+          operation.kind === "point_pool_to_spell_slot"
+            ? {
+                ...operation,
+                options: [
+                  ...operation.options,
+                  {
+                    minimumClassLevel: 11,
+                    pointCost: 9,
+                    spellSlotLevel: 6,
+                  },
+                ],
+              }
+            : operation,
+        ),
+      },
+    };
+
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(ClassFeatureRecordSchema)(
+          malformedFontOfMagic,
+        ),
+      ),
+    ).toBe(true);
+  });
+
+  test("keeps Monk Unarmored Movement as catalog Speed metadata", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("monk_unarmored_movement")).toMatchObject(
+      {
+        acquiredAtLevel: 2,
+        className: "monk",
+        kind: "class_feature",
+        mechanics: {
+          condition: {
+            kind: "all_of",
+            predicates: [
+              {
+                categories: ["light", "medium", "heavy"],
+                kind: "not_wearing_armor",
+              },
+              { kind: "not_wielding_shield" },
+            ],
+          },
+          family: "passive",
+          grants: [{ delta: 10, kind: "modify_speed", unit: "feet" }],
+        },
+        provenance: {
+          kind: "srd-5.2.1",
+          section: "Classes/Monk.md:30-33,92-94",
+        },
+      },
+    );
+  });
+
+  test("keeps Monk Uncanny Metabolism as catalog initiative recovery metadata", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("monk_uncanny_metabolism")).toMatchObject(
+      {
+        acquiredAtLevel: 2,
+        className: "monk",
+        kind: "class_feature",
+        mechanics: {
+          family: "initiative_focus_recovery",
+          healing: {
+            amount: {
+              kind: "monk_martial_arts_die_plus_monk_level",
+              martialArtsUnitId: "monk_martial_arts",
+            },
+            kind: "heal_hp",
+            target: "self",
+          },
+          optional: true,
+          recovery: {
+            kind: "recover_all_expended_uses",
+            resourceUnitId: "monk_monks_focus",
+          },
+          resetCadence: { kind: "long_rest" },
+          trigger: { kind: "roll_initiative" },
+        },
+        provenance: {
+          kind: "srd-5.2.1",
+          section: "Classes/Monk.md:30-48,96-100",
+        },
+      },
+    );
+  });
+
   test("installs expressible SRD level-1 class feature records", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 
@@ -1592,6 +1896,141 @@ describe("SRD Unit catalog boundary", () => {
         }),
       ]);
     }
+  });
+
+  test("installs Cleric Channel Divinity as a level-2 resource container", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("class_cleric")).toMatchObject({
+      featureGrants: expect.arrayContaining([
+        { level: 2, unitId: "cleric_channel_divinity" },
+      ]),
+      kind: "class",
+      spellcasting: expect.objectContaining({
+        kind: "list_prepared_spellcasting_progression_creation",
+        spellcastingProgression: expect.arrayContaining([
+          expect.objectContaining({
+            atLevel: 2,
+            cantripCount: 3,
+            preparedSpellCount: 5,
+            spellSlots: [{ spellLevel: 1, count: 3 }],
+          }),
+        ]),
+      }),
+    });
+    expect(result.catalog.requireUnit("cleric_channel_divinity")).toMatchObject(
+      {
+        acquiredAtLevel: 2,
+        className: "cleric",
+        kind: "class_feature",
+        mechanics: {
+          effectSaveDc: { kind: "class_spellcasting_spell_save_dc" },
+          family: "resource_container",
+          optionSet: {
+            choiceKey: "cleric_channel_divinity_effect",
+            initialOptions: [
+              { id: "cleric_divine_spark", displayName: "Divine Spark" },
+              { id: "cleric_turn_undead", displayName: "Turn Undead" },
+            ],
+            timing: "resource_use",
+          },
+          resetCadence: {
+            kind: "partial_short_full_long",
+            shortRestRefill: 1,
+          },
+          resource: {
+            cap: {
+              axis: "class",
+              base: 2,
+              kind: "threshold_tiers",
+              tiers: [
+                { atLevel: 6, value: 3 },
+                { atLevel: 18, value: 4 },
+              ],
+            },
+            kind: "use_count",
+          },
+        },
+      },
+    );
+  });
+
+  test("installs Ranger Deft Explorer as level-2 Expertise and language choices", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("ranger_deft_explorer")).toMatchObject({
+      acquiredAtLevel: 2,
+      className: "ranger",
+      kind: "class_feature",
+      mechanics: {
+        family: "passive",
+        grants: [
+          {
+            choiceCount: {
+              kind: "class_level_total_choices",
+              levels: [{ atLevel: 2, total: 1 }],
+            },
+            kind: "grant_expertise",
+            skills: { kind: "owned_skill_proficiencies_without_expertise" },
+          },
+          {
+            count: 2,
+            kind: "grant_language_choice",
+            source: "character_creation_language_tables",
+          },
+        ],
+      },
+    });
+  });
+
+  test("installs Ranger Fighting Style as a feat or Druidic Warrior acquisition choice", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("ranger_fighting_style")).toMatchObject({
+      acquiredAtLevel: 2,
+      className: "ranger",
+      kind: "class_feature",
+      mechanics: {
+        choiceKey: "ranger_fighting_style",
+        family: "class_feature_acquisition_choice",
+        options: [
+          {
+            id: "fighting_style_feat",
+            mechanics: {
+              grants: [
+                {
+                  category: "fighting_style",
+                  kind: "grant_feat",
+                },
+              ],
+            },
+          },
+          {
+            id: "druidic_warrior",
+            mechanics: {
+              grants: [
+                {
+                  count: 2,
+                  kind: "grant_spell_access_choice",
+                  mode: "known",
+                  spellLevel: 0,
+                  spellList: "druid",
+                },
+              ],
+            },
+          },
+        ],
+      },
+    });
   });
 
   test("installs Find Familiar with catalog-backed familiar form references", () => {

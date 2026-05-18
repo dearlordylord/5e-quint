@@ -21,9 +21,32 @@ variants in package-local QNT model modules, starting with
 when they need the moved names. Domain behavior helpers can live in narrower
 QNT modules, such as `battle-runtime-find-familiar.qnt`,
 `battle-runtime-light.qnt`, and `battle-runtime-creature-type-protection.qnt`,
-`battle-runtime-armor-class.qnt`, and `battle-runtime-thaumaturgy.qnt`, when
-the split follows SRD language and avoids duplicate state names or
-compatibility-wrapper churn.
+`battle-runtime-armor-class.qnt`, `battle-runtime-thaumaturgy.qnt`, and
+`battle-runtime-bardic-inspiration.qnt`, and `battle-runtime-hit-points.qnt`,
+`battle-runtime-turn-order.qnt`, and `battle-runtime-damage-adjustments.qnt`,
+`battle-runtime-spell-invocation.qnt`, `battle-runtime-spell-attack.qnt`,
+`battle-runtime-chained-spell-attack.qnt`, and
+`battle-runtime-save-gated-spell.qnt`, `battle-runtime-marked-riders.qnt`, and
+`battle-runtime-marked-spells.qnt`,
+`battle-runtime-reaction-window.qnt`, `battle-runtime-combatant-side.qnt`, and
+`battle-runtime-concentration.qnt`, `battle-runtime-actor-combatants.qnt`, and
+`battle-runtime-sanctuary.qnt`, `battle-runtime-feather-fall.qnt`, and
+`battle-runtime-jump-movement.qnt`, and
+`battle-runtime-weapon-hit-spell-riders.qnt`, and
+`battle-runtime-fighter-ongoing-features.qnt`, and
+`battle-runtime-timed-effects.qnt`, and
+`battle-runtime-attack-facts.qnt`, `battle-runtime-hidden.qnt`, and
+`battle-runtime-movement.qnt`, and
+`battle-runtime-restoration-and-buffs.qnt`, and
+`battle-runtime-sleep-hideous-laughter.qnt`, and
+`battle-runtime-turn-advancement.qnt`, and
+`battle-runtime-ground-command.qnt`, and
+`battle-runtime-weapon-attacks.qnt`, when the split follows SRD language and
+avoids duplicate state names or compatibility-wrapper churn.
+Package-local `battle-runtime-*-tests.qnt` files group QNT self-tests by domain
+so test context can be loaded without the full canonical integration spec body;
+`battle-runtime-self-tests.qnt` imports those modules for the Vitest self-test
+lane in one Quint invocation.
 
 The promoted MBT strategy is selective. MBT proves reducer facts after Surface
 decode/projection; it must not enumerate all Surface-authored content multiplied

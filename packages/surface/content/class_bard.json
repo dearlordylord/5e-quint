@@ -6,11 +6,15 @@
     "kind": "trained"
   },
   "className": "bard",
-  "description": "SRD Bard class creation and early progression facts, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, and level 1-2 class feature grants.",
+  "description": "SRD Bard class creation and early progression facts, including level 1-2 class-list prepared Spell Access, Spell Slots, spellcasting focus facts, and level 1-2 class feature grants.",
   "featureGrants": [
     {
       "level": 1,
       "unitId": "bard_bardic_inspiration"
+    },
+    {
+      "level": 2,
+      "unitId": "bard_expertise"
     },
     {
       "level": 2,
@@ -128,7 +132,7 @@
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Bard.md:3-25,34-37,69-91,99-103"
+    "section": "Classes/Bard.md:3-26,34-37,69-103"
   },
   "savingThrowProficiencies": [
     "dex",
@@ -171,7 +175,7 @@
       ]
     },
     "featureLevel": 1,
-    "kind": "list_prepared_spellcasting_creation",
+    "kind": "list_prepared_spellcasting_progression_creation",
     "preparedAccess": {
       "changeOn": {
         "kind": "class_level",
@@ -195,6 +199,10 @@
         {
           "spellId": "healing_word",
           "spellLevel": 1
+        },
+        {
+          "spellId": "thunderwave",
+          "spellLevel": 1
         }
       ]
     },
@@ -211,9 +219,32 @@
       ]
     },
     "spellcastingAbility": "cha",
-    "spellcastingFocus": "musical_instrument"
+    "spellcastingFocus": "musical_instrument",
+    "spellcastingProgression": [
+      {
+        "atLevel": 1,
+        "cantripCount": 2,
+        "preparedSpellCount": 4,
+        "spellSlots": [
+          {
+            "count": 2,
+            "spellLevel": 1
+          }
+        ]
+      },
+      {
+        "atLevel": 2,
+        "cantripCount": 2,
+        "preparedSpellCount": 5,
+        "spellSlots": [
+          {
+            "count": 3,
+            "spellLevel": 1
+          }
+        ]
+      }
+    ]
   },
-  "subclassChoices": [],
   "startingEquipment": [
     {
       "coinsGp": 19,
@@ -245,6 +276,7 @@
       "kind": "coin_grant"
     }
   ],
+  "subclassChoices": [],
   "toolProficiencies": {
     "count": 3,
     "kind": "choice",

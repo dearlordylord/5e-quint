@@ -1,0 +1,37 @@
+{
+  "acquiredAtLevel": 2,
+  "className": "ranger",
+  "description": "Choose one of your skill proficiencies with which you lack Expertise; you gain Expertise in that skill. You also know two languages of your choice from the Character Creation language tables.",
+  "id": "ranger_deft_explorer",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "choiceCount": {
+          "kind": "class_level_total_choices",
+          "levels": [
+            {
+              "atLevel": 2,
+              "total": 1
+            }
+          ]
+        },
+        "kind": "grant_expertise",
+        "skills": {
+          "kind": "owned_skill_proficiencies_without_expertise"
+        }
+      },
+      {
+        "count": 2,
+        "kind": "grant_language_choice",
+        "source": "character_creation_language_tables"
+      }
+    ]
+  },
+  "name": "Deft Explorer",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Ranger.md:88-94"
+  }
+}

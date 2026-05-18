@@ -1,6 +1,12 @@
 import type { AreaDirectEffectAtom } from "../surface/types.ts";
 import type { TraceEdge, TraceNode } from "./tracer-model.ts";
-import { describeDc, describeLinkedSpeed } from "./tracer-rule-labels.ts";
+import { Match } from "effect";
+import {
+  describeClassLevelChoiceCount,
+  describeDc,
+  describeLinkedSpeed,
+  describeScaling,
+} from "./tracer-rule-labels.ts";
 import type { IdGen } from "./tracer-rule-labels.ts";
 import type { TraceEffectAtomFn } from "./tracer-effect-types.ts";
 
@@ -24,6 +30,102 @@ export type CompositeAndCountermagicEffectAtom = Extract<
       | "transform_target";
   }
 >;
+
+type TransformTargetEffect = Extract<
+  CompositeAndCountermagicEffectAtom,
+  { readonly kind: "transform_target" }
+>;
+type ShapeShiftFormSource = TransformTargetEffect["newForm"];
+type ShapeShiftRevertTrigger = TransformTargetEffect["revertTriggers"][number];
+
+function describeShapeShiftCrBound(
+  crBound: Extract<
+    ShapeShiftFormSource,
+    { readonly kind: "catalog_ref" }
+  >["crBound"],
+): string {
+  return Match.value(crBound).pipe(
+    Match.when({ kind: "fixed" }, (fixed) => `CR ${fixed.cr}`),
+    Match.when({ kind: "target_cr_or_level" }, () => "CR <= target CR/level"),
+    Match.when({ kind: "caster_level" }, () => "CR <= caster level"),
+    Match.exhaustive,
+  );
+}
+
+function describeShapeShiftFlySpeed(
+  flySpeed: Extract<
+    ShapeShiftFormSource,
+    { readonly kind: "known_forms_roster" }
+  >["flySpeed"],
+): string {
+  return Match.value(flySpeed).pipe(
+    Match.when({ kind: "forbidden" }, () => "fly speed forbidden"),
+    Match.when(
+      { kind: "allowed_at_class_level" },
+      (allowed) => `fly speed allowed at class level ${allowed.atLevel}`,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function describeShapeShiftKnownFormChange(
+  change: Extract<
+    ShapeShiftFormSource,
+    { readonly kind: "known_forms_roster" }
+  >["knownFormChange"],
+): string {
+  return Match.value(change).pipe(
+    Match.when(
+      { kind: "long_rest" },
+      (longRest) =>
+        `known form change: replace ${longRest.replacementCount} on long_rest`,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function describeShapeShiftFormSource(newForm: ShapeShiftFormSource): string {
+  return Match.value(newForm).pipe(
+    Match.when(
+      { kind: "catalog_ref" },
+      (catalog) =>
+        `${catalog.creatureType} (${describeShapeShiftCrBound(catalog.crBound)})`,
+    ),
+    Match.when({ kind: "known_forms_roster" }, (roster) =>
+      [
+        `${roster.creatureType} known forms roster`,
+        `known forms: ${describeClassLevelChoiceCount(roster.knownForms)}`,
+        describeShapeShiftKnownFormChange(roster.knownFormChange),
+        `max CR: ${describeScaling(roster.maxChallengeRating)}`,
+        describeShapeShiftFlySpeed(roster.flySpeed),
+      ].join("\n"),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function describeShapeShiftRevertTrigger(
+  trigger: ShapeShiftRevertTrigger,
+): string {
+  return Match.value(trigger).pipe(
+    Match.when({ kind: "zero_hp" }, () => "zero_hp"),
+    Match.when({ kind: "spell_ends" }, () => "spell_ends"),
+    Match.when({ kind: "temp_hp_depleted" }, () => "temp_hp_depleted"),
+    Match.when({ kind: "dismissed_by_caster" }, () => "dismissed_by_caster"),
+    Match.when({ kind: "duration_expires" }, () => "duration_expires"),
+    Match.when({ kind: "source_used_again" }, () => "source_used_again"),
+    Match.when(
+      { kind: "condition_active" },
+      (conditionActive) => `condition_active:${conditionActive.condition}`,
+    ),
+    Match.when({ kind: "death" }, () => "death"),
+    Match.when(
+      { kind: "dismissed_by_target" },
+      (dismissed) => `dismissed_by_target:${dismissed.action}`,
+    ),
+    Match.exhaustive,
+  );
+}
 
 export function traceCompositeAndCountermagicEffectAtom(
   e: CompositeAndCountermagicEffectAtom,
@@ -322,13 +424,10 @@ export function traceCompositeAndCountermagicEffectAtom(
     }
     case "transform_target": {
       const id = ids("eff");
-      const cr =
-        e.newForm.crBound.kind === "fixed"
-          ? `CR ${e.newForm.crBound.cr}`
-          : e.newForm.crBound.kind === "target_cr_or_level"
-            ? "CR ≤ target CR/level"
-            : "CR ≤ caster level";
-      const rev = e.revertTriggers.map((t) => t.kind).join(" | ");
+      const form = describeShapeShiftFormSource(e.newForm);
+      const rev = e.revertTriggers
+        .map(describeShapeShiftRevertTrigger)
+        .join(" | ");
       const extras = [
         `retain: ${e.retainedFields.join(", ")}`,
         `revert: ${rev}`,
@@ -341,7 +440,7 @@ export function traceCompositeAndCountermagicEffectAtom(
         id,
         category: "effect",
         atomKind: "transform_target",
-        label: `transform_target\n${e.newForm.creatureType} (${cr})\n${extras}`,
+        label: `transform_target\n${form}\n${extras}`,
       });
       return id;
     }
