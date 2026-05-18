@@ -1236,6 +1236,8 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
   Fighter critical range, weapon/spell attack damage roll constructors, Sneak
   Attack eligibility, weapon mastery DCs, and reaction damage-reduction
   arithmetic.
+- `battle-runtime-hidden.qnt` - Hidden execution facts, Hide-hole admission,
+  Search DC projection, and reveal helpers.
 - `battle-runtime-*-tests.qnt` - package-local QNT self-tests split by domain
   so the canonical integration spec stays focused on reducer behavior.
 - `battle-runtime-self-tests.qnt` - import-only QNT self-test suite used by the

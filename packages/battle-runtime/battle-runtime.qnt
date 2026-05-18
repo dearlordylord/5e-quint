@@ -71,6 +71,7 @@ module battleRuntime {
   import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
   import battleRuntimeAttackFacts.* from "./battle-runtime-attack-facts"
+  import battleRuntimeHidden.* from "./battle-runtime-hidden"
 
   // SRD traceability for this canonical battle runtime spec:
   // - Playing-the-Game.md lines 479-495: combat proceeds in rounds and turns
@@ -377,41 +378,6 @@ module battleRuntime {
       Set(TargetChoice)
     else Set()
 
-  pure def hideHoles(state: BattleState): Set[Hole] =
-    if (
-      currentActor(state) == Fighter and
-      state.actionAvailable and
-      not(state.fighter.unconscious) and
-      state.fighterHidePrerequisite
-    )
-      Set(AbilityCheck)
-    else Set()
-
-  pure def hiddenDiscoveryDcValue(hidden: HiddenDiscoveryDc): int =
-    match hidden {
-      | HiddenDc15 => 15
-      | HiddenDc16 => 16
-      | HiddenDc17 => 17
-      | HiddenDc18 => 18
-      | HiddenDc19 => 19
-      | HiddenDc20 => 20
-    }
-
-  pure def totalToHiddenState(total: int): HiddenState =
-    if (total < 15) NotHidden
-    else if (total == 15) HiddenByDc(HiddenDc15)
-    else if (total == 16) HiddenByDc(HiddenDc16)
-    else if (total == 17) HiddenByDc(HiddenDc17)
-    else if (total == 18) HiddenByDc(HiddenDc18)
-    else if (total == 19) HiddenByDc(HiddenDc19)
-    else HiddenByDc(HiddenDc20)
-
-  pure def fighterIsHidden(state: BattleState): bool =
-    match state.fighter.hidden {
-      | NotHidden => false
-      | HiddenByDc(_) => true
-    }
-
   pure def hideFighter(state: BattleState, stealthTotal: int): BattleState =
     {
       val step = battleRuntimeHide(movementProjectionForFighter(state, WalkSpeedKind), state.fighterHidePrerequisite, stealthTotal, 15)
@@ -449,9 +415,6 @@ module battleRuntime {
       }
         }
     }
-
-  pure def revealFighterHidden(state: BattleState): BattleState =
-    { ...state, fighter: { ...state.fighter, hidden: NotHidden } }
 
   pure def attackReplayHoles(state: BattleState, replay: AttackReplay): Set[Hole] =
     if (not(currentActorCanAttack(state)))
