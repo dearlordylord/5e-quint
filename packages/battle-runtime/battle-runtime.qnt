@@ -55,6 +55,7 @@ module battleRuntime {
   import battleRuntimeThaumaturgy.* from "./battle-runtime-thaumaturgy"
   import battleRuntimeBardicInspiration.* from "./battle-runtime-bardic-inspiration"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
+  import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
 
   // SRD traceability for this canonical battle runtime spec:
   // - Playing-the-Game.md lines 479-495: combat proceeds in rounds and turns
@@ -350,16 +351,6 @@ module battleRuntime {
   // @dnd/battle-runtime behavior. Old root battle.qnt is legacy/Core broad
   // proof and restore source material; it is not the place to add new
   // @dnd/battle-runtime behavior.
-
-  pure def currentActor(state: BattleState): Actor =
-    state.initiative.stillToAct[0]
-
-  pure def currentActorCanAttack(state: BattleState): bool =
-    (state.actionAvailable or (currentActor(state) == Fighter and state.fighterExtraAttackSlotsRemaining > 0)) and
-    (
-      (currentActor(state) == Fighter and not(state.fighter.unconscious) and not(state.fighter.incapacitated)) or
-      (currentActor(state) == Goblin and state.goblin.hp > 0)
-    )
 
   pure def fighterRageOccurrence(state: BattleState): ActiveOngoingFeatureOccurrence =
     state.fighter.activeOngoingFeatureOccurrences.get(FIGHTER_RAGE_SOURCE_KEY)
@@ -887,17 +878,6 @@ module battleRuntime {
             Set()
       | AttackReplayComplete => Set()
     }
-
-  pure def nextInitiative(initiative: Initiative): Initiative = {
-    val current = initiative.stillToAct[0]
-    val remaining = initiative.stillToAct.slice(1, initiative.stillToAct.length())
-    val acted = initiative.alreadyActed.append(current)
-
-    if (remaining.length() == 0)
-      { round: initiative.round + 1, alreadyActed: [], stillToAct: acted }
-    else
-      { round: initiative.round, alreadyActed: acted, stillToAct: remaining }
-  }
 
   pure def endTurn(state: BattleState): BattleState = {
     val featureChecked = normalizeFighterEarlyEndedOngoingFeatures(expireFighterEndOfTurnOngoingFeatures(expireEndOfTurnSpellEffects(state)))
@@ -2083,9 +2063,6 @@ module battleRuntime {
       val damaged = applyDamageFromSource(state.goblin, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter)
       { ...rolled, goblin: applyChillTouchHitPointRegainPrevention(state, damaged, Fighter), actionAvailable: false }
     }
-
-  pure def endOfCasterNextTurnExpiresAtRound(state: BattleState, source: Actor): int =
-    if (currentActor(state) == source) state.initiative.round + 1 else state.initiative.round
 
   pure def starryWispDimLightEmitter(
     state: BattleState,

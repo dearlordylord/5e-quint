@@ -1191,6 +1191,8 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
 - `battle-runtime-hit-points.qnt` - Hit Point, healing, stabilization,
   zero-Hit-Point, and Death Saving Throw lifecycle helpers imported by the
   canonical spec and focused death-save lane.
+- `battle-runtime-turn-order.qnt` - initiative turn ownership, attack-turn
+  eligibility, next-initiative calculation, and end-of-caster-next-turn timing.
 - `battle-runtime.mbt.qnt` - package-local randomized model for the selected
   integrated promoted MBT path.
 
