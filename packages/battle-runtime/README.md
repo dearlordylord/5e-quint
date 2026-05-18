@@ -1200,7 +1200,7 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
   spell modifiers, scalar-buff profile projection, and Magic Missile helpers.
 - `battle-runtime-spell-attack.qnt` - spell attack profile projection, spell
   attack active effects, object damage and ignition helpers, spell attack roll
-  modes, and Eldritch Blast beam replay holes.
+  modes, Eldritch Blast beam replay holes, and spell attack reducers.
 - `battle-runtime-chained-spell-attack.qnt` - Chromatic Orb chained attack
   damage choices, d8 duplicate-face facts, leap legality, and replay holes.
 - `battle-runtime-save-gated-spell.qnt` - save-gated damage and condition
