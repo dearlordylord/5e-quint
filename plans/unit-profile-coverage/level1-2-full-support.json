@@ -2299,66 +2299,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
-      "sourceRecordPath": "packages/surface/content/spider_climb.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Spider Climb",
-          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_spider_climb",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 292,
-            "lineStart": 292,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Warlock spell list Spider Climb",
-          "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_spider_climb",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 373,
-            "lineStart": 373,
-            "path": ".references/srd-5.2.1/Classes/Warlock.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Spider Climb",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_spider_climb",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 229,
-            "lineStart": 229,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
-      "unitId": "spider_climb"
-    },
-    {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME: Promote Spike Growth's battle-visible hazard: Magic Action and level-2-or-higher Spell Slot spend, caster-owned Concentration up to 10 minutes, caller-supplied point-origin ground-area identity, active Difficult Terrain movement-cost facts for movement through the area, Movement-triggered 2d4 Piercing damage per 5-foot increment traveled into or within the area from caller-supplied path-distance facts, damage disposition and Concentration interactions, and cleanup when Concentration or duration ends. Owner: battle-runtime spell invocation/effect lifecycle plus table/spatial movement owner. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Spike Growth movement damage, Difficult Terrain movement cost, resource spending, Concentration ownership, and cleanup without automatic geometry or pathfinding derivation.; L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION: Represent and close the camouflaged terrain recognition rule: whether a creature could see the area when the spell was cast, Search action spend before entering for creatures that did not see it, Wisdom (Perception or Survival) check against the caster's spell save DC, recognition state or explicit table-owned witness used before movement into the area, and cleanup with the hazard. Owner: surface Spell Definition authoring plus table/Search action owner. Required output: Surface schema/content support or accepted runtime-detached closure for Spike Growth hazard recognition, with focused tests and coverage disposition that either promotes the Search recognition boundary or closes it with an explicit table-owned reason.",
       "sourceRecordPath": "packages/surface/content/spike_growth.json",
       "sourceRows": [
         {
@@ -2386,8 +2334,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
       "unitId": "spike_growth"
     },
     {
@@ -2397,11 +2345,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "L12G-FOLLOWUP-SPIRITUAL-WEAPON-SURFACE-PROXY-SHAPE: Replace or verify the Spiritual Weapon Surface shape so it represents the RAW spectral force as a spell-owned proxy/effect, not a creature companion or ordinary object; preserve Bonus Action casting, Concentration up to 1 minute, 60-foot placement, immediate attack target within 5 feet of the force, slot-scaled Force damage, and a later-turn single Bonus Action operation that may move the force up to 20 feet and repeat the attack. Owner: surface Spell Definition authoring. Required output: Spiritual Weapon Dhall and JSON content, plus schema/tracer support where required, make the coupled force placement, later movement, repeat attack, Concentration, and slot scaling executable source facts without representing movement and repeat attack as two separately spendable Bonus Action operations.; L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME: Promote Spiritual Weapon as a level-2 prepared Spell Invocation that spends the Bonus Action and Spell Slot, starts caster-owned Concentration up to 1 minute, consumes caller-supplied force placement and target-adjacency facts, resolves the immediate melee Spell Attack, applies slot-scaled Force damage, records the spell-owned attack proxy, offers a later-turn Bonus Action to move the proxy up to 20 feet from caller-supplied destination facts and repeat the attack, and cleans up on Concentration or duration end without introducing companion actions, object Hit Points, or duplicated proxy state. Owner: battle-runtime spell invocation/effect lifecycle plus table/spatial owner. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial casting, Spell Slot spend, Concentration ownership, proxy placement, immediate attack, later Bonus Action movement and repeat attack, slot scaling, and cleanup while leaving automatic geometry and adjacency derivation table-owned.",
       "sourceRecordPath": "packages/surface/content/spiritual_weapon.json",
       "sourceRows": [
         {
@@ -2417,8 +2368,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
       "unitId": "spiritual_weapon"
     },
     {
@@ -2540,7 +2491,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 98,
+      "count": 99,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2633,6 +2584,7 @@
         "sorcerer_innate_sorcery",
         "sorcerous_burst",
         "spare_the_dying",
+        "spider_climb",
         "starry_wisp",
         "thunderwave",
         "true_strike",
@@ -2645,30 +2597,7 @@
       ]
     },
     {
-      "count": 16,
-      "description": "No Unit profile claim records runtime support or an accepted strict closure.",
-      "status": "open-runtime-behavior",
-      "unitIds": [
-        "find_steed",
-        "gentle_repose",
-        "heat_metal",
-        "hold_person",
-        "invisibility",
-        "lesser_restoration",
-        "magic_weapon",
-        "mind_spike",
-        "prayer_of_healing",
-        "protection_from_poison",
-        "ray_of_enfeeblement",
-        "spider_climb",
-        "spike_growth",
-        "spiritual_weapon",
-        "warding_bond",
-        "web"
-      ]
-    },
-    {
-      "count": 15,
+      "count": 17,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
@@ -2686,7 +2615,9 @@
         "moonbeam",
         "see_invisibility",
         "sorcerer_font_of_magic",
-        "sorcerer_metamagic"
+        "sorcerer_metamagic",
+        "spike_growth",
+        "spiritual_weapon"
       ]
     },
     {
@@ -2708,6 +2639,26 @@
         "silent_image",
         "speak_with_animals",
         "thaumaturgy"
+      ]
+    },
+    {
+      "count": 13,
+      "description": "No Unit profile claim records runtime support or an accepted strict closure.",
+      "status": "open-runtime-behavior",
+      "unitIds": [
+        "find_steed",
+        "gentle_repose",
+        "heat_metal",
+        "hold_person",
+        "invisibility",
+        "lesser_restoration",
+        "magic_weapon",
+        "mind_spike",
+        "prayer_of_healing",
+        "protection_from_poison",
+        "ray_of_enfeeblement",
+        "warding_bond",
+        "web"
       ]
     },
     {
@@ -2736,12 +2687,12 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 470,
-      "percent": "84.5%",
+      "numerator": 467,
+      "percent": "84%",
       "rowsByStatus": {
-        "accepted": 321,
-        "accepted-no-battle-effect": 149,
-        "battle-runtime-required": 76,
+        "accepted": 324,
+        "accepted-no-battle-effect": 143,
+        "battle-runtime-required": 79,
         "owner-evidence-required": 4,
         "partial-battle-runtime": 6
       }
@@ -2757,24 +2708,24 @@
       "percent": "22.9%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 98,
+      "denominator": 99,
       "numerator": 30,
-      "percent": "30.6%"
+      "percent": "30.3%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 151,
-      "numerator": 98,
-      "percent": "64.9%"
+      "numerator": 99,
+      "percent": "65.6%"
     },
     "strictTargetClosure": {
       "denominator": 151,
-      "numerator": 135,
-      "percent": "89.4%"
+      "numerator": 138,
+      "percent": "91.4%"
     }
   },
   "openFrontier": [
     {
-      "count": 16,
+      "count": 13,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
@@ -2789,9 +2740,6 @@
         "prayer_of_healing",
         "protection_from_poison",
         "ray_of_enfeeblement",
-        "spider_climb",
-        "spike_growth",
-        "spiritual_weapon",
         "warding_bond",
         "web"
       ]
@@ -6014,9 +5962,9 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 98,
+        "denominator": 99,
         "numerator": 30,
-        "percent": "30.6%"
+        "percent": "30.3%"
       }
     },
     "units": [
@@ -7659,6 +7607,18 @@
         "unitId": "spare_the_dying"
       },
       {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.scalar-buff",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "spider_climb"
+      },
+      {
         "joinStatus": "covered",
         "profiles": [
           {
@@ -7862,20 +7822,20 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
-      "missing": 16,
+      "missing": 13,
       "profile-subset-supported": 11,
-      "supported-profile": 98,
-      "unsupported-profile": 26
+      "supported-profile": 99,
+      "unsupported-profile": 28
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 15,
+      "blocked-follow-up-split": 17,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 14,
-      "open-runtime-behavior": 16,
-      "supported-profile": 98
+      "open-runtime-behavior": 13,
+      "supported-profile": 99
     },
-    "nonSupportedFrontier": 53,
+    "nonSupportedFrontier": 52,
     "strictDenominator": 151
   }
 }

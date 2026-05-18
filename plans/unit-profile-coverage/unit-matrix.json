@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 379,
-      "numerator": 158,
-      "percent": "41.7%"
+      "numerator": 159,
+      "percent": "42%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 451,
-      "numerator": 190,
-      "percent": "42.1%"
+      "numerator": 191,
+      "percent": "42.4%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 191
+      "value": 192
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 121,
-      "numerator": 121,
+      "denominator": 122,
+      "numerator": 122,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 191,
-      "numerator": 191,
+      "denominator": 192,
+      "numerator": 192,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -92,9 +92,9 @@
       "percent": "27%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 121,
+      "denominator": 122,
       "numerator": 41,
-      "percent": "33.9%"
+      "percent": "33.6%"
     },
     "runtimeMappingCoverage": {
       "denominator": 68,
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 121,
+      "denominator": 122,
       "numerator": 104,
-      "percent": "86%"
+      "percent": "85.2%"
     },
     "supportedProfileCoverage": {
-      "denominator": 159,
-      "numerator": 121,
-      "percent": "76.1%"
+      "denominator": 160,
+      "numerator": 122,
+      "percent": "76.3%"
     }
   },
   "metricSemantics": [
@@ -3357,9 +3357,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 121,
+          "denominator": 122,
           "numerator": 41,
-          "percent": "33.9%"
+          "percent": "33.6%"
         }
       },
       "units": [
@@ -5365,6 +5365,18 @@
             }
           ],
           "unitId": "spare_the_dying"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.scalar-buff",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "spider_climb"
         },
         {
           "joinStatus": "covered",
@@ -17815,6 +17827,74 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "table-spatial-derivation",
+          "owner": "table/spatial movement owner",
+          "reason": "Automatic vertical-surface and ceiling path legality, hands-free traversal presentation, collision/pathfinding, and final-position derivation remain caller/table-owned; battle runtime owns the Spider Climb spell effect and Speed projection."
+        },
+        "profileIds": [
+          "spell.scalar-buff"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action level-2-or-higher Spell Slot casting",
+          "caller-supplied known-willing touched creature target admission with one additional target per Spell Slot level above 2",
+          "Concentration-owned Climb Speed grant equal to the target's effective Speed for up to 1 hour",
+          "granted Climb Speed appears in movement and Dash budgets while the spell effect remains active",
+          "Concentration cleanup removes the granted Climb Speed"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-SPELL-SPIDER-CLIMB"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.scalar-buff",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV30A",
+            "L12G-SPELL-AID",
+            "L12G-SPELL-BARKSKIN"
+          ],
+          "title": "Spell spends an Action or Bonus Action and Spell Slot to grant scalar Temporary Hit Points, Speed, Armor Class bonus/floor, or Hit Point maximum effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/spider_climb.json",
+      "unitId": "spider_climb"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
           "owner": "table/spatial owner",
           "reason": "Push geometry, collision/pathfinding, final-position derivation, broad object inventory simulation, and sound propagation simulation remain runtime-detached table/spatial derivations outside the Thunderwave runtime profile."
         },
@@ -22627,24 +22707,28 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/spider_climb.json",
-      "unitId": "spider_climb"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME",
+            "mechanic": "Promote Spike Growth's battle-visible hazard: Magic Action and level-2-or-higher Spell Slot spend, caster-owned Concentration up to 10 minutes, caller-supplied point-origin ground-area identity, active Difficult Terrain movement-cost facts for movement through the area, Movement-triggered 2d4 Piercing damage per 5-foot increment traveled into or within the area from caller-supplied path-distance facts, damage disposition and Concentration interactions, and cleanup when Concentration or duration ends.",
+            "owner": "battle-runtime spell invocation/effect lifecycle plus table/spatial movement owner",
+            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Spike Growth movement damage, Difficult Terrain movement cost, resource spending, Concentration ownership, and cleanup without automatic geometry or pathfinding derivation.",
+            "title": "Spike Growth Movement Hazard Runtime"
+          },
+          {
+            "id": "L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION",
+            "mechanic": "Represent and close the camouflaged terrain recognition rule: whether a creature could see the area when the spell was cast, Search action spend before entering for creatures that did not see it, Wisdom (Perception or Survival) check against the caster's spell save DC, recognition state or explicit table-owned witness used before movement into the area, and cleanup with the hazard.",
+            "owner": "surface Spell Definition authoring plus table/Search action owner",
+            "requiredOutput": "Surface schema/content support or accepted runtime-detached closure for Spike Growth hazard recognition, with focused tests and coverage disposition that either promotes the Search recognition boundary or closes it with an explicit table-owned reason.",
+            "title": "Spike Growth Hazard Recognition Boundary"
+          }
+        ],
+        "futureProfileOwner": "battle-runtime spell invocation/effect lifecycle plus table/spatial movement and Search recognition boundary",
+        "reason": "Spike Growth is authored as an SRD Surface Spell Definition with Magic Action Spell Slot casting, Concentration up to 10 minutes, a point-origin 20-foot-radius Sphere, Difficult Terrain, and 2d4 Piercing damage per 5 feet a creature moves into or within the area. Task 48 claims no promoted battle-runtime profile yet because the runtime has Grease-specific ground-hazard Difficult Terrain movement facts but no spell-neutral ground hazard identity, no Movement-triggered damage procedure proportional to table-supplied distance, and no Search action recognition boundary for camouflaged terrain that distinguishes creatures that could see the area when the spell was cast.",
+        "tag": "unsupported-profile"
       },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -22681,6 +22765,28 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-SPIRITUAL-WEAPON-SURFACE-PROXY-SHAPE",
+            "mechanic": "Replace or verify the Spiritual Weapon Surface shape so it represents the RAW spectral force as a spell-owned proxy/effect, not a creature companion or ordinary object; preserve Bonus Action casting, Concentration up to 1 minute, 60-foot placement, immediate attack target within 5 feet of the force, slot-scaled Force damage, and a later-turn single Bonus Action operation that may move the force up to 20 feet and repeat the attack.",
+            "owner": "surface Spell Definition authoring",
+            "requiredOutput": "Spiritual Weapon Dhall and JSON content, plus schema/tracer support where required, make the coupled force placement, later movement, repeat attack, Concentration, and slot scaling executable source facts without representing movement and repeat attack as two separately spendable Bonus Action operations.",
+            "title": "Spiritual Weapon Proxy Surface Shape"
+          },
+          {
+            "id": "L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME",
+            "mechanic": "Promote Spiritual Weapon as a level-2 prepared Spell Invocation that spends the Bonus Action and Spell Slot, starts caster-owned Concentration up to 1 minute, consumes caller-supplied force placement and target-adjacency facts, resolves the immediate melee Spell Attack, applies slot-scaled Force damage, records the spell-owned attack proxy, offers a later-turn Bonus Action to move the proxy up to 20 feet from caller-supplied destination facts and repeat the attack, and cleans up on Concentration or duration end without introducing companion actions, object Hit Points, or duplicated proxy state.",
+            "owner": "battle-runtime spell invocation/effect lifecycle plus table/spatial owner",
+            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial casting, Spell Slot spend, Concentration ownership, proxy placement, immediate attack, later Bonus Action movement and repeat attack, slot scaling, and cleanup while leaving automatic geometry and adjacency derivation table-owned.",
+            "title": "Spiritual Weapon Persistent Attack Runtime"
+          }
+        ],
+        "futureProfileOwner": "surface Spell Definition proxy shape plus battle-runtime spell invocation/effect lifecycle and table/spatial owner",
+        "reason": "The local SRD 5.2.1 Spiritual Weapon passage defines Bonus Action level-2-or-higher Spell Slot casting, Concentration up to 1 minute, a floating spectral force placed within 60 feet, an immediate melee Spell Attack against one creature within 5 feet of the force, Force damage equal to 1d8 plus the spellcasting ability modifier with +1d8 per slot level above 2, and later-turn Bonus Action movement up to 20 feet plus a repeat attack. Task 49 claims no promoted battle-runtime profile yet because runtime has no spell-owned attack-proxy active effect, no table-spatial witness boundary for proxy placement, movement, and target adjacency, and no later-turn Bonus Action repeat-attack lifecycle tied to that proxy without treating it as a companion or ordinary object.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",

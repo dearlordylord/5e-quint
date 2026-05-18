@@ -533,6 +533,24 @@ module battleRuntimeHpArmorBuffSpatialTests {
     }
   }
 
+  run test_scalar_buff_spider_climb_targets_selected_creature_and_grants_climb_speed = {
+    val result = resolveScalarBuffSpell(initialState, SpiderClimbScalarBuff, Set(Fighter), Set(Fighter), 2, 0)
+    val rejected = resolveScalarBuffSpell(initialState, SpiderClimbScalarBuff, Set(Goblin), Set(Fighter), 2, 0)
+    val broken = breakConcentration(result.fighter)
+    val expired = { ...result.fighter, activeEffects: tickDurationActiveEffects(Set(SpiderClimbClimbSpeedGrant({ durationTicks: 1 }))) }
+    all {
+      assert(result.fighter.concentrating),
+      assert(result.fighter.activeEffects.contains(SpiderClimbClimbSpeedGrant({ durationTicks: 600 }))),
+      assert(movementSpeed(result.fighter, WalkSpeedKind) == 30),
+      assert(movementSpeed(result.fighter, ClimbSpeedKind) == 30),
+      assert(rejected == initialState),
+      assert(not(broken.activeEffects.contains(SpiderClimbClimbSpeedGrant({ durationTicks: 600 })))),
+      assert(movementSpeed(broken, ClimbSpeedKind) == 0),
+      assert(not(expired.activeEffects.contains(SpiderClimbClimbSpeedGrant({ durationTicks: 1 })))),
+      assert(movementSpeed(expired, ClimbSpeedKind) == 0),
+    }
+  }
+
   run test_scalar_buff_aid_increases_hit_point_maximum_and_current_hit_points = {
     val result = resolveScalarBuffSpell(initialState, AidScalarBuff, Set(Fighter, Goblin), Set(), 3, 0)
     all {

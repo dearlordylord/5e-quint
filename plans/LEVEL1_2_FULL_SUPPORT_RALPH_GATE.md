@@ -688,7 +688,7 @@ with supported profile or accepted strict closure in the level 1-2 report.
 | 48 | `L12G-SPELL-SHINING-SMITE` | `shining_smite` | after-hit Radiant damage, visible outline, Invisible suppression, concentration | supported damage and visibility subset with explicit residuals |
 | 49 | `L12G-SPELL-SPIDER-CLIMB` | `spider_climb` | Climb Speed and surfaces/ceiling movement | Character Sheet/battle movement support using witness facts where needed |
 | 50 | `L12G-SPELL-SPIKE-GROWTH` | `spike_growth` | area hazard, movement-triggered damage, Difficult Terrain, hidden hazard discovery | table-supplied movement/path witness plus supported damage subset |
-| 51 | `L12G-SPELL-SPIRITUAL-WEAPON` | `spiritual_weapon` | summoned spectral weapon, Bonus Action attack, movement, slot scaling, no concentration | supported persistent spell effect or split around controlled object movement |
+| 51 | `L12G-SPELL-SPIRITUAL-WEAPON` | `spiritual_weapon` | floating spectral force, Bonus Action attack, movement, slot scaling, concentration | supported persistent spell effect or split around spell-owned spectral force/proxy movement |
 | 52 | `L12G-SPELL-WARDING-BOND` | `warding_bond` | AC/save bonus, Resistance, linked damage sharing, distance/end conditions | supported linked-effect profile and cleanup evidence |
 | 53 | `L12G-SPELL-WEB` | `web` | area Difficult Terrain, Restrained on save fail, escape, recurring saves, burning webs | supported condition/hazard subset plus explicit table/object residuals |
 

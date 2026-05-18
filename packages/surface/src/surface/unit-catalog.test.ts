@@ -121,6 +121,7 @@ const requiredFirstVerticalUnitIds = [
   "shining_smite",
   "see_invisibility",
   "sleep",
+  "spider_climb",
   "thunderwave",
   "eldritch_blast",
   "minor_illusion",

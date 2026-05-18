@@ -163,6 +163,7 @@ import shillelaghInput from "../../content/shillelagh.json";
 import shiningSmiteInput from "../../content/shining_smite.json";
 import shockingGraspInput from "../../content/shocking_grasp.json";
 import sleepInput from "../../content/sleep.json";
+import spiderClimbInput from "../../content/spider_climb.json";
 import sacredFlameInput from "../../content/sacred_flame.json";
 import scorchingRayInput from "../../content/scorching_ray.json";
 import seeInvisibilityInput from "../../content/see_invisibility.json";
@@ -476,6 +477,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     shillelaghInput,
     shiningSmiteInput,
     sleepInput,
+    spiderClimbInput,
     thunderwaveInput,
     trueStrikeInput,
     eldritchBlastInput,

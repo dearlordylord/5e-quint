@@ -235,6 +235,8 @@ export const shieldOfFaithUnitId = "shield_of_faith";
 
 export const shockingGraspUnitId = "shocking_grasp";
 
+export const spiderClimbUnitId = "spider_climb";
+
 export const starryWispUnitId = "starry_wisp";
 
 export const viciousMockeryUnitId = "vicious_mockery";

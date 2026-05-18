@@ -352,9 +352,13 @@ module battleRuntimeMovement {
 
   pure def movementSpeed(combatant: Combatant, speedKind: MovementSpeedKind): int = {
     val walkSpeed = combatant.speed + (if (combatant.activeEffects.contains(LongstriderSpeedDelta)) 10 else 0)
+    val hasSpiderClimbSpeedGrant = combatant.activeEffects.exists(effect => match effect {
+      | SpiderClimbClimbSpeedGrant(_) => true
+      | _ => false
+    })
     match speedKind {
       | WalkSpeedKind => walkSpeed
-      | ClimbSpeedKind => if (combatant.hasRovingSpeedKindGrants) walkSpeed else 0
+      | ClimbSpeedKind => if (combatant.hasRovingSpeedKindGrants or hasSpiderClimbSpeedGrant) walkSpeed else 0
       | SwimSpeedKind => if (combatant.hasRovingSpeedKindGrants) walkSpeed else 0
     }
   }

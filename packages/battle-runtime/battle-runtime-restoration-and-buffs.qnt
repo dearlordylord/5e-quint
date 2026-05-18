@@ -78,7 +78,7 @@ module battleRuntimeRestorationAndBuffs {
     targets: Set[Actor],
     knownWillingTargets: Set[Actor],
   ): bool =
-    if (invocation == BarkskinScalarBuff)
+    if (invocation == BarkskinScalarBuff or invocation == SpiderClimbScalarBuff)
       targets.forall(target => knownWillingTargets.contains(target))
     else
       true
@@ -97,6 +97,7 @@ module battleRuntimeRestorationAndBuffs {
     match effect {
       | BattleRuntimeLongstriderSpeedIncreaseEffect => LongstriderSpeedDelta
       | BattleRuntimeShieldOfFaithArmorClassBonusEffect => ShieldOfFaithArmorClassBonus
+      | BattleRuntimeSpiderClimbClimbSpeedGrantEffect => SpiderClimbClimbSpeedGrant({ durationTicks: 600 })
       | BattleRuntimeBarkskinArmorClassFloorEffect => BarkskinArmorClassFloor({ durationTicks: barkskinDurationTicks })
       | BattleRuntimeHeroismFrightenedImmunityEffect => HeroismFrightenedImmunity
       | BattleRuntimeHeroismTurnStartTemporaryHitPointsEffect(data) => HeroismTurnStartTemporaryHitPoints(data)

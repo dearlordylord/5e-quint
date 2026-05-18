@@ -48,6 +48,7 @@ import {
   type BattleOpportunityAttackThreat,
   type BattlePassiveSpeedProfile,
   type BattleResolvedMovement,
+  type BattleSpecialSpeedKind,
   type BattleState,
   type BattleTargetSpatialFact,
 } from "../battle-reducer.ts";
@@ -209,6 +210,9 @@ export function battleSpecialSpeedCandidates(
       candidates.push({ kind: "equalToSpeed", speedType });
     }
   }
+  for (const speedType of activeSpecialSpeedGrantKinds(combatant)) {
+    candidates.push({ kind: "equalToSpeed", speedType });
+  }
   if (combatant.origin.kind === "statBlock") {
     for (const speed of combatant.origin.statBlock.statBlock.speeds) {
       if (isBattleLiteralSpecialSpeed(speed)) {
@@ -244,6 +248,9 @@ export function representedMovementSpeedKinds(
   for (const kind of passiveSpeedKindGrantKinds(combatant)) {
     kinds.add(kind);
   }
+  for (const kind of activeSpecialSpeedGrantKinds(combatant)) {
+    kinds.add(kind);
+  }
   if (combatant.origin.kind === "statBlock") {
     for (const speed of combatant.origin.statBlock.statBlock.speeds) {
       if (isBattleLiteralSpecialSpeed(speed)) {
@@ -252,6 +259,18 @@ export function representedMovementSpeedKinds(
     }
   }
   return BATTLE_MOVEMENT_SPEED_KINDS.filter((kind) => kinds.has(kind));
+}
+
+function activeSpecialSpeedGrantKinds(
+  combatant: BattleCreatureState,
+): readonly BattleSpecialSpeedKind[] {
+  const kinds = new Set<BattleSpecialSpeedKind>();
+  for (const effect of combatant.activeEffects) {
+    if (effect.kind === "specialSpeedGrant") {
+      kinds.add(effect.speedKind);
+    }
+  }
+  return BATTLE_SPECIAL_SPEED_KINDS.filter((kind) => kinds.has(kind));
 }
 
 export function isBattleLiteralSpecialSpeed(speed: {

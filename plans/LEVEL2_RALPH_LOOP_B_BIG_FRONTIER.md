@@ -31,19 +31,19 @@
     {
       "number": 47,
       "id": "L12G-SPELL-SPIDER-CLIMB",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Spider Climb Runtime Support"
     },
     {
       "number": 48,
       "id": "L12G-SPELL-SPIKE-GROWTH",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Spike Growth Runtime Support Or Closure"
     },
     {
       "number": 49,
       "id": "L12G-SPELL-SPIRITUAL-WEAPON",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Spiritual Weapon Runtime Support"
     },
     {
@@ -51,168 +51,12 @@
       "id": "L12G-SPELL-WARDING-BOND",
       "status": "ready-for-research",
       "title": "Warding Bond Runtime Support"
-    },
-    {
-      "number": 51,
-      "id": "L12G-SPELL-WEB",
-      "status": "ready-for-research",
-      "title": "Web Runtime Support Or Closure"
-    },
-    {
-      "number": 52,
-      "id": "L12G-MISSING-ANIMAL-MESSENGER",
-      "status": "ready-for-research",
-      "title": "Animal Messenger Definition And Closure"
-    },
-    {
-      "number": 53,
-      "id": "L12G-MISSING-ARCANISTS-MAGIC-AURA",
-      "status": "ready-for-research",
-      "title": "Arcanists Magic Aura Definition And Closure"
-    },
-    {
-      "number": 54,
-      "id": "L12G-MISSING-AUGURY",
-      "status": "ready-for-research",
-      "title": "Augury Definition And Closure"
-    },
-    {
-      "number": 55,
-      "id": "L12G-MISSING-CALM-EMOTIONS",
-      "status": "ready-for-research",
-      "title": "Calm Emotions Definition And Support"
-    },
-    {
-      "number": 56,
-      "id": "L12G-MISSING-DARKNESS",
-      "status": "ready-for-research",
-      "title": "Darkness Definition And Support Or Closure"
-    },
-    {
-      "number": 57,
-      "id": "L12G-MISSING-DARKVISION",
-      "status": "ready-for-research",
-      "title": "Darkvision Definition And Support Or Closure"
-    },
-    {
-      "number": 58,
-      "id": "L12G-MISSING-DETECT-THOUGHTS",
-      "status": "ready-for-research",
-      "title": "Detect Thoughts Definition And Closure"
-    },
-    {
-      "number": 90,
-      "id": "L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT",
-      "status": "ready-for-research",
-      "title": "See Invisibility Observer Sight Runtime Support"
-    },
-    {
-      "number": 59,
-      "id": "L12G-MISSING-DRAGONS-BREATH",
-      "status": "deferred",
-      "title": "Dragons Breath Definition And Runtime Support"
-    },
-    {
-      "number": 60,
-      "id": "L12G-MISSING-ENHANCE-ABILITY",
-      "status": "deferred",
-      "title": "Enhance Ability Definition And Support"
-    },
-    {
-      "number": 61,
-      "id": "L12G-MISSING-ENLARGE-REDUCE",
-      "status": "deferred",
-      "title": "Enlarge Reduce Definition And Support"
-    },
-    {
-      "number": 62,
-      "id": "L12G-MISSING-ENTHRALL",
-      "status": "deferred",
-      "title": "Enthrall Definition And Closure"
-    },
-    {
-      "number": 63,
-      "id": "L12G-MISSING-FIND-TRAPS",
-      "status": "deferred",
-      "title": "Find Traps Definition And Closure"
-    },
-    {
-      "number": 64,
-      "id": "L12G-MISSING-FLAMING-SPHERE",
-      "status": "deferred",
-      "title": "Flaming Sphere Definition And Runtime Support"
-    },
-    {
-      "number": 65,
-      "id": "L12G-MISSING-GUST-OF-WIND",
-      "status": "deferred",
-      "title": "Gust Of Wind Definition And Support Or Closure"
-    },
-    {
-      "number": 66,
-      "id": "L12G-MISSING-KNOCK",
-      "status": "deferred",
-      "title": "Knock Definition And Closure"
-    },
-    {
-      "number": 67,
-      "id": "L12G-MISSING-LEVITATE",
-      "status": "deferred",
-      "title": "Levitate Definition And Support Or Closure"
-    },
-    {
-      "number": 68,
-      "id": "L12G-MISSING-LOCATE-ANIMALS-OR-PLANTS",
-      "status": "deferred",
-      "title": "Locate Animals Or Plants Definition And Closure"
-    },
-    {
-      "number": 69,
-      "id": "L12G-MISSING-LOCATE-OBJECT",
-      "status": "deferred",
-      "title": "Locate Object Definition And Closure"
-    },
-    {
-      "number": 70,
-      "id": "L12G-MISSING-MAGIC-MOUTH",
-      "status": "deferred",
-      "title": "Magic Mouth Definition And Closure"
-    },
-    {
-      "number": 71,
-      "id": "L12G-MISSING-MIRROR-IMAGE",
-      "status": "deferred",
-      "title": "Mirror Image Definition And Runtime Support"
-    },
-    {
-      "number": 72,
-      "id": "L12G-MISSING-ROPE-TRICK",
-      "status": "deferred",
-      "title": "Rope Trick Definition And Closure"
-    },
-    {
-      "number": 73,
-      "id": "L12G-MISSING-SILENCE",
-      "status": "deferred",
-      "title": "Silence Definition And Support Or Closure"
-    },
-    {
-      "number": 74,
-      "id": "L12G-MISSING-SUGGESTION",
-      "status": "deferred",
-      "title": "Suggestion Definition And Closure"
-    },
-    {
-      "number": 75,
-      "id": "L12G-MISSING-ZONE-OF-TRUTH",
-      "status": "deferred",
-      "title": "Zone Of Truth Definition And Closure"
     }
   ]
 }
 -->
 
-This is the second level-2 execution lane. Loop B owns Tasks 43-58 and Task 90 only. Loop D owns Tasks 59-75. Loop A owns Tasks 22-36 and 88-89; Loop C owns Tasks 37-42 and 76-87. Do not implement or re-open sibling-lane tasks from this lane.
+This is the second level-2 execution lane. Loop B owns Tasks 43-58 and Tasks 90-94. Loop D owns Tasks 59-75. Loop A owns Tasks 22-36 and 88-89; Loop C owns Tasks 37-42 and 76-87. Do not implement or re-open sibling-lane tasks from this lane.
 
 ## Worktree Safety Prefix
 
@@ -287,8 +131,8 @@ use the repository MBT scarcity protocol.
 
 ## Included Work
 
-Loop B contains 17 atomic tasks: Tasks 43-58, from Scorching Ray through
-Detect Thoughts, plus Task 90 for the See Invisibility follow-up split. Tasks
+Loop B contains 21 atomic tasks: Tasks 43-58, from Scorching Ray through
+Detect Thoughts, plus Tasks 90-94 for the See Invisibility, Spike Growth, and Spiritual Weapon follow-up splits. Tasks
 59-75 have moved to Loop D. The historical manifest rows for Tasks 59-75 remain
 below, but they stay `deferred` here so Loop B cannot pick them. It excludes all
 level-1, Loop D/L, companion/familiar boundary, and Counterspell work.
@@ -312,6 +156,10 @@ level-1, Loop D/L, companion/familiar boundary, and Counterspell work.
 | 57 | 59 | `L12G-MISSING-DARKVISION` | `darkvision` |
 | 58 | 60 | `L12G-MISSING-DETECT-THOUGHTS` | `detect_thoughts` |
 | 90 | 46 | `L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT` | `see_invisibility` |
+| 91 | 50 | `L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME` | `spike_growth` |
+| 92 | 50 | `L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION` | `spike_growth` |
+| 93 | 51 | `L12G-FOLLOWUP-SPIRITUAL-WEAPON-SURFACE-PROXY-SHAPE` | `spiritual_weapon` |
+| 94 | 51 | `L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME` | `spiritual_weapon` |
 | 59 | 61 | `L12G-MISSING-DRAGONS-BREATH` | `dragons_breath` |
 | 60 | 62 | `L12G-MISSING-ENHANCE-ABILITY` | `enhance_ability` |
 | 61 | 63 | `L12G-MISSING-ENLARGE-REDUCE` | `enlarge_reduce` |
@@ -331,6 +179,12 @@ level-1, Loop D/L, companion/familiar boundary, and Counterspell work.
 | 75 | 77 | `L12G-MISSING-ZONE-OF-TRUTH` | `zone_of_truth` |
 
 ## Task Details
+
+## Wrap-Up Directive
+
+This lane is in organic shutdown mode. Complete only Task 50 - L12G-SPELL-WARDING-BOND - Warding Bond Runtime Support, run reviewer-loop convergence, merge the completed task through this integration branch, and then stop. Do not start another task from this file.
+
+All other unfinished tasks from this lane were moved to `plans/LEVEL2_RALPH_WRAPUP_BACKLOG.md`. That backlog is storage for future orchestration, not active work for this lane.
 
 ### Task 43 - L12G-SPELL-SCORCHING-RAY - Scorching Ray Runtime Support
 
@@ -457,9 +311,18 @@ Acceptance:
 
 ### Task 47 - L12G-SPELL-SPIDER-CLIMB - Spider Climb Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `spider_climb`. Gate task: 49 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Result: Spider Climb is a `supported-profile` Unit for Magic Action casting
+with a level-2-or-higher Spell Slot, caller-supplied known-willing touched
+creature targets, one additional willing target per slot level above 2,
+Concentration cleanup, and a Climb Speed grant equal to the target's effective
+Speed. Automatic vertical-surface and ceiling path legality, hands-free
+traversal presentation, collision/pathfinding, and final-position derivation
+remain caller/table-owned spatial movement facts outside the promoted runtime
+profile.
 
 Inputs:
 
@@ -484,9 +347,15 @@ Acceptance:
 
 ### Task 48 - L12G-SPELL-SPIKE-GROWTH - Spike Growth Runtime Support Or Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `spike_growth`. Gate task: 50 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Result: Spike Growth remains an `unsupported-profile` Unit in Task 48. Runtime
+work is split into Task 91 for the battle-visible movement hazard and Task 92
+for the camouflaged terrain recognition/Search boundary, rather than treating
+catalog admission or Grease-specific ground-hazard facts as Spike Growth
+runtime support.
 
 Inputs:
 
@@ -511,9 +380,20 @@ Acceptance:
 
 ### Task 49 - L12G-SPELL-SPIRITUAL-WEAPON - Spiritual Weapon Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `spiritual_weapon`. Gate task: 51 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Result: Spiritual Weapon remains an `unsupported-profile` Unit in Task 49.
+Runtime work is split into Task 93 for the spell-owned proxy Surface shape and
+Task 94 for the battle-visible persistent attack runtime, rather than treating
+catalog admission, a generic object, or a companion-like controller as
+Spiritual Weapon support. Local SRD 5.2.1 text requires Bonus Action casting,
+Concentration up to 1 minute, a floating spectral force placed within range,
+an immediate melee Spell Attack, later Bonus Action force movement plus repeat
+attack, Force damage, and higher-slot damage scaling.
+RAW trace: `.references/srd-5.2.1/Spells/Descriptions-S-Z.md:512` through
+`:525`, with the Cleric list entry at `.references/srd-5.2.1/Classes/Cleric.md:196`.
 
 Inputs:
 
@@ -560,711 +440,5 @@ Outputs:
 Acceptance:
 
 - the level 1-2 metric row for `warding_bond` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 51 - L12G-SPELL-WEB - Web Runtime Support Or Closure
-
-Status: `ready-for-research`
-
-Unit: `web`. Gate task: 53 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `web`.
-
-Outputs:
-
-- one concrete end state from the Task Output Contract for `web`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the level 1-2 metric row for `web` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 52 - L12G-MISSING-ANIMAL-MESSENGER - Animal Messenger Definition And Closure
-
-Status: `ready-for-research`
-
-Unit: `animal_messenger`. Gate task: 54 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `animal_messenger`.
-
-Outputs:
-
-- one concrete end state from the Task Output Contract for `animal_messenger`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the level 1-2 metric row for `animal_messenger` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 53 - L12G-MISSING-ARCANISTS-MAGIC-AURA - Arcanists Magic Aura Definition And Closure
-
-Status: `ready-for-research`
-
-Unit: `arcanists_magic_aura`. Gate task: 55 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `arcanists_magic_aura`.
-
-Outputs:
-
-- one concrete end state from the Task Output Contract for `arcanists_magic_aura`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the level 1-2 metric row for `arcanists_magic_aura` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 54 - L12G-MISSING-AUGURY - Augury Definition And Closure
-
-Status: `ready-for-research`
-
-Unit: `augury`. Gate task: 56 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `augury`.
-
-Outputs:
-
-- one concrete end state from the Task Output Contract for `augury`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the level 1-2 metric row for `augury` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 55 - L12G-MISSING-CALM-EMOTIONS - Calm Emotions Definition And Support
-
-Status: `ready-for-research`
-
-Unit: `calm_emotions`. Gate task: 57 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `calm_emotions`.
-
-Outputs:
-
-- one concrete end state from the Task Output Contract for `calm_emotions`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the level 1-2 metric row for `calm_emotions` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 56 - L12G-MISSING-DARKNESS - Darkness Definition And Support Or Closure
-
-Status: `ready-for-research`
-
-Unit: `darkness`. Gate task: 58 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `darkness`.
-
-Outputs:
-
-- one concrete end state from the Task Output Contract for `darkness`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the level 1-2 metric row for `darkness` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 57 - L12G-MISSING-DARKVISION - Darkvision Definition And Support Or Closure
-
-Status: `ready-for-research`
-
-Unit: `darkvision`. Gate task: 59 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `darkvision`.
-
-Outputs:
-
-- one concrete end state from the Task Output Contract for `darkvision`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the level 1-2 metric row for `darkvision` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 58 - L12G-MISSING-DETECT-THOUGHTS - Detect Thoughts Definition And Closure
-
-Status: `ready-for-research`
-
-Unit: `detect_thoughts`. Gate task: 60 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `detect_thoughts`.
-
-Outputs:
-
-- one concrete end state from the Task Output Contract for `detect_thoughts`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the level 1-2 metric row for `detect_thoughts` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 59 - L12G-MISSING-DRAGONS-BREATH - Dragons Breath Definition And Runtime Support
-
-Status: `deferred`
-
-Unit: `dragons_breath`. Gate task: 61 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `dragons_breath`.
-
-Outputs:
-
-- one concrete end state from the Task Output Contract for `dragons_breath`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the level 1-2 metric row for `dragons_breath` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 60 - L12G-MISSING-ENHANCE-ABILITY - Enhance Ability Definition And Support
-
-Status: `deferred`
-
-Unit: `enhance_ability`. Gate task: 62 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `enhance_ability`.
-
-Outputs:
-
-- one concrete end state from the Task Output Contract for `enhance_ability`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the level 1-2 metric row for `enhance_ability` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 61 - L12G-MISSING-ENLARGE-REDUCE - Enlarge Reduce Definition And Support
-
-Status: `deferred`
-
-Unit: `enlarge_reduce`. Gate task: 63 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `enlarge_reduce`.
-
-Outputs:
-
-- one concrete end state from the Task Output Contract for `enlarge_reduce`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the level 1-2 metric row for `enlarge_reduce` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 62 - L12G-MISSING-ENTHRALL - Enthrall Definition And Closure
-
-Status: `deferred`
-
-Unit: `enthrall`. Gate task: 64 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `enthrall`.
-
-Outputs:
-
-- one concrete end state from the Task Output Contract for `enthrall`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the level 1-2 metric row for `enthrall` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 63 - L12G-MISSING-FIND-TRAPS - Find Traps Definition And Closure
-
-Status: `deferred`
-
-Unit: `find_traps`. Gate task: 65 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `find_traps`.
-
-Outputs:
-
-- one concrete end state from the Task Output Contract for `find_traps`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the level 1-2 metric row for `find_traps` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 64 - L12G-MISSING-FLAMING-SPHERE - Flaming Sphere Definition And Runtime Support
-
-Status: `deferred`
-
-Unit: `flaming_sphere`. Gate task: 66 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `flaming_sphere`.
-
-Outputs:
-
-- one concrete end state from the Task Output Contract for `flaming_sphere`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the level 1-2 metric row for `flaming_sphere` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 65 - L12G-MISSING-GUST-OF-WIND - Gust Of Wind Definition And Support Or Closure
-
-Status: `deferred`
-
-Unit: `gust_of_wind`. Gate task: 67 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `gust_of_wind`.
-
-Outputs:
-
-- one concrete end state from the Task Output Contract for `gust_of_wind`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the level 1-2 metric row for `gust_of_wind` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 66 - L12G-MISSING-KNOCK - Knock Definition And Closure
-
-Status: `deferred`
-
-Unit: `knock`. Gate task: 68 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `knock`.
-
-Outputs:
-
-- one concrete end state from the Task Output Contract for `knock`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the level 1-2 metric row for `knock` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 67 - L12G-MISSING-LEVITATE - Levitate Definition And Support Or Closure
-
-Status: `deferred`
-
-Unit: `levitate`. Gate task: 69 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `levitate`.
-
-Outputs:
-
-- one concrete end state from the Task Output Contract for `levitate`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the level 1-2 metric row for `levitate` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 68 - L12G-MISSING-LOCATE-ANIMALS-OR-PLANTS - Locate Animals Or Plants Definition And Closure
-
-Status: `deferred`
-
-Unit: `locate_animals_or_plants`. Gate task: 70 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `locate_animals_or_plants`.
-
-Outputs:
-
-- one concrete end state from the Task Output Contract for `locate_animals_or_plants`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the level 1-2 metric row for `locate_animals_or_plants` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 69 - L12G-MISSING-LOCATE-OBJECT - Locate Object Definition And Closure
-
-Status: `deferred`
-
-Unit: `locate_object`. Gate task: 71 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `locate_object`.
-
-Outputs:
-
-- one concrete end state from the Task Output Contract for `locate_object`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the level 1-2 metric row for `locate_object` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 70 - L12G-MISSING-MAGIC-MOUTH - Magic Mouth Definition And Closure
-
-Status: `deferred`
-
-Unit: `magic_mouth`. Gate task: 72 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `magic_mouth`.
-
-Outputs:
-
-- one concrete end state from the Task Output Contract for `magic_mouth`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the level 1-2 metric row for `magic_mouth` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 71 - L12G-MISSING-MIRROR-IMAGE - Mirror Image Definition And Runtime Support
-
-Status: `deferred`
-
-Unit: `mirror_image`. Gate task: 73 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `mirror_image`.
-
-Outputs:
-
-- one concrete end state from the Task Output Contract for `mirror_image`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the level 1-2 metric row for `mirror_image` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 72 - L12G-MISSING-ROPE-TRICK - Rope Trick Definition And Closure
-
-Status: `deferred`
-
-Unit: `rope_trick`. Gate task: 74 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `rope_trick`.
-
-Outputs:
-
-- one concrete end state from the Task Output Contract for `rope_trick`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the level 1-2 metric row for `rope_trick` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 73 - L12G-MISSING-SILENCE - Silence Definition And Support Or Closure
-
-Status: `deferred`
-
-Unit: `silence`. Gate task: 75 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `silence`.
-
-Outputs:
-
-- one concrete end state from the Task Output Contract for `silence`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the level 1-2 metric row for `silence` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 74 - L12G-MISSING-SUGGESTION - Suggestion Definition And Closure
-
-Status: `deferred`
-
-Unit: `suggestion`. Gate task: 76 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `suggestion`.
-
-Outputs:
-
-- one concrete end state from the Task Output Contract for `suggestion`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the level 1-2 metric row for `suggestion` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 75 - L12G-MISSING-ZONE-OF-TRUTH - Zone Of Truth Definition And Closure
-
-Status: `deferred`
-
-Unit: `zone_of_truth`. Gate task: 77 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing Surface content, Unit claims, owner evidence, and focused tests for `zone_of_truth`.
-
-Outputs:
-
-- one concrete end state from the Task Output Contract for `zone_of_truth`;
-- updated Surface/runtime/profile/evidence files only when they are the correct owner;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the level 1-2 metric row for `zone_of_truth` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no level-1 Loop D/L or companion boundary work is pulled into this lane;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 90 - L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT - See Invisibility Observer Sight Runtime Support
-
-Status: `ready-for-research`
-
-Unit: `see_invisibility`. Gate task: 46 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
-
-Inputs:
-
-- Task 44's installed `see_invisibility` Surface record and Unit claim;
-- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- existing observer, sight, Invisible condition, Spell Invocation, Spell Effect, duration, and owner-evidence code/tests.
-
-Outputs:
-
-- promote See Invisibility as a level-2 self spell that spends the Magic Action and Spell Slot;
-- apply and clean up a one-hour self Spell Effect;
-- expose observer-scoped sight facts that let only the caster see creatures and objects with the Invisible condition as visible;
-- expose Ethereal Plane visibility through table-supplied plane, distance, cover, and sight-line witnesses;
-- supported-profile Unit claim, deterministic admission/projection evidence, focused battle-runtime tests, and promoted Quint/runtime parity.
-
-Acceptance:
-
-- See Invisibility support does not grant Truesight, Darkness sight, visual-illusion handling, or transformation detection;
-- observer-scoped Invisible benefit denial and Ethereal visibility witness facts are covered by focused runtime tests and the relevant promoted Quint/runtime parity checks;
 - no level-1 Loop D/L or companion boundary work is pulled into this lane;
 - focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.

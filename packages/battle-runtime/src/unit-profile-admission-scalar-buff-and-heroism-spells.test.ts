@@ -2,6 +2,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30D heroism
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-AID aid
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-BARKSKIN barkskin
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-SPIDER-CLIMB spider_climb
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.scalar-buff spell.invocation-condition-immunity-turn-start-temporary-hit-points
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { describe, expect, test } from "vitest";
@@ -14,6 +15,7 @@ import {
   shieldOfFaithUnitId,
   spellCasterId,
   spellTargetId,
+  spiderClimbUnitId,
 } from "./unit-profile-admission-catalog-support.ts";
 import {
   damageRollFillWithGroups,
@@ -23,6 +25,7 @@ import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   bonusSpellAct,
   knownWillingSpellTargetFill,
+  knownWillingSpellTargetListFill,
   spellAct,
   spellHoleInvocation,
   spellTargetFill,
@@ -31,6 +34,7 @@ import {
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   applyCondition,
+  breakBattleConcentration,
   combatantId,
   DieRollResult,
   Hp,
@@ -543,6 +547,184 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
         ],
       },
     });
+  });
+
+  test("spider_climb is admitted as a concentration Climb Speed grant with slot-scaled willing targets", () => {
+    const spell = spellRecord(spiderClimbUnitId);
+    const secondTargetId = combatantId("unit-profile-spider-climb-target-2");
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [
+        { spellLevel: 2, count: 1 },
+        { spellLevel: 3, count: 1 },
+      ],
+      extraTargetIds: [secondTargetId],
+    });
+    const levelTwoAct = spellAct({
+      state,
+      spellId: spiderClimbUnitId,
+      slotLevel: 2,
+    });
+    const levelTwoTargetHole = requireHole(
+      levelTwoAct.initialHoles,
+      "targetChoice",
+    );
+    const levelThreeAct = spellAct({
+      state,
+      spellId: spiderClimbUnitId,
+      slotLevel: 3,
+    });
+    const targetListHole = requireHole(
+      levelThreeAct.initialHoles,
+      "spellTargetList",
+    );
+
+    expect(levelTwoAct.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(spiderClimbUnitId, 2, "scalarBuff"),
+      mode: { tag: "cast" },
+    });
+    expect(levelTwoTargetHole.choices).toEqual([spellCasterId]);
+    expect(targetListHole).toEqual(
+      expect.objectContaining({
+        minTargets: 1,
+        maxTargets: 2,
+        choices: [spellCasterId],
+      }),
+    );
+
+    const unwillingTarget = resolveBattleSubject({
+      state,
+      subject: levelThreeAct.subject,
+      fills: [
+        spellTargetListFill(targetListHole, spellCasterId, spiderClimbUnitId, [
+          secondTargetId,
+        ]),
+      ],
+    });
+    expect(unwillingTarget).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: levelThreeAct.subject,
+      fills: [
+        knownWillingSpellTargetListFill(
+          targetListHole,
+          spellCasterId,
+          spiderClimbUnitId,
+          [spellCasterId, secondTargetId],
+        ),
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.objectContaining({
+            combatantId: spellCasterId,
+            concentrating: true,
+            movement: expect.objectContaining({
+              speedKinds: expect.arrayContaining([
+                expect.objectContaining({
+                  kind: "climb",
+                  speedFeet: 30,
+                  remainingFeet: 30,
+                }),
+              ]),
+            }),
+          }),
+          expect.anything(),
+          expect.objectContaining({
+            combatantId: secondTargetId,
+            movement: expect.objectContaining({
+              speedKinds: expect.arrayContaining([
+                expect.objectContaining({
+                  kind: "climb",
+                  speedFeet: 30,
+                  remainingFeet: 30,
+                }),
+              ]),
+            }),
+          }),
+        ],
+      },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Spider Climb to resolve.");
+    }
+    const expectedEffect = expect.objectContaining({
+      kind: "specialSpeedGrant",
+      sourceSpellId: spiderClimbUnitId,
+      sourceCombatantId: spellCasterId,
+      speedKind: "climb",
+      expiresAt: {
+        kind: "concentration",
+        combatantId: spellCasterId,
+        durationTicks: elapsedTimeTicks(600),
+      },
+    });
+    expect(
+      resolved.state.combatants.get(spellCasterId)?.activeEffects,
+    ).toContainEqual(expectedEffect);
+    expect(
+      resolved.state.combatants.get(secondTargetId)?.activeEffects,
+    ).toContainEqual(expectedEffect);
+  });
+
+  test("spider_climb concentration cleanup removes the granted Climb Speed", () => {
+    const spell = spellRecord(spiderClimbUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = spellAct({
+      state,
+      spellId: spiderClimbUnitId,
+      slotLevel: 2,
+    });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          targetHole,
+          spiderClimbUnitId,
+          spellCasterId,
+          spellCasterId,
+        ),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Spider Climb to resolve.");
+    }
+    const broken = breakBattleConcentration(resolved.state, spellCasterId);
+
+    expect(broken.combatants.get(spellCasterId)?.activeEffects).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "specialSpeedGrant",
+          sourceSpellId: spiderClimbUnitId,
+        }),
+      ]),
+    );
+    const brokenCaster = snapshotBattle(broken).combatants.find(
+      (combatant) => combatant.combatantId === spellCasterId,
+    );
+    expect(brokenCaster?.movement.speedKinds).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "climb",
+        }),
+      ]),
+    );
   });
 
   test("aid is admitted as timed maximum and current Hit Point increases for up to three targets", () => {

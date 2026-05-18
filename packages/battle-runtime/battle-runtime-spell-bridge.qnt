@@ -83,6 +83,7 @@ module battleRuntimeSpellBridge {
     | BattleRuntimeFalseLifeScalarBuff
     | BattleRuntimeLongstriderScalarBuff
     | BattleRuntimeShieldOfFaithScalarBuff
+    | BattleRuntimeSpiderClimbScalarBuff
     | BattleRuntimeBarkskinScalarBuff
     | BattleRuntimeHeroismScalarBuff
     | BattleRuntimeAidScalarBuff
@@ -90,6 +91,7 @@ module battleRuntimeSpellBridge {
   type BattleRuntimeScalarBuffEffect =
     | BattleRuntimeLongstriderSpeedIncreaseEffect
     | BattleRuntimeShieldOfFaithArmorClassBonusEffect
+    | BattleRuntimeSpiderClimbClimbSpeedGrantEffect
     | BattleRuntimeBarkskinArmorClassFloorEffect
     | BattleRuntimeHeroismFrightenedImmunityEffect
     | BattleRuntimeHeroismTurnStartTemporaryHitPointsEffect({ amount: int })
@@ -370,6 +372,7 @@ module battleRuntimeSpellBridge {
       | BattleRuntimeFalseLifeScalarBuff => FalseLifeScalarBuffProfile
       | BattleRuntimeLongstriderScalarBuff => LongstriderScalarBuffProfile
       | BattleRuntimeShieldOfFaithScalarBuff => ShieldOfFaithScalarBuffProfile
+      | BattleRuntimeSpiderClimbScalarBuff => SpiderClimbScalarBuffProfile
       | BattleRuntimeBarkskinScalarBuff => BarkskinScalarBuffProfile
       | BattleRuntimeHeroismScalarBuff => HeroismScalarBuffProfile
       | BattleRuntimeAidScalarBuff => AidScalarBuffProfile
@@ -392,6 +395,7 @@ module battleRuntimeSpellBridge {
     match effect {
       | LongstriderSpeedIncreaseEffect => BattleRuntimeLongstriderSpeedIncreaseEffect
       | ShieldOfFaithArmorClassBonusEffect => BattleRuntimeShieldOfFaithArmorClassBonusEffect
+      | SpiderClimbClimbSpeedGrantEffect => BattleRuntimeSpiderClimbClimbSpeedGrantEffect
       | BarkskinArmorClassFloorEffect => BattleRuntimeBarkskinArmorClassFloorEffect
       | HeroismFrightenedImmunityEffect => BattleRuntimeHeroismFrightenedImmunityEffect
       | HeroismTurnStartTemporaryHitPointsEffect(data) => BattleRuntimeHeroismTurnStartTemporaryHitPointsEffect(data)
@@ -853,11 +857,15 @@ module battleRuntimeSpellBridge {
       assert(battleRuntimeScalarBuffUsesBonusAction(BattleRuntimeShieldOfFaithScalarBuff)),
       assert(battleRuntimeScalarBuffUsesBonusAction(BattleRuntimeBarkskinScalarBuff)),
       assert(not(battleRuntimeScalarBuffUsesBonusAction(BattleRuntimeLongstriderScalarBuff))),
+      assert(not(battleRuntimeScalarBuffUsesBonusAction(BattleRuntimeSpiderClimbScalarBuff))),
       assert(battleRuntimeScalarBuffMaximumTargets(BattleRuntimeLongstriderScalarBuff, 3) == 3),
+      assert(battleRuntimeScalarBuffMaximumTargets(BattleRuntimeSpiderClimbScalarBuff, 3) == 2),
       assert(battleRuntimeScalarBuffTemporaryHitPoints(BattleRuntimeFalseLifeScalarBuff, 3, 4) == 18),
       assert(battleRuntimeScalarBuffEffects(BattleRuntimeHeroismScalarBuff, 3, 1) == Set(BattleRuntimeHeroismFrightenedImmunityEffect, BattleRuntimeHeroismTurnStartTemporaryHitPointsEffect({ amount: 3 }))),
       assert(battleRuntimeScalarBuffEffects(BattleRuntimeBarkskinScalarBuff, 3, 2) == Set(BattleRuntimeBarkskinArmorClassFloorEffect)),
+      assert(battleRuntimeScalarBuffEffects(BattleRuntimeSpiderClimbScalarBuff, 3, 1) == Set(BattleRuntimeSpiderClimbClimbSpeedGrantEffect)),
       assert(battleRuntimeScalarBuffEffects(BattleRuntimeAidScalarBuff, 3, 3) == Set(BattleRuntimeAidHitPointMaximumIncreaseEffect({ amount: 10 }))),
+      assert(battleRuntimeScalarBuffRequiresConcentration(BattleRuntimeSpiderClimbScalarBuff)),
       assert(battleRuntimeScalarBuffRequiresConcentration(BattleRuntimeHeroismScalarBuff)),
       assert(not(battleRuntimeScalarBuffRequiresConcentration(BattleRuntimeBarkskinScalarBuff))),
     }

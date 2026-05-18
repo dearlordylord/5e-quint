@@ -30,9 +30,11 @@ import type {
 import { Either, Match, Schema } from "effect";
 import {
   BATTLE_D20_ROLL_MODIFIER_KINDS,
+  BATTLE_SPECIAL_SPEED_KINDS,
   type BlurAttackRollDefenseSpellInvocation,
   type BattleActiveEffectExpiration,
   type BattleCreatureState,
+  type BattleSpecialSpeedKind,
   type BattleState,
   type BattleD20RollModifierDelta,
   type BattleD20RollModifierKind,
@@ -2080,6 +2082,29 @@ export function scalarBuffSpellEffect(
   if (expiresAt === null) {
     return null;
   }
+  if (
+    effect.kind === "grant_speed" &&
+    typeof effect.feet !== "number" &&
+    effect.feet.kind === "walk_speed" &&
+    isBattleSpecialSpeedKind(effect.speedKind)
+  ) {
+    const speedGrantExpiresAt = scalarBuffSpecialSpeedGrantExpiration(
+      actorId,
+      duration,
+    );
+    return speedGrantExpiresAt === null
+      ? null
+      : {
+          kind: "activeEffect",
+          activeEffect: {
+            kind: "specialSpeedGrant",
+            sourceSpellId: spell.id,
+            sourceCombatantId: actorId,
+            speedKind: effect.speedKind,
+            expiresAt: speedGrantExpiresAt,
+          },
+        };
+  }
   if (effect.kind === "modify_speed" && effect.unit === "feet") {
     return {
       kind: "activeEffect",
@@ -2146,6 +2171,29 @@ export function scalarBuffSpellEffect(
         };
   }
   return null;
+}
+
+function isBattleSpecialSpeedKind(
+  speedKind: Extract<EffectAtom, { readonly kind: "grant_speed" }>["speedKind"],
+): speedKind is BattleSpecialSpeedKind {
+  return BATTLE_SPECIAL_SPEED_KINDS.some((kind) => kind === speedKind);
+}
+
+function scalarBuffSpecialSpeedGrantExpiration(
+  actorId: CombatantId,
+  duration: SpellRecord["mechanics"]["duration"],
+): BattleActiveEffectExpiration | null {
+  if (duration.kind !== "concentration") {
+    return scalarBuffActiveEffectExpiration(actorId, duration);
+  }
+  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(duration.upTo);
+  return Either.isLeft(durationTicks)
+    ? null
+    : {
+        kind: "concentration",
+        combatantId: actorId,
+        durationTicks: durationTicks.right,
+      };
 }
 
 export function rollModifierSpellProjection(
