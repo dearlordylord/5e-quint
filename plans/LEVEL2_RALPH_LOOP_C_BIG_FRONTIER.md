@@ -37,7 +37,7 @@
     {
       "number": 42,
       "id": "L12G-SPELL-RAY-OF-ENFEEBLEMENT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Ray Of Enfeeblement Runtime Support"
     },
     {
@@ -141,12 +141,24 @@
       "id": "L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST",
       "status": "ready-for-research",
       "title": "Prayer Of Healing Character Sheet Rest Runtime"
+    },
+    {
+      "number": 95,
+      "id": "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE",
+      "status": "ready-for-research",
+      "title": "Ray Of Enfeeblement D20 Lifecycle Runtime"
+    },
+    {
+      "number": 96,
+      "id": "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY",
+      "status": "ready-for-research",
+      "title": "Ray Of Enfeeblement Damage Roll Penalty Runtime"
     }
   ]
 }
 -->
 
-This is the third level-2 execution lane split from Loop A tail work. Loop C owns Tasks 37-42 and follow-up Tasks 76-87 and 90-94 only.
+This is the third level-2 execution lane split from Loop A tail work. Loop C owns Tasks 37-42 and follow-up Tasks 76-87 and 90-96 only.
 
 ## Worktree Safety Prefix
 
@@ -201,7 +213,7 @@ use the repository MBT scarcity protocol.
 
 ## Included Work
 
-Loop C contains 23 atomic tasks: the remaining Loop A spell tail from Misty Step through Ray of Enfeeblement, Druid/Monk/Sorcerer follow-up profile/runtime work moved out of Loop A, the Moonbeam follow-up split discovered by Task 38, and the Prayer of Healing follow-up split discovered by Task 40.
+Loop C contains 25 atomic tasks: the remaining Loop A spell tail from Misty Step through Ray of Enfeeblement, Druid/Monk/Sorcerer follow-up profile/runtime work moved out of Loop A, the Moonbeam follow-up split discovered by Task 38, the Prayer of Healing follow-up split discovered by Task 40, and the Ray of Enfeeblement follow-up split discovered by Task 42.
 
 It excludes Loop A Tasks 22-36 and 88-89, Loop B Tasks 43-58, Loop D Tasks 59-75, all level-1 Loop D/L work, companion autonomous-control, familiar autonomous-control, and Counterspell work. Wild Companion work in this lane is only the table-choice/source-link boundary; no autonomous companion decision engine belongs here.
 
@@ -230,6 +242,8 @@ It excludes Loop A Tasks 22-36 and 88-89, Loop B Tasks 43-58, Loop D Tasks 59-75
 | 92 | 38 follow-up | `L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER` | `moonbeam` |
 | 93 | 40 follow-up | `L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST` | `prayer_of_healing` |
 | 94 | 40 follow-up | `L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST` | `prayer_of_healing` |
+| 95 | 42 follow-up | `L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE` | `ray_of_enfeeblement` |
+| 96 | 42 follow-up | `L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY` | `ray_of_enfeeblement` |
 
 ## Follow-Up Dependencies
 
@@ -252,6 +266,8 @@ It excludes Loop A Tasks 22-36 and 88-89, Loop B Tasks 43-58, Loop D Tasks 59-75
 | `L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER` | `L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME`, `L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME` | The failed-save rider should attach to Moonbeam save results and consume a promoted shape-shifted/true-form state instead of creating Moonbeam-local shape-shifting state. |
 | `L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST` | `L12G-SPELL-PRAYER-OF-HEALING` | Prayer of Healing Surface authoring must capture the Short Rest benefit, per-recipient Long Rest lockout, completed 10-minute casting boundary, and slot-scaled healing facts before Character Sheet runtime consumes them. |
 | `L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST` | `L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST` | Character Sheet runtime should consume repaired Spell Definition facts and existing rest/spell-slot owners instead of duplicating Short Rest algorithms, Hit Point maximum capping, or Spell Slot recovery state. |
+| `L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE` | `L12G-SPELL-RAY-OF-ENFEEBLEMENT` | Ray of Enfeeblement runtime must first own the cast, save, Concentration, repeat-save, success-side next-attack, and failed-save Strength D20 Test lifecycle before damage-roll subtraction consumes that active effect. |
+| `L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY` | `L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE` | Damage-roll subtraction should consume the promoted failed-save Ray effect identity and lifecycle instead of duplicating spell duration, save, or Concentration state in the damage pipeline. |
 
 ## Task Details
 
@@ -392,7 +408,7 @@ Acceptance:
 
 ### Task 42 - L12G-SPELL-RAY-OF-ENFEEBLEMENT - Ray Of Enfeeblement Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `ray_of_enfeeblement`. Gate task: 44 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -947,4 +963,68 @@ Acceptance:
 - the Character Sheet rest-runtime portion of `prayer_of_healing` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
 - runtime behavior traces to SRD Prayer of Healing, Longer Casting Times, Healing, Short Rest, and Long Rest text without homebrew extensions and consumes existing rest and Spell Slot owners instead of duplicating their state;
 - no automatic spatial range tracking, encounter-time concentration interruption, or battle-runtime-only spell invocation behavior is implemented in this task;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if battle-runtime behavior changes, and reviewer-loop convergence are complete.
+
+### Task 95 - L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE - Ray Of Enfeeblement D20 Lifecycle Runtime
+
+Status: `ready-for-research`
+
+Unit: `ray_of_enfeeblement`. Follow-up split from Task 42.
+
+Dependency: Task 42 (`L12G-SPELL-RAY-OF-ENFEEBLEMENT`) done.
+
+Inputs:
+
+- `packages/surface/content/ray_of_enfeeblement.json`;
+- the `ray_of_enfeeblement` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Spells/Descriptions-Q-R.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- battle-runtime spell invocation, active spell-effect lifecycle, roll-mode owner evidence, Unit profile evidence, and focused tests for Ray of Enfeeblement cast/save behavior.
+
+Outputs:
+
+- profile-subset-supported evidence, focused runtime tests, and owner evidence for Ray of Enfeeblement's Magic Action and level-2-or-higher Spell Slot spend, one creature target within 60 feet, Constitution save, success-side next-attack Disadvantage until the start of the caster's next turn, failed-save Disadvantage on Strength-based D20 Tests, end-of-target-turn Constitution repeat saves ending the spell on success, and Concentration cleanup;
+- runtime state exposes one active failed-save Ray effect that later damage-roll subtraction can consume without reowning save, duration, or Concentration state;
+- Quint/runtime parity updates if promoted battle-runtime behavior changes;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the cast/save/lifecycle and Strength D20 Test portion of `ray_of_enfeeblement` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no damage-roll subtraction behavior is implemented in this task;
+- runtime behavior traces to SRD Ray of Enfeeblement and D20 Test terminology without homebrew extensions and consumes existing Spell Slot, Concentration, end-turn, and roll-mode owners instead of duplicating their state;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if battle-runtime behavior changes, and reviewer-loop convergence are complete.
+
+### Task 96 - L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY - Ray Of Enfeeblement Damage Roll Penalty Runtime
+
+Status: `ready-for-research`
+
+Unit: `ray_of_enfeeblement`. Follow-up split from Task 42.
+
+Dependency: Task 95 (`L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE`) done.
+
+Inputs:
+
+- `packages/surface/content/ray_of_enfeeblement.json`;
+- the `ray_of_enfeeblement` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Spells/Descriptions-Q-R.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- the promoted failed-save Ray effect from Task 95, battle-runtime damage-roll pipeline owner evidence, Unit profile evidence, and focused tests for source-side damage-roll subtraction.
+
+Outputs:
+
+- supported profile or profile-subset evidence, focused runtime tests, and owner evidence for subtracting 1d8 from all damage rolls made by the affected target while the failed-save Ray effect is active;
+- subtraction covers attack, spell, and other battle-owned damage rolls through one generic spell damage-roll penalty path that applies before target-side Resistance, damage reductions, Concentration saves, and damage disposition;
+- the damage path consumes the active Ray effect identity from Task 95 instead of duplicating spell duration, save, or Concentration state;
+- Quint/runtime parity updates if promoted battle-runtime behavior changes;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the damage-roll subtraction portion of `ray_of_enfeeblement` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- runtime behavior traces to SRD Ray of Enfeeblement without homebrew extensions and consumes the promoted failed-save Ray effect plus existing damage pipeline owners instead of creating parallel spell damage state;
 - focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if battle-runtime behavior changes, and reviewer-loop convergence are complete.

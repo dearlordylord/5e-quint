@@ -1961,11 +1961,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE: Promote Ray of Enfeeblement's cast/save/lifecycle branch: Magic Action and level-2-or-higher Spell Slot spend, one creature target within 60 feet, Constitution save, success-side Disadvantage on the target's next attack roll until the start of the caster's next turn, failed-save Disadvantage on Strength-based D20 Tests, end-of-target-turn Constitution repeat saves ending the spell on success, and Concentration cleanup without modeling the damage-roll penalty in this slice. Owner: battle-runtime spell invocation/effect lifecycle plus promoted Quint parity. Required output: Profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for cast/save/lifecycle and Strength D20 roll-mode behavior while leaving damage-roll subtraction to the separate damage pipeline task.; L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY: Promote Ray of Enfeeblement's failed-save source-side damage penalty: subtract 1d8 from all damage rolls made by the affected target while the spell effect is active, covering attack, spell, and other battle-owned damage rolls through one generic spell damage-roll penalty hole/fill path that applies before target-side Resistance, damage reductions, Concentration saves, and damage disposition. Owner: battle-runtime damage-roll pipeline plus promoted Quint parity. Required output: Supported-profile or profile-subset-supported Unit claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Ray damage-roll subtraction without duplicating damage state.",
       "sourceRecordPath": "packages/surface/content/ray_of_enfeeblement.json",
       "sourceRows": [
         {
@@ -1993,8 +1996,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
       "unitId": "ray_of_enfeeblement"
     },
     {
@@ -2618,7 +2621,7 @@
       ]
     },
     {
-      "count": 17,
+      "count": 16,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
@@ -2633,7 +2636,6 @@
         "lesser_restoration",
         "magic_weapon",
         "mind_spike",
-        "ray_of_enfeeblement",
         "spider_climb",
         "spike_growth",
         "spiritual_weapon",
@@ -2642,7 +2644,7 @@
       ]
     },
     {
-      "count": 14,
+      "count": 15,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
@@ -2657,6 +2659,7 @@
         "monk_uncanny_metabolism",
         "moonbeam",
         "prayer_of_healing",
+        "ray_of_enfeeblement",
         "see_invisibility",
         "sorcerer_font_of_magic",
         "sorcerer_metamagic"
@@ -2709,12 +2712,12 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 470,
-      "percent": "84.5%",
+      "numerator": 468,
+      "percent": "84.2%",
       "rowsByStatus": {
         "accepted": 320,
-        "accepted-no-battle-effect": 150,
-        "battle-runtime-required": 76,
+        "accepted-no-battle-effect": 148,
+        "battle-runtime-required": 78,
         "owner-evidence-required": 4,
         "partial-battle-runtime": 6
       }
@@ -2741,13 +2744,13 @@
     },
     "strictTargetClosure": {
       "denominator": 151,
-      "numerator": 134,
-      "percent": "88.7%"
+      "numerator": 135,
+      "percent": "89.4%"
     }
   },
   "openFrontier": [
     {
-      "count": 17,
+      "count": 16,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
@@ -2762,7 +2765,6 @@
         "lesser_restoration",
         "magic_weapon",
         "mind_spike",
-        "ray_of_enfeeblement",
         "spider_climb",
         "spike_growth",
         "spiritual_weapon",
@@ -7836,17 +7838,17 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
-      "missing": 17,
+      "missing": 16,
       "profile-subset-supported": 10,
       "supported-profile": 98,
-      "unsupported-profile": 26
+      "unsupported-profile": 27
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 14,
+      "blocked-follow-up-split": 15,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 14,
-      "open-runtime-behavior": 17,
+      "open-runtime-behavior": 16,
       "supported-profile": 98
     },
     "nonSupportedFrontier": 53,
