@@ -104,6 +104,7 @@ import {
   supportedLoadoutChoices,
   supportedPurchasableEquipmentUnitIdsForClass,
   supportedSpeciesUnitIds,
+  supportsCharacterBuildResourceUnitId,
   unitRefsForSupportedClassChoice,
 } from "./support-gates.ts";
 import {
@@ -1207,7 +1208,9 @@ export function characterBuildResources(
 ): readonly CharacterBuildResource[] {
   return characterBuildFeatureUnitIds(build, unitLibrary).flatMap((unitId) => {
     const unit = unitLibrary.getUnit(unitId);
-    return Option.isSome(unit) ? resourceForFeature(unit.value) : [];
+    return Option.isSome(unit)
+      ? characterBuildResourcesForUnit(unit.value)
+      : [];
   });
 }
 
@@ -2950,11 +2953,12 @@ function isMulticlassProficiencyChoiceKey(choiceKey: UnitChoiceKey): boolean {
   );
 }
 
-export function resourceForFeature(
+function characterBuildResourcesForUnit(
   unit: UnitRecord,
 ): readonly CharacterBuildResource[] {
   if (
     unit.kind === "class_feature" &&
+    supportsCharacterBuildResourceUnitId(unit.id) &&
     (unit.mechanics.family === "activation" ||
       unit.mechanics.family === "resource_container") &&
     unit.mechanics.resource !== undefined

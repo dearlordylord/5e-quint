@@ -88,6 +88,8 @@ export function traceClassFeatureMechanics(
       return [traceResourcePoolMechanics(m, nodes, edges, ids)];
     case "metamagic_options":
       return [traceMetamagicOptionsMechanics(m, nodes, edges, ids)];
+    case "druid_wild_companion_spell_cast":
+      return [traceDruidWildCompanionSpellCastMechanics(m, nodes, edges, ids)];
     case "class_spellcasting_projection": {
       const spellcastingId = ids("spellcasting");
       nodes.push({
@@ -236,6 +238,88 @@ export function traceInitiativeFocusRecoveryMechanics(
   edges.push({ from: triggerId, to: resetId, relation: "recovers_on" });
 
   return triggerId;
+}
+
+export function traceDruidWildCompanionSpellCastMechanics(
+  m: Extract<
+    ClassFeatureMechanics,
+    { readonly family: "druid_wild_companion_spell_cast" }
+  >,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const castId = ids("wild-companion");
+  nodes.push({
+    id: castId,
+    category: "procedure",
+    atomKind: "druid_wild_companion_spell_cast",
+    label: `druid_wild_companion_spell_cast\nspell ${m.spellId}`,
+  });
+
+  traceActivationCost(m.activationCost, castId, nodes, edges, ids);
+
+  for (const spendOption of m.spendOptions) {
+    const spendId = ids("spend-option");
+    nodes.push({
+      id: spendId,
+      category: "resource",
+      atomKind: spendOption.kind,
+      label: describeDruidWildCompanionSpendOption(spendOption),
+    });
+    edges.push({ from: castId, to: spendId, relation: "may_spend" });
+  }
+
+  const componentOverrideId = ids("component-override");
+  nodes.push({
+    id: componentOverrideId,
+    category: "effect",
+    atomKind: "material_component_override",
+    label: `material_component_override\n${m.componentOverride.material}`,
+  });
+  edges.push({
+    from: castId,
+    to: componentOverrideId,
+    relation: "casts_without",
+  });
+
+  const modeOverrideId = ids("mode-override");
+  nodes.push({
+    id: modeOverrideId,
+    category: "effect",
+    atomKind: m.spellModeOverride.kind,
+    label: `${m.spellModeOverride.kind}\n${m.spellModeOverride.optionId}`,
+  });
+  edges.push({ from: castId, to: modeOverrideId, relation: "fixes_mode" });
+
+  const dismissalId = ids("dismissal");
+  nodes.push({
+    id: dismissalId,
+    category: "window",
+    atomKind: "familiar_dismissal",
+    label: `familiar_dismissal\n${m.familiarDismissal.kind}`,
+  });
+  edges.push({ from: castId, to: dismissalId, relation: "ends_on" });
+
+  return castId;
+}
+
+type DruidWildCompanionSpendOption = Extract<
+  ClassFeatureMechanics,
+  { readonly family: "druid_wild_companion_spell_cast" }
+>["spendOptions"][number];
+
+function describeDruidWildCompanionSpendOption(
+  spendOption: DruidWildCompanionSpendOption,
+): string {
+  return Match.value(spendOption).pipe(
+    Match.when({ kind: "spell_slot" }, () => "Spell Slot"),
+    Match.when(
+      { kind: "one_class_feature_use" },
+      (option) => `one use of ${option.resourceUnitId}`,
+    ),
+    Match.exhaustive,
+  );
 }
 
 export function traceFeatureChoiceMechanics(

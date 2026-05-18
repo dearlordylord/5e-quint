@@ -35,6 +35,7 @@ import {
   PHASE1_CLASS_FIGHTER_UNIT_ID,
   SRD_BARD_CLASS_UNIT_ID,
   SRD_CLERIC_CLASS_UNIT_ID,
+  SRD_DRUID_CLASS_UNIT_ID,
   CLASS_TOOL_PROFICIENCY_CHOICE_KEY,
   PHASE1_LOADOUT_ARMOR_OPTION_ID,
   PHASE1_LOADOUT_SHIELD_OPTION_ID,
@@ -158,6 +159,7 @@ export type CharacterCreationSupportProfile = {
     readonly alignment: CharacterAlignment;
   };
   readonly supportedProgressions: readonly CharacterProgression[];
+  readonly characterBuildResourceUnitIds: readonly UnitRecord["id"][];
 };
 
 const SUPPORTED_DRAFT_CHOICE_PATHS = [
@@ -175,6 +177,7 @@ const SUPPORTED_PROGRESSIONS = [
   supportedSameClassSecondLevelProgression(PHASE1_CLASS_FIGHTER_UNIT_ID),
   supportedSameClassSecondLevelProgression(SRD_BARD_CLASS_UNIT_ID),
   supportedSameClassSecondLevelProgression(SRD_CLERIC_CLASS_UNIT_ID),
+  supportedSameClassSecondLevelProgression(SRD_DRUID_CLASS_UNIT_ID),
   supportedSameClassSecondLevelProgression(SRD_PALADIN_CLASS_UNIT_ID),
   supportedSameClassSecondLevelProgression(SRD_RANGER_CLASS_UNIT_ID),
   supportedSameClassSecondLevelProgression(WIDTH_CLASS_WIZARD_UNIT_ID),
@@ -288,6 +291,15 @@ const SUPPORTED_MUSICAL_INSTRUMENT_PROFICIENCY_OPTION_IDS =
   );
 const SUPPORTED_ABILITY_SCORE_INCREASE_OPTION_IDS =
   supportedAbilityScoreIncreaseOptionIds();
+const CHARACTER_BUILD_RESOURCE_UNIT_IDS = [
+  "barbarian_rage",
+  "bard_bardic_inspiration",
+  "cleric_channel_divinity",
+  "fighter_action_surge",
+  "fighter_second_wind",
+  "paladin_lay_on_hands",
+  "sorcerer_innate_sorcery",
+] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 
 export const CHARACTER_CREATION_SUPPORT_PROFILE = {
   draftOptionIdsByPath: SUPPORTED_DRAFT_OPTION_IDS_BY_PATH,
@@ -420,6 +432,7 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
     alignment: { order: "lawful", morality: "good" },
   },
   supportedProgressions: SUPPORTED_PROGRESSIONS,
+  characterBuildResourceUnitIds: CHARACTER_BUILD_RESOURCE_UNIT_IDS,
 } as const satisfies CharacterCreationSupportProfile;
 
 export function unsupportedHoleSelectionOptionId(
@@ -578,6 +591,14 @@ export function supportedProgressionForOptionId(
 ): CharacterProgression | undefined {
   return CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions.find(
     (progression) => progressionOptionId(progression) === optionId,
+  );
+}
+
+export function supportsCharacterBuildResourceUnitId(
+  unitId: UnitRecord["id"],
+): boolean {
+  return CHARACTER_CREATION_SUPPORT_PROFILE.characterBuildResourceUnitIds.some(
+    (supportedUnitId) => supportedUnitId === unitId,
   );
 }
 

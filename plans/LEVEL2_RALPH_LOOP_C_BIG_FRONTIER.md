@@ -43,7 +43,7 @@
     {
       "number": 76,
       "id": "L12G-AUTHOR-DRUID-WILD-COMPANION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Druid Wild Companion Boundary Closure"
     }
   ]
@@ -333,7 +333,7 @@ Acceptance:
 
 ### Task 76 - L12G-AUTHOR-DRUID-WILD-COMPANION - Druid Wild Companion Boundary Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `druid_wild_companion`. Gate task: 13 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 

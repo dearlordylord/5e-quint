@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 379,
-      "numerator": 158,
-      "percent": "41.7%"
+      "denominator": 380,
+      "numerator": 159,
+      "percent": "41.8%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 451,
-      "numerator": 190,
-      "percent": "42.1%"
+      "denominator": 452,
+      "numerator": 191,
+      "percent": "42.3%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 191
+      "value": 192
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 121,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 191,
-      "numerator": 191,
+      "denominator": 192,
+      "numerator": 192,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "86%"
     },
     "supportedProfileCoverage": {
-      "denominator": 159,
+      "denominator": 160,
       "numerator": 121,
-      "percent": "76.1%"
+      "percent": "75.6%"
     }
   },
   "metricSemantics": [
@@ -8992,13 +8992,6 @@
       "claim": {
         "followUpTasks": [
           {
-            "id": "L12G-AUTHOR-DRUID-WILD-COMPANION",
-            "mechanic": "Admit Druid level-2 progression only after Wild Companion can spend a spell slot or Wild Shape use to cast Find Familiar without Material components and close companion execution separately.",
-            "owner": "character-creation-runtime plus companion boundary",
-            "requiredOutput": "Character Creation can retain both Druid level-2 feature refs without treating companion execution as Wild Shape support.",
-            "title": "Druid Wild Companion Companion Boundary"
-          },
-          {
             "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
             "mechanic": "Project Wild Shape use count, partial Short Rest/full Long Rest reset, rounded-down duration, learned Beast forms, and one known-form replacement on Long Rest from the retained feature without duplicating class progression state.",
             "owner": "character-creation-runtime plus character-sheet-runtime",
@@ -9014,7 +9007,7 @@
           }
         ],
         "futureProfileOwner": "character-creation-runtime plus stat-block-control shape-shifting runtime",
-        "reason": "Druid Wild Shape is authored and installed as an SRD Surface class-feature record with catalog-level activation, resource, and shape-shifting metadata only. It remains blocked by the concrete follow-up split listed on this claim; no resource-projection or runtime Unit profile is claimed in Task 12.",
+        "reason": "Druid Wild Shape is authored and installed as an SRD Surface class-feature record with catalog-level activation, resource, and shape-shifting metadata only. Wild Companion now has its own authored boundary and level-2 progression admission; Wild Shape remains blocked by the concrete follow-up split listed on this claim.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
@@ -9024,6 +9017,63 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/druid_wild_shape.json",
       "unitId": "druid_wild_shape"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "companion-control-boundary",
+              "owner": "SRDINV86 companion review boundary plus Druid Wild Shape follow-up owners",
+              "reason": "Wild Companion delegates familiar lifecycle behavior to the existing Find Familiar Unit; unsupported companion control remains under SRDINV86, while Wild Shape resource reset, known-form, duration, and shape-shifting execution stay under the Druid Wild Shape follow-up split."
+            },
+            "followUpTaskId": "SRDINV86",
+            "mechanic": "Find Familiar companion lifecycle execution outside the existing promoted subset, autonomous companion command/action selection, familiar form attacks, and Wild Shape shape-shifting execution."
+          }
+        ],
+        "profileIds": [
+          "character-creation.class-feature-advancement-replacement"
+        ],
+        "supportedMechanics": [
+          "Wild Companion is authored as a Druid level-2 Surface class-feature record that requires a Magic action, links to the existing Find Familiar Spell Definition, names the SRD spend choices as a Spell Slot or one use of the existing Wild Shape feature resource, removes Material components, fixes the familiar mode to Fey, and adds the caster-finished-Long-Rest disappearance boundary.",
+          "Character Creation admits same-class Druid level-2 progression and finalizes retained sibling feature refs for Wild Shape and Wild Companion without projecting a CharacterBuild resource for Wild Shape or treating Wild Companion as Wild Shape shape-shifting execution."
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "character-creation.class-feature-advancement-replacement",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "CharacterBuild progression plus Surface class-feature and class spellcasting facts; replacement and gain choices are accepted only as part of a class-level gain and rewrite existing CharacterBuild feature refs, selected invocation ownership, or Warlock Pact Magic spellcasting facts without parallel selected-option state.",
+          "taskRefs": [
+            "L1C-CHARACTER-ADVANCEMENT-REPLACEMENT-LIFECYCLE",
+            "L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE",
+            "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT"
+          ],
+          "title": "Character Creation advances CharacterBuild class levels with class-feature replacement and gain choices",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/druid_wild_companion.json",
+      "unitId": "druid_wild_companion"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

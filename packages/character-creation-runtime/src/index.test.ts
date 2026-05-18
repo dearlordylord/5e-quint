@@ -713,6 +713,7 @@ describe("character creation hole discovery", () => {
           "12:class_cleric:level_1:maximum_hit_die",
           "12:class_cleric|12:class_cleric:level_2:fixed_hp_gain",
           "11:class_druid:level_1:maximum_hit_die",
+          "11:class_druid|11:class_druid:level_2:fixed_hp_gain",
           "13:class_fighter:level_1:maximum_hit_die",
           "13:class_fighter|13:class_fighter:level_2:fixed_hp_gain",
           "13:class_fighter|15:class_barbarian:level_2:fixed_hp_gain",
@@ -3821,6 +3822,44 @@ describe("character creation finalization", () => {
         },
       },
     });
+  });
+
+  test("accepts Druid 2 Wild Shape and Wild Companion as sibling feature refs", () => {
+    const druidTwo = completeSupportedProgressionDraft({
+      draftId: "draft:druid-wild-companion",
+      progression: testProgression("class_druid", 2),
+    });
+    const result = finalizeCharacterDraft({ draft: druidTwo, unitLibrary });
+
+    expect(result.tag).toBe("ready");
+    if (result.tag !== "ready") return;
+
+    expect(characterBuildFeatureUnitIds(result.build, unitLibrary)).toEqual(
+      expect.arrayContaining([
+        "druid_druidic",
+        "druid_primal_order",
+        "druid_wild_shape",
+        "druid_wild_companion",
+      ]),
+    );
+    expect(
+      characterBuildUnitRefs(result.build, unitLibrary).map((ref) => ref.unitId),
+    ).toEqual(
+      expect.arrayContaining([
+        "class_druid",
+        "druid_wild_shape",
+        "druid_wild_companion",
+      ]),
+    );
+    expect(
+      result.build.spellcasting?.sources.find(
+        (source) => source.sourceUnitId === "class_druid",
+      )?.preparedSpells,
+    ).toHaveLength(5);
+    expect(result.build.spellcasting?.slotPools.spellcasting?.slots).toEqual([
+      { spellLevel: 1, count: 3 },
+    ]);
+    expect(characterBuildResources(result.build, unitLibrary)).toEqual([]);
   });
 
   test("advances a finalized Fighter build and replaces Fighting Style in one level-gain operation", () => {
