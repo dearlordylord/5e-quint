@@ -66,6 +66,7 @@ module battleRuntime {
   import battleRuntimeActorCombatants.* from "./battle-runtime-actor-combatants"
   import battleRuntimeSanctuary.* from "./battle-runtime-sanctuary"
   import battleRuntimeFeatherFall.* from "./battle-runtime-feather-fall"
+  import battleRuntimeJumpMovement.* from "./battle-runtime-jump-movement"
 
   // SRD traceability for this canonical battle runtime spec:
   // - Playing-the-Game.md lines 479-495: combat proceeds in rounds and turns
@@ -2245,12 +2246,6 @@ module battleRuntime {
   pure def activeEffectsContainExpeditiousRetreatDashBonusAction(effects: Set[ActiveEffect]): bool =
     effects.contains(ExpeditiousRetreatDashBonusAction)
 
-  pure def jumpMovementReplacementMaxTargets(slotLevel: int): int =
-    if (slotLevel < 1) 0 else slotLevel
-
-  pure def jumpMovementReplacementActiveEffect(): ActiveEffect =
-    JumpMovementReplacement({ durationTicks: 10, usedThisTurn: false })
-
   pure def resolveSanctuarySpell(state: BattleState, target: Actor): BattleState =
     if (
       currentActor(state) != Fighter or
@@ -2270,12 +2265,6 @@ module battleRuntime {
         combatantWithSanctuaryWard(targetCombatant, Fighter),
       )
     }
-
-  pure def jumpMovementReplacementLandingIsLegal(landing: JumpMovementLandingFact): bool =
-    landing != JumpIllegalLanding
-
-  pure def jumpMovementReplacementLandingAppliesProne(landing: JumpMovementLandingFact): bool =
-    landing == JumpLegalLandingAcrobaticsFailed
 
   pure def resolveJumpMovementReplacementSpell(state: BattleState, targets: Set[Actor], willingTargets: Set[Actor], slotLevel: int): BattleState =
     if (
@@ -2305,18 +2294,6 @@ module battleRuntime {
     } else {
       state
     }
-
-  pure def activeEffectsContainAvailableJumpMovementReplacement(effects: Set[ActiveEffect]): bool =
-    effects.exists(effect => match effect {
-      | JumpMovementReplacement(data) => not(data.usedThisTurn)
-      | _ => false
-    })
-
-  pure def activeEffectsAfterJumpMovementReplacementUse(effects: Set[ActiveEffect]): Set[ActiveEffect] =
-    effects.map(effect => match effect {
-      | JumpMovementReplacement(data) => JumpMovementReplacement({ ...data, usedThisTurn: true })
-      | _ => effect
-    })
 
   pure def jumpMovementReplacementFighter(
     state: BattleState,
