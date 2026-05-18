@@ -20,6 +20,9 @@
       "unsupported-by-admission": 1
     }
   },
+  "derivedFields": {
+    "obligations[].profiles": "Derived from profileObligations by obligation id; authored obligations.jsonl rows must not contain profiles."
+  },
   "obligations": [
     {
       "id": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
@@ -56,9 +59,9 @@
         }
       ],
       "profiles": [
-        "unit-feature.reaction-roll-or-damage-reduction",
         "spell.reaction-shield",
-        "spell.readied-action-time-spell"
+        "spell.readied-action-time-spell",
+        "unit-feature.reaction-roll-or-damage-reduction"
       ],
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
@@ -83,8 +86,8 @@
         }
       ],
       "profiles": [
-        "unit-feature.alternate-action-cost",
         "unit-feature.action-surge-resource",
+        "unit-feature.alternate-action-cost",
         "unit-feature.attack-damage-rider",
         "unit-feature.bonus-action-ongoing-rage",
         "unit-feature.first-attack-roll-reckless-advantage",
@@ -120,8 +123,8 @@
         }
       ],
       "profiles": [
-        "spell.invocation-damage-save-or-attack",
         "spell.hit-point-restoration",
+        "spell.invocation-damage-save-or-attack",
         "spell.reaction-shield",
         "spell.readied-action-time-spell"
       ],
@@ -189,6 +192,7 @@
       "kind": "projection-scalar",
       "parityWitnesses": [
         {
+          "deterministicReplayRationale": "Armor Class base formula is a scalar projection fixture with explicitly named selected-identity cases; random branch interleavings are not the risk for this obligation.",
           "kind": "deterministic-qnt-replay",
           "ownerPath": "packages/character-sheet-runtime/src/armor-class-base-selected-identity.mbt.test.ts",
           "qntSpecPath": "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt",
@@ -243,11 +247,11 @@
       "kind": "composition",
       "parityWitnesses": [],
       "profiles": [
-        "character-creation.class-feature-feat-choice",
         "character-creation.class-feature-advancement-replacement",
+        "character-creation.class-feature-feat-choice",
+        "character-creation.eldritch-invocation-choice",
         "character-creation.warlock-pact-magic-advancement",
-        "character-creation.weapon-mastery-choice",
-        "character-creation.eldritch-invocation-choice"
+        "character-creation.weapon-mastery-choice"
       ],
       "qntOwners": [],
       "runtime": "character-creation",
@@ -317,6 +321,7 @@
       "kind": "state-transition",
       "parityWitnesses": [
         {
+          "deterministicReplayRationale": "Positive Hit Point damage has four explicitly named finite fixture cases with no sequencing or interleaving claim; qReplayIndex makes the closed case table execute once per case.",
           "kind": "deterministic-qnt-replay",
           "ownerPath": "packages/battle-runtime/src/rule-core-hit-point-damage.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt",

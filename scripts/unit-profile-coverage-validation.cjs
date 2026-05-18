@@ -11,6 +11,7 @@ const {
   nearCanonicalDenyList,
   profileKinds,
   protectedExpressionFields,
+  rulesKernelProfileKindClassificationIssues,
   selectedIdentityMbtEvidenceTag,
   unitEvidenceTags,
   unitProfileOwnerClaimKinds,
@@ -87,6 +88,34 @@ function collectFields(value, prefix = "") {
     ]);
   }
   return [];
+}
+
+const forbiddenRulesKernelJoinFields = [
+  "obligationIds",
+  "profileObligations",
+  "profiles",
+  "rulesKernelObligationIds",
+  "rulesKernelObligations",
+  "rulesKernelProfileObligations",
+  "rulesKernelProfiles",
+];
+
+function forbiddenRulesKernelJoinFieldIssues(value, context) {
+  if (!isRecord(value)) return [];
+  const issues = [];
+  for (const field of forbiddenRulesKernelJoinFields) {
+    if (Object.prototype.hasOwnProperty.call(value, field)) {
+      issues.push(
+        `${context} must not copy rules-kernel join field ${field}; use plans/rules-kernel-coverage/profile-obligations.jsonl.`,
+      );
+    }
+  }
+  if (isRecord(value.claim)) {
+    issues.push(
+      ...forbiddenRulesKernelJoinFieldIssues(value.claim, `${context}.claim`),
+    );
+  }
+  return issues;
 }
 
 function hasFungiTheme(value) {
@@ -190,6 +219,12 @@ function validateProfiles(profiles) {
   const issues = [];
   const seen = new Set();
   for (const profile of profiles) {
+    issues.push(
+      ...forbiddenRulesKernelJoinFieldIssues(
+        profile,
+        `${profile.id ?? "<unknown profile>"} profile row`,
+      ),
+    );
     if (seen.has(profile.id))
       issues.push(`Duplicate profile id ${profile.id}.`);
     seen.add(profile.id);
@@ -235,6 +270,12 @@ function validateUnitClaims(claims, inventory, authoredSurfaceUnits, profiles) {
   const claimsByUnit = new Map();
 
   for (const claim of claims) {
+    issues.push(
+      ...forbiddenRulesKernelJoinFieldIssues(
+        claim,
+        `Unit ${claim.unitId ?? "<unknown unit>"} claim row`,
+      ),
+    );
     const claimedUnit = claimableUnitsById.get(claim.unitId);
     if (claimedUnit === undefined) {
       issues.push(`Claim references unknown Unit id ${claim.unitId}.`);
@@ -904,6 +945,7 @@ function validateCoverageInputs({
   scannedClaims,
 }) {
   return [
+    ...rulesKernelProfileKindClassificationIssues(),
     ...validateCollections(collections.collections, inventory),
     ...validateProfiles(profiles),
     ...validateUnitClaims(

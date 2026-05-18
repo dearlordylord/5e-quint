@@ -30,21 +30,21 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `profile-obligat
 
 | Obligation | Runtime | Status | Profiles |
 | --- | --- | --- | --- |
-| `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` | battle | covered |  |
-| `BATTLE.REACTION.OFFER_DECLINE_RESUME` | battle | covered | `unit-feature.reaction-roll-or-damage-reduction`, `spell.reaction-shield`, `spell.readied-action-time-spell` |
-| `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` | battle | covered | `unit-feature.alternate-action-cost`, `unit-feature.action-surge-resource`, `unit-feature.attack-damage-rider`, `unit-feature.bonus-action-ongoing-rage`, `unit-feature.first-attack-roll-reckless-advantage`, `unit-feature.passive-armor-class-bonus`, `unit-feature.passive-ranged-attack-roll-bonus`, `unit-feature.reaction-roll-or-damage-reduction`, `unit-feature.save-damage-replacement`, `unit-feature.self-bonus-action-healing`, `unit-feature.weapon-critical-range-19`, `unit-feature.weapon-damage-dice-roll-choice`, `unit-feature.zero-hit-point-replacement` |
-| `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | battle | covered | `spell.invocation-damage-save-or-attack`, `spell.hit-point-restoration`, `spell.reaction-shield`, `spell.readied-action-time-spell` |
+| `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` | battle | covered | _direct reducer entrypoint_ |
+| `BATTLE.REACTION.OFFER_DECLINE_RESUME` | battle | covered | `spell.reaction-shield`, `spell.readied-action-time-spell`, `unit-feature.reaction-roll-or-damage-reduction` |
+| `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` | battle | covered | `unit-feature.action-surge-resource`, `unit-feature.alternate-action-cost`, `unit-feature.attack-damage-rider`, `unit-feature.bonus-action-ongoing-rage`, `unit-feature.first-attack-roll-reckless-advantage`, `unit-feature.passive-armor-class-bonus`, `unit-feature.passive-ranged-attack-roll-bonus`, `unit-feature.reaction-roll-or-damage-reduction`, `unit-feature.save-damage-replacement`, `unit-feature.self-bonus-action-healing`, `unit-feature.weapon-critical-range-19`, `unit-feature.weapon-damage-dice-roll-choice`, `unit-feature.zero-hit-point-replacement` |
+| `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | battle | covered | `spell.hit-point-restoration`, `spell.invocation-damage-save-or-attack`, `spell.reaction-shield`, `spell.readied-action-time-spell` |
 | `BATTLE.STAT_BLOCK.ATTACK_CONTROL` | battle | covered | `stat-block.attack-control` |
-| `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` | character-creation | covered |  |
+| `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` | character-creation | covered | _direct reducer entrypoint_ |
 | `SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE` | character-sheet | covered | `character-sheet.armor-class-base-formula` |
-| `BATTLE.HOLE.SEMANTIC_FRONTIER_CLASSIFICATION` | battle | needs-qnt-owner |  |
-| `BATTLE.SURFACE.EXECUTABLE_PROFILE_JOIN` | battle | needs-surface-evidence |  |
-| `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` | character-creation | needs-qnt-owner | `character-creation.class-feature-feat-choice`, `character-creation.class-feature-advancement-replacement`, `character-creation.warlock-pact-magic-advancement`, `character-creation.weapon-mastery-choice`, `character-creation.eldritch-invocation-choice` |
-| `SHEET.REST_AND_RESOURCE.TRANSITIONS` | character-sheet | needs-qnt-owner |  |
-| `CHARACTER.BATTLE.HANDOFF.SETTLEMENT` | character-battle | needs-qnt-owner |  |
-| `BATTLE.PROTOCOL.MALFORMED_PAYLOAD_REJECTION` | battle | boundary-only |  |
-| `BATTLE.SURFACE.CATALOG_ONLY_RECORDS` | battle | unsupported-by-admission |  |
-| `SHARED.HIT_POINTS.POSITIVE_DAMAGE` | shared-algebras | covered |  |
+| `BATTLE.HOLE.SEMANTIC_FRONTIER_CLASSIFICATION` | battle | needs-qnt-owner | _profile mapping pending_ |
+| `BATTLE.SURFACE.EXECUTABLE_PROFILE_JOIN` | battle | needs-surface-evidence | _surface join pending_ |
+| `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` | character-creation | needs-qnt-owner | `character-creation.class-feature-advancement-replacement`, `character-creation.class-feature-feat-choice`, `character-creation.eldritch-invocation-choice`, `character-creation.warlock-pact-magic-advancement`, `character-creation.weapon-mastery-choice` |
+| `SHEET.REST_AND_RESOURCE.TRANSITIONS` | character-sheet | needs-qnt-owner | _profile mapping pending_ |
+| `CHARACTER.BATTLE.HANDOFF.SETTLEMENT` | character-battle | needs-qnt-owner | _profile mapping pending_ |
+| `BATTLE.PROTOCOL.MALFORMED_PAYLOAD_REJECTION` | battle | boundary-only | _outside reducer semantics_ |
+| `BATTLE.SURFACE.CATALOG_ONLY_RECORDS` | battle | unsupported-by-admission | _outside reducer semantics_ |
+| `SHARED.HIT_POINTS.POSITIVE_DAMAGE` | shared-algebras | covered | _direct reducer entrypoint_ |
 
 ## Generator Readiness
 

@@ -27,6 +27,88 @@ const profileKinds = new Set([
   "equipment",
   "table-caller",
 ]);
+const rulesKernelProfileKindClasses = new Set([
+  "rules-kernel",
+  "surface-authored-data",
+]);
+const rulesKernelProfileKindClassifications = Object.freeze({
+  "character-creation": "rules-kernel",
+  "character-sheet": "rules-kernel",
+  passive: "rules-kernel",
+  action: "rules-kernel",
+  "bonus-action": "rules-kernel",
+  reaction: "rules-kernel",
+  "spell-invocation": "rules-kernel",
+  "persistent-effect": "rules-kernel",
+  "summoned-companion": "rules-kernel",
+  "stat-block-control": "rules-kernel",
+  resource: "rules-kernel",
+  equipment: "surface-authored-data",
+  "table-caller": "rules-kernel",
+});
+const rulesKernelProfileKindClassificationReasons = Object.freeze({
+  "character-creation":
+    "character creation reducers own choice legality, fill validation, advancement, and finalization semantics",
+  "character-sheet":
+    "character sheet reducers own durable/session sheet projections and mutations",
+  passive: "passive profiles project reducer-visible table facts",
+  action: "action profiles execute reducer-owned procedures",
+  "bonus-action": "bonus-action profiles execute reducer-owned procedures",
+  reaction: "reaction profiles execute reducer-owned continuations",
+  "spell-invocation": "spell invocation profiles execute reducer-owned procedures",
+  "persistent-effect":
+    "persistent-effect profiles own active-effect lifecycle and table-state projection",
+  "summoned-companion":
+    "summoned-companion profiles own reducer-visible companion control semantics",
+  "stat-block-control":
+    "stat-block-control profiles own reducer-visible creature procedure semantics",
+  resource: "resource profiles own reducer-visible spend/recover semantics",
+  equipment:
+    "equipment profile rows are authored data until admitted through a character-sheet or battle reducer profile",
+  "table-caller":
+    "table-caller profiles request table facts that feed reducer-owned semantic choices",
+});
+const rulesKernelProfileKinds = new Set(
+  Object.entries(rulesKernelProfileKindClassifications)
+    .filter(([, classification]) => classification === "rules-kernel")
+    .map(([profileKind]) => profileKind),
+);
+function rulesKernelProfileKindClassificationIssues() {
+  const issues = [];
+  for (const profileKind of profileKinds) {
+    if (
+      !Object.prototype.hasOwnProperty.call(
+        rulesKernelProfileKindClassifications,
+        profileKind,
+      )
+    ) {
+      issues.push(
+        `Profile kind ${profileKind} has no rules-kernel classification.`,
+      );
+    }
+  }
+  for (const [profileKind, classification] of Object.entries(
+    rulesKernelProfileKindClassifications,
+  )) {
+    if (!profileKinds.has(profileKind)) {
+      issues.push(
+        `Rules-kernel profile classification references unknown profile kind ${profileKind}.`,
+      );
+    }
+    if (!rulesKernelProfileKindClasses.has(classification)) {
+      issues.push(
+        `Profile kind ${profileKind} has unknown rules-kernel classification ${classification}.`,
+      );
+    }
+    const reason = rulesKernelProfileKindClassificationReasons[profileKind];
+    if (typeof reason !== "string" || reason.length === 0) {
+      issues.push(
+        `Profile kind ${profileKind} must declare a rules-kernel classification reason.`,
+      );
+    }
+  }
+  return issues;
+}
 const claimTags = new Set([
   "supported-profile",
   "profile-subset-supported",
@@ -181,6 +263,18 @@ function coveragePaths(root) {
       coverageDir,
       "LEVEL1_2_FULL_SUPPORT.md",
     ),
+    rulesKernelObligations: path.join(
+      root,
+      "plans",
+      "rules-kernel-coverage",
+      "obligations.jsonl",
+    ),
+    rulesKernelProfileObligations: path.join(
+      root,
+      "plans",
+      "rules-kernel-coverage",
+      "profile-obligations.jsonl",
+    ),
   };
 }
 
@@ -199,6 +293,10 @@ module.exports = {
   nearCanonicalDenyList,
   profileKinds,
   protectedExpressionFields,
+  rulesKernelProfileKindClassificationIssues,
+  rulesKernelProfileKindClassificationReasons,
+  rulesKernelProfileKindClassifications,
+  rulesKernelProfileKinds,
   selectedIdentityMbtEvidenceTag,
   skippedClaimScanDirs,
   surfaceUnitKinds,

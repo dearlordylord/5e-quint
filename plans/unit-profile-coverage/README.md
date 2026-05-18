@@ -9,6 +9,12 @@ mechanics profiles, which installed Units are explicitly unsupported or need
 widening, which authored Surface Units are not yet admitted to the Unit catalog,
 and which QNT/runtime/verification owners cover each supported profile.
 
+This lane is the authored-content breadth layer. It does not by itself prove
+that reducer-owned semantics are fully connected to the rules kernel. For any
+supported profile whose `profileKind` carries reducer-owned behavior, the
+profile must also be joined to `plans/rules-kernel-coverage/` through
+`plans/rules-kernel-coverage/profile-obligations.jsonl`.
+
 ## Collection Boundaries
 
 `srd-5.2.1` is the shipped SRD Surface Unit collection. Its records must carry
@@ -52,22 +58,26 @@ UNIT-IDENTITY-EVIDENCE marker fields:
 <evidence-tag> <task-id> <unit-id> [<unit-id> ...]
 ```
 
-Selected identity MBT evidence also requires owner-local replay markers:
+`selected-identity-mbt` is the historical evidence tag for selected Unit
+identity replay through an MBT/QNT owner. The deterministic replay rows required
+by this tag are identity/wiring witnesses, not MBT coverage by themselves.
+
+Rows with this tag also require owner-local replay markers:
 
 ```text
 UNIT-IDENTITY-MBT-REPLAY marker fields:
 <task-id> <unit-id> <driver-action> [<driver-action> ...]
 ```
 
-The checker treats these replay markers as the MBT wiring witness for
-`selected-identity-mbt`: every selected evidence row must name at least one MBT
+The checker treats these replay markers as the wiring witness for
+`selected-identity-mbt`: every selected evidence row must name at least one
 driver action for that Unit id, every replay action must be declared in an
 owner-local driver schema, and every replay action must be reachable from a
 Quint `step` action passed to an owner-local `run()` call.
 
-Selected identity MBT evidence must also have owner-local deterministic replay
-data and an owner-local deterministic replay test consumer. That replay test is
-the executable witness that the named actions actually run, compare the same
+Rows with this tag must also have owner-local deterministic replay data and an
+owner-local deterministic replay test consumer. That replay test is the
+executable witness that the named actions actually run, compare the same
 projection shape, and bind the claimed Unit id at a Unit-bearing production
 boundary per claimed action. The replay marker, deterministic replay data, test
 consumer, and `unit-evidence.jsonl` are bidirectional. If a driver action name
@@ -75,16 +85,21 @@ changes, falls out of the executable Quint action set, stops matching
 deterministic replay data, or stops binding the claimed Unit id during the
 deterministic replay, the coverage check or replay test fails.
 
+The deterministic replay consumer is an identity/wiring witness, not MBT
+coverage for reusable reducer semantics. Use rules-kernel focused MBT when the
+risk is sequencing, holes, reactions, resources, active-effect lifecycle, or
+interleavings.
+
 Current evidence tags are:
 
 - `deterministic-admission-projection`: a focused catalog/runtime test loads the
   authored Unit through the production Unit catalog, or loads a public
   mechanics-only Classic fixture through its policy fixture boundary, and proves
   the production support/projection boundary admits it.
-- `selected-identity-mbt`: a focused MBT fixture binds a concrete authored Unit
-  id into production runtime entrypoints, names the identity-bearing driver
-  replay actions with `UNIT-IDENTITY-MBT-REPLAY`, executes deterministic replay
-  rows for those actions, and compares QCORE-observable projections.
+- `selected-identity-mbt`: an MBT/QNT owner binds a concrete authored Unit id
+  into production runtime entrypoints, names the identity-bearing driver replay
+  actions with `UNIT-IDENTITY-MBT-REPLAY`, executes deterministic replay rows
+  for those actions, and compares QCORE-observable projections.
 
 ## Classic Non-SRD Authoring Lane
 
@@ -137,7 +152,7 @@ authored Unit sources
   -> QNT Procedure Parity profiles
   -> focused QMBT Procedure Parity
   -> matrix profile/evidence accounting
-  -> selective Specific Unit Parity MBT
+  -> selected Unit identity replay/wiring
 ```
 
 For mechanics that are not implemented in TypeScript yet, the preferred
@@ -149,7 +164,7 @@ matrix gap or authored-source pressure
   -> focused Procedure Parity MBT expectation
   -> TypeScript catalog/support/runtime implementation
   -> deterministic admission/projection evidence
-  -> selective Specific Unit Parity MBT when identity risk justifies it
+  -> selected Unit identity replay/wiring when identity risk justifies it
 ```
 
 Authored Unit sources currently include SRD-backed records in this repo and
@@ -190,10 +205,35 @@ This matrix has two verification layers:
 
 Deterministic admission/projection coverage counts supported Unit ids with
 `unit-evidence.jsonl` evidence tagged `deterministic-admission-projection`.
-Selected identity MBT coverage counts supported Unit ids with evidence tagged
-`selected-identity-mbt`. Both denominators are the supported Unit claims in
-this matrix; unsupported and widening rows remain closure dispositions, not
+Selected identity replay coverage counts supported Unit ids with evidence
+tagged `selected-identity-mbt`. Both denominators are the supported Unit claims
+in this matrix; unsupported and widening rows remain closure dispositions, not
 test omissions.
+
+## Rules-Kernel Join
+
+The coverage stack is intentionally layered:
+
+```text
+authored Surface Unit
+  -> Unit catalog/support admission
+  -> supported mechanics profile
+  -> rules-kernel semantic obligation
+  -> QNT owner
+  -> executable TS parity witness
+```
+
+`profiles.jsonl` remains the Unit-profile source for profile definitions and
+profile-local QNT/runtime evidence. `profile-obligations.jsonl` in the
+rules-kernel lane is the only source for the profile-to-obligation join. Do not
+copy that mapping into Unit claims, profile rows, or obligation rows.
+
+The generated Unit reports include rules-kernel join metrics so authored-content
+support and reducer-kernel coverage can be read together without merging their
+denominators. A `supported-profile` Unit claim means the authored Unit is
+admitted to a typed support profile; it counts as full rules-kernel chain
+coverage only when every reducer-owned profile for that Unit maps to covered
+rules-kernel obligations.
 
 ## Done-State Gate
 
@@ -202,6 +242,11 @@ Any task that adds or changes `UNIT-IDENTITY-EVIDENCE`, `unit-claims.jsonl`,
 owner markers must run `pnpm unit-profile-coverage:check --write` before the
 task can be marked `done`. The generated inventory and matrix artifacts in this
 directory are part of the task output and must agree with `ACTIVE_PLAN.md`.
+Any task that changes `plans/rules-kernel-coverage/profile-obligations.jsonl`,
+rules-kernel obligations, or rules-kernel covered status must run both
+`pnpm rules-kernel-coverage:check --write` and
+`pnpm unit-profile-coverage:check --write`, because Unit reports derive their
+rules-kernel join view from the rules-kernel lane.
 
 The checker-visible disposition is the source of truth for support status.
 When a Unit supports only an executable subset of the SRD text, use

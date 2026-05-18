@@ -81,6 +81,21 @@
       "numerator": 65,
       "percent": "100%"
     },
+    "rulesKernelCoveredProfileCoverage": {
+      "denominator": 86,
+      "numerator": 19,
+      "percent": "22.1%"
+    },
+    "rulesKernelProfileJoinCoverage": {
+      "denominator": 86,
+      "numerator": 24,
+      "percent": "27.9%"
+    },
+    "rulesKernelSupportedUnitCoverage": {
+      "denominator": 113,
+      "numerator": 40,
+      "percent": "35.4%"
+    },
     "runtimeMappingCoverage": {
       "denominator": 65,
       "numerator": 65,
@@ -176,6 +191,30 @@
       "planningQuestion": "Do supported executable profiles have focused MBT or runtime-test parity evidence?"
     },
     {
+      "denominator": "profile records whose kind carries reducer-owned semantics",
+      "key": "rulesKernelProfileJoinCoverage",
+      "kind": "coverage",
+      "label": "Rules-kernel profile join coverage",
+      "numerator": "rules-kernel-applicable profile records with at least one profile-obligation mapping",
+      "planningQuestion": "Do reducer-owned mechanics profiles point to rules-kernel semantic obligations?"
+    },
+    {
+      "denominator": "profile records whose kind carries reducer-owned semantics",
+      "key": "rulesKernelCoveredProfileCoverage",
+      "kind": "coverage",
+      "label": "Rules-kernel covered profile coverage",
+      "numerator": "rules-kernel-applicable profile records whose mapped obligations are all covered",
+      "planningQuestion": "Do reducer-owned mechanics profiles point to covered rules-kernel obligations?"
+    },
+    {
+      "denominator": "installed Units with supported-profile claims and at least one rules-kernel-applicable profile",
+      "key": "rulesKernelSupportedUnitCoverage",
+      "kind": "coverage",
+      "label": "Supported Unit rules-kernel chain coverage",
+      "numerator": "supported Unit ids whose rules-kernel-applicable profiles all map to covered obligations",
+      "planningQuestion": "Do supported Unit identities have every reducer-owned profile connected to covered rules-kernel obligations?"
+    },
+    {
       "denominator": "installed Units with supported-profile claims",
       "key": "deterministicAdmissionProjectionCoverage",
       "kind": "coverage",
@@ -187,9 +226,9 @@
       "denominator": "installed Units with supported-profile claims",
       "key": "selectedIdentityMbtCoverage",
       "kind": "coverage",
-      "label": "Selected identity MBT coverage",
+      "label": "Selected identity replay coverage",
       "numerator": "supported Unit ids with selected-identity-mbt evidence",
-      "planningQuestion": "Which supported Unit identities have intentionally selected concrete identity MBT evidence?"
+      "planningQuestion": "Which supported Unit identities have intentionally selected concrete identity replay evidence?"
     },
     {
       "denominator": "installed Classic non-SRD records",
@@ -2474,6 +2513,2836 @@
       ]
     }
   ],
+  "rulesKernelProfileJoin": {
+    "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
+    "metrics": {
+      "rulesKernelCoveredProfileCoverage": {
+        "denominator": 86,
+        "numerator": 19,
+        "percent": "22.1%"
+      },
+      "rulesKernelProfileJoinCoverage": {
+        "denominator": 86,
+        "numerator": 24,
+        "percent": "27.9%"
+      }
+    },
+    "profileKinds": [
+      "action",
+      "bonus-action",
+      "character-creation",
+      "character-sheet",
+      "passive",
+      "persistent-effect",
+      "reaction",
+      "resource",
+      "spell-invocation",
+      "stat-block-control",
+      "summoned-companion",
+      "table-caller"
+    ],
+    "profiles": [
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
+        "profileId": "unit-feature.alternate-action-cost",
+        "profileKind": "bonus-action"
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
+        "profileId": "unit-feature.action-surge-resource",
+        "profileKind": "resource"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "unit-feature.attack-action-attack-count-scaling",
+        "profileKind": "passive"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "unit-feature.martial-arts-attack-projection",
+        "profileKind": "passive"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "unit-feature.attack-damage-reduction-zero-damage-redirect",
+        "profileKind": "reaction"
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
+        "profileId": "unit-feature.attack-damage-rider",
+        "profileKind": "persistent-effect"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "unit-feature.bardic-inspiration-grant",
+        "profileKind": "bonus-action"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
+        "profileKind": "resource"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "unit-feature.bonus-action-dash-temporary-hit-points",
+        "profileKind": "bonus-action"
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
+        "profileId": "unit-feature.bonus-action-ongoing-rage",
+        "profileKind": "persistent-effect"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "unit-feature.innate-sorcery-activation",
+        "profileKind": "persistent-effect"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "unit-feature.failed-ability-check-resource-boost",
+        "profileKind": "resource"
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
+        "profileId": "unit-feature.first-attack-roll-reckless-advantage",
+        "profileKind": "persistent-effect"
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
+        "profileId": "unit-feature.passive-armor-class-bonus",
+        "profileKind": "passive"
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
+        "profileId": "unit-feature.passive-ranged-attack-roll-bonus",
+        "profileKind": "passive"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "unit-feature.passive-saving-throw-roll-mode",
+        "profileKind": "passive"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "unit-feature.attack-roll-miss-to-hit-replacement",
+        "profileKind": "persistent-effect"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "unit-feature.passive-speed-bonus",
+        "profileKind": "passive"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "unit-feature.passive-speed-kind-grants",
+        "profileKind": "passive"
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
+        "profileId": "unit-feature.weapon-damage-dice-roll-choice",
+        "profileKind": "persistent-effect"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "unit-feature.weapon-mastery-sap",
+        "profileKind": "persistent-effect"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "unit-feature.weapon-mastery-topple",
+        "profileKind": "persistent-effect"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "unit-feature.weapon-mastery-cleave",
+        "profileKind": "persistent-effect"
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
+        "profileId": "unit-feature.zero-hit-point-replacement",
+        "profileKind": "persistent-effect"
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          },
+          {
+            "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+          }
+        ],
+        "profileId": "unit-feature.reaction-roll-or-damage-reduction",
+        "profileKind": "reaction"
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
+        "profileId": "unit-feature.save-damage-replacement",
+        "profileKind": "passive"
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
+        "profileId": "unit-feature.self-bonus-action-healing",
+        "profileKind": "bonus-action"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "character-sheet.healing-resource-action",
+        "profileKind": "character-sheet"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "character-sheet.short-rest-spell-slot-recovery",
+        "profileKind": "character-sheet"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "character-sheet.spellbook-ritual-invocation",
+        "profileKind": "character-sheet"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "character-sheet.weapon-mastery-reselection",
+        "profileKind": "character-sheet"
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
+        "profileId": "unit-feature.weapon-critical-range-19",
+        "profileKind": "passive"
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+          }
+        ],
+        "profileId": "spell.invocation-damage-save-or-attack",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-chained-attack-damage",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-condition-save",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-sleep-target-admission",
+        "profileKind": "table-caller"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-sleep-repeat-save-lifecycle",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-grease-ground-hazard",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-fog-cloud-obscurement",
+        "profileKind": "table-caller"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-object-light",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-held-light-emitter",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-dancing-lights-movable-dim-light",
+        "profileKind": "table-caller"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-command-halt-grovel",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-command-drop-held-object",
+        "profileKind": "table-caller"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-command-approach-route",
+        "profileKind": "table-caller"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-command-flee-route",
+        "profileKind": "table-caller"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-expeditious-retreat-dash",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-feather-fall-mitigation",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.reaction-hellish-rebuke",
+        "profileKind": "reaction"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.reaction-counterspell",
+        "profileKind": "reaction"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-jump-movement-replacement",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-forced-reaction-movement",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-damage-reduction",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-make-stable",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-weapon-damage-rider",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-after-hit-damage",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-after-hit-restraint-turn-start-damage",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-after-hit-timed-damage-save",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-spell-hosted-weapon-attack",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-weapon-attack-override",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-beam-sequence",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-marked-damage-rider",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+          }
+        ],
+        "profileId": "spell.hit-point-restoration",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+          },
+          {
+            "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+          }
+        ],
+        "profileId": "spell.reaction-shield",
+        "profileKind": "reaction"
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+          },
+          {
+            "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+          }
+        ],
+        "profileId": "spell.readied-action-time-spell",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-roll-modifier",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.creature-type-protection-and-charm",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-attack-roll-advantage-save",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-condition-immunity-turn-start-temporary-hit-points",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.scalar-buff",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.STAT_BLOCK.ATTACK_CONTROL",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Stat Block action, Multiattack, limited-use, recharge, reaction, and legendary action controls"
+          }
+        ],
+        "profileId": "stat-block.attack-control",
+        "profileKind": "stat-block-control"
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet Armor Class base formula selection from build, loadout, and class-feature facts"
+          }
+        ],
+        "profileId": "character-sheet.armor-class-base-formula",
+        "profileKind": "character-sheet"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-hideous-laughter-repeat-save-lifecycle",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-sanctuary-targeting-interdiction",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.find-familiar-lifecycle",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+            "runtime": "character-creation",
+            "status": "needs-qnt-owner",
+            "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+          }
+        ],
+        "profileId": "character-creation.class-feature-feat-choice",
+        "profileKind": "character-creation"
+      },
+      {
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+            "runtime": "character-creation",
+            "status": "needs-qnt-owner",
+            "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+          }
+        ],
+        "profileId": "character-creation.class-feature-advancement-replacement",
+        "profileKind": "character-creation"
+      },
+      {
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+            "runtime": "character-creation",
+            "status": "needs-qnt-owner",
+            "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+          }
+        ],
+        "profileId": "character-creation.warlock-pact-magic-advancement",
+        "profileKind": "character-creation"
+      },
+      {
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+            "runtime": "character-creation",
+            "status": "needs-qnt-owner",
+            "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+          }
+        ],
+        "profileId": "character-creation.weapon-mastery-choice",
+        "profileKind": "character-creation"
+      },
+      {
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+            "runtime": "character-creation",
+            "status": "needs-qnt-owner",
+            "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+          }
+        ],
+        "profileId": "character-creation.eldritch-invocation-choice",
+        "profileKind": "character-creation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "character-creation.class-feature-option-projection",
+        "profileKind": "character-creation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "character-creation.skill-expertise-choice",
+        "profileKind": "character-creation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "character-creation.class-feature-resource-projection",
+        "profileKind": "character-creation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-self-ability-check-advantage",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "character-sheet.ability-check-proficiency-bonus",
+        "profileKind": "character-sheet"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "character-sheet.pact-slot-recovery",
+        "profileKind": "character-sheet"
+      }
+    ],
+    "sourceArtifacts": {
+      "obligations": "plans/rules-kernel-coverage/obligations.jsonl",
+      "profileObligations": "plans/rules-kernel-coverage/profile-obligations.jsonl"
+    },
+    "supportedUnitJoin": {
+      "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
+      "metrics": {
+        "rulesKernelSupportedUnitCoverage": {
+          "denominator": 113,
+          "numerator": 40,
+          "percent": "35.4%"
+        }
+      },
+      "units": [
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.invocation-damage-save-or-attack",
+              "profileKind": "spell-invocation"
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.readied-action-time-spell",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "acid_splash"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.creature-type-protection-and-charm",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "animal_friendship"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-roll-modifier",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "bane"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "unit-feature.passive-saving-throw-roll-mode",
+              "profileKind": "passive"
+            }
+          ],
+          "unitId": "barbarian_danger_sense"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "unit-feature.passive-speed-bonus",
+              "profileKind": "passive"
+            }
+          ],
+          "unitId": "barbarian_fast_movement"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.bonus-action-ongoing-rage",
+              "profileKind": "persistent-effect"
+            }
+          ],
+          "unitId": "barbarian_rage"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.first-attack-roll-reckless-advantage",
+              "profileKind": "persistent-effect"
+            }
+          ],
+          "unitId": "barbarian_reckless_attack"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet Armor Class base formula selection from build, loadout, and class-feature facts"
+                }
+              ],
+              "profileId": "character-sheet.armor-class-base-formula",
+              "profileKind": "character-sheet"
+            }
+          ],
+          "unitId": "barbarian_unarmored_defense"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "unit-feature.bardic-inspiration-grant",
+              "profileKind": "bonus-action"
+            },
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
+              "profileKind": "resource"
+            }
+          ],
+          "unitId": "bard_bardic_inspiration"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                },
+                {
+                  "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+                }
+              ],
+              "profileId": "unit-feature.reaction-roll-or-damage-reduction",
+              "profileKind": "reaction"
+            }
+          ],
+          "unitId": "bard_cutting_words"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "character-sheet.ability-check-proficiency-bonus",
+              "profileKind": "character-sheet"
+            }
+          ],
+          "unitId": "bard_jack_of_all_trades"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-roll-modifier",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "bless"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.invocation-damage-save-or-attack",
+              "profileKind": "spell-invocation"
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.readied-action-time-spell",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "burning_hands"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.invocation-damage-save-or-attack",
+              "profileKind": "spell-invocation"
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.readied-action-time-spell",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "chill_touch"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-chained-attack-damage",
+              "profileKind": "spell-invocation"
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.readied-action-time-spell",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "chromatic_orb"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "character-creation.class-feature-resource-projection",
+              "profileKind": "character-creation"
+            }
+          ],
+          "unitId": "cleric_channel_divinity"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "character-creation.class-feature-option-projection",
+              "profileKind": "character-creation"
+            }
+          ],
+          "unitId": "cleric_divine_order"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-condition-save",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "color_spray"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-command-halt-grovel",
+              "profileKind": "spell-invocation"
+            },
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-command-drop-held-object",
+              "profileKind": "table-caller"
+            },
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-command-approach-route",
+              "profileKind": "table-caller"
+            },
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-command-flee-route",
+              "profileKind": "table-caller"
+            }
+          ],
+          "unitId": "command"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.reaction-counterspell",
+              "profileKind": "reaction"
+            }
+          ],
+          "unitId": "counterspell"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.hit-point-restoration",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "cure_wounds"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-dancing-lights-movable-dim-light",
+              "profileKind": "table-caller"
+            }
+          ],
+          "unitId": "dancing_lights"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.passive-armor-class-bonus",
+              "profileKind": "passive"
+            }
+          ],
+          "unitId": "defense"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.invocation-damage-save-or-attack",
+              "profileKind": "spell-invocation"
+            },
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-forced-reaction-movement",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "dissonant_whispers"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-weapon-damage-rider",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "divine_favor"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-after-hit-damage",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "divine_smite"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "character-creation.class-feature-option-projection",
+              "profileKind": "character-creation"
+            }
+          ],
+          "unitId": "druid_primal_order"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-beam-sequence",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "eldritch_blast"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-after-hit-restraint-turn-start-damage",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "ensnaring_strike"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-condition-save",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "entangle"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-expeditious-retreat-dash",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "expeditious_retreat"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-attack-roll-advantage-save",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "faerie_fire"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.scalar-buff",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "false_life"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.passive-ranged-attack-roll-bonus",
+              "profileKind": "passive"
+            }
+          ],
+          "unitId": "feat_archery"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "unit-feature.attack-roll-miss-to-hit-replacement",
+              "profileKind": "persistent-effect"
+            }
+          ],
+          "unitId": "feat_boon_of_combat_prowess"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.weapon-damage-dice-roll-choice",
+              "profileKind": "persistent-effect"
+            }
+          ],
+          "unitId": "feat_savage_attacker"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-feather-fall-mitigation",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "feather_fall"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.action-surge-resource",
+              "profileKind": "resource"
+            }
+          ],
+          "unitId": "fighter_action_surge"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "unit-feature.attack-action-attack-count-scaling",
+              "profileKind": "passive"
+            }
+          ],
+          "unitId": "fighter_extra_attack"
+        },
+        {
+          "joinStatus": "mapped-open",
+          "profiles": [
+            {
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                  "runtime": "character-creation",
+                  "status": "needs-qnt-owner",
+                  "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+                }
+              ],
+              "profileId": "character-creation.class-feature-feat-choice",
+              "profileKind": "character-creation"
+            },
+            {
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                  "runtime": "character-creation",
+                  "status": "needs-qnt-owner",
+                  "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+                }
+              ],
+              "profileId": "character-creation.class-feature-advancement-replacement",
+              "profileKind": "character-creation"
+            }
+          ],
+          "unitId": "fighter_fighting_style"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.weapon-critical-range-19",
+              "profileKind": "passive"
+            }
+          ],
+          "unitId": "fighter_improved_critical"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.self-bonus-action-healing",
+              "profileKind": "bonus-action"
+            }
+          ],
+          "unitId": "fighter_second_wind"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "unit-feature.failed-ability-check-resource-boost",
+              "profileKind": "resource"
+            }
+          ],
+          "unitId": "fighter_tactical_mind"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.invocation-damage-save-or-attack",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "fire_bolt"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-fog-cloud-obscurement",
+              "profileKind": "table-caller"
+            }
+          ],
+          "unitId": "fog_cloud"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-grease-ground-hazard",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "grease"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-roll-modifier",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "guidance"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.invocation-damage-save-or-attack",
+              "profileKind": "spell-invocation"
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.readied-action-time-spell",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "guiding_bolt"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.hit-point-restoration",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "healing_word"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.reaction-hellish-rebuke",
+              "profileKind": "reaction"
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.invocation-damage-save-or-attack",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "hellish_rebuke"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-condition-immunity-turn-start-temporary-hit-points",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "heroism"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-marked-damage-rider",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "hex"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-hideous-laughter-repeat-save-lifecycle",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "hideous_laughter"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-marked-damage-rider",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "hunters_mark"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.invocation-damage-save-or-attack",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "ice_knife"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.invocation-damage-save-or-attack",
+              "profileKind": "spell-invocation"
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.readied-action-time-spell",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "inflict_wounds"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-jump-movement-replacement",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "jump"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-object-light",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "light"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.scalar-buff",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "longstrider"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.invocation-damage-save-or-attack",
+              "profileKind": "spell-invocation"
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.readied-action-time-spell",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "mage_armor"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.invocation-damage-save-or-attack",
+              "profileKind": "spell-invocation"
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.readied-action-time-spell",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "magic_missile"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.hit-point-restoration",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "mass_cure_wounds"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.hit-point-restoration",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "mass_healing_word"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "unit-feature.weapon-mastery-cleave",
+              "profileKind": "persistent-effect"
+            }
+          ],
+          "unitId": "mastery_cleave"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "unit-feature.weapon-mastery-sap",
+              "profileKind": "persistent-effect"
+            }
+          ],
+          "unitId": "mastery_sap"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "unit-feature.weapon-mastery-topple",
+              "profileKind": "persistent-effect"
+            }
+          ],
+          "unitId": "mastery_topple"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "unit-feature.attack-damage-reduction-zero-damage-redirect",
+              "profileKind": "reaction"
+            }
+          ],
+          "unitId": "monk_deflect_attacks"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "unit-feature.martial-arts-attack-projection",
+              "profileKind": "passive"
+            }
+          ],
+          "unitId": "monk_martial_arts"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet Armor Class base formula selection from build, loadout, and class-feature facts"
+                }
+              ],
+              "profileId": "character-sheet.armor-class-base-formula",
+              "profileKind": "character-sheet"
+            }
+          ],
+          "unitId": "monk_unarmored_defense"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "unit-feature.passive-speed-bonus",
+              "profileKind": "passive"
+            }
+          ],
+          "unitId": "monk_unarmored_movement"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.alternate-action-cost",
+              "profileKind": "bonus-action"
+            }
+          ],
+          "unitId": "mycelium_step"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "unit-feature.bonus-action-dash-temporary-hit-points",
+              "profileKind": "bonus-action"
+            }
+          ],
+          "unitId": "orc_adrenaline_rush"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.zero-hit-point-replacement",
+              "profileKind": "persistent-effect"
+            }
+          ],
+          "unitId": "orc_relentless_endurance"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "unit-feature.attack-action-attack-count-scaling",
+              "profileKind": "passive"
+            }
+          ],
+          "unitId": "paladin_extra_attack"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "character-sheet.healing-resource-action",
+              "profileKind": "character-sheet"
+            }
+          ],
+          "unitId": "paladin_lay_on_hands"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-after-hit-damage",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "paladin_paladins_smite"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                  "runtime": "character-creation",
+                  "status": "needs-qnt-owner",
+                  "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+                }
+              ],
+              "profileId": "character-creation.weapon-mastery-choice",
+              "profileKind": "character-creation"
+            },
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "character-sheet.weapon-mastery-reselection",
+              "profileKind": "character-sheet"
+            }
+          ],
+          "unitId": "paladin_weapon_mastery"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.invocation-damage-save-or-attack",
+              "profileKind": "spell-invocation"
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.readied-action-time-spell",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "poison_spray"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.invocation-damage-save-or-attack",
+              "profileKind": "spell-invocation"
+            },
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-held-light-emitter",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "produce_flame"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.creature-type-protection-and-charm",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "protection_from_evil_and_good"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "character-creation.skill-expertise-choice",
+              "profileKind": "character-creation"
+            }
+          ],
+          "unitId": "ranger_deft_explorer"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "unit-feature.attack-action-attack-count-scaling",
+              "profileKind": "passive"
+            }
+          ],
+          "unitId": "ranger_extra_attack"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "unit-feature.passive-speed-kind-grants",
+              "profileKind": "passive"
+            }
+          ],
+          "unitId": "ranger_roving"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                  "runtime": "character-creation",
+                  "status": "needs-qnt-owner",
+                  "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+                }
+              ],
+              "profileId": "character-creation.weapon-mastery-choice",
+              "profileKind": "character-creation"
+            },
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "character-sheet.weapon-mastery-reselection",
+              "profileKind": "character-sheet"
+            }
+          ],
+          "unitId": "ranger_weapon_mastery"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.invocation-damage-save-or-attack",
+              "profileKind": "spell-invocation"
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.readied-action-time-spell",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "ray_of_frost"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.invocation-damage-save-or-attack",
+              "profileKind": "spell-invocation"
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.readied-action-time-spell",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "ray_of_sickness"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-damage-reduction",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "resistance"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.alternate-action-cost",
+              "profileKind": "bonus-action"
+            }
+          ],
+          "unitId": "rogue_cunning_action"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.save-damage-replacement",
+              "profileKind": "passive"
+            }
+          ],
+          "unitId": "rogue_evasion"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "character-creation.skill-expertise-choice",
+              "profileKind": "character-creation"
+            }
+          ],
+          "unitId": "rogue_expertise"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.attack-damage-rider",
+              "profileKind": "persistent-effect"
+            }
+          ],
+          "unitId": "rogue_sneak_attack"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                },
+                {
+                  "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+                }
+              ],
+              "profileId": "unit-feature.reaction-roll-or-damage-reduction",
+              "profileKind": "reaction"
+            }
+          ],
+          "unitId": "rogue_uncanny_dodge"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                  "runtime": "character-creation",
+                  "status": "needs-qnt-owner",
+                  "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+                }
+              ],
+              "profileId": "character-creation.weapon-mastery-choice",
+              "profileKind": "character-creation"
+            },
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "character-sheet.weapon-mastery-reselection",
+              "profileKind": "character-sheet"
+            }
+          ],
+          "unitId": "rogue_weapon_mastery"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.invocation-damage-save-or-attack",
+              "profileKind": "spell-invocation"
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.readied-action-time-spell",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "sacred_flame"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-sanctuary-targeting-interdiction",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "sanctuary"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-after-hit-timed-damage-save",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "searing_smite"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.reaction-shield",
+              "profileKind": "reaction"
+            }
+          ],
+          "unitId": "shield"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.scalar-buff",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "shield_of_faith"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-weapon-attack-override",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "shillelagh"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.invocation-damage-save-or-attack",
+              "profileKind": "spell-invocation"
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.readied-action-time-spell",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "shocking_grasp"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-sleep-target-admission",
+              "profileKind": "table-caller"
+            },
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-sleep-repeat-save-lifecycle",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "sleep"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "unit-feature.innate-sorcery-activation",
+              "profileKind": "persistent-effect"
+            }
+          ],
+          "unitId": "sorcerer_innate_sorcery"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.invocation-damage-save-or-attack",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "sorcerous_burst"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-make-stable",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "spare_the_dying"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.invocation-damage-save-or-attack",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "starry_wisp"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.invocation-damage-save-or-attack",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "thunderwave"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-spell-hosted-weapon-attack",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "true_strike"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.invocation-damage-save-or-attack",
+              "profileKind": "spell-invocation"
+            },
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.readied-action-time-spell",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "vicious_mockery"
+        },
+        {
+          "joinStatus": "mapped-open",
+          "profiles": [
+            {
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                  "runtime": "character-creation",
+                  "status": "needs-qnt-owner",
+                  "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+                }
+              ],
+              "profileId": "character-creation.eldritch-invocation-choice",
+              "profileKind": "character-creation"
+            },
+            {
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                  "runtime": "character-creation",
+                  "status": "needs-qnt-owner",
+                  "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+                }
+              ],
+              "profileId": "character-creation.class-feature-advancement-replacement",
+              "profileKind": "character-creation"
+            },
+            {
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                  "runtime": "character-creation",
+                  "status": "needs-qnt-owner",
+                  "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+                }
+              ],
+              "profileId": "character-creation.warlock-pact-magic-advancement",
+              "profileKind": "character-creation"
+            }
+          ],
+          "unitId": "warlock_eldritch_invocations"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "character-sheet.pact-slot-recovery",
+              "profileKind": "character-sheet"
+            }
+          ],
+          "unitId": "warlock_magical_cunning"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "character-sheet.short-rest-spell-slot-recovery",
+              "profileKind": "character-sheet"
+            }
+          ],
+          "unitId": "wizard_arcane_recovery"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "character-sheet.spellbook-ritual-invocation",
+              "profileKind": "character-sheet"
+            }
+          ],
+          "unitId": "wizard_ritual_adept"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "character-creation.skill-expertise-choice",
+              "profileKind": "character-creation"
+            }
+          ],
+          "unitId": "wizard_scholar"
+        }
+      ]
+    }
+  },
   "taskClaims": [
     {
       "claimKind": "qnt-proof",

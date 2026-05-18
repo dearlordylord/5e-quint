@@ -350,14 +350,36 @@ Rules-kernel coverage is the obligation ledger for reducer-owned semantics.
 Its denominator is TS-current reducer behavior after Surface admission, not raw
 code coverage, catalog breadth, parser failure coverage, or unsupported authored
 records. The active artifacts live in `plans/rules-kernel-coverage/`.
+Authored-content breadth remains in `plans/unit-profile-coverage/`; the join
+between the two lanes is `plans/rules-kernel-coverage/profile-obligations.jsonl`.
+Do not duplicate profile-to-obligation mappings in Unit claims, profile rows, or
+obligation rows.
 
-A semantic obligation is covered only when the full chain exists:
+A Surface-backed semantic obligation is covered only when the full chain exists:
 
 ```text
-Surface record or reducer entry point
+Surface record
         |
         v
-support profile or boundary classification
+support profile
+        |
+        v
+semantic obligation id
+        |
+        v
+QNT owner
+        |
+        v
+production TypeScript runtime owner
+        |
+        v
+executable parity witness
+```
+
+Direct reducer-entrypoint obligations use the shorter chain:
+
+```text
+reducer entry point
         |
         v
 semantic obligation id
@@ -377,6 +399,13 @@ QNT-owned projection. A QNT owner without an executable TS witness is only a
 spec claim; a TS test without a QNT owner is only regression coverage. Boundary
 or unsupported behavior can be recorded outside the QNT denominator only when
 the boundary classification is explicit.
+
+Focused MBT with random traces is the default parity witness for reducer
+procedures, sequencing, holes, reactions, resources, active effects, and
+interleavings. Deterministic QNT replay is a replay witness, not MBT coverage;
+it is reserved for fixed projections or small finite fixtures with explicitly
+named cases. Index-gated replay is not a general MBT pattern and must not
+replace random MBT where branch interaction is the coverage risk.
 
 Generator readiness is a separate C-axis record. It asks whether the QNT owner
 is shaped like semantic core that a future QNT-to-Rust generator could consume.
@@ -416,6 +445,7 @@ rewritten, or explicitly ledgered for restoration.
 | `ASSUMPTIONS.md` | Explicit modeling choices where SRD is underspecified | Sole record of intentional RAW assumptions |
 | `packages/character-creation-runtime/VOCABULARY.md` | Character-creation runtime terms | Character-creation package vocabulary |
 | `plans/rules-kernel-coverage/` | Reducer semantic obligation coverage and generator-readiness ledger | Coverage authority for TS-current reducer semantics |
+| `plans/unit-profile-coverage/` | Authored Surface Unit/profile support breadth | Coverage authority for authored-content support and the generated rules-kernel join view |
 | `packages/core/ARCHITECTURE.md` | Core-specific runtime and Quint/TS guidance | Core lane architecture |
 | Package READMEs | Package-owned APIs and local invariants | Local package contracts |
 

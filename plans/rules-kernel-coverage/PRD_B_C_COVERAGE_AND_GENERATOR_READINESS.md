@@ -26,8 +26,8 @@ Close the existing rules-kernel coverage baseline first, then run a separate
 generator-readiness program.
 
 For B, the rules-kernel coverage lane becomes the source of truth for
-TS-current reducer semantic coverage. A reducer feature counts as covered only
-when the chain is complete:
+TS-current reducer semantic coverage. Surface-backed reducer features count as
+covered only when the chain is complete:
 
 ```text
 Surface record
@@ -35,6 +35,17 @@ Surface record
   -> support profile
   -> semantic obligation id
   -> QNT owner
+  -> executable TS parity witness
+```
+
+Reducer semantics without a Surface Unit profile enter through the shorter
+direct entrypoint chain:
+
+```text
+reducer entry point
+  -> semantic obligation id
+  -> QNT owner
+  -> production TypeScript runtime owner
   -> executable TS parity witness
 ```
 
@@ -73,8 +84,9 @@ dry run that makes a future generator plausible.
 - A reducer semantic is any branch or state transition that changes legal table-observable game state or legal next moves.
 - Public protocol failures, malformed payloads, unknown ids, and parser errors are boundary-only unless they encode a rule-semantic rejection.
 - Surface support requires production admission into a typed executable support profile plus an executable runtime path. Schema/catalog presence alone is not support.
-- The primary manifest is profile-centered. Surface records are evidence rows that point to profiles.
+- The rules-kernel manifest is obligation-centered. Surface-backed joins are profile-centered, and Surface records are evidence rows that point to profiles.
 - Support profiles are split by reducer procedure shape, not by authored name.
+- The profile-to-obligation join is owned only by `profile-obligations.jsonl`; obligation rows and Unit-profile rows must not duplicate that mapping.
 - Composed profiles are allowed, but composition obligations must expose sequencing, shared resources, active-effect handoff, and cleanup points.
 - QNT owns abstract option legality, cardinality, timing, and effects. Deterministic Surface evidence owns concrete option enumeration and display payloads.
 - B closure removes transitional `needs-*` statuses from the baseline before the lane becomes mandatory for new reducer semantics.
@@ -89,9 +101,10 @@ dry run that makes a future generator plausible.
 - The rules-kernel coverage checker is the main gate for manifest consistency.
 - Covered obligations require source markers for QNT owner, runtime owner, and parity witness.
 - Parity witnesses must be executable and QNT-connected.
-- Focused MBT is used for sequencing, holes, reactions, resources, active effects, and interleavings.
-- Deterministic QNT replay is acceptable for fixed projection/scalar obligations.
-- QNT-generated projection checks are acceptable when QNT is the oracle and TS is mechanically compared against it.
+- Focused random MBT is used for sequencing, holes, reactions, resources, active effects, and interleavings.
+- Deterministic QNT replay is acceptable for fixed projection/scalar obligations and tiny explicitly named finite fixtures. It is a replay witness, not MBT coverage, and must not be copied into procedure/interleaving coverage.
+- Index-gated deterministic replay such as `qReplayIndex` requires an executable `deterministicReplayRationale`: the obligation must be closed over explicitly named cases, and random exploration must add no sequencing or interleaving value. Branch rarity alone is not enough reason to avoid focused random MBT.
+- QNT-generated projection checks are not an accepted parity witness kind yet; adding them requires a checker-enforced QNT/action/projection contract.
 - Plain TS unit tests do not count as full-circle QNT coverage by themselves.
 - Deterministic Surface admission/projection tests count for the Surface-to-profile link, not for profile semantics by themselves.
 - Existing unit-profile and raw-coverage lanes remain separate and should continue to validate alongside rules-kernel coverage.

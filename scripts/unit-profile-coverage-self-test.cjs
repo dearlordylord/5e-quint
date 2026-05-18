@@ -16,6 +16,7 @@ const {
 const { fail, toRepoPath } = require("./unit-profile-coverage-io.cjs");
 const {
   validateCollections,
+  validateCoverageInputs,
   validateOwnerClaims,
 } = require("./unit-profile-coverage-validation.cjs");
 
@@ -267,6 +268,62 @@ function runSelfTest(root) {
       if (!reverseTaskClaimDriftIssues.includes(expectedIssue)) {
         fail(
           `Self-test failed: expected reverse task claim drift issue ${JSON.stringify(expectedIssue)}, got ${JSON.stringify(reverseTaskClaimDriftIssues)}`,
+        );
+      }
+    }
+    const copiedJoinFieldIssues = validateCoverageInputs({
+      root: tempDir,
+      collections: {
+        collections: [{ id: "srd-5.2.1", policy: { tag: "srd" } }],
+      },
+      inventory: [
+        {
+          unitId: "fixture_unit",
+          collectionId: "srd-5.2.1",
+          sourceRecordPath: "fixture/unit.json",
+          provenance: { kind: "srd-5.2.1" },
+          rawRecord: {},
+        },
+      ],
+      profiles: [
+        {
+          id: "fixture.profile",
+          profileKind: "equipment",
+          qntOwners: [],
+          runtimeOwners: [],
+          verificationOwners: [],
+          obligationIds: ["BATTLE.SAMPLE"],
+        },
+      ],
+      unitClaims: [
+        {
+          unitId: "fixture_unit",
+          collectionId: "srd-5.2.1",
+          claim: {
+            tag: "supported-profile",
+            profileIds: ["fixture.profile"],
+            rulesKernelObligations: ["BATTLE.SAMPLE"],
+          },
+        },
+      ],
+      unitEvidence: [],
+      taskClaims: [],
+      authoredSurfaceUnits: [],
+      scannedClaims: {
+        profileClaims: [],
+        unitEvidence: [],
+        unitIdentityMbtReplays: [],
+        selectedUnitIdentityReplays: [],
+        selectedUnitIdentityReplayConsumers: [],
+      },
+    });
+    for (const expectedIssue of [
+      "fixture.profile profile row must not copy rules-kernel join field obligationIds; use plans/rules-kernel-coverage/profile-obligations.jsonl.",
+      "Unit fixture_unit claim row.claim must not copy rules-kernel join field rulesKernelObligations; use plans/rules-kernel-coverage/profile-obligations.jsonl.",
+    ]) {
+      if (!copiedJoinFieldIssues.includes(expectedIssue)) {
+        fail(
+          `Self-test failed: expected copied rules-kernel join field issue ${JSON.stringify(expectedIssue)}, got ${JSON.stringify(copiedJoinFieldIssues)}`,
         );
       }
     }

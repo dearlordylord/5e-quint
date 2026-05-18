@@ -14,6 +14,10 @@ const {
   runtimes,
 } = require("./rules-kernel-coverage-config.cjs");
 const { scanClaimFiles } = require("./rules-kernel-coverage-claim-scan.cjs");
+const {
+  rulesKernelProfileKinds,
+  rulesKernelProfileKindClassificationIssues,
+} = require("./unit-profile-coverage-config.cjs");
 
 const root = process.env.RULES_KERNEL_COVERAGE_ROOT ?? process.cwd();
 const write = process.argv.includes("--write");
@@ -108,6 +112,106 @@ function validateStringArray(value, context) {
   );
 }
 
+function findObjectEnd(text, openBraceIndex) {
+  let depth = 0;
+  let quote = null;
+  let escaped = false;
+  let lineComment = false;
+  let blockComment = false;
+  for (let index = openBraceIndex; index < text.length; index += 1) {
+    const char = text[index];
+    const next = text[index + 1];
+    if (lineComment) {
+      if (char === "\n") lineComment = false;
+      continue;
+    }
+    if (blockComment) {
+      if (char === "*" && next === "/") {
+        blockComment = false;
+        index += 1;
+      }
+      continue;
+    }
+    if (quote !== null) {
+      if (escaped) {
+        escaped = false;
+      } else if (char === "\\") {
+        escaped = true;
+      } else if (char === quote) {
+        quote = null;
+      }
+      continue;
+    }
+    if (char === "/" && next === "/") {
+      lineComment = true;
+      index += 1;
+      continue;
+    }
+    if (char === "/" && next === "*") {
+      blockComment = true;
+      index += 1;
+      continue;
+    }
+    if (char === '"' || char === "'" || char === "`") {
+      quote = char;
+      continue;
+    }
+    if (char === "{") depth += 1;
+    if (char === "}") {
+      depth -= 1;
+      if (depth === 0) return index;
+    }
+  }
+  return -1;
+}
+
+function runObjectBodies(text) {
+  const bodies = [];
+  const runPattern = /\brun\s*\(\s*\{/g;
+  for (
+    let match = runPattern.exec(text);
+    match !== null;
+    match = runPattern.exec(text)
+  ) {
+    const openBraceIndex = text.indexOf("{", match.index);
+    const closeBraceIndex = findObjectEnd(text, openBraceIndex);
+    if (closeBraceIndex < 0) continue;
+    bodies.push(text.slice(openBraceIndex + 1, closeBraceIndex));
+    runPattern.lastIndex = closeBraceIndex + 1;
+  }
+  return bodies;
+}
+
+function extractRunSpecLiteral(body) {
+  const pathResolveMatch = body.match(
+    /\bspec\s*:\s*path\.resolve\s*\(\s*import\.meta\.dirname\s*,\s*(["'])([^"']+)\1\s*,?\s*\)/,
+  );
+  if (pathResolveMatch) return pathResolveMatch[2];
+  const directStringMatch = body.match(/\bspec\s*:\s*(["'])([^"']+)\1/);
+  return directStringMatch?.[2];
+}
+
+function extractRunStepLiteral(body) {
+  const stepMatch = body.match(/\bstep\s*:\s*(["'])([^"']+)\1/);
+  return stepMatch?.[2];
+}
+
+function extractRunTargets(rootPath, ownerPath, witnessText) {
+  const ownerDir = path.dirname(path.join(rootPath, ownerPath));
+  return runObjectBodies(witnessText)
+    .map((body) => {
+      const specLiteral = extractRunSpecLiteral(body);
+      const step = extractRunStepLiteral(body);
+      if (specLiteral === undefined || step === undefined) return undefined;
+      return {
+        hasStateCheck: /\bstateCheck\s*:/.test(body),
+        specPath: repoPath(rootPath, path.resolve(ownerDir, specLiteral)),
+        step,
+      };
+    })
+    .filter((target) => target !== undefined);
+}
+
 function validateRequiredStringArray(value, context) {
   if (value === undefined) return [`${context} must be an array.`];
   return validateStringArray(value, context);
@@ -138,6 +242,31 @@ function validateWitness(witness, context) {
     issues.push(
       `${context}.stepAction must be a non-empty string when present.`,
     );
+  }
+  if (
+    witness.kind === "focused-mbt" ||
+    witness.kind === "deterministic-qnt-replay"
+  ) {
+    if (typeof witness.qntSpecPath !== "string" || witness.qntSpecPath.length === 0) {
+      issues.push(
+        `${context}.qntSpecPath must be a non-empty string for ${witness.kind} witnesses.`,
+      );
+    }
+    if (typeof witness.stepAction !== "string" || witness.stepAction.length === 0) {
+      issues.push(
+        `${context}.stepAction must be a non-empty string for ${witness.kind} witnesses.`,
+      );
+    }
+  }
+  if (witness.kind === "deterministic-qnt-replay") {
+    if (
+      typeof witness.deterministicReplayRationale !== "string" ||
+      witness.deterministicReplayRationale.trim().length === 0
+    ) {
+      issues.push(
+        `${context}.deterministicReplayRationale must be a non-empty string for deterministic-qnt-replay witnesses.`,
+      );
+    }
   }
   return issues;
 }
@@ -172,12 +301,7 @@ function validateObligationShape(obligation) {
   if (!obligationStatuses.has(obligation.status)) {
     issues.push(`${obligation.id} has unknown status ${obligation.status}.`);
   }
-  for (const field of [
-    "profiles",
-    "surfaceEvidence",
-    "qntOwners",
-    "runtimeOwners",
-  ]) {
+  for (const field of ["surfaceEvidence", "qntOwners", "runtimeOwners"]) {
     issues.push(
       ...validateStringArray(obligation[field], `${obligation.id}.${field}`),
     );
@@ -207,14 +331,21 @@ function validateObligationShape(obligation) {
   return issues;
 }
 
-function validateProfileMapping(mapping, index, obligationIds, profileIds) {
+function validateProfileMapping(mapping, index, obligationIds, profilesById) {
   const issues = [];
   const context = `profile-obligations row ${index + 1}`;
   if (!isRecord(mapping)) return [`${context} must be an object.`];
   if (typeof mapping.profileId !== "string" || mapping.profileId.length === 0) {
     issues.push(`${context}.profileId must be a non-empty string.`);
-  } else if (!profileIds.has(mapping.profileId)) {
-    issues.push(`${context} references unknown profile ${mapping.profileId}.`);
+  } else {
+    const profile = profilesById.get(mapping.profileId);
+    if (profile === undefined) {
+      issues.push(`${context} references unknown profile ${mapping.profileId}.`);
+    } else if (!rulesKernelProfileKinds.has(profile.profileKind)) {
+      issues.push(
+        `${context} maps non-rules-kernel profile ${mapping.profileId} with profileKind ${profile.profileKind}.`,
+      );
+    }
   }
   if (
     !Array.isArray(mapping.obligationIds) ||
@@ -222,7 +353,14 @@ function validateProfileMapping(mapping, index, obligationIds, profileIds) {
   ) {
     issues.push(`${context}.obligationIds must be a non-empty array.`);
   } else {
+    const obligationIdSet = new Set();
     for (const obligationId of mapping.obligationIds) {
+      if (obligationIdSet.has(obligationId)) {
+        issues.push(
+          `${context}.obligationIds repeats obligation ${obligationId}.`,
+        );
+      }
+      obligationIdSet.add(obligationId);
       if (!obligationIds.has(obligationId)) {
         issues.push(
           `${context} references unknown obligation ${obligationId}.`,
@@ -399,6 +537,27 @@ function validateCoveredEvidence(rootPath, obligation, markerIndex) {
           `${obligation.id} parity witness ${witness.ownerPath} does not define a stateCheck().`,
         );
       }
+      if (
+        typeof witness.qntSpecPath === "string" &&
+        typeof witness.stepAction === "string"
+      ) {
+        const runTargets = extractRunTargets(
+          rootPath,
+          witness.ownerPath,
+          witnessText,
+        );
+        const hasDeclaredRunTarget = runTargets.some(
+          (target) =>
+            target.specPath === witness.qntSpecPath &&
+            target.step === witness.stepAction &&
+            target.hasStateCheck,
+        );
+        if (!hasDeclaredRunTarget) {
+          issues.push(
+            `${obligation.id} parity witness ${witness.ownerPath} does not run ${witness.qntSpecPath} with step ${witness.stepAction} and stateCheck.`,
+          );
+        }
+      }
     }
     if (witness.qntSpecPath !== undefined) {
       const qntPath = path.join(rootPath, witness.qntSpecPath);
@@ -406,22 +565,26 @@ function validateCoveredEvidence(rootPath, obligation, markerIndex) {
         issues.push(
           `${obligation.id} parity QNT spec ${witness.qntSpecPath} does not exist.`,
         );
-      } else if (witness.stepAction !== undefined) {
+      } else {
         const qntText = fs.readFileSync(qntPath, "utf8");
-        const stepPattern = new RegExp(
-          `\\baction\\s+${escapeRegExp(witness.stepAction)}\\b`,
-        );
-        if (!stepPattern.test(qntText)) {
+        if (
+          /\bqReplayIndex\b/.test(qntText) &&
+          witness.kind !== "deterministic-qnt-replay"
+        ) {
           issues.push(
-            `${obligation.id} parity QNT spec ${witness.qntSpecPath} has no action ${witness.stepAction}.`,
+            `${obligation.id} parity QNT spec ${witness.qntSpecPath} uses qReplayIndex, so the witness kind must be deterministic-qnt-replay with deterministicReplayRationale.`,
           );
         }
-      }
-      const specBasename = path.basename(witness.qntSpecPath);
-      if (!witnessText.includes(specBasename)) {
-        issues.push(
-          `${obligation.id} parity witness ${witness.ownerPath} does not reference ${specBasename}.`,
-        );
+        if (witness.stepAction !== undefined) {
+          const stepPattern = new RegExp(
+            `\\baction\\s+${escapeRegExp(witness.stepAction)}\\b`,
+          );
+          if (!stepPattern.test(qntText)) {
+            issues.push(
+              `${obligation.id} parity QNT spec ${witness.qntSpecPath} has no action ${witness.stepAction}.`,
+            );
+          }
+        }
       }
     }
   }
@@ -462,15 +625,42 @@ function buildSummary(obligations) {
   };
 }
 
+function profilesByObligation(profileObligations) {
+  const groups = new Map();
+  for (const mapping of profileObligations) {
+    for (const obligationId of mapping.obligationIds ?? []) {
+      const current = groups.get(obligationId) ?? [];
+      current.push(mapping.profileId);
+      groups.set(obligationId, current);
+    }
+  }
+  return new Map(
+    Array.from(groups.entries()).map(([obligationId, profileIds]) => [
+      obligationId,
+      Array.from(new Set(profileIds)).sort(),
+    ]),
+  );
+}
+
 function buildMatrix(rootPath) {
   const paths = coveragePaths(rootPath);
   const obligations = readJsonl(rootPath, paths.obligations);
   const profileObligations = readJsonl(rootPath, paths.profileObligations);
   const generatorReadiness = readJsonl(rootPath, paths.generatorReadiness);
   const profiles = readJsonl(rootPath, paths.unitProfiles);
+  const profileIdsByObligation = profilesByObligation(profileObligations);
   return {
     summary: buildSummary(obligations),
-    obligations: obligations.map((obligation) => stable(obligation)),
+    derivedFields: {
+      "obligations[].profiles":
+        "Derived from profileObligations by obligation id; authored obligations.jsonl rows must not contain profiles.",
+    },
+    obligations: obligations.map((obligation) =>
+      stable({
+        ...obligation,
+        profiles: profileIdsByObligation.get(obligation.id) ?? [],
+      }),
+    ),
     profileObligations: profileObligations.map((mapping) => stable(mapping)),
     generatorReadiness: generatorReadiness.map((readiness) =>
       stable(readiness),
@@ -515,8 +705,9 @@ function renderReport(matrix, issues) {
   lines.push("| Obligation | Runtime | Status | Profiles |");
   lines.push("| --- | --- | --- | --- |");
   for (const obligation of matrix.obligations) {
+    const profiles = renderObligationProfiles(obligation);
     lines.push(
-      `| \`${obligation.id}\` | ${obligation.runtime} | ${obligation.status} | ${(obligation.profiles ?? []).map((profile) => `\`${profile}\``).join(", ")} |`,
+      `| \`${obligation.id}\` | ${obligation.runtime} | ${obligation.status} | ${profiles} |`,
     );
   }
   lines.push("");
@@ -561,6 +752,20 @@ function renderReport(matrix, issues) {
   return `${lines.join("\n")}\n`;
 }
 
+function renderObligationProfiles(obligation) {
+  if ((obligation.profiles ?? []).length > 0) {
+    return obligation.profiles.map((profile) => `\`${profile}\``).join(", ");
+  }
+  if (coveredStatuses.has(obligation.status)) return "_direct reducer entrypoint_";
+  if (obligation.status === "needs-surface-evidence") {
+    return "_surface join pending_";
+  }
+  if (nonSemanticStatuses.has(obligation.status)) {
+    return "_outside reducer semantics_";
+  }
+  return "_profile mapping pending_";
+}
+
 function buildKernelCoverage({ root: rootPath }) {
   const paths = coveragePaths(rootPath);
   const obligations = readJsonl(rootPath, paths.obligations);
@@ -570,9 +775,10 @@ function buildKernelCoverage({ root: rootPath }) {
   const scanned = scanClaimFiles(rootPath);
   const markerIndex = buildMarkerIndex(scanned.markers);
   const issues = [];
+  issues.push(...rulesKernelProfileKindClassificationIssues());
   const obligationIds = new Set();
   const obligationsById = new Map();
-  const profileIds = new Set(profiles.map((profile) => profile.id));
+  const profilesById = new Map(profiles.map((profile) => [profile.id, profile]));
 
   for (const [index, obligation] of obligations.entries()) {
     issues.push(
@@ -604,12 +810,22 @@ function buildKernelCoverage({ root: rootPath }) {
     }
   }
 
+  const mappedProfileIds = new Set();
   for (const [index, mapping] of profileObligations.entries()) {
     issues.push(
-      ...validateProfileMapping(mapping, index, obligationIds, profileIds),
+      ...validateProfileMapping(mapping, index, obligationIds, profilesById),
     );
+    if (isRecord(mapping) && typeof mapping.profileId === "string") {
+      if (mappedProfileIds.has(mapping.profileId)) {
+        issues.push(
+          `profile-obligations row ${index + 1}: duplicate profile mapping for ${mapping.profileId}.`,
+        );
+      }
+      mappedProfileIds.add(mapping.profileId);
+    }
   }
 
+  const derivedProfilesByObligation = profilesByObligation(profileObligations);
   const readinessObligationIds = new Set();
   for (const [index, readiness] of generatorReadiness.entries()) {
     if (isRecord(readiness) && typeof readiness.obligationId === "string") {
@@ -631,12 +847,11 @@ function buildKernelCoverage({ root: rootPath }) {
   }
 
   for (const obligation of obligations) {
-    for (const profileId of obligation.profiles ?? []) {
-      if (!profileIds.has(profileId)) {
-        issues.push(
-          `${obligation.id} references unknown unit profile ${profileId}.`,
-        );
-      }
+    if (Object.prototype.hasOwnProperty.call(obligation, "profiles")) {
+      const derived = derivedProfilesByObligation.get(obligation.id) ?? [];
+      issues.push(
+        `${obligation.id}.profiles is derived from profile-obligations.jsonl; remove the field from obligations.jsonl. Derived profiles: ${derived.join(", ") || "_none_"}.`,
+      );
     }
     if (coveredStatuses.has(obligation.status)) {
       issues.push(
@@ -663,8 +878,14 @@ function main() {
 
   const paths = coveragePaths(root);
   const result = buildKernelCoverage({ root });
+  if (result.issues.length > 0) {
+    for (const issue of result.issues) {
+      console.error(`rules-kernel-coverage: ${issue}`);
+    }
+    process.exitCode = 1;
+    return;
+  }
   const outputIssues = [
-    ...result.issues,
     ...compareOrWrite(
       root,
       write,

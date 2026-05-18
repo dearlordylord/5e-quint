@@ -23,13 +23,17 @@ No `needs-*` status remains after closure.
   decision, movement route fact, damage disposition, damage type choice, skill
   choice, ability choice, command option, Grapple/Shove outcome, and
   Concentration save.
-- Add focused QNT/replay witnesses only where the choice changes reducer state or
-  legal next moves.
+- Add focused random MBT/QNT parity witnesses where the choice changes reducer
+  state or legal next moves. Reserve deterministic replay for fixed boundary
+  projections or tiny closed fixtures.
 
 ## Phase 2: Battle Surface/Profile Join
 
 - Ensure every executable `plans/unit-profile-coverage/profiles.jsonl` row maps
   to one or more rules-kernel obligations.
+- Keep `profile-obligations.jsonl` as the single profile-to-obligation source;
+  generated Unit reports and rules-kernel reports must derive profile join
+  status from it.
 - Ensure every supported Unit evidence row follows:
 
   ```text
@@ -62,8 +66,9 @@ No `needs-*` status remains after closure.
 - Split `CHARACTER.BATTLE.HANDOFF.SETTLEMENT` into battle init projection,
   Armor Class base-choice forwarding, spellcasting/invocation projection, battle
   HP/condition/spell-slot settlement, and identity/max-HP conflict handling.
-- Prefer deterministic QNT replay for fixed projection/handoff facts and focused
-  MBT only when reducer sequencing or state interleaving is the risk.
+- Use deterministic QNT replay only for fixed projection/handoff facts with
+  closed, explicitly named cases. Use focused random MBT when reducer sequencing,
+  choices, or state interleaving are the risk.
 
 ## Phase 6: Tighten The Gate
 

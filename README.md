@@ -75,7 +75,13 @@ the runtime packages.
 **Rules kernel coverage** (`plans/rules-kernel-coverage/`) — semantic
 obligation manifest for TS-current reducer behavior. New reducer semantics are
 QNT-first and must connect back to production runtime behavior through a focused
-MBT or deterministic QNT replay witness.
+random MBT witness or deterministic QNT replay witness according to the lane's
+witness-mode rules.
+
+**Unit profile coverage** (`plans/unit-profile-coverage/`) — authored-content
+support breadth for Surface Units. Its generated reports include the
+rules-kernel join, so a supported Unit can be read through to reducer-semantic
+coverage without merging the two denominators.
 
 ## Running It
 

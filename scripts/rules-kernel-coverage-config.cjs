@@ -40,7 +40,6 @@ const obligationKinds = new Set([
 const parityWitnessKinds = new Set([
   "focused-mbt",
   "deterministic-qnt-replay",
-  "qnt-generated-projection",
 ]);
 
 const generatorReadinessStatuses = new Set([
