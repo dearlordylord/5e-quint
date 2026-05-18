@@ -28,8 +28,9 @@ QNT modules, such as `battle-runtime-find-familiar.qnt`,
 `battle-runtime-chained-spell-attack.qnt`, and
 `battle-runtime-save-gated-spell.qnt`, and `battle-runtime-marked-riders.qnt`,
 `battle-runtime-reaction-window.qnt`, `battle-runtime-combatant-side.qnt`, and
-`battle-runtime-concentration.qnt`, when the split follows SRD language and
-avoids duplicate state names or compatibility-wrapper churn.
+`battle-runtime-concentration.qnt`, `battle-runtime-actor-combatants.qnt`, and
+`battle-runtime-sanctuary.qnt`, when the split follows SRD language and avoids
+duplicate state names or compatibility-wrapper churn.
 
 The promoted MBT strategy is selective. MBT proves reducer facts after Surface
 decode/projection; it must not enumerate all Surface-authored content multiplied

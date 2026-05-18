@@ -1216,6 +1216,10 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
 - `battle-runtime-concentration.qnt` - Concentration Saving Throw DCs,
   Concentration-breaking active-effect cleanup, Sleep cleanup, and damage-ended
   Charm cleanup helpers.
+- `battle-runtime-actor-combatants.qnt` - actor-to-combatant projection helpers
+  for reducer procedures that update a selected creature in `BattleState`.
+- `battle-runtime-sanctuary.qnt` - Sanctuary ward active-effect lifecycle and
+  targeting-interdiction outcome helpers.
 - `battle-runtime.mbt.qnt` - package-local randomized model for the selected
   integrated promoted MBT path.
 

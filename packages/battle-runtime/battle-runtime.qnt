@@ -63,6 +63,8 @@ module battleRuntime {
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
   import battleRuntimeCombatantSide.* from "./battle-runtime-combatant-side"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
+  import battleRuntimeActorCombatants.* from "./battle-runtime-actor-combatants"
+  import battleRuntimeSanctuary.* from "./battle-runtime-sanctuary"
 
   // SRD traceability for this canonical battle runtime spec:
   // - Playing-the-Game.md lines 479-495: combat proceeds in rounds and turns
@@ -2251,53 +2253,6 @@ module battleRuntime {
   pure def featherFallMitigationActiveEffect(): ActiveEffect =
     FeatherFallMitigation({ durationTicks: 10 })
 
-  pure def sanctuaryWardActiveEffect(source: Actor): ActiveEffect =
-    SanctuaryWard({ source: source, durationTicks: 10 })
-
-  pure def activeEffectsWithoutSanctuaryWard(effects: Set[ActiveEffect]): Set[ActiveEffect] =
-    effects.filter(effect => match effect {
-      | SanctuaryWard(_) => false
-      | _ => true
-    })
-
-  pure def activeEffectsContainSanctuaryWard(effects: Set[ActiveEffect]): bool =
-    effects.exists(effect => match effect {
-      | SanctuaryWard(_) => true
-      | _ => false
-    })
-
-  pure def activeEffectsSanctuaryWardDurationTicks(effects: Set[ActiveEffect]): int =
-    effects.map(effect => match effect {
-      | SanctuaryWard(data) => data.durationTicks
-      | _ => 0
-    }).fold(0, (highest, ticks) => if (highest > ticks) highest else ticks)
-
-  pure def combatantWithSanctuaryWard(target: Combatant, source: Actor): Combatant =
-    {
-      ...target,
-      activeEffects: activeEffectsWithoutSanctuaryWard(target.activeEffects).union(Set(sanctuaryWardActiveEffect(source))),
-    }
-
-  pure def stateWithActorCombatant(state: BattleState, actor: Actor, combatant: Combatant): BattleState =
-    match actor {
-      | Fighter => { ...state, fighter: combatant }
-      | Goblin => { ...state, goblin: combatant }
-    }
-
-  pure def combatantForActor(state: BattleState, actor: Actor): Combatant =
-    match actor {
-      | Fighter => state.fighter
-      | Goblin => state.goblin
-    }
-
-  pure def battleStateAfterSanctuaryEarlyEndForActor(state: BattleState, actor: Actor): BattleState = {
-    val combatant = combatantForActor(state, actor)
-    stateWithActorCombatant(state, actor, {
-      ...combatant,
-      activeEffects: activeEffectsWithoutSanctuaryWard(combatant.activeEffects),
-    })
-  }
-
   pure def resolveSanctuarySpell(state: BattleState, target: Actor): BattleState =
     if (
       currentActor(state) != Fighter or
@@ -2317,58 +2272,6 @@ module battleRuntime {
         combatantWithSanctuaryWard(targetCombatant, Fighter),
       )
     }
-
-  pure def wardTargetingInterdictionApplies(
-    trigger: SanctuaryTargetingTrigger,
-  ): bool =
-    match trigger {
-      | SanctuaryAttackRollTargeting => true
-      | SanctuaryDamagingSpellTargeting => true
-      | SanctuaryAreaOfEffectTargeting => false
-    }
-
-  pure def wardInterdictionLosesAttackOrSpell(
-    outcome: SanctuaryInterdictionOutcome,
-  ): bool =
-    match outcome {
-      | SanctuarySaveSucceeded => false
-      | SanctuaryLoseAttackOrSpell => true
-      | SanctuaryChooseNewTarget(_) => false
-    }
-
-  pure def wardInterdictionTarget(
-    warded: Actor,
-    outcome: SanctuaryInterdictionOutcome,
-  ): Actor =
-    match outcome {
-      | SanctuarySaveSucceeded => warded
-      | SanctuaryLoseAttackOrSpell => warded
-      | SanctuaryChooseNewTarget(data) => data.target
-    }
-
-  pure def sanctuaryTargetingInterdictionOutcomeApplies(
-    state: BattleState,
-    warded: Actor,
-    trigger: SanctuaryTargetingTrigger,
-    outcome: SanctuaryInterdictionOutcome,
-  ): bool =
-    activeEffectsContainSanctuaryWard(combatantForActor(state, warded).activeEffects) and
-    wardTargetingInterdictionApplies(trigger) and
-    not(wardInterdictionLosesAttackOrSpell(outcome))
-
-  pure def sanctuaryTargetingInterdictionResolvedTarget(
-    state: BattleState,
-    warded: Actor,
-    trigger: SanctuaryTargetingTrigger,
-    outcome: SanctuaryInterdictionOutcome,
-  ): Actor =
-    if (
-      activeEffectsContainSanctuaryWard(combatantForActor(state, warded).activeEffects) and
-      wardTargetingInterdictionApplies(trigger)
-    )
-      wardInterdictionTarget(warded, outcome)
-    else
-      warded
 
   pure def activeFeatherFallDescentRateCapFeetPerRound(effects: Set[ActiveEffect]): int =
     if (effects.exists(effect => match effect {
