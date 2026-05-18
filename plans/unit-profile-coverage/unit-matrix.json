@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 374,
-      "numerator": 144,
-      "percent": "38.5%"
+      "numerator": 145,
+      "percent": "38.8%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 446,
-      "numerator": 176,
-      "percent": "39.5%"
+      "numerator": 177,
+      "percent": "39.7%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,47 +59,47 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 177
+      "value": 178
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 113,
-      "numerator": 113,
+      "denominator": 114,
+      "numerator": 114,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 177,
-      "numerator": 177,
+      "denominator": 178,
+      "numerator": 178,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 65,
-      "numerator": 65,
+      "denominator": 66,
+      "numerator": 66,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 65,
-      "numerator": 65,
+      "denominator": 66,
+      "numerator": 66,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 65,
-      "numerator": 65,
+      "denominator": 66,
+      "numerator": 66,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 65,
-      "numerator": 65,
+      "denominator": 66,
+      "numerator": 66,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 113,
+      "denominator": 114,
       "numerator": 104,
-      "percent": "92%"
+      "percent": "91.2%"
     },
     "supportedProfileCoverage": {
-      "denominator": 145,
-      "numerator": 113,
-      "percent": "77.9%"
+      "denominator": 146,
+      "numerator": 114,
+      "percent": "78.1%"
     }
   },
   "metricSemantics": [
@@ -2472,6 +2472,31 @@
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
         }
       ]
+    },
+    {
+      "id": "spell.invocation-self-teleport",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "sourceBoundary": "The runtime consumes the authored Misty Step spell and a caller-supplied unoccupied visible destination within 30 feet. It spends the caster's Bonus Action and Spell Slot, emits a self-teleport outcome, and records that teleportation spends no Movement, provokes no Opportunity Attacks, and carries worn and carried equipment. Automatic visibility, occupancy, blocked-destination fallback, and map-position derivation remain table/spatial facts outside this runtime boundary.",
+      "taskRefs": [
+        "L12G-SPELL-MISTY-STEP"
+      ],
+      "title": "Spell invocation spends a Bonus Action and Spell Slot to teleport the caster to a caller-supplied unoccupied visible destination",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-misty-step.test.ts"
+        }
+      ]
     }
   ],
   "taskClaims": [
@@ -4082,6 +4107,22 @@
         "character-sheet.pact-slot-recovery"
       ],
       "taskId": "L12G-AUTHOR-WARLOCK-MAGICAL-CUNNING"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Misty Step's Bonus Action level-2 Spell Slot spend, unoccupied visible destination within 30 feet, no Movement spend, no Opportunity Attack provocation, and worn/carried equipment transport.",
+      "profileIds": [
+        "spell.invocation-self-teleport"
+      ],
+      "taskId": "L12G-SPELL-MISTY-STEP"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover Misty Step catalog admission, Bonus Action spell discovery, teleport destination fill validation, Spell Slot spend, self-teleport outcome, no Movement spend, no Opportunity Attack provocation, and rejection without level-2-or-higher slots.",
+      "profileIds": [
+        "spell.invocation-self-teleport"
+      ],
+      "taskId": "L12G-SPELL-MISTY-STEP"
     }
   ],
   "units": [
@@ -11532,6 +11573,72 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "table/spatial owner",
+          "reason": "Automatic destination visibility, occupancy, blocked-destination fallback, and map-position derivation remain caller-supplied table/spatial facts outside the Misty Step runtime profile."
+        },
+        "profileIds": [
+          "spell.invocation-self-teleport"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Bonus Action level-2-or-higher Spell Slot casting",
+          "self teleport to a caller-supplied unoccupied visible destination within 30 feet",
+          "teleport outcome spends no Movement and provokes no Opportunity Attacks",
+          "worn and carried equipment travels with the caster"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-misty-step.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-SPELL-MISTY-STEP"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-self-teleport",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the authored Misty Step spell and a caller-supplied unoccupied visible destination within 30 feet. It spends the caster's Bonus Action and Spell Slot, emits a self-teleport outcome, and records that teleportation spends no Movement, provokes no Opportunity Attacks, and carries worn and carried equipment. Automatic visibility, occupancy, blocked-destination fallback, and map-position derivation remain table/spatial facts outside this runtime boundary.",
+          "taskRefs": [
+            "L12G-SPELL-MISTY-STEP"
+          ],
+          "title": "Spell invocation spends a Bonus Action and Spell Slot to teleport the caster to a caller-supplied unoccupied visible destination",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-misty-step.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/misty_step.json",
+      "unitId": "misty_step"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "profileIds": [
           "spell.invocation-damage-save-or-attack",
           "spell.readied-action-time-spell"
@@ -18025,24 +18132,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/mind_spike.json",
       "unitId": "mind_spike"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/misty_step.json",
-      "unitId": "misty_step"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

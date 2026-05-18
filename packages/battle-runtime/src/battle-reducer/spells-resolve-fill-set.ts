@@ -129,6 +129,9 @@ export type SpellFillSet =
         | undefined;
       readonly commandOptionChoice: BattleCommandOption | undefined;
       readonly areaChoice: BattleFogCloudAreaChoice | undefined;
+      readonly teleportDestination:
+        | Extract<BattleFill, { readonly kind: "teleportDestination" }>
+        | undefined;
       readonly dancingLightsPlacement:
         | Extract<BattleFill, { readonly kind: "dancingLightsPlacement" }>
         | undefined;
@@ -221,6 +224,9 @@ export function spellFillSet(
     | undefined;
   let commandOptionChoice: BattleCommandOption | undefined;
   let areaChoice: BattleFogCloudAreaChoice | undefined;
+  let teleportDestination:
+    | Extract<BattleFill, { readonly kind: "teleportDestination" }>
+    | undefined;
   let dancingLightsPlacement:
     | Extract<BattleFill, { readonly kind: "dancingLightsPlacement" }>
     | undefined;
@@ -434,6 +440,23 @@ export function spellFillSet(
         return { tag: "invalid", message: "Spell area was filled twice." };
       }
       areaChoice = fill.value;
+      continue;
+    }
+
+    if (fill.kind === "teleportDestination") {
+      if (invocation.procedure !== "selfTeleport") {
+        return {
+          tag: "invalid",
+          message: "Teleport destination does not match this spell act.",
+        };
+      }
+      if (teleportDestination !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Teleport destination was filled twice.",
+        };
+      }
+      teleportDestination = fill;
       continue;
     }
 
@@ -973,6 +996,7 @@ export function spellFillSet(
     thaumaturgyActiveOneMinuteEffectCount,
     commandOptionChoice,
     areaChoice,
+    teleportDestination,
     dancingLightsPlacement,
     damageTypeChoice,
     concentrationSavingThrows,
@@ -1010,6 +1034,7 @@ export function spellFillSetContainsOnlySpellCastReactionFacts(
     fillSet.thaumaturgyActiveOneMinuteEffectCount === undefined &&
     fillSet.commandOptionChoice === undefined &&
     fillSet.areaChoice === undefined &&
+    fillSet.teleportDestination === undefined &&
     fillSet.dancingLightsPlacement === undefined &&
     fillSet.damageTypeChoice === undefined &&
     fillSet.concentrationSavingThrows.length === 0 &&

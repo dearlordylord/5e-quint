@@ -94,6 +94,7 @@ import massHealingWordInput from "../../content/mass_healing_word.json";
 import masteryCleaveInput from "../../content/mastery_cleave.json";
 import masterySapInput from "../../content/mastery_sap.json";
 import masteryToppleInput from "../../content/mastery_topple.json";
+import mistyStepInput from "../../content/misty_step.json";
 import minorIllusionInput from "../../content/minor_illusion.json";
 import monkDeflectAttacksInput from "../../content/monk_deflect_attacks.json";
 import monkMartialArtsInput from "../../content/monk_martial_arts.json";
@@ -420,6 +421,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     jumpInput,
     lightInput,
     longstriderInput,
+    mistyStepInput,
     poisonSprayInput,
     protectionFromEvilAndGoodInput,
     produceFlameInput,

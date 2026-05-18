@@ -1642,6 +1642,14 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("selfTeleport"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("bonusAction"),
+      maxDistanceFeet: MovementFeet,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("sanctuaryTargetingInterdiction"),
       spell: BattleRuntimeObjectSchema,
       actionCost: Schema.Literal("bonusAction"),
@@ -1924,6 +1932,15 @@ export const BattleHoleSchema = Schema.Union(
       kind: Schema.Literal("pointOriginSphere"),
       radiusFeet: MovementFeet,
     }),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("teleportDestination"),
+    label: Schema.String,
+    spell: SupportedSpellInvocationSchema,
+    actorId: CombatantId,
+    maxDistanceFeet: MovementFeet,
+    requiresTableSpatialFact: Schema.Literal(true),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2366,6 +2383,17 @@ type BattleFillEncoded =
       readonly value: {
         readonly kind: "fogCloudArea";
         readonly areaId: string;
+      };
+    }
+  | {
+      readonly kind: "teleportDestination";
+      readonly holeId: string;
+      readonly value: {
+        readonly kind: "unoccupiedVisibleDestination";
+        readonly actorId: string;
+        readonly spellId: string;
+        readonly destinationId: string;
+        readonly distanceFeet: number;
       };
     }
   | {
@@ -2897,6 +2925,17 @@ export const BattleFillSchema: Schema.Schema<
       value: Schema.Struct({
         kind: Schema.Literal("fogCloudArea"),
         areaId: Schema.String,
+      }),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("teleportDestination"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Struct({
+        kind: Schema.Literal("unoccupiedVisibleDestination"),
+        actorId: CombatantId,
+        spellId: SpellId,
+        destinationId: BattleTablePositionId,
+        distanceFeet: MovementFeet,
       }),
     }),
     Schema.Struct({

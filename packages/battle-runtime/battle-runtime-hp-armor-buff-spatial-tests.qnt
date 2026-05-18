@@ -638,6 +638,23 @@ module battleRuntimeHpArmorBuffSpatialTests {
     }
   }
 
+  run test_misty_step_spends_bonus_action_slot_without_movement_or_opportunity_attack = {
+    val movedAlready = { ...initialState, fighter: { ...initialState.fighter, movementSpent: 10 } }
+    val teleported = resolveMistyStepSpell(movedAlready, 30, true)
+    val tooFar = resolveMistyStepSpell(initialState, 31, true)
+    val notVisibleUnoccupied = resolveMistyStepSpell(initialState, 30, false)
+    all {
+      assert(not(teleported.bonusActionAvailable)),
+      assert(battleActorHasCommittedSpellSlotUse(teleported, Fighter)),
+      assert(teleported.fighter.movementSpent == 10),
+      assert(not(mistyStepTeleportSpendsMovement)),
+      assert(not(mistyStepTeleportProvokesOpportunityAttacks)),
+      assert(mistyStepTeleportTransportsWornAndCarriedEquipment),
+      assert(tooFar == initialState),
+      assert(notVisibleUnoccupied == initialState),
+    }
+  }
+
   run test_divine_favor_adds_radiant_damage_to_fighter_weapon_hits = {
     val favored = resolveDivineFavor(initialState)
     val hit = resolveAttack(favored, 15, 10, fighterWeaponAttackDamageRollWithDivineFavor(4, 3), true)

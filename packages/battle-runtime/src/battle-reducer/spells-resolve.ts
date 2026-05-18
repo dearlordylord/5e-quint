@@ -168,6 +168,7 @@ export {
   resolvePreparedHealingSpellAct,
   resolveRollModifierSpellAct,
   resolveScalarBuffSpellAct,
+  resolveSelfTeleportSpellAct,
   resolveThaumaturgyBoomingVoiceSpellAct,
 } from "./spells-resolve-support-effects.ts";
 export {
@@ -196,6 +197,7 @@ import {
   resolvePreparedHealingSpellAct,
   resolveRollModifierSpellAct,
   resolveScalarBuffSpellAct,
+  resolveSelfTeleportSpellAct,
   resolveThaumaturgyBoomingVoiceSpellAct,
 } from "./spells-resolve-support-effects.ts";
 
@@ -1607,6 +1609,14 @@ export function resolveBonusActionSpellAct(
         "Bonus Action spell subject requires a supported Bonus Action spell act.",
       );
     }
+  } else if (invocation.procedure === "selfTeleport") {
+    if (invocation.actionCost !== "bonusAction") {
+      return invalidResult(
+        input.state,
+        "unsupportedSubject",
+        "Bonus Action spell subject requires a supported Bonus Action spell act.",
+      );
+    }
   } else if (invocation.procedure === "sanctuaryTargetingInterdiction") {
     if (invocation.actionCost !== "bonusAction") {
       return invalidResult(
@@ -1715,6 +1725,14 @@ export function resolveBonusActionSpellAct(
   }
   if (invocation.procedure === "jumpMovementReplacement") {
     return resolveJumpMovementReplacementSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "selfTeleport") {
+    return resolveSelfTeleportSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

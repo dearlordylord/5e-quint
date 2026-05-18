@@ -182,8 +182,8 @@
       "numerator": 475,
       "percent": "85.4%",
       "rowsByStatus": {
-        "accepted": 297,
-        "accepted-no-battle-effect": 178,
+        "accepted": 300,
+        "accepted-no-battle-effect": 175,
         "battle-runtime-required": 77,
         "owner-evidence-required": 4
       }
@@ -200,16 +200,16 @@
       "catalog-installed-owner-evidence-required": 5
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 302,
+      "catalog-installed-owner-evidence-present": 305,
       "non-runtime": 24,
-      "catalog-only/dead-for-now": 149,
+      "catalog-only/dead-for-now": 146,
       "missing-authored-record": 75,
       "catalog-installed-owner-evidence-required": 5,
       "catalog-authored-executable-follow-up": 1
     },
     "spellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 143,
-      "catalog-only/dead-for-now": 149,
+      "catalog-installed-owner-evidence-present": 146,
+      "catalog-only/dead-for-now": 146,
       "missing-authored-record": 74,
       "catalog-authored-executable-follow-up": 1
     },
@@ -19851,13 +19851,31 @@
         "sourceRecordPath": "packages/surface/content/misty_step.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "misty_step"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial owner",
+        "reason": "Automatic destination visibility, occupancy, blocked-destination fallback, and map-position derivation remain caller-supplied table/spatial facts outside the Misty Step runtime profile."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit misty_step is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-SPELL-MISTY-STEP at packages/battle-runtime/src/unit-profile-admission-misty-step.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_scorching_ray",
@@ -21677,13 +21695,31 @@
         "sourceRecordPath": "packages/surface/content/misty_step.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "misty_step"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial owner",
+        "reason": "Automatic destination visibility, occupancy, blocked-destination fallback, and map-position derivation remain caller-supplied table/spatial facts outside the Misty Step runtime profile."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit misty_step is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-SPELL-MISTY-STEP at packages/battle-runtime/src/unit-profile-admission-misty-step.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_ray_of_enfeeblement",
@@ -25088,13 +25124,31 @@
         "sourceRecordPath": "packages/surface/content/misty_step.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "misty_step"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial owner",
+        "reason": "Automatic destination visibility, occupancy, blocked-destination fallback, and map-position derivation remain caller-supplied table/spatial facts outside the Misty Step runtime profile."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit misty_step is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-SPELL-MISTY-STEP at packages/battle-runtime/src/unit-profile-admission-misty-step.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_ray_of_enfeeblement",

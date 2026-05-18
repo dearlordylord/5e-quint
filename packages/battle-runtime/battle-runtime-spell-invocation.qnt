@@ -107,6 +107,7 @@ module battleRuntimeSpellInvocation {
       | SorcerousBurst => false
       | SpareTheDying => false
       | HideousLaughter => true
+      | MistyStep => true
     }
 
   pure def canExpendSpellSlotThisTurn(state: BattleState): bool =

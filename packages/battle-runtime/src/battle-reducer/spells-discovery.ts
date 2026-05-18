@@ -46,6 +46,7 @@ import {
   spellTargetAllocationHole,
   spellTargetHole,
   spellTargetListHole,
+  spellTeleportDestinationHole,
   thaumaturgyActiveOneMinuteEffectCountHole,
   supportedSpellInvocationMatchesRef,
   supportedSpellInvocationRef,
@@ -127,6 +128,21 @@ export function discoverSupportedSpellInvocations(
             label: invocation.spell.name,
             summary: `${spellActivationInvocationCastSummary(invocation)} The table supplies the fog area identity.`,
             initialHoles: [spellAreaChoiceHole(invocation)],
+          },
+        ];
+      }
+      if (invocation.procedure === "selfTeleport") {
+        return [
+          {
+            subject: {
+              tag: "bonusActionSpell" as const,
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
+            },
+            label: invocation.spell.name,
+            summary: spellInvocationCastSummary(invocation),
+            initialHoles: [spellTeleportDestinationHole(invocation, actorId)],
           },
         ];
       }
@@ -802,6 +818,9 @@ export function spellInvocationCastSummary(
   if (invocation.procedure === "sanctuaryTargetingInterdiction") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
+  if (invocation.procedure === "selfTeleport") {
+    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot and teleport to a caller-supplied unoccupied visible destination within ${invocation.maxDistanceFeet} feet.`;
+  }
   if (invocation.procedure === "featherFallMitigation") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
@@ -849,6 +868,7 @@ export function spellActivationInvocationCastSummary(
         | "dancingLightsSeparateCast"
         | "dancingLightsCombinedCast"
         | "jumpMovementReplacement"
+        | "selfTeleport"
         | "sanctuaryTargetingInterdiction"
         | "featherFallMitigation";
     }
@@ -887,6 +907,9 @@ export function spellSubjectTagForInvocation(
     return "bonusActionSpell";
   }
   if (invocation.procedure === "jumpMovementReplacement") {
+    return "bonusActionSpell";
+  }
+  if (invocation.procedure === "selfTeleport") {
     return "bonusActionSpell";
   }
   if (invocation.procedure === "sanctuaryTargetingInterdiction") {
@@ -966,6 +989,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "markedDamageRider" &&
     invocation.procedure !== "expeditiousRetreatDash" &&
     invocation.procedure !== "jumpMovementReplacement" &&
+    invocation.procedure !== "selfTeleport" &&
     invocation.procedure !== "sanctuaryTargetingInterdiction" &&
     invocation.procedure !== "saveGatedCondition" &&
     invocation.procedure !== "saveGatedAttackRollAdvantage" &&
@@ -996,6 +1020,7 @@ export function readiedSpellAct(
     invocation.procedure === "markedDamageRider" ||
     invocation.procedure === "expeditiousRetreatDash" ||
     invocation.procedure === "jumpMovementReplacement" ||
+    invocation.procedure === "selfTeleport" ||
     invocation.procedure === "sanctuaryTargetingInterdiction" ||
     invocation.procedure === "afterHitDamage" ||
     invocation.procedure === "spellAttackBeamSequence" ||

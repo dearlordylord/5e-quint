@@ -124,6 +124,14 @@ export function supportedSpellInvocationRef(
       procedure: "jumpMovementReplacement",
     };
   }
+  if (invocation.procedure === "selfTeleport") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "selfTeleport",
+    };
+  }
   if (invocation.procedure === "featherFallMitigation") {
     return {
       tag: "spellSlot",

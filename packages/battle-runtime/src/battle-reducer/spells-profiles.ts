@@ -81,6 +81,7 @@ import {
   supportedPreparedMarkedDamageRiderSpellProfile,
   supportedPreparedRollModifierSpellProfile,
   supportedPreparedScalarBuffSpellProfile,
+  supportedPreparedSelfTeleportSpellProfile,
   supportedPreparedSlotSpellProfile,
   supportedPreparedWeaponDamageRiderSpellProfile,
   supportedCantripThaumaturgyBoomingVoiceSpellProfile,
@@ -304,6 +305,9 @@ export function supportedSpellActs(
         spell,
         spellcasting.spellSlots,
       ),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedSelfTeleportSpellProfile(spell, spellcasting.spellSlots),
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedSanctuaryTargetingInterdictionSpellProfile(

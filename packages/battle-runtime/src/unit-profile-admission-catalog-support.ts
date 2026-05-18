@@ -105,6 +105,8 @@ export const expeditiousRetreatUnitId = "expeditious_retreat";
 
 export const jumpUnitId = "jump";
 
+export const mistyStepUnitId = "misty_step";
+
 export const searingSmiteUnitId = "searing_smite";
 
 export const trueStrikeUnitId = "true_strike";

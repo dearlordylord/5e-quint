@@ -21,6 +21,7 @@ import {
   type BattleSpellTargetListHole,
   type BattleSpellTargetListSpatialFact,
   type BattleState,
+  type BattleTeleportDestinationHole,
   type BattleObjectTargetChoiceHole,
   type BattleCreatureState,
   type BattleTargetChoiceHole,
@@ -347,6 +348,46 @@ export function spellAreaChoiceHoleId(
   >,
 ): BattleHoleId {
   return holeId(`battle:spell:area-choice:${invocation.spell.id}`);
+}
+
+export function spellTeleportDestinationHole(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "selfTeleport" }
+  >,
+  actorId: CombatantId,
+): BattleTeleportDestinationHole {
+  const holeKey = spellTeleportDestinationHoleKey(invocation, actorId);
+  return {
+    kind: "teleportDestination",
+    holeId: spellTeleportDestinationHoleId(invocation, actorId),
+    holeInstanceKey: holeInstanceKey(holeKey),
+    label: `${invocation.spell.name} destination`,
+    spell: invocation,
+    actorId,
+    maxDistanceFeet: invocation.maxDistanceFeet,
+    requiresTableSpatialFact: true,
+  };
+}
+
+export function spellTeleportDestinationHoleId(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "selfTeleport" }
+  >,
+  actorId: CombatantId,
+): BattleHoleId {
+  return holeId(spellTeleportDestinationHoleKey(invocation, actorId));
+}
+
+function spellTeleportDestinationHoleKey(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "selfTeleport" }
+  >,
+  actorId: CombatantId,
+): string {
+  return `battle:spell:teleport-destination:${actorId}:${invocation.spell.id}`;
 }
 
 export function spellTargetIsLegal(
