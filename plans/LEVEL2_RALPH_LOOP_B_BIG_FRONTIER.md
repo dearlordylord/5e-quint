@@ -7,7 +7,7 @@
     {
       "number": 43,
       "id": "L12G-SPELL-SCORCHING-RAY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Scorching Ray Runtime Support"
     },
     {
@@ -327,7 +327,7 @@ Counterspell work.
 
 ### Task 43 - L12G-SPELL-SCORCHING-RAY - Scorching Ray Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `scorching_ray`. Gate task: 45 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
