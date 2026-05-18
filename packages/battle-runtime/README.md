@@ -1175,8 +1175,8 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
 - `battle-runtime-find-familiar.qnt` - Find Familiar lifecycle and permission
   helpers imported by the canonical spec.
 - `battle-runtime-light.qnt` - light-source duration, illumination, sight
-  obscurement, and spell light projection helpers imported by the canonical
-  spec.
+  obscurement, spell light projection, and Light/Dancing Lights/Produce
+  Flame/Shillelagh reducers imported by the canonical spec.
 - `battle-runtime-creature-type-protection.qnt` - Protection from Evil and Good
   creature-type scoping, condition prevention, and possession prevention
   helpers imported by the canonical spec.
