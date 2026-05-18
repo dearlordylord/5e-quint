@@ -87,6 +87,7 @@ module battleRuntimeArmorClass {
         | HideousLaughterEffect(_) => false
         | GreaseGroundHazard(_) => false
         | FogCloudObscurement(_) => false
+        | FlamingSphere(_) => false
         | CommandPending(_) => false
       })) 13 + dexMod else baseAc
       val shieldBonus = if (effects.contains(ShieldArmorClassBonus)) 5 else 0

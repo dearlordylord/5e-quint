@@ -2,6 +2,7 @@
 // extracted from ../battle-reducer.ts. Mechanical move; no behavior change
 // intended.
 
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
@@ -150,6 +151,11 @@ import type {
   BattleCreatureState,
   BattleDroppedObjectOutcome,
   BattleFill,
+  BattleFlamingSphereDamageRollHole,
+  BattleFlamingSphereRamMovementHole,
+  BattleFlamingSphereRepositionMovementHole,
+  BattleFlamingSphereSavingThrowOutcomeHole,
+  BattleFlamingSphereTrigger,
   BattleGreaseGroundDifficultTerrainMovementFact,
   BattleGrappleLink,
   BattleGreaseGroundHazardSavingThrowOutcomeHole,
@@ -836,6 +842,10 @@ function validateSpellConditionEndTurnSavingThrowOutcome(
 export type GreaseGroundHazardEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "greaseGroundHazard" }
+>;
+export type FlamingSphereEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "flamingSphere" }
 >;
 export type CommandPendingEffect = Extract<
   BattleActiveEffect,
@@ -1790,6 +1800,780 @@ function resolveGreaseGroundHazardEndTurnSaveCommand(
   return endTurnResult.tag === "needsHoles"
     ? { ...endTurnResult, subject: input.subject }
     : endTurnResult;
+}
+
+function flamingSphereEffectFor(
+  state: BattleState,
+  subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command:
+        | "flamingSphereSave"
+        | "flamingSphereReposition"
+        | "flamingSphereRam";
+    }
+  >,
+): FlamingSphereEffect | undefined {
+  const source = state.combatants.get(subject.sourceCombatantId);
+  return source?.activeEffects.find(
+    (effect): effect is FlamingSphereEffect =>
+      effect.kind === "flamingSphere" &&
+      effect.sourceSpellId === subject.sourceSpellId &&
+      effect.sourceCombatantId === subject.sourceCombatantId &&
+      effect.areaId === subject.areaId,
+  );
+}
+
+function flamingSphereTriggerLabel(
+  trigger: BattleFlamingSphereTrigger,
+): "ram" | "end-within-5-feet" {
+  if (trigger === "rammedBySphere") {
+    return "ram";
+  }
+  if (trigger === "endsTurnWithinFiveFeetOfSphere") {
+    return "end-within-5-feet";
+  }
+  const _: never = trigger;
+  return _;
+}
+
+export function flamingSphereRamMovementHole(
+  targetId: CombatantId,
+  effect: FlamingSphereEffect,
+): BattleFlamingSphereRamMovementHole {
+  const key = `battle:flaming-sphere-ram-movement:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}`;
+  return {
+    kind: "flamingSphereRamMovement",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${effect.sourceSpellId} ram movement`,
+    flamingSphere: {
+      targetId,
+      sourceSpellId: effect.sourceSpellId,
+      sourceCombatantId: effect.sourceCombatantId,
+      areaId: effect.areaId,
+      maxMoveFeet: effect.ramMaxMoveFeet,
+    },
+    requiresTableSpatialFact: true,
+  };
+}
+
+export function flamingSphereRepositionMovementHole(
+  effect: FlamingSphereEffect,
+): BattleFlamingSphereRepositionMovementHole {
+  const key = `battle:flaming-sphere-reposition-movement:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}`;
+  return {
+    kind: "flamingSphereRepositionMovement",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${effect.sourceSpellId} reposition movement`,
+    flamingSphere: {
+      sourceSpellId: effect.sourceSpellId,
+      sourceCombatantId: effect.sourceCombatantId,
+      areaId: effect.areaId,
+      maxMoveFeet: effect.ramMaxMoveFeet,
+    },
+    requiresTableSpatialFact: true,
+  };
+}
+
+export function flamingSphereSavingThrowOutcomeHole(
+  state: BattleState,
+  targetId: CombatantId,
+  effect: FlamingSphereEffect,
+  trigger: BattleFlamingSphereTrigger,
+): BattleFlamingSphereSavingThrowOutcomeHole {
+  const key = `battle:flaming-sphere-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}:${trigger}`;
+  return {
+    kind: "savingThrowOutcome",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${effect.sourceSpellId} ${flamingSphereTriggerLabel(trigger)} DEX save`,
+    flamingSphere: {
+      targetId,
+      sourceSpellId: effect.sourceSpellId,
+      sourceCombatantId: effect.sourceCombatantId,
+      areaId: effect.areaId,
+      trigger,
+      save: effect.save,
+    },
+    ability: effect.save.ability,
+    dc: effect.save.dc,
+    areaChoices: [],
+    targetRollModes: savingThrowRollModeProjections(
+      state,
+      effect.save.ability,
+    ).filter((projection) => projection.targetId === targetId),
+  };
+}
+
+function flamingSphereDamageRollHole(
+  targetId: CombatantId,
+  effect: FlamingSphereEffect,
+  trigger: BattleFlamingSphereTrigger,
+): BattleFlamingSphereDamageRollHole {
+  const key = `battle:flaming-sphere-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}:${trigger}`;
+  return {
+    kind: "rolledDice",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${effect.sourceSpellId} ${flamingSphereTriggerLabel(trigger)} damage`,
+    flamingSphere: {
+      targetId,
+      sourceSpellId: effect.sourceSpellId,
+      sourceCombatantId: effect.sourceCombatantId,
+      areaId: effect.areaId,
+      trigger,
+      damage: effect.damage,
+    },
+    critical: false,
+  };
+}
+
+function savingThrowOutcomeFillForHole(
+  fills: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[],
+  hole: BattleFlamingSphereSavingThrowOutcomeHole,
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
+  return fills.find((fill) => fill.holeId === hole.holeId);
+}
+
+function rolledDiceFillForHole(
+  fills: readonly Extract<BattleFill, { readonly kind: "rolledDice" }>[],
+  hole: BattleFlamingSphereDamageRollHole,
+): Extract<BattleFill, { readonly kind: "rolledDice" }> | undefined {
+  return fills.find((fill) => fill.holeId === hole.holeId);
+}
+
+function everyFillUsesHoleId(
+  fills: readonly { readonly holeId: BattleHoleId }[],
+  expectedHoleId: BattleHoleId,
+): boolean {
+  return fills.every((fill) => fill.holeId === expectedHoleId);
+}
+
+function validateFlamingSphereSavingThrowOutcome(
+  value: BattleSavingThrowOutcomeValue,
+  targetId: CombatantId,
+): string | null {
+  if ("area" in value) {
+    return "Flaming Sphere Saving Throw outcome must not include area facts.";
+  }
+  return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
+    ? null
+    : "Flaming Sphere Saving Throw outcome must match the triggering target.";
+}
+
+function validateFlamingSphereDamageRoll(
+  fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+  hole: BattleFlamingSphereDamageRollHole,
+): string | null {
+  if (fill.holeId !== hole.holeId) {
+    return "Flaming Sphere damage must use the selected sphere damage hole.";
+  }
+  const validation = validateRolledDiceForDiceExpr(
+    fill.value,
+    hole.flamingSphere.damage.expr,
+  );
+  return validation === null ? null : validation.reason;
+}
+
+function validateFlamingSphereRamMovement(
+  fill: Extract<BattleFill, { readonly kind: "flamingSphereRamMovement" }>,
+  hole: BattleFlamingSphereRamMovementHole,
+): string | null {
+  if (fill.holeId !== hole.holeId) {
+    return "Flaming Sphere ram movement must use the selected sphere movement hole.";
+  }
+  if (
+    Number(fill.value.moveFeet) <= 0 ||
+    !Number.isInteger(fill.value.moveFeet)
+  ) {
+    return "Flaming Sphere ram movement distance must be a positive integer.";
+  }
+  return Number(fill.value.moveFeet) <= Number(hole.flamingSphere.maxMoveFeet)
+    ? null
+    : "Flaming Sphere ram movement distance exceeds the spell's maximum.";
+}
+
+function validateFlamingSphereRepositionMovement(
+  fill: Extract<
+    BattleFill,
+    { readonly kind: "flamingSphereRepositionMovement" }
+  >,
+  hole: BattleFlamingSphereRepositionMovementHole,
+): string | null {
+  if (fill.holeId !== hole.holeId) {
+    return "Flaming Sphere reposition movement must use the selected sphere movement hole.";
+  }
+  if (
+    Number(fill.value.moveFeet) <= 0 ||
+    !Number.isInteger(fill.value.moveFeet)
+  ) {
+    return "Flaming Sphere reposition movement distance must be a positive integer.";
+  }
+  return Number(fill.value.moveFeet) <= Number(hole.flamingSphere.maxMoveFeet)
+    ? null
+    : "Flaming Sphere reposition movement distance exceeds the spell's maximum.";
+}
+
+function flamingSphereAdjustedDamage(input: {
+  readonly target: BattleCreatureState;
+  readonly effect: FlamingSphereEffect;
+  readonly damageFill: Extract<BattleFill, { readonly kind: "rolledDice" }>;
+  readonly saveSucceeded: boolean;
+}): number {
+  const rolledDamage =
+    rolledDiceTotal(input.damageFill.value) +
+    (input.effect.damage.expr.flat ?? 0);
+  const saveAdjustedDamage = input.saveSucceeded
+    ? Math.floor(rolledDamage / 2)
+    : rolledDamage;
+  return damageAmountAfterTargetAdjustments(
+    input.target,
+    saveAdjustedDamage,
+    input.effect.damage.damageType,
+  );
+}
+
+function applyFlamingSphereDamage(input: {
+  readonly state: BattleState;
+  readonly targetId: CombatantId;
+  readonly effect: FlamingSphereEffect;
+  readonly damageFill: Extract<BattleFill, { readonly kind: "rolledDice" }>;
+  readonly saveSucceeded: boolean;
+  readonly concentrationSavingThrow?:
+    | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
+    | undefined;
+}): BattleState {
+  const target = input.state.combatants.get(input.targetId);
+  if (target === undefined) {
+    return input.state;
+  }
+  return applyPreparedSlotSpellDamage(
+    input.state,
+    input.targetId,
+    flamingSphereAdjustedDamage({
+      target,
+      effect: input.effect,
+      damageFill: input.damageFill,
+      saveSucceeded: input.saveSucceeded,
+    }),
+    {
+      damageSourceId: input.effect.sourceCombatantId,
+      concentrationSavingThrow: input.concentrationSavingThrow,
+    },
+  );
+}
+
+export function resolveFlamingSphereSaveCommand(
+  input: BattleResolutionInput & {
+    readonly subject: Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "flamingSphereSave";
+      }
+    >;
+    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+  },
+): BattleResolutionResult {
+  const effect = flamingSphereEffectFor(input.state, input.subject);
+  const target = input.state.combatants.get(input.subject.actorId);
+  if (effect === undefined || target === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Flaming Sphere save is no longer available.",
+    );
+  }
+  const saveHole = flamingSphereSavingThrowOutcomeHole(
+    input.state,
+    input.subject.actorId,
+    effect,
+    input.subject.trigger,
+  );
+  const damageHole = flamingSphereDamageRollHole(
+    input.subject.actorId,
+    effect,
+    input.subject.trigger,
+  );
+  const saveFills = input.fills.filter(
+    (
+      fill,
+    ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+      fill.kind === "savingThrowOutcome" && fill.holeId === saveHole.holeId,
+  );
+  const damageFills = input.fills.filter(
+    (fill): fill is Extract<BattleFill, { readonly kind: "rolledDice" }> =>
+      fill.kind === "rolledDice" && fill.holeId === damageHole.holeId,
+  );
+  if (saveFills.length > 1 || damageFills.length > 1) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Flaming Sphere end-within-5-feet save received duplicate sphere fills.",
+    );
+  }
+  const concentrationHoleId = concentrationSavingThrowHole(target, 1)?.holeId;
+  const endTurnSubject = {
+    tag: "runtimeCommand" as const,
+    actorId: input.subject.actorId,
+    command: "endTurn" as const,
+  };
+  const endTurnFills = input.fills.filter(
+    (fill) =>
+      fill.holeId !== saveHole.holeId &&
+      fill.holeId !== damageHole.holeId &&
+      fill.holeId !== concentrationHoleId,
+  );
+  const endTurnProbe = resolveEndTurnCommand({
+    state: input.state,
+    subject: endTurnSubject,
+    fills: endTurnFills,
+  });
+  const saveFill = savingThrowOutcomeFillForHole(saveFills, saveHole);
+  if (saveFill === undefined) {
+    return endTurnProbe.tag === "needsHoles"
+      ? needsHolesResult(input.state, input.subject, [
+          saveHole,
+          ...endTurnProbe.holes,
+        ])
+      : endTurnProbe.tag === "invalid"
+        ? endTurnProbe
+        : needsHolesResult(input.state, input.subject, [saveHole]);
+  }
+  const saveValidation = validateFlamingSphereSavingThrowOutcome(
+    saveFill.value,
+    input.subject.actorId,
+  );
+  if (saveValidation !== null) {
+    return invalidResult(input.state, "invalidFill", saveValidation);
+  }
+  const saveOutcome = saveFill.value.outcomes[0]!;
+  if (!saveOutcome.succeeded) {
+    const saveFailedReactionWindow = maybeOpenReactionWindow(
+      input.state,
+      {
+        trigger: "saveFailed",
+        targetId: input.subject.actorId,
+        sourceSpellId: effect.sourceSpellId,
+        continuation: {
+          kind: "replay",
+          subject: input.subject,
+          fills: input.fills,
+        },
+      },
+      input.suppressedReactionTrigger,
+    );
+    if (saveFailedReactionWindow !== null) {
+      return saveFailedReactionWindow;
+    }
+  }
+  const damageFill = rolledDiceFillForHole(damageFills, damageHole);
+  if (damageFill === undefined) {
+    return endTurnProbe.tag === "needsHoles"
+      ? needsHolesResult(input.state, input.subject, [
+          damageHole,
+          ...endTurnProbe.holes,
+        ])
+      : endTurnProbe.tag === "invalid"
+        ? endTurnProbe
+        : needsHolesResult(input.state, input.subject, [damageHole]);
+  }
+  const damageValidation = validateFlamingSphereDamageRoll(
+    damageFill,
+    damageHole,
+  );
+  if (damageValidation !== null) {
+    return invalidResult(input.state, "invalidFill", damageValidation);
+  }
+  const adjustedDamage = flamingSphereAdjustedDamage({
+    target,
+    effect,
+    damageFill,
+    saveSucceeded: saveOutcome.succeeded,
+  });
+  const concentrationHole = concentrationSavingThrowHole(target, adjustedDamage);
+  const concentrationFills =
+    concentrationHole === null
+      ? []
+      : input.fills.filter(
+          (
+            fill,
+          ): fill is Extract<
+            BattleFill,
+            { readonly kind: "concentrationSavingThrow" }
+          > =>
+            fill.kind === "concentrationSavingThrow" &&
+            fill.holeId === concentrationHole.holeId,
+        );
+  if (concentrationFills.length > 1) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Flaming Sphere end-within-5-feet save received duplicate sphere fills.",
+    );
+  }
+  const concentrationFill =
+    concentrationHole === null
+      ? undefined
+      : concentrationSavingThrowFillFor(concentrationFills, concentrationHole);
+  if (concentrationHole !== null && concentrationFill === undefined) {
+    return endTurnProbe.tag === "needsHoles"
+      ? needsHolesResult(input.state, input.subject, [
+          concentrationHole,
+          ...endTurnProbe.holes,
+        ])
+      : endTurnProbe.tag === "invalid"
+        ? endTurnProbe
+        : needsHolesResult(input.state, input.subject, [concentrationHole]);
+  }
+  if (endTurnProbe.tag === "needsHoles") {
+    return { ...endTurnProbe, subject: input.subject };
+  }
+  if (endTurnProbe.tag === "invalid") {
+    return endTurnProbe;
+  }
+  const damaged = applyFlamingSphereDamage({
+    state: input.state,
+    targetId: input.subject.actorId,
+    effect,
+    damageFill,
+    saveSucceeded: saveOutcome.succeeded,
+    concentrationSavingThrow: concentrationFill,
+  });
+  const endTurnResult = resolveEndTurnCommand({
+    state: damaged,
+    subject: endTurnSubject,
+    fills: endTurnFills,
+  });
+  return endTurnResult.tag === "needsHoles"
+    ? { ...endTurnResult, subject: input.subject }
+    : endTurnResult;
+}
+
+export function resolveFlamingSphereRepositionCommand(
+  input: BattleResolutionInput & {
+    readonly subject: Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "flamingSphereReposition";
+      }
+    >;
+  },
+): BattleResolutionResult {
+  if (
+    input.fills.some((fill) => fill.kind !== "flamingSphereRepositionMovement")
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Flaming Sphere reposition accepts only movement fills.",
+    );
+  }
+  const effect = flamingSphereEffectFor(input.state, input.subject);
+  if (
+    effect === undefined ||
+    input.subject.actorId !== input.subject.sourceCombatantId ||
+    input.subject.actorId !== currentActorId(input.state)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Flaming Sphere reposition is no longer available.",
+    );
+  }
+  if (!input.state.currentTurnResources.currentHasBonusAction) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Flaming Sphere reposition requires an available Bonus Action.",
+    );
+  }
+  const movementHole = flamingSphereRepositionMovementHole(effect);
+  const movementFills = input.fills.filter(
+    (
+      fill,
+    ): fill is Extract<
+      BattleFill,
+      { readonly kind: "flamingSphereRepositionMovement" }
+    > => fill.kind === "flamingSphereRepositionMovement",
+  );
+  if (!everyFillUsesHoleId(movementFills, movementHole.holeId)) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Flaming Sphere reposition received a fill for an unrelated hole.",
+    );
+  }
+  if (movementFills.length > 1) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Flaming Sphere reposition received duplicate sphere fills.",
+    );
+  }
+  const movementFill = movementFills[0];
+  if (movementFill === undefined) {
+    return needsHolesResult(input.state, input.subject, [movementHole]);
+  }
+  const movementValidation = validateFlamingSphereRepositionMovement(
+    movementFill,
+    movementHole,
+  );
+  if (movementValidation !== null) {
+    return invalidResult(input.state, "invalidFill", movementValidation);
+  }
+  const nextState = {
+    ...input.state,
+    currentTurnResources: {
+      ...input.state.currentTurnResources,
+      currentHasBonusAction: false,
+    },
+  };
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+export function resolveFlamingSphereRamCommand(
+  input: BattleResolutionInput & {
+    readonly subject: Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "flamingSphereRam";
+      }
+    >;
+    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+  },
+): BattleResolutionResult {
+  if (
+    input.fills.some(
+      (fill) =>
+        fill.kind !== "savingThrowOutcome" &&
+        fill.kind !== "rolledDice" &&
+        fill.kind !== "flamingSphereRamMovement" &&
+        fill.kind !== "concentrationSavingThrow",
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Flaming Sphere ram accepts only movement, save, damage, and Concentration fills.",
+    );
+  }
+  const effect = flamingSphereEffectFor(input.state, input.subject);
+  const target = input.state.combatants.get(input.subject.targetId);
+  if (
+    effect === undefined ||
+    target === undefined ||
+    input.subject.actorId !== input.subject.sourceCombatantId ||
+    input.subject.actorId !== currentActorId(input.state)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Flaming Sphere ram is no longer available.",
+    );
+  }
+  if (!input.state.currentTurnResources.currentHasBonusAction) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Flaming Sphere ram requires an available Bonus Action.",
+    );
+  }
+  const saveHole = flamingSphereSavingThrowOutcomeHole(
+    input.state,
+    input.subject.targetId,
+    effect,
+    input.subject.trigger,
+  );
+  const movementHole = flamingSphereRamMovementHole(
+    input.subject.targetId,
+    effect,
+  );
+  const damageHole = flamingSphereDamageRollHole(
+    input.subject.targetId,
+    effect,
+    input.subject.trigger,
+  );
+  const movementFills = input.fills.filter(
+    (
+      fill,
+    ): fill is Extract<
+      BattleFill,
+      { readonly kind: "flamingSphereRamMovement" }
+    > => fill.kind === "flamingSphereRamMovement",
+  );
+  const saveFills = input.fills.filter(
+    (
+      fill,
+    ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+      fill.kind === "savingThrowOutcome",
+  );
+  const damageFills = input.fills.filter(
+    (fill): fill is Extract<BattleFill, { readonly kind: "rolledDice" }> =>
+      fill.kind === "rolledDice",
+  );
+  const concentrationFills = input.fills.filter(
+    (
+      fill,
+    ): fill is Extract<
+      BattleFill,
+      { readonly kind: "concentrationSavingThrow" }
+    > => fill.kind === "concentrationSavingThrow",
+  );
+  if (
+    !everyFillUsesHoleId(movementFills, movementHole.holeId) ||
+    !everyFillUsesHoleId(saveFills, saveHole.holeId) ||
+    !everyFillUsesHoleId(damageFills, damageHole.holeId)
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Flaming Sphere ram received a fill for an unrelated hole.",
+    );
+  }
+  if (
+    movementFills.length > 1 ||
+    saveFills.length > 1 ||
+    damageFills.length > 1
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Flaming Sphere ram received duplicate sphere fills.",
+    );
+  }
+  const movementFill = movementFills[0];
+  if (movementFill === undefined) {
+    return needsHolesResult(input.state, input.subject, [movementHole]);
+  }
+  const movementValidation = validateFlamingSphereRamMovement(
+    movementFill,
+    movementHole,
+  );
+  if (movementValidation !== null) {
+    return invalidResult(input.state, "invalidFill", movementValidation);
+  }
+  const saveFill = savingThrowOutcomeFillForHole(saveFills, saveHole);
+  if (saveFill === undefined) {
+    return needsHolesResult(input.state, input.subject, [saveHole]);
+  }
+  const saveValidation = validateFlamingSphereSavingThrowOutcome(
+    saveFill.value,
+    input.subject.targetId,
+  );
+  if (saveValidation !== null) {
+    return invalidResult(input.state, "invalidFill", saveValidation);
+  }
+  const saveOutcome = saveFill.value.outcomes[0]!;
+  const damageFill = rolledDiceFillForHole(damageFills, damageHole);
+  if (damageFill === undefined) {
+    if (concentrationFills.length > 0) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Flaming Sphere ram received a fill for an unrelated hole.",
+      );
+    }
+  } else {
+    const damageValidation = validateFlamingSphereDamageRoll(
+      damageFill,
+      damageHole,
+    );
+    if (damageValidation !== null) {
+      return invalidResult(input.state, "invalidFill", damageValidation);
+    }
+  }
+  const concentrationHole =
+    damageFill === undefined
+      ? null
+      : concentrationSavingThrowHole(
+          target,
+          flamingSphereAdjustedDamage({
+            target,
+            effect,
+            damageFill,
+            saveSucceeded: saveOutcome.succeeded,
+          }),
+        );
+  if (
+    concentrationHole === null
+      ? concentrationFills.length > 0
+      : !everyFillUsesHoleId(concentrationFills, concentrationHole.holeId)
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Flaming Sphere ram received a fill for an unrelated hole.",
+    );
+  }
+  if (concentrationFills.length > 1) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Flaming Sphere ram received duplicate sphere fills.",
+    );
+  }
+  const concentrationFill =
+    concentrationHole === null
+      ? undefined
+      : concentrationSavingThrowFillFor(concentrationFills, concentrationHole);
+  if (!saveOutcome.succeeded) {
+    const saveFailedReactionWindow = maybeOpenReactionWindow(
+      input.state,
+      {
+        trigger: "saveFailed",
+        targetId: input.subject.targetId,
+        sourceSpellId: effect.sourceSpellId,
+        continuation: {
+          kind: "replay",
+          subject: input.subject,
+          fills: input.fills,
+        },
+      },
+      input.suppressedReactionTrigger,
+    );
+    if (saveFailedReactionWindow !== null) {
+      return saveFailedReactionWindow;
+    }
+  }
+  if (damageFill === undefined) {
+    return needsHolesResult(input.state, input.subject, [damageHole]);
+  }
+  if (concentrationHole !== null && concentrationFill === undefined) {
+    return needsHolesResult(input.state, input.subject, [concentrationHole]);
+  }
+  const damaged = applyFlamingSphereDamage({
+    state: input.state,
+    targetId: input.subject.targetId,
+    effect,
+    damageFill,
+    saveSucceeded: saveOutcome.succeeded,
+    concentrationSavingThrow: concentrationFill,
+  });
+  const nextState = {
+    ...damaged,
+    currentTurnResources: {
+      ...damaged.currentTurnResources,
+      currentHasBonusAction: false,
+    },
+  };
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
 }
 
 function applySleepRepeatSaveFills(

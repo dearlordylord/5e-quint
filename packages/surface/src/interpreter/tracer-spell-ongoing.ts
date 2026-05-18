@@ -484,6 +484,17 @@ export function traceOngoingTrigger(
       edges.push({ from: procId, to: winId, relation: "opens_window" });
       return { hostId: winId, hostRelation: "grants" };
     }
+    case "on_creature_ends_turn_within_distance_of_area": {
+      const winId = ids("win");
+      nodes.push({
+        id: winId,
+        category: "window",
+        atomKind: "post_action_window",
+        label: `post_action_window\n(creature ends turn within ${trigger.distanceFeet} ft of area)`,
+      });
+      edges.push({ from: procId, to: winId, relation: "opens_window" });
+      return { hostId: winId, hostRelation: "grants" };
+    }
     case "on_structure_collapses": {
       const winId = ids("win");
       nodes.push({

@@ -2582,7 +2582,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 97,
+      "count": 98,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2624,6 +2624,7 @@
         "fighter_second_wind",
         "fighter_tactical_mind",
         "fire_bolt",
+        "flaming_sphere",
         "fog_cloud",
         "grease",
         "guidance",
@@ -2778,40 +2779,40 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 472,
-      "percent": "84.9%",
+      "numerator": 475,
+      "percent": "85.4%",
       "rowsByStatus": {
-        "accepted": 316,
+        "accepted": 319,
         "accepted-no-battle-effect": 156,
-        "battle-runtime-required": 74,
+        "battle-runtime-required": 71,
         "owner-evidence-required": 4,
         "partial-battle-runtime": 6
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 69,
+      "denominator": 70,
       "numerator": 11,
-      "percent": "15.9%"
+      "percent": "15.7%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 69,
+      "denominator": 70,
       "numerator": 16,
-      "percent": "23.2%"
+      "percent": "22.9%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 97,
+      "denominator": 98,
       "numerator": 30,
-      "percent": "30.9%"
+      "percent": "30.6%"
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 151,
-      "numerator": 97,
-      "percent": "64.2%"
+      "denominator": 152,
+      "numerator": 98,
+      "percent": "64.5%"
     },
     "strictTargetClosure": {
-      "denominator": 151,
-      "numerator": 132,
-      "percent": "87.4%"
+      "denominator": 152,
+      "numerator": 133,
+      "percent": "87.5%"
     }
   },
   "openFrontier": [
@@ -3287,48 +3288,6 @@
           }
         ],
         "unitId": "elementalism"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "spell Unit pressure",
-            "concept": "Druid spell list Flaming Sphere",
-            "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_flaming_sphere",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 237,
-              "lineStart": 237,
-              "path": ".references/srd-5.2.1/Classes/Druid.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Sorcerer spell list Flaming Sphere",
-            "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_flaming_sphere",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 280,
-              "lineStart": 280,
-              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Wizard spell list Flaming Sphere",
-            "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_flaming_sphere",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 211,
-              "lineStart": 211,
-              "path": ".references/srd-5.2.1/Classes/Wizard.md"
-            }
-          }
-        ],
-        "unitId": "flaming_sphere"
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/floating_disk.md",
@@ -6059,9 +6018,9 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 97,
+        "denominator": 98,
         "numerator": 30,
-        "percent": "30.9%"
+        "percent": "30.6%"
       }
     },
     "units": [
@@ -6723,6 +6682,18 @@
           }
         ],
         "unitId": "fire_bolt"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-flaming-sphere-hazard-ram",
+            "profileKind": "table-caller"
+          }
+        ],
+        "unitId": "flaming_sphere"
       },
       {
         "joinStatus": "unmapped",
@@ -7897,7 +7868,7 @@
     "groupsByClaimTag": {
       "missing": 19,
       "profile-subset-supported": 10,
-      "supported-profile": 97,
+      "supported-profile": 98,
       "unsupported-profile": 25
     },
     "groupsByStatus": {
@@ -7906,9 +7877,9 @@
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 14,
       "open-runtime-behavior": 19,
-      "supported-profile": 97
+      "supported-profile": 98
     },
     "nonSupportedFrontier": 54,
-    "strictDenominator": 151
+    "strictDenominator": 152
   }
 }

@@ -138,6 +138,65 @@ module battleRuntimeGroundCommandTests {
     }
   }
 
+  run test_flaming_sphere_records_movable_fire_hazard = {
+    val resolved = resolveFlamingSphere(initialState, flamingSphereAreaId, 2)
+    all {
+      assert(resolved.fighter.activeEffects.contains(FlamingSphere({
+        areaId: flamingSphereAreaId,
+        damageDice: 2,
+        durationTicks: flamingSphereDurationTicks,
+        ramMaxMoveFeet: flamingSphereRamMaxMoveFeet,
+      }))),
+      assert(flamingSphereDiameterFeet == 5),
+      assert(resolved.fighter.concentrating),
+      assert(not(resolved.actionAvailable)),
+      assert(battleActorHasCommittedSpellSlotUse(resolved, Fighter)),
+    }
+  }
+
+  run test_flaming_sphere_slot_scaling_increases_damage_dice = {
+    val resolved = resolveFlamingSphere(initialState, flamingSphereAreaId, 3)
+    all {
+      assert(flamingSphereDamageDice(2) == 2),
+      assert(flamingSphereDamageDice(3) == 3),
+      assert(flamingSphereActiveDamageDice(resolved, flamingSphereAreaId) == 3),
+    }
+  }
+
+  run test_flaming_sphere_end_within_five_feet_save_damages_before_turn_advance = {
+    val resolved = resolveFlamingSphere(initialState, flamingSphereAreaId, 2)
+    val goblinTurn = endTurn(resolved)
+    val endWithinFiveFeetFailed = endTurnWithFlamingSphereEndWithinFiveFeetSave(goblinTurn, Goblin, flamingSphereAreaId, false, 7)
+    all {
+      assert(endWithinFiveFeetFailed.goblin.hp == 3),
+      assert(currentActor(endWithinFiveFeetFailed) == Fighter),
+    }
+  }
+
+  run test_flaming_sphere_ram_spends_bonus_action_and_halves_success_damage = {
+    val resolved = resolveFlamingSphere(initialState, flamingSphereAreaId, 2)
+    val rammed = resolveFlamingSphereRam(resolved, Goblin, flamingSphereAreaId, true, 6, 30)
+    val tooFar = resolveFlamingSphereRam(resolved, Goblin, flamingSphereAreaId, true, 6, 31)
+    all {
+      assert(rammed.goblin.hp == 7),
+      assert(not(rammed.bonusActionAvailable)),
+      assert(tooFar.goblin.hp == initialState.goblin.hp),
+      assert(tooFar.bonusActionAvailable),
+    }
+  }
+
+  run test_flaming_sphere_reposition_spends_bonus_action_without_damage = {
+    val resolved = resolveFlamingSphere(initialState, flamingSphereAreaId, 2)
+    val moved = resolveFlamingSphereReposition(resolved, flamingSphereAreaId, 30)
+    val tooFar = resolveFlamingSphereReposition(resolved, flamingSphereAreaId, 31)
+    all {
+      assert(moved.goblin.hp == initialState.goblin.hp),
+      assert(not(moved.bonusActionAvailable)),
+      assert(tooFar.goblin.hp == initialState.goblin.hp),
+      assert(tooFar.bonusActionAvailable),
+    }
+  }
+
   run test_command_grovel_records_next_turn_pending_effect_on_failed_save = {
     val resolved = resolveCommand(initialState, Set(Goblin), Set(Goblin), 1, CommandGrovelOption)
     all {

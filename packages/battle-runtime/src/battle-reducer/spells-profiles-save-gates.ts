@@ -1361,6 +1361,9 @@ export function areaSaveGateSpellRangeFeet(
 ): MovementFeet | null {
   return Match.value(targeting).pipe(
     Match.when({ kind: "pointOriginSphere" }, () => fixedPointRangeFeet(range)),
+    Match.when({ kind: "pointOriginSphereDiameter" }, () =>
+      fixedPointRangeFeet(range),
+    ),
     Match.when({ kind: "pointOriginCubeExcludingCaster" }, () =>
       fixedPointRangeFeet(range),
     ),

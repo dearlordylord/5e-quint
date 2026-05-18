@@ -3548,6 +3548,16 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
       "Battle runtime MBT does not model teleport destination holes.",
     );
   }
+  if (hole.kind === "flamingSphereRamMovement") {
+    throw new Error(
+      "Battle runtime MBT does not model Flaming Sphere ram movement holes.",
+    );
+  }
+  if (hole.kind === "flamingSphereRepositionMovement") {
+    throw new Error(
+      "Battle runtime MBT does not model Flaming Sphere reposition movement holes.",
+    );
+  }
   return [
     Match.value(hole).pipe(
     Match.when({ kind: "targetChoice" }, () => "TargetChoice" as const),

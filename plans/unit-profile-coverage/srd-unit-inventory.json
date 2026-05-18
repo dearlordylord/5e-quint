@@ -179,12 +179,12 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 472,
-      "percent": "84.9%",
+      "numerator": 475,
+      "percent": "85.4%",
       "rowsByStatus": {
-        "accepted": 316,
+        "accepted": 319,
         "accepted-no-battle-effect": 156,
-        "battle-runtime-required": 74,
+        "battle-runtime-required": 71,
         "partial-battle-runtime": 6,
         "owner-evidence-required": 4
       }
@@ -201,17 +201,17 @@
       "catalog-installed-owner-evidence-required": 5
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 327,
+      "catalog-installed-owner-evidence-present": 330,
       "non-runtime": 24,
       "catalog-only/dead-for-now": 127,
-      "missing-authored-record": 58,
+      "missing-authored-record": 55,
       "catalog-installed-owner-evidence-required": 14,
       "catalog-authored-executable-follow-up": 6
     },
     "spellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 168,
+      "catalog-installed-owner-evidence-present": 171,
       "catalog-only/dead-for-now": 127,
-      "missing-authored-record": 57,
+      "missing-authored-record": 54,
       "catalog-installed-owner-evidence-required": 9,
       "catalog-authored-executable-follow-up": 6
     },
@@ -11299,16 +11299,36 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "flaming_sphere",
+        "sourceRecordPath": "packages/surface/content/flaming_sphere.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "flaming_sphere"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial owner",
+        "reason": "Automatic unoccupied-space validation, area membership, pathfinding, barrier and pit traversal, sphere stop-position tracking, touched-object ignition, Bright/Dim light projection, and map rendering remain runtime-detached table or presentation derivations outside the Flaming Sphere hazard/reposition/ram profile."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit flaming_sphere is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-MISSING-FLAMING-SPHERE at packages/battle-runtime/src/unit-profile-admission-flaming-sphere.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_gust_of_wind",
@@ -19987,16 +20007,36 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "flaming_sphere",
+        "sourceRecordPath": "packages/surface/content/flaming_sphere.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "flaming_sphere"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial owner",
+        "reason": "Automatic unoccupied-space validation, area membership, pathfinding, barrier and pit traversal, sphere stop-position tracking, touched-object ignition, Bright/Dim light projection, and map rendering remain runtime-detached table or presentation derivations outside the Flaming Sphere hazard/reposition/ram profile."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit flaming_sphere is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-MISSING-FLAMING-SPHERE at packages/battle-runtime/src/unit-profile-admission-flaming-sphere.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_gust_of_wind",
@@ -25229,16 +25269,36 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "flaming_sphere",
+        "sourceRecordPath": "packages/surface/content/flaming_sphere.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "flaming_sphere"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/spatial owner",
+        "reason": "Automatic unoccupied-space validation, area membership, pathfinding, barrier and pit traversal, sphere stop-position tracking, touched-object ignition, Bright/Dim light projection, and map rendering remain runtime-detached table or presentation derivations outside the Flaming Sphere hazard/reposition/ram profile."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit flaming_sphere is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-MISSING-FLAMING-SPHERE at packages/battle-runtime/src/unit-profile-admission-flaming-sphere.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_gentle_repose",

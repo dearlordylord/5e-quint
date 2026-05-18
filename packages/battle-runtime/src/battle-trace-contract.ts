@@ -25,6 +25,8 @@ export const BATTLE_TRACE_HOLE_KINDS = [
   "dancingLightsPlacement",
   "spellAreaChoice",
   "teleportDestination",
+  "flamingSphereRamMovement",
+  "flamingSphereRepositionMovement",
   "savingThrowOutcome",
   "deathSavingThrow",
   "statBlockRechargeRoll",

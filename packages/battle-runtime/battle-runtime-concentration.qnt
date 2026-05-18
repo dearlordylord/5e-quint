@@ -35,6 +35,7 @@ module battleRuntimeConcentration {
         | SearingSmiteBurning(_) => false
         | ShiningSmiteIllumination(_) => false
         | FogCloudObscurement(_) => false
+        | FlamingSphere(_) => false
         | ResistanceDamageReduction(_) => false
         | SleepPendingRepeatSave(_) => false
         | SleepUnconscious(_) => false

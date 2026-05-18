@@ -169,6 +169,7 @@
 {"unitId":"grease","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV40","ownerPath":"packages/battle-runtime/src/unit-profile-admission-grease-ground-hazard.test.ts"}}
 {"unitId":"grease","evidence":{"tag":"selected-identity-mbt","taskId":"level1-spatial-witness","ownerPath":"packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts"}}
 {"unitId":"fog_cloud","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84E","ownerPath":"packages/battle-runtime/src/battle-runtime-test-support.ts"}}
+{"unitId":"flaming_sphere","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-MISSING-FLAMING-SPHERE","ownerPath":"packages/battle-runtime/src/unit-profile-admission-flaming-sphere.test.ts"}}
 {"unitId":"fog_cloud","evidence":{"tag":"selected-identity-mbt","taskId":"level1-spatial-witness","ownerPath":"packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts"}}
 {"unitId":"expeditious_retreat","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV49","ownerPath":"packages/battle-runtime/src/unit-profile-admission-movement-buff-spells.test.ts"}}
 {"unitId":"expeditious_retreat","evidence":{"tag":"selected-identity-mbt","taskId":"movement-forced-movement","ownerPath":"packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts"}}

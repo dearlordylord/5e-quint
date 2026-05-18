@@ -1707,6 +1707,10 @@ export const OngoingTriggerSchema = Schema.Union(
   }),
   Schema.Struct({ kind: Schema.Literal("on_creature_enters_area") }),
   Schema.Struct({ kind: Schema.Literal("on_creature_ends_turn_in_area") }),
+  Schema.Struct({
+    kind: Schema.Literal("on_creature_ends_turn_within_distance_of_area"),
+    distanceFeet: Schema.Number,
+  }),
   Schema.Struct({ kind: Schema.Literal("on_creature_moves_through_area") }),
   Schema.Struct({
     kind: Schema.Literal("on_creature_moves_within_area"),

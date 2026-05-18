@@ -8,12 +8,12 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 
 | Metric | Covered |
 | --- | ---: |
-| Strict runtime/profile support | 97/151 (64.2%) |
-| Strict target closure | 132/151 (87.4%) |
-| Product readiness | 472/556 (84.9%) |
-| Rules-kernel profile join | 16/69 (23.2%) |
-| Rules-kernel covered profile join | 11/69 (15.9%) |
-| Supported Unit rules-kernel chain | 30/97 (30.9%) |
+| Strict runtime/profile support | 98/152 (64.5%) |
+| Strict target closure | 133/152 (87.5%) |
+| Product readiness | 475/556 (85.4%) |
+| Rules-kernel profile join | 16/70 (22.9%) |
+| Rules-kernel covered profile join | 11/70 (15.7%) |
+| Supported Unit rules-kernel chain | 30/98 (30.6%) |
 
 ## Scope
 
@@ -21,16 +21,16 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | --- | ---: |
 | Candidate Unit ids before exclusions | 197 |
 | Companion-worktree exclusions | 1 |
-| SRD pressure with no Unit matrix row | 33 |
+| SRD pressure with no Unit matrix row | 32 |
 | Non-executable class containers | 12 |
-| Strict executable denominator | 151 |
+| Strict executable denominator | 152 |
 | Non-supported frontier | 54 |
 
 ## Status Groups
 
 | Status | Count | Units |
 | --- | ---: | --- |
-| supported-profile | 97 | `acid_splash`, `aid`, `animal_friendship`, `bane`, `barbarian_danger_sense`, `barbarian_rage`, `barbarian_reckless_attack`, `barbarian_unarmored_defense`, `bard_bardic_inspiration`, `bard_jack_of_all_trades`, `barkskin`, `bless`, `blindness_deafness`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_channel_divinity`, `cleric_divine_order`, `color_spray`, `command`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `druid_primal_order`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feather_fall`, `fighter_action_surge`, `fighter_fighting_style`, `fighter_second_wind`, `fighter_tactical_mind`, `fire_bolt`, `fog_cloud`, `grease`, `guidance`, `guiding_bolt`, `healing_word`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hunters_mark`, `ice_knife`, `inflict_wounds`, `jump`, `light`, `longstrider`, `mage_armor`, `magic_missile`, `misty_step`, `monk_martial_arts`, `monk_unarmored_defense`, `monk_unarmored_movement`, `paladin_lay_on_hands`, `paladin_paladins_smite`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `ranger_deft_explorer`, `ranger_weapon_mastery`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_cunning_action`, `rogue_expertise`, `rogue_sneak_attack`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `scorching_ray`, `searing_smite`, `shatter`, `shield`, `shield_of_faith`, `shillelagh`, `shining_smite`, `shocking_grasp`, `sleep`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `starry_wisp`, `thunderwave`, `true_strike`, `vicious_mockery`, `warlock_eldritch_invocations`, `warlock_magical_cunning`, `wizard_arcane_recovery`, `wizard_ritual_adept`, `wizard_scholar` |
+| supported-profile | 98 | `acid_splash`, `aid`, `animal_friendship`, `bane`, `barbarian_danger_sense`, `barbarian_rage`, `barbarian_reckless_attack`, `barbarian_unarmored_defense`, `bard_bardic_inspiration`, `bard_jack_of_all_trades`, `barkskin`, `bless`, `blindness_deafness`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_channel_divinity`, `cleric_divine_order`, `color_spray`, `command`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `druid_primal_order`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feather_fall`, `fighter_action_surge`, `fighter_fighting_style`, `fighter_second_wind`, `fighter_tactical_mind`, `fire_bolt`, `flaming_sphere`, `fog_cloud`, `grease`, `guidance`, `guiding_bolt`, `healing_word`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hunters_mark`, `ice_knife`, `inflict_wounds`, `jump`, `light`, `longstrider`, `mage_armor`, `magic_missile`, `misty_step`, `monk_martial_arts`, `monk_unarmored_defense`, `monk_unarmored_movement`, `paladin_lay_on_hands`, `paladin_paladins_smite`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `ranger_deft_explorer`, `ranger_weapon_mastery`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_cunning_action`, `rogue_expertise`, `rogue_sneak_attack`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `scorching_ray`, `searing_smite`, `shatter`, `shield`, `shield_of_faith`, `shillelagh`, `shining_smite`, `shocking_grasp`, `sleep`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `starry_wisp`, `thunderwave`, `true_strike`, `vicious_mockery`, `warlock_eldritch_invocations`, `warlock_magical_cunning`, `wizard_arcane_recovery`, `wizard_ritual_adept`, `wizard_scholar` |
 | open-runtime-behavior | 19 | `blur`, `continual_flame`, `find_steed`, `flame_blade`, `gentle_repose`, `heat_metal`, `hold_person`, `invisibility`, `lesser_restoration`, `magic_weapon`, `mind_spike`, `prayer_of_healing`, `protection_from_poison`, `ray_of_enfeeblement`, `spider_climb`, `spike_growth`, `spiritual_weapon`, `warding_bond`, `web` |
 | closed-runtime-detached-table-adjudication | 14 | `alarm`, `arcane_lock`, `charm_person`, `comprehend_languages`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `find_traps`, `identify`, `minor_illusion`, `pass_without_trace`, `silent_image`, `speak_with_animals`, `thaumaturgy` |
 | blocked-follow-up-split | 13 | `acid_arrow`, `alter_self`, `dragons_breath`, `druid_wild_shape`, `enhance_ability`, `enlarge_reduce`, `enthrall`, `monk_monks_focus`, `monk_uncanny_metabolism`, `moonbeam`, `see_invisibility`, `sorcerer_font_of_magic`, `sorcerer_metamagic` |
@@ -77,6 +77,7 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `feather_fall` | unmapped | `spell.invocation-feather-fall-mitigation` (unmapped: no obligation mapping) |
 | `fighter_fighting_style` | mapped-open | `character-creation.class-feature-feat-choice` (mapped-open: `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner)); `character-creation.class-feature-advancement-replacement` (mapped-open: `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner)) |
 | `fighter_tactical_mind` | unmapped | `unit-feature.failed-ability-check-resource-boost` (unmapped: no obligation mapping) |
+| `flaming_sphere` | unmapped | `spell.invocation-flaming-sphere-hazard-ram` (unmapped: no obligation mapping) |
 | `fog_cloud` | unmapped | `spell.invocation-fog-cloud-obscurement` (unmapped: no obligation mapping) |
 | `grease` | unmapped | `spell.invocation-grease-ground-hazard` (unmapped: no obligation mapping) |
 | `guidance` | unmapped | `spell.invocation-roll-modifier` (unmapped: no obligation mapping) |
@@ -217,7 +218,6 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `druid_wild_companion` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Druid Wild Companion |
 | `druidcraft` | 1 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/druidcraft.md` | Druid spell list Druidcraft |
 | `elementalism` | 3 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/elementalism.md` | Druid spell list Elementalism; Sorcerer spell list Elementalism; Wizard spell list Elementalism |
-| `flaming_sphere` | 3 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Druid spell list Flaming Sphere; Sorcerer spell list Flaming Sphere; Wizard spell list Flaming Sphere |
 | `floating_disk` | 1 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/floating_disk.md` | Wizard spell list Floating Disk |
 | `goodberry` | 2 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/goodberry.md` | Druid spell list Goodberry; Ranger spell list Goodberry |
 | `gust_of_wind` | 4 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Druid spell list Gust of Wind; Ranger spell list Gust of Wind; Sorcerer spell list Gust of Wind; Wizard spell list Gust of Wind |

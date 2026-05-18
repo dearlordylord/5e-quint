@@ -10,6 +10,8 @@ module battleRuntimeGroundCommand {
   import battleRuntimeMovement.* from "./battle-runtime-movement"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
+  import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
+  import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
 
   pure val greaseDurationTicks = 10
   pure val greaseAreaId = 1
@@ -17,6 +19,10 @@ module battleRuntimeGroundCommand {
   pure val fogCloudAreaId = 2
   pure val fogCloudBaseRadiusFeet = 20
   pure val fogCloudRadiusFeetPerSlotAboveFirst = 20
+  pure val flamingSphereDurationTicks = 10
+  pure val flamingSphereAreaId = 3
+  pure val flamingSphereDiameterFeet = 5
+  pure val flamingSphereRamMaxMoveFeet = 30
 
   pure def activeEffectsWithoutGreaseGroundHazard(effects: Set[ActiveEffect], areaId: int): Set[ActiveEffect] =
     effects.filter(effect => match effect {
@@ -137,6 +143,154 @@ module battleRuntimeGroundCommand {
       breakConcentrationSpellEffects(state, Fighter)
     else
       state
+
+  pure def flamingSphereDamageDice(slotLevel: int): int =
+    2 + (slotLevel - 2)
+
+  pure def activeEffectsWithoutFlamingSphere(effects: Set[ActiveEffect], areaId: int): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | FlamingSphere(data) => data.areaId != areaId
+      | _ => true
+    })
+
+  pure def resolveFlamingSphere(
+    state: BattleState,
+    areaId: int,
+    slotLevel: int,
+  ): BattleState =
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)) or slotLevel < 2)
+      state
+    else {
+      val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
+      commitActorSpellSlotUse({
+        ...withoutPrior,
+        fighter: {
+          ...withoutPrior.fighter,
+          concentrating: true,
+          activeEffects: activeEffectsWithoutFlamingSphere(withoutPrior.fighter.activeEffects, areaId)
+            .union(Set(FlamingSphere({
+              areaId: areaId,
+              damageDice: flamingSphereDamageDice(slotLevel),
+              durationTicks: flamingSphereDurationTicks,
+              ramMaxMoveFeet: flamingSphereRamMaxMoveFeet,
+            }))),
+        },
+        actionAvailable: false,
+      }, Fighter)
+    }
+
+  pure def flamingSphereActive(state: BattleState, areaId: int): bool =
+    state.fighter.activeEffects.exists(effect => match effect {
+      | FlamingSphere(data) => data.areaId == areaId
+      | _ => false
+    })
+
+  pure def flamingSphereActiveDamageDice(state: BattleState, areaId: int): int =
+    state.fighter.activeEffects
+      .map(effect => match effect {
+        | FlamingSphere(data) => if (data.areaId == areaId) data.damageDice else 0
+        | _ => 0
+      })
+      .fold(0, (highest, damageDice) => if (highest > damageDice) highest else damageDice)
+
+  pure def flamingSphereActiveRamMaxMoveFeet(state: BattleState, areaId: int): int =
+    state.fighter.activeEffects
+      .map(effect => match effect {
+        | FlamingSphere(data) => if (data.areaId == areaId) data.ramMaxMoveFeet else 0
+        | _ => 0
+      })
+      .fold(0, (highest, moveFeet) => if (highest > moveFeet) highest else moveFeet)
+
+  pure def flamingSphereDamageAfterSave(rolledDamage: int, savingThrowSucceeded: bool): int =
+    if (savingThrowSucceeded)
+      rolledDamage / 2
+    else
+      rolledDamage
+
+  pure def flamingSphereAdjustedDamage(rolledDamage: int, savingThrowSucceeded: bool): int =
+    damageAfterAdjustments(
+      flamingSphereDamageAfterSave(rolledDamage, savingThrowSucceeded),
+      Fire,
+      Set(),
+      Set(),
+      Set(),
+    )
+
+  pure def combatantWithFlamingSphereDamage(
+    target: Combatant,
+    rolledDamage: int,
+    savingThrowSucceeded: bool,
+  ): Combatant =
+    applyDamageFromSource(
+      target,
+      flamingSphereAdjustedDamage(rolledDamage, savingThrowSucceeded),
+      1,
+      true,
+      OrdinaryDamage,
+      Fighter,
+    )
+
+  pure def resolveFlamingSphereEndWithinFiveFeetSave(
+    state: BattleState,
+    targetActor: Actor,
+    areaId: int,
+    savingThrowSucceeded: bool,
+    rolledDamage: int,
+  ): BattleState =
+    if (not(flamingSphereActive(state, areaId)))
+      state
+    else {
+      match targetActor {
+        | Fighter => { ...state, fighter: combatantWithFlamingSphereDamage(state.fighter, rolledDamage, savingThrowSucceeded) }
+        | Goblin => { ...state, goblin: combatantWithFlamingSphereDamage(state.goblin, rolledDamage, savingThrowSucceeded) }
+      }
+    }
+
+  pure def endTurnWithFlamingSphereEndWithinFiveFeetSave(
+    state: BattleState,
+    targetActor: Actor,
+    areaId: int,
+    savingThrowSucceeded: bool,
+    rolledDamage: int,
+  ): BattleState =
+    endTurn(resolveFlamingSphereEndWithinFiveFeetSave(state, targetActor, areaId, savingThrowSucceeded, rolledDamage))
+
+  pure def resolveFlamingSphereRam(
+    state: BattleState,
+    targetActor: Actor,
+    areaId: int,
+    savingThrowSucceeded: bool,
+    rolledDamage: int,
+    moveFeet: int,
+  ): BattleState =
+    if (
+      not(flamingSphereActive(state, areaId)) or
+      currentActor(state) != Fighter or
+      not(state.bonusActionAvailable) or
+      moveFeet <= 0 or
+      moveFeet > flamingSphereActiveRamMaxMoveFeet(state, areaId)
+    )
+      state
+    else {
+      val damaged = resolveFlamingSphereEndWithinFiveFeetSave(state, targetActor, areaId, savingThrowSucceeded, rolledDamage)
+      { ...damaged, bonusActionAvailable: false }
+    }
+
+  pure def resolveFlamingSphereReposition(
+    state: BattleState,
+    areaId: int,
+    moveFeet: int,
+  ): BattleState =
+    if (
+      not(flamingSphereActive(state, areaId)) or
+      currentActor(state) != Fighter or
+      not(state.bonusActionAvailable) or
+      moveFeet <= 0 or
+      moveFeet > flamingSphereActiveRamMaxMoveFeet(state, areaId)
+    )
+      state
+    else
+      { ...state, bonusActionAvailable: false }
 
   pure def commandMaxTargets(slotLevel: int): int =
     slotLevel

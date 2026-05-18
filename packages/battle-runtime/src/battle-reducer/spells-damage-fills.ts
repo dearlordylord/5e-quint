@@ -866,6 +866,10 @@ export function spellAreaTargetingLabel(
   return Match.value(targeting).pipe(
     Match.when({ kind: "pointOriginSphere" }, () => "point-origin Sphere"),
     Match.when(
+      { kind: "pointOriginSphereDiameter" },
+      () => "point-origin Sphere",
+    ),
+    Match.when(
       { kind: "pointOriginCubeExcludingCaster" },
       () => "point-origin Cube",
     ),

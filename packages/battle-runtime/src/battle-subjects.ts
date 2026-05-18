@@ -1,3 +1,5 @@
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram
+
 import { Match, Schema } from "effect";
 import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
 import { SpellSlotLevel, spellSlotLevel } from "@dnd/shared/types";
@@ -44,6 +46,9 @@ export const BATTLE_RUNTIME_COMMANDS = [
   "releaseGrapple",
   "opportunityAttack",
   "greaseGroundHazardSave",
+  "flamingSphereSave",
+  "flamingSphereReposition",
+  "flamingSphereRam",
   "protectionRelevantEffectSave",
   "disperseFogCloud",
   "jumpMovementReplacement",
@@ -96,6 +101,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "hideousLaughter",
   "greaseGroundHazard",
   "fogCloudObscurement",
+  "flamingSphere",
   "command",
   "repeatedDamageAllocation",
   "directHitPointRestoration",
@@ -481,6 +487,33 @@ export const BattleSubjectSchema = Schema.Union(
     sourceSpellId: SpellId,
     areaId: BattleSubjectTextSchema,
     trigger: Schema.Literal("entersArea", "endsTurnInArea"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("flamingSphereSave"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: SpellId,
+    areaId: BattleSubjectTextSchema,
+    trigger: Schema.Literal("endsTurnWithinFiveFeetOfSphere"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("flamingSphereReposition"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: SpellId,
+    areaId: BattleSubjectTextSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("flamingSphereRam"),
+    targetId: CombatantId,
+    sourceCombatantId: CombatantId,
+    sourceSpellId: SpellId,
+    areaId: BattleSubjectTextSchema,
+    trigger: Schema.Literal("rammedBySphere"),
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),

@@ -139,6 +139,21 @@ export function discoverSupportedSpellInvocations(
           },
         ];
       }
+      if (invocation.procedure === "flamingSphere") {
+        return [
+          {
+            subject: {
+              tag: "actionSpell" as const,
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
+            },
+            label: invocation.spell.name,
+            summary: `${spellActivationInvocationCastSummary(invocation)} The table supplies the sphere area identity.`,
+            initialHoles: [spellAreaChoiceHole(invocation)],
+          },
+        ];
+      }
       if (invocation.procedure === "selfTeleport") {
         return [
           {
@@ -897,6 +912,7 @@ export function spellActivationInvocationCastSummary(
         | "command"
         | "greaseGroundHazard"
         | "fogCloudObscurement"
+        | "flamingSphere"
         | "dancingLightsSeparateCast"
         | "dancingLightsCombinedCast"
         | "jumpMovementReplacement"
@@ -1032,6 +1048,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "command" &&
     invocation.procedure !== "greaseGroundHazard" &&
     invocation.procedure !== "fogCloudObscurement" &&
+    invocation.procedure !== "flamingSphere" &&
     invocation.procedure !== "spellAttackSequence" &&
     invocation.procedure !== "shieldReaction"
   );
@@ -1073,6 +1090,7 @@ export function readiedSpellAct(
     invocation.procedure === "command" ||
     invocation.procedure === "greaseGroundHazard" ||
     invocation.procedure === "fogCloudObscurement" ||
+    invocation.procedure === "flamingSphere" ||
     invocation.procedure === "shieldReaction" ||
     (invocation.procedure === "spellAttackDamage" &&
       invocation.damage.kind === "sorcerousBurstDamageTypeChoice") ||
