@@ -100,9 +100,9 @@ structured Surface records, the following candidate-source gaps were found:
   perception, Darkvision 30 feet, and Bonus Action reposition distance, but it
   omits the solid-barrier block and 1-inch-opening movement clauses.
 - `packages/surface/content/see_invisibility.json` records the effect as
-  `grant_sense` with `sense = "truesight"` and `rangeFeet = 0`. The source
-  comment names this as a closest-match encoding, not an exact sense. Runtime
-  admission should split See Invisibility from full Truesight before claiming
+  `see_invisible_and_ethereal`, a narrow Surface sight override. Runtime
+  admission still needs observer-scoped sight witnesses before claiming
+  Invisible or Ethereal Plane behavior, and must continue not to claim
   Darkness, visual-illusion, or transformation behavior.
 - `packages/surface/content/tongues.json` records spoken-or-signed
   understanding and outward intelligibility to any language-knower. No battle
@@ -169,9 +169,11 @@ Round 2 architecture and connascence pass:
   for catalog and claim state.
 - Existing profile ids are cited from `profiles.jsonl`; this artifact does not
   create parallel support metadata or duplicate runtime gates.
-- The main connascence risk is the structured See Invisibility closest-match
-  encoding through `grant_sense`/`truesight`. Future admission must split that
-  source shape or support gate before claiming full Truesight behavior.
+- The main connascence risk is future runtime projection treating See
+  Invisibility as full Truesight. The structured source now uses the narrower
+  `see_invisible_and_ethereal` sight override; future support gates must
+  preserve that split before claiming observer-visible Invisible or Ethereal
+  Plane behavior.
 - Strong remaining coupling is local to the candidate table, source findings,
   and follow-up list: if a candidate moves buckets, those sections must change
   together.

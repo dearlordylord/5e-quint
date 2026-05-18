@@ -1,11 +1,15 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30B bane bless guidance
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-PASS-WITHOUT-TRACE pass_without_trace
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-MISSING-ENHANCE-ABILITY enhance_ability
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30F resistance
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-roll-modifier spell.invocation-damage-reduction
 import { describe, expect, test } from "vitest";
 import {
   baneUnitId,
   blessUnitId,
+  enhanceAbilityUnitId,
   guidanceUnitId,
+  passWithoutTraceUnitId,
   rayOfFrostUnitId,
   resistanceUnitId,
   spellCasterId,
@@ -25,6 +29,7 @@ import {
 } from "./unit-profile-admission-creature-fixture-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
+  abilityChoiceFill,
   requireSpellDamageReductionHole,
   savingThrowOutcomeFill,
   skillChoiceFill,
@@ -46,6 +51,7 @@ import type {
   BattleState,
   BattleSubject,
 } from "./unit-profile-admission-test-support.ts";
+import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
 
 describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
   test("bless is admitted as a concentration d4 bonus with slot-scaled targets", () => {
@@ -340,6 +346,183 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         skill: "stealth",
       }),
     );
+  });
+
+  test("pass without trace stores a fixed Stealth ability-check bonus on the caster and chosen creatures in the emanation", () => {
+    const spell = spellRecord(passWithoutTraceUnitId);
+    const secondTargetId = combatantId(
+      "unit-profile-pass-without-trace-target-2",
+    );
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      extraTargetIds: [secondTargetId],
+    });
+    const act = spellAct({
+      state,
+      spellId: passWithoutTraceUnitId,
+      slotLevel: 2,
+    });
+    const targetListHole = requireHole(act.initialHoles, "spellTargetList");
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(
+        passWithoutTraceUnitId,
+        2,
+        "rollModifier",
+      ),
+      mode: { tag: "cast" },
+    });
+    expect(targetListHole).toEqual(
+      expect.objectContaining({ minTargets: 1, maxTargets: 3 }),
+    );
+
+    const missingCaster = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetListFill(
+          targetListHole,
+          spellCasterId,
+          passWithoutTraceUnitId,
+          [spellTargetId],
+        ),
+      ],
+    });
+    expect(missingCaster).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetListFill(
+          targetListHole,
+          spellCasterId,
+          passWithoutTraceUnitId,
+          [spellCasterId, spellTargetId],
+        ),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Pass without Trace to resolve.");
+    }
+    expect(
+      resolved.state.combatants.get(spellCasterId)?.activeEffects,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "d20RollModifier",
+        sourceSpellId: passWithoutTraceUnitId,
+        sourceCombatantId: spellCasterId,
+        on: ["ability_check"],
+        delta: { dice: 10, dieSize: 1, sign: "+" },
+        skill: "stealth",
+        expiresAt: { kind: "concentration", combatantId: spellCasterId },
+      }),
+    );
+    expect(
+      resolved.state.combatants.get(spellTargetId)?.activeEffects,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "d20RollModifier",
+        sourceSpellId: passWithoutTraceUnitId,
+        skill: "stealth",
+      }),
+    );
+    expect(
+      resolved.state.combatants
+        .get(secondTargetId)
+        ?.activeEffects.some(
+          (effect) =>
+            effect.kind === "d20RollModifier" &&
+            effect.sourceSpellId === passWithoutTraceUnitId,
+        ),
+    ).toBe(false);
+  });
+
+  test("enhance ability requires a chosen ability and projects Ability Check Advantage for that ability", () => {
+    const spell = spellRecord(enhanceAbilityUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = spellAct({ state, spellId: enhanceAbilityUnitId });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const abilityHole = requireHole(act.initialHoles, "abilityChoice");
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(
+        enhanceAbilityUnitId,
+        2,
+        "rollModifier",
+      ),
+      mode: { tag: "cast" },
+    });
+    expect(targetHole.choices).toContain(spellTargetId);
+    expect(abilityHole.choices).toEqual(["str", "dex", "int", "wis", "cha"]);
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(
+          targetHole,
+          enhanceAbilityUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+        abilityChoiceFill(abilityHole, "dex"),
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.objectContaining({
+            combatantId: spellCasterId,
+            concentrating: true,
+          }),
+          expect.anything(),
+        ],
+      },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Enhance Ability to resolve.");
+    }
+    expect(
+      resolved.state.combatants.get(spellTargetId)?.activeEffects,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "abilityCheckRollMode",
+        sourceSpellId: enhanceAbilityUnitId,
+        sourceCombatantId: spellCasterId,
+        mode: "advantage",
+        ability: "dex",
+        expiresAt: {
+          kind: "concentration",
+          combatantId: spellCasterId,
+        },
+      }),
+    );
+    expect(
+      requiredAbilityCheckRollMode(resolved.state, spellTargetId, "dex", {
+        skill: "stealth",
+      }),
+    ).toBe("advantage");
+    expect(
+      requiredAbilityCheckRollMode(resolved.state, spellTargetId, "str", {
+        skill: "athletics",
+      }),
+    ).toBeUndefined();
   });
 
   test("resistance stores a chosen damage-type reduction with a once-per-turn use marker", () => {

@@ -23,13 +23,14 @@ module battleRuntimeConcentration {
       NormalSavingThrow
 
   pure def spellEffectConcentrationActiveEffects(): Set[ActiveEffect] =
-    Set(ShieldOfFaithArmorClassBonus, HeroismFrightenedImmunity, BaneD20RollPenalty, BlessD20RollBonus, GuidanceAbilityCheckBonus, EntangleRestrained, FaerieFireOutline, ProtectionFromEvilAndGoodCreatureTypeProtection, ExpeditiousRetreatDashBonusAction)
+    Set(ShieldOfFaithArmorClassBonus, HeroismFrightenedImmunity, BaneD20RollPenalty, BlessD20RollBonus, GuidanceAbilityCheckBonus, PassWithoutTraceStealthBonus, EntangleRestrained, FaerieFireOutline, ProtectionFromEvilAndGoodCreatureTypeProtection, ExpeditiousRetreatDashBonusAction)
 
   pure def activeEffectsWithoutSpellEffectConcentration(effects: Set[ActiveEffect]): Set[ActiveEffect] =
     effects
       .exclude(spellEffectConcentrationActiveEffects)
       .filter(effect => match effect {
         | HeroismTurnStartTemporaryHitPoints(_) => false
+        | EnhanceAbilityCheckAdvantage(_) => false
         | EnsnaringStrikeRestrained(_) => false
         | SearingSmiteBurning(_) => false
         | FogCloudObscurement(_) => false

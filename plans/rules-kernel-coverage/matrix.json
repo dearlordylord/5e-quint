@@ -1,0 +1,611 @@
+{
+  "summary": {
+    "total": 15,
+    "covered": 8,
+    "open": 5,
+    "nonSemantic": 2,
+    "byRuntime": {
+      "shared-algebras": 1,
+      "battle": 9,
+      "character-creation": 2,
+      "character-sheet": 2,
+      "character-battle": 1
+    },
+    "byStatus": {
+      "covered": 8,
+      "needs-qnt-owner": 4,
+      "needs-parity-witness": 0,
+      "needs-surface-evidence": 1,
+      "boundary-only": 1,
+      "unsupported-by-admission": 1
+    }
+  },
+  "derivedFields": {
+    "obligations[].profiles": "Derived from profileObligations by obligation id; authored obligations.jsonl rows must not contain profiles."
+  },
+  "obligations": [
+    {
+      "id": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
+      "kind": "hole-frontier",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [],
+      "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts"
+    },
+    {
+      "id": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+      "kind": "reaction-continuation",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "spell.reaction-shield",
+        "spell.readied-action-time-spell",
+        "unit-feature.reaction-roll-or-damage-reduction"
+      ],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [],
+      "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+    },
+    {
+      "id": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+      "kind": "profile-procedure",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "unit-feature.action-surge-resource",
+        "unit-feature.alternate-action-cost",
+        "unit-feature.attack-damage-rider",
+        "unit-feature.bonus-action-ongoing-rage",
+        "unit-feature.first-attack-roll-reckless-advantage",
+        "unit-feature.passive-armor-class-bonus",
+        "unit-feature.passive-ranged-attack-roll-bonus",
+        "unit-feature.reaction-roll-or-damage-reduction",
+        "unit-feature.save-damage-replacement",
+        "unit-feature.self-bonus-action-healing",
+        "unit-feature.weapon-critical-range-19",
+        "unit-feature.weapon-damage-dice-roll-choice",
+        "unit-feature.zero-hit-point-replacement"
+      ],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [],
+      "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+    },
+    {
+      "id": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+      "kind": "profile-procedure",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "spell.hit-point-restoration",
+        "spell.invocation-damage-save-or-attack",
+        "spell.reaction-shield",
+        "spell.readied-action-time-spell"
+      ],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [],
+      "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+    },
+    {
+      "id": "BATTLE.STAT_BLOCK.ATTACK_CONTROL",
+      "kind": "profile-procedure",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-stat-block-controls.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "stat-block.attack-control"
+      ],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [],
+      "title": "Battle Stat Block action, Multiattack, limited-use, recharge, reaction, and legendary action controls"
+    },
+    {
+      "id": "CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/character-creation-runtime/src/character-creation-runtime.mbt.test.ts",
+          "qntSpecPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/character-creation-runtime/character-creation-runtime-slice.qnt"
+      ],
+      "runtime": "character-creation",
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/fill-reducer.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [],
+      "title": "Character Creation draft hole discovery, atomic fill batch, rediscovery, and finalization status for the established supported slice"
+    },
+    {
+      "id": "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
+      "kind": "projection-scalar",
+      "parityWitnesses": [
+        {
+          "deterministicReplayRationale": "Armor Class base formula is a scalar projection fixture with explicitly named selected-identity cases; random branch interleavings are not the risk for this obligation.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/character-sheet-runtime/src/armor-class-base-selected-identity.mbt.test.ts",
+          "qntSpecPath": "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [
+        "character-sheet.armor-class-base-formula"
+      ],
+      "qntOwners": [
+        "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt"
+      ],
+      "runtime": "character-sheet",
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [],
+      "title": "Character Sheet Armor Class base formula selection from build, loadout, and class-feature facts"
+    },
+    {
+      "id": "BATTLE.HOLE.SEMANTIC_FRONTIER_CLASSIFICATION",
+      "kind": "hole-frontier",
+      "parityWitnesses": [],
+      "profiles": [],
+      "qntOwners": [],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "status": "needs-qnt-owner",
+      "surfaceEvidence": [],
+      "title": "Classify every current BattleHole kind as QNT-owned semantic frontier, deterministic boundary projection, or unsupported/dead branch"
+    },
+    {
+      "id": "BATTLE.SURFACE.EXECUTABLE_PROFILE_JOIN",
+      "kind": "composition",
+      "parityWitnesses": [],
+      "profiles": [],
+      "qntOwners": [],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "status": "needs-surface-evidence",
+      "surfaceEvidence": [],
+      "title": "Prove each currently admitted executable battle Surface profile points to a covered semantic obligation"
+    },
+    {
+      "id": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+      "kind": "composition",
+      "parityWitnesses": [],
+      "profiles": [
+        "character-creation.class-feature-advancement-replacement",
+        "character-creation.class-feature-feat-choice",
+        "character-creation.eldritch-invocation-choice",
+        "character-creation.warlock-pact-magic-advancement",
+        "character-creation.weapon-mastery-choice"
+      ],
+      "qntOwners": [],
+      "runtime": "character-creation",
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/index.ts"
+      ],
+      "status": "needs-qnt-owner",
+      "surfaceEvidence": [],
+      "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+    },
+    {
+      "id": "SHEET.REST_AND_RESOURCE.TRANSITIONS",
+      "kind": "state-transition",
+      "parityWitnesses": [],
+      "profiles": [],
+      "qntOwners": [],
+      "runtime": "character-sheet",
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "status": "needs-qnt-owner",
+      "surfaceEvidence": [],
+      "title": "Audit current Character Sheet HP, rest, spell-slot, pact-slot, Hit Dice, and feature-resource transitions into QNT-connected obligations"
+    },
+    {
+      "id": "CHARACTER.BATTLE.HANDOFF.SETTLEMENT",
+      "kind": "composition",
+      "parityWitnesses": [],
+      "profiles": [],
+      "qntOwners": [],
+      "runtime": "character-battle",
+      "runtimeOwners": [
+        "packages/character-battle-runtime/src/index.ts"
+      ],
+      "status": "needs-qnt-owner",
+      "surfaceEvidence": [],
+      "title": "Audit Character Sheet to battle init and battle handoff settlement for HP, zero-HP lifecycle, conditions, spell slots, and identity checks"
+    },
+    {
+      "id": "BATTLE.PROTOCOL.MALFORMED_PAYLOAD_REJECTION",
+      "kind": "boundary-protocol",
+      "parityWitnesses": [],
+      "profiles": [],
+      "qntOwners": [],
+      "reason": "These failures do not change legal table-observable game state; typed parsers and deterministic protocol tests own them.",
+      "runtime": "battle",
+      "runtimeOwners": [],
+      "status": "boundary-only",
+      "surfaceEvidence": [],
+      "title": "Malformed client payload, unreadable fill shape, and unknown public ids are parser/protocol failures rather than reducer semantics"
+    },
+    {
+      "id": "BATTLE.SURFACE.CATALOG_ONLY_RECORDS",
+      "kind": "boundary-protocol",
+      "parityWitnesses": [],
+      "profiles": [],
+      "qntOwners": [],
+      "reason": "Schema/catalog presence alone is not TS-current reducer support.",
+      "runtime": "battle",
+      "runtimeOwners": [],
+      "status": "unsupported-by-admission",
+      "surfaceEvidence": [],
+      "title": "Surface records that parse or ship but do not admit into an executable runtime profile are outside the rules-kernel QNT denominator"
+    },
+    {
+      "id": "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "deterministicReplayRationale": "Positive Hit Point damage has four explicitly named finite fixture cases with no sequencing or interleaving claim; qReplayIndex makes the closed case table execute once per case.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/battle-runtime/src/rule-core-hit-point-damage.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/hit-point-damage.qnt"
+      ],
+      "runtime": "shared-algebras",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/damage-apply.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [],
+      "title": "Shared resolved positive-Hit-Point damage procedure and its TS parity route through consuming reducers"
+    }
+  ],
+  "profileObligations": [
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.alternate-action-cost"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.action-surge-resource"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.attack-damage-rider"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.bonus-action-ongoing-rage"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.first-attack-roll-reckless-advantage"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.passive-armor-class-bonus"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.passive-ranged-attack-roll-bonus"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.REACTION.OFFER_DECLINE_RESUME"
+      ],
+      "profileId": "unit-feature.reaction-roll-or-damage-reduction"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.save-damage-replacement"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.self-bonus-action-healing"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.weapon-critical-range-19"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.weapon-damage-dice-roll-choice"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.zero-hit-point-replacement"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "spell.invocation-damage-save-or-attack"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "spell.hit-point-restoration"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.REACTION.OFFER_DECLINE_RESUME"
+      ],
+      "profileId": "spell.reaction-shield"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.REACTION.OFFER_DECLINE_RESUME"
+      ],
+      "profileId": "spell.readied-action-time-spell"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.STAT_BLOCK.ATTACK_CONTROL"
+      ],
+      "profileId": "stat-block.attack-control"
+    },
+    {
+      "obligationIds": [
+        "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE"
+      ],
+      "profileId": "character-sheet.armor-class-base-formula"
+    },
+    {
+      "obligationIds": [
+        "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT"
+      ],
+      "profileId": "character-creation.class-feature-feat-choice"
+    },
+    {
+      "obligationIds": [
+        "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT"
+      ],
+      "profileId": "character-creation.class-feature-advancement-replacement"
+    },
+    {
+      "obligationIds": [
+        "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT"
+      ],
+      "profileId": "character-creation.warlock-pact-magic-advancement"
+    },
+    {
+      "obligationIds": [
+        "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT"
+      ],
+      "profileId": "character-creation.weapon-mastery-choice"
+    },
+    {
+      "obligationIds": [
+        "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT"
+      ],
+      "profileId": "character-creation.eldritch-invocation-choice"
+    }
+  ],
+  "generatorReadiness": [
+    {
+      "blockedBy": [
+        "packages/shared-algebras/proofs/rule-core/hit-point-damage.qnt mixes semantic definitions with run tests; split tests or teach the generator to ignore run blocks before treating the whole file as generation-subset-clean"
+      ],
+      "dryRun": "plans/rules-kernel-coverage/GENERATOR_READINESS_HIT_POINTS_DRY_RUN.md",
+      "generatorSubset": [
+        "variant",
+        "record",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "implies",
+        "all-block"
+      ],
+      "obligationId": "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/hit-point-damage-inductive.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/hit-point-damage.qnt"
+      ],
+      "status": "fixture-bound"
+    }
+  ],
+  "profileIdsSeenFromUnitProfileCoverage": [
+    "character-creation.class-feature-advancement-replacement",
+    "character-creation.class-feature-feat-choice",
+    "character-creation.class-feature-option-projection",
+    "character-creation.class-feature-resource-projection",
+    "character-creation.eldritch-invocation-choice",
+    "character-creation.skill-expertise-choice",
+    "character-creation.warlock-pact-magic-advancement",
+    "character-creation.weapon-mastery-choice",
+    "character-sheet.ability-check-proficiency-bonus",
+    "character-sheet.armor-class-base-formula",
+    "character-sheet.healing-resource-action",
+    "character-sheet.pact-slot-recovery",
+    "character-sheet.short-rest-spell-slot-recovery",
+    "character-sheet.spellbook-ritual-invocation",
+    "character-sheet.weapon-mastery-reselection",
+    "spell.creature-type-protection-and-charm",
+    "spell.find-familiar-lifecycle",
+    "spell.hit-point-restoration",
+    "spell.invocation-after-hit-damage",
+    "spell.invocation-after-hit-restraint-turn-start-damage",
+    "spell.invocation-after-hit-timed-damage-save",
+    "spell.invocation-attack-roll-advantage-save",
+    "spell.invocation-beam-sequence",
+    "spell.invocation-chained-attack-damage",
+    "spell.invocation-command-approach-route",
+    "spell.invocation-command-drop-held-object",
+    "spell.invocation-command-flee-route",
+    "spell.invocation-command-halt-grovel",
+    "spell.invocation-condition-immunity-turn-start-temporary-hit-points",
+    "spell.invocation-condition-save",
+    "spell.invocation-damage-reduction",
+    "spell.invocation-damage-save-or-attack",
+    "spell.invocation-dancing-lights-movable-dim-light",
+    "spell.invocation-expeditious-retreat-dash",
+    "spell.invocation-feather-fall-mitigation",
+    "spell.invocation-fog-cloud-obscurement",
+    "spell.invocation-forced-reaction-movement",
+    "spell.invocation-grease-ground-hazard",
+    "spell.invocation-held-light-emitter",
+    "spell.invocation-hideous-laughter-repeat-save-lifecycle",
+    "spell.invocation-jump-movement-replacement",
+    "spell.invocation-make-stable",
+    "spell.invocation-marked-damage-rider",
+    "spell.invocation-object-light",
+    "spell.invocation-roll-modifier",
+    "spell.invocation-sanctuary-targeting-interdiction",
+    "spell.invocation-self-ability-check-advantage",
+    "spell.invocation-sleep-repeat-save-lifecycle",
+    "spell.invocation-sleep-target-admission",
+    "spell.invocation-spell-hosted-weapon-attack",
+    "spell.invocation-weapon-attack-override",
+    "spell.invocation-weapon-damage-rider",
+    "spell.reaction-counterspell",
+    "spell.reaction-hellish-rebuke",
+    "spell.reaction-shield",
+    "spell.readied-action-time-spell",
+    "spell.scalar-buff",
+    "stat-block.attack-control",
+    "unit-feature.action-surge-resource",
+    "unit-feature.alternate-action-cost",
+    "unit-feature.attack-action-attack-count-scaling",
+    "unit-feature.attack-damage-reduction-zero-damage-redirect",
+    "unit-feature.attack-damage-rider",
+    "unit-feature.attack-roll-miss-to-hit-replacement",
+    "unit-feature.bardic-inspiration-failed-d20-test",
+    "unit-feature.bardic-inspiration-grant",
+    "unit-feature.bonus-action-dash-temporary-hit-points",
+    "unit-feature.bonus-action-ongoing-rage",
+    "unit-feature.failed-ability-check-resource-boost",
+    "unit-feature.first-attack-roll-reckless-advantage",
+    "unit-feature.innate-sorcery-activation",
+    "unit-feature.martial-arts-attack-projection",
+    "unit-feature.passive-armor-class-bonus",
+    "unit-feature.passive-ranged-attack-roll-bonus",
+    "unit-feature.passive-saving-throw-roll-mode",
+    "unit-feature.passive-speed-bonus",
+    "unit-feature.passive-speed-kind-grants",
+    "unit-feature.reaction-roll-or-damage-reduction",
+    "unit-feature.save-damage-replacement",
+    "unit-feature.self-bonus-action-healing",
+    "unit-feature.weapon-critical-range-19",
+    "unit-feature.weapon-damage-dice-roll-choice",
+    "unit-feature.weapon-mastery-cleave",
+    "unit-feature.weapon-mastery-sap",
+    "unit-feature.weapon-mastery-topple",
+    "unit-feature.zero-hit-point-replacement"
+  ]
+}

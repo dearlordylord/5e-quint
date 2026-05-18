@@ -1,8 +1,10 @@
 import type {
   Attachment,
   MarkTransfer,
+  OngoingActionCost,
   OngoingEffectMechanics,
   OngoingOperation,
+  Range,
 } from "../surface/types.ts";
 import type { TraceEdge, TraceNode } from "./tracer-model.ts";
 import {
@@ -23,7 +25,7 @@ import {
 import { tracePhase } from "./tracer-activation.ts";
 
 import {
-  describeOngoingCasterActionCost,
+  describeOngoingActionCost,
   traceAttachment,
 } from "./tracer-attachments.ts";
 
@@ -57,7 +59,16 @@ export function traceOngoingEffect(
   }
 
   for (const op of m.operations) {
-    traceOngoingOperation(op, ctx.procId, attId, ctx.slotId, nodes, edges, ids);
+    traceOngoingOperation(
+      op,
+      ctx.procId,
+      attId,
+      ctx.slotId,
+      ctx.range,
+      nodes,
+      edges,
+      ids,
+    );
   }
 }
 
@@ -122,6 +133,7 @@ export function traceOngoingOperation(
   procId: string,
   attId: string,
   slotId: string | null,
+  range: Range,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
@@ -161,10 +173,17 @@ export function traceOngoingOperation(
     effectHostRelation,
     attId,
     slotId,
+    range,
     nodes,
     edges,
     ids,
   );
+}
+
+function ongoingActionWindowAtomKind(
+  cost: OngoingActionCost,
+): "action_window" | "bonus_action_window" {
+  return cost.kind === "bonus_action" ? "bonus_action_window" : "action_window";
 }
 
 export function traceOngoingPredicateGate(
@@ -421,15 +440,24 @@ export function traceOngoingTrigger(
     }
     case "on_caster_spends_action": {
       const winId = ids("win");
-      const atomKind =
-        trigger.cost.kind === "bonus_action"
-          ? "bonus_action_window"
-          : "action_window";
+      const atomKind = ongoingActionWindowAtomKind(trigger.cost);
       nodes.push({
         id: winId,
         category: "window",
         atomKind,
-        label: `${atomKind}\n(caster spends ${describeOngoingCasterActionCost(trigger.cost)})`,
+        label: `${atomKind}\n(caster spends ${describeOngoingActionCost(trigger.cost)})`,
+      });
+      edges.push({ from: procId, to: winId, relation: "opens_window" });
+      return { hostId: winId, hostRelation: "grants" };
+    }
+    case "on_attached_spends_action": {
+      const winId = ids("win");
+      const atomKind = ongoingActionWindowAtomKind(trigger.cost);
+      nodes.push({
+        id: winId,
+        category: "window",
+        atomKind,
+        label: `${atomKind}\n(attached creature spends ${describeOngoingActionCost(trigger.cost)})`,
       });
       edges.push({ from: procId, to: winId, relation: "opens_window" });
       return { hostId: winId, hostRelation: "grants" };
@@ -500,6 +528,7 @@ export function traceOngoingOpEffect(
   hostRelation: "grants" | "opens_window",
   attId: string,
   slotId: string | null,
+  range: Range,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
@@ -520,6 +549,10 @@ export function traceOngoingOpEffect(
     case "save_gate": {
       // §A9 — damage-triggered or turn-start save inside an ongoing
       // effect. Reuses the activation save_gate atom.
+      const saveAttachmentId =
+        eff.attachment === undefined
+          ? attId
+          : traceAttachment(eff.attachment, range, nodes, ids);
       const sgId = ids("sg");
       nodes.push({
         id: sgId,
@@ -528,7 +561,7 @@ export function traceOngoingOpEffect(
         label: `save_gate\n${eff.ability.toUpperCase()} vs ${describeDc(eff.dc)}`,
       });
       edges.push({ from: hostId, to: sgId, relation: hostRelation });
-      edges.push({ from: sgId, to: attId, relation: "attaches_to" });
+      edges.push({ from: sgId, to: saveAttachmentId, relation: "attaches_to" });
       const failId = traceEffectAtom(eff.onFail, nodes, ids, edges);
       if (failId !== null) {
         edges.push({ from: sgId, to: failId, relation: "branches_on_save" });
@@ -596,6 +629,7 @@ export function traceOngoingOpEffect(
           "grants",
           attId,
           slotId,
+          range,
           nodes,
           edges,
           ids,
@@ -655,6 +689,7 @@ export function traceOngoingOpEffect(
             "grants",
             attId,
             slotId,
+            range,
             nodes,
             edges,
             ids,

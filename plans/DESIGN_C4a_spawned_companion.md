@@ -232,6 +232,14 @@ type CompanionStatBlockOverrides = {
 
 ### Control + dismissal
 
+`CompanionControl` means rule protocol, not tactic policy. It records RAW facts
+such as command cost, command range, initiative relationship, turn timing, and
+fixed default behavior. Runtime code may expose legal companion acts and require
+holes/fills or table-supplied witnesses, but the table chooses the command,
+action, target, route, and placement. The in-world caster/owner may be the rules
+actor; runtime code still receives explicit choices instead of choosing them. Do
+not implement autonomous companion tactics in this family.
+
 ```ts
 type CompanionControl = {
   readonly initiative: "shared_with_caster" | "own_roll";
@@ -241,7 +249,7 @@ type CompanionControl = {
     | { kind: "bonus_action"; }                        // Animate Dead, Create Undead
     | { kind: "action"; };
   readonly commandRangeFeet: number;                   // 60 / 100 / 500 ft
-  readonly defaultBehavior: "dodge_and_avoid" | "independent";
+  readonly defaultBehavior: "dodge_and_avoid" | "independent"; // independent means table-selected acts, not runtime tactic policy
   readonly telepathy?: {
     readonly rangeFeet: number;
     readonly sharedSenses?: "bonus_action";

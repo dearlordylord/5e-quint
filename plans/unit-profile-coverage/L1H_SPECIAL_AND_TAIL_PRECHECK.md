@@ -38,7 +38,7 @@ still lack selected identity MBT evidence:
 | --- | --- | --- |
 | L1H-ANIMAL-FRIENDSHIP | `animal_friendship` | `spell.creature-type-protection-and-charm` |
 | L1H-PROTECTION-EVIL-GOOD | `protection_from_evil_and_good` | `spell.creature-type-protection-and-charm` |
-| L1H-ELDRITCH-BLAST | `eldritch_blast` | `spell.invocation-beam-sequence` |
+| L1H-ELDRITCH-BLAST | `eldritch_blast` | `spell.invocation-independent-attack-sequence` |
 | L1H-MAGE-ARMOR | `mage_armor` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
 | L1H-SANCTUARY | `sanctuary` | `spell.invocation-sanctuary-targeting-interdiction` |
 

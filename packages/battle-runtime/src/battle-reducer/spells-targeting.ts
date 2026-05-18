@@ -21,6 +21,7 @@ import {
   type BattleSpellTargetListHole,
   type BattleSpellTargetListSpatialFact,
   type BattleState,
+  type BattleTeleportDestinationHole,
   type BattleObjectTargetChoiceHole,
   type BattleCreatureState,
   type BattleTargetChoiceHole,
@@ -29,6 +30,7 @@ import {
   type TargetListSpellInvocation,
 } from "../battle-reducer.ts";
 import { COMMAND_OPTIONS } from "./domain-constants.ts";
+import { spellAttackSequencePartName } from "./spells-profile-shared.ts";
 import type { BattleObjectId } from "../identity.ts";
 
 type SingleCreatureOrObjectSpellAttackDamageInvocation =
@@ -39,7 +41,7 @@ type SingleCreatureOrObjectSpellAttackDamageInvocation =
     ? {
         readonly procedure:
           | "heldLightHurl"
-          | "spellAttackBeamSequence"
+          | "spellAttackSequence"
           | "spellAttackDamage";
         readonly spell: { readonly id: string; readonly name: string };
         readonly rangeFeet: ObjectFact extends {
@@ -49,8 +51,18 @@ type SingleCreatureOrObjectSpellAttackDamageInvocation =
           : never;
       }
     : never;
+type SpellAttackSequenceInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "spellAttackSequence" }
+>;
+type SpellAttackSequenceObjectTargetHoleInvocation =
+  SpellAttackSequenceInvocation;
 type SingleObjectSpellInvocation =
-  | SingleCreatureOrObjectSpellAttackDamageInvocation
+  | Exclude<
+      SingleCreatureOrObjectSpellAttackDamageInvocation,
+      { readonly procedure: "spellAttackSequence" }
+    >
+  | SpellAttackSequenceObjectTargetHoleInvocation
   | Extract<
       SupportedSpellInvocation,
       {
@@ -89,21 +101,22 @@ export function spellTargetHole(
   };
 }
 
-export function spellBeamTargetHole(
+export function spellAttackSequencePartTargetHole(
   state: BattleState,
   actorId: CombatantId,
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "spellAttackBeamSequence" }
+    { readonly procedure: "spellAttackSequence" }
   >,
-  beamIndex: number,
+  partIndex: number,
 ): BattleTargetChoiceHole {
-  const holeKey = spellBeamTargetHoleKey(invocation, beamIndex);
+  const holeKey = spellAttackSequencePartTargetHoleKey(invocation, partIndex);
+  const partName = spellAttackSequencePartName(invocation.spell);
   return {
     kind: "targetChoice",
     holeId: holeId(holeKey),
     holeInstanceKey: holeInstanceKey(holeKey),
-    label: `${invocation.spell.name} beam ${beamIndex + 1} target`,
+    label: `${invocation.spell.name} ${partName} ${partIndex + 1} target`,
     requiresTableSpatialFact: true,
     choices: [...state.combatants.keys()].filter((id) =>
       spellTargetHasNonSpatialPrerequisites(state, actorId, id, invocation),
@@ -111,24 +124,24 @@ export function spellBeamTargetHole(
   };
 }
 
-export function spellBeamTargetHoleId(
+export function spellAttackSequencePartTargetHoleId(
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "spellAttackBeamSequence" }
+    { readonly procedure: "spellAttackSequence" }
   >,
-  beamIndex: number,
+  partIndex: number,
 ): BattleHoleId {
-  return holeId(spellBeamTargetHoleKey(invocation, beamIndex));
+  return holeId(spellAttackSequencePartTargetHoleKey(invocation, partIndex));
 }
 
-function spellBeamTargetHoleKey(
+function spellAttackSequencePartTargetHoleKey(
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "spellAttackBeamSequence" }
+    { readonly procedure: "spellAttackSequence" }
   >,
-  beamIndex: number,
+  partIndex: number,
 ): string {
-  return `battle:spell:beam-target:${invocation.spell.id}:${beamIndex}`;
+  return `battle:spell:attack-sequence-part-target:${invocation.spell.id}:${partIndex}`;
 }
 
 export function spellObjectTargetHole(
@@ -144,41 +157,33 @@ export function spellObjectTargetHole(
   };
 }
 
-export function spellBeamObjectTargetHole(
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "spellAttackBeamSequence" }
-  >,
-  beamIndex: number,
+export function spellAttackSequencePartObjectTargetHole(
+  invocation: SpellAttackSequenceObjectTargetHoleInvocation,
+  partIndex: number,
 ): BattleObjectTargetChoiceHole {
-  const holeKey = spellBeamObjectTargetHoleKey(invocation, beamIndex);
+  const holeKey = spellAttackSequencePartObjectTargetHoleKey(invocation, partIndex);
+  const partName = spellAttackSequencePartName(invocation.spell);
   return {
     kind: "objectTargetChoice",
     holeId: holeId(holeKey),
     holeInstanceKey: holeInstanceKey(holeKey),
-    label: `${invocation.spell.name} beam ${beamIndex + 1} object target`,
+    label: `${invocation.spell.name} ${partName} ${partIndex + 1} object target`,
     requiresTableSpatialFact: true,
   };
 }
 
-export function spellBeamObjectTargetHoleId(
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "spellAttackBeamSequence" }
-  >,
-  beamIndex: number,
+export function spellAttackSequencePartObjectTargetHoleId(
+  invocation: SpellAttackSequenceInvocation,
+  partIndex: number,
 ): BattleHoleId {
-  return holeId(spellBeamObjectTargetHoleKey(invocation, beamIndex));
+  return holeId(spellAttackSequencePartObjectTargetHoleKey(invocation, partIndex));
 }
 
-function spellBeamObjectTargetHoleKey(
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "spellAttackBeamSequence" }
-  >,
-  beamIndex: number,
+function spellAttackSequencePartObjectTargetHoleKey(
+  invocation: SpellAttackSequenceInvocation,
+  partIndex: number,
 ): string {
-  return `battle:spell:beam-object-target:${invocation.spell.id}:${beamIndex}`;
+  return `battle:spell:attack-sequence-part-object-target:${invocation.spell.id}:${partIndex}`;
 }
 
 export function spellObjectTargetHoleId(
@@ -282,6 +287,9 @@ export function spellTargetListHole(
   invocation: TargetListSpellInvocation,
 ): BattleSpellTargetListHole {
   const holeKey = `battle:spell:target-list:${invocation.spell.id}`;
+  const choices = [...state.combatants.keys()].filter((id) =>
+    spellTargetHasNonSpatialPrerequisites(state, actorId, id, invocation),
+  );
   return {
     kind: "spellTargetList",
     holeId: spellTargetListHoleId(invocation),
@@ -289,12 +297,33 @@ export function spellTargetListHole(
     label: `${invocation.spell.name} targets`,
     spell: invocation,
     minTargets: invocation.targeting.minTargets,
-    maxTargets: invocation.targeting.maxTargets,
+    maxTargets: targetListHoleMaxTargets(invocation, choices.length),
     requiresTableSpatialFact: true,
-    choices: [...state.combatants.keys()].filter((id) =>
-      spellTargetHasNonSpatialPrerequisites(state, actorId, id, invocation),
-    ),
+    choices,
   };
+}
+
+export function targetListTargetingHasFixedMaximum(
+  targeting: TargetListSpellInvocation["targeting"],
+): targeting is TargetListSpellInvocation["targeting"] & {
+  readonly maxTargets: number;
+} {
+  return "maxTargets" in targeting;
+}
+
+function targetListTargetingRequiresCaster(
+  targeting: TargetListSpellInvocation["targeting"],
+): boolean {
+  return targeting.kind === "selfAndChosenLegalTargets";
+}
+
+function targetListHoleMaxTargets(
+  invocation: TargetListSpellInvocation,
+  choiceCount: number,
+): number {
+  return targetListTargetingHasFixedMaximum(invocation.targeting)
+    ? invocation.targeting.maxTargets
+    : choiceCount;
 }
 
 export function commandOptionChoiceHole(
@@ -347,6 +376,46 @@ export function spellAreaChoiceHoleId(
   >,
 ): BattleHoleId {
   return holeId(`battle:spell:area-choice:${invocation.spell.id}`);
+}
+
+export function spellTeleportDestinationHole(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "selfTeleport" }
+  >,
+  actorId: CombatantId,
+): BattleTeleportDestinationHole {
+  const holeKey = spellTeleportDestinationHoleKey(invocation, actorId);
+  return {
+    kind: "teleportDestination",
+    holeId: spellTeleportDestinationHoleId(invocation, actorId),
+    holeInstanceKey: holeInstanceKey(holeKey),
+    label: `${invocation.spell.name} destination`,
+    spell: invocation,
+    actorId,
+    maxDistanceFeet: invocation.maxDistanceFeet,
+    requiresTableSpatialFact: true,
+  };
+}
+
+export function spellTeleportDestinationHoleId(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "selfTeleport" }
+  >,
+  actorId: CombatantId,
+): BattleHoleId {
+  return holeId(spellTeleportDestinationHoleKey(invocation, actorId));
+}
+
+function spellTeleportDestinationHoleKey(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "selfTeleport" }
+  >,
+  actorId: CombatantId,
+): string {
+  return `battle:spell:teleport-destination:${actorId}:${invocation.spell.id}`;
 }
 
 export function spellTargetIsLegal(
@@ -602,8 +671,17 @@ export function validateSpellTargetList(
   if (targetIds.length < invocation.targeting.minTargets) {
     return `${invocation.spell.name} must target at least ${invocation.targeting.minTargets} creature.`;
   }
-  if (targetIds.length > invocation.targeting.maxTargets) {
+  if (
+    targetListTargetingHasFixedMaximum(invocation.targeting) &&
+    targetIds.length > invocation.targeting.maxTargets
+  ) {
     return `${invocation.spell.name} can target at most ${invocation.targeting.maxTargets} creatures.`;
+  }
+  if (
+    targetListTargetingRequiresCaster(invocation.targeting) &&
+    !targetIds.includes(actorId)
+  ) {
+    return `${invocation.spell.name} must include the caster among its targets.`;
   }
   const seen = new Set<CombatantId>();
   for (const targetId of targetIds) {

@@ -7,19 +7,19 @@
     {
       "number": 43,
       "id": "L12G-SPELL-SCORCHING-RAY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Scorching Ray Runtime Support"
     },
     {
       "number": 44,
       "id": "L12G-SPELL-SEE-INVISIBILITY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "See Invisibility Runtime Support Or Closure"
     },
     {
       "number": 45,
       "id": "L12G-SPELL-SHATTER",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Shatter Runtime Support"
     },
     {
@@ -99,6 +99,12 @@
       "id": "L12G-MISSING-DETECT-THOUGHTS",
       "status": "ready-for-research",
       "title": "Detect Thoughts Definition And Closure"
+    },
+    {
+      "number": 90,
+      "id": "L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT",
+      "status": "ready-for-research",
+      "title": "See Invisibility Observer Sight Runtime Support"
     },
     {
       "number": 59,
@@ -206,7 +212,7 @@
 }
 -->
 
-This is the second level-2 execution lane. Loop B owns Tasks 43-58 only. Loop D owns Tasks 59-75. Loop A owns Tasks 22-36 and 88-89; Loop C owns Tasks 37-42 and 76-87. Do not implement or re-open sibling-lane tasks from this lane.
+This is the second level-2 execution lane. Loop B owns Tasks 43-58 and Task 90 only. Loop D owns Tasks 59-75. Loop A owns Tasks 22-36 and 88-89; Loop C owns Tasks 37-42 and 76-87. Do not implement or re-open sibling-lane tasks from this lane.
 
 ## Worktree Safety Prefix
 
@@ -281,11 +287,11 @@ use the repository MBT scarcity protocol.
 
 ## Included Work
 
-Loop B contains 16 atomic tasks: Tasks 43-58, from Scorching Ray through
-Detect Thoughts. Tasks 59-75 have moved to Loop D. The historical manifest rows
-for Tasks 59-75 remain below, but they stay `deferred` here so Loop B cannot
-pick them. It excludes all level-1, Loop D/L, companion/familiar boundary, and
-Counterspell work.
+Loop B contains 17 atomic tasks: Tasks 43-58, from Scorching Ray through
+Detect Thoughts, plus Task 90 for the See Invisibility follow-up split. Tasks
+59-75 have moved to Loop D. The historical manifest rows for Tasks 59-75 remain
+below, but they stay `deferred` here so Loop B cannot pick them. It excludes all
+level-1, Loop D/L, companion/familiar boundary, and Counterspell work.
 
 | Lane | Gate | Task | Unit |
 | ---: | ---: | --- | --- |
@@ -305,6 +311,7 @@ Counterspell work.
 | 56 | 58 | `L12G-MISSING-DARKNESS` | `darkness` |
 | 57 | 59 | `L12G-MISSING-DARKVISION` | `darkvision` |
 | 58 | 60 | `L12G-MISSING-DETECT-THOUGHTS` | `detect_thoughts` |
+| 90 | 46 | `L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT` | `see_invisibility` |
 | 59 | 61 | `L12G-MISSING-DRAGONS-BREATH` | `dragons_breath` |
 | 60 | 62 | `L12G-MISSING-ENHANCE-ABILITY` | `enhance_ability` |
 | 61 | 63 | `L12G-MISSING-ENLARGE-REDUCE` | `enlarge_reduce` |
@@ -327,7 +334,7 @@ Counterspell work.
 
 ### Task 43 - L12G-SPELL-SCORCHING-RAY - Scorching Ray Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `scorching_ray`. Gate task: 45 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -339,6 +346,9 @@ Inputs:
 - local RAW under `.references/srd-5.2.1/`;
 - `UBIQUITOUS_LANGUAGE.md`;
 - existing Surface content, Unit claims, owner evidence, and focused tests for `scorching_ray`.
+- continuation WIP, if still available, on branch `backup/level2-b-task-43-scorching-ray-wip-20260518-121151`
+  at commit `c9b0cb72be980577800e685dd16fb67863d56a2f`; inspect and cherry-pick/rework it only
+  if it still matches RAW, ubiquitous language, architecture, and the task output contract.
 
 Outputs:
 
@@ -354,9 +364,14 @@ Acceptance:
 
 ### Task 44 - L12G-SPELL-SEE-INVISIBILITY - See Invisibility Runtime Support Or Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `see_invisibility`. Gate task: 46 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Result: See Invisibility is installed in the SRD Unit catalog with a distinct
+`see_invisible_and_ethereal` Surface effect atom and an `unsupported-profile`
+claim. Runtime behavior remains executable as Task 90 rather than being
+collapsed into Truesight or catalog admission.
 
 Inputs:
 
@@ -381,9 +396,16 @@ Acceptance:
 
 ### Task 45 - L12G-SPELL-SHATTER - Shatter Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `shatter`. Gate task: 47 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Result: Shatter is a `supported-profile` Unit for save-gated Thunder damage,
+Construct save Disadvantage, slot scaling, and caller-supplied nonmagical
+unattended object damage facts. Automatic area membership, line of effect,
+object inventory/material/magical/worn-carried discovery, and grid geometry
+remain runtime-detached table/spatial derivations outside the Shatter runtime
+profile.
 
 Inputs:
 
@@ -1213,5 +1235,36 @@ Outputs:
 Acceptance:
 
 - the level 1-2 metric row for `zone_of_truth` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 90 - L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT - See Invisibility Observer Sight Runtime Support
+
+Status: `ready-for-research`
+
+Unit: `see_invisibility`. Gate task: 46 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- Task 44's installed `see_invisibility` Surface record and Unit claim;
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing observer, sight, Invisible condition, Spell Invocation, Spell Effect, duration, and owner-evidence code/tests.
+
+Outputs:
+
+- promote See Invisibility as a level-2 self spell that spends the Magic Action and Spell Slot;
+- apply and clean up a one-hour self Spell Effect;
+- expose observer-scoped sight facts that let only the caster see creatures and objects with the Invisible condition as visible;
+- expose Ethereal Plane visibility through table-supplied plane, distance, cover, and sight-line witnesses;
+- supported-profile Unit claim, deterministic admission/projection evidence, focused battle-runtime tests, and promoted Quint/runtime parity.
+
+Acceptance:
+
+- See Invisibility support does not grant Truesight, Darkness sight, visual-illusion handling, or transformation detection;
+- observer-scoped Invisible benefit denial and Ethereal visibility witness facts are covered by focused runtime tests and the relevant promoted Quint/runtime parity checks;
 - no level-1 Loop D/L or companion boundary work is pulled into this lane;
 - focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.

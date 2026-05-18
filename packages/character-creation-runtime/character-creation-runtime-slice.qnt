@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY
 
 module characterCreationRuntimeSlice {
   // SRD traceability for this character-creation parity model:

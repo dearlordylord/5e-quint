@@ -49,8 +49,11 @@ import druidDruidicInput from "../../content/druid_druidic.json";
 import druidPrimalOrderInput from "../../content/druid_primal_order.json";
 import druidWildShapeInput from "../../content/druid_wild_shape.json";
 import eldritchBlastInput from "../../content/eldritch_blast.json";
+import enhanceAbilityInput from "../../content/enhance_ability.json";
+import enlargeReduceInput from "../../content/enlarge_reduce.json";
 import ensnaringStrikeInput from "../../content/ensnaring_strike.json";
 import entangleInput from "../../content/entangle.json";
+import enthrallInput from "../../content/enthrall.json";
 import expeditiousRetreatInput from "../../content/expeditious_retreat.json";
 import faerieFireInput from "../../content/faerie_fire.json";
 import featherFallInput from "../../content/feather_fall.json";
@@ -75,6 +78,7 @@ import falseLifeInput from "../../content/false_life.json";
 import fireBoltInput from "../../content/fire_bolt.json";
 import fireballInput from "../../content/fireball.json";
 import findFamiliarInput from "../../content/find_familiar.json";
+import findTrapsInput from "../../content/find_traps.json";
 import fogCloudInput from "../../content/fog_cloud.json";
 import guidanceInput from "../../content/guidance.json";
 import greaseInput from "../../content/grease.json";
@@ -97,6 +101,7 @@ import massHealingWordInput from "../../content/mass_healing_word.json";
 import masteryCleaveInput from "../../content/mastery_cleave.json";
 import masterySapInput from "../../content/mastery_sap.json";
 import masteryToppleInput from "../../content/mastery_topple.json";
+import mistyStepInput from "../../content/misty_step.json";
 import minorIllusionInput from "../../content/minor_illusion.json";
 import monkDeflectAttacksInput from "../../content/monk_deflect_attacks.json";
 import monkMartialArtsInput from "../../content/monk_martial_arts.json";
@@ -113,6 +118,7 @@ import paladinFightingStyleInput from "../../content/paladin_fighting_style.json
 import paladinLayOnHandsInput from "../../content/paladin_lay_on_hands.json";
 import paladinPaladinsSmiteInput from "../../content/paladin_paladins_smite.json";
 import paladinWeaponMasteryInput from "../../content/paladin_weapon_mastery.json";
+import passWithoutTraceInput from "../../content/pass_without_trace.json";
 import poisonSprayInput from "../../content/poison_spray.json";
 import protectionFromEvilAndGoodInput from "../../content/protection_from_evil_and_good.json";
 import produceFlameInput from "../../content/produce_flame.json";
@@ -155,6 +161,8 @@ import shillelaghInput from "../../content/shillelagh.json";
 import shockingGraspInput from "../../content/shocking_grasp.json";
 import sleepInput from "../../content/sleep.json";
 import sacredFlameInput from "../../content/sacred_flame.json";
+import scorchingRayInput from "../../content/scorching_ray.json";
+import seeInvisibilityInput from "../../content/see_invisibility.json";
 import searingSmiteInput from "../../content/searing_smite.json";
 import sorcererFontOfMagicInput from "../../content/sorcerer_font_of_magic.json";
 import sorcererInnateSorceryInput from "../../content/sorcerer_innate_sorcery.json";
@@ -405,8 +413,11 @@ export const srdUnitCollection = defineSrdUnitCollection({
     dissonantWhispersInput,
     divineFavorInput,
     divineSmiteInput,
+    enhanceAbilityInput,
+    enlargeReduceInput,
     ensnaringStrikeInput,
     entangleInput,
+    enthrallInput,
     expeditiousRetreatInput,
     faerieFireInput,
     featherFallInput,
@@ -414,6 +425,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     fireBoltInput,
     fireballInput,
     findFamiliarInput,
+    findTrapsInput,
     fogCloudInput,
     guidanceInput,
     greaseInput,
@@ -426,6 +438,8 @@ export const srdUnitCollection = defineSrdUnitCollection({
     jumpInput,
     lightInput,
     longstriderInput,
+    mistyStepInput,
+    passWithoutTraceInput,
     poisonSprayInput,
     protectionFromEvilAndGoodInput,
     produceFlameInput,
@@ -434,6 +448,8 @@ export const srdUnitCollection = defineSrdUnitCollection({
     resistanceInput,
     sacredFlameInput,
     sanctuaryInput,
+    scorchingRayInput,
+    seeInvisibilityInput,
     searingSmiteInput,
     shockingGraspInput,
     sorcerousBurstInput,

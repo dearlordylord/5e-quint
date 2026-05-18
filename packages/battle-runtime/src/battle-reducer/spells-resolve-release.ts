@@ -452,11 +452,11 @@ function dancingLightsFillSetHasUnrelatedFills(
     fillSet.targetSpatialFacts.length > 0 ||
     fillSet.targetAllocation !== undefined ||
     fillSet.targetList !== undefined ||
-    fillSet.beamFills.some(
-      (beamFill) =>
-        beamFill.target !== undefined ||
-        beamFill.attackRoll !== undefined ||
-        beamFill.damageRoll !== undefined,
+    fillSet.attackSequencePartFills.some(
+      (attackSequencePartFill) =>
+        attackSequencePartFill.target !== undefined ||
+        attackSequencePartFill.attackRoll !== undefined ||
+        attackSequencePartFill.damageRoll !== undefined,
     ) ||
     fillSet.attackRoll !== undefined ||
     fillSet.savingThrowOutcomes !== undefined ||

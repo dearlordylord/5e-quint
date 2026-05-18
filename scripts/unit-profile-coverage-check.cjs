@@ -35,6 +35,9 @@ const { runSelfTest } = require("./unit-profile-coverage-self-test.cjs");
 const {
   validateCoverageInputs,
 } = require("./unit-profile-coverage-validation.cjs");
+const {
+  buildKernelCoverage,
+} = require("./rules-kernel-coverage-check.cjs");
 
 const root = process.env.UNIT_PROFILE_COVERAGE_ROOT ?? process.cwd();
 const write = process.argv.includes("--write");
@@ -47,6 +50,11 @@ function main() {
   const unitClaims = readJsonl(root, paths.unitClaims);
   const unitEvidence = readJsonl(root, paths.unitEvidence);
   const taskClaims = readJsonl(root, paths.taskClaims);
+  const rulesKernelObligations = readJsonl(root, paths.rulesKernelObligations);
+  const rulesKernelProfileObligations = readJsonl(
+    root,
+    paths.rulesKernelProfileObligations,
+  );
   const characterCreationOwnerEvidence = readJson(
     paths.characterCreationOwnerEvidence,
   );
@@ -77,6 +85,11 @@ function main() {
     taskClaims,
     scannedClaims,
   });
+  issues.push(
+    ...buildKernelCoverage({ root }).issues.map(
+      (issue) => `rules-kernel: ${issue}`,
+    ),
+  );
   issues.push(...validateSrdUnitInventory(srdUnitInventory));
   if (issues.length > 0) {
     for (const issue of issues)
@@ -94,6 +107,8 @@ function main() {
       unitClaims,
       unitEvidence,
       taskClaims,
+      rulesKernelObligations,
+      rulesKernelProfileObligations,
     },
     {
       executableProfileKinds,

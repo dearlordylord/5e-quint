@@ -186,7 +186,7 @@ Scope:
 Out of scope:
 
 - Pact of the Chain's forgo-one-attack exception;
-- adding generic command AI or automatic behavior from "obeys your commands";
+- adding generic command/action-selection policy or automatic behavior from "obeys your commands";
 - deriving target legality from map geometry.
 
 ### SRDINV84I4 - Promote Telepathic Connection and Touch-Spell Delivery

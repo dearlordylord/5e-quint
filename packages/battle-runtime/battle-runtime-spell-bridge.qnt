@@ -116,15 +116,16 @@ module battleRuntimeSpellBridge {
   type BattleRuntimeAttackBurstSaveDamageProfile =
     | BattleRuntimeIceKnifeAttackBurstSaveDamage
 
-  type BattleRuntimeSpellAttackBeamSequenceProfile =
+  type BattleRuntimeSpellAttackSequenceProfile =
     | BattleRuntimeEldritchBlastBeamSequence
+    | BattleRuntimeScorchingRaySequence
 
-  type BattleRuntimeSpellAttackBeamSequenceStep =
-    | BattleRuntimeBeamSequenceUnavailable
-    | BattleRuntimeBeamSequenceNeedsTargets
-    | BattleRuntimeBeamSequenceNeedsAttackRoll
-    | BattleRuntimeBeamSequenceNeedsDamageRoll
-    | BattleRuntimeBeamSequenceComplete
+  type BattleRuntimeSpellAttackSequenceStep =
+    | BattleRuntimeSpellAttackSequenceUnavailable
+    | BattleRuntimeSpellAttackSequenceNeedsTargets
+    | BattleRuntimeSpellAttackSequenceNeedsAttackRoll
+    | BattleRuntimeSpellAttackSequenceNeedsDamageRoll
+    | BattleRuntimeSpellAttackSequenceComplete
 
   type BattleRuntimeSorcerousBurstDamageTypeChoice =
     | BattleRuntimeSorcerousBurstAcidDamage
@@ -574,58 +575,59 @@ module battleRuntimeSpellBridge {
   pure def battleRuntimeAttackBurstSaveDamageBurstAmount(damageRoll: int, savingThrowSucceeded: bool): int =
     attackBurstSaveDamageBurstAmount(damageRoll, savingThrowSucceeded)
 
-  pure def battleRuntimeSpellAttackBeamSequenceProfile(
-    profile: BattleRuntimeSpellAttackBeamSequenceProfile
-  ): SpellAttackBeamSequenceProfile =
+  pure def battleRuntimeSpellAttackSequenceProfile(
+    profile: BattleRuntimeSpellAttackSequenceProfile
+  ): SpellAttackSequenceProfile =
     match profile {
       | BattleRuntimeEldritchBlastBeamSequence => EldritchBlastBeamSequenceProfile
+      | BattleRuntimeScorchingRaySequence => ScorchingRaySequenceProfile
     }
 
-  pure def battleRuntimeSpellAttackBeamSequenceStep(
-    step: SpellAttackBeamSequenceStep
-  ): BattleRuntimeSpellAttackBeamSequenceStep =
+  pure def battleRuntimeSpellAttackSequenceStep(
+    step: SpellAttackSequenceStep
+  ): BattleRuntimeSpellAttackSequenceStep =
     match step {
-      | BeamSequenceUnavailable => BattleRuntimeBeamSequenceUnavailable
-      | BeamSequenceNeedsTargets => BattleRuntimeBeamSequenceNeedsTargets
-      | BeamSequenceNeedsAttackRoll => BattleRuntimeBeamSequenceNeedsAttackRoll
-      | BeamSequenceNeedsDamageRoll => BattleRuntimeBeamSequenceNeedsDamageRoll
-      | BeamSequenceComplete => BattleRuntimeBeamSequenceComplete
+      | SpellAttackSequenceUnavailable => BattleRuntimeSpellAttackSequenceUnavailable
+      | SpellAttackSequenceNeedsTargets => BattleRuntimeSpellAttackSequenceNeedsTargets
+      | SpellAttackSequenceNeedsAttackRoll => BattleRuntimeSpellAttackSequenceNeedsAttackRoll
+      | SpellAttackSequenceNeedsDamageRoll => BattleRuntimeSpellAttackSequenceNeedsDamageRoll
+      | SpellAttackSequenceComplete => BattleRuntimeSpellAttackSequenceComplete
     }
 
-  pure def battleRuntimeSpellAttackBeamSequenceDamageType(
-    profile: BattleRuntimeSpellAttackBeamSequenceProfile
+  pure def battleRuntimeSpellAttackSequenceDamageType(
+    profile: BattleRuntimeSpellAttackSequenceProfile
   ): RuleDamageType =
-    spellAttackBeamSequenceDamageType(battleRuntimeSpellAttackBeamSequenceProfile(profile))
+    spellAttackSequenceDamageType(battleRuntimeSpellAttackSequenceProfile(profile))
 
-  pure def battleRuntimeSpellAttackBeamSequenceSupportsObjectTargets(
-    profile: BattleRuntimeSpellAttackBeamSequenceProfile
+  pure def battleRuntimeSpellAttackSequenceSupportsObjectTargets(
+    profile: BattleRuntimeSpellAttackSequenceProfile
   ): bool =
-    spellAttackBeamSequenceSupportsObjectTargets(battleRuntimeSpellAttackBeamSequenceProfile(profile))
+    spellAttackSequenceSupportsObjectTargets(battleRuntimeSpellAttackSequenceProfile(profile))
 
-  pure def battleRuntimeSpellAttackBeamSequenceBeamCount(
-    profile: BattleRuntimeSpellAttackBeamSequenceProfile,
-    characterLevel: int
+  pure def battleRuntimeSpellAttackSequenceAttackCount(
+    profile: BattleRuntimeSpellAttackSequenceProfile,
+    scalingLevel: int
   ): int =
-    spellAttackBeamSequenceBeamCount(battleRuntimeSpellAttackBeamSequenceProfile(profile), characterLevel)
+    spellAttackSequenceAttackCount(battleRuntimeSpellAttackSequenceProfile(profile), scalingLevel)
 
-  pure def battleRuntimeSpellAttackBeamSequenceNextStep(
-    profile: BattleRuntimeSpellAttackBeamSequenceProfile,
+  pure def battleRuntimeSpellAttackSequenceNextStep(
+    profile: BattleRuntimeSpellAttackSequenceProfile,
     canCastSpells: bool,
-    beamCount: int,
-    beamTargetsFilled: int,
-    beamAttackRollsFilled: int,
-    beamHits: int,
-    beamDamageRollsFilled: int,
-  ): BattleRuntimeSpellAttackBeamSequenceStep =
-    battleRuntimeSpellAttackBeamSequenceStep(
-      spellAttackBeamSequenceStep(
-        battleRuntimeSpellAttackBeamSequenceProfile(profile),
+    attackCount: int,
+    targetsFilled: int,
+    attackRollsFilled: int,
+    hits: int,
+    damageRollsFilled: int,
+  ): BattleRuntimeSpellAttackSequenceStep =
+    battleRuntimeSpellAttackSequenceStep(
+      spellAttackSequenceStep(
+        battleRuntimeSpellAttackSequenceProfile(profile),
         canCastSpells,
-        beamCount,
-        beamTargetsFilled,
-        beamAttackRollsFilled,
-        beamHits,
-        beamDamageRollsFilled,
+        attackCount,
+        targetsFilled,
+        attackRollsFilled,
+        hits,
+        damageRollsFilled,
       )
     )
 
@@ -906,19 +908,29 @@ module battleRuntimeSpellBridge {
     }
   }
 
-  run test_spell_attack_beam_sequence_projection = {
+  run test_spell_attack_sequence_projection = {
     all {
-      assert(battleRuntimeSpellAttackBeamSequenceDamageType(BattleRuntimeEldritchBlastBeamSequence) == ForceDamage),
-      assert(battleRuntimeSpellAttackBeamSequenceSupportsObjectTargets(BattleRuntimeEldritchBlastBeamSequence)),
-      assert(battleRuntimeSpellAttackBeamSequenceBeamCount(BattleRuntimeEldritchBlastBeamSequence, 1) == 1),
-      assert(battleRuntimeSpellAttackBeamSequenceBeamCount(BattleRuntimeEldritchBlastBeamSequence, 5) == 2),
-      assert(battleRuntimeSpellAttackBeamSequenceBeamCount(BattleRuntimeEldritchBlastBeamSequence, 11) == 3),
-      assert(battleRuntimeSpellAttackBeamSequenceBeamCount(BattleRuntimeEldritchBlastBeamSequence, 17) == 4),
-      assert(battleRuntimeSpellAttackBeamSequenceNextStep(BattleRuntimeEldritchBlastBeamSequence, false, 2, 0, 0, 0, 0) == BattleRuntimeBeamSequenceUnavailable),
-      assert(battleRuntimeSpellAttackBeamSequenceNextStep(BattleRuntimeEldritchBlastBeamSequence, true, 2, 0, 0, 0, 0) == BattleRuntimeBeamSequenceNeedsTargets),
-      assert(battleRuntimeSpellAttackBeamSequenceNextStep(BattleRuntimeEldritchBlastBeamSequence, true, 2, 2, 1, 0, 0) == BattleRuntimeBeamSequenceNeedsAttackRoll),
-      assert(battleRuntimeSpellAttackBeamSequenceNextStep(BattleRuntimeEldritchBlastBeamSequence, true, 2, 2, 2, 2, 1) == BattleRuntimeBeamSequenceNeedsDamageRoll),
-      assert(battleRuntimeSpellAttackBeamSequenceNextStep(BattleRuntimeEldritchBlastBeamSequence, true, 2, 2, 2, 1, 1) == BattleRuntimeBeamSequenceComplete),
+      assert(battleRuntimeSpellAttackSequenceDamageType(BattleRuntimeEldritchBlastBeamSequence) == ForceDamage),
+      assert(battleRuntimeSpellAttackSequenceDamageType(BattleRuntimeScorchingRaySequence) == FireDamage),
+      assert(battleRuntimeSpellAttackSequenceSupportsObjectTargets(BattleRuntimeEldritchBlastBeamSequence)),
+      assert(battleRuntimeSpellAttackSequenceSupportsObjectTargets(BattleRuntimeScorchingRaySequence)),
+      assert(battleRuntimeSpellAttackSequenceAttackCount(BattleRuntimeEldritchBlastBeamSequence, 1) == 1),
+      assert(battleRuntimeSpellAttackSequenceAttackCount(BattleRuntimeEldritchBlastBeamSequence, 5) == 2),
+      assert(battleRuntimeSpellAttackSequenceAttackCount(BattleRuntimeEldritchBlastBeamSequence, 11) == 3),
+      assert(battleRuntimeSpellAttackSequenceAttackCount(BattleRuntimeEldritchBlastBeamSequence, 17) == 4),
+      assert(battleRuntimeSpellAttackSequenceAttackCount(BattleRuntimeScorchingRaySequence, 1) == 0),
+      assert(battleRuntimeSpellAttackSequenceAttackCount(BattleRuntimeScorchingRaySequence, 2) == 3),
+      assert(battleRuntimeSpellAttackSequenceAttackCount(BattleRuntimeScorchingRaySequence, 3) == 4),
+      assert(battleRuntimeSpellAttackSequenceAttackCount(BattleRuntimeScorchingRaySequence, 5) == 6),
+      assert(battleRuntimeSpellAttackSequenceNextStep(BattleRuntimeEldritchBlastBeamSequence, false, 2, 0, 0, 0, 0) == BattleRuntimeSpellAttackSequenceUnavailable),
+      assert(battleRuntimeSpellAttackSequenceNextStep(BattleRuntimeEldritchBlastBeamSequence, true, 2, 0, 0, 0, 0) == BattleRuntimeSpellAttackSequenceNeedsTargets),
+      assert(battleRuntimeSpellAttackSequenceNextStep(BattleRuntimeEldritchBlastBeamSequence, true, 2, 2, 1, 0, 0) == BattleRuntimeSpellAttackSequenceNeedsAttackRoll),
+      assert(battleRuntimeSpellAttackSequenceNextStep(BattleRuntimeEldritchBlastBeamSequence, true, 2, 2, 2, 2, 1) == BattleRuntimeSpellAttackSequenceNeedsDamageRoll),
+      assert(battleRuntimeSpellAttackSequenceNextStep(BattleRuntimeEldritchBlastBeamSequence, true, 2, 2, 2, 1, 1) == BattleRuntimeSpellAttackSequenceComplete),
+      assert(battleRuntimeSpellAttackSequenceNextStep(BattleRuntimeScorchingRaySequence, true, 3, 0, 0, 0, 0) == BattleRuntimeSpellAttackSequenceNeedsTargets),
+      assert(battleRuntimeSpellAttackSequenceNextStep(BattleRuntimeScorchingRaySequence, true, 3, 3, 2, 0, 0) == BattleRuntimeSpellAttackSequenceNeedsAttackRoll),
+      assert(battleRuntimeSpellAttackSequenceNextStep(BattleRuntimeScorchingRaySequence, true, 3, 3, 3, 2, 1) == BattleRuntimeSpellAttackSequenceNeedsDamageRoll),
+      assert(battleRuntimeSpellAttackSequenceNextStep(BattleRuntimeScorchingRaySequence, true, 3, 3, 3, 1, 1) == BattleRuntimeSpellAttackSequenceComplete),
     }
   }
 

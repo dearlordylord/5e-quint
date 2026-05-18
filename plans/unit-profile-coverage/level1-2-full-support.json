@@ -683,6 +683,52 @@
       "unitId": "detect_poison_and_disease"
     },
     {
+      "catalogDisposition": {
+        "category": "srd-candidate",
+        "planningLane": "QMBT14-QMBT16",
+        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
+      },
+      "catalogStatus": "not-in-unit-catalog",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST: Promote the Bonus Action spell invocation that spends a level-2-or-higher Spell Slot, chooses Acid, Cold, Fire, Lightning, or Poison once at cast time, targets one willing touched creature, starts caster-owned Concentration for up to 1 minute, and stores a target-attached active effect with the chosen damage type, caster spell save DC, and original slot level without duplicating Spell Access state or reauthoring damage-type options. Owner: battle-runtime spell invocation/effect lifecycle. Required output: Supported runtime owner evidence for Dragon's Breath initial casting, Spell Slot spending, damage-type choice retention, caster spell save DC retention, original slot level retention, willing target attachment, Concentration expiry, and active-effect cleanup.; L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION: Discover and execute the attached target's Magic action while the spell remains active, using the stored caster spell save DC, chosen damage type, and original slot level to resolve a 15-foot Cone Dexterity save for half damage with slot scaling from the original cast. Owner: battle-runtime target-granted action lifecycle plus promoted Quint parity. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for target-side action discovery, action economy spending, area membership input, save-for-half damage, slot scaling, and expiry behavior.",
+      "sourceRecordPath": "packages/surface/content/dragons_breath.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Sorcerer spell list Dragon's Breath",
+          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_dragons_breath",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 276,
+            "lineStart": 276,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Dragon's Breath",
+          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_dragons_breath",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 208,
+            "lineStart": 208,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
+      "unitId": "dragons_breath"
+    },
+    {
       "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
@@ -744,6 +790,201 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES: Promote level 3+ Enhance Ability casting so each additional target selected by the upcast can carry its own Strength, Dexterity, Intelligence, Wisdom, or Charisma choice without sharing one cast-level ability choice across all targets. Owner: battle-runtime spell invocation target-list ability-choice lifecycle plus promoted Quint parity. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for slot-scaled target count and per-target chosen Ability Check Advantage effects.",
+      "sourceRecordPath": "packages/surface/content/enhance_ability.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Enhance Ability",
+          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_enhance_ability",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 195,
+            "lineStart": 195,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Cleric spell list Enhance Ability",
+          "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_enhance_ability",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 187,
+            "lineStart": 187,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Druid spell list Enhance Ability",
+          "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_enhance_ability",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 233,
+            "lineStart": 233,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Ranger spell list Enhance Ability",
+          "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_enhance_ability",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 186,
+            "lineStart": 186,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Sorcerer spell list Enhance Ability",
+          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_enhance_ability",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 277,
+            "lineStart": 277,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Enhance Ability",
+          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_enhance_ability",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 209,
+            "lineStart": 209,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
+      "unitId": "enhance_ability"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME: Promote the Enlarge/Reduce creature branch: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, willing target application, unwilling target Constitution save gate, cast-time Enlarge/Reduce mode choice, active size-category projection used by size-dependent runtime rules, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage with normal cancellation, Enlarge +1d4 and Reduce -1d4 minimum 1 damage for attacks with affected weapons or Unarmed Strikes, and cleanup when Concentration or duration ends. Owner: battle-runtime spell invocation/effect lifecycle plus promoted Quint parity. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without object-target behavior.; L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH: Represent and promote the object branch: a target object that is neither worn nor carried, object size-category change and cleanup, carried/worn item size changes while the creature branch is active, dropped item normalization, and thrown weapon/ammunition normalization immediately after hit or miss if those item lifecycle facts belong to promoted runtime. Owner: surface target selection plus battle-runtime object and item lifecycle. Required output: Surface schema/content support for the object target constraint, runtime object/item lifecycle owner decision, focused tests, and coverage disposition that either supports the object branch or closes it with an accepted runtime-boundary reason.",
+      "sourceRecordPath": "packages/surface/content/enlarge_reduce.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Enlarge/Reduce",
+          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_enlarge_reduce",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 196,
+            "lineStart": 196,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Druid spell list Enlarge/Reduce",
+          "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_enlarge_reduce",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 234,
+            "lineStart": 234,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Sorcerer spell list Enlarge/Reduce",
+          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_enlarge_reduce",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 278,
+            "lineStart": 278,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Enlarge/Reduce",
+          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_enlarge_reduce",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 210,
+            "lineStart": 210,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
+      "unitId": "enlarge_reduce"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME: Promote Enthrall's battle-visible Perception subset: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied eligible creature target list after applying the fighting-caster-or-companions auto-success predicate at the table boundary, Wisdom save, failed-save active -10 modifier to Wisdom (Perception) Ability Checks, derived Passive Perception consequence from the same modifier, and cleanup when Concentration or duration ends. Owner: battle-runtime spell invocation/effect lifecycle plus promoted Quint parity. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Enthrall's Perception penalty without modeling social attention state.",
+      "sourceRecordPath": "packages/surface/content/enthrall.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Enthrall",
+          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_enthrall",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 197,
+            "lineStart": 197,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Warlock spell list Enthrall",
+          "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_enthrall",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 366,
+            "lineStart": 366,
+            "path": ".references/srd-5.2.1/Classes/Warlock.md"
+          }
+        }
+      ],
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
+      "unitId": "enthrall"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
         "later-level-only"
       ],
       "collectionId": "srd-5.2.1",
@@ -799,6 +1040,59 @@
       "status": "open-runtime-behavior",
       "strictTargetClosed": false,
       "unitId": "find_steed"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Trap presence, line of sight, non-location warning, and general-danger disclosure are exploration/detection facts supplied by the table rather than promoted battle runtime state.",
+      "sourceRecordPath": "packages/surface/content/find_traps.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Cleric spell list Find Traps",
+          "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_find_traps",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 188,
+            "lineStart": 188,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Druid spell list Find Traps",
+          "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_find_traps",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 235,
+            "lineStart": 235,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Ranger spell list Find Traps",
+          "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_find_traps",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 187,
+            "lineStart": 187,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
+        }
+      ],
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
+      "unitId": "find_traps"
     },
     {
       "catalogDisposition": {
@@ -1400,61 +1694,6 @@
       "unitId": "minor_illusion"
     },
     {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
-      "sourceRecordPath": "packages/surface/content/misty_step.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Misty Step",
-          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_misty_step",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 288,
-            "lineStart": 288,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Warlock spell list Misty Step",
-          "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_misty_step",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 371,
-            "lineStart": 371,
-            "path": ".references/srd-5.2.1/Classes/Warlock.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Misty Step",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_misty_step",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 223,
-            "lineStart": 223,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
-      "unitId": "misty_step"
-    },
-    {
       "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
@@ -1519,11 +1758,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "L12G-FOLLOWUP-MOONBEAM-SURFACE-LIFECYCLE: Replace the partial Moonbeam mechanics with a lossless SRD Surface shape for the point-origin Cylinder, Concentration duration, Dim Light area, Magic-action Cylinder movement up to 60 feet, the initial, area-moved, creature-enter, and end-turn Constitution Saving Throw triggers with the once-per-turn limiter, slot-scaled Radiant damage, and failed-save shape-shift reversion plus shape-shift prevention until the creature leaves the Cylinder. Owner: surface Spell Definition authoring. Required output: Moonbeam Dhall and JSON content, with schema and tracer support where required, represent the RAW lifecycle as executable source facts without encoding Dim Light, movement triggers, once-per-turn limiting, or shape-shift suppression as comments or lossy prose.; L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME: Promote Moonbeam as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, consumes caller-supplied Cylinder area identity and affected-creature facts for appearance saves, records a Concentration-owned movable area effect, exposes later Magic-action beam movement up to 60 feet from caller-supplied destination facts, resolves table-triggered area-moves-into-creature-space, creature-enters-area, and end-turn saves at most once per creature per turn, applies slot-scaled Radiant damage with half damage on success, projects Dim Light and Lightly Obscured facts for the active Cylinder, and performs concentration and duration cleanup. Owner: battle-runtime spell invocation/effect lifecycle plus table/spatial owner. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Moonbeam zone damage, movement, once-per-turn save limiting, Dim Light projection, resource spending, and cleanup while leaving automatic geometry and area membership derivation table-owned.; L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER: Execute the failed-save shape-shift rider by consuming a battle-visible shape-shifted and true-form state, reverting a shape-shifted target to its true form when it fails the Moonbeam Constitution Saving Throw, preventing that creature from shape-shifting again while it remains in the Moonbeam Cylinder, and clearing the prevention when it leaves the Cylinder or the spell ends without duplicating the shape-shifting source state. Owner: stat-block-control shape-shifting runtime plus battle-runtime spell effect lifecycle. Required output: Supported runtime profile or profile-subset evidence for Moonbeam's shape-shift reversion and suppression rider integrated with the promoted shape-shifting owner, including focused tests and Quint/runtime parity for failed save, successful save, exit cleanup, and spell cleanup.",
       "sourceRecordPath": "packages/surface/content/moonbeam.json",
       "sourceRows": [
         {
@@ -1539,8 +1781,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
       "unitId": "moonbeam"
     },
     {
@@ -1573,17 +1815,15 @@
       "unitId": "paladin_fighting_style"
     },
     {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "Pass without Trace's changing aura membership and non-caster chosen affected creatures depend on caller-supplied table/spatial facts at cast time, and leaving no tracks is pursuit/exploration state outside promoted battle runtime.",
       "sourceRecordPath": "packages/surface/content/pass_without_trace.json",
       "sourceRows": [
         {
@@ -1611,8 +1851,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
       "unitId": "pass_without_trace"
     },
     {
@@ -1856,60 +2096,15 @@
       "unitId": "rogue_thieves_cant"
     },
     {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
-      "sourceRecordPath": "packages/surface/content/scorching_ray.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Scorching Ray",
-          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_scorching_ray",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 289,
-            "lineStart": 289,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Scorching Ray",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_scorching_ray",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 226,
-            "lineStart": 226,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
-      "unitId": "scorching_ray"
-    },
-    {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT: Promote See Invisibility as a level-2 self spell that spends the Magic Action and Spell Slot, applies a one-hour self effect, and exposes observer-scoped sight facts that let only the caster see creatures and objects with the Invisible condition as visible and see Ethereal Plane facts through table-supplied plane, distance, cover, and sight-line witnesses, without granting full Truesight, Darkness, visual-illusion, or transformation behavior. Owner: battle-runtime spell invocation/effect lifecycle plus observer-sight witness boundary. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused battle-runtime tests, and promoted Quint/runtime parity for the self effect, duration cleanup, observer-scoped Invisible benefit denial, and Ethereal visibility witness facts without full Truesight behavior.",
       "sourceRecordPath": "packages/surface/content/see_invisibility.json",
       "sourceRows": [
         {
@@ -1949,62 +2144,9 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
       "unitId": "see_invisibility"
-    },
-    {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "table-spatial-derivation"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "Shatter area membership and affected nonmagical unattended objects are table/spatial facts supplied at the battle-runtime boundary.",
-      "sourceRecordPath": "packages/surface/content/shatter.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Bard spell list Shatter",
-          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_shatter",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 208,
-            "lineStart": 208,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Shatter",
-          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_shatter",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 291,
-            "lineStart": 291,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Shatter",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_shatter",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 228,
-            "lineStart": 228,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "shatter"
     },
     {
       "catalogDisposition": {
@@ -2471,7 +2613,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 93,
+      "count": 96,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2530,6 +2672,7 @@
         "longstrider",
         "mage_armor",
         "magic_missile",
+        "misty_step",
         "monk_martial_arts",
         "monk_unarmored_defense",
         "monk_unarmored_movement",
@@ -2550,7 +2693,9 @@
         "rogue_weapon_mastery",
         "sacred_flame",
         "sanctuary",
+        "scorching_ray",
         "searing_smite",
+        "shatter",
         "shield",
         "shield_of_faith",
         "shillelagh",
@@ -2571,7 +2716,7 @@
       ]
     },
     {
-      "count": 25,
+      "count": 20,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
@@ -2586,14 +2731,9 @@
         "lesser_restoration",
         "magic_weapon",
         "mind_spike",
-        "misty_step",
-        "moonbeam",
-        "pass_without_trace",
         "prayer_of_healing",
         "protection_from_poison",
         "ray_of_enfeeblement",
-        "scorching_ray",
-        "see_invisibility",
         "shining_smite",
         "spider_climb",
         "spike_growth",
@@ -2603,7 +2743,7 @@
       ]
     },
     {
-      "count": 12,
+      "count": 14,
       "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
@@ -2614,23 +2754,31 @@
         "detect_evil_and_good",
         "detect_magic",
         "detect_poison_and_disease",
+        "find_traps",
         "identify",
         "minor_illusion",
+        "pass_without_trace",
         "silent_image",
         "speak_with_animals",
         "thaumaturgy"
       ]
     },
     {
-      "count": 7,
+      "count": 13,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
         "acid_arrow",
         "alter_self",
+        "dragons_breath",
         "druid_wild_shape",
+        "enhance_ability",
+        "enlarge_reduce",
+        "enthrall",
         "monk_monks_focus",
         "monk_uncanny_metabolism",
+        "moonbeam",
+        "see_invisibility",
         "sorcerer_font_of_magic",
         "sorcerer_metamagic"
       ]
@@ -2656,42 +2804,50 @@
         "druid_druidic",
         "rogue_thieves_cant"
       ]
-    },
-    {
-      "count": 1,
-      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
-      "status": "open-profile-accounting",
-      "unitIds": [
-        "shatter"
-      ]
     }
   ],
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 473,
-      "percent": "85.1%",
+      "numerator": 472,
+      "percent": "84.9%",
       "rowsByStatus": {
-        "accepted": 308,
-        "accepted-no-battle-effect": 165,
-        "battle-runtime-required": 79,
-        "owner-evidence-required": 4
+        "accepted": 315,
+        "accepted-no-battle-effect": 157,
+        "battle-runtime-required": 74,
+        "owner-evidence-required": 4,
+        "partial-battle-runtime": 6
       }
     },
+    "rulesKernelCoveredProfileJoin": {
+      "denominator": 68,
+      "numerator": 11,
+      "percent": "16.2%"
+    },
+    "rulesKernelProfileJoin": {
+      "denominator": 68,
+      "numerator": 16,
+      "percent": "23.5%"
+    },
+    "rulesKernelSupportedUnitCoverage": {
+      "denominator": 96,
+      "numerator": 30,
+      "percent": "31.3%"
+    },
     "strictRuntimeProfileSupport": {
-      "denominator": 146,
-      "numerator": 93,
-      "percent": "63.7%"
+      "denominator": 151,
+      "numerator": 96,
+      "percent": "63.6%"
     },
     "strictTargetClosure": {
-      "denominator": 146,
-      "numerator": 120,
-      "percent": "82.2%"
+      "denominator": 151,
+      "numerator": 131,
+      "percent": "86.8%"
     }
   },
   "openFrontier": [
     {
-      "count": 25,
+      "count": 20,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
@@ -2706,28 +2862,15 @@
         "lesser_restoration",
         "magic_weapon",
         "mind_spike",
-        "misty_step",
-        "moonbeam",
-        "pass_without_trace",
         "prayer_of_healing",
         "protection_from_poison",
         "ray_of_enfeeblement",
-        "scorching_ray",
-        "see_invisibility",
         "shining_smite",
         "spider_climb",
         "spike_growth",
         "spiritual_weapon",
         "warding_bond",
         "web"
-      ]
-    },
-    {
-      "count": 1,
-      "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
-      "status": "open-profile-accounting",
-      "unitIds": [
-        "shatter"
       ]
     }
   ],
@@ -3101,36 +3244,6 @@
         "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
           {
-            "category": "spell Unit pressure",
-            "concept": "Sorcerer spell list Dragon's Breath",
-            "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_dragons_breath",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 276,
-              "lineStart": 276,
-              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Wizard spell list Dragon's Breath",
-            "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_dragons_breath",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 208,
-              "lineStart": 208,
-              "path": ".references/srd-5.2.1/Classes/Wizard.md"
-            }
-          }
-        ],
-        "unitId": "dragons_breath"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
             "category": "class feature",
             "concept": "Druid Wild Companion",
             "id": "srd521:classes/druid:level-2:class-feature-grant:druid_wild_companion",
@@ -3206,210 +3319,6 @@
           }
         ],
         "unitId": "elementalism"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "spell Unit pressure",
-            "concept": "Bard spell list Enhance Ability",
-            "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_enhance_ability",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 195,
-              "lineStart": 195,
-              "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Cleric spell list Enhance Ability",
-            "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_enhance_ability",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 187,
-              "lineStart": 187,
-              "path": ".references/srd-5.2.1/Classes/Cleric.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Druid spell list Enhance Ability",
-            "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_enhance_ability",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 233,
-              "lineStart": 233,
-              "path": ".references/srd-5.2.1/Classes/Druid.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Ranger spell list Enhance Ability",
-            "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_enhance_ability",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 186,
-              "lineStart": 186,
-              "path": ".references/srd-5.2.1/Classes/Ranger.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Sorcerer spell list Enhance Ability",
-            "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_enhance_ability",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 277,
-              "lineStart": 277,
-              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Wizard spell list Enhance Ability",
-            "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_enhance_ability",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 209,
-              "lineStart": 209,
-              "path": ".references/srd-5.2.1/Classes/Wizard.md"
-            }
-          }
-        ],
-        "unitId": "enhance_ability"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "spell Unit pressure",
-            "concept": "Bard spell list Enlarge/Reduce",
-            "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_enlarge_reduce",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 196,
-              "lineStart": 196,
-              "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Druid spell list Enlarge/Reduce",
-            "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_enlarge_reduce",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 234,
-              "lineStart": 234,
-              "path": ".references/srd-5.2.1/Classes/Druid.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Sorcerer spell list Enlarge/Reduce",
-            "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_enlarge_reduce",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 278,
-              "lineStart": 278,
-              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Wizard spell list Enlarge/Reduce",
-            "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_enlarge_reduce",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 210,
-              "lineStart": 210,
-              "path": ".references/srd-5.2.1/Classes/Wizard.md"
-            }
-          }
-        ],
-        "unitId": "enlarge_reduce"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "spell Unit pressure",
-            "concept": "Bard spell list Enthrall",
-            "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_enthrall",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 197,
-              "lineStart": 197,
-              "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Warlock spell list Enthrall",
-            "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_enthrall",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 366,
-              "lineStart": 366,
-              "path": ".references/srd-5.2.1/Classes/Warlock.md"
-            }
-          }
-        ],
-        "unitId": "enthrall"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "spell Unit pressure",
-            "concept": "Cleric spell list Find Traps",
-            "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_find_traps",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 188,
-              "lineStart": 188,
-              "path": ".references/srd-5.2.1/Classes/Cleric.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Druid spell list Find Traps",
-            "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_find_traps",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 235,
-              "lineStart": 235,
-              "path": ".references/srd-5.2.1/Classes/Druid.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Ranger spell list Find Traps",
-            "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_find_traps",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 187,
-              "lineStart": 187,
-              "path": ".references/srd-5.2.1/Classes/Ranger.md"
-            }
-          }
-        ],
-        "unitId": "find_traps"
       },
       {
         "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
@@ -6178,6 +6087,1813 @@
       }
     ]
   },
+  "rulesKernelSupportedUnitJoin": {
+    "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
+    "metrics": {
+      "rulesKernelSupportedUnitCoverage": {
+        "denominator": 96,
+        "numerator": 30,
+        "percent": "31.3%"
+      }
+    },
+    "units": [
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.invocation-damage-save-or-attack",
+            "profileKind": "spell-invocation"
+          },
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+              },
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.readied-action-time-spell",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "acid_splash"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.scalar-buff",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "aid"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.creature-type-protection-and-charm",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "animal_friendship"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-roll-modifier",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "bane"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "unit-feature.passive-saving-throw-roll-mode",
+            "profileKind": "passive"
+          }
+        ],
+        "unitId": "barbarian_danger_sense"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
+            "profileId": "unit-feature.bonus-action-ongoing-rage",
+            "profileKind": "persistent-effect"
+          }
+        ],
+        "unitId": "barbarian_rage"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
+            "profileId": "unit-feature.first-attack-roll-reckless-advantage",
+            "profileKind": "persistent-effect"
+          }
+        ],
+        "unitId": "barbarian_reckless_attack"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
+                "runtime": "character-sheet",
+                "status": "covered",
+                "title": "Character Sheet Armor Class base formula selection from build, loadout, and class-feature facts"
+              }
+            ],
+            "profileId": "character-sheet.armor-class-base-formula",
+            "profileKind": "character-sheet"
+          }
+        ],
+        "unitId": "barbarian_unarmored_defense"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "unit-feature.bardic-inspiration-grant",
+            "profileKind": "bonus-action"
+          },
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
+            "profileKind": "resource"
+          }
+        ],
+        "unitId": "bard_bardic_inspiration"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "character-sheet.ability-check-proficiency-bonus",
+            "profileKind": "character-sheet"
+          }
+        ],
+        "unitId": "bard_jack_of_all_trades"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.scalar-buff",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "barkskin"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-roll-modifier",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "bless"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-condition-save",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "blindness_deafness"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.invocation-damage-save-or-attack",
+            "profileKind": "spell-invocation"
+          },
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+              },
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.readied-action-time-spell",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "burning_hands"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.invocation-damage-save-or-attack",
+            "profileKind": "spell-invocation"
+          },
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+              },
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.readied-action-time-spell",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "chill_touch"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-chained-attack-damage",
+            "profileKind": "spell-invocation"
+          },
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+              },
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.readied-action-time-spell",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "chromatic_orb"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "character-creation.class-feature-resource-projection",
+            "profileKind": "character-creation"
+          }
+        ],
+        "unitId": "cleric_channel_divinity"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "character-creation.class-feature-option-projection",
+            "profileKind": "character-creation"
+          }
+        ],
+        "unitId": "cleric_divine_order"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-condition-save",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "color_spray"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-command-halt-grovel",
+            "profileKind": "spell-invocation"
+          },
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-command-drop-held-object",
+            "profileKind": "table-caller"
+          },
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-command-approach-route",
+            "profileKind": "table-caller"
+          },
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-command-flee-route",
+            "profileKind": "table-caller"
+          }
+        ],
+        "unitId": "command"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.hit-point-restoration",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "cure_wounds"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-dancing-lights-movable-dim-light",
+            "profileKind": "table-caller"
+          }
+        ],
+        "unitId": "dancing_lights"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.invocation-damage-save-or-attack",
+            "profileKind": "spell-invocation"
+          },
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-forced-reaction-movement",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "dissonant_whispers"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-weapon-damage-rider",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "divine_favor"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-after-hit-damage",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "divine_smite"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "character-creation.class-feature-option-projection",
+            "profileKind": "character-creation"
+          }
+        ],
+        "unitId": "druid_primal_order"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-independent-attack-sequence",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "eldritch_blast"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-after-hit-restraint-turn-start-damage",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "ensnaring_strike"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-condition-save",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "entangle"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-expeditious-retreat-dash",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "expeditious_retreat"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-attack-roll-advantage-save",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "faerie_fire"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.scalar-buff",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "false_life"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-feather-fall-mitigation",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "feather_fall"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
+            "profileId": "unit-feature.action-surge-resource",
+            "profileKind": "resource"
+          }
+        ],
+        "unitId": "fighter_action_surge"
+      },
+      {
+        "joinStatus": "mapped-open",
+        "profiles": [
+          {
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                "runtime": "character-creation",
+                "status": "needs-qnt-owner",
+                "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+              }
+            ],
+            "profileId": "character-creation.class-feature-feat-choice",
+            "profileKind": "character-creation"
+          },
+          {
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                "runtime": "character-creation",
+                "status": "needs-qnt-owner",
+                "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+              }
+            ],
+            "profileId": "character-creation.class-feature-advancement-replacement",
+            "profileKind": "character-creation"
+          }
+        ],
+        "unitId": "fighter_fighting_style"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
+            "profileId": "unit-feature.self-bonus-action-healing",
+            "profileKind": "bonus-action"
+          }
+        ],
+        "unitId": "fighter_second_wind"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "unit-feature.failed-ability-check-resource-boost",
+            "profileKind": "resource"
+          }
+        ],
+        "unitId": "fighter_tactical_mind"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.invocation-damage-save-or-attack",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "fire_bolt"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-fog-cloud-obscurement",
+            "profileKind": "table-caller"
+          }
+        ],
+        "unitId": "fog_cloud"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-grease-ground-hazard",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "grease"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-roll-modifier",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "guidance"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.invocation-damage-save-or-attack",
+            "profileKind": "spell-invocation"
+          },
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+              },
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.readied-action-time-spell",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "guiding_bolt"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.hit-point-restoration",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "healing_word"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.reaction-hellish-rebuke",
+            "profileKind": "reaction"
+          },
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.invocation-damage-save-or-attack",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "hellish_rebuke"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-condition-immunity-turn-start-temporary-hit-points",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "heroism"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-marked-damage-rider",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "hex"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-hideous-laughter-repeat-save-lifecycle",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "hideous_laughter"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-marked-damage-rider",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "hunters_mark"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.invocation-damage-save-or-attack",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "ice_knife"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.invocation-damage-save-or-attack",
+            "profileKind": "spell-invocation"
+          },
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+              },
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.readied-action-time-spell",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "inflict_wounds"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-jump-movement-replacement",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "jump"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-object-light",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "light"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.scalar-buff",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "longstrider"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.invocation-damage-save-or-attack",
+            "profileKind": "spell-invocation"
+          },
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+              },
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.readied-action-time-spell",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "mage_armor"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.invocation-damage-save-or-attack",
+            "profileKind": "spell-invocation"
+          },
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+              },
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.readied-action-time-spell",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "magic_missile"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-self-teleport",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "misty_step"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "unit-feature.martial-arts-attack-projection",
+            "profileKind": "passive"
+          }
+        ],
+        "unitId": "monk_martial_arts"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
+                "runtime": "character-sheet",
+                "status": "covered",
+                "title": "Character Sheet Armor Class base formula selection from build, loadout, and class-feature facts"
+              }
+            ],
+            "profileId": "character-sheet.armor-class-base-formula",
+            "profileKind": "character-sheet"
+          }
+        ],
+        "unitId": "monk_unarmored_defense"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "unit-feature.passive-speed-bonus",
+            "profileKind": "passive"
+          }
+        ],
+        "unitId": "monk_unarmored_movement"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "character-sheet.healing-resource-action",
+            "profileKind": "character-sheet"
+          }
+        ],
+        "unitId": "paladin_lay_on_hands"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-after-hit-damage",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "paladin_paladins_smite"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                "runtime": "character-creation",
+                "status": "needs-qnt-owner",
+                "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+              }
+            ],
+            "profileId": "character-creation.weapon-mastery-choice",
+            "profileKind": "character-creation"
+          },
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "character-sheet.weapon-mastery-reselection",
+            "profileKind": "character-sheet"
+          }
+        ],
+        "unitId": "paladin_weapon_mastery"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.invocation-damage-save-or-attack",
+            "profileKind": "spell-invocation"
+          },
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+              },
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.readied-action-time-spell",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "poison_spray"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.invocation-damage-save-or-attack",
+            "profileKind": "spell-invocation"
+          },
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-held-light-emitter",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "produce_flame"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.creature-type-protection-and-charm",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "protection_from_evil_and_good"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "character-creation.skill-expertise-choice",
+            "profileKind": "character-creation"
+          }
+        ],
+        "unitId": "ranger_deft_explorer"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                "runtime": "character-creation",
+                "status": "needs-qnt-owner",
+                "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+              }
+            ],
+            "profileId": "character-creation.weapon-mastery-choice",
+            "profileKind": "character-creation"
+          },
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "character-sheet.weapon-mastery-reselection",
+            "profileKind": "character-sheet"
+          }
+        ],
+        "unitId": "ranger_weapon_mastery"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.invocation-damage-save-or-attack",
+            "profileKind": "spell-invocation"
+          },
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+              },
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.readied-action-time-spell",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "ray_of_frost"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.invocation-damage-save-or-attack",
+            "profileKind": "spell-invocation"
+          },
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+              },
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.readied-action-time-spell",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "ray_of_sickness"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-damage-reduction",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "resistance"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
+            "profileId": "unit-feature.alternate-action-cost",
+            "profileKind": "bonus-action"
+          }
+        ],
+        "unitId": "rogue_cunning_action"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "character-creation.skill-expertise-choice",
+            "profileKind": "character-creation"
+          }
+        ],
+        "unitId": "rogue_expertise"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
+            "profileId": "unit-feature.attack-damage-rider",
+            "profileKind": "persistent-effect"
+          }
+        ],
+        "unitId": "rogue_sneak_attack"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                "runtime": "character-creation",
+                "status": "needs-qnt-owner",
+                "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+              }
+            ],
+            "profileId": "character-creation.weapon-mastery-choice",
+            "profileKind": "character-creation"
+          },
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "character-sheet.weapon-mastery-reselection",
+            "profileKind": "character-sheet"
+          }
+        ],
+        "unitId": "rogue_weapon_mastery"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.invocation-damage-save-or-attack",
+            "profileKind": "spell-invocation"
+          },
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+              },
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.readied-action-time-spell",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "sacred_flame"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-sanctuary-targeting-interdiction",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "sanctuary"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-independent-attack-sequence",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "scorching_ray"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-after-hit-timed-damage-save",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "searing_smite"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.invocation-damage-save-or-attack",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "shatter"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+              },
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.reaction-shield",
+            "profileKind": "reaction"
+          }
+        ],
+        "unitId": "shield"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.scalar-buff",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "shield_of_faith"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-weapon-attack-override",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "shillelagh"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.invocation-damage-save-or-attack",
+            "profileKind": "spell-invocation"
+          },
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+              },
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.readied-action-time-spell",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "shocking_grasp"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-sleep-target-admission",
+            "profileKind": "table-caller"
+          },
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-sleep-repeat-save-lifecycle",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "sleep"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "unit-feature.innate-sorcery-activation",
+            "profileKind": "persistent-effect"
+          }
+        ],
+        "unitId": "sorcerer_innate_sorcery"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.invocation-damage-save-or-attack",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "sorcerous_burst"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-make-stable",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "spare_the_dying"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.invocation-damage-save-or-attack",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "starry_wisp"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.invocation-damage-save-or-attack",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "thunderwave"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-spell-hosted-weapon-attack",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "true_strike"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.invocation-damage-save-or-attack",
+            "profileKind": "spell-invocation"
+          },
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+              },
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.readied-action-time-spell",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "vicious_mockery"
+      },
+      {
+        "joinStatus": "mapped-open",
+        "profiles": [
+          {
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                "runtime": "character-creation",
+                "status": "needs-qnt-owner",
+                "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+              }
+            ],
+            "profileId": "character-creation.eldritch-invocation-choice",
+            "profileKind": "character-creation"
+          },
+          {
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                "runtime": "character-creation",
+                "status": "needs-qnt-owner",
+                "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+              }
+            ],
+            "profileId": "character-creation.class-feature-advancement-replacement",
+            "profileKind": "character-creation"
+          },
+          {
+            "joinStatus": "mapped-open",
+            "obligations": [
+              {
+                "obligationId": "CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT",
+                "runtime": "character-creation",
+                "status": "needs-qnt-owner",
+                "title": "Audit every current Character Creation choice/fill/finalization profile into semantic obligations and parity witnesses"
+              }
+            ],
+            "profileId": "character-creation.warlock-pact-magic-advancement",
+            "profileKind": "character-creation"
+          }
+        ],
+        "unitId": "warlock_eldritch_invocations"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "character-sheet.pact-slot-recovery",
+            "profileKind": "character-sheet"
+          }
+        ],
+        "unitId": "warlock_magical_cunning"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "character-sheet.short-rest-spell-slot-recovery",
+            "profileKind": "character-sheet"
+          }
+        ],
+        "unitId": "wizard_arcane_recovery"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "character-sheet.spellbook-ritual-invocation",
+            "profileKind": "character-sheet"
+          }
+        ],
+        "unitId": "wizard_ritual_adept"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "character-creation.skill-expertise-choice",
+            "profileKind": "character-creation"
+          }
+        ],
+        "unitId": "wizard_scholar"
+      }
+    ]
+  },
   "scope": {
     "denominatorRule": "unique candidateUnitId rows joined to executable Unit matrix rows",
     "excludedUnitIds": [
@@ -6199,21 +7915,20 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
-      "missing": 25,
-      "profile-subset-supported": 9,
-      "supported-profile": 93,
-      "unsupported-profile": 19
+      "missing": 20,
+      "profile-subset-supported": 10,
+      "supported-profile": 96,
+      "unsupported-profile": 25
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 7,
+      "blocked-follow-up-split": 13,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 6,
-      "closed-runtime-detached-table-adjudication": 12,
-      "open-profile-accounting": 1,
-      "open-runtime-behavior": 25,
-      "supported-profile": 93
+      "closed-runtime-detached-table-adjudication": 14,
+      "open-runtime-behavior": 20,
+      "supported-profile": 96
     },
-    "nonSupportedFrontier": 53,
-    "strictDenominator": 146
+    "nonSupportedFrontier": 55,
+    "strictDenominator": 151
   }
 }

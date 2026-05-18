@@ -5,6 +5,10 @@ const {
   battleReadinessClosureKind,
 } = require("./unit-profile-coverage-config.cjs");
 const { percent, stable } = require("./unit-profile-coverage-report.cjs");
+const {
+  buildRulesKernelSupportedUnitJoin,
+  rulesKernelUnitJoin,
+} = require("./rules-kernel-profile-join.cjs");
 
 const strictLevelBands = ["level-1", "spell-level-0", "spell-level-1"];
 const strictLevel12Bands = [
@@ -344,7 +348,7 @@ function strictStatusForUnit(unit) {
   };
 }
 
-function rowForStrictUnit(unit, sourceRows) {
+function rowForStrictUnit(unit, sourceRows, rulesKernelProfileJoin) {
   const status = strictStatusForUnit(unit);
   return stable({
     unitId: unit.unitId,
@@ -359,6 +363,10 @@ function rowForStrictUnit(unit, sourceRows) {
     kind: unit.kind,
     sourceRecordPath: unit.sourceRecordPath,
     closureKinds: closureKindsForClaim(unit.claim),
+    rulesKernel:
+      unit.claim?.tag === "supported-profile"
+        ? rulesKernelUnitJoin(unit, rulesKernelProfileJoin)
+        : undefined,
     sourceRows: sourceRowSummary(sourceRows),
   });
 }
@@ -509,11 +517,39 @@ function buildStrictFullSupport(
       continue;
     }
 
-    strictRows.push(rowForStrictUnit(matrixUnit, sourceRows));
+    strictRows.push(
+      rowForStrictUnit(matrixUnit, sourceRows, matrix.rulesKernelProfileJoin),
+    );
   }
 
   const strictRuntimeProfileSupport = strictRows.filter(
     (row) => row.status === "supported-profile",
+  );
+  const supportedStrictMatrixUnits = strictRuntimeProfileSupport
+    .map((row) => matrixUnitsById.get(row.unitId)?.[0])
+    .filter(Boolean);
+  const rulesKernelSupportedUnitJoin = buildRulesKernelSupportedUnitJoin(
+    supportedStrictMatrixUnits,
+    matrix.rulesKernelProfileJoin,
+  );
+  const rulesKernelProfileIds = new Set(
+    rulesKernelSupportedUnitJoin.units.flatMap((unit) =>
+      unit.profiles.map((profile) => profile.profileId),
+    ),
+  );
+  const rulesKernelCoveredProfileIds = new Set(
+    rulesKernelSupportedUnitJoin.units.flatMap((unit) =>
+      unit.profiles
+        .filter((profile) => profile.joinStatus === "covered")
+        .map((profile) => profile.profileId),
+    ),
+  );
+  const rulesKernelMappedProfileIds = new Set(
+    rulesKernelSupportedUnitJoin.units.flatMap((unit) =>
+      unit.profiles
+        .filter((profile) => profile.joinStatus !== "unmapped")
+        .map((profile) => profile.profileId),
+    ),
   );
   const strictTargetClosure = strictRows.filter(
     (row) => row.strictTargetClosed,
@@ -555,6 +591,16 @@ function buildStrictFullSupport(
         strictRows.length,
       ),
       productReadiness,
+      rulesKernelProfileJoin: countCoverage(
+        rulesKernelMappedProfileIds.size,
+        rulesKernelProfileIds.size,
+      ),
+      rulesKernelCoveredProfileJoin: countCoverage(
+        rulesKernelCoveredProfileIds.size,
+        rulesKernelProfileIds.size,
+      ),
+      rulesKernelSupportedUnitCoverage:
+        rulesKernelSupportedUnitJoin.metrics.rulesKernelSupportedUnitCoverage,
     },
     summary: {
       candidateUnitIdsBeforeExclusions: candidateUnitIds.length,
@@ -567,6 +613,7 @@ function buildStrictFullSupport(
       ),
     },
     groups,
+    rulesKernelSupportedUnitJoin,
     frontierRows: frontierRows.sort((a, b) =>
       a.unitId.localeCompare(b.unitId),
     ),
@@ -651,6 +698,9 @@ function renderStrictFullSupport(report, scope) {
     `| Strict runtime/profile support | ${renderMetric(report.metrics.strictRuntimeProfileSupport)} |`,
     `| Strict target closure | ${renderMetric(report.metrics.strictTargetClosure)} |`,
     `| Product readiness | ${renderMetric(report.metrics.productReadiness)} |`,
+    `| Rules-kernel profile join | ${renderMetric(report.metrics.rulesKernelProfileJoin)} |`,
+    `| Rules-kernel covered profile join | ${renderMetric(report.metrics.rulesKernelCoveredProfileJoin)} |`,
+    `| Supported Unit rules-kernel chain | ${renderMetric(report.metrics.rulesKernelSupportedUnitCoverage)} |`,
     "",
     "## Scope",
     "",
@@ -682,6 +732,37 @@ function renderStrictFullSupport(report, scope) {
           (group) =>
             `| ${group.status} | ${group.count} | ${mdUnitIds(group.unitIds)} |`,
         )),
+    "",
+    "## Rules-Kernel Join",
+    "",
+    "`plans/unit-profile-coverage/` owns this strict authored-content view. `plans/rules-kernel-coverage/profile-obligations.jsonl` owns the reducer-semantic join for supported profiles.",
+    "",
+    "| Unit | Status | Profiles Needing Attention |",
+    "| --- | --- | --- |",
+    ...(report.rulesKernelSupportedUnitJoin.units.filter(
+      (row) => row.joinStatus !== "covered",
+    ).length === 0
+      ? ["| _none_ | _none_ | _none_ |"]
+      : report.rulesKernelSupportedUnitJoin.units
+          .filter((row) => row.joinStatus !== "covered")
+          .map((row) => {
+            const profiles = row.profiles
+              .filter((profile) => profile.joinStatus !== "covered")
+              .map((profile) => {
+                const obligations =
+                  profile.obligations.length === 0
+                    ? "no obligation mapping"
+                    : profile.obligations
+                        .map(
+                          (obligation) =>
+                            `\`${obligation.obligationId}\` (${obligation.status})`,
+                        )
+                        .join(", ");
+                return `\`${profile.profileId}\` (${profile.joinStatus}: ${obligations})`;
+              })
+              .join("; ");
+            return `| \`${row.unitId}\` | ${row.joinStatus} | ${profiles} |`;
+          })),
     "",
     "## Non-Supported Frontier Detail",
     "",

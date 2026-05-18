@@ -178,15 +178,15 @@ export function damageAmountByTypeMapEntries(
 
 const SPELL_DAMAGE_REDUCTION_ROLL_HOLE_PREFIX =
   "battle:spell-damage-reduction-roll";
-const SPELL_BEAM_DAMAGE_REDUCTION_ROLL_HOLE_PREFIX =
-  "battle:spell:beam-damage-reduction-roll";
+const SPELL_ATTACK_SEQUENCE_PART_DAMAGE_REDUCTION_ROLL_HOLE_PREFIX =
+  "battle:spell:attack-sequence-part-damage-reduction-roll";
 
 export function isSpellDamageReductionRollFill(
   fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
 ): boolean {
   return (
     fill.holeId.startsWith(SPELL_DAMAGE_REDUCTION_ROLL_HOLE_PREFIX) ||
-    fill.holeId.startsWith(SPELL_BEAM_DAMAGE_REDUCTION_ROLL_HOLE_PREFIX)
+    fill.holeId.startsWith(SPELL_ATTACK_SEQUENCE_PART_DAMAGE_REDUCTION_ROLL_HOLE_PREFIX)
   );
 }
 

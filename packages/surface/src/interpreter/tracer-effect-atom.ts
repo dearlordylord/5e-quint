@@ -56,6 +56,7 @@ export function traceEffectAtom(
     case "modify_roll_numeric":
     case "jack_of_all_trades_ability_check_bonus":
     case "modify_damage_numeric":
+    case "modify_size_category":
     case "modify_roll_advantage":
     case "suppress_roll_disadvantage":
     case "remove_equipment_requirement":
@@ -98,6 +99,7 @@ export function traceEffectAtom(
     case "block_gases_and_gaseous_creatures":
     case "block_flying_movement":
     case "negate_named_effect":
+    case "see_invisible_and_ethereal":
     case "grant_sense":
     case "modify_sense_range":
     case "grant_language_understanding":

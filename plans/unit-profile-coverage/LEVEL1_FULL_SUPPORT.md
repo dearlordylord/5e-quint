@@ -11,6 +11,9 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | Strict runtime/profile support | 78/94 (83%) |
 | Strict target closure | 94/94 (100%) |
 | Product readiness | 367/367 (100%) |
+| Rules-kernel profile join | 13/58 (22.4%) |
+| Rules-kernel covered profile join | 8/58 (13.8%) |
+| Supported Unit rules-kernel chain | 26/78 (33.3%) |
 
 ## Scope
 
@@ -37,6 +40,65 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | Status | Count | Units |
 | --- | ---: | --- |
 | _none_ | 0 | _none_ |
+
+## Rules-Kernel Join
+
+`plans/unit-profile-coverage/` owns this strict authored-content view. `plans/rules-kernel-coverage/profile-obligations.jsonl` owns the reducer-semantic join for supported profiles.
+
+| Unit | Status | Profiles Needing Attention |
+| --- | --- | --- |
+| `animal_friendship` | unmapped | `spell.creature-type-protection-and-charm` (unmapped: no obligation mapping) |
+| `bane` | unmapped | `spell.invocation-roll-modifier` (unmapped: no obligation mapping) |
+| `bard_bardic_inspiration` | unmapped | `unit-feature.bardic-inspiration-grant` (unmapped: no obligation mapping); `unit-feature.bardic-inspiration-failed-d20-test` (unmapped: no obligation mapping) |
+| `bless` | unmapped | `spell.invocation-roll-modifier` (unmapped: no obligation mapping) |
+| `chromatic_orb` | unmapped | `spell.invocation-chained-attack-damage` (unmapped: no obligation mapping) |
+| `cleric_divine_order` | unmapped | `character-creation.class-feature-option-projection` (unmapped: no obligation mapping) |
+| `color_spray` | unmapped | `spell.invocation-condition-save` (unmapped: no obligation mapping) |
+| `command` | unmapped | `spell.invocation-command-halt-grovel` (unmapped: no obligation mapping); `spell.invocation-command-drop-held-object` (unmapped: no obligation mapping); `spell.invocation-command-approach-route` (unmapped: no obligation mapping); `spell.invocation-command-flee-route` (unmapped: no obligation mapping) |
+| `dancing_lights` | unmapped | `spell.invocation-dancing-lights-movable-dim-light` (unmapped: no obligation mapping) |
+| `dissonant_whispers` | unmapped | `spell.invocation-forced-reaction-movement` (unmapped: no obligation mapping) |
+| `divine_favor` | unmapped | `spell.invocation-weapon-damage-rider` (unmapped: no obligation mapping) |
+| `divine_smite` | unmapped | `spell.invocation-after-hit-damage` (unmapped: no obligation mapping) |
+| `druid_primal_order` | unmapped | `character-creation.class-feature-option-projection` (unmapped: no obligation mapping) |
+| `eldritch_blast` | unmapped | `spell.invocation-independent-attack-sequence` (unmapped: no obligation mapping) |
+| `ensnaring_strike` | unmapped | `spell.invocation-after-hit-restraint-turn-start-damage` (unmapped: no obligation mapping) |
+| `entangle` | unmapped | `spell.invocation-condition-save` (unmapped: no obligation mapping) |
+| `expeditious_retreat` | unmapped | `spell.invocation-expeditious-retreat-dash` (unmapped: no obligation mapping) |
+| `faerie_fire` | unmapped | `spell.invocation-attack-roll-advantage-save` (unmapped: no obligation mapping) |
+| `false_life` | unmapped | `spell.scalar-buff` (unmapped: no obligation mapping) |
+| `feather_fall` | unmapped | `spell.invocation-feather-fall-mitigation` (unmapped: no obligation mapping) |
+| `fighter_fighting_style` | mapped-open | `character-creation.class-feature-feat-choice` (mapped-open: `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner)); `character-creation.class-feature-advancement-replacement` (mapped-open: `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner)) |
+| `fog_cloud` | unmapped | `spell.invocation-fog-cloud-obscurement` (unmapped: no obligation mapping) |
+| `grease` | unmapped | `spell.invocation-grease-ground-hazard` (unmapped: no obligation mapping) |
+| `guidance` | unmapped | `spell.invocation-roll-modifier` (unmapped: no obligation mapping) |
+| `hellish_rebuke` | unmapped | `spell.reaction-hellish-rebuke` (unmapped: no obligation mapping) |
+| `heroism` | unmapped | `spell.invocation-condition-immunity-turn-start-temporary-hit-points` (unmapped: no obligation mapping) |
+| `hex` | unmapped | `spell.invocation-marked-damage-rider` (unmapped: no obligation mapping) |
+| `hideous_laughter` | unmapped | `spell.invocation-hideous-laughter-repeat-save-lifecycle` (unmapped: no obligation mapping) |
+| `hunters_mark` | unmapped | `spell.invocation-marked-damage-rider` (unmapped: no obligation mapping) |
+| `jump` | unmapped | `spell.invocation-jump-movement-replacement` (unmapped: no obligation mapping) |
+| `light` | unmapped | `spell.invocation-object-light` (unmapped: no obligation mapping) |
+| `longstrider` | unmapped | `spell.scalar-buff` (unmapped: no obligation mapping) |
+| `monk_martial_arts` | unmapped | `unit-feature.martial-arts-attack-projection` (unmapped: no obligation mapping) |
+| `paladin_lay_on_hands` | unmapped | `character-sheet.healing-resource-action` (unmapped: no obligation mapping) |
+| `paladin_weapon_mastery` | unmapped | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner)); `character-sheet.weapon-mastery-reselection` (unmapped: no obligation mapping) |
+| `produce_flame` | unmapped | `spell.invocation-held-light-emitter` (unmapped: no obligation mapping) |
+| `protection_from_evil_and_good` | unmapped | `spell.creature-type-protection-and-charm` (unmapped: no obligation mapping) |
+| `ranger_weapon_mastery` | unmapped | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner)); `character-sheet.weapon-mastery-reselection` (unmapped: no obligation mapping) |
+| `resistance` | unmapped | `spell.invocation-damage-reduction` (unmapped: no obligation mapping) |
+| `rogue_expertise` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
+| `rogue_weapon_mastery` | unmapped | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner)); `character-sheet.weapon-mastery-reselection` (unmapped: no obligation mapping) |
+| `sanctuary` | unmapped | `spell.invocation-sanctuary-targeting-interdiction` (unmapped: no obligation mapping) |
+| `searing_smite` | unmapped | `spell.invocation-after-hit-timed-damage-save` (unmapped: no obligation mapping) |
+| `shield_of_faith` | unmapped | `spell.scalar-buff` (unmapped: no obligation mapping) |
+| `shillelagh` | unmapped | `spell.invocation-weapon-attack-override` (unmapped: no obligation mapping) |
+| `sleep` | unmapped | `spell.invocation-sleep-target-admission` (unmapped: no obligation mapping); `spell.invocation-sleep-repeat-save-lifecycle` (unmapped: no obligation mapping) |
+| `sorcerer_innate_sorcery` | unmapped | `unit-feature.innate-sorcery-activation` (unmapped: no obligation mapping) |
+| `spare_the_dying` | unmapped | `spell.invocation-make-stable` (unmapped: no obligation mapping) |
+| `true_strike` | unmapped | `spell.invocation-spell-hosted-weapon-attack` (unmapped: no obligation mapping) |
+| `warlock_eldritch_invocations` | mapped-open | `character-creation.eldritch-invocation-choice` (mapped-open: `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner)); `character-creation.class-feature-advancement-replacement` (mapped-open: `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner)); `character-creation.warlock-pact-magic-advancement` (mapped-open: `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner)) |
+| `wizard_arcane_recovery` | unmapped | `character-sheet.short-rest-spell-slot-recovery` (unmapped: no obligation mapping) |
+| `wizard_ritual_adept` | unmapped | `character-sheet.spellbook-ritual-invocation` (unmapped: no obligation mapping) |
 
 ## Non-Supported Frontier Detail
 

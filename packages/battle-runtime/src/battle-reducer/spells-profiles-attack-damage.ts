@@ -22,10 +22,11 @@ import { Either, Match } from "effect";
 import {
   SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET,
   type BattleCreatureState,
+  type CantripSpellAttackSequenceTargeting,
   type DamageSpellSource,
   type PreparedDamageSpellSource,
+  type PreparedSpellAttackSequenceTargeting,
   type SpellActivationPhase,
-  type SpellAttackBeamSequenceTargeting,
   type SpellAttackDamageTargeting,
   type SpellAttackHitEffect,
   type SpellObjectHitEffect,
@@ -38,10 +39,17 @@ import {
   CHROMATIC_ORB_CONTINUATION_LIMIT_KINDS,
   CHROMATIC_ORB_DAMAGE_TYPES,
   CHROMATIC_ORB_LEAP_RANGE_FEET,
+  ELDRITCH_BLAST_SPELL_ID,
   ELDRITCH_BLAST_BEAM_COUNT_TIERS,
+  SCORCHING_RAY_SPELL_ID,
+  scorchingRayRayCount,
   type EldritchBlastBeamCount,
+  type ScorchingRayRayCount,
 } from "./domain-constants.ts";
-import { sameDiceExpr, sameStringSet } from "./spells-profile-shared.ts";
+import {
+  sameDiceExpr,
+  sameStringSet,
+} from "./spells-profile-shared.ts";
 import {
   singleTargetSpellRangeFeet,
   supportedDamageAmountExpr,
@@ -56,7 +64,7 @@ export function supportedCantripSpellAttackProfile(
   characterLevel: number,
 ): readonly SupportedSpellInvocation[] {
   return [
-    ...supportedCantripSpellAttackBeamSequenceProfile(
+    ...supportedCantripSpellAttackSequenceProfile(
       spell,
       spellcastingAbilityModifier,
       proficiencyBonus,
@@ -90,6 +98,12 @@ const SHILLELAGH_WEAPON_UNIT_IDS = [
   "weapon_club",
   "weapon_quarterstaff",
 ] as const satisfies readonly WeaponRecord["id"][];
+const SCORCHING_RAY_DAMAGE_TYPE = "fire" as const satisfies DamageType;
+const SCORCHING_RAY_RANGE_FEET = 120;
+const SCORCHING_RAY_ATTACK_KIND = "ranged_spell_attack" as const;
+const SCORCHING_RAY_BASE_LEVEL = 2;
+const SCORCHING_RAY_BASE_RAY_COUNT = 3;
+const SCORCHING_RAY_RAYS_PER_SLOT_ABOVE_BASE = 1;
 
 export function supportedCantripSpellHostedWeaponAttackProfile(
   actor: BattleCreatureState,
@@ -266,9 +280,7 @@ export function supportedCantripWeaponAttackOverrideProfile(
   }));
 }
 
-function shillelaghAttachedWeaponAttacks(
-  actor: BattleCreatureState,
-): readonly {
+function shillelaghAttachedWeaponAttacks(actor: BattleCreatureState): readonly {
   readonly itemId: string;
   readonly attack: CharacterWeaponAttackActionOption;
 }[] {
@@ -297,7 +309,9 @@ function shillelaghAttachedWeaponAttacks(
           },
         ]),
   ].filter(
-    (held): held is {
+    (
+      held,
+    ): held is {
       readonly itemId: string;
       readonly attack: CharacterWeaponAttackActionOption;
       readonly unitId: WeaponRecord["id"];
@@ -407,6 +421,9 @@ export function supportedPreparedSpellAttackProfile(
   spellcastingAbilityModifier: AbilityModifier,
   proficiencyBonus: ProficiencyBonusType,
 ): readonly SupportedSpellInvocation[] {
+  if (isCanonicalSrdScorchingRaySpellDefinition(spell)) {
+    return [];
+  }
   return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
     if (Number(slot.spellLevel) < spell.mechanics.level) {
       return [];
@@ -420,6 +437,90 @@ export function supportedPreparedSpellAttackProfile(
       slotLevel: slot.spellLevel,
     });
   });
+}
+
+export function supportedPreparedSpellAttackSequenceProfile(
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+  spellcastingAbilityModifier: AbilityModifier,
+  proficiencyBonus: ProficiencyBonusType,
+): readonly SupportedSpellInvocation[] {
+  if (!isCanonicalSrdScorchingRaySpellDefinition(spell)) {
+    return [];
+  }
+  const phase =
+    spell.mechanics.family === "activation"
+      ? spell.mechanics.phases[0]
+      : undefined;
+  const damageEffect = phase?.kind === "attack_roll" ? phase.onHit[0] : null;
+  const range = spell.mechanics.range;
+  if (
+    spell.mechanics.family !== "activation" ||
+    spell.mechanics.level !== SCORCHING_RAY_BASE_LEVEL ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.duration.kind !== "instantaneous" ||
+    range.kind !== "point" ||
+    range.feet !== SCORCHING_RAY_RANGE_FEET ||
+    spell.mechanics.phases.length !== 1 ||
+    phase?.kind !== "attack_roll" ||
+    phase.attackKind !== SCORCHING_RAY_ATTACK_KIND ||
+    phase.onHit.length !== 1 ||
+    damageEffect?.kind !== "damage" ||
+    damageEffect.damageType !== SCORCHING_RAY_DAMAGE_TYPE ||
+    phase.onMiss.length !== 1 ||
+    phase.onMiss[0]?.kind !== "none"
+  ) {
+    return [];
+  }
+  if (scorchingRayTargetingIsCanonical(phase.attachment) !== true) {
+    return [];
+  }
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    const targeting = spellAttackSequenceSlotTargeting(
+      phase.attachment,
+      slot.spellLevel,
+    );
+    const damageExpr = supportedDamageAmountExpr({
+      amount: damageEffect.amount,
+      spellLevel: spell.mechanics.level,
+      slotLevel: slot.spellLevel,
+    });
+    if (targeting === null || damageExpr === null) {
+      return [];
+    }
+    return [
+      {
+        access: { tag: "prepared" },
+        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+        procedure: "spellAttackSequence",
+        spell,
+        targeting,
+        damage: {
+          expr: damageExpr,
+          damageType: SCORCHING_RAY_DAMAGE_TYPE,
+        },
+        rangeFeet: movementFeet(SCORCHING_RAY_RANGE_FEET),
+        attackKind: SCORCHING_RAY_ATTACK_KIND,
+        attackBonus: attackBonus(
+          Number(spellcastingAbilityModifier) + Number(proficiencyBonus),
+        ),
+      },
+    ];
+  });
+}
+
+export function isCanonicalSrdScorchingRaySpellDefinition(
+  spell: SpellRecord,
+): boolean {
+  return (
+    spell.name === "Scorching Ray" &&
+    spell.id === SCORCHING_RAY_SPELL_ID &&
+    spell.provenance.kind === "srd-5.2.1" &&
+    spell.provenance.section === "Spells/Descriptions-S-Z#Scorching Ray"
+  );
 }
 
 export function supportedPreparedChainedSpellAttackDamageProfile(
@@ -860,7 +961,7 @@ export function isCanonicalSrdSorcerousBurstSpellDefinition(
   );
 }
 
-export function supportedCantripSpellAttackBeamSequenceProfile(
+export function supportedCantripSpellAttackSequenceProfile(
   spell: SpellRecord,
   spellcastingAbilityModifier: AbilityModifier,
   proficiencyBonus: ProficiencyBonusType,
@@ -875,7 +976,7 @@ export function supportedCantripSpellAttackBeamSequenceProfile(
       : undefined;
   const targeting =
     phase?.kind === "attack_roll"
-      ? spellAttackBeamSequenceTargeting(phase.attachment, characterLevel)
+      ? spellAttackSequenceTargeting(phase.attachment, characterLevel)
       : null;
   const damageEffect = phase?.kind === "attack_roll" ? phase.onHit[0] : null;
   if (
@@ -909,7 +1010,7 @@ export function supportedCantripSpellAttackBeamSequenceProfile(
     {
       access: { tag: "classCantrip" },
       resource: { tag: "none" },
-      procedure: "spellAttackBeamSequence",
+      procedure: "spellAttackSequence",
       spell,
       targeting,
       damage: {
@@ -930,15 +1031,16 @@ export function isCanonicalSrdEldritchBlastSpellDefinition(
 ): boolean {
   return (
     spell.name === "Eldritch Blast" &&
+    spell.id === ELDRITCH_BLAST_SPELL_ID &&
     spell.provenance.kind === "srd-5.2.1" &&
     spell.provenance.section === "Spells/Descriptions-E-L#Eldritch Blast"
   );
 }
 
-function spellAttackBeamSequenceTargeting(
+function spellAttackSequenceTargeting(
   attachment: Attachment,
   characterLevel: number,
-): SpellAttackBeamSequenceTargeting | null {
+): CantripSpellAttackSequenceTargeting | null {
   if (
     attachment.kind !== "hole" ||
     attachment.value.kind !== "target" ||
@@ -955,7 +1057,83 @@ function spellAttackBeamSequenceTargeting(
   );
   return beamCount === null
     ? null
-    : { kind: "beamSequenceCreatureOrObject", beamCount };
+    : {
+        kind: "spellAttackSequenceCreatureOrObject",
+        countSource: "characterLevel",
+        attackCount: beamCount,
+      };
+}
+
+function spellAttackSequenceSlotTargeting(
+  attachment: Attachment,
+  slotLevel: SpellSlotLevel,
+): PreparedSpellAttackSequenceTargeting | null {
+  if (
+    attachment.kind !== "hole" ||
+    attachment.value.kind !== "target" ||
+    !sameStringSet(attachment.value.selection.targetKinds ?? [], [
+      "creature",
+      "object",
+    ])
+  ) {
+    return null;
+  }
+  const attackCount = scorchingRayAttackCount(
+    attachment.value.selection,
+    slotLevel,
+  );
+  return attackCount === null
+    ? null
+    : {
+        kind: "spellAttackSequenceCreatureOrObject",
+        countSource: "spellSlotLevel",
+        attackCount,
+      };
+}
+
+function scorchingRayTargetingIsCanonical(attachment: Attachment): boolean {
+  if (
+    attachment.kind !== "hole" ||
+    attachment.value.kind !== "target" ||
+    !sameStringSet(attachment.value.selection.targetKinds ?? [], [
+      "creature",
+      "object",
+    ])
+  ) {
+    return false;
+  }
+  return scorchingRaySelectionIsCanonical(attachment.value.selection);
+}
+
+function scorchingRaySelectionIsCanonical(selection: TargetSelection): boolean {
+  if (selection.mode !== "choose_up_to" || selection.repeatsAllowed !== true) {
+    return false;
+  }
+  const count = selection.count;
+  return (
+    typeof count === "object" &&
+    count.kind === "linear" &&
+    count.base === SCORCHING_RAY_BASE_RAY_COUNT &&
+    count.baseLevel === SCORCHING_RAY_BASE_LEVEL &&
+    count.perSlotAboveBase === SCORCHING_RAY_RAYS_PER_SLOT_ABOVE_BASE
+  );
+}
+
+function scorchingRayAttackCount(
+  selection: TargetSelection,
+  slotLevel: SpellSlotLevel,
+): ScorchingRayRayCount | null {
+  if (!scorchingRaySelectionIsCanonical(selection)) {
+    return null;
+  }
+  const slotOffset = Number(slotLevel) - SCORCHING_RAY_BASE_LEVEL;
+  if (slotOffset < 0) {
+    return null;
+  }
+  return scorchingRayRayCount(
+    SCORCHING_RAY_BASE_RAY_COUNT +
+      slotOffset * SCORCHING_RAY_RAYS_PER_SLOT_ABOVE_BASE,
+  );
 }
 
 function eldritchBlastBeamCount(

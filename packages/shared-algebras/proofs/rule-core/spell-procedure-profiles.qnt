@@ -1,6 +1,7 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS
 
 module spellProcedureProfiles {
   import hitPointDamage.* from "./hit-point-damage"
@@ -158,15 +159,16 @@ module spellProcedureProfiles {
   type AttackBurstSaveDamageProfile =
     | IceKnifeAttackBurstSaveDamageProfile
 
-  type SpellAttackBeamSequenceProfile =
+  type SpellAttackSequenceProfile =
     | EldritchBlastBeamSequenceProfile
+    | ScorchingRaySequenceProfile
 
-  type SpellAttackBeamSequenceStep =
-    | BeamSequenceUnavailable
-    | BeamSequenceNeedsTargets
-    | BeamSequenceNeedsAttackRoll
-    | BeamSequenceNeedsDamageRoll
-    | BeamSequenceComplete
+  type SpellAttackSequenceStep =
+    | SpellAttackSequenceUnavailable
+    | SpellAttackSequenceNeedsTargets
+    | SpellAttackSequenceNeedsAttackRoll
+    | SpellAttackSequenceNeedsDamageRoll
+    | SpellAttackSequenceComplete
 
   type SleepRepeatSaveLifecycle =
     | NoSleepRepeatSaveLifecycle
@@ -732,46 +734,63 @@ module spellProcedureProfiles {
   pure def attackBurstSaveDamageBurstAmount(damageRoll: int, savingThrowSucceeded: bool): int =
     if (savingThrowSucceeded) 0 else damageRoll
 
-  pure def spellAttackBeamSequenceDamageType(profile: SpellAttackBeamSequenceProfile): RuleDamageType =
+  pure def spellAttackSequenceDamageType(profile: SpellAttackSequenceProfile): RuleDamageType =
     match profile {
       | EldritchBlastBeamSequenceProfile => ForceDamage
+      | ScorchingRaySequenceProfile => FireDamage
     }
 
-  pure def spellAttackBeamSequenceSupportsObjectTargets(profile: SpellAttackBeamSequenceProfile): bool =
+  pure def spellAttackSequenceSupportsObjectTargets(profile: SpellAttackSequenceProfile): bool =
     match profile {
       | EldritchBlastBeamSequenceProfile => true
+      | ScorchingRaySequenceProfile => true
     }
 
-  pure def spellAttackBeamSequenceBeamCount(profile: SpellAttackBeamSequenceProfile, characterLevel: int): int =
+  pure def spellAttackSequenceAttackCount(profile: SpellAttackSequenceProfile, scalingLevel: int): int =
     match profile {
       | EldritchBlastBeamSequenceProfile =>
-          if (characterLevel >= 17) 4
-          else if (characterLevel >= 11) 3
-          else if (characterLevel >= 5) 2
+          if (scalingLevel >= 17) 4
+          else if (scalingLevel >= 11) 3
+          else if (scalingLevel >= 5) 2
           else 1
+      | ScorchingRaySequenceProfile =>
+          if (scalingLevel < 2) 0
+          else 3 + (scalingLevel - 2)
     }
 
-  pure def spellAttackBeamSequenceStep(
-    profile: SpellAttackBeamSequenceProfile,
+  pure def spellAttackSequenceStepFromCounts(
     canCastSpells: bool,
-    beamCount: int,
-    beamTargetsFilled: int,
-    beamAttackRollsFilled: int,
-    beamHits: int,
-    beamDamageRollsFilled: int,
-  ): SpellAttackBeamSequenceStep =
+    attackCount: int,
+    targetsFilled: int,
+    attackRollsFilled: int,
+    hits: int,
+    damageRollsFilled: int,
+  ): SpellAttackSequenceStep =
+    if (not(canCastSpells) or attackCount <= 0)
+      SpellAttackSequenceUnavailable
+    else if (targetsFilled < attackCount)
+      SpellAttackSequenceNeedsTargets
+    else if (attackRollsFilled < attackCount)
+      SpellAttackSequenceNeedsAttackRoll
+    else if (damageRollsFilled < hits)
+      SpellAttackSequenceNeedsDamageRoll
+    else
+      SpellAttackSequenceComplete
+
+  pure def spellAttackSequenceStep(
+    profile: SpellAttackSequenceProfile,
+    canCastSpells: bool,
+    attackCount: int,
+    targetsFilled: int,
+    attackRollsFilled: int,
+    hits: int,
+    damageRollsFilled: int,
+  ): SpellAttackSequenceStep =
     match profile {
       | EldritchBlastBeamSequenceProfile =>
-          if (not(canCastSpells) or beamCount <= 0)
-            BeamSequenceUnavailable
-          else if (beamTargetsFilled < beamCount)
-            BeamSequenceNeedsTargets
-          else if (beamAttackRollsFilled < beamCount)
-            BeamSequenceNeedsAttackRoll
-          else if (beamDamageRollsFilled < beamHits)
-            BeamSequenceNeedsDamageRoll
-          else
-            BeamSequenceComplete
+          spellAttackSequenceStepFromCounts(canCastSpells, attackCount, targetsFilled, attackRollsFilled, hits, damageRollsFilled)
+      | ScorchingRaySequenceProfile =>
+          spellAttackSequenceStepFromCounts(canCastSpells, attackCount, targetsFilled, attackRollsFilled, hits, damageRollsFilled)
     }
 
   pure def sleepInitialSaveLifecycle(
@@ -1391,19 +1410,29 @@ module spellProcedureProfiles {
     }
   }
 
-  run test_spell_attack_beam_sequence_projects_eldritch_blast_facts = {
+  run test_spell_attack_sequence_projects_supported_spell_facts = {
     all {
-      assert(spellAttackBeamSequenceDamageType(EldritchBlastBeamSequenceProfile) == ForceDamage),
-      assert(spellAttackBeamSequenceSupportsObjectTargets(EldritchBlastBeamSequenceProfile)),
-      assert(spellAttackBeamSequenceBeamCount(EldritchBlastBeamSequenceProfile, 1) == 1),
-      assert(spellAttackBeamSequenceBeamCount(EldritchBlastBeamSequenceProfile, 5) == 2),
-      assert(spellAttackBeamSequenceBeamCount(EldritchBlastBeamSequenceProfile, 11) == 3),
-      assert(spellAttackBeamSequenceBeamCount(EldritchBlastBeamSequenceProfile, 17) == 4),
-      assert(spellAttackBeamSequenceStep(EldritchBlastBeamSequenceProfile, false, 2, 0, 0, 0, 0) == BeamSequenceUnavailable),
-      assert(spellAttackBeamSequenceStep(EldritchBlastBeamSequenceProfile, true, 2, 0, 0, 0, 0) == BeamSequenceNeedsTargets),
-      assert(spellAttackBeamSequenceStep(EldritchBlastBeamSequenceProfile, true, 2, 2, 1, 0, 0) == BeamSequenceNeedsAttackRoll),
-      assert(spellAttackBeamSequenceStep(EldritchBlastBeamSequenceProfile, true, 2, 2, 2, 2, 1) == BeamSequenceNeedsDamageRoll),
-      assert(spellAttackBeamSequenceStep(EldritchBlastBeamSequenceProfile, true, 2, 2, 2, 1, 1) == BeamSequenceComplete),
+      assert(spellAttackSequenceDamageType(EldritchBlastBeamSequenceProfile) == ForceDamage),
+      assert(spellAttackSequenceDamageType(ScorchingRaySequenceProfile) == FireDamage),
+      assert(spellAttackSequenceSupportsObjectTargets(EldritchBlastBeamSequenceProfile)),
+      assert(spellAttackSequenceSupportsObjectTargets(ScorchingRaySequenceProfile)),
+      assert(spellAttackSequenceAttackCount(EldritchBlastBeamSequenceProfile, 1) == 1),
+      assert(spellAttackSequenceAttackCount(EldritchBlastBeamSequenceProfile, 5) == 2),
+      assert(spellAttackSequenceAttackCount(EldritchBlastBeamSequenceProfile, 11) == 3),
+      assert(spellAttackSequenceAttackCount(EldritchBlastBeamSequenceProfile, 17) == 4),
+      assert(spellAttackSequenceAttackCount(ScorchingRaySequenceProfile, 1) == 0),
+      assert(spellAttackSequenceAttackCount(ScorchingRaySequenceProfile, 2) == 3),
+      assert(spellAttackSequenceAttackCount(ScorchingRaySequenceProfile, 3) == 4),
+      assert(spellAttackSequenceAttackCount(ScorchingRaySequenceProfile, 5) == 6),
+      assert(spellAttackSequenceStep(EldritchBlastBeamSequenceProfile, false, 2, 0, 0, 0, 0) == SpellAttackSequenceUnavailable),
+      assert(spellAttackSequenceStep(EldritchBlastBeamSequenceProfile, true, 2, 0, 0, 0, 0) == SpellAttackSequenceNeedsTargets),
+      assert(spellAttackSequenceStep(EldritchBlastBeamSequenceProfile, true, 2, 2, 1, 0, 0) == SpellAttackSequenceNeedsAttackRoll),
+      assert(spellAttackSequenceStep(EldritchBlastBeamSequenceProfile, true, 2, 2, 2, 2, 1) == SpellAttackSequenceNeedsDamageRoll),
+      assert(spellAttackSequenceStep(EldritchBlastBeamSequenceProfile, true, 2, 2, 2, 1, 1) == SpellAttackSequenceComplete),
+      assert(spellAttackSequenceStep(ScorchingRaySequenceProfile, true, 3, 0, 0, 0, 0) == SpellAttackSequenceNeedsTargets),
+      assert(spellAttackSequenceStep(ScorchingRaySequenceProfile, true, 3, 3, 2, 0, 0) == SpellAttackSequenceNeedsAttackRoll),
+      assert(spellAttackSequenceStep(ScorchingRaySequenceProfile, true, 3, 3, 3, 2, 1) == SpellAttackSequenceNeedsDamageRoll),
+      assert(spellAttackSequenceStep(ScorchingRaySequenceProfile, true, 3, 3, 3, 1, 1) == SpellAttackSequenceComplete),
     }
   }
 

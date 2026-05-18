@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt stat-block.attack-control
+// KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_CONTROL
 import * as path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 

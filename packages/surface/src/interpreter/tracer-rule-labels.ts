@@ -284,6 +284,8 @@ export function describeAreaOrigin(
       return `origin: point within ${describeAttachmentRange(range, rangeOrigin)}`;
     case "on_primary_target":
       return "origin: primary target";
+    case "on_attached_creature":
+      return "origin: attached creature";
     case "self":
       return "origin: caster (self)";
     default: {

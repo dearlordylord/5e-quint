@@ -10,7 +10,6 @@ import { movementFeet, type Round as RoundType } from "@dnd/shared/types";
 import type {
   Ability,
   DamageType,
-  Skill,
   SpellRecord,
 } from "@dnd/surface/surface/types";
 import { battleDancingLightId } from "../identity.ts";
@@ -58,6 +57,7 @@ import {
   type SpellLightEmissionPostDamageRider,
   type SpellPostDamageRider,
   type SpellPostDamageRiderExpiration,
+  type SelectedRollModifierSpellEffect,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import type { BattleObjectId } from "../identity.ts";
@@ -1942,33 +1942,23 @@ export function applyScalarBuffSpellEffect(
 
 export function applyRollModifierSpellEffect(
   state: BattleState,
-  actorId: CombatantId,
   targetIds: readonly CombatantId[],
-  invocation: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "rollModifier" }
-  >,
-  skill: Skill | null,
+  selectedEffect: SelectedRollModifierSpellEffect,
 ): BattleState {
   return targetIds.reduce((nextState, targetId) => {
     const target = nextState.combatants.get(targetId);
     if (target === undefined) {
       return nextState;
     }
-    const nextEffect = {
-      ...invocation.effect,
-      sourceCombatantId: actorId,
-      skill,
-    };
     const activeEffects = [
       ...target.activeEffects.filter(
         (effect) =>
           !(
-            effect.kind === "d20RollModifier" &&
-            effect.sourceSpellId === invocation.spell.id
+            effect.kind === selectedEffect.kind &&
+            effect.sourceSpellId === selectedEffect.sourceSpellId
           ),
       ),
-      nextEffect,
+      selectedEffect,
     ];
     return {
       ...nextState,

@@ -67,7 +67,7 @@ The 33 `partial-battle-runtime` rows collapse to 13 Unit claims:
 | `faerie_fire` / `light` | 6 | Color presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding are outside the emitter projection boundary after SRDINV89C. |
 | `feather_fall` / `jump` / `thunderwave` | 11 | Fall distance, elevation, landing, pathfinding, push geometry, broad object simulation, and sound propagation are spatial/table work under SRDINV55. |
 | `fog_cloud` / `grease` | 6 | Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry are spatial/table work under SRDINV66. |
-| `find_familiar` | 1 | Unsupported familiar form attacks and generic command AI are outside the promoted companion lifecycle subset; SRDINV86 owns the review boundary. |
+| `find_familiar` | 1 | Unsupported familiar form attacks and generic command/action-selection policy are outside the promoted companion lifecycle subset; SRDINV86 owns the review boundary. |
 | `charm_person` | 5 | Friendly disposition, social interaction effects, and target knowledge when the spell ends are social/knowledge state under SRDINV41. |
 
 This review does not claim that unsupported/profile-subset rows are supported
@@ -125,6 +125,6 @@ reducer slice:
   metric remains 309/367 (84.2%) with 58 rows outside the accepted numerator.
 - Round 2: rejected another reducer-first spell batch. After SRDINV89A-SRDINV89C,
   the remaining named gaps mostly have explicit non-battle, later-level,
-  spatial/table, social/knowledge, companion-AI, or outside-runtime owners.
+  spatial/table, social/knowledge, companion-control boundary, or outside-runtime owners.
   The next executable work is to encode those closure semantics in the
   readiness boundary so the metric cannot contradict the Unit claims.

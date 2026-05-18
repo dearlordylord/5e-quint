@@ -7,19 +7,19 @@
     {
       "number": 37,
       "id": "L12G-SPELL-MISTY-STEP",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Misty Step Runtime Support"
     },
     {
       "number": 38,
       "id": "L12G-SPELL-MOONBEAM",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Moonbeam Runtime Support Or Closure"
     },
     {
       "number": 39,
       "id": "L12G-SPELL-PASS-WITHOUT-TRACE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Pass Without Trace Runtime Support Or Closure"
     },
     {
@@ -111,12 +111,30 @@
       "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION",
       "status": "ready-for-research",
       "title": "Sorcerer Metamagic Cast-Time Option Execution"
+    },
+    {
+      "number": 90,
+      "id": "L12G-FOLLOWUP-MOONBEAM-SURFACE-LIFECYCLE",
+      "status": "ready-for-research",
+      "title": "Moonbeam Surface Area Lifecycle"
+    },
+    {
+      "number": 91,
+      "id": "L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Moonbeam Movable Zone Runtime"
+    },
+    {
+      "number": 92,
+      "id": "L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER",
+      "status": "ready-for-research",
+      "title": "Moonbeam Shape-Shifting Rider Runtime"
     }
   ]
 }
 -->
 
-This is the third level-2 execution lane split from Loop A tail work. Loop C owns Tasks 37-42 and follow-up Tasks 76-87 only.
+This is the third level-2 execution lane split from Loop A tail work. Loop C owns Tasks 37-42 and follow-up Tasks 76-87 and 90-92 only.
 
 ## Worktree Safety Prefix
 
@@ -171,7 +189,7 @@ use the repository MBT scarcity protocol.
 
 ## Included Work
 
-Loop C contains 18 atomic tasks: the remaining Loop A spell tail from Misty Step through Ray of Enfeeblement, plus Druid/Monk/Sorcerer follow-up profile/runtime work moved out of Loop A.
+Loop C contains 21 atomic tasks: the remaining Loop A spell tail from Misty Step through Ray of Enfeeblement, Druid/Monk/Sorcerer follow-up profile/runtime work moved out of Loop A, and the Moonbeam follow-up split discovered by Task 38.
 
 It excludes Loop A Tasks 22-36 and 88-89, Loop B Tasks 43-58, Loop D Tasks 59-75, all level-1 Loop D/L work, companion autonomous-control, familiar autonomous-control, and Counterspell work. Wild Companion work in this lane is only the table-choice/source-link boundary; no autonomous companion decision engine belongs here.
 
@@ -195,6 +213,9 @@ It excludes Loop A Tasks 22-36 and 88-89, Loop B Tasks 43-58, Loop D Tasks 59-75
 | 85 | 18 follow-up | `L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS` | `sorcerer_font_of_magic` |
 | 86 | 19 follow-up | `L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS` | `sorcerer_metamagic` |
 | 87 | 19 follow-up | `L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION` | `sorcerer_metamagic` |
+| 90 | 38 follow-up | `L12G-FOLLOWUP-MOONBEAM-SURFACE-LIFECYCLE` | `moonbeam` |
+| 91 | 38 follow-up | `L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME` | `moonbeam` |
+| 92 | 38 follow-up | `L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER` | `moonbeam` |
 
 ## Follow-Up Dependencies
 
@@ -212,12 +233,15 @@ It excludes Loop A Tasks 22-36 and 88-89, Loop B Tasks 43-58, Loop D Tasks 59-75
 | `L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS` | `L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS` | Sorcery Point to temporary Spell Slot creation should consume the projected shared Sorcery Point resource and own the temporary slot lifecycle without duplicating class progression state. |
 | `L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS` | `L12G-AUTHOR-SORCERER-METAMAGIC`, `L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS` | Metamagic option projection should retain the authored Metamagic feature and link known option facts to the shared Sorcery Point resource projected from Font of Magic instead of duplicating point-pool state. |
 | `L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION` | `L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS`, `L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS` | Cast-time Metamagic execution should consume known-option and shared Sorcery Point resource facts rather than creating a Metamagic-local point pool. |
+| `L12G-FOLLOWUP-MOONBEAM-SURFACE-LIFECYCLE` | `L12G-SPELL-MOONBEAM` | Moonbeam Surface authoring must capture the RAW movable Cylinder, Dim Light, recurring save, once-per-turn, slot-scaling, and shape-shift rider facts before runtime owners consume them. |
+| `L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME` | `L12G-FOLLOWUP-MOONBEAM-SURFACE-LIFECYCLE` | Runtime zone execution should consume the repaired Moonbeam Spell Definition facts and caller-supplied table/spatial witnesses instead of duplicating area membership or geometry derivation. |
+| `L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER` | `L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME`, `L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME` | The failed-save rider should attach to Moonbeam save results and consume a promoted shape-shifted/true-form state instead of creating Moonbeam-local shape-shifting state. |
 
 ## Task Details
 
 ### Task 37 - L12G-SPELL-MISTY-STEP - Misty Step Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `misty_step`. Gate task: 39 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -244,7 +268,7 @@ Acceptance:
 
 ### Task 38 - L12G-SPELL-MOONBEAM - Moonbeam Runtime Support Or Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `moonbeam`. Gate task: 40 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -271,7 +295,7 @@ Acceptance:
 
 ### Task 39 - L12G-SPELL-PASS-WITHOUT-TRACE - Pass Without Trace Runtime Support Or Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `pass_without_trace`. Gate task: 41 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -748,4 +772,99 @@ Acceptance:
 - the cast-time execution portion of `sorcerer_metamagic` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
 - runtime behavior traces to SRD Metamagic without homebrew extensions and consumes projected shared Sorcery Point facts instead of duplicating Font of Magic resource state;
 - no Font of Magic Spell Slot conversion behavior is implemented in this task;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.
+
+### Task 90 - L12G-FOLLOWUP-MOONBEAM-SURFACE-LIFECYCLE - Moonbeam Surface Area Lifecycle
+
+Status: `ready-for-research`
+
+Unit: `moonbeam`. Follow-up split from Task 38.
+
+Dependency: Task 38 (`L12G-SPELL-MOONBEAM`) done.
+
+Inputs:
+
+- `packages/surface/content/moonbeam.dhall`;
+- `packages/surface/content/moonbeam.json`;
+- the `moonbeam` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Spells/Descriptions-M-P.md` and `.references/srd-5.2.1/Rules-Glossary.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- Surface Spell Definition schema, tracer, and admission code for spell mechanics.
+
+Outputs:
+
+- Moonbeam Dhall and JSON content represent the point-origin 5-foot-radius, 40-foot-high Cylinder, Concentration duration, Dim Light area, later Magic-action Cylinder movement up to 60 feet, the initial, area-moved, creature-enter, and end-turn Constitution Saving Throw triggers, the once-per-turn save limiter, slot-scaled Radiant damage, and failed-save shape-shift reversion plus shape-shift prevention until the creature leaves the Cylinder;
+- schema and tracer support are updated where required so those facts are executable source facts rather than comments or lossy prose;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the Surface authoring portion of `moonbeam` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no battle-runtime zone execution, table/spatial geometry derivation, or shape-shifting rider execution is implemented in this task;
+- authored facts trace to SRD Moonbeam, Cylinder, Dim Light, Concentration, Magic Action, Saving Throw, and Shape-Shifting text without homebrew extensions;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 91 - L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME - Moonbeam Movable Zone Runtime
+
+Status: `ready-for-research`
+
+Unit: `moonbeam`. Follow-up split from Task 38.
+
+Dependency: Task 90 (`L12G-FOLLOWUP-MOONBEAM-SURFACE-LIFECYCLE`) done.
+
+Inputs:
+
+- `packages/surface/content/moonbeam.json`;
+- the `moonbeam` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Spells/Descriptions-M-P.md`, `.references/srd-5.2.1/Rules-Glossary.md`, and `.references/srd-5.2.1/Playing-the-Game.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- battle-runtime spell invocation/effect lifecycle, table/spatial owner evidence, Unit profile evidence, and focused tests for movable area effects.
+
+Outputs:
+
+- supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Moonbeam casting with Magic Action and Spell Slot spend, caller-supplied Cylinder area identity and affected-creature facts, appearance saves, Concentration-owned movable area effect, later Magic-action beam movement up to 60 feet, table-triggered area-moves-into-creature-space, creature-enters-area, and end-turn saves at most once per creature per turn, slot-scaled Radiant damage with half damage on success, Dim Light and Lightly Obscured projection for the active Cylinder, and concentration/duration cleanup;
+- automatic geometry, destination validity, and area membership derivation remain table/spatial owner facts rather than Moonbeam runtime state;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the movable-zone runtime portion of `moonbeam` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no failed-save shape-shift reversion or shape-shift suppression rider is implemented in this task;
+- runtime behavior traces to SRD Moonbeam and area/light/concentration rules without homebrew extensions and consumes Surface facts rather than duplicating authored mechanics;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.
+
+### Task 92 - L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER - Moonbeam Shape-Shifting Rider Runtime
+
+Status: `ready-for-research`
+
+Unit: `moonbeam`. Follow-up split from Task 38.
+
+Dependency: Task 91 (`L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME`) and Task 78 (`L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME`) done.
+
+Inputs:
+
+- `packages/surface/content/moonbeam.json`;
+- the `moonbeam` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Spells/Descriptions-M-P.md` and `.references/srd-5.2.1/Rules-Glossary.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- stat-block-control shape-shifting runtime, battle-runtime spell effect lifecycle, Unit profile evidence, and focused tests for shape-shift reversion and suppression.
+
+Outputs:
+
+- supported runtime profile or profile-subset evidence for reverting a shape-shifted target to its true form when it fails the Moonbeam Constitution Saving Throw, preventing that creature from shape-shifting again while it remains in the Moonbeam Cylinder, and clearing the prevention when it leaves the Cylinder or the spell ends;
+- execution consumes battle-visible shape-shifted and true-form state from the shape-shifting owner and Moonbeam save/area lifecycle facts from the movable-zone runtime without duplicating either owner state;
+- promoted Quint/runtime parity updates if battle-runtime behavior changes;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the shape-shifting rider portion of `moonbeam` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- runtime behavior traces to SRD Moonbeam and Shape-Shifting rules without homebrew extensions and does not create Moonbeam-local duplicate shape-shifting state;
+- automatic area membership derivation remains table/spatial owned;
 - focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.

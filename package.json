@@ -7,6 +7,8 @@
     "check:authored-id-dispatch": "node scripts/check-authored-id-dispatch-boundary.cjs",
     "raw-coverage:check": "node scripts/raw-coverage-check.cjs",
     "raw-coverage:check:self-test": "node scripts/raw-coverage-check.cjs --self-test",
+    "rules-kernel-coverage:check": "node scripts/rules-kernel-coverage-check.cjs",
+    "rules-kernel-coverage:check:self-test": "node scripts/rules-kernel-coverage-check.cjs --self-test",
     "unit-profile-coverage:check": "node scripts/unit-profile-coverage-check.cjs",
     "unit-profile-coverage:check:self-test": "node scripts/unit-profile-coverage-check.cjs --self-test",
     "lint": "pnpm --filter @dnd/mcp lint && pnpm --filter @dnd/app lint",

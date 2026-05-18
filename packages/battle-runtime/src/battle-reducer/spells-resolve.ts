@@ -119,7 +119,7 @@ import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 
 import { resolveChainedSpellAttackDamageAct } from "./spells-resolve-chained.ts";
 import { resolveFogCloudObscurementSpellAct } from "./spells-resolve-area-effects.ts";
-import { resolveSpellAttackBeamSequenceAct } from "./spells-resolve-beam-sequence.ts";
+import { resolveSpellAttackSequenceAct } from "./spells-resolve-attack-sequence.ts";
 export { resolveFogCloudObscurementSpellAct } from "./spells-resolve-area-effects.ts";
 export { resolveAttackBurstSaveDamageSpellAct } from "./spells-resolve-attack-burst.ts";
 export {
@@ -168,6 +168,7 @@ export {
   resolvePreparedHealingSpellAct,
   resolveRollModifierSpellAct,
   resolveScalarBuffSpellAct,
+  resolveSelfTeleportSpellAct,
   resolveThaumaturgyBoomingVoiceSpellAct,
 } from "./spells-resolve-support-effects.ts";
 export {
@@ -175,14 +176,14 @@ export {
   creatureTypeProtectionSpellTargetSelection,
   healingSpellTargetSelection,
   rollModifierSpellAffectedTargets,
-  rollModifierSpellSkillSelection,
+  rollModifierSpellEffectSelection,
   rollModifierSpellTargetSelection,
   scalarBuffSpellTargetSelection,
   type ConditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection,
   type CreatureTypeProtectionSpellTargetSelection,
   type HealingSpellTargetSelection,
   type RollModifierSpellAffectedTargets,
-  type RollModifierSpellSkillSelection,
+  type RollModifierSpellEffectSelection,
   type RollModifierSpellTargetSelection,
   type ScalarBuffSpellTargetSelection,
 } from "./spells-resolve-target-selection.ts";
@@ -196,6 +197,7 @@ import {
   resolvePreparedHealingSpellAct,
   resolveRollModifierSpellAct,
   resolveScalarBuffSpellAct,
+  resolveSelfTeleportSpellAct,
   resolveThaumaturgyBoomingVoiceSpellAct,
 } from "./spells-resolve-support-effects.ts";
 
@@ -253,7 +255,7 @@ function isSupportedDamageSpellInvocation(
     invocation.procedure === "repeatedDamageAllocation" ||
     (invocation.procedure === "spellAttackDamage" &&
       invocation.damage.kind !== "sorcerousBurstDamageTypeChoice") ||
-    invocation.procedure === "spellAttackBeamSequence" ||
+    invocation.procedure === "spellAttackSequence" ||
     invocation.procedure === "saveGatedDamage" ||
     invocation.procedure === "attackBurstSaveDamage"
   );
@@ -375,7 +377,7 @@ export function resolveSpellAct(
       invocation.procedure === "command" ||
       invocation.procedure === "fogCloudObscurement" ||
       invocation.procedure === "sanctuaryTargetingInterdiction" ||
-      invocation.procedure === "spellAttackBeamSequence")
+      invocation.procedure === "spellAttackSequence")
   ) {
     return invalidResult(
       input.state,
@@ -451,8 +453,8 @@ export function resolveSpellAct(
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
-  if (invocation.procedure === "spellAttackBeamSequence") {
-    return resolveSpellAttackBeamSequenceAct({
+  if (invocation.procedure === "spellAttackSequence") {
+    return resolveSpellAttackSequenceAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
@@ -1607,6 +1609,14 @@ export function resolveBonusActionSpellAct(
         "Bonus Action spell subject requires a supported Bonus Action spell act.",
       );
     }
+  } else if (invocation.procedure === "selfTeleport") {
+    if (invocation.actionCost !== "bonusAction") {
+      return invalidResult(
+        input.state,
+        "unsupportedSubject",
+        "Bonus Action spell subject requires a supported Bonus Action spell act.",
+      );
+    }
   } else if (invocation.procedure === "sanctuaryTargetingInterdiction") {
     if (invocation.actionCost !== "bonusAction") {
       return invalidResult(
@@ -1715,6 +1725,14 @@ export function resolveBonusActionSpellAct(
   }
   if (invocation.procedure === "jumpMovementReplacement") {
     return resolveJumpMovementReplacementSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "selfTeleport") {
+    return resolveSelfTeleportSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

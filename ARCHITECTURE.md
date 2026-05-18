@@ -203,6 +203,30 @@ Not every table-owned rule fact is a runtime input. Keep these cases separate:
   disclosure, language conversation, broad detection result narration, and
   illusion/social adjudication that does not feed a modeled procedure.
 
+## Companion Control Frontier
+
+Companion, familiar, steed, summon, and other controlled-creature rules follow
+the same ownership boundary as spatial facts and player choices. The runtime may
+model the mechanical protocol that RAW gives it: creature admission, source-owner
+links, one-at-a-time replacement, command cost, turn ordering, legal action
+discovery, resources, HP/damage, dismissal, and the mechanical consequences of a
+table-selected action.
+
+The runtime must not choose a companion's tactics. It must not select whether the
+owner commands the companion, which legal action the companion takes, which target
+it chooses, which route it follows, where it moves, or how it interprets an
+open-ended command. Those are Table Decisions expressed through the same explicit
+channels used elsewhere: selected public acts, holes/fills, and table-supplied
+witnesses such as target, route, range, line of sight, placement, and
+area-membership facts.
+
+When RAW says a controlled creature "obeys commands", "acts independently", or
+takes a default behavior, model only the rule protocol that has a mechanical
+consequence. A default such as Dodge can be a modeled action if RAW fixes it; an
+open-ended instruction such as choosing useful tactics remains outside runtime
+ownership unless a future product explicitly adds a separate caller-owned policy
+layer outside the rules reducer.
+
 ## Designing Ownership
 
 Design starts from the rule and its state-transition consequence, not from the
@@ -320,6 +344,76 @@ Ordinary catalog width belongs in Surface reader/contract tests and package
 support-gate tests unless it changes a reusable reducer procedure family or a
 selected high-risk composition flow.
 
+## Rules Kernel Coverage And Generator Readiness
+
+Rules-kernel coverage is the obligation ledger for reducer-owned semantics.
+Its denominator is TS-current reducer behavior after Surface admission, not raw
+code coverage, catalog breadth, parser failure coverage, or unsupported authored
+records. The active artifacts live in `plans/rules-kernel-coverage/`.
+Authored-content breadth remains in `plans/unit-profile-coverage/`; the join
+between the two lanes is `plans/rules-kernel-coverage/profile-obligations.jsonl`.
+Do not duplicate profile-to-obligation mappings in Unit claims, profile rows, or
+obligation rows.
+
+A Surface-backed semantic obligation is covered only when the full chain exists:
+
+```text
+Surface record
+        |
+        v
+support profile
+        |
+        v
+semantic obligation id
+        |
+        v
+QNT owner
+        |
+        v
+production TypeScript runtime owner
+        |
+        v
+executable parity witness
+```
+
+Direct reducer-entrypoint obligations use the shorter chain:
+
+```text
+reducer entry point
+        |
+        v
+semantic obligation id
+        |
+        v
+QNT owner
+        |
+        v
+production TypeScript runtime owner
+        |
+        v
+executable parity witness
+```
+
+The parity witness must run current production TypeScript reducer code against a
+QNT-owned projection. A QNT owner without an executable TS witness is only a
+spec claim; a TS test without a QNT owner is only regression coverage. Boundary
+or unsupported behavior can be recorded outside the QNT denominator only when
+the boundary classification is explicit.
+
+Focused MBT with random traces is the default parity witness for reducer
+procedures, sequencing, holes, reactions, resources, active effects, and
+interleavings. Deterministic QNT replay is a replay witness, not MBT coverage;
+it is reserved for fixed projections or small finite fixtures with explicitly
+named cases. Index-gated replay is not a general MBT pattern and must not
+replace random MBT where branch interaction is the coverage risk.
+
+Generator readiness is a separate C-axis record. It asks whether the QNT owner
+is shaped like semantic core that a future QNT-to-Rust generator could consume.
+It does not make the generator part of the current runtime and it does not
+replace parity coverage. A generator-readiness row must distinguish semantic
+core QNT from proof-only QNT and name the small language subset the future
+generator would need.
+
 ## Dependency Direction
 
 The promoted runtime path uses this dependency direction:
@@ -344,14 +438,16 @@ rewritten, or explicitly ledgered for restoration.
 
 ## Reference Authority
 
-| Document                                            | Scope                                                 | Authority                                  |
-| --------------------------------------------------- | ----------------------------------------------------- | ------------------------------------------ |
-| `.references/srd-5.2.1/`                            | Rules text                                            | Ground truth for modeled SRD rules         |
-| `UBIQUITOUS_LANGUAGE.md`                            | Canonical D&D domain terminology                      | Naming authority for domain terms          |
-| `ASSUMPTIONS.md`                                    | Explicit modeling choices where SRD is underspecified | Sole record of intentional RAW assumptions |
-| `packages/character-creation-runtime/VOCABULARY.md` | Character-creation runtime terms                      | Character-creation package vocabulary      |
-| `packages/core/ARCHITECTURE.md`                     | Core-specific runtime and Quint/TS guidance           | Core lane architecture                     |
-| Package READMEs                                     | Package-owned APIs and local invariants               | Local package contracts                    |
+| Document | Scope | Authority |
+| --- | --- | --- |
+| `.references/srd-5.2.1/` | Rules text | Ground truth for modeled SRD rules |
+| `UBIQUITOUS_LANGUAGE.md` | Canonical D&D domain terminology | Naming authority for domain terms |
+| `ASSUMPTIONS.md` | Explicit modeling choices where SRD is underspecified | Sole record of intentional RAW assumptions |
+| `packages/character-creation-runtime/VOCABULARY.md` | Character-creation runtime terms | Character-creation package vocabulary |
+| `plans/rules-kernel-coverage/` | Reducer semantic obligation coverage and generator-readiness ledger | Coverage authority for TS-current reducer semantics |
+| `plans/unit-profile-coverage/` | Authored Surface Unit/profile support breadth | Coverage authority for authored-content support and the generated rules-kernel join view |
+| `packages/core/ARCHITECTURE.md` | Core-specific runtime and Quint/TS guidance | Core lane architecture |
+| Package READMEs | Package-owned APIs and local invariants | Local package contracts |
 
 ## Choosing The Right Owner
 

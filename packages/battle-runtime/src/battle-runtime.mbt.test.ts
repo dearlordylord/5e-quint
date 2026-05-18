@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points spell.invocation-beam-sequence spell.invocation-sleep-repeat-save-lifecycle spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bonus-action-dash-temporary-hit-points spell.invocation-independent-attack-sequence spell.invocation-sleep-repeat-save-lifecycle spell.scalar-buff
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt extra-attack-count-scaling fighter_extra_attack paladin_extra_attack ranger_extra_attack
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-ORC-ADRENALINE-RUSH orc_adrenaline_rush
 // UNIT-IDENTITY-MBT-REPLAY: extra-attack-count-scaling fighter_extra_attack doResolveFirstExtraAttackMiss doResolveSecondExtraAttackMiss
@@ -2224,7 +2224,7 @@ function eldritchBlastSubject(): Extract<
     actorId: fighterId,
     invocation: cantripSpellInvocationRef(
       "eldritch_blast",
-      "spellAttackBeamSequence",
+      "spellAttackSequence",
     ),
     mode: { tag: "cast" },
   };
@@ -3542,6 +3542,11 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
     // The active MBT suites do not branch on Counterspell table facts; they
     // prefill this projection-only hole with an empty fact set before submit.
     return [];
+  }
+  if (hole.kind === "teleportDestination") {
+    throw new Error(
+      "Battle runtime MBT does not model teleport destination holes.",
+    );
   }
   return [
     Match.value(hole).pipe(

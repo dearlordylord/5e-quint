@@ -6,6 +6,10 @@ const {
   hasVariantMagicMechanics,
 } = require("./unit-profile-coverage-discovery.cjs");
 const { fail } = require("./unit-profile-coverage-io.cjs");
+const {
+  buildRulesKernelProfileJoin,
+  buildRulesKernelSupportedUnitJoin,
+} = require("./rules-kernel-profile-join.cjs");
 
 function stable(value) {
   if (Array.isArray(value)) return value.map(stable);
@@ -110,6 +114,39 @@ const metricDefinitions = [
     denominator: "profile records whose kind requires executable evidence",
   },
   {
+    key: "rulesKernelProfileJoinCoverage",
+    label: "Rules-kernel profile join coverage",
+    kind: "coverage",
+    planningQuestion:
+      "Do reducer-owned mechanics profiles point to rules-kernel semantic obligations?",
+    numerator:
+      "rules-kernel-applicable profile records with at least one profile-obligation mapping",
+    denominator:
+      "profile records whose kind carries reducer-owned semantics",
+  },
+  {
+    key: "rulesKernelCoveredProfileCoverage",
+    label: "Rules-kernel covered profile coverage",
+    kind: "coverage",
+    planningQuestion:
+      "Do reducer-owned mechanics profiles point to covered rules-kernel obligations?",
+    numerator:
+      "rules-kernel-applicable profile records whose mapped obligations are all covered",
+    denominator:
+      "profile records whose kind carries reducer-owned semantics",
+  },
+  {
+    key: "rulesKernelSupportedUnitCoverage",
+    label: "Supported Unit rules-kernel chain coverage",
+    kind: "coverage",
+    planningQuestion:
+      "Do supported Unit identities have every reducer-owned profile connected to covered rules-kernel obligations?",
+    numerator:
+      "supported Unit ids whose rules-kernel-applicable profiles all map to covered obligations",
+    denominator:
+      "installed Units with supported-profile claims and at least one rules-kernel-applicable profile",
+  },
+  {
     key: "deterministicAdmissionProjectionCoverage",
     label: "Deterministic admission/projection coverage",
     kind: "coverage",
@@ -121,10 +158,10 @@ const metricDefinitions = [
   },
   {
     key: "selectedIdentityMbtCoverage",
-    label: "Selected identity MBT coverage",
+    label: "Selected identity replay coverage",
     kind: "coverage",
     planningQuestion:
-      "Which supported Unit identities have intentionally selected concrete identity MBT evidence?",
+      "Which supported Unit identities have intentionally selected concrete identity replay evidence?",
     numerator: "supported Unit ids with selected-identity-mbt evidence",
     denominator: "installed Units with supported-profile claims",
   },
@@ -184,6 +221,8 @@ function metrics({
   unitEvidence,
   executableProfiles,
   deterministicAdmissionProjectionEvidenceTag,
+  rulesKernelProfileJoin,
+  rulesKernelSupportedUnitJoin,
   selectedIdentityMbtEvidenceTag,
 }) {
   const inventoryIds = new Set(inventory.map((unit) => unit.unitId));
@@ -303,6 +342,12 @@ function metrics({
       denominator: executableProfiles.length,
       percent: percent(runtimeParity.length, executableProfiles.length),
     },
+    rulesKernelProfileJoinCoverage:
+      rulesKernelProfileJoin.metrics.rulesKernelProfileJoinCoverage,
+    rulesKernelCoveredProfileCoverage:
+      rulesKernelProfileJoin.metrics.rulesKernelCoveredProfileCoverage,
+    rulesKernelSupportedUnitCoverage:
+      rulesKernelSupportedUnitJoin.metrics.rulesKernelSupportedUnitCoverage,
     deterministicAdmissionProjectionCoverage: {
       numerator: deterministicAdmissionProjection.size,
       denominator: supportedUnitClaims.length,
@@ -407,6 +452,8 @@ function buildMatrix(
     unitClaims,
     unitEvidence,
     taskClaims,
+    rulesKernelObligations,
+    rulesKernelProfileObligations,
   },
   {
     executableProfileKinds,
@@ -415,6 +462,11 @@ function buildMatrix(
   },
 ) {
   const profileMap = new Map(profiles.map((profile) => [profile.id, profile]));
+  const rulesKernelProfileJoin = buildRulesKernelProfileJoin({
+    obligations: rulesKernelObligations,
+    profileObligations: rulesKernelProfileObligations,
+    profiles,
+  });
   const claimsByUnit = new Map(
     unitClaims.map((claim) => [claim.unitId, claim]),
   );
@@ -477,10 +529,14 @@ function buildMatrix(
             profiles: claimProfiles(claim?.claim, profileMap),
             evidence: [],
           });
-        }),
+      }),
     );
   const executableProfiles = profiles.filter((profile) =>
     executableProfileKinds.has(profile.profileKind),
+  );
+  const rulesKernelSupportedUnitJoin = buildRulesKernelSupportedUnitJoin(
+    units,
+    rulesKernelProfileJoin,
   );
   const matrixMetrics = metrics({
     inventory,
@@ -490,6 +546,8 @@ function buildMatrix(
     unitEvidence,
     executableProfiles,
     deterministicAdmissionProjectionEvidenceTag,
+    rulesKernelProfileJoin,
+    rulesKernelSupportedUnitJoin,
     selectedIdentityMbtEvidenceTag,
   });
   assertMetricDefinitionCoverage(matrixMetrics);
@@ -501,6 +559,10 @@ function buildMatrix(
     derivedViews: collections.derivedViews,
     metrics: matrixMetrics,
     metricSemantics: metricDefinitions,
+    rulesKernelProfileJoin: {
+      ...rulesKernelProfileJoin,
+      supportedUnitJoin: rulesKernelSupportedUnitJoin,
+    },
     units,
     profiles,
     taskClaims,
@@ -719,6 +781,36 @@ function renderReport(
   const coverageMetricDefinitions = matrix.metricSemantics.filter(
     (definition) => definition.kind === "coverage",
   );
+  const rulesKernelJoin = matrix.rulesKernelProfileJoin ?? {
+    profiles: [],
+    supportedUnitJoin: { units: [] },
+  };
+  const rulesKernelProfileGroups = Array.from(
+    rulesKernelJoin.profiles
+      .reduce((groups, row) => {
+        const current = groups.get(row.joinStatus) ?? [];
+        current.push(row.profileId);
+        groups.set(row.joinStatus, current);
+        return groups;
+      }, new Map())
+      .entries(),
+  ).sort(([leftStatus], [rightStatus]) => leftStatus.localeCompare(rightStatus));
+  const rulesKernelUnitGroups = Array.from(
+    rulesKernelJoin.supportedUnitJoin.units
+      .reduce((groups, row) => {
+        const current = groups.get(row.joinStatus) ?? [];
+        current.push(row.unitId);
+        groups.set(row.joinStatus, current);
+        return groups;
+      }, new Map())
+      .entries(),
+  ).sort(([leftStatus], [rightStatus]) => leftStatus.localeCompare(rightStatus));
+  const rulesKernelProfileGaps = rulesKernelJoin.profiles.filter(
+    (row) => row.joinStatus !== "covered",
+  );
+  const rulesKernelUnitGaps = rulesKernelJoin.supportedUnitJoin.units.filter(
+    (row) => row.joinStatus !== "covered",
+  );
 
   return `${[
     "# Unit Profile Coverage Report",
@@ -748,6 +840,61 @@ function renderReport(
     "| Metric | Planning question | Measure | Denominator |",
     "| --- | --- | --- | --- |",
     ...matrix.metricSemantics.map(renderMetricSemantics),
+    "",
+    "## Rules-Kernel Join",
+    "",
+    "The Unit matrix owns authored-content breadth. `plans/rules-kernel-coverage/profile-obligations.jsonl` owns the reducer-semantic join from supported mechanics profiles to QNT-connected rules-kernel obligations.",
+    "",
+    "| Join status | Profile count | Profiles |",
+    "| --- | ---: | --- |",
+    ...(rulesKernelProfileGroups.length === 0
+      ? ["| _none_ | 0 | _none_ |"]
+      : rulesKernelProfileGroups.map(
+          ([status, profileIds]) =>
+            `| ${status} | ${profileIds.length} | ${profileIds.map((id) => `\`${id}\``).join(", ")} |`,
+        )),
+    "",
+    "| Supported Unit join status | Unit count | Units |",
+    "| --- | ---: | --- |",
+    ...(rulesKernelUnitGroups.length === 0
+      ? ["| _none_ | 0 | _none_ |"]
+      : rulesKernelUnitGroups.map(
+          ([status, unitIds]) =>
+            `| ${status} | ${unitIds.length} | ${unitIds.map((id) => `\`${id}\``).join(", ")} |`,
+        )),
+    "",
+    "### Rules-Kernel Profile Join Gaps",
+    "",
+    "| Profile | Kind | Status | Obligations |",
+    "| --- | --- | --- | --- |",
+    ...(rulesKernelProfileGaps.length === 0
+      ? ["| _none_ | _none_ | _none_ | _none_ |"]
+      : rulesKernelProfileGaps.map((row) => {
+          const obligations =
+            row.obligations.length === 0
+              ? "no obligation mapping"
+              : row.obligations
+                  .map(
+                    (obligation) =>
+                      `\`${obligation.obligationId}\` (${obligation.status})`,
+                  )
+                  .join(", ");
+          return `| \`${row.profileId}\` | ${row.profileKind} | ${row.joinStatus} | ${obligations} |`;
+        })),
+    "",
+    "### Supported Unit Rules-Kernel Chain Gaps",
+    "",
+    "| Unit | Status | Profiles |",
+    "| --- | --- | --- |",
+    ...(rulesKernelUnitGaps.length === 0
+      ? ["| _none_ | _none_ | _none_ |"]
+      : rulesKernelUnitGaps.map((row) => {
+          const profiles = row.profiles
+            .filter((profile) => profile.joinStatus !== "covered")
+            .map((profile) => `\`${profile.profileId}\` (${profile.joinStatus})`)
+            .join(", ");
+          return `| \`${row.unitId}\` | ${row.joinStatus} | ${profiles} |`;
+        })),
     "",
     "## Supported Unit Claims",
     "",
@@ -847,7 +994,7 @@ function renderReport(
             }),
         )),
     "",
-    "## Selected Identity MBT Evidence",
+    "## Selected Identity Replay Evidence",
     "",
     "| Unit | Profiles | Task | Owner |",
     "| --- | --- | --- | --- |",

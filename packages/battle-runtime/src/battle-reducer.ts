@@ -1,5 +1,6 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-dancing-lights-movable-dim-light spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-object-light spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-self-ability-check-advantage spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-independent-attack-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-dancing-lights-movable-dim-light spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-object-light spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-self-ability-check-advantage spell.invocation-self-teleport spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS BATTLE.STAT_BLOCK.ATTACK_CONTROL
 import type {
   ActionEconomyState,
   RuntimeActionResource,
@@ -120,11 +121,13 @@ import type { ZeroHpLifecycle } from "./zero-hp-lifecycle.ts";
 import { type DamageAmountByTypeEntry } from "./battle-reducer/damage-helpers.ts";
 import {
   BATTLE_ATTACK_RANGE_BANDS,
+  type BattleD20RollModifierDieSize,
   COMMAND_OPTIONS,
   CRITICAL_HIT_THRESHOLDS,
   type EldritchBlastBeamCount,
   HUNTERS_MARK_FINDING_SKILLS,
   PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS,
+  type ScorchingRayRayCount,
   SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS,
   THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
 } from "./battle-reducer/domain-constants.ts";
@@ -433,7 +436,7 @@ export type BattleD20RollModifierKind = Extract<
 >;
 export type BattleD20RollModifierDelta = {
   readonly dice: number;
-  readonly dieSize: DamageDieSize;
+  readonly dieSize: BattleD20RollModifierDieSize;
   readonly sign: "+" | "-";
 };
 export type BattlePassiveSpeedProfile =
@@ -721,6 +724,12 @@ export type BattleActiveEffect =
       readonly on: readonly BattleD20RollModifierKind[];
       readonly delta: BattleD20RollModifierDelta;
       readonly skill: Skill | null;
+      readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "abilityCheckRollMode";
+      readonly mode: AttackRollMode;
+      readonly ability: Ability;
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {
@@ -1489,6 +1498,15 @@ export type BattleJumpLandingFact =
       readonly kind: "legalLanding";
       readonly difficultTerrainAcrobatics: "failed";
     };
+export type BattleTeleportDestination = {
+  readonly kind: "unoccupiedVisibleDestination";
+  readonly destinationId: BattleTablePositionId;
+  readonly distanceFeet: MovementFeet;
+};
+export type BattleTeleportDestinationFact = BattleTeleportDestination & {
+  readonly actorId: CombatantId;
+  readonly spellId: SpellId;
+};
 export type BattleOpportunityAttackThreat = {
   readonly reactorId: CombatantId;
   readonly attackName: string;
@@ -1717,6 +1735,15 @@ export type BattleShovePushDisposition =
 export type BattleShovePushOutcome = {
   readonly targetId: CombatantId;
   readonly disposition: BattleShovePushDisposition;
+};
+export type BattleTeleportOutcome = {
+  readonly kind: "selfTeleport";
+  readonly actorId: CombatantId;
+  readonly sourceSpellId: SpellId;
+  readonly destination: BattleTeleportDestination;
+  readonly spendsMovement: false;
+  readonly provokesOpportunityAttacks: false;
+  readonly transportsWornAndCarriedEquipment: true;
 };
 export type BattleThunderwaveAudibleBoom = {
   readonly sound: "thunderous boom";
@@ -1961,16 +1988,18 @@ export type SpellFailedSaveAttackRollEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "faerieFireOutline" }
 >;
+export type SpellTargetListTargeting = {
+  readonly kind: "targetList";
+  readonly minTargets: 1;
+  readonly maxTargets: number;
+};
 export type ScalarBuffSpellTargeting =
   | {
       readonly kind: "self";
     }
-  | {
-      readonly kind: "targetList";
-      readonly minTargets: 1;
-      readonly maxTargets: number;
+  | (SpellTargetListTargeting & {
       readonly requiredTargetDisposition: "unrestricted" | "willing";
-    };
+    });
 export type TargetListSpellInvocation =
   | Extract<
       SupportedSpellInvocation,
@@ -2039,14 +2068,26 @@ export type ScalarBuffSpellEffect =
         { readonly kind: "hitPointMaximumIncrease" }
       >;
     };
-export type RollModifierSpellTargeting = {
-  readonly kind: "targetList";
-  readonly minTargets: 1;
-  readonly maxTargets: number;
-};
-export type RollModifierSpellEffect = Extract<
+export type RollModifierSpellTargeting =
+  | SpellTargetListTargeting
+  | {
+      readonly kind: "selfAndChosenLegalTargets";
+      readonly minTargets: 1;
+    };
+export type D20RollModifierSpellEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "d20RollModifier" }
+>;
+export type AbilityCheckRollModeSpellEffect = Omit<
+  Extract<BattleActiveEffect, { readonly kind: "abilityCheckRollMode" }>,
+  "ability"
+>;
+export type RollModifierSpellEffect =
+  | D20RollModifierSpellEffect
+  | Extract<BattleActiveEffect, { readonly kind: "abilityCheckRollMode" }>;
+export type SelectedRollModifierSpellEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "d20RollModifier" | "abilityCheckRollMode" }
 >;
 export type ThaumaturgyBoomingVoiceSpellInvocation = {
   readonly access: ClassCantripSpellAccess;
@@ -2064,25 +2105,36 @@ type RollModifierSpellSaveGate = {
   readonly ability: Ability;
   readonly dc: DcSource;
 };
-export type RollModifierSpellInvocation = {
+type RollModifierSpellInvocationBase = {
   readonly access: PreparedSpellAccess | ClassCantripSpellAccess;
   readonly resource: SpellSlotInvocationResource | NoSpellInvocationResource;
   readonly procedure: "rollModifier";
   readonly spell: SpellRecord;
   readonly actionCost: "magicAction";
   readonly targeting: RollModifierSpellTargeting;
-  readonly effect: RollModifierSpellEffect;
   readonly rangeFeet: MovementFeet;
   readonly saveGate: RollModifierSpellSaveGate | null;
-  readonly skillChoices: readonly Skill[] | null;
 };
+export type RollModifierSpellInvocation = RollModifierSpellInvocationBase &
+  (
+    | {
+        readonly effect: D20RollModifierSpellEffect;
+        readonly skillChoices: readonly Skill[] | null;
+        readonly abilityChoices: null;
+      }
+    | {
+        readonly effect: AbilityCheckRollModeSpellEffect;
+        readonly skillChoices: null;
+        readonly abilityChoices: readonly Ability[];
+      }
+  );
 export type CreatureTypeProtectionSpellInvocation = {
   readonly access: PreparedSpellAccess;
   readonly resource: SpellSlotInvocationResource;
   readonly procedure: "creatureTypeProtection";
   readonly spell: SpellRecord;
   readonly actionCost: "magicAction";
-  readonly targeting: RollModifierSpellTargeting;
+  readonly targeting: SpellTargetListTargeting;
   readonly activeEffect: Extract<
     BattleActiveEffect,
     { readonly kind: "creatureTypeProtection" }
@@ -2095,7 +2147,7 @@ export type DamageReductionSpellInvocation = {
   readonly procedure: "damageReduction";
   readonly spell: SpellRecord;
   readonly actionCost: "magicAction";
-  readonly targeting: RollModifierSpellTargeting;
+  readonly targeting: SpellTargetListTargeting;
   readonly damageTypeChoices: readonly DamageType[];
   readonly amount: {
     readonly dice: 1;
@@ -2110,7 +2162,7 @@ export type ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation = {
   readonly procedure: "conditionImmunityAndTurnStartTemporaryHitPoints";
   readonly spell: SpellRecord;
   readonly actionCost: "magicAction";
-  readonly targeting: RollModifierSpellTargeting;
+  readonly targeting: SpellTargetListTargeting;
   readonly activeEffects: readonly [
     Extract<BattleActiveEffect, { readonly kind: "conditionImmunity" }>,
     Extract<
@@ -2136,6 +2188,14 @@ export type JumpMovementReplacementSpellInvocation = {
     { readonly kind: "jumpMovementReplacement" }
   >;
   readonly rangeFeet: MovementFeet;
+};
+export type SelfTeleportSpellInvocation = {
+  readonly access: PreparedSpellAccess;
+  readonly resource: SpellSlotInvocationResource;
+  readonly procedure: "selfTeleport";
+  readonly spell: SpellRecord;
+  readonly actionCost: "bonusAction";
+  readonly maxDistanceFeet: MovementFeet;
 };
 export type SanctuaryTargetingInterdictionSpellInvocation = {
   readonly access: PreparedSpellAccess;
@@ -2342,10 +2402,19 @@ export type SpellAttackDamageTargeting = Extract<
   SpellTargeting,
   { readonly kind: "singleCombatant" | "singleCreatureOrObject" }
 >;
-export type SpellAttackBeamSequenceTargeting = {
-  readonly kind: "beamSequenceCreatureOrObject";
-  readonly beamCount: EldritchBlastBeamCount;
+export type CantripSpellAttackSequenceTargeting = {
+  readonly kind: "spellAttackSequenceCreatureOrObject";
+  readonly countSource: "characterLevel";
+  readonly attackCount: EldritchBlastBeamCount;
 };
+export type PreparedSpellAttackSequenceTargeting = {
+  readonly kind: "spellAttackSequenceCreatureOrObject";
+  readonly countSource: "spellSlotLevel";
+  readonly attackCount: ScorchingRayRayCount;
+};
+export type SpellAttackSequenceTargeting =
+  | CantripSpellAttackSequenceTargeting
+  | PreparedSpellAttackSequenceTargeting;
 export type SpellHostedWeaponAttackInvocation = {
   readonly access: ClassCantripSpellAccess;
   readonly resource: NoSpellInvocationResource;
@@ -2457,6 +2526,7 @@ export type SupportedSpellInvocation =
       readonly rangeFeet: MovementFeet;
     }
   | JumpMovementReplacementSpellInvocation
+  | SelfTeleportSpellInvocation
   | {
       readonly access: PreparedSpellAccess;
       readonly resource: SpellSlotInvocationResource;
@@ -2483,12 +2553,10 @@ export type SupportedSpellInvocation =
       readonly postDamageRiders: readonly SpellPostDamageRider[];
       readonly objectHitEffect: SpellObjectHitEffect;
     })
-  | {
-      readonly access: ClassCantripSpellAccess;
-      readonly resource: NoSpellInvocationResource;
-      readonly procedure: "spellAttackBeamSequence";
+  | (ClassCantripDamageSpellSource & {
+      readonly procedure: "spellAttackSequence";
       readonly spell: SpellRecord;
-      readonly targeting: SpellAttackBeamSequenceTargeting;
+      readonly targeting: CantripSpellAttackSequenceTargeting;
       readonly damage: {
         readonly expr: DiceExpr;
         readonly damageType: DamageType;
@@ -2496,7 +2564,19 @@ export type SupportedSpellInvocation =
       readonly rangeFeet: MovementFeet;
       readonly attackKind: Extract<SpellAttackKind, "ranged_spell_attack">;
       readonly attackBonus: AttackBonus;
-    }
+    })
+  | (PreparedDamageSpellSource & {
+      readonly procedure: "spellAttackSequence";
+      readonly spell: SpellRecord;
+      readonly targeting: PreparedSpellAttackSequenceTargeting;
+      readonly damage: {
+        readonly expr: DiceExpr;
+        readonly damageType: DamageType;
+      };
+      readonly rangeFeet: MovementFeet;
+      readonly attackKind: Extract<SpellAttackKind, "ranged_spell_attack">;
+      readonly attackBonus: AttackBonus;
+    })
   | (PreparedDamageSpellSource & {
       readonly procedure: "chainedSpellAttackDamage";
       readonly spell: SpellRecord;
@@ -2766,6 +2846,7 @@ type AnySupportedDamageSpellInvocation = Exclude<
       | "markedDamageRider"
       | "expeditiousRetreatDash"
       | "jumpMovementReplacement"
+      | "selfTeleport"
       | "sanctuaryTargetingInterdiction"
       | "featherFallMitigation"
       | "heldLight"
@@ -3278,6 +3359,16 @@ export type BattleSpellAreaChoiceHole = {
     { readonly kind: "pointOriginSphere" }
   >;
 };
+export type BattleTeleportDestinationHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "teleportDestination";
+  readonly label: string;
+  readonly spell: SelfTeleportSpellInvocation;
+  readonly actorId: CombatantId;
+  readonly maxDistanceFeet: MovementFeet;
+  readonly requiresTableSpatialFact: true;
+};
 export type BattleHeldObjectFactsHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -3478,7 +3569,7 @@ export type BattleSpellDamageRollHole = Extract<
         | "heldLightHurl"
         | "repeatedDamageAllocation"
         | "saveGatedDamage"
-        | "spellAttackBeamSequence"
+        | "spellAttackSequence"
         | "spellAttackDamage";
     }
   >;
@@ -3646,10 +3737,12 @@ export type BattleSpellAbilityChoiceHole = {
   readonly holeId: BattleHoleId;
   readonly kind: "abilityChoice";
   readonly label: string;
-  readonly spell: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "markedDamageRider"; readonly action: "cast" }
-  >;
+  readonly spell:
+    | Extract<
+        SupportedSpellInvocation,
+        { readonly procedure: "markedDamageRider"; readonly action: "cast" }
+      >
+    | Extract<SupportedSpellInvocation, { readonly procedure: "rollModifier" }>;
   readonly choices: readonly Ability[];
 };
 export type BattleSpellConditionChoiceHole = {
@@ -4011,6 +4104,7 @@ export type BattleHole =
   | BattleSpellCastReactionFactsHole
   | BattleObjectTargetChoiceHole
   | BattleSpellAreaChoiceHole
+  | BattleTeleportDestinationHole
   | BattleHeldObjectFactsHole
   | BattleSpellDamageTypeChoiceHole
   | BattleSpellTargetAllocationHole
@@ -4167,6 +4261,11 @@ export type BattleFill =
       readonly kind: "spellAreaChoice";
       readonly holeId: BattleHoleId;
       readonly value: BattleFogCloudAreaChoice;
+    }
+  | {
+      readonly kind: "teleportDestination";
+      readonly holeId: BattleHoleId;
+      readonly value: BattleTeleportDestinationFact;
     }
   | {
       readonly kind: "spellTargetAllocation";
@@ -4391,6 +4490,7 @@ export type BattleResolutionResult =
       readonly objectIgnitions?: readonly BattleObjectIgnitionOutcome[];
       readonly droppedObjects?: readonly BattleDroppedObjectOutcome[];
       readonly shovePushes?: readonly BattleShovePushOutcome[];
+      readonly teleports?: readonly BattleTeleportOutcome[];
     }
   | {
       readonly tag: "needsHoles";

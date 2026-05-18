@@ -24,6 +24,7 @@ export const BATTLE_TRACE_HOLE_KINDS = [
   "thaumaturgyActiveOneMinuteEffectCount",
   "dancingLightsPlacement",
   "spellAreaChoice",
+  "teleportDestination",
   "savingThrowOutcome",
   "deathSavingThrow",
   "statBlockRechargeRoll",

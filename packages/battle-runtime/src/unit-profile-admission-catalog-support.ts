@@ -103,11 +103,15 @@ export const entangleUnitId = "entangle";
 
 export const eldritchBlastUnitId = "eldritch_blast";
 
+export const enhanceAbilityUnitId = "enhance_ability";
+
 export const ensnaringStrikeUnitId = "ensnaring_strike";
 
 export const expeditiousRetreatUnitId = "expeditious_retreat";
 
 export const jumpUnitId = "jump";
+
+export const mistyStepUnitId = "misty_step";
 
 export const searingSmiteUnitId = "searing_smite";
 
@@ -187,6 +191,8 @@ export const mageArmorUnitId = "mage_armor";
 
 export const magicMissileUnitId = "magic_missile";
 
+export const passWithoutTraceUnitId = "pass_without_trace";
+
 export const poisonSprayUnitId = "poison_spray";
 
 export const protectionFromEvilAndGoodUnitId = "protection_from_evil_and_good";
@@ -196,6 +202,8 @@ export const produceFlameUnitId = "produce_flame";
 export const resistanceUnitId = "resistance";
 
 export const sacredFlameUnitId = "sacred_flame";
+
+export const scorchingRayUnitId = "scorching_ray";
 
 export const shillelaghUnitId = "shillelagh";
 

@@ -26,3 +26,8 @@ Owned boundary functions:
 
 MCP and app code should call this package instead of owning parallel
 Character Sheet/battle projection logic.
+
+Rules-kernel coverage for battle/sheet composition semantics is tracked in
+`plans/rules-kernel-coverage/`. New handoff or battle-initialization reducer
+behavior should add or extend a semantic obligation and connect QNT ownership to
+production TS through MBT or deterministic QNT replay.

@@ -1,0 +1,156 @@
+{
+  "description": "For the duration, the spell enlarges or reduces a creature or an object you can see within range. The object can't be worn or carried. An unwilling creature can make a Constitution saving throw; on a successful save, the spell has no effect. Enlarge increases the target's size by one category, grants Advantage on Strength checks and Strength saving throws, and adds 1d4 damage to attacks with enlarged weapons or Unarmed Strikes. Reduce decreases the target's size by one category, imposes Disadvantage on Strength checks and Strength saving throws, and subtracts 1d4 damage from attacks with reduced weapons or Unarmed Strikes, to a minimum of 1 damage.",
+  "id": "enlarge_reduce",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a pinch of powdered iron",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "activation",
+    "level": 2,
+    "phases": [
+      {
+        "ability": "con",
+        "attachment": {
+          "holeId": "enlarge_reduce_target",
+          "kind": "hole",
+          "label": "creature target",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "mode": "one",
+              "targetKinds": [
+                "creature"
+              ]
+            }
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "kind": "choose_effect_mode",
+          "label": "Enlarge/Reduce effect",
+          "options": [
+            {
+              "displayName": "Enlarge",
+              "effects": [
+                {
+                  "direction": "increase",
+                  "kind": "modify_size_category",
+                  "steps": 1
+                },
+                {
+                  "abilityFilter": [
+                    "str"
+                  ],
+                  "kind": "modify_roll_advantage",
+                  "mode": "advantage",
+                  "on": [
+                    "ability_check"
+                  ]
+                },
+                {
+                  "kind": "modify_roll_advantage",
+                  "mode": "advantage",
+                  "on": [
+                    "saving_throw"
+                  ],
+                  "saveAbilityFilter": [
+                    "str"
+                  ]
+                },
+                {
+                  "damageSourceFilter": {
+                    "attackRollFilter": "weapon_or_unarmed_strike",
+                    "kind": "attack_hit"
+                  },
+                  "delta": {
+                    "dice": 1,
+                    "dieSize": 4,
+                    "kind": "fixed_dice",
+                    "sign": "+"
+                  },
+                  "kind": "modify_damage_numeric"
+                }
+              ],
+              "id": "enlarge"
+            },
+            {
+              "displayName": "Reduce",
+              "effects": [
+                {
+                  "direction": "decrease",
+                  "kind": "modify_size_category",
+                  "steps": 1
+                },
+                {
+                  "abilityFilter": [
+                    "str"
+                  ],
+                  "kind": "modify_roll_advantage",
+                  "mode": "disadvantage",
+                  "on": [
+                    "ability_check"
+                  ]
+                },
+                {
+                  "kind": "modify_roll_advantage",
+                  "mode": "disadvantage",
+                  "on": [
+                    "saving_throw"
+                  ],
+                  "saveAbilityFilter": [
+                    "str"
+                  ]
+                },
+                {
+                  "damageSourceFilter": {
+                    "attackRollFilter": "weapon_or_unarmed_strike",
+                    "kind": "attack_hit"
+                  },
+                  "delta": {
+                    "dice": 1,
+                    "dieSize": 4,
+                    "kind": "fixed_dice",
+                    "sign": "-"
+                  },
+                  "kind": "modify_damage_numeric",
+                  "minimumDamageTotal": 1
+                }
+              ],
+              "id": "reduce"
+            }
+          ]
+        },
+        "onSuccess": {
+          "kind": "none"
+        },
+        "saveAppliesIf": "unwilling_target"
+      }
+    ],
+    "range": {
+      "feet": 30,
+      "kind": "point"
+    },
+    "school": "transmutation"
+  },
+  "name": "Enlarge/Reduce",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Enlarge/Reduce"
+  }
+}
