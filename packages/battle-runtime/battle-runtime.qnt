@@ -1304,71 +1304,6 @@ module battleRuntime {
       { ...secondResolved, actionAvailable: false }
     }
 
-  pure def applyDamage(target: Combatant, damage: int, deathFailuresAtZeroHp: int, concentrationSaveSucceeded: bool): Combatant =
-    applyDamageWithDisposition(target, damage, deathFailuresAtZeroHp, concentrationSaveSucceeded, OrdinaryDamage)
-
-  pure def applyDamageFromSource(
-    target: Combatant,
-    damage: int,
-    deathFailuresAtZeroHp: int,
-    concentrationSaveSucceeded: bool,
-    damageDisposition: DamageDisposition,
-    damageSource: Actor,
-  ): Combatant = {
-    val damaged = applyDamageWithDisposition(target, damage, deathFailuresAtZeroHp, concentrationSaveSucceeded, damageDisposition)
-    if (damage > 0 and battleRuntimeSleepEffectEndsOnDamage)
-      combatantWithoutSleepEffects({
-        ...damaged,
-        activeEffects: activeEffectsAfterTargetDamagedByCasterOrAlly(damaged.activeEffects, actorDamageSource(damageSource)),
-      })
-    else
-      damaged
-  }
-
-  pure def applyDamageWithDisposition(target: Combatant, damage: int, deathFailuresAtZeroHp: int, concentrationSaveSucceeded: bool, damageDisposition: DamageDisposition): Combatant = {
-    val effectiveDamage = nonnegative(damage)
-    val afterDamage =
-      if (effectiveDamage <= 0)
-        target
-      else if (target.hp <= 0) {
-        val result = applyDamageToZeroHitPointCreature(
-          combatantVitals(target),
-          combatantDeathSavingThrows(target),
-          effectiveDamage,
-          deathFailuresAtZeroHp >= 2,
-        )
-        combatantWithZeroHitPointLifecycleResult(target, result)
-      } else {
-        val result = applyResolvedDamageToPositiveHitPoints(combatantVitals(target), effectiveDamage)
-        val recovery =
-          if (damageDisposition == KnockOut) {
-            applyKnockOutDisposition(result)
-          } else {
-            {
-              vitals: result.vitals,
-              deathSavingThrows:
-                deathSavingThrowLifecycleAfterPositiveHitPointDamage(combatantDeathSavingThrows(target), result),
-              positiveHitPointUnconsciousRecovery: NoPositiveHitPointUnconsciousRecovery,
-              hitPointsRegained: 0,
-            }
-        }
-        combatantWithHitPointRecoveryResult(target, recovery)
-      }
-    val afterIncapacitatingDamage =
-      if (target.concentrating and not(target.unconscious) and afterDamage.unconscious)
-        breakConcentration(afterDamage)
-      else
-        afterDamage
-
-    if (target.concentrating and effectiveDamage > 0 and not(concentrationSaveSucceeded))
-      breakConcentration(afterIncapacitatingDamage)
-    else
-      afterIncapacitatingDamage
-  }
-
-  pure def applyKnockOut(target: Combatant): Combatant =
-    { ...breakConcentration(target), hp: 1, unconscious: true, knockedOut: true }
-
   pure def applyMageArmor(target: Combatant): Combatant =
     {
       ...target,
@@ -4101,22 +4036,5 @@ module battleRuntime {
         }, Fighter)
       }
     }
-
-  pure def applyDropToZeroHp(target: Combatant): Combatant = {
-    val damageResult = applyResolvedDamageToPositiveHitPoints(combatantVitals(target), target.hp)
-    combatantWithHitPointRecoveryResult(
-      breakConcentration(target),
-      {
-        vitals: damageResult.vitals,
-        deathSavingThrows:
-          deathSavingThrowLifecycleAfterPositiveHitPointDamage(
-            combatantDeathSavingThrows(target),
-            damageResult,
-          ),
-        positiveHitPointUnconsciousRecovery: NoPositiveHitPointUnconsciousRecovery,
-        hitPointsRegained: 0,
-      }
-    )
-  }
 
 }

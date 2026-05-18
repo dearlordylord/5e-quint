@@ -1188,9 +1188,9 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
 - `battle-runtime-bardic-inspiration.qnt` - Bardic Inspiration and Cutting
   Words d20-test helpers imported by the canonical spec and focused Bardic
   selected-identity lane.
-- `battle-runtime-hit-points.qnt` - Hit Point, healing, stabilization,
-  zero-Hit-Point, and Death Saving Throw lifecycle helpers imported by the
-  canonical spec and focused death-save lane.
+- `battle-runtime-hit-points.qnt` - Hit Point damage, healing, stabilization,
+  zero-Hit-Point, Knock Out, drop-to-zero, and Death Saving Throw lifecycle
+  helpers imported by the canonical spec and focused death-save lane.
 - `battle-runtime-turn-order.qnt` - initiative turn ownership, attack-turn
   eligibility, next-initiative calculation, and end-of-caster-next-turn timing.
 - `battle-runtime-damage-adjustments.qnt` - damage type projection,
