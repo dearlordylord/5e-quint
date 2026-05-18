@@ -37,7 +37,8 @@ QNT modules, such as `battle-runtime-find-familiar.qnt`,
 `battle-runtime-timed-effects.qnt`, and
 `battle-runtime-attack-facts.qnt`, `battle-runtime-hidden.qnt`, and
 `battle-runtime-movement.qnt`, and
-`battle-runtime-restoration-and-buffs.qnt`, when the split follows SRD language and
+`battle-runtime-restoration-and-buffs.qnt`, and
+`battle-runtime-sleep-hideous-laughter.qnt`, when the split follows SRD language and
 avoids duplicate state names or compatibility-wrapper churn.
 Package-local `battle-runtime-*-tests.qnt` files group QNT self-tests by domain
 so test context can be loaded without the full canonical integration spec body;

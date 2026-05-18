@@ -40,6 +40,7 @@ module battleRuntimeSaveSpellTests {
   import battleRuntimeAttackFacts.* from "./battle-runtime-attack-facts"
   import battleRuntimeMovement.* from "./battle-runtime-movement"
   import battleRuntimeRestorationAndBuffs.* from "./battle-runtime-restoration-and-buffs"
+  import battleRuntimeSleepHideousLaughter.* from "./battle-runtime-sleep-hideous-laughter"
 
   run test_roll_modifier_concentration_effects_end_when_caster_concentration_breaks = {
     val concentrating = {

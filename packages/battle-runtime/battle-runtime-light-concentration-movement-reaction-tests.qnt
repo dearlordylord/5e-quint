@@ -40,6 +40,7 @@ module battleRuntimeLightConcentrationMovementReactionTests {
   import battleRuntimeAttackFacts.* from "./battle-runtime-attack-facts"
   import battleRuntimeMovement.* from "./battle-runtime-movement"
   import battleRuntimeRestorationAndBuffs.* from "./battle-runtime-restoration-and-buffs"
+  import battleRuntimeSleepHideousLaughter.* from "./battle-runtime-sleep-hideous-laughter"
 
   run test_produce_flame_held_light_spends_bonus_action_and_records_light = {
     val result = resolveProduceFlameHeldLight(initialState)
