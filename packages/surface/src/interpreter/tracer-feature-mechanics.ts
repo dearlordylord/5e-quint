@@ -1,3 +1,4 @@
+import { Match } from "effect";
 import type {
   ClassFeatureMechanics,
   PassiveMechanics,
@@ -183,10 +184,7 @@ export function traceFeatureChoiceMechanics(
 }
 
 export function traceResourceContainerMechanics(
-  m: Extract<
-    ClassFeatureMechanics,
-    { readonly family: "resource_container" }
-  >,
+  m: Extract<ClassFeatureMechanics, { readonly family: "resource_container" }>,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
@@ -198,7 +196,7 @@ export function traceResourceContainerMechanics(
   const saveDc =
     m.effectSaveDc === undefined
       ? ""
-      : `\nsave DC ${m.effectSaveDc.kind.replaceAll("_", " ")}`;
+      : `\nsave DC ${describeClassFeatureEffectSaveDc(m.effectSaveDc)}`;
   nodes.push({
     id: containerId,
     category: "procedure",
@@ -212,6 +210,29 @@ export function traceResourceContainerMechanics(
   edges.push({ from: containerId, to: resourceId, relation: "contains" });
   traceResetCadence(m.resetCadence, resourceId, nodes, edges, ids);
   return containerId;
+}
+
+type ClassFeatureEffectSaveDc = NonNullable<
+  Extract<
+    ClassFeatureMechanics,
+    { readonly family: "resource_container" }
+  >["effectSaveDc"]
+>;
+
+function describeClassFeatureEffectSaveDc(
+  saveDc: ClassFeatureEffectSaveDc,
+): string {
+  return Match.value(saveDc).pipe(
+    Match.when(
+      { kind: "class_spellcasting_spell_save_dc" },
+      () => "class spellcasting spell save DC",
+    ),
+    Match.when(
+      { kind: "class_feature_ability_save_dc" },
+      (dc) => `${dc.base} + ${dc.ability.toUpperCase()} mod + PB`,
+    ),
+    Match.exhaustive,
+  );
 }
 
 export function describeFeatureChoiceChange(

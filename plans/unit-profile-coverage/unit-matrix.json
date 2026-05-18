@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 366,
-      "numerator": 136,
-      "percent": "37.2%"
+      "denominator": 367,
+      "numerator": 137,
+      "percent": "37.3%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 438,
-      "numerator": 168,
-      "percent": "38.4%"
+      "denominator": 439,
+      "numerator": 169,
+      "percent": "38.5%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 169
+      "value": 170
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 110,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 169,
-      "numerator": 169,
+      "denominator": 170,
+      "numerator": 170,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -97,9 +97,9 @@
       "percent": "94.5%"
     },
     "supportedProfileCoverage": {
-      "denominator": 137,
+      "denominator": 138,
       "numerator": 110,
-      "percent": "80.3%"
+      "percent": "79.7%"
     }
   },
   "metricSemantics": [
@@ -5901,6 +5901,41 @@
       ],
       "sourceRecordPath": "packages/surface/content/monk_martial_arts.json",
       "unitId": "monk_martial_arts"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS",
+            "mechanic": "Admit Monk level-2 progression after sibling Monk level-2 grants can be retained, then project Focus Point count, Short or Long Rest reset, initial Focus feature option names, and the authored Focus save DC fact without duplicating class progression or option execution state.",
+            "owner": "character-creation-runtime plus character-sheet-runtime",
+            "requiredOutput": "Owner evidence for CharacterBuild or Character Sheet Focus Point resource, Focus save DC, and retained Monk level-2 feature refs.",
+            "title": "Monk's Focus Character Facts And Resource Projection"
+          },
+          {
+            "id": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS",
+            "mechanic": "Execute Flurry of Blows, Patient Defense, and Step of the Wind option modes, including Bonus Action economy, Focus Point spending where RAW requires it, Dodge and jump-distance effects, and shared Focus Point spending for later Focus spenders instead of synthetic per-feature pools.",
+            "owner": "battle-runtime plus character-battle-runtime resource handoff",
+            "requiredOutput": "Supported runtime profile and owner evidence for Monk's Focus option execution and a single shared Focus Point resource consumed by Focus-spending Monk features.",
+            "title": "Monk's Focus Battle Option Execution"
+          }
+        ],
+        "futureProfileOwner": "character-creation-runtime plus battle-runtime Focus Point option execution",
+        "reason": "Monk's Focus is authored and installed as an SRD Surface class-feature record with catalog-level Focus Point resource, Focus save DC source, and initial option-set metadata. It remains blocked by the concrete follow-up split listed on this claim; no resource-projection or battle-runtime Unit profile is claimed in Task 13.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/monk_monks_focus.json",
+      "unitId": "monk_monks_focus"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

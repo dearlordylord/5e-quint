@@ -167,6 +167,7 @@ const battleRuntimeRelevantFeatureUnitIds = new Set([
   "fighter_fighting_style",
   "fighter_weapon_mastery",
   "monk_martial_arts",
+  "monk_monks_focus",
   "paladin_fighting_style",
   "paladin_paladins_smite",
   "paladin_weapon_mastery",

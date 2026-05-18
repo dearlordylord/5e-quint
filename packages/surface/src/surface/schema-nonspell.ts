@@ -470,6 +470,17 @@ export const ClassFeatureAcquisitionChoiceMechanicsSchema = Schema.Struct({
   ),
 });
 
+export const ClassFeatureEffectSaveDcSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("class_spellcasting_spell_save_dc"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("class_feature_ability_save_dc"),
+    base: Schema.Literal(8),
+    ability: AbilitySchema,
+  }),
+);
+
 export const ClassFeatureResourceContainerMechanicsSchema = Schema.Struct({
   family: Schema.Literal("resource_container"),
   resource: ActivationResourceSchema,
@@ -484,11 +495,7 @@ export const ClassFeatureResourceContainerMechanicsSchema = Schema.Struct({
       }),
     ),
   }),
-  effectSaveDc: exactOptional(
-    Schema.Struct({
-      kind: Schema.Literal("class_spellcasting_spell_save_dc"),
-    }),
-  ),
+  effectSaveDc: exactOptional(ClassFeatureEffectSaveDcSchema),
 });
 
 export const FeatureChoiceMechanicsSchema = Schema.Union(

@@ -79,7 +79,7 @@
     {
       "number": 13,
       "id": "L12G-AUTHOR-MONK-MONKS-FOCUS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Monk Monks Focus Authoring And Support"
     },
     {
@@ -471,6 +471,18 @@
       "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME",
       "status": "ready-for-research",
       "title": "Druid Wild Shape Shape-Shifting Runtime"
+    },
+    {
+      "number": 79,
+      "id": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS",
+      "status": "ready-for-research",
+      "title": "Monk's Focus Character Facts And Resource Projection"
+    },
+    {
+      "number": 80,
+      "id": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS",
+      "status": "ready-for-research",
+      "title": "Monk's Focus Battle Option Execution"
     }
   ]
 }
@@ -562,8 +574,8 @@ use the repository MBT scarcity protocol.
 
 ## Included Work
 
-Loop A owns Tasks 10-42 after the split plus Task 12's concrete follow-up split
-tasks 76-78. Tasks 1-9 are already done. Tasks 43-75 are owned by
+Loop A owns Tasks 10-42 after the split, Task 12's concrete follow-up split
+tasks 76-78, and Task 13's concrete follow-up split tasks 79-80. Tasks 1-9 are already done. Tasks 43-75 are owned by
 `plans/LEVEL2_RALPH_LOOP_B_BIG_FRONTIER.md` and stay `deferred` here so Loop A
 cannot pick them. Keep this lane out of Loop D's level-1 recursive frontier and
 Loop L's language-access frontier.
@@ -648,6 +660,8 @@ Loop L's language-access frontier.
 | 76 | 13 | `L12G-AUTHOR-DRUID-WILD-COMPANION` | `druid_wild_companion` |
 | 77 | 12a | `L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS` | `druid_wild_shape` |
 | 78 | 12b | `L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME` | `druid_wild_shape` |
+| 79 | 14a | `L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS` | `monk_monks_focus` |
+| 80 | 14b | `L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS` | `monk_monks_focus` |
 
 ## Follow-Up Dependencies
 
@@ -656,6 +670,8 @@ Loop L's language-access frontier.
 | `L12G-AUTHOR-DRUID-WILD-COMPANION` | `L12G-AUTHOR-DRUID-WILD-SHAPE` | Druid level-2 admission must retain both level-2 feature refs without treating companion execution as Wild Shape support. |
 | `L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS` | `L12G-AUTHOR-DRUID-WILD-COMPANION` | Character creation/sheet projection needs the Druid level-2 feature boundary closed before projecting Wild Shape resources and known forms. |
 | `L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME` | `L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS` | Shape-shifting runtime should consume the projected Wild Shape resource, duration, and known-form facts instead of duplicating class progression state. |
+| `L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS` | `L12G-AUTHOR-MONK-MONKS-FOCUS`, `L12G-AUTHOR-MONK-UNARMORED-MOVEMENT`, `L12G-AUTHOR-MONK-UNCANNY-METABOLISM` | Monk level-2 admission should retain the full level-2 feature grant set before projecting Focus Point resources from the authored Monk's Focus record. |
+| `L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS` | `L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS` | Battle option execution should consume the projected shared Focus Point resource instead of creating per-feature pools. |
 
 ## Task Details
 
@@ -988,7 +1004,7 @@ Acceptance:
 
 ### Task 13 - L12G-AUTHOR-MONK-MONKS-FOCUS - Monk Monks Focus Authoring And Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `monk_monks_focus`. Gate task: 14 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -2774,4 +2790,65 @@ Acceptance:
 
 - the shape-shifting runtime portion of `druid_wild_shape` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
 - runtime behavior traces to SRD Wild Shape and Shape-Shift rules without homebrew extensions;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.
+
+### Task 79 - L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS - Monk's Focus Character Facts And Resource Projection
+
+Status: `ready-for-research`
+
+Unit: `monk_monks_focus`. Follow-up split from Task 13.
+
+Dependency: Tasks 13 (`L12G-AUTHOR-MONK-MONKS-FOCUS`), 14 (`L12G-AUTHOR-MONK-UNARMORED-MOVEMENT`), and 15 (`L12G-AUTHOR-MONK-UNCANNY-METABOLISM`) done.
+
+Inputs:
+
+- `packages/surface/content/monk_monks_focus.json`;
+- the `monk_monks_focus` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Classes/Monk.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- character-creation and character-sheet resource/profile owner evidence.
+
+Outputs:
+
+- owner evidence for admitting Monk level-2 progression after the full Monk level-2 feature grant set can be retained;
+- Focus Point count, Short or Long Rest reset, initial Focus feature option names, and Focus save DC projection derive from the authored Surface feature and class progression without duplicating class progression or option execution state;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the character-facts/resource portion of `monk_monks_focus` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no Flurry of Blows, Patient Defense, Step of the Wind battle option execution is implemented in this task;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 80 - L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS - Monk's Focus Battle Option Execution
+
+Status: `ready-for-research`
+
+Unit: `monk_monks_focus`. Follow-up split from Task 13.
+
+Dependency: Task 79 (`L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS`) done.
+
+Inputs:
+
+- `packages/surface/content/monk_monks_focus.json`;
+- the `monk_monks_focus` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Classes/Monk.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- battle-runtime, character-battle-runtime resource handoff, Unit profile, owner-evidence, and focused tests for Monk's Focus option execution.
+
+Outputs:
+
+- supported runtime profile and owner evidence for Flurry of Blows, Patient Defense, and Step of the Wind option modes;
+- Bonus Action economy, Focus Point spending where RAW requires it, Dodge and jump-distance effects, and later Focus spenders consume one shared Focus Point resource rather than synthetic per-feature pools;
+- Quint/runtime parity updates if promoted battle-runtime behavior changes;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- the battle-option execution portion of `monk_monks_focus` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- runtime behavior traces to SRD Monk's Focus without homebrew extensions and consumes projected Focus Point facts instead of duplicating class progression state;
 - focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.

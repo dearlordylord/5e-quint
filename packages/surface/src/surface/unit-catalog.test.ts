@@ -1569,6 +1569,51 @@ describe("SRD Unit catalog boundary", () => {
     }
   });
 
+  test("keeps Monk's Focus as catalog Focus Point metadata", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("monk_monks_focus")).toMatchObject({
+      acquiredAtLevel: 2,
+      className: "monk",
+      kind: "class_feature",
+      mechanics: {
+        effectSaveDc: {
+          ability: "wis",
+          base: 8,
+          kind: "class_feature_ability_save_dc",
+        },
+        family: "resource_container",
+        optionSet: {
+          choiceKey: "monk_focus_point_feature",
+          initialOptions: [
+            { id: "monk_flurry_of_blows", displayName: "Flurry of Blows" },
+            { id: "monk_patient_defense", displayName: "Patient Defense" },
+            { id: "monk_step_of_the_wind", displayName: "Step of the Wind" },
+          ],
+          timing: "resource_use",
+        },
+        resetCadence: { kind: "short_or_long_rest" },
+        resource: {
+          cap: {
+            axis: "class",
+            base: 2,
+            kind: "linear_per_level",
+            perLevel: 1,
+            startingAtLevel: 2,
+          },
+          kind: "use_count",
+        },
+      },
+      provenance: {
+        kind: "srd-5.2.1",
+        section: "Classes/Monk.md:30-33,76-90",
+      },
+    });
+  });
+
   test("installs expressible SRD level-1 class feature records", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 
@@ -1712,41 +1757,41 @@ describe("SRD Unit catalog boundary", () => {
         ]),
       }),
     });
-    expect(
-      result.catalog.requireUnit("cleric_channel_divinity"),
-    ).toMatchObject({
-      acquiredAtLevel: 2,
-      className: "cleric",
-      kind: "class_feature",
-      mechanics: {
-        effectSaveDc: { kind: "class_spellcasting_spell_save_dc" },
-        family: "resource_container",
-        optionSet: {
-          choiceKey: "cleric_channel_divinity_effect",
-          initialOptions: [
-            { id: "cleric_divine_spark", displayName: "Divine Spark" },
-            { id: "cleric_turn_undead", displayName: "Turn Undead" },
-          ],
-          timing: "resource_use",
-        },
-        resetCadence: {
-          kind: "partial_short_full_long",
-          shortRestRefill: 1,
-        },
-        resource: {
-          cap: {
-            axis: "class",
-            base: 2,
-            kind: "threshold_tiers",
-            tiers: [
-              { atLevel: 6, value: 3 },
-              { atLevel: 18, value: 4 },
+    expect(result.catalog.requireUnit("cleric_channel_divinity")).toMatchObject(
+      {
+        acquiredAtLevel: 2,
+        className: "cleric",
+        kind: "class_feature",
+        mechanics: {
+          effectSaveDc: { kind: "class_spellcasting_spell_save_dc" },
+          family: "resource_container",
+          optionSet: {
+            choiceKey: "cleric_channel_divinity_effect",
+            initialOptions: [
+              { id: "cleric_divine_spark", displayName: "Divine Spark" },
+              { id: "cleric_turn_undead", displayName: "Turn Undead" },
             ],
+            timing: "resource_use",
           },
-          kind: "use_count",
+          resetCadence: {
+            kind: "partial_short_full_long",
+            shortRestRefill: 1,
+          },
+          resource: {
+            cap: {
+              axis: "class",
+              base: 2,
+              kind: "threshold_tiers",
+              tiers: [
+                { atLevel: 6, value: 3 },
+                { atLevel: 18, value: 4 },
+              ],
+            },
+            kind: "use_count",
+          },
         },
       },
-    });
+    );
   });
 
   test("installs Find Familiar with catalog-backed familiar form references", () => {

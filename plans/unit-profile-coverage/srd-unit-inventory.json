@@ -181,8 +181,8 @@
       "rowsByStatus": {
         "accepted": 293,
         "accepted-no-battle-effect": 179,
-        "battle-runtime-required": 75,
-        "owner-evidence-required": 9
+        "battle-runtime-required": 76,
+        "owner-evidence-required": 8
       }
     },
     "levelOneClassContainers": 12,
@@ -193,15 +193,15 @@
     "levelTwoRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 11,
       "non-runtime": 12,
-      "missing-authored-record": 9,
-      "catalog-installed-owner-evidence-required": 1
+      "missing-authored-record": 8,
+      "catalog-installed-owner-evidence-required": 2
     },
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 298,
       "non-runtime": 24,
       "catalog-only/dead-for-now": 150,
-      "missing-authored-record": 83,
-      "catalog-installed-owner-evidence-required": 1
+      "missing-authored-record": 82,
+      "catalog-installed-owner-evidence-required": 2
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 143,
@@ -12760,16 +12760,30 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "monk_monks_focus",
+        "sourceRecordPath": "packages/surface/content/monk_monks_focus.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "monk_monks_focus"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit monk_monks_focus is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime plus character-sheet-runtime; battle-runtime plus character-battle-runtime resource handoff",
+          "evidence": "Promote follow-up split L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS: L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS owns Admit Monk level-2 progression after sibling Monk level-2 grants can be retained, then project Focus Point count, Short or Long Rest reset, initial Focus feature option names, and the authored Focus save DC fact without duplicating class progression or option execution state. Required output: Owner evidence for CharacterBuild or Character Sheet Focus Point resource, Focus save DC, and retained Monk level-2 feature refs.; L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS owns Execute Flurry of Blows, Patient Defense, and Step of the Wind option modes, including Bonus Action economy, Focus Point spending where RAW requires it, Dodge and jump-distance effects, and shared Focus Point spending for later Focus spenders instead of synthetic per-feature pools. Required output: Supported runtime profile and owner evidence for Monk's Focus option execution and a single shared Focus Point resource consumed by Focus-spending Monk features.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS: L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS owns Admit Monk level-2 progression after sibling Monk level-2 grants can be retained, then project Focus Point count, Short or Long Rest reset, initial Focus feature option names, and the authored Focus save DC fact without duplicating class progression or option execution state. Required output: Owner evidence for CharacterBuild or Character Sheet Focus Point resource, Focus save DC, and retained Monk level-2 feature refs.; L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS owns Execute Flurry of Blows, Patient Defense, and Step of the Wind option modes, including Bonus Action economy, Focus Point spending where RAW requires it, Dodge and jump-distance effects, and shared Focus Point spending for later Focus spenders instead of synthetic per-feature pools. Required output: Supported runtime profile and owner evidence for Monk's Focus option execution and a single shared Focus Point resource consumed by Focus-spending Monk features.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/monk:level-2:class-feature-grant:monk_unarmored_movement",

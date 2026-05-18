@@ -224,6 +224,7 @@ export {
   OtherClassFeatureRecordSchema,
   CompositeClassFeatureMechanicsSchema,
   ClassFeatureAcquisitionChoiceMechanicsSchema,
+  ClassFeatureEffectSaveDcSchema,
   ClassFeatureResourceContainerMechanicsSchema,
   PrimaryAbilityExpressionSchema,
   RestSpellSlotRecoveryMechanicsSchema,

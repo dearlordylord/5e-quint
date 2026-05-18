@@ -1635,6 +1635,35 @@
       "unitId": "misty_step"
     },
     {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS: Admit Monk level-2 progression after sibling Monk level-2 grants can be retained, then project Focus Point count, Short or Long Rest reset, initial Focus feature option names, and the authored Focus save DC fact without duplicating class progression or option execution state. Owner: character-creation-runtime plus character-sheet-runtime. Required output: Owner evidence for CharacterBuild or Character Sheet Focus Point resource, Focus save DC, and retained Monk level-2 feature refs.; L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS: Execute Flurry of Blows, Patient Defense, and Step of the Wind option modes, including Bonus Action economy, Focus Point spending where RAW requires it, Dodge and jump-distance effects, and shared Focus Point spending for later Focus spenders instead of synthetic per-feature pools. Owner: battle-runtime plus character-battle-runtime resource handoff. Required output: Supported runtime profile and owner evidence for Monk's Focus option execution and a single shared Focus Point resource consumed by Focus-spending Monk features.",
+      "sourceRecordPath": "packages/surface/content/monk_monks_focus.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Monk Monk's Focus",
+          "id": "srd521:classes/monk:level-2:class-feature-grant:monk_monks_focus",
+          "levelBand": "level-2",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 91,
+            "lineStart": 76,
+            "path": ".references/srd-5.2.1/Classes/Monk.md"
+          }
+        }
+      ],
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
+      "unitId": "monk_monks_focus"
+    },
+    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -2669,19 +2698,20 @@
     },
     {
       "count": 2,
+      "description": "The Unit claim records concrete smaller follow-up tasks for the remaining executable owner work.",
+      "status": "blocked-follow-up-split",
+      "unitIds": [
+        "druid_wild_shape",
+        "monk_monks_focus"
+      ]
+    },
+    {
+      "count": 2,
       "description": "Character facts are owned while only runtime-detached adjudication remains.",
       "status": "closed-character-fact-and-runtime-detached-split",
       "unitIds": [
         "druid_druidic",
         "rogue_thieves_cant"
-      ]
-    },
-    {
-      "count": 1,
-      "description": "The Unit claim records concrete smaller follow-up tasks for the remaining executable owner work.",
-      "status": "blocked-follow-up-split",
-      "unitIds": [
-        "druid_wild_shape"
       ]
     },
     {
@@ -2701,19 +2731,19 @@
       "rowsByStatus": {
         "accepted": 293,
         "accepted-no-battle-effect": 179,
-        "battle-runtime-required": 75,
-        "owner-evidence-required": 9
+        "battle-runtime-required": 76,
+        "owner-evidence-required": 8
       }
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 138,
+      "denominator": 139,
       "numerator": 87,
-      "percent": "63%"
+      "percent": "62.6%"
     },
     "strictTargetClosure": {
-      "denominator": 138,
-      "numerator": 106,
-      "percent": "76.8%"
+      "denominator": 139,
+      "numerator": 107,
+      "percent": "77%"
     }
   },
   "openFrontier": [
@@ -4085,24 +4115,6 @@
           }
         ],
         "unitId": "mirror_image"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
-            "concept": "Monk Monk's Focus",
-            "id": "srd521:classes/monk:level-2:class-feature-grant:monk_monks_focus",
-            "levelBand": "level-2",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 91,
-              "lineStart": 76,
-              "path": ".references/srd-5.2.1/Classes/Monk.md"
-            }
-          }
-        ],
-        "unitId": "monk_monks_focus"
       },
       {
         "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
@@ -6379,10 +6391,10 @@
       "missing": 31,
       "profile-subset-supported": 8,
       "supported-profile": 87,
-      "unsupported-profile": 12
+      "unsupported-profile": 13
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 1,
+      "blocked-follow-up-split": 2,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 5,
       "closed-runtime-detached-table-adjudication": 11,
@@ -6390,7 +6402,7 @@
       "open-runtime-behavior": 31,
       "supported-profile": 87
     },
-    "nonSupportedFrontier": 51,
-    "strictDenominator": 138
+    "nonSupportedFrontier": 52,
+    "strictDenominator": 139
   }
 }
