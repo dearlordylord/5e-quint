@@ -459,6 +459,27 @@ export const ClassFeatureAcquisitionChoiceMechanicsSchema = Schema.Struct({
   ),
 });
 
+export const ClassFeatureResourceContainerMechanicsSchema = Schema.Struct({
+  family: Schema.Literal("resource_container"),
+  resource: ActivationResourceSchema,
+  resetCadence: ResetCadenceSchema,
+  optionSet: Schema.Struct({
+    choiceKey: NonEmptyStringSchema,
+    timing: Schema.Literal("resource_use"),
+    initialOptions: Schema.NonEmptyArray(
+      Schema.Struct({
+        id: NonEmptyStringSchema,
+        displayName: NonEmptyStringSchema,
+      }),
+    ),
+  }),
+  effectSaveDc: exactOptional(
+    Schema.Struct({
+      kind: Schema.Literal("class_spellcasting_spell_save_dc"),
+    }),
+  ),
+});
+
 export const FeatureChoiceMechanicsSchema = Schema.Union(
   Schema.Struct({
     family: Schema.Literal("feature_choice"),
@@ -561,6 +582,7 @@ export const ClassFeatureMechanicsSchema = Schema.Union(
   CompositeClassFeatureMechanicsSchema,
   FeatureChoiceMechanicsSchema,
   ClassFeatureAcquisitionChoiceMechanicsSchema,
+  ClassFeatureResourceContainerMechanicsSchema,
   ClassSpellcastingProjectionMechanicsSchema,
   WeaponMasteryChoiceMechanicsSchema,
   SpellbookRitualAccessMechanicsSchema,
@@ -572,6 +594,7 @@ export const ClassGeneralFeatureMechanicsSchema = Schema.Union(
   ClassFeatureComponentMechanicsSchema,
   CompositeClassFeatureMechanicsSchema,
   ClassFeatureAcquisitionChoiceMechanicsSchema,
+  ClassFeatureResourceContainerMechanicsSchema,
   WeaponMasteryChoiceMechanicsSchema,
 );
 

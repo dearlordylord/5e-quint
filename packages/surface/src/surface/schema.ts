@@ -222,6 +222,7 @@ export {
   OtherClassFeatureRecordSchema,
   CompositeClassFeatureMechanicsSchema,
   ClassFeatureAcquisitionChoiceMechanicsSchema,
+  ClassFeatureResourceContainerMechanicsSchema,
   PrimaryAbilityExpressionSchema,
   RestSpellSlotRecoveryMechanicsSchema,
   CompositeMagicItemMechanicsSchema,

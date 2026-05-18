@@ -587,6 +587,9 @@ export type CompositeClassFeatureMechanics = Schema.Schema.Type<
 export type ClassFeatureAcquisitionChoiceMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.ClassFeatureAcquisitionChoiceMechanicsSchema
 >;
+export type ClassFeatureResourceContainerMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.ClassFeatureResourceContainerMechanicsSchema
+>;
 export type FeatureChoiceMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.FeatureChoiceMechanicsSchema
 >;

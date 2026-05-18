@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 364,
-      "numerator": 134,
-      "percent": "36.8%"
+      "denominator": 365,
+      "numerator": 135,
+      "percent": "37%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 436,
-      "numerator": 166,
-      "percent": "38.1%"
+      "denominator": 437,
+      "numerator": 167,
+      "percent": "38.2%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 167
+      "value": 168
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 109,
-      "numerator": 109,
+      "denominator": 110,
+      "numerator": 110,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 167,
-      "numerator": 167,
+      "denominator": 168,
+      "numerator": 168,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 109,
+      "denominator": 110,
       "numerator": 104,
-      "percent": "95.4%"
+      "percent": "94.5%"
     },
     "supportedProfileCoverage": {
-      "denominator": 135,
-      "numerator": 109,
-      "percent": "80.7%"
+      "denominator": 136,
+      "numerator": 110,
+      "percent": "80.9%"
     }
   },
   "metricSemantics": [
@@ -2392,6 +2392,25 @@
       ]
     },
     {
+      "id": "character-creation.class-feature-resource-projection",
+      "profileKind": "character-creation",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "Surface class-feature resource container records projected from class progression into CharacterBuild resource facts; selected option execution remains owned by selected option Unit profiles.",
+      "taskRefs": [
+        "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY"
+      ],
+      "title": "Character Creation projects class-feature resources into CharacterBuild resource facts",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
       "id": "spell.invocation-self-ability-check-advantage",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -4028,6 +4047,14 @@
         "character-sheet.ability-check-proficiency-bonus"
       ],
       "taskId": "L12G-CLASS-BARD-JACK-OF-ALL-TRADES"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Character Creation runtime tests cover Cleric level 2 Channel Divinity resource-container admission from the Surface class feature, same-class Cleric 2 progression, use-count cap tiers, partial Short Rest/full Long Rest reset facts, initial option labels, and CharacterBuild resource projection. Divine Spark and Turn Undead execution remains split to option-owned tasks.",
+      "profileIds": [
+        "character-creation.class-feature-resource-projection"
+      ],
+      "taskId": "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY"
     }
   ],
   "units": [
@@ -5557,6 +5584,61 @@
       ],
       "sourceRecordPath": "packages/surface/content/bard_jack_of_all_trades.json",
       "unitId": "bard_jack_of_all_trades"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "character-creation.class-feature-resource-projection"
+        ],
+        "rawRequirementIds": [],
+        "supportedMechanics": [
+          "Cleric Channel Divinity is installed as a level-2 Surface class-feature grant on class_cleric",
+          "Surface Cleric spellcasting carries level-1 and level-2 table rows so admitting same-class Cleric 2 projects five prepared spells and three level-1 Spell Slots",
+          "Surface resource_container represents the shared Channel Divinity use-count pool with Cleric-level cap tiers of 2 uses, 3 uses at Cleric level 6, and 4 uses at Cleric level 18",
+          "Surface resetCadence represents regaining one expended use on a Short Rest and all expended uses on a Long Rest",
+          "Surface optionSet records Divine Spark and Turn Undead as resource-use options and records that option saving throws use this class's Spellcasting spell save DC",
+          "Character Creation admits supported Cleric level-2 progression and projects the Channel Divinity resource into CharacterBuild resources without duplicating class progression or option execution state"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "character-creation.class-feature-resource-projection",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface class-feature resource container records projected from class progression into CharacterBuild resource facts; selected option execution remains owned by selected option Unit profiles.",
+          "taskRefs": [
+            "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY"
+          ],
+          "title": "Character Creation projects class-feature resources into CharacterBuild resource facts",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/cleric_channel_divinity.json",
+      "unitId": "cleric_channel_divinity"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

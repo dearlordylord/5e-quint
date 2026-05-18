@@ -37,6 +37,7 @@
         "srd521:classes/cleric:level-1:equipment-pressure:cleric_starting_equipment",
         "srd521:classes/cleric:level-1:multiclass-entry:cleric_multiclass_entry_traits",
         "srd521:classes/cleric:level-1:spell-access:cleric_spellcasting",
+        "srd521:classes/cleric:level-2:class-feature-grant:cleric_channel_divinity",
         "srd521:classes/druid:level-1:class-container:druid_class_container",
         "srd521:classes/druid:level-1:class-feature-grant:druid_druidic",
         "srd521:classes/druid:level-1:class-feature-grant:druid_primal_order",
@@ -175,13 +176,13 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 471,
-      "percent": "84.7%",
+      "numerator": 472,
+      "percent": "84.9%",
       "rowsByStatus": {
-        "accepted": 292,
+        "accepted": 293,
         "accepted-no-battle-effect": 179,
         "battle-runtime-required": 74,
-        "owner-evidence-required": 11
+        "owner-evidence-required": 10
       }
     },
     "levelOneClassContainers": 12,
@@ -190,15 +191,15 @@
       "non-runtime": 12
     },
     "levelTwoRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 10,
+      "catalog-installed-owner-evidence-present": 11,
       "non-runtime": 12,
-      "missing-authored-record": 11
+      "missing-authored-record": 10
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 297,
+      "catalog-installed-owner-evidence-present": 298,
       "non-runtime": 24,
       "catalog-only/dead-for-now": 150,
-      "missing-authored-record": 85
+      "missing-authored-record": 84
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 143,
@@ -7323,16 +7324,30 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "cleric_channel_divinity",
+        "sourceRecordPath": "packages/surface/content/cleric_channel_divinity.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "cleric_channel_divinity"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit cleric_channel_divinity is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY character-creation.class-feature-resource-projection support profile; Cleric Channel Divinity is retained from the level-2 Cleric class feature grant and projected into CharacterBuild resource facts from the authored Surface resource container, while Divine Spark and Turn Undead option execution remains option-owned.",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/cleric:level-2:class-table-summary:cleric_level_2_feature_table_row",

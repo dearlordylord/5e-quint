@@ -2333,6 +2333,27 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes supported level-1 class-feature acquisition choices"
       ]
     },
+    "srd521:classes/cleric:level-2:class-feature-grant:cleric_channel_divinity": {
+      "taskId": "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY",
+      "profile": "character-creation.class-feature-resource-projection support profile",
+      "summary": "Cleric Channel Divinity is retained from the level-2 Cleric class feature grant and projected into CharacterBuild resource facts from the authored Surface resource container, while Divine Spark and Turn Undead option execution remains option-owned.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverInitialDraftHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds",
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildResources"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:accepts Cleric 2 Channel Divinity as a class resource container"
+      ]
+    },
     "srd521:classes/druid:level-1:class-feature-grant:druid_druidic": {
       "taskId": "SRDINV18",
       "profile": "level-1 Druid class-feature support profile",

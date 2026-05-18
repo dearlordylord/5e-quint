@@ -351,21 +351,39 @@ describe("character-creation Surface records", () => {
         input: classClericInput,
         className: "cleric",
         hitPointDie: 8,
-        spellcasting: listPreparedSpellcasting({
-          className: "cleric",
-          spellcastingAbility: "wis",
-          spellcastingFocus: "holy_symbol",
-          preparedChangeOn: "long_rest",
-          preparedReplacementCount: "any",
-          preparedCount: 4,
-          preparedSpells: [
-            "bless",
-            "cure_wounds",
-            "guiding_bolt",
-            "shield_of_faith",
+        spellcasting: {
+          ...listPreparedSpellcasting({
+            className: "cleric",
+            spellcastingAbility: "wis",
+            spellcastingFocus: "holy_symbol",
+            preparedChangeOn: "long_rest",
+            preparedReplacementCount: "any",
+            preparedCount: 4,
+            preparedSpells: [
+              "bless",
+              "cure_wounds",
+              "guiding_bolt",
+              "shield_of_faith",
+              "healing_word",
+            ],
+            cantrips: ["guidance", "sacred_flame", "thaumaturgy"],
+          }),
+          kind: "list_prepared_spellcasting_progression_creation",
+          spellcastingProgression: [
+            {
+              atLevel: 1,
+              cantripCount: 3,
+              preparedSpellCount: 4,
+              spellSlots: [{ spellLevel: 1, count: 2 }],
+            },
+            {
+              atLevel: 2,
+              cantripCount: 3,
+              preparedSpellCount: 5,
+              spellSlots: [{ spellLevel: 1, count: 3 }],
+            },
           ],
-          cantrips: ["guidance", "sacred_flame", "thaumaturgy"],
-        }),
+        },
       },
       {
         input: classDruidInput,

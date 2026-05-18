@@ -228,3 +228,4 @@
 {"unitId":"bard_expertise","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-AUTHOR-BARD-EXPERTISE","ownerPath":"packages/character-creation-runtime/src/bard-expertise.test.ts"}}
 {"unitId":"bard_jack_of_all_trades","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-CLASS-BARD-JACK-OF-ALL-TRADES","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"wizard_scholar","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-CLASS-WIZARD-SCHOLAR","ownerPath":"packages/character-creation-runtime/src/wizard-scholar.test.ts"}}
+{"unitId":"cleric_channel_divinity","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}

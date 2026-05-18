@@ -2477,7 +2477,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 86,
+      "count": 87,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2494,6 +2494,7 @@
         "burning_hands",
         "chill_touch",
         "chromatic_orb",
+        "cleric_channel_divinity",
         "cleric_divine_order",
         "color_spray",
         "command",
@@ -2658,24 +2659,24 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 471,
-      "percent": "84.7%",
+      "numerator": 472,
+      "percent": "84.9%",
       "rowsByStatus": {
-        "accepted": 292,
+        "accepted": 293,
         "accepted-no-battle-effect": 179,
         "battle-runtime-required": 74,
-        "owner-evidence-required": 11
+        "owner-evidence-required": 10
       }
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 136,
-      "numerator": 86,
-      "percent": "63.2%"
+      "denominator": 137,
+      "numerator": 87,
+      "percent": "63.5%"
     },
     "strictTargetClosure": {
-      "denominator": 136,
-      "numerator": 104,
-      "percent": "76.5%"
+      "denominator": 137,
+      "numerator": 105,
+      "percent": "76.6%"
     }
   },
   "openFrontier": [
@@ -2879,24 +2880,6 @@
           }
         ],
         "unitId": "calm_emotions"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
-            "concept": "Cleric Channel Divinity",
-            "id": "srd521:classes/cleric:level-2:class-feature-grant:cleric_channel_divinity",
-            "levelBand": "level-2",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 101,
-              "lineStart": 88,
-              "path": ".references/srd-5.2.1/Classes/Cleric.md"
-            }
-          }
-        ],
-        "unitId": "cleric_channel_divinity"
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/create_or_destroy_water.md",
@@ -6376,7 +6359,7 @@
     "groupsByClaimTag": {
       "missing": 31,
       "profile-subset-supported": 8,
-      "supported-profile": 86,
+      "supported-profile": 87,
       "unsupported-profile": 11
     },
     "groupsByStatus": {
@@ -6385,9 +6368,9 @@
       "closed-runtime-detached-table-adjudication": 11,
       "open-profile-accounting": 1,
       "open-runtime-behavior": 31,
-      "supported-profile": 86
+      "supported-profile": 87
     },
     "nonSupportedFrontier": 50,
-    "strictDenominator": 136
+    "strictDenominator": 137
   }
 }

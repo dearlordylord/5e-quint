@@ -33,6 +33,7 @@ import classWizardInput from "../../content/class_wizard.json";
 import charmPersonInput from "../../content/charm_person.json";
 import chillTouchInput from "../../content/chill_touch.json";
 import chromaticOrbInput from "../../content/chromatic_orb.json";
+import clericChannelDivinityInput from "../../content/cleric_channel_divinity.json";
 import clericDivineOrderInput from "../../content/cleric_divine_order.json";
 import colorSprayInput from "../../content/color_spray.json";
 import commandInput from "../../content/command.json";
@@ -318,6 +319,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     bardCuttingWordsInput,
     bardExpertiseInput,
     bardJackOfAllTradesInput,
+    clericChannelDivinityInput,
     clericDivineOrderInput,
     druidDruidicInput,
     druidPrimalOrderInput,

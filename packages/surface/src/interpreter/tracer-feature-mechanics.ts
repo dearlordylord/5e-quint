@@ -19,6 +19,8 @@ import { traceEffectAtom } from "./tracer-effect-atom.ts";
 import {
   describeWeaponMasteryEligibility,
   traceActivatedAbility,
+  traceActivationResource,
+  traceResetCadence,
 } from "./tracer-activated-abilities.ts";
 
 import { traceOnHitTriggerMechanics } from "./tracer-mastery.ts";
@@ -76,6 +78,8 @@ export function traceClassFeatureMechanics(
       }
       return [choiceId];
     }
+    case "resource_container":
+      return [traceResourceContainerMechanics(m, nodes, edges, ids)];
     case "class_spellcasting_projection": {
       const spellcastingId = ids("spellcasting");
       nodes.push({
@@ -176,6 +180,38 @@ export function traceFeatureChoiceMechanics(
       `${m.optionSource.className} ${m.optionSource.optionKind}\n${describeFeatureChoiceChange(m.changeOn)}`,
   });
   return choiceId;
+}
+
+export function traceResourceContainerMechanics(
+  m: Extract<
+    ClassFeatureMechanics,
+    { readonly family: "resource_container" }
+  >,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const containerId = ids("resource-container");
+  const options = m.optionSet.initialOptions
+    .map((option) => option.displayName)
+    .join(" | ");
+  const saveDc =
+    m.effectSaveDc === undefined
+      ? ""
+      : `\nsave DC ${m.effectSaveDc.kind.replaceAll("_", " ")}`;
+  nodes.push({
+    id: containerId,
+    category: "procedure",
+    atomKind: "class_feature_resource_container",
+    label:
+      `class_feature_resource_container\n${m.optionSet.choiceKey}\n` +
+      `timing ${m.optionSet.timing}\n${options}${saveDc}`,
+  });
+
+  const resourceId = traceActivationResource(m.resource, nodes, edges, ids);
+  edges.push({ from: containerId, to: resourceId, relation: "contains" });
+  traceResetCadence(m.resetCadence, resourceId, nodes, edges, ids);
+  return containerId;
 }
 
 export function describeFeatureChoiceChange(

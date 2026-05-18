@@ -67,7 +67,7 @@
     {
       "number": 11,
       "id": "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Cleric Channel Divinity Authoring And Support"
     },
     {
@@ -900,7 +900,7 @@ Acceptance:
 
 ### Task 11 - L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY - Cleric Channel Divinity Authoring And Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `cleric_channel_divinity`. Gate task: 11 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 

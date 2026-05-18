@@ -8,11 +8,15 @@
     "kind": "trained"
   },
   "className": "cleric",
-  "description": "SRD Cleric class creation facts for a level-1 character, including class-list prepared Spell Access, Spell Slots, and spellcasting focus facts.",
+  "description": "SRD Cleric class creation and early progression facts for a level 1-2 character, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, and level 1-2 class feature grants.",
   "featureGrants": [
     {
       "level": 1,
       "unitId": "cleric_divine_order"
+    },
+    {
+      "level": 2,
+      "unitId": "cleric_channel_divinity"
     }
   ],
   "hitPointDie": 8,
@@ -44,7 +48,7 @@
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Cleric.md:3-24,33-35,56-78"
+    "section": "Classes/Cleric.md:3-24,33-98,142-179"
   },
   "savingThrowProficiencies": [
     "wis",
@@ -74,8 +78,8 @@
         "thaumaturgy"
       ]
     },
-    "kind": "list_prepared_spellcasting_creation",
     "featureLevel": 1,
+    "kind": "list_prepared_spellcasting_progression_creation",
     "preparedAccess": {
       "changeOn": {
         "kind": "long_rest",
@@ -99,6 +103,10 @@
         {
           "spellId": "shield_of_faith",
           "spellLevel": 1
+        },
+        {
+          "spellId": "healing_word",
+          "spellLevel": 1
         }
       ]
     },
@@ -115,9 +123,32 @@
       ]
     },
     "spellcastingAbility": "wis",
-    "spellcastingFocus": "holy_symbol"
+    "spellcastingFocus": "holy_symbol",
+    "spellcastingProgression": [
+      {
+        "atLevel": 1,
+        "cantripCount": 3,
+        "preparedSpellCount": 4,
+        "spellSlots": [
+          {
+            "count": 2,
+            "spellLevel": 1
+          }
+        ]
+      },
+      {
+        "atLevel": 2,
+        "cantripCount": 3,
+        "preparedSpellCount": 5,
+        "spellSlots": [
+          {
+            "count": 3,
+            "spellLevel": 1
+          }
+        ]
+      }
+    ]
   },
-  "subclassChoices": [],
   "startingEquipment": [
     {
       "coinsGp": 7,
@@ -152,6 +183,7 @@
       "kind": "coin_grant"
     }
   ],
+  "subclassChoices": [],
   "toolProficiencies": {
     "kind": "none"
   },

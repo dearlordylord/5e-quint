@@ -128,11 +128,13 @@ import {
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.skill-expertise-choice
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.class-feature-advancement-replacement
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.warlock-pact-magic-advancement
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.class-feature-resource-projection
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-03 fighter_fighting_style
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE warlock_eldritch_invocations
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-06 cleric_divine_order druid_primal_order
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-CLASS-PALADIN-FIGHTING-STYLE paladin_fighting_style
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-07 rogue_expertise
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY cleric_channel_divinity
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -705,6 +707,7 @@ describe("character creation hole discovery", () => {
           "10:class_bard:level_1:maximum_hit_die",
           "10:class_bard|10:class_bard:level_2:fixed_hp_gain",
           "12:class_cleric:level_1:maximum_hit_die",
+          "12:class_cleric|12:class_cleric:level_2:fixed_hp_gain",
           "11:class_druid:level_1:maximum_hit_die",
           "13:class_fighter:level_1:maximum_hit_die",
           "13:class_fighter|13:class_fighter:level_2:fixed_hp_gain",
@@ -3414,6 +3417,43 @@ describe("character creation finalization", () => {
         (resource) => resource.unitId,
       ),
     ).toContain("fighter_action_surge");
+  });
+
+  test("accepts Cleric 2 Channel Divinity as a class resource container", () => {
+    const clericTwo = completeSupportedProgressionDraft({
+      draftId: "draft:cleric-channel-divinity",
+      progression: testProgression("class_cleric", 2),
+    });
+    const result = finalizeCharacterDraft({ draft: clericTwo, unitLibrary });
+
+    expect(result.tag).toBe("ready");
+    if (result.tag !== "ready") return;
+
+    expect(characterBuildFeatureUnitIds(result.build, unitLibrary)).toEqual(
+      expect.arrayContaining([
+        "cleric_divine_order",
+        "cleric_channel_divinity",
+      ]),
+    );
+    expect(
+      characterBuildResources(result.build, unitLibrary).find(
+        (resource) => resource.unitId === "cleric_channel_divinity",
+      ),
+    ).toEqual({
+      unitId: "cleric_channel_divinity",
+      resource: {
+        kind: "use_count",
+        cap: {
+          kind: "threshold_tiers",
+          axis: "class",
+          base: 2,
+          tiers: [
+            { atLevel: 6, value: 3 },
+            { atLevel: 18, value: 4 },
+          ],
+        },
+      },
+    });
   });
 
   test("advances a finalized Fighter build and replaces Fighting Style in one level-gain operation", () => {

@@ -8,22 +8,22 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Metric | Value |
 | --- | ---: |
-| Installed collection inventory count | 167 Units |
+| Installed collection inventory count | 168 Units |
 
 ## Coverage Metrics
 
 | Metric | Covered | Percent |
 | --- | ---: | ---: |
-| Authored Surface Unit catalog admission | 166/436 | 38.1% |
-| Authored Surface executable catalog admission | 134/364 | 36.8% |
-| Installed Unit profile classification coverage | 167/167 | 100% |
-| Supported executable Unit coverage | 109/135 | 80.7% |
+| Authored Surface Unit catalog admission | 167/437 | 38.2% |
+| Authored Surface executable catalog admission | 135/365 | 37% |
+| Installed Unit profile classification coverage | 168/168 | 100% |
+| Supported executable Unit coverage | 110/136 | 80.9% |
 | QNT profile modeling coverage | 65/65 | 100% |
 | QNT proof coverage | 65/65 | 100% |
 | Runtime mapping coverage | 65/65 | 100% |
 | Runtime parity coverage | 65/65 | 100% |
-| Deterministic admission/projection coverage | 109/109 | 100% |
-| Selected identity MBT coverage | 104/109 | 95.4% |
+| Deterministic admission/projection coverage | 110/110 | 100% |
+| Selected identity MBT coverage | 104/110 | 94.5% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -61,6 +61,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | `bard_bardic_inspiration` | srd-5.2.1 | `unit-feature.bardic-inspiration-grant`, `unit-feature.bardic-inspiration-failed-d20-test` |
 | `bard_cutting_words` | srd-5.2.1 | `unit-feature.reaction-roll-or-damage-reduction` |
 | `bard_jack_of_all_trades` | srd-5.2.1 | `character-sheet.ability-check-proficiency-bonus` |
+| `cleric_channel_divinity` | srd-5.2.1 | `character-creation.class-feature-resource-projection` |
 | `cleric_divine_order` | srd-5.2.1 | `character-creation.class-feature-option-projection` |
 | `druid_primal_order` | srd-5.2.1 | `character-creation.class-feature-option-projection` |
 | `monk_martial_arts` | srd-5.2.1 | `unit-feature.martial-arts-attack-projection` |
@@ -765,6 +766,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `bard_bardic_inspiration` | `unit-feature.bardic-inspiration-grant`, `unit-feature.bardic-inspiration-failed-d20-test` | SRDINV72B | `packages/battle-runtime/src/battle-runtime-test-support.ts` |
 | `bard_cutting_words` | `unit-feature.reaction-roll-or-damage-reduction` | QMBT65 | `packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts` |
 | `bard_jack_of_all_trades` | `character-sheet.ability-check-proficiency-bonus` | L12G-CLASS-BARD-JACK-OF-ALL-TRADES | `packages/character-sheet-runtime/src/index.test.ts` |
+| `cleric_channel_divinity` | `character-creation.class-feature-resource-projection` | L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY | `packages/character-creation-runtime/src/index.test.ts` |
 | `cleric_divine_order` | `character-creation.class-feature-option-projection` | AT-L1-06 | `packages/character-creation-runtime/src/index.test.ts` |
 | `druid_primal_order` | `character-creation.class-feature-option-projection` | AT-L1-06 | `packages/character-creation-runtime/src/index.test.ts` |
 | `monk_martial_arts` | `unit-feature.martial-arts-attack-projection` | SRDINV73A | `packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts` |
@@ -1288,6 +1290,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | L1D2-THAUMATURGY-BOOMING-VOICE | qnt-proof | `spell.invocation-self-ability-check-advantage` |
 | L1D2-THAUMATURGY-BOOMING-VOICE | completed-runtime-parity | `spell.invocation-self-ability-check-advantage` |
 | L12G-CLASS-BARD-JACK-OF-ALL-TRADES | completed-runtime-parity | `character-sheet.ability-check-proficiency-bonus` |
+| L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY | completed-runtime-parity | `character-creation.class-feature-resource-projection` |
 
 ## Supported Profiles Lacking Runtime Parity
 

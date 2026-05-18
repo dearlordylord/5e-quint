@@ -2955,7 +2955,8 @@ export function resourceForFeature(
 ): readonly CharacterBuildResource[] {
   if (
     unit.kind === "class_feature" &&
-    unit.mechanics.family === "activation" &&
+    (unit.mechanics.family === "activation" ||
+      unit.mechanics.family === "resource_container") &&
     unit.mechanics.resource !== undefined
   ) {
     return [{ unitId: unit.id, resource: unit.mechanics.resource }];

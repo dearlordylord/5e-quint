@@ -1595,6 +1595,66 @@ describe("SRD Unit catalog boundary", () => {
     }
   });
 
+  test("installs Cleric Channel Divinity as a level-2 resource container", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("class_cleric")).toMatchObject({
+      featureGrants: expect.arrayContaining([
+        { level: 2, unitId: "cleric_channel_divinity" },
+      ]),
+      kind: "class",
+      spellcasting: expect.objectContaining({
+        kind: "list_prepared_spellcasting_progression_creation",
+        spellcastingProgression: expect.arrayContaining([
+          expect.objectContaining({
+            atLevel: 2,
+            cantripCount: 3,
+            preparedSpellCount: 5,
+            spellSlots: [{ spellLevel: 1, count: 3 }],
+          }),
+        ]),
+      }),
+    });
+    expect(
+      result.catalog.requireUnit("cleric_channel_divinity"),
+    ).toMatchObject({
+      acquiredAtLevel: 2,
+      className: "cleric",
+      kind: "class_feature",
+      mechanics: {
+        effectSaveDc: { kind: "class_spellcasting_spell_save_dc" },
+        family: "resource_container",
+        optionSet: {
+          choiceKey: "cleric_channel_divinity_effect",
+          initialOptions: [
+            { id: "cleric_divine_spark", displayName: "Divine Spark" },
+            { id: "cleric_turn_undead", displayName: "Turn Undead" },
+          ],
+          timing: "resource_use",
+        },
+        resetCadence: {
+          kind: "partial_short_full_long",
+          shortRestRefill: 1,
+        },
+        resource: {
+          cap: {
+            axis: "class",
+            base: 2,
+            kind: "threshold_tiers",
+            tiers: [
+              { atLevel: 6, value: 3 },
+              { atLevel: 18, value: 4 },
+            ],
+          },
+          kind: "use_count",
+        },
+      },
+    });
+  });
+
   test("installs Find Familiar with catalog-backed familiar form references", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 
