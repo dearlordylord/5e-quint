@@ -51,11 +51,11 @@ module battleRuntimeSaveSpellTests {
       fighter: {
         ...initialState.fighter,
         concentrating: true,
-        activeEffects: Set(BaneD20RollPenalty, BlessD20RollBonus, GuidanceAbilityCheckBonus),
+        activeEffects: Set(BaneD20RollPenalty, BlessD20RollBonus, GuidanceAbilityCheckBonus, PassWithoutTraceStealthBonus),
       },
       goblin: {
         ...initialState.goblin,
-        activeEffects: Set(BaneD20RollPenalty, BlessD20RollBonus, GuidanceAbilityCheckBonus),
+        activeEffects: Set(BaneD20RollPenalty, BlessD20RollBonus, GuidanceAbilityCheckBonus, PassWithoutTraceStealthBonus),
       },
     }
     val result = resolveGoblinAttack(concentrating, 20, 18, 5, false)
@@ -64,9 +64,11 @@ module battleRuntimeSaveSpellTests {
       assert(not(result.fighter.activeEffects.contains(BaneD20RollPenalty))),
       assert(not(result.fighter.activeEffects.contains(BlessD20RollBonus))),
       assert(not(result.fighter.activeEffects.contains(GuidanceAbilityCheckBonus))),
+      assert(not(result.fighter.activeEffects.contains(PassWithoutTraceStealthBonus))),
       assert(not(result.goblin.activeEffects.contains(BaneD20RollPenalty))),
       assert(not(result.goblin.activeEffects.contains(BlessD20RollBonus))),
       assert(not(result.goblin.activeEffects.contains(GuidanceAbilityCheckBonus))),
+      assert(not(result.goblin.activeEffects.contains(PassWithoutTraceStealthBonus))),
     }
   }
 
@@ -76,11 +78,11 @@ module battleRuntimeSaveSpellTests {
       fighter: {
         ...initialState.fighter,
         concentrating: true,
-        activeEffects: Set(BaneD20RollPenalty, GuidanceAbilityCheckBonus),
+        activeEffects: Set(BaneD20RollPenalty, GuidanceAbilityCheckBonus, PassWithoutTraceStealthBonus),
       },
       goblin: {
         ...initialState.goblin,
-        activeEffects: Set(BaneD20RollPenalty, GuidanceAbilityCheckBonus),
+        activeEffects: Set(BaneD20RollPenalty, GuidanceAbilityCheckBonus, PassWithoutTraceStealthBonus),
       },
     }
     val result = resolveRollModifierSpell(prior, BlessRollModifier, Set(Goblin), Set(), 1)
@@ -88,10 +90,31 @@ module battleRuntimeSaveSpellTests {
       assert(result.fighter.concentrating),
       assert(not(result.fighter.activeEffects.contains(BaneD20RollPenalty))),
       assert(not(result.fighter.activeEffects.contains(GuidanceAbilityCheckBonus))),
+      assert(not(result.fighter.activeEffects.contains(PassWithoutTraceStealthBonus))),
       assert(not(result.fighter.activeEffects.contains(BlessD20RollBonus))),
       assert(not(result.goblin.activeEffects.contains(BaneD20RollPenalty))),
       assert(not(result.goblin.activeEffects.contains(GuidanceAbilityCheckBonus))),
+      assert(not(result.goblin.activeEffects.contains(PassWithoutTraceStealthBonus))),
       assert(result.goblin.activeEffects.contains(BlessD20RollBonus)),
+    }
+  }
+
+  run test_pass_without_trace_applies_stealth_bonus_to_chosen_aura_targets = {
+    val result = resolveRollModifierSpell(initialState, PassWithoutTraceRollModifier, Set(Fighter, Goblin), Set(), 2)
+    all {
+      assert(result.fighter.concentrating),
+      assert(result.fighter.activeEffects.contains(PassWithoutTraceStealthBonus)),
+      assert(result.goblin.activeEffects.contains(PassWithoutTraceStealthBonus)),
+      assert(battleActorHasCommittedSpellSlotUse(result, Fighter)),
+    }
+  }
+
+  run test_pass_without_trace_requires_caster_in_selected_targets = {
+    val result = resolveRollModifierSpell(initialState, PassWithoutTraceRollModifier, Set(Goblin), Set(), 2)
+    all {
+      assert(result == initialState),
+      assert(not(result.fighter.activeEffects.contains(PassWithoutTraceStealthBonus))),
+      assert(not(result.goblin.activeEffects.contains(PassWithoutTraceStealthBonus))),
     }
   }
 

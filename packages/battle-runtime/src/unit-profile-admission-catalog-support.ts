@@ -183,6 +183,8 @@ export const mageArmorUnitId = "mage_armor";
 
 export const magicMissileUnitId = "magic_missile";
 
+export const passWithoutTraceUnitId = "pass_without_trace";
+
 export const poisonSprayUnitId = "poison_spray";
 
 export const protectionFromEvilAndGoodUnitId = "protection_from_evil_and_good";

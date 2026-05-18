@@ -111,6 +111,7 @@ import paladinFightingStyleInput from "../../content/paladin_fighting_style.json
 import paladinLayOnHandsInput from "../../content/paladin_lay_on_hands.json";
 import paladinPaladinsSmiteInput from "../../content/paladin_paladins_smite.json";
 import paladinWeaponMasteryInput from "../../content/paladin_weapon_mastery.json";
+import passWithoutTraceInput from "../../content/pass_without_trace.json";
 import poisonSprayInput from "../../content/poison_spray.json";
 import protectionFromEvilAndGoodInput from "../../content/protection_from_evil_and_good.json";
 import produceFlameInput from "../../content/produce_flame.json";
@@ -422,6 +423,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     lightInput,
     longstriderInput,
     mistyStepInput,
+    passWithoutTraceInput,
     poisonSprayInput,
     protectionFromEvilAndGoodInput,
     produceFlameInput,

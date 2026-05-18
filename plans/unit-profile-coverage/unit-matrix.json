@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 374,
-      "numerator": 145,
-      "percent": "38.8%"
+      "numerator": 146,
+      "percent": "39%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 446,
-      "numerator": 177,
-      "percent": "39.7%"
+      "numerator": 178,
+      "percent": "39.9%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 178
+      "value": 179
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 114,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 178,
-      "numerator": 178,
+      "denominator": 179,
+      "numerator": 179,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -97,9 +97,9 @@
       "percent": "91.2%"
     },
     "supportedProfileCoverage": {
-      "denominator": 146,
+      "denominator": 147,
       "numerator": 114,
-      "percent": "78.1%"
+      "percent": "77.6%"
     }
   },
   "metricSemantics": [
@@ -2008,7 +2008,7 @@
       "taskRefs": [
         "SRDINV30B"
       ],
-      "title": "Spell invocation applies concentration d20 roll modifiers from target-list or skill-choice spell effects",
+      "title": "Spell invocation applies concentration d20 roll modifiers from target-list, area-selected, or skill-choice spell effects",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -8909,7 +8909,7 @@
           "taskRefs": [
             "SRDINV30B"
           ],
-          "title": "Spell invocation applies concentration d20 roll modifiers from target-list or skill-choice spell effects",
+          "title": "Spell invocation applies concentration d20 roll modifiers from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -8968,7 +8968,7 @@
           "taskRefs": [
             "SRDINV30B"
           ],
-          "title": "Spell invocation applies concentration d20 roll modifiers from target-list or skill-choice spell effects",
+          "title": "Spell invocation applies concentration d20 roll modifiers from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -10732,7 +10732,7 @@
           "taskRefs": [
             "SRDINV30B"
           ],
-          "title": "Spell invocation applies concentration d20 roll modifiers from target-list or skill-choice spell effects",
+          "title": "Spell invocation applies concentration d20 roll modifiers from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -11631,6 +11631,77 @@
       ],
       "sourceRecordPath": "packages/surface/content/misty_step.json",
       "unitId": "misty_step"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "table/spatial and exploration/tracking owner",
+              "reason": "Pass without Trace's changing aura membership and non-caster chosen affected creatures depend on caller-supplied table/spatial facts at cast time, and leaving no tracks is pursuit/exploration state outside promoted battle runtime."
+            },
+            "mechanic": "automatic Emanation membership, changing membership as creatures move, pursuit/track discovery, and no-tracks world state"
+          }
+        ],
+        "profileIds": [
+          "spell.invocation-roll-modifier"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action level-2-or-higher Spell Slot casting",
+          "Concentration-owned +10 bonus to Dexterity (Stealth) Ability Checks on the caster and each selected creature",
+          "self-origin 30-foot Emanation target eligibility through caller-supplied table/spatial facts",
+          "caster-included affected creatures represented by a target-list fill at cast time",
+          "Concentration cleanup and recast replacement remove the Stealth modifier"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-SPELL-PASS-WITHOUT-TRACE"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-roll-modifier",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV30B"
+          ],
+          "title": "Spell invocation applies concentration d20 roll modifiers from target-list, area-selected, or skill-choice spell effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/pass_without_trace.json",
+      "unitId": "pass_without_trace"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -18291,24 +18362,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/paladin_epic_boon.json",
       "unitId": "paladin_epic_boon"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/pass_without_trace.json",
-      "unitId": "pass_without_trace"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

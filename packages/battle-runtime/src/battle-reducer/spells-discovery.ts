@@ -24,6 +24,7 @@ import {
   type BattleState,
   type ReadiedSpellInvocation,
   type SupportedSpellInvocation,
+  type TargetListSpellInvocation,
 } from "../battle-reducer.ts";
 import {
   spellActTurnResourceAvailable,
@@ -51,7 +52,10 @@ import {
   supportedSpellInvocationMatchesRef,
   supportedSpellInvocationRef,
 } from "./spells-holes-fills.ts";
-import { spellDancingLightsPlacementHole } from "./spells-targeting.ts";
+import {
+  spellDancingLightsPlacementHole,
+  targetListTargetingHasFixedMaximum,
+} from "./spells-targeting.ts";
 import { dancingLightsFromEffect } from "./spells-active-effects.ts";
 import { attackTargetHole } from "./hole-helpers.ts";
 import { spellCastReactionFactsHole } from "./spell-cast-reaction-frame.ts";
@@ -212,10 +216,9 @@ export function discoverSupportedSpellInvocations(
           : [...castActs, ...readiedSpellAct(state, actorId, invocation)];
       }
       if (invocation.procedure === "rollModifier") {
-        const targetHole =
-          invocation.targeting.maxTargets > 1
-            ? spellTargetListHole(state, actorId, invocation)
-            : spellTargetHole(state, actorId, invocation);
+        const targetHole = targetListSpellUsesTargetListHole(invocation)
+          ? spellTargetListHole(state, actorId, invocation)
+          : spellTargetHole(state, actorId, invocation);
         const initialHoles =
           targetHole.choices.length === 0
             ? []
@@ -575,10 +578,9 @@ export function discoverSupportedSpellInvocations(
         if (!isScalarBuffTargetListInvocation(invocation)) {
           return [];
         }
-        const targetHole =
-          invocation.targeting.maxTargets > 1
-            ? spellTargetListHole(state, actorId, invocation)
-            : spellTargetHole(state, actorId, invocation);
+        const targetHole = targetListSpellUsesTargetListHole(invocation)
+          ? spellTargetListHole(state, actorId, invocation)
+          : spellTargetHole(state, actorId, invocation);
         const castActs =
           targetHole.choices.length === 0
             ? []
@@ -601,10 +603,9 @@ export function discoverSupportedSpellInvocations(
         invocation.procedure ===
         "conditionImmunityAndTurnStartTemporaryHitPoints"
       ) {
-        const targetHole =
-          invocation.targeting.maxTargets > 1
-            ? spellTargetListHole(state, actorId, invocation)
-            : spellTargetHole(state, actorId, invocation);
+        const targetHole = targetListSpellUsesTargetListHole(invocation)
+          ? spellTargetListHole(state, actorId, invocation)
+          : spellTargetHole(state, actorId, invocation);
         const castActs =
           targetHole.choices.length === 0
             ? []
@@ -656,7 +657,7 @@ export function discoverSupportedSpellInvocations(
         invocation.procedure === "repeatedDamageAllocation"
           ? spellTargetAllocationHole(state, actorId, invocation)
           : invocation.procedure === "directHitPointRestoration" &&
-              invocation.targeting.maxTargets > 1
+              targetListSpellUsesTargetListHole(invocation)
             ? spellTargetListHole(state, actorId, invocation)
             : spellTargetHole(state, actorId, invocation);
       const castActs =
@@ -1056,6 +1057,15 @@ export function readiedSpellAct(
     summary: `Ready ${invocation.spell.name} for ${reactionTriggerLabel(trigger)}; holding the spell requires Concentration until the start of your next turn.`,
     initialHoles: [],
   }));
+}
+
+function targetListSpellUsesTargetListHole(
+  invocation: TargetListSpellInvocation,
+): boolean {
+  if (!targetListTargetingHasFixedMaximum(invocation.targeting)) {
+    return true;
+  }
+  return invocation.targeting.maxTargets > 1;
 }
 
 // activeOngoingFeaturesPreventSpellcasting also belongs to cluster K but

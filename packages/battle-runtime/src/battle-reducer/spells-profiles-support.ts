@@ -59,6 +59,7 @@ import type { CombatantId } from "../identity.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import { activeMarkedDamageRiderEffect } from "./damage-helpers.ts";
 import {
+  BATTLE_D20_ROLL_MODIFIER_DIE_SIZES,
   HUNTERS_MARK_FINDING_SKILLS,
   PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES,
   PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS,
@@ -1785,18 +1786,22 @@ export function rollModifierSpellProjection(
   if (spell.mechanics.castingTime.kind !== "action") {
     return null;
   }
-  const rangeFeet = scalarBuffSpellRangeFeet(spell.mechanics.range);
   const expiresAt = scalarBuffActiveEffectExpiration(
     actorId,
     spell.mechanics.duration,
   );
-  if (rangeFeet === null || expiresAt === null) {
+  if (expiresAt === null) {
     return null;
   }
 
   if (spell.mechanics.family === "ongoing_effect") {
+    const rangeFeet = rollModifierSpellRangeFeet(
+      spell.mechanics.range,
+      spell.mechanics.attachment,
+    );
     const operation = spell.mechanics.operations[0];
     if (
+      rangeFeet === null ||
       spell.mechanics.operations.length !== 1 ||
       operation?.trigger.kind !== "passive" ||
       operation.effect.kind !== "modify_roll_numeric"
@@ -1829,7 +1834,9 @@ export function rollModifierSpellProjection(
     return null;
   }
   const phase = spell.mechanics.phases[0];
+  const rangeFeet = scalarBuffSpellRangeFeet(spell.mechanics.range);
   if (
+    rangeFeet === null ||
     spell.mechanics.phases.length !== 1 ||
     phase?.kind !== "save_gate" ||
     phase.onFail.kind !== "modify_roll_numeric" ||
@@ -1864,6 +1871,14 @@ export function rollModifierSpellTargeting(
   spellLevel: number,
   slotLevel: SpellSlotLevel,
 ): RollModifierSpellTargeting | null {
+  if (
+    attachment.kind === "area" &&
+    attachment.origin.kind === "self" &&
+    attachment.shape.kind === "emanation" &&
+    typeof attachment.shape.radiusFeet === "number"
+  ) {
+    return { kind: "selfAndChosenLegalTargets", minTargets: 1 };
+  }
   if (attachment.kind !== "hole" || attachment.value.kind !== "target") {
     return null;
   }
@@ -1977,10 +1992,34 @@ export function rollModifierDelta(
   delta: Extract<EffectAtom, { readonly kind: "modify_roll_numeric" }>["delta"],
 ): BattleD20RollModifierDelta | null {
   return delta.kind === "fixed_dice" &&
-    delta.dieSize === 4 &&
+    rollModifierDeltaDieSizeIsSupported(delta.dieSize) &&
     (delta.sign === "+" || delta.sign === "-")
     ? { dice: delta.dice, dieSize: delta.dieSize, sign: delta.sign }
     : null;
+}
+
+function rollModifierSpellRangeFeet(
+  range: SpellRecord["mechanics"]["range"],
+  attachment: Attachment,
+): MovementFeet | null {
+  if (
+    range.kind === "self" &&
+    attachment.kind === "area" &&
+    attachment.origin.kind === "self" &&
+    attachment.shape.kind === "emanation" &&
+    typeof attachment.shape.radiusFeet === "number"
+  ) {
+    return movementFeet(attachment.shape.radiusFeet);
+  }
+  return scalarBuffSpellRangeFeet(range);
+}
+
+function rollModifierDeltaDieSizeIsSupported(
+  dieSize: number,
+): dieSize is BattleD20RollModifierDelta["dieSize"] {
+  return BATTLE_D20_ROLL_MODIFIER_DIE_SIZES.includes(
+    dieSize as BattleD20RollModifierDelta["dieSize"],
+  );
 }
 
 export function rollModifierKindsAreSupported(

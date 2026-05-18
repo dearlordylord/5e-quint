@@ -19,7 +19,7 @@
     {
       "number": 39,
       "id": "L12G-SPELL-PASS-WITHOUT-TRACE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Pass Without Trace Runtime Support Or Closure"
     },
     {
@@ -295,7 +295,7 @@ Acceptance:
 
 ### Task 39 - L12G-SPELL-PASS-WITHOUT-TRACE - Pass Without Trace Runtime Support Or Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `pass_without_trace`. Gate task: 41 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 

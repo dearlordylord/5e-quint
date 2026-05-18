@@ -1704,17 +1704,15 @@
       "unitId": "paladin_fighting_style"
     },
     {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "Pass without Trace's changing aura membership and non-caster chosen affected creatures depend on caller-supplied table/spatial facts at cast time, and leaving no tracks is pursuit/exploration state outside promoted battle runtime.",
       "sourceRecordPath": "packages/surface/content/pass_without_trace.json",
       "sourceRows": [
         {
@@ -1742,8 +1740,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
       "unitId": "pass_without_trace"
     },
     {
@@ -2700,7 +2698,7 @@
       ]
     },
     {
-      "count": 28,
+      "count": 27,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
@@ -2720,7 +2718,6 @@
         "lesser_restoration",
         "magic_weapon",
         "mind_spike",
-        "pass_without_trace",
         "prayer_of_healing",
         "protection_from_poison",
         "ray_of_enfeeblement",
@@ -2735,7 +2732,7 @@
       ]
     },
     {
-      "count": 11,
+      "count": 12,
       "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
@@ -2747,6 +2744,7 @@
         "detect_poison_and_disease",
         "identify",
         "minor_illusion",
+        "pass_without_trace",
         "silent_image",
         "speak_with_animals",
         "thaumaturgy"
@@ -2803,8 +2801,8 @@
       "numerator": 474,
       "percent": "85.3%",
       "rowsByStatus": {
-        "accepted": 300,
-        "accepted-no-battle-effect": 174,
+        "accepted": 302,
+        "accepted-no-battle-effect": 172,
         "battle-runtime-required": 78,
         "owner-evidence-required": 4
       }
@@ -2816,13 +2814,13 @@
     },
     "strictTargetClosure": {
       "denominator": 146,
-      "numerator": 117,
-      "percent": "80.1%"
+      "numerator": 118,
+      "percent": "80.8%"
     }
   },
   "openFrontier": [
     {
-      "count": 28,
+      "count": 27,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
@@ -2842,7 +2840,6 @@
         "lesser_restoration",
         "magic_weapon",
         "mind_spike",
-        "pass_without_trace",
         "prayer_of_healing",
         "protection_from_poison",
         "ray_of_enfeeblement",
@@ -6333,8 +6330,8 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
-      "missing": 28,
-      "profile-subset-supported": 9,
+      "missing": 27,
+      "profile-subset-supported": 10,
       "supported-profile": 91,
       "unsupported-profile": 18
     },
@@ -6342,9 +6339,9 @@
       "blocked-follow-up-split": 7,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 6,
-      "closed-runtime-detached-table-adjudication": 11,
+      "closed-runtime-detached-table-adjudication": 12,
       "open-profile-accounting": 1,
-      "open-runtime-behavior": 28,
+      "open-runtime-behavior": 27,
       "supported-profile": 91
     },
     "nonSupportedFrontier": 55,

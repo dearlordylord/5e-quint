@@ -18,6 +18,9 @@ import type {
 
 export const CRITICAL_HIT_THRESHOLDS = [19, 20] as const;
 export const BATTLE_ATTACK_RANGE_BANDS = ["normal", "long"] as const;
+export const BATTLE_D20_ROLL_MODIFIER_DIE_SIZES = [1, 4] as const;
+export type BattleD20RollModifierDieSize =
+  (typeof BATTLE_D20_ROLL_MODIFIER_DIE_SIZES)[number];
 export const SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS = [
   "condition",
   "spell",

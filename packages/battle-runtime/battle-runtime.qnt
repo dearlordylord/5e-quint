@@ -871,6 +871,7 @@ module battleRuntime {
       | BaneRollModifier => 3 + (if (slotLevel > 1) slotLevel - 1 else 0)
       | BlessRollModifier => 3 + (if (slotLevel > 1) slotLevel - 1 else 0)
       | GuidanceRollModifier => 1
+      | PassWithoutTraceRollModifier => Set(Fighter, Goblin).size()
     }
 
   pure def rollModifierActiveEffect(invocation: RollModifierSpell): ActiveEffect =
@@ -878,6 +879,7 @@ module battleRuntime {
       | BaneRollModifier => BaneD20RollPenalty
       | BlessRollModifier => BlessD20RollBonus
       | GuidanceRollModifier => GuidanceAbilityCheckBonus
+      | PassWithoutTraceRollModifier => PassWithoutTraceStealthBonus
     }
 
   pure def rollModifierRequiresFailedSave(invocation: RollModifierSpell): bool =
@@ -885,6 +887,13 @@ module battleRuntime {
 
   pure def rollModifierSpendsLevelOneSlot(invocation: RollModifierSpell): bool =
     invocation != GuidanceRollModifier
+
+  pure def rollModifierSelectedTargetsValid(invocation: RollModifierSpell, selectedTargets: Set[Actor], slotLevel: int): bool = {
+    val targetCount = selectedTargets.size()
+    targetCount >= 1 and
+      targetCount <= rollModifierMaximumTargets(invocation, slotLevel) and
+      (invocation != PassWithoutTraceRollModifier or selectedTargets.contains(Fighter))
+  }
 
   pure def rollModifierTargetedState(
     state: BattleState,
@@ -904,13 +913,11 @@ module battleRuntime {
     failedSaveTargets: Set[Actor],
     slotLevel: int,
   ): BattleState = {
-    val targetCount = selectedTargets.size()
-    val validTargetCount = targetCount >= 1 and targetCount <= rollModifierMaximumTargets(invocation, slotLevel)
     val affectedTargets =
       if (rollModifierRequiresFailedSave(invocation)) failedSaveTargets else selectedTargets
     if (
       currentActor(state) == Fighter and
-      validTargetCount and
+      rollModifierSelectedTargetsValid(invocation, selectedTargets, slotLevel) and
       failedSaveTargets.forall(target => selectedTargets.contains(target)) and
       state.actionAvailable and
       (not(rollModifierSpendsLevelOneSlot(invocation)) or canExpendSpellSlotThisTurn(state)) and

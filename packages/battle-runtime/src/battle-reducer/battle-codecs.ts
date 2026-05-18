@@ -1475,11 +1475,17 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       procedure: Schema.Literal("rollModifier"),
       spell: BattleRuntimeObjectSchema,
       actionCost: Schema.Literal("magicAction"),
-      targeting: Schema.Struct({
-        kind: Schema.Literal("targetList"),
-        minTargets: Schema.Literal(1),
-        maxTargets: Schema.Number,
-      }),
+      targeting: Schema.Union(
+        Schema.Struct({
+          kind: Schema.Literal("targetList"),
+          minTargets: Schema.Literal(1),
+          maxTargets: Schema.Number,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("selfAndChosenLegalTargets"),
+          minTargets: Schema.Literal(1),
+        }),
+      ),
       effect: BattleRuntimeObjectSchema,
       rangeFeet: MovementFeet,
       saveGate: Schema.NullOr(

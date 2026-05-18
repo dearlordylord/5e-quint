@@ -120,6 +120,7 @@ import type { ZeroHpLifecycle } from "./zero-hp-lifecycle.ts";
 import { type DamageAmountByTypeEntry } from "./battle-reducer/damage-helpers.ts";
 import {
   BATTLE_ATTACK_RANGE_BANDS,
+  type BattleD20RollModifierDieSize,
   COMMAND_OPTIONS,
   CRITICAL_HIT_THRESHOLDS,
   type EldritchBlastBeamCount,
@@ -433,7 +434,7 @@ export type BattleD20RollModifierKind = Extract<
 >;
 export type BattleD20RollModifierDelta = {
   readonly dice: number;
-  readonly dieSize: DamageDieSize;
+  readonly dieSize: BattleD20RollModifierDieSize;
   readonly sign: "+" | "-";
 };
 export type BattlePassiveSpeedProfile =
@@ -1929,11 +1930,12 @@ export type ScalarBuffSpellTargeting =
   | {
       readonly kind: "self";
     }
-  | {
-      readonly kind: "targetList";
-      readonly minTargets: 1;
-      readonly maxTargets: number;
-    };
+  | SpellTargetListTargeting;
+export type SpellTargetListTargeting = {
+  readonly kind: "targetList";
+  readonly minTargets: 1;
+  readonly maxTargets: number;
+};
 export type TargetListSpellInvocation =
   | Extract<
       SupportedSpellInvocation,
@@ -1990,10 +1992,12 @@ export type ScalarBuffSpellEffect =
         { readonly kind: "speedDelta" | "spellArmorClassBonus" }
       >;
     };
-export type RollModifierSpellTargeting = Extract<
-  ScalarBuffSpellTargeting,
-  { readonly kind: "targetList" }
->;
+export type RollModifierSpellTargeting =
+  | SpellTargetListTargeting
+  | {
+      readonly kind: "selfAndChosenLegalTargets";
+      readonly minTargets: 1;
+    };
 export type RollModifierSpellEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "d20RollModifier" }
@@ -2032,7 +2036,7 @@ export type CreatureTypeProtectionSpellInvocation = {
   readonly procedure: "creatureTypeProtection";
   readonly spell: SpellRecord;
   readonly actionCost: "magicAction";
-  readonly targeting: RollModifierSpellTargeting;
+  readonly targeting: SpellTargetListTargeting;
   readonly activeEffect: Extract<
     BattleActiveEffect,
     { readonly kind: "creatureTypeProtection" }
@@ -2045,7 +2049,7 @@ export type DamageReductionSpellInvocation = {
   readonly procedure: "damageReduction";
   readonly spell: SpellRecord;
   readonly actionCost: "magicAction";
-  readonly targeting: RollModifierSpellTargeting;
+  readonly targeting: SpellTargetListTargeting;
   readonly damageTypeChoices: readonly DamageType[];
   readonly amount: {
     readonly dice: 1;
@@ -2060,7 +2064,7 @@ export type ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation = {
   readonly procedure: "conditionImmunityAndTurnStartTemporaryHitPoints";
   readonly spell: SpellRecord;
   readonly actionCost: "magicAction";
-  readonly targeting: RollModifierSpellTargeting;
+  readonly targeting: SpellTargetListTargeting;
   readonly activeEffects: readonly [
     Extract<BattleActiveEffect, { readonly kind: "conditionImmunity" }>,
     Extract<

@@ -283,6 +283,9 @@ export function spellTargetListHole(
   invocation: TargetListSpellInvocation,
 ): BattleSpellTargetListHole {
   const holeKey = `battle:spell:target-list:${invocation.spell.id}`;
+  const choices = [...state.combatants.keys()].filter((id) =>
+    spellTargetHasNonSpatialPrerequisites(state, actorId, id, invocation),
+  );
   return {
     kind: "spellTargetList",
     holeId: spellTargetListHoleId(invocation),
@@ -290,12 +293,33 @@ export function spellTargetListHole(
     label: `${invocation.spell.name} targets`,
     spell: invocation,
     minTargets: invocation.targeting.minTargets,
-    maxTargets: invocation.targeting.maxTargets,
+    maxTargets: targetListHoleMaxTargets(invocation, choices.length),
     requiresTableSpatialFact: true,
-    choices: [...state.combatants.keys()].filter((id) =>
-      spellTargetHasNonSpatialPrerequisites(state, actorId, id, invocation),
-    ),
+    choices,
   };
+}
+
+export function targetListTargetingHasFixedMaximum(
+  targeting: TargetListSpellInvocation["targeting"],
+): targeting is TargetListSpellInvocation["targeting"] & {
+  readonly maxTargets: number;
+} {
+  return "maxTargets" in targeting;
+}
+
+function targetListTargetingRequiresCaster(
+  targeting: TargetListSpellInvocation["targeting"],
+): boolean {
+  return targeting.kind === "selfAndChosenLegalTargets";
+}
+
+function targetListHoleMaxTargets(
+  invocation: TargetListSpellInvocation,
+  choiceCount: number,
+): number {
+  return targetListTargetingHasFixedMaximum(invocation.targeting)
+    ? invocation.targeting.maxTargets
+    : choiceCount;
 }
 
 export function commandOptionChoiceHole(
@@ -636,8 +660,17 @@ export function validateSpellTargetList(
   if (targetIds.length < invocation.targeting.minTargets) {
     return `${invocation.spell.name} must target at least ${invocation.targeting.minTargets} creature.`;
   }
-  if (targetIds.length > invocation.targeting.maxTargets) {
+  if (
+    targetListTargetingHasFixedMaximum(invocation.targeting) &&
+    targetIds.length > invocation.targeting.maxTargets
+  ) {
     return `${invocation.spell.name} can target at most ${invocation.targeting.maxTargets} creatures.`;
+  }
+  if (
+    targetListTargetingRequiresCaster(invocation.targeting) &&
+    !targetIds.includes(actorId)
+  ) {
+    return `${invocation.spell.name} must include the caster among its targets.`;
   }
   const seen = new Set<CombatantId>();
   for (const targetId of targetIds) {
