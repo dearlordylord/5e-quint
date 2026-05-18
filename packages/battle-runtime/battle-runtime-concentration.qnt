@@ -30,6 +30,7 @@ module battleRuntimeConcentration {
       .exclude(spellEffectConcentrationActiveEffects)
       .filter(effect => match effect {
         | HeroismTurnStartTemporaryHitPoints(_) => false
+        | EnhanceAbilityCheckAdvantage(_) => false
         | EnsnaringStrikeRestrained(_) => false
         | SearingSmiteBurning(_) => false
         | FogCloudObscurement(_) => false

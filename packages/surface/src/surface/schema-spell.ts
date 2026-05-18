@@ -59,6 +59,16 @@ export const SpellSchoolSchema = Schema.Literal(
   "transmutation",
 );
 
+const DETECTION_PROPERTIES = [
+  "magic",
+  "evil_and_good",
+  "poison_and_disease",
+  "thoughts",
+  "traps",
+] as const satisfies ReadonlyNonEmptyArray<string>;
+const DetectionPropertySchema = Schema.Literal(...DETECTION_PROPERTIES);
+type DetectionProperty = Schema.Schema.Type<typeof DetectionPropertySchema>;
+
 export const LinearPerLevelNumberSchema = Schema.Struct({
   kind: Schema.Literal("linear_per_level"),
   axis: LevelAxisSchema,
@@ -241,6 +251,11 @@ export const AreaPushUnsecuredObjectsSchema = strictStruct({
   distanceFeet: PositiveIntegerSchema,
 });
 
+export const DamageSourceFilterSchema = strictStruct({
+  kind: Schema.Literal("attack_hit"),
+  attackRollFilter: Schema.Literal("weapon_or_unarmed_strike"),
+});
+
 export const ForceMovePushEffectSchema = strictStruct({
   kind: Schema.Literal("force_move"),
   movementKind: Schema.Literal("push"),
@@ -362,6 +377,7 @@ type AudibleEffect = Schema.Schema.Type<typeof AudibleEffectSchema>;
 type AreaPushUnsecuredObjects = Schema.Schema.Type<
   typeof AreaPushUnsecuredObjectsSchema
 >;
+type DamageSourceFilter = Schema.Schema.Type<typeof DamageSourceFilterSchema>;
 type AreaScopedEffectAtom = AreaPushUnsecuredObjects;
 type AreaDirectEffectAtom = EffectAtom | AreaScopedEffectAtom;
 type ShapeShiftRevertTrigger = Schema.Schema.Type<
@@ -603,8 +619,15 @@ type EffectAtom =
   | {
       readonly kind: "modify_damage_numeric";
       readonly delta: DiceDelta;
+      readonly damageSourceFilter?: DamageSourceFilter;
       readonly weaponFilter?: WeaponFilter;
       readonly abilityFilter?: ReadonlyNonEmptyArray<Ability>;
+      readonly minimumDamageTotal?: 1;
+    }
+  | {
+      readonly kind: "modify_size_category";
+      readonly direction: "increase" | "decrease";
+      readonly steps: 1;
     }
   | {
       readonly kind: "modify_crit_range";
@@ -836,11 +859,7 @@ type EffectAtom =
     }
   | {
       readonly kind: "detect";
-      readonly property:
-        | "magic"
-        | "evil_and_good"
-        | "poison_and_disease"
-        | "thoughts";
+      readonly property: DetectionProperty;
       readonly radiusFeet: number;
     }
   | {
@@ -1191,6 +1210,7 @@ type OngoingEffect =
   | EffectAtom
   | {
       readonly kind: "save_gate";
+      readonly attachment?: AreaAttachment;
       readonly ability: Ability;
       readonly dc: DcSource;
       readonly onFail: EffectAtom;
@@ -1442,6 +1462,7 @@ export const TargetSelectionSchema = Schema.Union(
 export const AreaOriginSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("point_within_range") }),
   Schema.Struct({ kind: Schema.Literal("on_primary_target") }),
+  Schema.Struct({ kind: Schema.Literal("on_attached_creature") }),
   Schema.Struct({ kind: Schema.Literal("self") }),
 );
 
@@ -1637,7 +1658,7 @@ export const DcSourceSchema = Schema.Union(
   }),
 );
 
-export const OngoingCasterActionCostSchema = Schema.Union(
+export const OngoingActionCostSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("bonus_action") }),
   Schema.Struct({
     kind: Schema.Literal("standard_action"),
@@ -1711,7 +1732,11 @@ export const OngoingTriggerSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("on_caster_spends_action"),
-    cost: OngoingCasterActionCostSchema,
+    cost: OngoingActionCostSchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("on_attached_spends_action"),
+    cost: OngoingActionCostSchema,
   }),
   Schema.Struct({ kind: Schema.Literal("on_creature_studies") }),
 );
@@ -2056,8 +2081,15 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       Schema.Struct({
         kind: Schema.Literal("modify_damage_numeric"),
         delta: DiceDeltaSchema,
+        damageSourceFilter: optionalExact(DamageSourceFilterSchema),
         weaponFilter: optionalExact(WeaponFilterSchema),
         abilityFilter: optionalExact(nonEmpty(AbilitySchema)),
+        minimumDamageTotal: optionalExact(Schema.Literal(1)),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("modify_size_category"),
+        direction: Schema.Literal("increase", "decrease"),
+        steps: Schema.Literal(1),
       }),
       Schema.Struct({
         kind: Schema.Literal("modify_crit_range"),
@@ -2488,12 +2520,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       }),
       Schema.Struct({
         kind: Schema.Literal("detect"),
-        property: Schema.Literal(
-          "magic",
-          "evil_and_good",
-          "poison_and_disease",
-          "thoughts",
-        ),
+        property: DetectionPropertySchema,
         radiusFeet: Schema.Number,
       }),
       Schema.Struct({
@@ -2858,6 +2885,7 @@ export const OngoingEffectSchema: Schema.suspend<
     EffectAtomSchema,
     Schema.Struct({
       kind: Schema.Literal("save_gate"),
+      attachment: optionalExact(AreaAttachmentSchema),
       ability: AbilitySchema,
       dc: DcSourceSchema,
       onFail: EffectAtomSchema,

@@ -85,7 +85,7 @@ module battleRuntimeSaveSpellTests {
         activeEffects: Set(BaneD20RollPenalty, GuidanceAbilityCheckBonus, PassWithoutTraceStealthBonus),
       },
     }
-    val result = resolveRollModifierSpell(prior, BlessRollModifier, Set(Goblin), Set(), 1)
+    val result = resolveRollModifierSpell(prior, BlessRollModifier, Set(Goblin), Set(), 1, StrAbility)
     all {
       assert(result.fighter.concentrating),
       assert(not(result.fighter.activeEffects.contains(BaneD20RollPenalty))),
@@ -120,7 +120,7 @@ module battleRuntimeSaveSpellTests {
 
   run test_guidance_preserves_existing_turn_spell_slot_guard = {
     val alreadySpent = commitActorSpellSlotUse(initialState, Fighter)
-    val result = resolveRollModifierSpell(alreadySpent, GuidanceRollModifier, Set(Fighter), Set(), 0)
+    val result = resolveRollModifierSpell(alreadySpent, GuidanceRollModifier, Set(Fighter), Set(), 0, StrAbility)
     all {
       assert(result.fighter.concentrating),
       assert(result.fighter.activeEffects.contains(GuidanceAbilityCheckBonus)),

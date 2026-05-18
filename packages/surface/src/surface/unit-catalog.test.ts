@@ -127,6 +127,10 @@ const requiredFirstVerticalUnitIds = [
   "charm_person",
   "command",
   "dissonant_whispers",
+  "enhance_ability",
+  "enlarge_reduce",
+  "enthrall",
+  "find_traps",
   "expeditious_retreat",
   "feather_fall",
   "jump",
@@ -855,6 +859,288 @@ describe("SRD Unit catalog boundary", () => {
               },
             },
           },
+        },
+      ]);
+    }
+  });
+
+  test("decodes Enhance Ability as chosen-ability Ability Check Advantage with slot-scaled touched targets", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const enhanceAbility = result.catalog.requireUnit("enhance_ability");
+      expect(enhanceAbility.kind).toBe("spell");
+      if (enhanceAbility.kind !== "spell") return;
+      expect(enhanceAbility.mechanics.family).toBe("ongoing_effect");
+      if (enhanceAbility.mechanics.family !== "ongoing_effect") return;
+
+      expect(enhanceAbility.mechanics.level).toBe(2);
+      expect(enhanceAbility.mechanics.castingTime).toEqual({
+        kind: "action",
+      });
+      expect(enhanceAbility.mechanics.range).toEqual({ kind: "touch" });
+      expect(enhanceAbility.mechanics.duration).toEqual({
+        kind: "concentration",
+        upTo: { unit: "hour", amount: 1 },
+      });
+      expect(enhanceAbility.mechanics.attachment).toEqual({
+        kind: "hole",
+        holeId: "enhance_ability_target",
+        label: "target",
+        value: {
+          kind: "target",
+          selection: {
+            mode: "choose_up_to",
+            count: {
+              kind: "linear",
+              base: 1,
+              perSlotAboveBase: 1,
+              baseLevel: 2,
+            },
+            targetKinds: ["creature"],
+          },
+        },
+      });
+      expect(enhanceAbility.mechanics.operations).toEqual([
+        {
+          trigger: { kind: "passive" },
+          effect: {
+            kind: "modify_roll_advantage",
+            mode: "advantage",
+            affects: "self_roll",
+            on: ["ability_check"],
+            abilityFilter: {
+              kind: "hole",
+              holeId: "enhance_ability_chosen_ability",
+              label: "chosen ability",
+              value: {
+                kind: "choice",
+                label: "chosen ability",
+                options: ["str", "dex", "int", "wis", "cha"],
+              },
+            },
+          },
+        },
+      ]);
+    }
+  });
+
+  test("decodes Enthrall as save-gated Perception penalty over any-number creature targets", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const enthrall = result.catalog.requireUnit("enthrall");
+      expect(enthrall.kind).toBe("spell");
+      if (enthrall.kind !== "spell") return;
+      expect(enthrall.mechanics.family).toBe("activation");
+      if (enthrall.mechanics.family !== "activation") return;
+
+      expect(enthrall.mechanics.level).toBe(2);
+      expect(enthrall.mechanics.castingTime).toEqual({
+        kind: "action",
+      });
+      expect(enthrall.mechanics.range).toEqual({
+        kind: "point",
+        feet: 60,
+      });
+      expect(enthrall.mechanics.duration).toEqual({
+        kind: "concentration",
+        upTo: { unit: "minute", amount: 1 },
+      });
+      expect(enthrall.mechanics.phases).toEqual([
+        {
+          kind: "save_gate",
+          attachment: {
+            kind: "hole",
+            holeId: "enthrall_targets",
+            label: "targets",
+            value: {
+              kind: "target",
+              selection: {
+                mode: "any_number",
+                targetKinds: ["creature"],
+              },
+            },
+          },
+          ability: "wis",
+          dc: { kind: "caster_spell_save_dc" },
+          onFail: {
+            kind: "modify_roll_numeric",
+            on: ["ability_check"],
+            delta: { kind: "fixed_number", amount: 10, sign: "-" },
+            skillFilter: { kind: "fixed", skills: ["perception"] },
+          },
+          onSuccess: { kind: "none" },
+        },
+      ]);
+    }
+  });
+
+  test("decodes Find Traps as instantaneous trap detection without a target save", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const findTraps = result.catalog.requireUnit("find_traps");
+      expect(findTraps.kind).toBe("spell");
+      if (findTraps.kind !== "spell") return;
+      expect(findTraps.mechanics.family).toBe("activation");
+      if (findTraps.mechanics.family !== "activation") return;
+
+      expect(findTraps.mechanics.level).toBe(2);
+      expect(findTraps.mechanics.castingTime).toEqual({
+        kind: "action",
+      });
+      expect(findTraps.mechanics.range).toEqual({
+        kind: "point",
+        feet: 120,
+      });
+      expect(findTraps.mechanics.duration).toEqual({
+        kind: "instantaneous",
+      });
+      expect(findTraps.mechanics.phases).toEqual([
+        {
+          kind: "direct",
+          attachment: {
+            kind: "self",
+          },
+          effects: [
+            {
+              kind: "detect",
+              property: "traps",
+              radiusFeet: 120,
+            },
+          ],
+        },
+      ]);
+      expect(findTraps.description).toContain(
+        "reveals that a trap is present but not its location",
+      );
+    }
+  });
+
+  test("decodes Enlarge/Reduce as a creature-branch size and Strength-mode spell", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const enlargeReduce = result.catalog.requireUnit("enlarge_reduce");
+      expect(enlargeReduce.kind).toBe("spell");
+      if (enlargeReduce.kind !== "spell") return;
+      expect(enlargeReduce.mechanics.family).toBe("activation");
+      if (enlargeReduce.mechanics.family !== "activation") return;
+
+      expect(enlargeReduce.mechanics.level).toBe(2);
+      expect(enlargeReduce.mechanics.castingTime).toEqual({
+        kind: "action",
+      });
+      expect(enlargeReduce.mechanics.range).toEqual({
+        kind: "point",
+        feet: 30,
+      });
+      expect(enlargeReduce.mechanics.duration).toEqual({
+        kind: "concentration",
+        upTo: { unit: "minute", amount: 1 },
+      });
+
+      const phase = enlargeReduce.mechanics.phases[0];
+      expect(phase?.kind).toBe("save_gate");
+      if (phase?.kind !== "save_gate") return;
+      expect(phase.ability).toBe("con");
+      expect(phase.saveAppliesIf).toBe("unwilling_target");
+      expect(phase.attachment).toEqual({
+        kind: "hole",
+        holeId: "enlarge_reduce_target",
+        label: "creature target",
+        value: {
+          kind: "target",
+          selection: {
+            mode: "one",
+            targetKinds: ["creature"],
+          },
+        },
+      });
+      expect(phase.onSuccess).toEqual({ kind: "none" });
+
+      const modeChoice = phase.onFail;
+      expect(modeChoice.kind).toBe("choose_effect_mode");
+      if (modeChoice.kind !== "choose_effect_mode") return;
+      expect(modeChoice.label).toBe("Enlarge/Reduce effect");
+      expect(modeChoice.options).toEqual([
+        {
+          id: "enlarge",
+          displayName: "Enlarge",
+          effects: [
+            {
+              kind: "modify_size_category",
+              direction: "increase",
+              steps: 1,
+            },
+            {
+              kind: "modify_roll_advantage",
+              mode: "advantage",
+              on: ["ability_check"],
+              abilityFilter: ["str"],
+            },
+            {
+              kind: "modify_roll_advantage",
+              mode: "advantage",
+              on: ["saving_throw"],
+              saveAbilityFilter: ["str"],
+            },
+            {
+              kind: "modify_damage_numeric",
+              delta: {
+                kind: "fixed_dice",
+                dice: 1,
+                dieSize: 4,
+                sign: "+",
+              },
+              damageSourceFilter: {
+                kind: "attack_hit",
+                attackRollFilter: "weapon_or_unarmed_strike",
+              },
+            },
+          ],
+        },
+        {
+          id: "reduce",
+          displayName: "Reduce",
+          effects: [
+            {
+              kind: "modify_size_category",
+              direction: "decrease",
+              steps: 1,
+            },
+            {
+              kind: "modify_roll_advantage",
+              mode: "disadvantage",
+              on: ["ability_check"],
+              abilityFilter: ["str"],
+            },
+            {
+              kind: "modify_roll_advantage",
+              mode: "disadvantage",
+              on: ["saving_throw"],
+              saveAbilityFilter: ["str"],
+            },
+            {
+              kind: "modify_damage_numeric",
+              delta: {
+                kind: "fixed_dice",
+                dice: 1,
+                dieSize: 4,
+                sign: "-",
+              },
+              damageSourceFilter: {
+                kind: "attack_hit",
+                attackRollFilter: "weapon_or_unarmed_strike",
+              },
+              minimumDamageTotal: 1,
+            },
+          ],
         },
       ]);
     }

@@ -179,12 +179,13 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 469,
-      "percent": "84.4%",
+      "numerator": 472,
+      "percent": "84.9%",
       "rowsByStatus": {
         "accepted": 311,
-        "accepted-no-battle-effect": 158,
-        "battle-runtime-required": 83,
+        "accepted-no-battle-effect": 161,
+        "battle-runtime-required": 74,
+        "partial-battle-runtime": 6,
         "owner-evidence-required": 4
       }
     },
@@ -200,19 +201,19 @@
       "catalog-installed-owner-evidence-required": 5
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 316,
+      "catalog-installed-owner-evidence-present": 322,
       "non-runtime": 24,
-      "catalog-only/dead-for-now": 129,
-      "missing-authored-record": 75,
-      "catalog-installed-owner-evidence-required": 8,
-      "catalog-authored-executable-follow-up": 4
+      "catalog-only/dead-for-now": 132,
+      "missing-authored-record": 58,
+      "catalog-installed-owner-evidence-required": 14,
+      "catalog-authored-executable-follow-up": 6
     },
     "spellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 157,
-      "catalog-only/dead-for-now": 129,
-      "missing-authored-record": 74,
-      "catalog-installed-owner-evidence-required": 3,
-      "catalog-authored-executable-follow-up": 4
+      "catalog-installed-owner-evidence-present": 163,
+      "catalog-only/dead-for-now": 132,
+      "missing-authored-record": 57,
+      "catalog-installed-owner-evidence-required": 9,
+      "catalog-authored-executable-follow-up": 6
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -6263,16 +6264,30 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "enhance_ability",
+        "sourceRecordPath": "packages/surface/content/enhance_ability.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "enhance_ability"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit enhance_ability is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-MISSING-ENHANCE-ABILITY at packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "partial-battle-runtime"
     },
     {
       "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_enlarge_reduce",
@@ -6292,15 +6307,29 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "enlarge_reduce",
+        "sourceRecordPath": "packages/surface/content/enlarge_reduce.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "enlarge_reduce"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit enlarge_reduce is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/effect lifecycle plus promoted Quint parity; surface target selection plus battle-runtime object and item lifecycle",
+          "evidence": "Promote follow-up split L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME, L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH: L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME owns Promote the Enlarge/Reduce creature branch: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, willing target application, unwilling target Constitution save gate, cast-time Enlarge/Reduce mode choice, active size-category projection used by size-dependent runtime rules, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage with normal cancellation, Enlarge +1d4 and Reduce -1d4 minimum 1 damage for attacks with affected weapons or Unarmed Strikes, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without object-target behavior.; L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH owns Represent and promote the object branch: a target object that is neither worn nor carried, object size-category change and cleanup, carried/worn item size changes while the creature branch is active, dropped item normalization, and thrown weapon/ammunition normalization immediately after hit or miss if those item lifecycle facts belong to promoted runtime. Required output: Surface schema/content support for the object target constraint, runtime object/item lifecycle owner decision, focused tests, and coverage disposition that either supports the object branch or closes it with an accepted runtime-boundary reason.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME, L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH: L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME owns Promote the Enlarge/Reduce creature branch: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, willing target application, unwilling target Constitution save gate, cast-time Enlarge/Reduce mode choice, active size-category projection used by size-dependent runtime rules, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage with normal cancellation, Enlarge +1d4 and Reduce -1d4 minimum 1 damage for attacks with affected weapons or Unarmed Strikes, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without object-target behavior.; L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH owns Represent and promote the object branch: a target object that is neither worn nor carried, object size-category change and cleanup, carried/worn item size changes while the creature branch is active, dropped item normalization, and thrown weapon/ammunition normalization immediately after hit or miss if those item lifecycle facts belong to promoted runtime. Required output: Surface schema/content support for the object target constraint, runtime object/item lifecycle owner decision, focused tests, and coverage disposition that either supports the object branch or closes it with an accepted runtime-boundary reason.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {
@@ -6321,15 +6350,29 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "enthrall",
+        "sourceRecordPath": "packages/surface/content/enthrall.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "enthrall"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit enthrall is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/effect lifecycle plus promoted Quint parity",
+          "evidence": "Promote follow-up split L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME: L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME owns Promote Enthrall's battle-visible Perception subset: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied eligible creature target list after applying the fighting-caster-or-companions auto-success predicate at the table boundary, Wisdom save, failed-save active -10 modifier to Wisdom (Perception) Ability Checks, derived Passive Perception consequence from the same modifier, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Enthrall's Perception penalty without modeling social attention state.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME: L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME owns Promote Enthrall's battle-visible Perception subset: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied eligible creature target list after applying the fighting-caster-or-companions auto-success predicate at the table boundary, Wisdom save, failed-save active -10 modifier to Wisdom (Perception) Ability Checks, derived Passive Perception consequence from the same modifier, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Enthrall's Perception penalty without modeling social attention state.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {
@@ -8527,16 +8570,30 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "enhance_ability",
+        "sourceRecordPath": "packages/surface/content/enhance_ability.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "enhance_ability"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit enhance_ability is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-MISSING-ENHANCE-ABILITY at packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "partial-battle-runtime"
     },
     {
       "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_find_traps",
@@ -8553,19 +8610,39 @@
       "detail": "Find Traps (Divination; —)",
       "candidateUnitId": "find_traps",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "find_traps",
+        "sourceRecordPath": "packages/surface/content/find_traps.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "find_traps"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "exploration/detection owner",
+        "reason": "Trap presence, line of sight, non-location warning, and general-danger disclosure are exploration/detection facts supplied by the table rather than promoted battle runtime state."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit find_traps is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "exploration/detection owner",
+          "evidence": "Trap presence, line of sight, non-location warning, and general-danger disclosure are exploration/detection facts supplied by the table rather than promoted battle runtime state.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Trap presence, line of sight, non-location warning, and general-danger disclosure are exploration/detection facts supplied by the table rather than promoted battle runtime state.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_gentle_repose",
@@ -11032,16 +11109,30 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "enhance_ability",
+        "sourceRecordPath": "packages/surface/content/enhance_ability.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "enhance_ability"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit enhance_ability is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-MISSING-ENHANCE-ABILITY at packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "partial-battle-runtime"
     },
     {
       "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_enlarge_reduce",
@@ -11061,15 +11152,29 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "enlarge_reduce",
+        "sourceRecordPath": "packages/surface/content/enlarge_reduce.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "enlarge_reduce"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit enlarge_reduce is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/effect lifecycle plus promoted Quint parity; surface target selection plus battle-runtime object and item lifecycle",
+          "evidence": "Promote follow-up split L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME, L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH: L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME owns Promote the Enlarge/Reduce creature branch: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, willing target application, unwilling target Constitution save gate, cast-time Enlarge/Reduce mode choice, active size-category projection used by size-dependent runtime rules, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage with normal cancellation, Enlarge +1d4 and Reduce -1d4 minimum 1 damage for attacks with affected weapons or Unarmed Strikes, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without object-target behavior.; L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH owns Represent and promote the object branch: a target object that is neither worn nor carried, object size-category change and cleanup, carried/worn item size changes while the creature branch is active, dropped item normalization, and thrown weapon/ammunition normalization immediately after hit or miss if those item lifecycle facts belong to promoted runtime. Required output: Surface schema/content support for the object target constraint, runtime object/item lifecycle owner decision, focused tests, and coverage disposition that either supports the object branch or closes it with an accepted runtime-boundary reason.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME, L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH: L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME owns Promote the Enlarge/Reduce creature branch: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, willing target application, unwilling target Constitution save gate, cast-time Enlarge/Reduce mode choice, active size-category projection used by size-dependent runtime rules, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage with normal cancellation, Enlarge +1d4 and Reduce -1d4 minimum 1 damage for attacks with affected weapons or Unarmed Strikes, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without object-target behavior.; L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH owns Represent and promote the object branch: a target object that is neither worn nor carried, object size-category change and cleanup, carried/worn item size changes while the creature branch is active, dropped item normalization, and thrown weapon/ammunition normalization immediately after hit or miss if those item lifecycle facts belong to promoted runtime. Required output: Surface schema/content support for the object target constraint, runtime object/item lifecycle owner decision, focused tests, and coverage disposition that either supports the object branch or closes it with an accepted runtime-boundary reason.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {
@@ -11087,19 +11192,39 @@
       "detail": "Find Traps (Divination; —)",
       "candidateUnitId": "find_traps",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "find_traps",
+        "sourceRecordPath": "packages/surface/content/find_traps.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "find_traps"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "exploration/detection owner",
+        "reason": "Trap presence, line of sight, non-location warning, and general-danger disclosure are exploration/detection facts supplied by the table rather than promoted battle runtime state."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit find_traps is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "exploration/detection owner",
+          "evidence": "Trap presence, line of sight, non-location warning, and general-danger disclosure are exploration/detection facts supplied by the table rather than promoted battle runtime state.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Trap presence, line of sight, non-location warning, and general-danger disclosure are exploration/detection facts supplied by the table rather than promoted battle runtime state.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_flame_blade",
@@ -16098,16 +16223,30 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "enhance_ability",
+        "sourceRecordPath": "packages/surface/content/enhance_ability.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "enhance_ability"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit enhance_ability is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-MISSING-ENHANCE-ABILITY at packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "partial-battle-runtime"
     },
     {
       "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_find_traps",
@@ -16124,19 +16263,39 @@
       "detail": "Find Traps (Divination; —)",
       "candidateUnitId": "find_traps",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "find_traps",
+        "sourceRecordPath": "packages/surface/content/find_traps.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "find_traps"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "exploration/detection owner",
+        "reason": "Trap presence, line of sight, non-location warning, and general-danger disclosure are exploration/detection facts supplied by the table rather than promoted battle runtime state."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit find_traps is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "exploration/detection owner",
+          "evidence": "Trap presence, line of sight, non-location warning, and general-danger disclosure are exploration/detection facts supplied by the table rather than promoted battle runtime state.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Trap presence, line of sight, non-location warning, and general-danger disclosure are exploration/detection facts supplied by the table rather than promoted battle runtime state.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_gust_of_wind",
@@ -19625,15 +19784,18 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "dragons_breath",
+        "sourceRecordPath": "packages/surface/content/dragons_breath.json"
       },
       "catalogAdmission": {
         "state": "not-installed",
         "unitId": "dragons_breath"
       },
-      "finalDisposition": "missing-authored-record",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST, L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION: L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST owns Promote the Bonus Action spell invocation that spends a level-2-or-higher Spell Slot, chooses Acid, Cold, Fire, Lightning, or Poison once at cast time, targets one willing touched creature, starts caster-owned Concentration for up to 1 minute, and stores a target-attached active effect with the chosen damage type, caster spell save DC, and original slot level without duplicating Spell Access state or reauthoring damage-type options. Required output: Supported runtime owner evidence for Dragon's Breath initial casting, Spell Slot spending, damage-type choice retention, caster spell save DC retention, original slot level retention, willing target attachment, Concentration expiry, and active-effect cleanup.; L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION owns Discover and execute the attached target's Magic action while the spell remains active, using the stored caster spell save DC, chosen damage type, and original slot level to resolve a 15-foot Cone Dexterity save for half damage with slot scaling from the original cast. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for target-side action discovery, action economy spending, area membership input, save-for-half damage, slot scaling, and expiry behavior.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {
@@ -19654,16 +19816,30 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "enhance_ability",
+        "sourceRecordPath": "packages/surface/content/enhance_ability.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "enhance_ability"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit enhance_ability is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-MISSING-ENHANCE-ABILITY at packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "partial-battle-runtime"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_enlarge_reduce",
@@ -19683,15 +19859,29 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "enlarge_reduce",
+        "sourceRecordPath": "packages/surface/content/enlarge_reduce.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "enlarge_reduce"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit enlarge_reduce is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/effect lifecycle plus promoted Quint parity; surface target selection plus battle-runtime object and item lifecycle",
+          "evidence": "Promote follow-up split L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME, L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH: L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME owns Promote the Enlarge/Reduce creature branch: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, willing target application, unwilling target Constitution save gate, cast-time Enlarge/Reduce mode choice, active size-category projection used by size-dependent runtime rules, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage with normal cancellation, Enlarge +1d4 and Reduce -1d4 minimum 1 damage for attacks with affected weapons or Unarmed Strikes, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without object-target behavior.; L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH owns Represent and promote the object branch: a target object that is neither worn nor carried, object size-category change and cleanup, carried/worn item size changes while the creature branch is active, dropped item normalization, and thrown weapon/ammunition normalization immediately after hit or miss if those item lifecycle facts belong to promoted runtime. Required output: Surface schema/content support for the object target constraint, runtime object/item lifecycle owner decision, focused tests, and coverage disposition that either supports the object branch or closes it with an accepted runtime-boundary reason.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME, L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH: L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME owns Promote the Enlarge/Reduce creature branch: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, willing target application, unwilling target Constitution save gate, cast-time Enlarge/Reduce mode choice, active size-category projection used by size-dependent runtime rules, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage with normal cancellation, Enlarge +1d4 and Reduce -1d4 minimum 1 damage for attacks with affected weapons or Unarmed Strikes, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without object-target behavior.; L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH owns Represent and promote the object branch: a target object that is neither worn nor carried, object size-category change and cleanup, carried/worn item size changes while the creature branch is active, dropped item normalization, and thrown weapon/ammunition normalization immediately after hit or miss if those item lifecycle facts belong to promoted runtime. Required output: Surface schema/content support for the object target constraint, runtime object/item lifecycle owner decision, focused tests, and coverage disposition that either supports the object branch or closes it with an accepted runtime-boundary reason.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {
@@ -21698,15 +21888,29 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "enthrall",
+        "sourceRecordPath": "packages/surface/content/enthrall.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "enthrall"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit enthrall is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/effect lifecycle plus promoted Quint parity",
+          "evidence": "Promote follow-up split L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME: L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME owns Promote Enthrall's battle-visible Perception subset: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied eligible creature target list after applying the fighting-caster-or-companions auto-success predicate at the table boundary, Wisdom save, failed-save active -10 modifier to Wisdom (Perception) Ability Checks, derived Passive Perception consequence from the same modifier, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Enthrall's Perception penalty without modeling social attention state.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME: L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME owns Promote Enthrall's battle-visible Perception subset: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied eligible creature target list after applying the fighting-caster-or-companions auto-success predicate at the table boundary, Wisdom save, failed-save active -10 modifier to Wisdom (Perception) Ability Checks, derived Passive Perception consequence from the same modifier, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Enthrall's Perception penalty without modeling social attention state.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {
@@ -24841,15 +25045,18 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "dragons_breath",
+        "sourceRecordPath": "packages/surface/content/dragons_breath.json"
       },
       "catalogAdmission": {
         "state": "not-installed",
         "unitId": "dragons_breath"
       },
-      "finalDisposition": "missing-authored-record",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST, L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION: L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST owns Promote the Bonus Action spell invocation that spends a level-2-or-higher Spell Slot, chooses Acid, Cold, Fire, Lightning, or Poison once at cast time, targets one willing touched creature, starts caster-owned Concentration for up to 1 minute, and stores a target-attached active effect with the chosen damage type, caster spell save DC, and original slot level without duplicating Spell Access state or reauthoring damage-type options. Required output: Supported runtime owner evidence for Dragon's Breath initial casting, Spell Slot spending, damage-type choice retention, caster spell save DC retention, original slot level retention, willing target attachment, Concentration expiry, and active-effect cleanup.; L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION owns Discover and execute the attached target's Magic action while the spell remains active, using the stored caster spell save DC, chosen damage type, and original slot level to resolve a 15-foot Cone Dexterity save for half damage with slot scaling from the original cast. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for target-side action discovery, action economy spending, area membership input, save-for-half damage, slot scaling, and expiry behavior.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {
@@ -24870,16 +25077,30 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "enhance_ability",
+        "sourceRecordPath": "packages/surface/content/enhance_ability.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "enhance_ability"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit enhance_ability is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-MISSING-ENHANCE-ABILITY at packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "partial-battle-runtime"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_enlarge_reduce",
@@ -24899,15 +25120,29 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "enlarge_reduce",
+        "sourceRecordPath": "packages/surface/content/enlarge_reduce.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "enlarge_reduce"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit enlarge_reduce is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/effect lifecycle plus promoted Quint parity; surface target selection plus battle-runtime object and item lifecycle",
+          "evidence": "Promote follow-up split L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME, L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH: L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME owns Promote the Enlarge/Reduce creature branch: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, willing target application, unwilling target Constitution save gate, cast-time Enlarge/Reduce mode choice, active size-category projection used by size-dependent runtime rules, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage with normal cancellation, Enlarge +1d4 and Reduce -1d4 minimum 1 damage for attacks with affected weapons or Unarmed Strikes, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without object-target behavior.; L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH owns Represent and promote the object branch: a target object that is neither worn nor carried, object size-category change and cleanup, carried/worn item size changes while the creature branch is active, dropped item normalization, and thrown weapon/ammunition normalization immediately after hit or miss if those item lifecycle facts belong to promoted runtime. Required output: Surface schema/content support for the object target constraint, runtime object/item lifecycle owner decision, focused tests, and coverage disposition that either supports the object branch or closes it with an accepted runtime-boundary reason.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME, L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH: L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME owns Promote the Enlarge/Reduce creature branch: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, willing target application, unwilling target Constitution save gate, cast-time Enlarge/Reduce mode choice, active size-category projection used by size-dependent runtime rules, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage with normal cancellation, Enlarge +1d4 and Reduce -1d4 minimum 1 damage for attacks with affected weapons or Unarmed Strikes, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without object-target behavior.; L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH owns Represent and promote the object branch: a target object that is neither worn nor carried, object size-category change and cleanup, carried/worn item size changes while the creature branch is active, dropped item normalization, and thrown weapon/ammunition normalization immediately after hit or miss if those item lifecycle facts belong to promoted runtime. Required output: Surface schema/content support for the object target constraint, runtime object/item lifecycle owner decision, focused tests, and coverage disposition that either supports the object branch or closes it with an accepted runtime-boundary reason.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {

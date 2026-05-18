@@ -91,6 +91,7 @@ export function traceEffectAtomScaling(
     case "modify_roll_numeric":
     case "jack_of_all_trades_ability_check_bonus":
     case "modify_damage_numeric":
+    case "modify_size_category":
     case "modify_roll_advantage":
     case "suppress_roll_disadvantage":
     case "remove_equipment_requirement":

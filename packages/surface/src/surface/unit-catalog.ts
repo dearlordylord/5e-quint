@@ -48,8 +48,11 @@ import druidDruidicInput from "../../content/druid_druidic.json";
 import druidPrimalOrderInput from "../../content/druid_primal_order.json";
 import druidWildShapeInput from "../../content/druid_wild_shape.json";
 import eldritchBlastInput from "../../content/eldritch_blast.json";
+import enhanceAbilityInput from "../../content/enhance_ability.json";
+import enlargeReduceInput from "../../content/enlarge_reduce.json";
 import ensnaringStrikeInput from "../../content/ensnaring_strike.json";
 import entangleInput from "../../content/entangle.json";
+import enthrallInput from "../../content/enthrall.json";
 import expeditiousRetreatInput from "../../content/expeditious_retreat.json";
 import faerieFireInput from "../../content/faerie_fire.json";
 import featherFallInput from "../../content/feather_fall.json";
@@ -74,6 +77,7 @@ import falseLifeInput from "../../content/false_life.json";
 import fireBoltInput from "../../content/fire_bolt.json";
 import fireballInput from "../../content/fireball.json";
 import findFamiliarInput from "../../content/find_familiar.json";
+import findTrapsInput from "../../content/find_traps.json";
 import fogCloudInput from "../../content/fog_cloud.json";
 import guidanceInput from "../../content/guidance.json";
 import greaseInput from "../../content/grease.json";
@@ -407,8 +411,11 @@ export const srdUnitCollection = defineSrdUnitCollection({
     dissonantWhispersInput,
     divineFavorInput,
     divineSmiteInput,
+    enhanceAbilityInput,
+    enlargeReduceInput,
     ensnaringStrikeInput,
     entangleInput,
+    enthrallInput,
     expeditiousRetreatInput,
     faerieFireInput,
     featherFallInput,
@@ -416,6 +423,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     fireBoltInput,
     fireballInput,
     findFamiliarInput,
+    findTrapsInput,
     fogCloudInput,
     guidanceInput,
     greaseInput,

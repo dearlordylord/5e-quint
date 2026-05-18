@@ -48,6 +48,7 @@ module battleRuntimeArmorClass {
         | BlessD20RollBonus => false
         | GuidanceAbilityCheckBonus => false
         | PassWithoutTraceStealthBonus => false
+        | EnhanceAbilityCheckAdvantage(_) => false
         | ThaumaturgyBoomingVoice(_) => false
         | ResistanceDamageReduction(_) => false
         | DivineFavorWeaponDamageRider(_) => false

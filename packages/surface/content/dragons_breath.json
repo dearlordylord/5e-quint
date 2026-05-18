@@ -1,0 +1,110 @@
+{
+  "description": "You touch one willing creature and choose Acid, Cold, Fire, Lightning, or Poison. Until the spell ends, the target can take a Magic action to exhale a 15-foot Cone. Each creature in that area makes a Dexterity saving throw, taking 3d6 damage of the chosen type on a failed save or half as much damage on a successful one. Using a Higher-Level Spell Slot. The damage increases by 1d6 for each spell slot level above 2.",
+  "id": "dragons_breath",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "holeId": "dragons_breath_target",
+      "kind": "hole",
+      "label": "willing target",
+      "value": {
+        "kind": "target",
+        "selection": {
+          "disposition": "willing",
+          "mode": "one",
+          "targetKinds": [
+            "creature"
+          ]
+        }
+      }
+    },
+    "castingTime": {
+      "kind": "bonus_action"
+    },
+    "components": {
+      "m": "a hot pepper",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "level": 2,
+    "operations": [
+      {
+        "effect": {
+          "ability": "dex",
+          "attachment": {
+            "kind": "area",
+            "origin": {
+              "kind": "on_attached_creature"
+            },
+            "shape": {
+              "kind": "cone",
+              "lengthFeet": 15
+            }
+          },
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "kind": "save_gate",
+          "onFail": {
+            "amount": {
+              "axis": "slot",
+              "base": {
+                "dice": 3,
+                "dieSize": 6
+              },
+              "kind": "linear_per_level",
+              "perLevel": {
+                "dice": 1
+              },
+              "startingAtLevel": 2
+            },
+            "damageType": {
+              "holeId": "dragons_breath_damage_type",
+              "kind": "hole",
+              "label": "damage type",
+              "value": {
+                "kind": "choice",
+                "label": "damage type",
+                "options": [
+                  "acid",
+                  "cold",
+                  "fire",
+                  "lightning",
+                  "poison"
+                ]
+              }
+            },
+            "kind": "damage"
+          },
+          "onSuccess": {
+            "kind": "half_damage"
+          }
+        },
+        "trigger": {
+          "cost": {
+            "action": "magic",
+            "kind": "standard_action"
+          },
+          "kind": "on_attached_spends_action"
+        }
+      }
+    ],
+    "range": {
+      "kind": "touch"
+    },
+    "school": "transmutation"
+  },
+  "name": "Dragon's Breath",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Dragon's Breath"
+  }
+}

@@ -101,6 +101,8 @@ export const entangleUnitId = "entangle";
 
 export const eldritchBlastUnitId = "eldritch_blast";
 
+export const enhanceAbilityUnitId = "enhance_ability";
+
 export const ensnaringStrikeUnitId = "ensnaring_strike";
 
 export const expeditiousRetreatUnitId = "expeditious_retreat";

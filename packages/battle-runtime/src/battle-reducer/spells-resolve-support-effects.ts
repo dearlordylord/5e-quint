@@ -53,7 +53,7 @@ import {
   creatureTypeProtectionSpellTargetSelection,
   healingSpellTargetSelection,
   rollModifierSpellAffectedTargets,
-  rollModifierSpellSkillSelection,
+  rollModifierSpellEffectSelection,
   rollModifierSpellTargetSelection,
   scalarBuffSpellTargetSelection,
 } from "./spells-resolve-target-selection.ts";
@@ -395,7 +395,7 @@ export function resolveRollModifierSpellAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Roll modifier spells use target, optional skill, and optional Saving Throw fills.",
+      "Roll modifier spells use target, optional skill or ability, and optional Saving Throw fills.",
     );
   }
 
@@ -413,17 +413,17 @@ export function resolveRollModifierSpellAct(input: {
     );
   }
 
-  const skillSelection = rollModifierSpellSkillSelection(input);
-  if (skillSelection.tag === "needsHoles") {
+  const effectSelection = rollModifierSpellEffectSelection(input);
+  if (effectSelection.tag === "needsHoles") {
     return needsHolesResult(input.input.state, input.input.subject, [
-      skillSelection.hole,
+      effectSelection.hole,
     ]);
   }
-  if (skillSelection.tag === "invalid") {
+  if (effectSelection.tag === "invalid") {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      skillSelection.message,
+      effectSelection.message,
     );
   }
 
@@ -466,10 +466,8 @@ export function resolveRollModifierSpellAct(input: {
     : input.input.state;
   const effected = applyRollModifierSpellEffect(
     concentrationBase,
-    input.actorId,
     affectedTargets.targetIds,
-    input.invocation,
-    skillSelection.skill,
+    effectSelection.effect,
   );
   const resourced = spendSpellCastResources({
     state: effected,

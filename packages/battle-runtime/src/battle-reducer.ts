@@ -720,6 +720,12 @@ export type BattleActiveEffect =
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {
+      readonly kind: "abilityCheckRollMode";
+      readonly mode: AttackRollMode;
+      readonly ability: Ability;
+      readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleSpellEffectBase & {
       readonly kind: "thaumaturgyBoomingVoice";
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
@@ -2024,9 +2030,20 @@ export type RollModifierSpellTargeting =
       readonly kind: "selfAndChosenLegalTargets";
       readonly minTargets: 1;
     };
-export type RollModifierSpellEffect = Extract<
+export type D20RollModifierSpellEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "d20RollModifier" }
+>;
+export type AbilityCheckRollModeSpellEffect = Omit<
+  Extract<BattleActiveEffect, { readonly kind: "abilityCheckRollMode" }>,
+  "ability"
+>;
+export type RollModifierSpellEffect =
+  | D20RollModifierSpellEffect
+  | Extract<BattleActiveEffect, { readonly kind: "abilityCheckRollMode" }>;
+export type SelectedRollModifierSpellEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "d20RollModifier" | "abilityCheckRollMode" }
 >;
 export type ThaumaturgyBoomingVoiceSpellInvocation = {
   readonly access: ClassCantripSpellAccess;
@@ -2044,18 +2061,29 @@ type RollModifierSpellSaveGate = {
   readonly ability: Ability;
   readonly dc: DcSource;
 };
-export type RollModifierSpellInvocation = {
+type RollModifierSpellInvocationBase = {
   readonly access: PreparedSpellAccess | ClassCantripSpellAccess;
   readonly resource: SpellSlotInvocationResource | NoSpellInvocationResource;
   readonly procedure: "rollModifier";
   readonly spell: SpellRecord;
   readonly actionCost: "magicAction";
   readonly targeting: RollModifierSpellTargeting;
-  readonly effect: RollModifierSpellEffect;
   readonly rangeFeet: MovementFeet;
   readonly saveGate: RollModifierSpellSaveGate | null;
-  readonly skillChoices: readonly Skill[] | null;
 };
+export type RollModifierSpellInvocation = RollModifierSpellInvocationBase &
+  (
+    | {
+        readonly effect: D20RollModifierSpellEffect;
+        readonly skillChoices: readonly Skill[] | null;
+        readonly abilityChoices: null;
+      }
+    | {
+        readonly effect: AbilityCheckRollModeSpellEffect;
+        readonly skillChoices: null;
+        readonly abilityChoices: readonly Ability[];
+      }
+  );
 export type CreatureTypeProtectionSpellInvocation = {
   readonly access: PreparedSpellAccess;
   readonly resource: SpellSlotInvocationResource;
@@ -3648,10 +3676,12 @@ export type BattleSpellAbilityChoiceHole = {
   readonly holeId: BattleHoleId;
   readonly kind: "abilityChoice";
   readonly label: string;
-  readonly spell: Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "markedDamageRider"; readonly action: "cast" }
-  >;
+  readonly spell:
+    | Extract<
+        SupportedSpellInvocation,
+        { readonly procedure: "markedDamageRider"; readonly action: "cast" }
+      >
+    | Extract<SupportedSpellInvocation, { readonly procedure: "rollModifier" }>;
   readonly choices: readonly Ability[];
 };
 export type BattleThaumaturgyActiveOneMinuteEffectCountHole = {

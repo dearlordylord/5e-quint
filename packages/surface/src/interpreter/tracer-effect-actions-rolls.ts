@@ -22,6 +22,7 @@ export type ActionAndRollEffectAtom = Extract<
       | "modify_roll_numeric"
       | "jack_of_all_trades_ability_check_bonus"
       | "modify_damage_numeric"
+      | "modify_size_category"
       | "modify_roll_advantage"
       | "suppress_roll_disadvantage"
       | "remove_equipment_requirement"
@@ -112,11 +113,29 @@ export function traceActionAndRollEffectAtom(
     }
     case "modify_damage_numeric": {
       const id = ids("eff");
+      const damageSource =
+        e.damageSourceFilter === undefined
+          ? ""
+          : `\nsource: ${e.damageSourceFilter.attackRollFilter}`;
+      const minimum =
+        e.minimumDamageTotal === undefined
+          ? ""
+          : `\nminimum total: ${e.minimumDamageTotal}`;
       nodes.push({
         id,
         category: "effect",
         atomKind: "modify_damage_numeric",
-        label: `modify_damage_numeric\n${describeDelta(e.delta)}${describeWeaponFilter(e.weaponFilter)}`,
+        label: `modify_damage_numeric\n${describeDelta(e.delta)}${damageSource}${describeWeaponFilter(e.weaponFilter)}${minimum}`,
+      });
+      return id;
+    }
+    case "modify_size_category": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "modify_size_category",
+        label: `modify_size_category\n${e.direction} ${e.steps}`,
       });
       return id;
     }
@@ -138,6 +157,10 @@ export function traceActionAndRollEffectAtom(
             : "holeId" in e.abilityFilter
               ? `\nability: ${e.abilityFilter.label ?? e.abilityFilter.holeId}`
               : "";
+      const saveAbility =
+        e.saveAbilityFilter === undefined
+          ? ""
+          : `\nsave ability: ${e.saveAbilityFilter.join("/")}`;
       const contextRange =
         e.contextRangeFeet !== undefined
           ? `\ncontext: within ${e.contextRangeFeet} ft`
@@ -151,7 +174,7 @@ export function traceActionAndRollEffectAtom(
         id,
         category: "effect",
         atomKind: "modify_roll_advantage",
-        label: `modify_roll_advantage\n${e.mode} on ${e.on.join(", ")}${by}${condition}${ability}${spellSource}${saveSource}${contextRange}`,
+        label: `modify_roll_advantage\n${e.mode} on ${e.on.join(", ")}${by}${condition}${ability}${saveAbility}${spellSource}${saveSource}${contextRange}`,
       });
       return id;
     }

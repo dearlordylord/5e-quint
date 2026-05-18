@@ -4,7 +4,11 @@
 
 import { ATTACK_ROLL_MODES } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type { ArmorClass as BattleArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
-import { CREATURE_TYPES, STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
+import {
+  ABILITIES,
+  CREATURE_TYPES,
+  STANDARD_ACTION_KINDS,
+} from "@dnd/shared/game-facts";
 import {
   CONDITIONS as ALL_CONDITIONS,
   AbilityModifier,
@@ -82,6 +86,7 @@ import {
 } from "./domain-constants.ts";
 
 const BATTLE_SURFACE_SKILLS = SURFACE_SKILLS;
+const BATTLE_SURFACE_ABILITIES = ABILITIES;
 const FindFamiliarFormSelectionSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("normalNamedForm"),
@@ -1535,6 +1540,9 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       ),
       skillChoices: Schema.NullOr(
         Schema.Array(Schema.Literal(...BATTLE_SURFACE_SKILLS)),
+      ),
+      abilityChoices: Schema.NullOr(
+        Schema.Array(Schema.Literal(...BATTLE_SURFACE_ABILITIES)),
       ),
     }),
     Schema.Struct({

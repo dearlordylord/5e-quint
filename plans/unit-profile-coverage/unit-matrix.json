@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 374,
-      "numerator": 150,
-      "percent": "40.1%"
+      "denominator": 379,
+      "numerator": 154,
+      "percent": "40.6%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 446,
-      "numerator": 182,
-      "percent": "40.8%"
+      "denominator": 451,
+      "numerator": 186,
+      "percent": "41.2%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 183
+      "value": 187
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 118,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 183,
-      "numerator": 183,
+      "denominator": 187,
+      "numerator": 187,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "88.1%"
     },
     "supportedProfileCoverage": {
-      "denominator": 151,
+      "denominator": 155,
       "numerator": 118,
-      "percent": "78.1%"
+      "percent": "76.1%"
     }
   },
   "metricSemantics": [
@@ -2049,10 +2049,12 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
+      "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets or table-supplied area membership, optional skill or ability choice fills, and optional Saving Throw outcomes; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 numeric modifiers, and chosen-ability Ability Check roll-mode active effects.",
       "taskRefs": [
-        "SRDINV30B"
+        "SRDINV30B",
+        "L12G-MISSING-ENHANCE-ABILITY"
       ],
-      "title": "Spell invocation applies concentration d20 roll modifiers from target-list, area-selected, or skill-choice spell effects",
+      "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -5998,6 +6000,22 @@
         "spell.invocation-roll-modifier"
       ],
       "taskId": "SRDINV30B"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts include Enhance Ability chosen-ability Ability Check Advantage as a roll-modifier spell subset with one runtime target pending the per-target upcast follow-up.",
+      "profileIds": [
+        "spell.invocation-roll-modifier"
+      ],
+      "taskId": "L12G-MISSING-ENHANCE-ABILITY"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover Enhance Ability Magic Action Spell Slot casting, chosen ability fill, Concentration, and Ability Check Advantage projection for one target.",
+      "profileIds": [
+        "spell.invocation-roll-modifier"
+      ],
+      "taskId": "L12G-MISSING-ENHANCE-ABILITY"
     },
     {
       "claimKind": "completed-runtime-parity",
@@ -12014,10 +12032,12 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
+          "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets or table-supplied area membership, optional skill or ability choice fills, and optional Saving Throw outcomes; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 numeric modifiers, and chosen-ability Ability Check roll-mode active effects.",
           "taskRefs": [
-            "SRDINV30B"
+            "SRDINV30B",
+            "L12G-MISSING-ENHANCE-ABILITY"
           ],
-          "title": "Spell invocation applies concentration d20 roll modifiers from target-list, area-selected, or skill-choice spell effects",
+          "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -12073,10 +12093,12 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
+          "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets or table-supplied area membership, optional skill or ability choice fills, and optional Saving Throw outcomes; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 numeric modifiers, and chosen-ability Ability Check roll-mode active effects.",
           "taskRefs": [
-            "SRDINV30B"
+            "SRDINV30B",
+            "L12G-MISSING-ENHANCE-ABILITY"
           ],
-          "title": "Spell invocation applies concentration d20 roll modifiers from target-list, area-selected, or skill-choice spell effects",
+          "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -13065,6 +13087,117 @@
         "status": "installed"
       },
       "claim": {
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES",
+            "mechanic": "higher-level Spell Slot casts can target one additional creature per slot level above 2 and can choose a different ability for each target"
+          }
+        ],
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES",
+            "mechanic": "Promote level 3+ Enhance Ability casting so each additional target selected by the upcast can carry its own Strength, Dexterity, Intelligence, Wisdom, or Charisma choice without sharing one cast-level ability choice across all targets.",
+            "owner": "battle-runtime spell invocation target-list ability-choice lifecycle plus promoted Quint parity",
+            "requiredOutput": "Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for slot-scaled target count and per-target chosen Ability Check Advantage effects.",
+            "title": "Enhance Ability Upcast Per-Target Ability Choices"
+          }
+        ],
+        "futureProfileOwner": "battle-runtime spell invocation target-list ability-choice lifecycle plus promoted Quint parity",
+        "profileIds": [
+          "spell.invocation-roll-modifier"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "SRD Surface definition records level-2 Magic Action Spell Slot casting, Touch range, V/S/M components, Concentration up to 1 hour, and Strength/Dexterity/Intelligence/Wisdom/Charisma Ability Check Advantage choices without Constitution",
+          "Battle runtime admits prepared Enhance Ability through the roll-modifier spell profile, spends the Magic Action and Spell Slot, starts caster-owned Concentration, accepts one touched creature target, accepts one chosen ability from the SRD 5.2.1 list, and projects Ability Check Advantage for that ability with normal Advantage/Disadvantage cancellation"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-MISSING-ENHANCE-ABILITY"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-roll-modifier",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets or table-supplied area membership, optional skill or ability choice fills, and optional Saving Throw outcomes; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 numeric modifiers, and chosen-ability Ability Check roll-mode active effects.",
+          "taskRefs": [
+            "SRDINV30B",
+            "L12G-MISSING-ENHANCE-ABILITY"
+          ],
+          "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/enhance_ability.json",
+      "unitId": "enhance_ability"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME",
+            "mechanic": "Promote the Enlarge/Reduce creature branch: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, willing target application, unwilling target Constitution save gate, cast-time Enlarge/Reduce mode choice, active size-category projection used by size-dependent runtime rules, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage with normal cancellation, Enlarge +1d4 and Reduce -1d4 minimum 1 damage for attacks with affected weapons or Unarmed Strikes, and cleanup when Concentration or duration ends.",
+            "owner": "battle-runtime spell invocation/effect lifecycle plus promoted Quint parity",
+            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without object-target behavior.",
+            "title": "Enlarge Reduce Creature Runtime Support"
+          },
+          {
+            "id": "L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH",
+            "mechanic": "Represent and promote the object branch: a target object that is neither worn nor carried, object size-category change and cleanup, carried/worn item size changes while the creature branch is active, dropped item normalization, and thrown weapon/ammunition normalization immediately after hit or miss if those item lifecycle facts belong to promoted runtime.",
+            "owner": "surface target selection plus battle-runtime object and item lifecycle",
+            "requiredOutput": "Surface schema/content support for the object target constraint, runtime object/item lifecycle owner decision, focused tests, and coverage disposition that either supports the object branch or closes it with an accepted runtime-boundary reason.",
+            "title": "Enlarge Reduce Object Branch"
+          }
+        ],
+        "futureProfileOwner": "surface object target widening plus battle-runtime spell invocation/effect lifecycle and promoted Quint parity",
+        "reason": "Enlarge/Reduce is authored as an SRD Surface Spell Definition for the creature branch, including Magic Action Spell Slot casting, Concentration up to 1 minute, Constitution save only for unwilling creature targets, an Enlarge/Reduce mode choice, one-step size category changes, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage, and weapon-or-Unarmed-Strike attack-hit damage adjustment with the Reduce minimum-damage floor. Task 61 claims no promoted battle-runtime profile yet because runtime has no active size projection owner, no active Strength Saving Throw roll-mode projection from spell effects, no same-source weapon/Unarmed-Strike damage adjustment with subtract-and-floor semantics, and no object target or worn/carried item lifecycle owner.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/enlarge_reduce.json",
+      "unitId": "enlarge_reduce"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "profileIds": [
           "spell.invocation-after-hit-restraint-turn-start-damage"
         ],
@@ -13180,6 +13313,34 @@
       ],
       "sourceRecordPath": "packages/surface/content/entangle.json",
       "unitId": "entangle"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME",
+            "mechanic": "Promote Enthrall's battle-visible Perception subset: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied eligible creature target list after applying the fighting-caster-or-companions auto-success predicate at the table boundary, Wisdom save, failed-save active -10 modifier to Wisdom (Perception) Ability Checks, derived Passive Perception consequence from the same modifier, and cleanup when Concentration or duration ends.",
+            "owner": "battle-runtime spell invocation/effect lifecycle plus promoted Quint parity",
+            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Enthrall's Perception penalty without modeling social attention state.",
+            "title": "Enthrall Perception Penalty Runtime Support"
+          }
+        ],
+        "futureProfileOwner": "battle-runtime roll-modifier spell invocation plus table/social owner",
+        "reason": "Enthrall is authored as an SRD Surface Spell Definition with Magic Action Spell Slot casting, Concentration up to 1 minute, any-number creature target selection, a Wisdom save gate, and a failed-save -10 modifier to Wisdom (Perception) Ability Checks. Task 62 claims no promoted battle-runtime profile yet because runtime roll-modifier spell targeting has no unbounded any-number target-list projection, active d20 roll modifiers do not support fixed-number deltas such as -10, and the fighting-caster-or-companions auto-success predicate is allegiance/table state rather than a current battle-runtime target predicate. Passive Perception remains derived from the Wisdom (Perception) check bonus rather than duplicated as separate Surface state; broader social attention adjudication remains runtime-detached.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/enthrall.json",
+      "unitId": "enthrall"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -13733,6 +13894,29 @@
       },
       "claim": {
         "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "exploration/detection owner",
+          "reason": "Trap presence, line of sight, non-location warning, and general-danger disclosure are exploration/detection facts supplied by the table rather than promoted battle runtime state."
+        },
+        "reason": "Find Traps is authored as an SRD Surface Spell Definition with Magic Action Spell Slot casting, 120-foot range, Instantaneous duration, and trap-sensing metadata. Task 63 claims no promoted battle-runtime profile because trap qualification, line of sight, trap presence disclosure, the explicit non-location warning, and the general nature of trap danger are exploration/table knowledge facts outside promoted battle Unit profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/find_traps.json",
+      "unitId": "find_traps"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
           "kind": "table-spatial-derivation",
           "owner": "table/spatial owner",
           "reason": "Automatic area membership, line of sight, map illumination, pathfinding, wind derivation, and grid geometry remain runtime-detached table/spatial derivations outside the Fog Cloud runtime profile."
@@ -13839,10 +14023,12 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
+          "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets or table-supplied area membership, optional skill or ability choice fills, and optional Saving Throw outcomes; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 numeric modifiers, and chosen-ability Ability Check roll-mode active effects.",
           "taskRefs": [
-            "SRDINV30B"
+            "SRDINV30B",
+            "L12G-MISSING-ENHANCE-ABILITY"
           ],
-          "title": "Spell invocation applies concentration d20 roll modifiers from target-list, area-selected, or skill-choice spell effects",
+          "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -14796,10 +14982,12 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
+          "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets or table-supplied area membership, optional skill or ability choice fills, and optional Saving Throw outcomes; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 numeric modifiers, and chosen-ability Ability Check roll-mode active effects.",
           "taskRefs": [
-            "SRDINV30B"
+            "SRDINV30B",
+            "L12G-MISSING-ENHANCE-ABILITY"
           ],
-          "title": "Spell invocation applies concentration d20 roll modifiers from target-list, area-selected, or skill-choice spell effects",
+          "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -19204,6 +19392,46 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/dominate_person.json",
       "unitId": "dominate_person"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "disposition": {
+          "category": "srd-candidate",
+          "planningLane": "QMBT14-QMBT16",
+          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
+        },
+        "expectedCollectionId": "srd-5.2.1",
+        "status": "not-in-unit-catalog"
+      },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST",
+            "mechanic": "Promote the Bonus Action spell invocation that spends a level-2-or-higher Spell Slot, chooses Acid, Cold, Fire, Lightning, or Poison once at cast time, targets one willing touched creature, starts caster-owned Concentration for up to 1 minute, and stores a target-attached active effect with the chosen damage type, caster spell save DC, and original slot level without duplicating Spell Access state or reauthoring damage-type options.",
+            "owner": "battle-runtime spell invocation/effect lifecycle",
+            "requiredOutput": "Supported runtime owner evidence for Dragon's Breath initial casting, Spell Slot spending, damage-type choice retention, caster spell save DC retention, original slot level retention, willing target attachment, Concentration expiry, and active-effect cleanup.",
+            "title": "Dragon's Breath Initial Cast And Effect State"
+          },
+          {
+            "id": "L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION",
+            "mechanic": "Discover and execute the attached target's Magic action while the spell remains active, using the stored caster spell save DC, chosen damage type, and original slot level to resolve a 15-foot Cone Dexterity save for half damage with slot scaling from the original cast.",
+            "owner": "battle-runtime target-granted action lifecycle plus promoted Quint parity",
+            "requiredOutput": "Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for target-side action discovery, action economy spending, area membership input, save-for-half damage, slot scaling, and expiry behavior.",
+            "title": "Dragon's Breath Granted Magic Action"
+          }
+        ],
+        "futureProfileOwner": "battle-runtime spell invocation plus target-granted action lifecycle",
+        "reason": "Dragon's Breath is authored as an SRD Surface Spell Definition for the willing touched target, chosen damage type, concentration duration, target-spent Magic action, attached-creature-origin 15-foot Cone, Dexterity save-for-half damage, and slot scaling. Task 59 claims no battle-runtime support yet because promoted battle runtime has no target-granted spell action lifecycle for a non-caster target to spend a Magic action through a caster-owned concentration effect.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/dragons_breath.json",
+      "unitId": "dragons_breath"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

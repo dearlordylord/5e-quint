@@ -39,6 +39,7 @@ import {
   spellAreaChoiceHoleId,
   spellObjectTargetHoleId,
   spellAbilityChoiceHoleId,
+  spellRollModifierAbilityChoiceHoleId,
   spellRollModifierSkillChoiceHoleId,
   spellSavingThrowOutcomeHoleId,
   spellTargetAllocationHoleId,
@@ -743,6 +744,35 @@ export function spellFillSet(
     }
 
     if (fill.kind === "abilityChoice") {
+      if (invocation.procedure === "rollModifier") {
+        if (invocation.abilityChoices === null) {
+          return {
+            tag: "invalid",
+            message: "Spell ability choice does not match this spell act.",
+          };
+        }
+        if (fill.holeId !== spellRollModifierAbilityChoiceHoleId(invocation)) {
+          return {
+            tag: "invalid",
+            message:
+              "Spell ability choice must use the selected spell act ability-choice hole.",
+          };
+        }
+        if (!invocation.abilityChoices.includes(fill.value)) {
+          return {
+            tag: "invalid",
+            message: "Spell ability choice is not available for this spell.",
+          };
+        }
+        if (abilityChoice !== undefined) {
+          return {
+            tag: "invalid",
+            message: "Spell ability choice was filled twice.",
+          };
+        }
+        abilityChoice = fill.value;
+        continue;
+      }
       if (
         invocation.procedure !== "markedDamageRider" ||
         invocation.action !== "cast" ||
