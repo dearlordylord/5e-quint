@@ -3,21 +3,21 @@
 
 import type { Skill } from "@dnd/surface/surface/types";
 import {
-isScalarBuffTargetListInvocation,
-type ActionSpellBattleResolutionInput,
-type BattleHole,
-type BonusActionSpellBattleResolutionInput,
-type SupportedSpellInvocation
+  isScalarBuffTargetListInvocation,
+  type ActionSpellBattleResolutionInput,
+  type BattleHole,
+  type BonusActionSpellBattleResolutionInput,
+  type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import type { CombatantId } from "../identity.ts";
 import {
-sameCombatantIdSet,
-spellRollModifierSkillChoiceHole,
-spellSavingThrowOutcomeHole,
-spellTargetHole,
-spellTargetIsLegal,
-spellTargetListHole,
-validateSpellTargetList
+  sameCombatantIdSet,
+  spellRollModifierSkillChoiceHole,
+  spellSavingThrowOutcomeHole,
+  spellTargetHole,
+  spellTargetIsLegal,
+  spellTargetListHole,
+  validateSpellTargetList,
 } from "./spells-holes-fills.ts";
 
 import { validateSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
@@ -163,7 +163,10 @@ export function scalarBuffSpellTargetSelection(input: {
     };
   }
 
-  if (input.invocation.targeting.maxTargets === 1) {
+  if (
+    input.invocation.targeting.kind === "targetList" &&
+    input.invocation.targeting.maxTargets === 1
+  ) {
     if (input.fillSet.targetList !== undefined) {
       return {
         tag: "invalid",
@@ -301,7 +304,10 @@ export function rollModifierSpellTargetSelection(input: {
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
 }): RollModifierSpellTargetSelection {
-  if (input.invocation.targeting.maxTargets === 1) {
+  if (
+    input.invocation.targeting.kind === "targetList" &&
+    input.invocation.targeting.maxTargets === 1
+  ) {
     if (input.fillSet.targetList !== undefined) {
       return {
         tag: "invalid",

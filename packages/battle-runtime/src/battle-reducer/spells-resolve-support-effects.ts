@@ -7,11 +7,14 @@ import {
   maybeOpenReactionWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
+  type BattleFill,
   type BattleResolutionResult,
   type BonusActionSpellBattleResolutionInput,
+  type BattleTeleportDestination,
+  type BattleTeleportDestinationFact,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
-import type { CombatantId } from "../identity.ts";
+import { spellId, type CombatantId } from "../identity.ts";
 import { applyHpHealing, breakBattleConcentration } from "./damage-apply.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -31,6 +34,8 @@ import {
   spellTargetHole,
   spellTargetIsLegal,
   spellTargetListHole,
+  spellTeleportDestinationHole,
+  spellTeleportDestinationHoleId,
   thaumaturgyActiveOneMinuteEffectCountHole,
   validateSpellTargetList,
   validateScalarBuffTemporaryHitPointsFill,
@@ -878,6 +883,147 @@ export function resolveJumpMovementReplacementSpellAct(input: {
     invocation: input.invocation,
     errorState: input.input.state,
   });
+}
+
+export function resolveSelfTeleportSpellAct(input: {
+  readonly input: BonusActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "selfTeleport" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  if (
+    input.fillSet.attackRoll !== undefined ||
+    input.fillSet.targetAllocation !== undefined ||
+    input.fillSet.targetId !== undefined ||
+    input.fillSet.objectTarget !== undefined ||
+    input.fillSet.targetList !== undefined ||
+    input.fillSet.targetSpatialFacts.length > 0 ||
+    input.fillSet.beamFills.length > 0 ||
+    input.fillSet.damageRoll !== undefined ||
+    input.fillSet.attackBurstDamageRoll !== undefined ||
+    input.fillSet.healingRoll !== undefined ||
+    input.fillSet.skillChoice !== undefined ||
+    input.fillSet.abilityChoice !== undefined ||
+    input.fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
+    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.areaChoice !== undefined ||
+    input.fillSet.dancingLightsPlacement !== undefined ||
+    input.fillSet.damageTypeChoice !== undefined ||
+    input.fillSet.savingThrowOutcomes !== undefined ||
+    input.fillSet.movement !== undefined ||
+    input.fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
+    input.fillSet.damageDispositions.length > 0 ||
+    input.fillSet.concentrationSavingThrows.length > 0 ||
+    input.fillSet.spellDamageReductionRolls.length > 0
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Misty Step uses a teleport-destination fill only.",
+    );
+  }
+
+  if (input.fillSet.teleportDestination === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      spellTeleportDestinationHole(input.invocation, input.actorId),
+    ]);
+  }
+  const destinationFill = input.fillSet.teleportDestination;
+  const destination = destinationFill.value;
+  const validation = validateSelfTeleportDestination(
+    input.invocation,
+    input.actorId,
+    destinationFill,
+    destination,
+  );
+  if (validation !== null) {
+    return invalidResult(input.input.state, "invalidFill", validation);
+  }
+
+  const spellCastReactionWindow = maybeOpenReactionWindow(
+    input.input.state,
+    spellCastReactionFrame({
+      casterId: input.actorId,
+      invocation: input.invocation,
+      targetIds: [],
+      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+      castingResource: { kind: "bonusAction" },
+      continuation: {
+        kind: "replay",
+        subject: input.input.subject,
+        fills: input.input.fills,
+      },
+    }),
+    input.input.suppressedReactionTrigger,
+  );
+  if (spellCastReactionWindow !== null) {
+    return spellCastReactionWindow;
+  }
+
+  const resourced = spendSpellCastResources({
+    state: input.input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+  });
+  return resourced.tag === "invalid"
+    ? resourced
+    : {
+        tag: "resolved",
+        state: resourced.state,
+        snapshot: snapshotBattle(resourced.state),
+        teleports: [
+          {
+            kind: "selfTeleport",
+            actorId: input.actorId,
+            sourceSpellId: spellId(input.invocation.spell.id),
+            destination: selfTeleportOutcomeDestination(destination),
+            spendsMovement: false,
+            provokesOpportunityAttacks: false,
+            transportsWornAndCarriedEquipment: true,
+          },
+        ],
+      };
+}
+
+function selfTeleportOutcomeDestination(
+  destination: BattleTeleportDestinationFact,
+): BattleTeleportDestination {
+  return {
+    kind: destination.kind,
+    destinationId: destination.destinationId,
+    distanceFeet: destination.distanceFeet,
+  };
+}
+
+function validateSelfTeleportDestination(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "selfTeleport" }
+  >,
+  actorId: CombatantId,
+  fill: Extract<BattleFill, { readonly kind: "teleportDestination" }>,
+  destination: BattleTeleportDestinationFact,
+): string | null {
+  if (fill.holeId !== spellTeleportDestinationHoleId(invocation, actorId)) {
+    return "Teleport destination must use the selected spell act destination hole.";
+  }
+  if (destination.actorId !== actorId) {
+    return "Teleport destination table fact must match the caster.";
+  }
+  if (destination.spellId !== spellId(invocation.spell.id)) {
+    return "Teleport destination table fact must match the spell.";
+  }
+  if (destination.distanceFeet <= 0) {
+    return "Teleport destination must be more than 0 feet away.";
+  }
+  if (destination.distanceFeet > invocation.maxDistanceFeet) {
+    return `${invocation.spell.name} destination must be within ${invocation.maxDistanceFeet} feet.`;
+  }
+  return null;
 }
 
 export function resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct(input: {

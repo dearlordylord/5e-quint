@@ -1467,61 +1467,6 @@
       "unitId": "minor_illusion"
     },
     {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
-      "sourceRecordPath": "packages/surface/content/misty_step.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Misty Step",
-          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_misty_step",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 288,
-            "lineStart": 288,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Warlock spell list Misty Step",
-          "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_misty_step",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 371,
-            "lineStart": 371,
-            "path": ".references/srd-5.2.1/Classes/Warlock.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Misty Step",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_misty_step",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 223,
-            "lineStart": 223,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
-      "unitId": "misty_step"
-    },
-    {
       "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
@@ -1586,11 +1531,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "L12G-FOLLOWUP-MOONBEAM-SURFACE-LIFECYCLE: Replace the partial Moonbeam mechanics with a lossless SRD Surface shape for the point-origin Cylinder, Concentration duration, Dim Light area, Magic-action Cylinder movement up to 60 feet, the initial, area-moved, creature-enter, and end-turn Constitution Saving Throw triggers with the once-per-turn limiter, slot-scaled Radiant damage, and failed-save shape-shift reversion plus shape-shift prevention until the creature leaves the Cylinder. Owner: surface Spell Definition authoring. Required output: Moonbeam Dhall and JSON content, with schema and tracer support where required, represent the RAW lifecycle as executable source facts without encoding Dim Light, movement triggers, once-per-turn limiting, or shape-shift suppression as comments or lossy prose.; L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME: Promote Moonbeam as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, consumes caller-supplied Cylinder area identity and affected-creature facts for appearance saves, records a Concentration-owned movable area effect, exposes later Magic-action beam movement up to 60 feet from caller-supplied destination facts, resolves table-triggered area-moves-into-creature-space, creature-enters-area, and end-turn saves at most once per creature per turn, applies slot-scaled Radiant damage with half damage on success, projects Dim Light and Lightly Obscured facts for the active Cylinder, and performs concentration and duration cleanup. Owner: battle-runtime spell invocation/effect lifecycle plus table/spatial owner. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Moonbeam zone damage, movement, once-per-turn save limiting, Dim Light projection, resource spending, and cleanup while leaving automatic geometry and area membership derivation table-owned.; L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER: Execute the failed-save shape-shift rider by consuming a battle-visible shape-shifted and true-form state, reverting a shape-shifted target to its true form when it fails the Moonbeam Constitution Saving Throw, preventing that creature from shape-shifting again while it remains in the Moonbeam Cylinder, and clearing the prevention when it leaves the Cylinder or the spell ends without duplicating the shape-shifting source state. Owner: stat-block-control shape-shifting runtime plus battle-runtime spell effect lifecycle. Required output: Supported runtime profile or profile-subset evidence for Moonbeam's shape-shift reversion and suppression rider integrated with the promoted shape-shifting owner, including focused tests and Quint/runtime parity for failed save, successful save, exit cleanup, and spell cleanup.",
       "sourceRecordPath": "packages/surface/content/moonbeam.json",
       "sourceRows": [
         {
@@ -1606,8 +1554,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
       "unitId": "moonbeam"
     },
     {
@@ -1640,17 +1588,15 @@
       "unitId": "paladin_fighting_style"
     },
     {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "Pass without Trace's changing aura membership and non-caster chosen affected creatures depend on caller-supplied table/spatial facts at cast time, and leaving no tracks is pursuit/exploration state outside promoted battle runtime.",
       "sourceRecordPath": "packages/surface/content/pass_without_trace.json",
       "sourceRows": [
         {
@@ -1678,8 +1624,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
       "unitId": "pass_without_trace"
     },
     {
@@ -2440,7 +2386,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 94,
+      "count": 95,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2498,6 +2444,7 @@
         "longstrider",
         "mage_armor",
         "magic_missile",
+        "misty_step",
         "monk_martial_arts",
         "monk_unarmored_defense",
         "monk_unarmored_movement",
@@ -2541,7 +2488,7 @@
       ]
     },
     {
-      "count": 24,
+      "count": 21,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
@@ -2557,9 +2504,6 @@
         "lesser_restoration",
         "magic_weapon",
         "mind_spike",
-        "misty_step",
-        "moonbeam",
-        "pass_without_trace",
         "prayer_of_healing",
         "protection_from_poison",
         "ray_of_enfeeblement",
@@ -2572,7 +2516,7 @@
       ]
     },
     {
-      "count": 12,
+      "count": 13,
       "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
@@ -2585,13 +2529,14 @@
         "detect_poison_and_disease",
         "identify",
         "minor_illusion",
+        "pass_without_trace",
         "silent_image",
         "speak_with_animals",
         "thaumaturgy"
       ]
     },
     {
-      "count": 8,
+      "count": 9,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
@@ -2600,6 +2545,7 @@
         "druid_wild_shape",
         "monk_monks_focus",
         "monk_uncanny_metabolism",
+        "moonbeam",
         "see_invisibility",
         "sorcerer_font_of_magic",
         "sorcerer_metamagic"
@@ -2631,44 +2577,44 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 470,
-      "percent": "84.5%",
+      "numerator": 469,
+      "percent": "84.4%",
       "rowsByStatus": {
-        "accepted": 306,
-        "accepted-no-battle-effect": 164,
-        "battle-runtime-required": 82,
+        "accepted": 311,
+        "accepted-no-battle-effect": 158,
+        "battle-runtime-required": 83,
         "owner-evidence-required": 4
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 67,
+      "denominator": 68,
       "numerator": 11,
-      "percent": "16.4%"
+      "percent": "16.2%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 67,
+      "denominator": 68,
       "numerator": 16,
-      "percent": "23.9%"
+      "percent": "23.5%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 94,
+      "denominator": 95,
       "numerator": 30,
-      "percent": "31.9%"
+      "percent": "31.6%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 146,
-      "numerator": 94,
-      "percent": "64.4%"
+      "numerator": 95,
+      "percent": "65.1%"
     },
     "strictTargetClosure": {
       "denominator": 146,
-      "numerator": 122,
-      "percent": "83.6%"
+      "numerator": 125,
+      "percent": "85.6%"
     }
   },
   "openFrontier": [
     {
-      "count": 24,
+      "count": 21,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
@@ -2684,9 +2630,6 @@
         "lesser_restoration",
         "magic_weapon",
         "mind_spike",
-        "misty_step",
-        "moonbeam",
-        "pass_without_trace",
         "prayer_of_healing",
         "protection_from_poison",
         "ray_of_enfeeblement",
@@ -6150,9 +6093,9 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 94,
+        "denominator": 95,
         "numerator": 30,
-        "percent": "31.9%"
+        "percent": "31.6%"
       }
     },
     "units": [
@@ -7144,6 +7087,18 @@
           {
             "joinStatus": "unmapped",
             "obligations": [],
+            "profileId": "spell.invocation-self-teleport",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "misty_step"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
             "profileId": "unit-feature.martial-arts-attack-projection",
             "profileKind": "passive"
           }
@@ -7950,20 +7905,20 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
-      "missing": 24,
-      "profile-subset-supported": 8,
-      "supported-profile": 94,
-      "unsupported-profile": 20
+      "missing": 21,
+      "profile-subset-supported": 9,
+      "supported-profile": 95,
+      "unsupported-profile": 21
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 8,
+      "blocked-follow-up-split": 9,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 6,
-      "closed-runtime-detached-table-adjudication": 12,
-      "open-runtime-behavior": 24,
-      "supported-profile": 94
+      "closed-runtime-detached-table-adjudication": 13,
+      "open-runtime-behavior": 21,
+      "supported-profile": 95
     },
-    "nonSupportedFrontier": 52,
+    "nonSupportedFrontier": 51,
     "strictDenominator": 146
   }
 }

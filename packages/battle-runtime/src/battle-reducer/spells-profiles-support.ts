@@ -47,6 +47,7 @@ import {
   type RollModifierSpellTargeting,
   type ScalarBuffSpellEffect,
   type ScalarBuffSpellTargeting,
+  type SelfTeleportSpellInvocation,
   type SupportedSpellInvocation,
   type ThaumaturgyBoomingVoiceSpellInvocation,
 } from "../battle-reducer.ts";
@@ -60,6 +61,7 @@ import type { CombatantId } from "../identity.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import { activeMarkedDamageRiderEffect } from "./damage-helpers.ts";
 import {
+  BATTLE_D20_ROLL_MODIFIER_DIE_SIZES,
   HUNTERS_MARK_FINDING_SKILLS,
   PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES,
   PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS,
@@ -134,6 +136,30 @@ export function supportedPreparedJumpMovementReplacementSpellProfile(
           },
         ];
   });
+}
+
+export function supportedPreparedSelfTeleportSpellProfile(
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  const projection = selfTeleportSpellProjection(spell);
+  if (projection === null) {
+    return [];
+  }
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] =>
+    Number(slot.spellLevel) < spell.mechanics.level
+      ? []
+      : [
+          {
+            access: { tag: "prepared" },
+            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+            procedure: "selfTeleport",
+            spell,
+            actionCost: "bonusAction",
+            ...projection,
+          },
+        ],
+  );
 }
 
 export function supportedPreparedFeatherFallMitigationSpellProfile(
@@ -306,6 +332,37 @@ function jumpMovementReplacementSpellProjection(
           expiresAt: { kind: "duration", durationTicks: durationTicks.right },
         },
       };
+}
+
+function selfTeleportSpellProjection(
+  spell: SpellRecord,
+): Pick<SelfTeleportSpellInvocation, "maxDistanceFeet"> | null {
+  if (
+    spell.name !== "Misty Step" ||
+    spell.provenance.kind !== "srd-5.2.1" ||
+    spell.provenance.section !== "Spells/Descriptions-M-P#Misty Step" ||
+    spell.mechanics.family !== "activation" ||
+    spell.mechanics.level !== 2 ||
+    spell.mechanics.castingTime.kind !== "bonus_action" ||
+    spell.mechanics.range.kind !== "self" ||
+    spell.mechanics.duration.kind !== "instantaneous" ||
+    spell.mechanics.phases.length !== 1
+  ) {
+    return null;
+  }
+  const phase = spell.mechanics.phases[0];
+  const effect = phase?.kind === "direct" ? phase.effects?.[0] : undefined;
+  if (
+    phase?.kind !== "direct" ||
+    phase.attachment.kind !== "self" ||
+    phase.effects?.length !== 1 ||
+    effect?.kind !== "teleport" ||
+    effect.destination !== "unoccupied_visible_space" ||
+    effect.maxFeet !== 30
+  ) {
+    return null;
+  }
+  return { maxDistanceFeet: movementFeet(effect.maxFeet) };
 }
 
 function jumpMovementReplacementTargetCount(
@@ -1823,18 +1880,22 @@ export function rollModifierSpellProjection(
   if (spell.mechanics.castingTime.kind !== "action") {
     return null;
   }
-  const rangeFeet = scalarBuffSpellRangeFeet(spell.mechanics.range);
   const expiresAt = scalarBuffActiveEffectExpiration(
     actorId,
     spell.mechanics.duration,
   );
-  if (rangeFeet === null || expiresAt === null) {
+  if (expiresAt === null) {
     return null;
   }
 
   if (spell.mechanics.family === "ongoing_effect") {
+    const rangeFeet = rollModifierSpellRangeFeet(
+      spell.mechanics.range,
+      spell.mechanics.attachment,
+    );
     const operation = spell.mechanics.operations[0];
     if (
+      rangeFeet === null ||
       spell.mechanics.operations.length !== 1 ||
       operation?.trigger.kind !== "passive" ||
       operation.effect.kind !== "modify_roll_numeric"
@@ -1867,7 +1928,9 @@ export function rollModifierSpellProjection(
     return null;
   }
   const phase = spell.mechanics.phases[0];
+  const rangeFeet = scalarBuffSpellRangeFeet(spell.mechanics.range);
   if (
+    rangeFeet === null ||
     spell.mechanics.phases.length !== 1 ||
     phase?.kind !== "save_gate" ||
     phase.onFail.kind !== "modify_roll_numeric" ||
@@ -1902,6 +1965,14 @@ export function rollModifierSpellTargeting(
   spellLevel: number,
   slotLevel: SpellSlotLevel,
 ): RollModifierSpellTargeting | null {
+  if (
+    attachment.kind === "area" &&
+    attachment.origin.kind === "self" &&
+    attachment.shape.kind === "emanation" &&
+    typeof attachment.shape.radiusFeet === "number"
+  ) {
+    return { kind: "selfAndChosenLegalTargets", minTargets: 1 };
+  }
   if (attachment.kind !== "hole" || attachment.value.kind !== "target") {
     return null;
   }
@@ -2015,10 +2086,34 @@ export function rollModifierDelta(
   delta: Extract<EffectAtom, { readonly kind: "modify_roll_numeric" }>["delta"],
 ): BattleD20RollModifierDelta | null {
   return delta.kind === "fixed_dice" &&
-    delta.dieSize === 4 &&
+    rollModifierDeltaDieSizeIsSupported(delta.dieSize) &&
     (delta.sign === "+" || delta.sign === "-")
     ? { dice: delta.dice, dieSize: delta.dieSize, sign: delta.sign }
     : null;
+}
+
+function rollModifierSpellRangeFeet(
+  range: SpellRecord["mechanics"]["range"],
+  attachment: Attachment,
+): MovementFeet | null {
+  if (
+    range.kind === "self" &&
+    attachment.kind === "area" &&
+    attachment.origin.kind === "self" &&
+    attachment.shape.kind === "emanation" &&
+    typeof attachment.shape.radiusFeet === "number"
+  ) {
+    return movementFeet(attachment.shape.radiusFeet);
+  }
+  return scalarBuffSpellRangeFeet(range);
+}
+
+function rollModifierDeltaDieSizeIsSupported(
+  dieSize: number,
+): dieSize is BattleD20RollModifierDelta["dieSize"] {
+  return BATTLE_D20_ROLL_MODIFIER_DIE_SIZES.includes(
+    dieSize as BattleD20RollModifierDelta["dieSize"],
+  );
 }
 
 export function rollModifierKindsAreSupported(

@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.passive-saving-throw-roll-mode unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.creature-type-protection-and-charm spell.find-familiar-lifecycle spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-independent-attack-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-dancing-lights-movable-dim-light spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-self-ability-check-advantage spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.passive-saving-throw-roll-mode unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.creature-type-protection-and-charm spell.find-familiar-lifecycle spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-independent-attack-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-dancing-lights-movable-dim-light spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-self-ability-check-advantage spell.invocation-self-teleport spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-self-ability-check-advantage
@@ -26,6 +26,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-feather-fall-mitigation
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-forced-reaction-movement
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-jump-movement-replacement
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-self-teleport
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-sanctuary-targeting-interdiction
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.creature-type-protection-and-charm
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-object-light
@@ -141,6 +142,12 @@ module battleRuntime {
   //   Action Concentration spell that immediately grants Dash and stores only
   //   the permission to take Dash again as a Bonus Action while the spell
   //   lasts; Speed and Movement budget updates stay owned by Dash.
+  // - Spells/Descriptions-M-P.md lines 409-418, Rules-Glossary.md lines
+  //   1032-1040, and UBIQUITOUS_LANGUAGE.md: Misty Step is a Bonus Action
+  //   instantaneous spell that teleports the caster up to 30 feet to an
+  //   unoccupied visible space. Teleportation spends no Movement and does not
+  //   provoke Opportunity Attacks; destination visibility and occupancy are
+  //   table spatial facts.
   // - Classes/Monk.md lines 102-106, Classes/Rogue.md lines 109-111,
   //   Classes/Bard.md lines 332-334, and Playing-the-Game.md lines 326-332:
   //   Deflect Attacks, Uncanny Dodge, and Cutting Words are Reactions that
@@ -760,6 +767,33 @@ module battleRuntime {
       state
     }
 
+  pure def mistyStepMaxTeleportFeet(): int = 30
+
+  pure def mistyStepDestinationIsLegal(distanceFeet: int, unoccupiedVisibleDestination: bool): bool =
+    unoccupiedVisibleDestination and distanceFeet > 0 and distanceFeet <= mistyStepMaxTeleportFeet
+
+  pure def mistyStepTeleportSpendsMovement(): bool = false
+
+  pure def mistyStepTeleportProvokesOpportunityAttacks(): bool = false
+
+  pure def mistyStepTeleportTransportsWornAndCarriedEquipment(): bool = true
+
+  pure def resolveMistyStepSpell(state: BattleState, distanceFeet: int, unoccupiedVisibleDestination: bool): BattleState =
+    if (
+      currentActor(state) == Fighter and
+      state.bonusActionAvailable and
+      canExpendSpellSlotThisTurn(state) and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(fighterHasRage(state)) and
+      mistyStepDestinationIsLegal(distanceFeet, unoccupiedVisibleDestination)
+    ) {
+      val afterCasterEarlyEnd = battleStateAfterSanctuaryEarlyEndForActor(state, Fighter)
+      commitActorSpellSlotUse({ ...afterCasterEarlyEnd, bonusActionAvailable: false }, Fighter)
+    } else {
+      state
+    }
+
   pure def jumpMovementReplacementFighter(
     state: BattleState,
     movementCost: int,
@@ -841,6 +875,7 @@ module battleRuntime {
       | BaneRollModifier => 3 + (if (slotLevel > 1) slotLevel - 1 else 0)
       | BlessRollModifier => 3 + (if (slotLevel > 1) slotLevel - 1 else 0)
       | GuidanceRollModifier => 1
+      | PassWithoutTraceRollModifier => Set(Fighter, Goblin).size()
     }
 
   pure def rollModifierActiveEffect(invocation: RollModifierSpell): ActiveEffect =
@@ -848,6 +883,7 @@ module battleRuntime {
       | BaneRollModifier => BaneD20RollPenalty
       | BlessRollModifier => BlessD20RollBonus
       | GuidanceRollModifier => GuidanceAbilityCheckBonus
+      | PassWithoutTraceRollModifier => PassWithoutTraceStealthBonus
     }
 
   pure def rollModifierRequiresFailedSave(invocation: RollModifierSpell): bool =
@@ -855,6 +891,13 @@ module battleRuntime {
 
   pure def rollModifierSpendsLevelOneSlot(invocation: RollModifierSpell): bool =
     invocation != GuidanceRollModifier
+
+  pure def rollModifierSelectedTargetsValid(invocation: RollModifierSpell, selectedTargets: Set[Actor], slotLevel: int): bool = {
+    val targetCount = selectedTargets.size()
+    targetCount >= 1 and
+      targetCount <= rollModifierMaximumTargets(invocation, slotLevel) and
+      (invocation != PassWithoutTraceRollModifier or selectedTargets.contains(Fighter))
+  }
 
   pure def rollModifierTargetedState(
     state: BattleState,
@@ -874,13 +917,11 @@ module battleRuntime {
     failedSaveTargets: Set[Actor],
     slotLevel: int,
   ): BattleState = {
-    val targetCount = selectedTargets.size()
-    val validTargetCount = targetCount >= 1 and targetCount <= rollModifierMaximumTargets(invocation, slotLevel)
     val affectedTargets =
       if (rollModifierRequiresFailedSave(invocation)) failedSaveTargets else selectedTargets
     if (
       currentActor(state) == Fighter and
-      validTargetCount and
+      rollModifierSelectedTargetsValid(invocation, selectedTargets, slotLevel) and
       failedSaveTargets.forall(target => selectedTargets.contains(target)) and
       state.actionAvailable and
       (not(rollModifierSpendsLevelOneSlot(invocation)) or canExpendSpellSlotThisTurn(state)) and

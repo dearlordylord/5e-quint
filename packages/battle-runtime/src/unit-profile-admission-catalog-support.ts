@@ -107,6 +107,8 @@ export const expeditiousRetreatUnitId = "expeditious_retreat";
 
 export const jumpUnitId = "jump";
 
+export const mistyStepUnitId = "misty_step";
+
 export const searingSmiteUnitId = "searing_smite";
 
 export const trueStrikeUnitId = "true_strike";
@@ -184,6 +186,8 @@ export const longstriderUnitId = "longstrider";
 export const mageArmorUnitId = "mage_armor";
 
 export const magicMissileUnitId = "magic_missile";
+
+export const passWithoutTraceUnitId = "pass_without_trace";
 
 export const poisonSprayUnitId = "poison_spray";
 

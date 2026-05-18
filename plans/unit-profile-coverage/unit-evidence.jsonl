@@ -236,3 +236,5 @@
 {"unitId":"ranger_deft_explorer","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-AUTHOR-RANGER-FIGHTING-STYLE","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"ranger_fighting_style","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-AUTHOR-RANGER-FIGHTING-STYLE","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"warlock_magical_cunning","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-AUTHOR-WARLOCK-MAGICAL-CUNNING","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
+{"unitId":"misty_step","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-SPELL-MISTY-STEP","ownerPath":"packages/battle-runtime/src/unit-profile-admission-misty-step.test.ts"}}
+{"unitId":"pass_without_trace","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-SPELL-PASS-WITHOUT-TRACE","ownerPath":"packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"}}

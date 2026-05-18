@@ -7,6 +7,7 @@ import {
   battleObjectId,
   battleTablePositionId,
   discoverBattleActs,
+  spellId,
   type AvailableBattleAct,
   type BattleFill,
   type BattleHole,
@@ -64,16 +65,23 @@ export function bonusSpellAct(input: {
   readonly state: BattleState;
   readonly spellId: string;
 }): BonusActionSpellAct {
-  const act = discoverBattleActs(input.state).find(
-    (candidate): candidate is BonusActionSpellAct =>
-      candidate.subject.tag === "bonusActionSpell" &&
-      candidate.subject.invocation.spellId === input.spellId,
-  );
+  const act = maybeBonusSpellAct(input);
   expect(act).toBeDefined();
   if (act === undefined) {
     throw new Error(`Expected ${input.spellId} Bonus Action spell act.`);
   }
   return act;
+}
+
+export function maybeBonusSpellAct(input: {
+  readonly state: BattleState;
+  readonly spellId: string;
+}): BonusActionSpellAct | undefined {
+  return discoverBattleActs(input.state).find(
+    (candidate): candidate is BonusActionSpellAct =>
+      candidate.subject.tag === "bonusActionSpell" &&
+      candidate.subject.invocation.spellId === input.spellId,
+  );
 }
 
 export function bonusSpellActForItem(input: {
@@ -249,6 +257,26 @@ export function knownWillingSpellTargetFill(
         spellId,
       },
     ],
+  };
+}
+
+export function teleportDestinationFill(input: {
+  readonly hole: Extract<BattleHole, { readonly kind: "teleportDestination" }>;
+  readonly destinationId?: string;
+  readonly distanceFeet?: number;
+}): Extract<BattleFill, { readonly kind: "teleportDestination" }> {
+  return {
+    kind: "teleportDestination",
+    holeId: input.hole.holeId,
+    value: {
+      kind: "unoccupiedVisibleDestination",
+      actorId: input.hole.actorId,
+      spellId: spellId(input.hole.spell.spell.id),
+      destinationId: battleTablePositionId(
+        input.destinationId ?? "misty-step-destination",
+      ),
+      distanceFeet: movementFeet(input.distanceFeet ?? 30),
+    },
   };
 }
 

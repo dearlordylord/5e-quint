@@ -3540,6 +3540,11 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
     // prefill this projection-only hole with an empty fact set before submit.
     return [];
   }
+  if (hole.kind === "teleportDestination") {
+    throw new Error(
+      "Battle runtime MBT does not model teleport destination holes.",
+    );
+  }
   return [
     Match.value(hole).pipe(
     Match.when({ kind: "targetChoice" }, () => "TargetChoice" as const),

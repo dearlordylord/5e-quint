@@ -20,11 +20,11 @@
 --     skillFilter=[stealth], delta=+10 flat
 --
 -- Selection nuance: RAW says "you and each creature you choose" —
--- caster-picked subset of creatures within the aura. The content
--- surface models the aura geometry (area + emanation); the selection
--- of which creatures benefit within the aura is caller/session agenda
--- (spatial + player-choice). Practical consequence: engine sees "all
--- in aura", session applies the +10 to caster + chosen creatures.
+-- caster plus a caster-picked subset of creatures within the aura.
+-- The content surface models the aura geometry (area + emanation);
+-- battle runtime uses a caster-included target-list fill at cast time,
+-- with caller/session facts supplying which chosen non-caster creatures
+-- are in the aura.
 --
 -- DM AGENDA. "Leave no tracks" is world-layer / pursuit agenda
 -- (§B movement-conversion). Not encoded.

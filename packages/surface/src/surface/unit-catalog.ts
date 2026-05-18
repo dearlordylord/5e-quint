@@ -96,6 +96,7 @@ import massHealingWordInput from "../../content/mass_healing_word.json";
 import masteryCleaveInput from "../../content/mastery_cleave.json";
 import masterySapInput from "../../content/mastery_sap.json";
 import masteryToppleInput from "../../content/mastery_topple.json";
+import mistyStepInput from "../../content/misty_step.json";
 import minorIllusionInput from "../../content/minor_illusion.json";
 import monkDeflectAttacksInput from "../../content/monk_deflect_attacks.json";
 import monkMartialArtsInput from "../../content/monk_martial_arts.json";
@@ -112,6 +113,7 @@ import paladinFightingStyleInput from "../../content/paladin_fighting_style.json
 import paladinLayOnHandsInput from "../../content/paladin_lay_on_hands.json";
 import paladinPaladinsSmiteInput from "../../content/paladin_paladins_smite.json";
 import paladinWeaponMasteryInput from "../../content/paladin_weapon_mastery.json";
+import passWithoutTraceInput from "../../content/pass_without_trace.json";
 import poisonSprayInput from "../../content/poison_spray.json";
 import protectionFromEvilAndGoodInput from "../../content/protection_from_evil_and_good.json";
 import produceFlameInput from "../../content/produce_flame.json";
@@ -426,6 +428,8 @@ export const srdUnitCollection = defineSrdUnitCollection({
     jumpInput,
     lightInput,
     longstriderInput,
+    mistyStepInput,
+    passWithoutTraceInput,
     poisonSprayInput,
     protectionFromEvilAndGoodInput,
     produceFlameInput,

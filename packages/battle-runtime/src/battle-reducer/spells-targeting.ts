@@ -21,6 +21,7 @@ import {
   type BattleSpellTargetListHole,
   type BattleSpellTargetListSpatialFact,
   type BattleState,
+  type BattleTeleportDestinationHole,
   type BattleObjectTargetChoiceHole,
   type BattleCreatureState,
   type BattleTargetChoiceHole,
@@ -286,6 +287,9 @@ export function spellTargetListHole(
   invocation: TargetListSpellInvocation,
 ): BattleSpellTargetListHole {
   const holeKey = `battle:spell:target-list:${invocation.spell.id}`;
+  const choices = [...state.combatants.keys()].filter((id) =>
+    spellTargetHasNonSpatialPrerequisites(state, actorId, id, invocation),
+  );
   return {
     kind: "spellTargetList",
     holeId: spellTargetListHoleId(invocation),
@@ -293,12 +297,33 @@ export function spellTargetListHole(
     label: `${invocation.spell.name} targets`,
     spell: invocation,
     minTargets: invocation.targeting.minTargets,
-    maxTargets: invocation.targeting.maxTargets,
+    maxTargets: targetListHoleMaxTargets(invocation, choices.length),
     requiresTableSpatialFact: true,
-    choices: [...state.combatants.keys()].filter((id) =>
-      spellTargetHasNonSpatialPrerequisites(state, actorId, id, invocation),
-    ),
+    choices,
   };
+}
+
+export function targetListTargetingHasFixedMaximum(
+  targeting: TargetListSpellInvocation["targeting"],
+): targeting is TargetListSpellInvocation["targeting"] & {
+  readonly maxTargets: number;
+} {
+  return "maxTargets" in targeting;
+}
+
+function targetListTargetingRequiresCaster(
+  targeting: TargetListSpellInvocation["targeting"],
+): boolean {
+  return targeting.kind === "selfAndChosenLegalTargets";
+}
+
+function targetListHoleMaxTargets(
+  invocation: TargetListSpellInvocation,
+  choiceCount: number,
+): number {
+  return targetListTargetingHasFixedMaximum(invocation.targeting)
+    ? invocation.targeting.maxTargets
+    : choiceCount;
 }
 
 export function commandOptionChoiceHole(
@@ -351,6 +376,46 @@ export function spellAreaChoiceHoleId(
   >,
 ): BattleHoleId {
   return holeId(`battle:spell:area-choice:${invocation.spell.id}`);
+}
+
+export function spellTeleportDestinationHole(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "selfTeleport" }
+  >,
+  actorId: CombatantId,
+): BattleTeleportDestinationHole {
+  const holeKey = spellTeleportDestinationHoleKey(invocation, actorId);
+  return {
+    kind: "teleportDestination",
+    holeId: spellTeleportDestinationHoleId(invocation, actorId),
+    holeInstanceKey: holeInstanceKey(holeKey),
+    label: `${invocation.spell.name} destination`,
+    spell: invocation,
+    actorId,
+    maxDistanceFeet: invocation.maxDistanceFeet,
+    requiresTableSpatialFact: true,
+  };
+}
+
+export function spellTeleportDestinationHoleId(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "selfTeleport" }
+  >,
+  actorId: CombatantId,
+): BattleHoleId {
+  return holeId(spellTeleportDestinationHoleKey(invocation, actorId));
+}
+
+function spellTeleportDestinationHoleKey(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "selfTeleport" }
+  >,
+  actorId: CombatantId,
+): string {
+  return `battle:spell:teleport-destination:${actorId}:${invocation.spell.id}`;
 }
 
 export function spellTargetIsLegal(
@@ -606,8 +671,17 @@ export function validateSpellTargetList(
   if (targetIds.length < invocation.targeting.minTargets) {
     return `${invocation.spell.name} must target at least ${invocation.targeting.minTargets} creature.`;
   }
-  if (targetIds.length > invocation.targeting.maxTargets) {
+  if (
+    targetListTargetingHasFixedMaximum(invocation.targeting) &&
+    targetIds.length > invocation.targeting.maxTargets
+  ) {
     return `${invocation.spell.name} can target at most ${invocation.targeting.maxTargets} creatures.`;
+  }
+  if (
+    targetListTargetingRequiresCaster(invocation.targeting) &&
+    !targetIds.includes(actorId)
+  ) {
+    return `${invocation.spell.name} must include the caster among its targets.`;
   }
   const seen = new Set<CombatantId>();
   for (const targetId of targetIds) {

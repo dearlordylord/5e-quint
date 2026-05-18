@@ -24,6 +24,7 @@ import {
   type BattleState,
   type ReadiedSpellInvocation,
   type SupportedSpellInvocation,
+  type TargetListSpellInvocation,
 } from "../battle-reducer.ts";
 import {
   spellActTurnResourceAvailable,
@@ -47,11 +48,15 @@ import {
   spellTargetAllocationHole,
   spellTargetHole,
   spellTargetListHole,
+  spellTeleportDestinationHole,
   thaumaturgyActiveOneMinuteEffectCountHole,
   supportedSpellInvocationMatchesRef,
   supportedSpellInvocationRef,
 } from "./spells-holes-fills.ts";
-import { spellDancingLightsPlacementHole } from "./spells-targeting.ts";
+import {
+  spellDancingLightsPlacementHole,
+  targetListTargetingHasFixedMaximum,
+} from "./spells-targeting.ts";
 import { dancingLightsFromEffect } from "./spells-active-effects.ts";
 import { attackTargetHole } from "./hole-helpers.ts";
 import { spellCastReactionFactsHole } from "./spell-cast-reaction-frame.ts";
@@ -131,6 +136,21 @@ export function discoverSupportedSpellInvocations(
           },
         ];
       }
+      if (invocation.procedure === "selfTeleport") {
+        return [
+          {
+            subject: {
+              tag: "bonusActionSpell" as const,
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
+            },
+            label: invocation.spell.name,
+            summary: spellInvocationCastSummary(invocation),
+            initialHoles: [spellTeleportDestinationHole(invocation, actorId)],
+          },
+        ];
+      }
       if (
         invocation.procedure === "saveGatedDamage" ||
         invocation.procedure === "saveGatedCondition" ||
@@ -197,10 +217,9 @@ export function discoverSupportedSpellInvocations(
           : [...castActs, ...readiedSpellAct(state, actorId, invocation)];
       }
       if (invocation.procedure === "rollModifier") {
-        const targetHole =
-          invocation.targeting.maxTargets > 1
-            ? spellTargetListHole(state, actorId, invocation)
-            : spellTargetHole(state, actorId, invocation);
+        const targetHole = targetListSpellUsesTargetListHole(invocation)
+          ? spellTargetListHole(state, actorId, invocation)
+          : spellTargetHole(state, actorId, invocation);
         const initialHoles =
           targetHole.choices.length === 0
             ? []
@@ -560,10 +579,9 @@ export function discoverSupportedSpellInvocations(
         if (!isScalarBuffTargetListInvocation(invocation)) {
           return [];
         }
-        const targetHole =
-          invocation.targeting.maxTargets > 1
-            ? spellTargetListHole(state, actorId, invocation)
-            : spellTargetHole(state, actorId, invocation);
+        const targetHole = targetListSpellUsesTargetListHole(invocation)
+          ? spellTargetListHole(state, actorId, invocation)
+          : spellTargetHole(state, actorId, invocation);
         const castActs =
           targetHole.choices.length === 0
             ? []
@@ -586,10 +604,9 @@ export function discoverSupportedSpellInvocations(
         invocation.procedure ===
         "conditionImmunityAndTurnStartTemporaryHitPoints"
       ) {
-        const targetHole =
-          invocation.targeting.maxTargets > 1
-            ? spellTargetListHole(state, actorId, invocation)
-            : spellTargetHole(state, actorId, invocation);
+        const targetHole = targetListSpellUsesTargetListHole(invocation)
+          ? spellTargetListHole(state, actorId, invocation)
+          : spellTargetHole(state, actorId, invocation);
         const castActs =
           targetHole.choices.length === 0
             ? []
@@ -641,7 +658,7 @@ export function discoverSupportedSpellInvocations(
         invocation.procedure === "repeatedDamageAllocation"
           ? spellTargetAllocationHole(state, actorId, invocation)
           : invocation.procedure === "directHitPointRestoration" &&
-              invocation.targeting.maxTargets > 1
+              targetListSpellUsesTargetListHole(invocation)
             ? spellTargetListHole(state, actorId, invocation)
             : spellTargetHole(state, actorId, invocation);
       const castActs =
@@ -803,6 +820,9 @@ export function spellInvocationCastSummary(
   if (invocation.procedure === "sanctuaryTargetingInterdiction") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
+  if (invocation.procedure === "selfTeleport") {
+    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot and teleport to a caller-supplied unoccupied visible destination within ${invocation.maxDistanceFeet} feet.`;
+  }
   if (invocation.procedure === "featherFallMitigation") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
@@ -855,6 +875,7 @@ export function spellActivationInvocationCastSummary(
         | "dancingLightsSeparateCast"
         | "dancingLightsCombinedCast"
         | "jumpMovementReplacement"
+        | "selfTeleport"
         | "sanctuaryTargetingInterdiction"
         | "featherFallMitigation";
     }
@@ -893,6 +914,9 @@ export function spellSubjectTagForInvocation(
     return "bonusActionSpell";
   }
   if (invocation.procedure === "jumpMovementReplacement") {
+    return "bonusActionSpell";
+  }
+  if (invocation.procedure === "selfTeleport") {
     return "bonusActionSpell";
   }
   if (invocation.procedure === "sanctuaryTargetingInterdiction") {
@@ -972,6 +996,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "markedDamageRider" &&
     invocation.procedure !== "expeditiousRetreatDash" &&
     invocation.procedure !== "jumpMovementReplacement" &&
+    invocation.procedure !== "selfTeleport" &&
     invocation.procedure !== "sanctuaryTargetingInterdiction" &&
     invocation.procedure !== "saveGatedCondition" &&
     invocation.procedure !== "saveGatedAttackRollAdvantage" &&
@@ -1002,6 +1027,7 @@ export function readiedSpellAct(
     invocation.procedure === "markedDamageRider" ||
     invocation.procedure === "expeditiousRetreatDash" ||
     invocation.procedure === "jumpMovementReplacement" ||
+    invocation.procedure === "selfTeleport" ||
     invocation.procedure === "sanctuaryTargetingInterdiction" ||
     invocation.procedure === "afterHitDamage" ||
     invocation.procedure === "spellAttackSequence" ||
@@ -1037,6 +1063,15 @@ export function readiedSpellAct(
     summary: `Ready ${invocation.spell.name} for ${reactionTriggerLabel(trigger)}; holding the spell requires Concentration until the start of your next turn.`,
     initialHoles: [],
   }));
+}
+
+function targetListSpellUsesTargetListHole(
+  invocation: TargetListSpellInvocation,
+): boolean {
+  if (!targetListTargetingHasFixedMaximum(invocation.targeting)) {
+    return true;
+  }
+  return invocation.targeting.maxTargets > 1;
 }
 
 // activeOngoingFeaturesPreventSpellcasting also belongs to cluster K but

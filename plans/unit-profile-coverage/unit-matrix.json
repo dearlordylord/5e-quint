@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 374,
-      "numerator": 148,
-      "percent": "39.6%"
+      "numerator": 150,
+      "percent": "40.1%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 446,
-      "numerator": 180,
-      "percent": "40.4%"
+      "numerator": 182,
+      "percent": "40.8%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,62 +59,62 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 181
+      "value": 183
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 117,
-      "numerator": 117,
+      "denominator": 118,
+      "numerator": 118,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 181,
-      "numerator": 181,
+      "denominator": 183,
+      "numerator": 183,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 65,
-      "numerator": 65,
+      "denominator": 66,
+      "numerator": 66,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 65,
-      "numerator": 65,
+      "denominator": 66,
+      "numerator": 66,
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 86,
+      "denominator": 87,
       "numerator": 19,
-      "percent": "22.1%"
+      "percent": "21.8%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 86,
+      "denominator": 87,
       "numerator": 24,
-      "percent": "27.9%"
+      "percent": "27.6%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 117,
+      "denominator": 118,
       "numerator": 41,
-      "percent": "35%"
+      "percent": "34.7%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 65,
-      "numerator": 65,
+      "denominator": 66,
+      "numerator": 66,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 65,
-      "numerator": 65,
+      "denominator": 66,
+      "numerator": 66,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 117,
+      "denominator": 118,
       "numerator": 104,
-      "percent": "88.9%"
+      "percent": "88.1%"
     },
     "supportedProfileCoverage": {
-      "denominator": 149,
-      "numerator": 117,
-      "percent": "78.5%"
+      "denominator": 151,
+      "numerator": 118,
+      "percent": "78.1%"
     }
   },
   "metricSemantics": [
@@ -2052,7 +2052,7 @@
       "taskRefs": [
         "SRDINV30B"
       ],
-      "title": "Spell invocation applies concentration d20 roll modifiers from target-list or skill-choice spell effects",
+      "title": "Spell invocation applies concentration d20 roll modifiers from target-list, area-selected, or skill-choice spell effects",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -2518,20 +2518,45 @@
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
         }
       ]
+    },
+    {
+      "id": "spell.invocation-self-teleport",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "sourceBoundary": "The runtime consumes the authored Misty Step spell and a caller-supplied unoccupied visible destination within 30 feet. It spends the caster's Bonus Action and Spell Slot, emits a self-teleport outcome, and records that teleportation spends no Movement, provokes no Opportunity Attacks, and carries worn and carried equipment. Automatic visibility, occupancy, blocked-destination fallback, and map-position derivation remain table/spatial facts outside this runtime boundary.",
+      "taskRefs": [
+        "L12G-SPELL-MISTY-STEP"
+      ],
+      "title": "Spell invocation spends a Bonus Action and Spell Slot to teleport the caster to a caller-supplied unoccupied visible destination",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-misty-step.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 86,
+        "denominator": 87,
         "numerator": 19,
-        "percent": "22.1%"
+        "percent": "21.8%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 86,
+        "denominator": 87,
         "numerator": 24,
-        "percent": "27.9%"
+        "percent": "27.6%"
       }
     },
     "profileKinds": [
@@ -3250,6 +3275,12 @@
         "obligations": [],
         "profileId": "character-sheet.pact-slot-recovery",
         "profileKind": "character-sheet"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-self-teleport",
+        "profileKind": "spell-invocation"
       }
     ],
     "sourceArtifacts": {
@@ -3260,9 +3291,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 117,
+          "denominator": 118,
           "numerator": 41,
-          "percent": "35%"
+          "percent": "34.7%"
         }
       },
       "units": [
@@ -4470,6 +4501,18 @@
             }
           ],
           "unitId": "mastery_topple"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-self-teleport",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "misty_step"
         },
         {
           "joinStatus": "unmapped",
@@ -7053,6 +7096,22 @@
         "character-sheet.pact-slot-recovery"
       ],
       "taskId": "L12G-AUTHOR-WARLOCK-MAGICAL-CUNNING"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Misty Step's Bonus Action level-2 Spell Slot spend, unoccupied visible destination within 30 feet, no Movement spend, no Opportunity Attack provocation, and worn/carried equipment transport.",
+      "profileIds": [
+        "spell.invocation-self-teleport"
+      ],
+      "taskId": "L12G-SPELL-MISTY-STEP"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover Misty Step catalog admission, Bonus Action spell discovery, teleport destination fill validation, Spell Slot spend, self-teleport outcome, no Movement spend, no Opportunity Attack provocation, and rejection without level-2-or-higher slots.",
+      "profileIds": [
+        "spell.invocation-self-teleport"
+      ],
+      "taskId": "L12G-SPELL-MISTY-STEP"
     }
   ],
   "units": [
@@ -11958,7 +12017,7 @@
           "taskRefs": [
             "SRDINV30B"
           ],
-          "title": "Spell invocation applies concentration d20 roll modifiers from target-list or skill-choice spell effects",
+          "title": "Spell invocation applies concentration d20 roll modifiers from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -12017,7 +12076,7 @@
           "taskRefs": [
             "SRDINV30B"
           ],
-          "title": "Spell invocation applies concentration d20 roll modifiers from target-list or skill-choice spell effects",
+          "title": "Spell invocation applies concentration d20 roll modifiers from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -13783,7 +13842,7 @@
           "taskRefs": [
             "SRDINV30B"
           ],
-          "title": "Spell invocation applies concentration d20 roll modifiers from target-list or skill-choice spell effects",
+          "title": "Spell invocation applies concentration d20 roll modifiers from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -14618,6 +14677,143 @@
       ],
       "sourceRecordPath": "packages/surface/content/longstrider.json",
       "unitId": "longstrider"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "table/spatial owner",
+          "reason": "Automatic destination visibility, occupancy, blocked-destination fallback, and map-position derivation remain caller-supplied table/spatial facts outside the Misty Step runtime profile."
+        },
+        "profileIds": [
+          "spell.invocation-self-teleport"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Bonus Action level-2-or-higher Spell Slot casting",
+          "self teleport to a caller-supplied unoccupied visible destination within 30 feet",
+          "teleport outcome spends no Movement and provokes no Opportunity Attacks",
+          "worn and carried equipment travels with the caster"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-misty-step.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-SPELL-MISTY-STEP"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-self-teleport",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the authored Misty Step spell and a caller-supplied unoccupied visible destination within 30 feet. It spends the caster's Bonus Action and Spell Slot, emits a self-teleport outcome, and records that teleportation spends no Movement, provokes no Opportunity Attacks, and carries worn and carried equipment. Automatic visibility, occupancy, blocked-destination fallback, and map-position derivation remain table/spatial facts outside this runtime boundary.",
+          "taskRefs": [
+            "L12G-SPELL-MISTY-STEP"
+          ],
+          "title": "Spell invocation spends a Bonus Action and Spell Slot to teleport the caster to a caller-supplied unoccupied visible destination",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-misty-step.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/misty_step.json",
+      "unitId": "misty_step"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "table/spatial and exploration/tracking owner",
+              "reason": "Pass without Trace's changing aura membership and non-caster chosen affected creatures depend on caller-supplied table/spatial facts at cast time, and leaving no tracks is pursuit/exploration state outside promoted battle runtime."
+            },
+            "mechanic": "automatic Emanation membership, changing membership as creatures move, pursuit/track discovery, and no-tracks world state"
+          }
+        ],
+        "profileIds": [
+          "spell.invocation-roll-modifier"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action level-2-or-higher Spell Slot casting",
+          "Concentration-owned +10 bonus to Dexterity (Stealth) Ability Checks on the caster and each selected creature",
+          "self-origin 30-foot Emanation target eligibility through caller-supplied table/spatial facts",
+          "caster-included affected creatures represented by a target-list fill at cast time",
+          "Concentration cleanup and recast replacement remove the Stealth modifier"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-SPELL-PASS-WITHOUT-TRACE"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-roll-modifier",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV30B"
+          ],
+          "title": "Spell invocation applies concentration d20 roll modifiers from target-list, area-selected, or skill-choice spell effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/pass_without_trace.json",
+      "unitId": "pass_without_trace"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -21223,24 +21419,6 @@
       "authoredSurfaceDuplicateIdCount": 1,
       "catalogAdmission": {
         "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/misty_step.json",
-      "unitId": "misty_step"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
           "category": "unsupported-widening-pressure",
           "planningLane": "QMBT18",
           "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
@@ -21332,6 +21510,35 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-MOONBEAM-SURFACE-LIFECYCLE",
+            "mechanic": "Replace the partial Moonbeam mechanics with a lossless SRD Surface shape for the point-origin Cylinder, Concentration duration, Dim Light area, Magic-action Cylinder movement up to 60 feet, the initial, area-moved, creature-enter, and end-turn Constitution Saving Throw triggers with the once-per-turn limiter, slot-scaled Radiant damage, and failed-save shape-shift reversion plus shape-shift prevention until the creature leaves the Cylinder.",
+            "owner": "surface Spell Definition authoring",
+            "requiredOutput": "Moonbeam Dhall and JSON content, with schema and tracer support where required, represent the RAW lifecycle as executable source facts without encoding Dim Light, movement triggers, once-per-turn limiting, or shape-shift suppression as comments or lossy prose.",
+            "title": "Moonbeam Surface Area Lifecycle"
+          },
+          {
+            "id": "L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME",
+            "mechanic": "Promote Moonbeam as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, consumes caller-supplied Cylinder area identity and affected-creature facts for appearance saves, records a Concentration-owned movable area effect, exposes later Magic-action beam movement up to 60 feet from caller-supplied destination facts, resolves table-triggered area-moves-into-creature-space, creature-enters-area, and end-turn saves at most once per creature per turn, applies slot-scaled Radiant damage with half damage on success, projects Dim Light and Lightly Obscured facts for the active Cylinder, and performs concentration and duration cleanup.",
+            "owner": "battle-runtime spell invocation/effect lifecycle plus table/spatial owner",
+            "requiredOutput": "Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Moonbeam zone damage, movement, once-per-turn save limiting, Dim Light projection, resource spending, and cleanup while leaving automatic geometry and area membership derivation table-owned.",
+            "title": "Moonbeam Movable Zone Runtime"
+          },
+          {
+            "id": "L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER",
+            "mechanic": "Execute the failed-save shape-shift rider by consuming a battle-visible shape-shifted and true-form state, reverting a shape-shifted target to its true form when it fails the Moonbeam Constitution Saving Throw, preventing that creature from shape-shifting again while it remains in the Moonbeam Cylinder, and clearing the prevention when it leaves the Cylinder or the spell ends without duplicating the shape-shifting source state.",
+            "owner": "stat-block-control shape-shifting runtime plus battle-runtime spell effect lifecycle",
+            "requiredOutput": "Supported runtime profile or profile-subset evidence for Moonbeam's shape-shift reversion and suppression rider integrated with the promoted shape-shifting owner, including focused tests and Quint/runtime parity for failed save, successful save, exit cleanup, and spell cleanup.",
+            "title": "Moonbeam Shape-Shifting Rider Runtime"
+          }
+        ],
+        "futureProfileOwner": "surface Spell Definition authoring plus battle-runtime movable area-effect lifecycle plus stat-block-control shape-shifting runtime",
+        "reason": "Moonbeam is authored as an SRD Surface Spell Definition, but its executable shape is not a safe runtime source for the level 1-2 gate: the local SRD passage requires a movable 5-foot-radius, 40-foot-high Cylinder with Dim Light, initial and recurring Constitution Saving Throws when the spell appears, when the area moves into a creature's space, when a creature enters, and when a creature ends its turn there, a once-per-turn save limit, slot-scaled Radiant damage, Concentration cleanup, and a failed-save shape-shift reversion and suppression rider. Task 38 claims no battle-runtime support and leaves the row blocked by the concrete follow-up tasks listed on this claim.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -21366,24 +21573,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/paladin_epic_boon.json",
       "unitId": "paladin_epic_boon"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/pass_without_trace.json",
-      "unitId": "pass_without_trace"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
