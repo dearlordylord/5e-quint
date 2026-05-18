@@ -71,6 +71,7 @@ const requiredFirstVerticalUnitIds = [
   "fighter_improved_critical",
   "barbarian_danger_sense",
   "barbarian_fast_movement",
+  "bard_expertise",
   "bard_jack_of_all_trades",
   ...task183ClassFeatureUnitIds,
   ...task184WeaponMasteryUnitIds,

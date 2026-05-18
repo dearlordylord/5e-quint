@@ -26,6 +26,7 @@
         "srd521:classes/bard:level-1:equipment-pressure:bard_starting_equipment",
         "srd521:classes/bard:level-1:multiclass-entry:bard_multiclass_entry_traits",
         "srd521:classes/bard:level-1:spell-access:bard_spellcasting",
+        "srd521:classes/bard:level-2:class-feature-grant:bard_expertise",
         "srd521:classes/cleric:level-1:class-container:cleric_class_container",
         "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order",
         "srd521:classes/cleric:level-1:core-trait:cleric_armor_training",
@@ -174,13 +175,13 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 470,
-      "percent": "84.5%",
+      "numerator": 471,
+      "percent": "84.7%",
       "rowsByStatus": {
-        "accepted": 291,
+        "accepted": 292,
         "accepted-no-battle-effect": 179,
-        "owner-evidence-required": 12,
-        "battle-runtime-required": 74
+        "battle-runtime-required": 74,
+        "owner-evidence-required": 11
       }
     },
     "levelOneClassContainers": 12,
@@ -189,15 +190,15 @@
       "non-runtime": 12
     },
     "levelTwoRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 9,
+      "catalog-installed-owner-evidence-present": 10,
       "non-runtime": 12,
-      "missing-authored-record": 12
+      "missing-authored-record": 11
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 296,
+      "catalog-installed-owner-evidence-present": 297,
       "non-runtime": 24,
-      "missing-authored-record": 86,
-      "catalog-only/dead-for-now": 150
+      "catalog-only/dead-for-now": 150,
+      "missing-authored-record": 85
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 143,
@@ -4638,16 +4639,36 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "bard_expertise",
+        "sourceRecordPath": "packages/surface/content/bard_expertise.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "bard_expertise"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "future Bard level-9 character advancement owner",
+        "reason": "The remaining Bard Expertise selected-skill count increase occurs only at Bard level 9, outside the level 1-2 support lane."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit bard_expertise is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L12G-AUTHOR-BARD-EXPERTISE level-2 Bard Expertise support profile; Bard Expertise is discovered from the owned-skill grant-expertise acquisition choice, finalized from two selected skills that are owned and not already Expertise, and projected into CharacterBuild Expertise evidence while Bard level-2 spellcasting projects its level-scaled prepared spell and Spell Slot facts.",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/bard:level-2:class-feature-grant:bard_jack_of_all_trades",

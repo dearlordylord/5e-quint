@@ -7,6 +7,7 @@ import animalFriendshipInput from "../../content/animal_friendship.json";
 import backgroundSoldierInput from "../../content/background_soldier.json";
 import bardBardicInspirationInput from "../../content/bard_bardic_inspiration.json";
 import bardCuttingWordsInput from "../../content/bard_cutting_words.json";
+import bardExpertiseInput from "../../content/bard_expertise.json";
 import bardJackOfAllTradesInput from "../../content/bard_jack_of_all_trades.json";
 import barbarianRageInput from "../../content/barbarian_rage.json";
 import barbarianDangerSenseInput from "../../content/barbarian_danger_sense.json";
@@ -315,6 +316,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     barbarianWeaponMasteryInput,
     bardBardicInspirationInput,
     bardCuttingWordsInput,
+    bardExpertiseInput,
     bardJackOfAllTradesInput,
     clericDivineOrderInput,
     druidDruidicInput,

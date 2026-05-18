@@ -2284,6 +2284,31 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
+    "srd521:classes/bard:level-2:class-feature-grant:bard_expertise": {
+      "taskId": "L12G-AUTHOR-BARD-EXPERTISE",
+      "profile": "level-2 Bard Expertise support profile",
+      "summary": "Bard Expertise is discovered from the owned-skill grant-expertise acquisition choice, finalized from two selected skills that are owned and not already Expertise, and projected into CharacterBuild Expertise evidence while Bard level-2 spellcasting projects its level-scaled prepared spell and Spell Slot facts.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:classFeatureGrantChoiceHoles",
+        "packages/character-creation-runtime/src/discovery.ts:eligibleExpertiseSkills"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:supportedFinalizationChoiceHoles",
+        "packages/character-creation-runtime/src/finalization.ts:expertiseSubjectsForSelection",
+        "packages/character-creation-runtime/src/list-prepared-spellcasting.ts:listPreparedSpellcastingCreationAtLevel"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildProficiencies"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/bard-expertise.test.ts:finalizes two owned skills as Bard level-2 Expertise",
+        "packages/character-creation-runtime/src/bard-expertise.test.ts:rejects Bard Expertise choices that are not owned skill proficiencies"
+      ]
+    },
     "srd521:classes/cleric:level-1:class-feature-grant:cleric_divine_order": {
       "taskId": "AT-L1-06",
       "profile": "character-creation.class-feature-option-projection support profile",

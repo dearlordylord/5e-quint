@@ -1089,6 +1089,13 @@ const WizardSpellcastingProgressionRowSchema = Schema.Struct({
   spellSlots: Schema.NonEmptyArray(SpellSlotCapacitySchema),
 });
 
+const ListPreparedSpellcastingProgressionRowSchema = Schema.Struct({
+  atLevel: PositiveIntegerSchema,
+  cantripCount: NonNegativeIntegerSchema,
+  preparedSpellCount: PositiveIntegerSchema,
+  spellSlots: Schema.NonEmptyArray(SpellSlotCapacitySchema),
+});
+
 const PactMagicProgressionSchema = Schema.NonEmptyArray(
   Schema.Struct({
     atLevel: PositiveIntegerSchema,
@@ -1621,6 +1628,85 @@ export const ListPreparedSpellcastingCreationSchema = Schema.Struct({
   ),
 );
 
+export const ListPreparedSpellcastingProgressionCreationSchema = Schema.Struct({
+  kind: Schema.Literal("list_prepared_spellcasting_progression_creation"),
+  featureLevel: Schema.Literal(1),
+  spellcastingAbility: Schema.Literal("cha", "wis"),
+  cantripAccess: exactOptional(ClassCantripAccessSchema),
+  preparedAccess: ClassPreparedAccessSchema,
+  spellSlotProjection: SpellSlotProjectionSchema,
+  spellcastingProgression: Schema.NonEmptyArray(
+    ListPreparedSpellcastingProgressionRowSchema,
+  ),
+  spellcastingFocus: Schema.Literal(
+    "arcane_focus",
+    "druidic_focus",
+    "holy_symbol",
+    "musical_instrument",
+  ),
+}).pipe(
+  Schema.filter(
+    (spellcasting) => {
+      const levelOne = listPreparedSpellcastingProgressionAtLevel(
+        spellcasting.spellcastingProgression,
+        1,
+      );
+      if (
+        levelOne === undefined ||
+        !distinctListPreparedSpellcastingProgressionLevels(
+          spellcasting.spellcastingProgression,
+        ) ||
+        !sameSpellSlotCapacities(
+          levelOne.spellSlots,
+          spellcasting.spellSlotProjection.slots,
+        )
+      ) {
+        return false;
+      }
+
+      const maxCantripCount = Math.max(
+        ...spellcasting.spellcastingProgression.map((row) => row.cantripCount),
+      );
+      const maxPreparedSpellCount = Math.max(
+        ...spellcasting.spellcastingProgression.map(
+          (row) => row.preparedSpellCount,
+        ),
+      );
+      const maxPreparedSpellLevel = Math.max(
+        ...spellcasting.spellcastingProgression.flatMap((row) =>
+          row.spellSlots
+            .filter((slot) => slot.count > 0)
+            .map((slot) => slot.spellLevel),
+        ),
+      );
+
+      return (
+        spellcasting.preparedAccess.choose === levelOne.preparedSpellCount &&
+        spellcasting.preparedAccess.spells.length >= maxPreparedSpellCount &&
+        allSpellIdsDistinct(spellcasting.preparedAccess.spells) &&
+        distinctSlotLevels(spellcasting.spellSlotProjection.slots) &&
+        spellcasting.spellcastingProgression.every((row) =>
+          distinctSlotLevels(row.spellSlots),
+        ) &&
+        (maxCantripCount === 0
+          ? spellcasting.cantripAccess === undefined
+          : spellcasting.cantripAccess !== undefined &&
+            spellcasting.cantripAccess.choose === levelOne.cantripCount &&
+            spellcasting.cantripAccess.spellIds.length >= maxCantripCount &&
+            distinctStrings(spellcasting.cantripAccess.spellIds)) &&
+        allSpellLevelsAtOrBelow(
+          spellcasting.preparedAccess.spells,
+          maxPreparedSpellLevel,
+        )
+      );
+    },
+    {
+      message: () =>
+        "List-prepared spellcasting progression choices must match level-1 facts, provide enough unique spell options for each progression row, and prepare only spells at or below available Spell Slot levels.",
+    },
+  ),
+);
+
 export const PactMagicSpellcastingCreationSchema = Schema.Struct({
   kind: Schema.Literal("pact_magic_spellcasting_creation"),
   featureLevel: Schema.Literal(1),
@@ -1818,6 +1904,14 @@ function distinctWizardSpellcastingProgressionLevels(
   return distinctStrings(progression.map((row) => row.atLevel.toString()));
 }
 
+function distinctListPreparedSpellcastingProgressionLevels(
+  progression: readonly {
+    readonly atLevel: number;
+  }[],
+): boolean {
+  return distinctStrings(progression.map((row) => row.atLevel.toString()));
+}
+
 function wizardSpellcastingProgressionMatchesLevelOneFacts(spellcasting: {
   readonly cantripAccess: { readonly choose: number };
   readonly spellbookAccess: { readonly choose: number };
@@ -1902,6 +1996,34 @@ function pactMagicProgressionAtLevel(
     .at(-1);
 }
 
+function listPreparedSpellcastingProgressionAtLevel(
+  progression: readonly {
+    readonly atLevel: number;
+    readonly cantripCount: number;
+    readonly preparedSpellCount: number;
+    readonly spellSlots: readonly {
+      readonly spellLevel: number;
+      readonly count: number;
+    }[];
+  }[],
+  classLevel: number,
+):
+  | {
+      readonly atLevel: number;
+      readonly cantripCount: number;
+      readonly preparedSpellCount: number;
+      readonly spellSlots: readonly {
+        readonly spellLevel: number;
+        readonly count: number;
+      }[];
+    }
+  | undefined {
+  return progression
+    .filter((row) => row.atLevel <= classLevel)
+    .sort((left, right) => left.atLevel - right.atLevel)
+    .at(-1);
+}
+
 function pactMagicProgressionMatchesLevelOneFacts(spellcasting: {
   readonly cantripAccess: { readonly choose: number };
   readonly preparedAccess: { readonly choose: number };
@@ -1932,6 +2054,7 @@ function pactMagicProgressionMatchesLevelOneFacts(spellcasting: {
 
 export const ClassSpellcastingCreationSchema = Schema.Union(
   ListPreparedSpellcastingCreationSchema,
+  ListPreparedSpellcastingProgressionCreationSchema,
   PactMagicSpellcastingCreationSchema,
   WizardSpellcastingCreationSchema,
 );
@@ -1969,7 +2092,10 @@ export const WizardClassRecordSchema = Schema.Struct({
 export const ListPreparedSpellcastingClassRecordSchema = Schema.Struct({
   ...ClassRecordBaseFields,
   className: ClassSpellcastingClassNameSchema,
-  spellcasting: ListPreparedSpellcastingCreationSchema,
+  spellcasting: Schema.Union(
+    ListPreparedSpellcastingCreationSchema,
+    ListPreparedSpellcastingProgressionCreationSchema,
+  ),
 }).pipe(
   Schema.filter(
     (unit) => {
@@ -1989,8 +2115,11 @@ export const ListPreparedSpellcastingClassRecordSchema = Schema.Struct({
         unit.spellcasting.preparedAccess.changeOn.replacementCount ===
           classFacts.preparedChangeOn.replacementCount &&
         unit.spellcasting.preparedAccess.choose === classFacts.preparedCount &&
-        unit.spellcasting.preparedAccess.spells.length ===
-          classFacts.preparedCount &&
+        (unit.spellcasting.kind === "list_prepared_spellcasting_creation"
+          ? unit.spellcasting.preparedAccess.spells.length ===
+            classFacts.preparedCount
+          : unit.spellcasting.preparedAccess.spells.length >=
+            classFacts.preparedCount) &&
         spellSlotProjectionMatchesLevelOneFacts(
           unit.spellcasting,
           classFacts,
@@ -2008,7 +2137,14 @@ export const ListPreparedSpellcastingClassRecordSchema = Schema.Struct({
         allPreparedSpellsFromClassSpellList(
           unit.className,
           unit.spellcasting.preparedAccess.spells,
-        )
+        ) &&
+        (unit.spellcasting.kind ===
+        "list_prepared_spellcasting_progression_creation"
+          ? listPreparedSpellcastingProgressionMatchesLevelOneFacts(
+              unit.spellcasting,
+              classFacts,
+            )
+          : true)
       );
     },
     {
@@ -2017,6 +2153,49 @@ export const ListPreparedSpellcastingClassRecordSchema = Schema.Struct({
     },
   ),
 );
+
+function listPreparedSpellcastingProgressionMatchesLevelOneFacts(
+  spellcasting: {
+    readonly cantripAccess?: { readonly choose: number };
+    readonly preparedAccess: { readonly choose: number };
+    readonly spellSlotProjection: {
+      readonly slots: readonly {
+        readonly spellLevel: number;
+        readonly count: number;
+      }[];
+    };
+    readonly spellcastingProgression: readonly {
+      readonly atLevel: number;
+      readonly cantripCount: number;
+      readonly preparedSpellCount: number;
+      readonly spellSlots: readonly {
+        readonly spellLevel: number;
+        readonly count: number;
+      }[];
+    }[];
+  },
+  facts: {
+    readonly cantripCount: number;
+    readonly preparedCount: number;
+    readonly spellSlotCount: number;
+    readonly spellSlotLevel: number;
+  },
+): boolean {
+  const levelOne = listPreparedSpellcastingProgressionAtLevel(
+    spellcasting.spellcastingProgression,
+    1,
+  );
+  return (
+    levelOne?.atLevel === 1 &&
+    levelOne.cantripCount === facts.cantripCount &&
+    levelOne.preparedSpellCount === facts.preparedCount &&
+    spellSlotProjectionMatchesLevelOneFacts(spellcasting, facts) &&
+    sameSpellSlotCapacities(
+      levelOne.spellSlots,
+      spellcasting.spellSlotProjection.slots,
+    )
+  );
+}
 
 export const PactMagicClassRecordSchema = Schema.Struct({
   ...ClassRecordBaseFields,

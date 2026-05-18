@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "L12G-AUTHOR-BARD-EXPERTISE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Bard Expertise Authoring And Support"
     },
     {
@@ -870,7 +870,7 @@ Acceptance:
 
 ### Task 10 - L12G-AUTHOR-BARD-EXPERTISE - Bard Expertise Authoring And Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `bard_expertise`. Gate task: 10 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 

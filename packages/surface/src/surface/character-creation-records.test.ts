@@ -313,21 +313,39 @@ describe("character-creation Surface records", () => {
         input: classBardInput,
         className: "bard",
         hitPointDie: 8,
-        spellcasting: listPreparedSpellcasting({
-          className: "bard",
-          spellcastingAbility: "cha",
-          spellcastingFocus: "musical_instrument",
-          preparedChangeOn: "class_level",
-          preparedReplacementCount: 1,
-          preparedCount: 4,
-          preparedSpells: [
-            "charm_person",
-            "color_spray",
-            "dissonant_whispers",
-            "healing_word",
+        spellcasting: {
+          ...listPreparedSpellcasting({
+            className: "bard",
+            spellcastingAbility: "cha",
+            spellcastingFocus: "musical_instrument",
+            preparedChangeOn: "class_level",
+            preparedReplacementCount: 1,
+            preparedCount: 4,
+            preparedSpells: [
+              "charm_person",
+              "color_spray",
+              "dissonant_whispers",
+              "healing_word",
+              "thunderwave",
+            ],
+            cantrips: ["dancing_lights", "vicious_mockery"],
+          }),
+          kind: "list_prepared_spellcasting_progression_creation",
+          spellcastingProgression: [
+            {
+              atLevel: 1,
+              cantripCount: 2,
+              preparedSpellCount: 4,
+              spellSlots: [{ spellLevel: 1, count: 2 }],
+            },
+            {
+              atLevel: 2,
+              cantripCount: 2,
+              preparedSpellCount: 5,
+              spellSlots: [{ spellLevel: 1, count: 3 }],
+            },
           ],
-          cantrips: ["dancing_lights", "vicious_mockery"],
-        }),
+        },
       },
       {
         input: classClericInput,

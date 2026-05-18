@@ -703,6 +703,7 @@ describe("character creation hole discovery", () => {
         [
           "15:class_barbarian:level_1:maximum_hit_die",
           "10:class_bard:level_1:maximum_hit_die",
+          "10:class_bard|10:class_bard:level_2:fixed_hp_gain",
           "12:class_cleric:level_1:maximum_hit_die",
           "11:class_druid:level_1:maximum_hit_die",
           "13:class_fighter:level_1:maximum_hit_die",
@@ -727,6 +728,7 @@ describe("character creation hole discovery", () => {
           "14:class_sorcerer:level_1:maximum_hit_die",
           "13:class_warlock:level_1:maximum_hit_die",
           "12:class_wizard:level_1:maximum_hit_die",
+          "12:class_wizard|12:class_wizard:level_2:fixed_hp_gain",
           "12:class_wizard|13:class_fighter:level_2:fixed_hp_gain",
         ],
       ],
@@ -3190,7 +3192,10 @@ describe("character creation finalization", () => {
       const classFacts = readableClassFacts(classUnitId);
       if (
         !("spellcasting" in classFacts) ||
-        classFacts.spellcasting.kind !== "list_prepared_spellcasting_creation"
+        (classFacts.spellcasting.kind !==
+          "list_prepared_spellcasting_creation" &&
+          classFacts.spellcasting.kind !==
+            "list_prepared_spellcasting_progression_creation")
       ) {
         throw new Error(
           `Expected list-prepared spellcasting for ${classUnitId}`,
@@ -3207,9 +3212,9 @@ describe("character creation finalization", () => {
         draft,
         CLASS_CANTRIP_CHOICE_KEY,
       );
-      const expectedPreparedSpells = spellcasting.preparedAccess.spells.map(
-        (spell) => spell.spellId,
-      );
+      const expectedPreparedSpells = spellcasting.preparedAccess.spells
+        .slice(0, spellcasting.preparedAccess.choose)
+        .map((spell) => spell.spellId);
       expect(
         selectedChoiceOptionIds(draft, classUnitId, CLASS_CANTRIP_CHOICE_KEY),
         classUnitId,

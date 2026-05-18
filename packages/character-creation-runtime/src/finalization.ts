@@ -16,15 +16,12 @@ import type {
   Ability,
   ArmorTrainingCategory,
   ClassFeatureRecord,
-  ClassSpellcastingCreation,
-  ListPreparedSpellcastingCreation,
   ProficiencyGrant,
   ProficiencyGrantSubject,
   Skill,
   StartingEquipmentChoice,
   EffectAtom,
   UnitRecord,
-  WizardSpellcastingCreation,
 } from "@dnd/surface/surface/types";
 import {
   discoverCreationHoles,
@@ -89,7 +86,13 @@ import {
   ELDRITCH_INVOCATIONS_CHOICE_KEY,
 } from "./phase1-manifest.ts";
 import { selectedEldritchInvocationFeatures } from "./eldritch-invocations.ts";
-import { wizardSpellcastingCreationAtLevel } from "./wizard-spellcasting.ts";
+import {
+  classSpellcastingCreationAtLevel,
+  isListPreparedSpellcastingCreation,
+  isPactMagicSpellcastingCreation,
+  isWizardSpellcastingCreation,
+  type ReadableClassSpellcasting,
+} from "./class-spellcasting.ts";
 import {
   languageFromCreationChoiceOptionId,
   languageFromSurfaceLanguageId,
@@ -171,9 +174,6 @@ type LoadoutChoiceSelection = Extract<
   CharacterChoiceSelection,
   { readonly kind: "loadout" }
 >;
-type ReadableClassSpellcasting =
-  | ClassSpellcastingCreation
-  | WizardSpellcastingCreation;
 type ModifyRollNumericGrant = Extract<
   EffectAtom,
   { readonly kind: "modify_roll_numeric" }
@@ -368,10 +368,7 @@ export function executableSupportIssues(
       "Finalized build must carry exactly the supported choices for the selected progression.",
     ),
     ...expectedValueIssue(
-      spellcastingFactsAuthoredForSelectedClassLevels(
-        selections,
-        unitLibrary,
-      ),
+      spellcastingFactsAuthoredForSelectedClassLevels(selections, unitLibrary),
       "Finalized build must have authored spellcasting facts for the selected class levels.",
     ),
     ...expectedValueIssue(
@@ -2379,38 +2376,10 @@ function classSpellcastingCreation(
   facts: ClassCreationFacts,
   classLevel: number,
 ): ReadableClassSpellcasting | undefined {
-  if (!("spellcasting" in facts) || facts.spellcasting == null) {
-    return undefined;
-  }
-  if (facts.spellcasting.featureLevel > classLevel) {
-    return undefined;
-  }
-  if (isWizardSpellcastingCreation(facts.spellcasting)) {
-    return wizardSpellcastingCreationAtLevel(facts.spellcasting, classLevel);
-  }
-
-  return facts.spellcasting;
-}
-
-function isListPreparedSpellcastingCreation(
-  spellcasting: ReadableClassSpellcasting,
-): spellcasting is ListPreparedSpellcastingCreation {
-  return spellcasting.kind === "list_prepared_spellcasting_creation";
-}
-
-function isPactMagicSpellcastingCreation(
-  spellcasting: ReadableClassSpellcasting,
-): spellcasting is Extract<
-  ClassSpellcastingCreation,
-  { readonly kind: "pact_magic_spellcasting_creation" }
-> {
-  return spellcasting.kind === "pact_magic_spellcasting_creation";
-}
-
-function isWizardSpellcastingCreation(
-  spellcasting: ReadableClassSpellcasting,
-): spellcasting is WizardSpellcastingCreation {
-  return spellcasting.kind === "wizard_spellcasting_creation";
+  return classSpellcastingCreationAtLevel(
+    "spellcasting" in facts ? facts.spellcasting : undefined,
+    classLevel,
+  );
 }
 
 function selectedUnitRefsForChoice(

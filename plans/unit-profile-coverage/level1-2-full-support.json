@@ -260,6 +260,35 @@
       "unitId": "barbarian_weapon_mastery"
     },
     {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "later-level-only"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "reason": "The remaining Bard Expertise selected-skill count increase occurs only at Bard level 9, outside the level 1-2 support lane.",
+      "sourceRecordPath": "packages/surface/content/bard_expertise.json",
+      "sourceRows": [
+        {
+          "category": "class feature",
+          "concept": "Bard Expertise",
+          "id": "srd521:classes/bard:level-2:class-feature-grant:bard_expertise",
+          "levelBand": "level-2",
+          "rowKind": "class-feature-grant",
+          "source": {
+            "lineEnd": 98,
+            "lineStart": 93,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        }
+      ],
+      "status": "closed-later-level-only",
+      "strictTargetClosed": true,
+      "unitId": "bard_expertise"
+    },
+    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -2597,11 +2626,12 @@
       ]
     },
     {
-      "count": 4,
+      "count": 5,
       "description": "The in-scope behavior is complete and every remaining residual is outside this strict accounting scope.",
       "status": "closed-later-level-only",
       "unitIds": [
         "barbarian_weapon_mastery",
+        "bard_expertise",
         "fighter_weapon_mastery",
         "paladin_fighting_style",
         "ranger_favored_enemy"
@@ -2628,24 +2658,24 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 470,
-      "percent": "84.5%",
+      "numerator": 471,
+      "percent": "84.7%",
       "rowsByStatus": {
-        "accepted": 291,
+        "accepted": 292,
         "accepted-no-battle-effect": 179,
         "battle-runtime-required": 74,
-        "owner-evidence-required": 12
+        "owner-evidence-required": 11
       }
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 135,
+      "denominator": 136,
       "numerator": 86,
-      "percent": "63.7%"
+      "percent": "63.2%"
     },
     "strictTargetClosure": {
-      "denominator": 135,
-      "numerator": 103,
-      "percent": "76.3%"
+      "denominator": 136,
+      "numerator": 104,
+      "percent": "76.5%"
     }
   },
   "openFrontier": [
@@ -2819,24 +2849,6 @@
           }
         ],
         "unitId": "augury"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
-            "concept": "Bard Expertise",
-            "id": "srd521:classes/bard:level-2:class-feature-grant:bard_expertise",
-            "levelBand": "level-2",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 98,
-              "lineStart": 93,
-              "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
-          }
-        ],
-        "unitId": "bard_expertise"
       },
       {
         "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
@@ -6363,19 +6375,19 @@
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
       "missing": 31,
-      "profile-subset-supported": 7,
+      "profile-subset-supported": 8,
       "supported-profile": 86,
       "unsupported-profile": 11
     },
     "groupsByStatus": {
       "closed-character-fact-and-runtime-detached-split": 2,
-      "closed-later-level-only": 4,
+      "closed-later-level-only": 5,
       "closed-runtime-detached-table-adjudication": 11,
       "open-profile-accounting": 1,
       "open-runtime-behavior": 31,
       "supported-profile": 86
     },
-    "nonSupportedFrontier": 49,
-    "strictDenominator": 135
+    "nonSupportedFrontier": 50,
+    "strictDenominator": 136
   }
 }

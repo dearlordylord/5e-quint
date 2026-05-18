@@ -33,6 +33,7 @@ import {
   PHASE1_BACKGROUND_TOOL_OPTION_ID,
   PHASE1_CLASS_EQUIPMENT_OPTION_ID,
   PHASE1_CLASS_FIGHTER_UNIT_ID,
+  SRD_BARD_CLASS_UNIT_ID,
   CLASS_TOOL_PROFICIENCY_CHOICE_KEY,
   PHASE1_LOADOUT_ARMOR_OPTION_ID,
   PHASE1_LOADOUT_SHIELD_OPTION_ID,
@@ -169,6 +170,7 @@ type SupportedDraftChoicePath = (typeof SUPPORTED_DRAFT_CHOICE_PATHS)[number];
 const SUPPORTED_PROGRESSIONS = [
   ...SRD_LEVEL_ONE_CLASS_UNIT_IDS.map(supportedLevelOneProgression),
   supportedSameClassSecondLevelProgression(PHASE1_CLASS_FIGHTER_UNIT_ID),
+  supportedSameClassSecondLevelProgression(SRD_BARD_CLASS_UNIT_ID),
   supportedSameClassSecondLevelProgression(SRD_PALADIN_CLASS_UNIT_ID),
   supportedSameClassSecondLevelProgression(WIDTH_CLASS_WIZARD_UNIT_ID),
   supportedSameClassProgression(SRD_ROGUE_CLASS_UNIT_ID, 6),

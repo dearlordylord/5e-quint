@@ -1113,7 +1113,11 @@ export type CharacterBuildSpellcastingFocus =
   | CharacterBuildBookOfShadowsSpellAccess["spellcastingFocus"]
   | Extract<
       ClassSpellcastingCreation,
-      { readonly kind: "list_prepared_spellcasting_creation" }
+      {
+        readonly kind:
+          | "list_prepared_spellcasting_creation"
+          | "list_prepared_spellcasting_progression_creation";
+      }
     >["spellcastingFocus"]
   | Extract<
       ClassSpellcastingCreation,

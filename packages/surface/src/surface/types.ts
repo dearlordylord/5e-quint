@@ -716,6 +716,9 @@ export type WizardSpellcastingCreation = Schema.Schema.Type<
 export type ListPreparedSpellcastingCreation = Schema.Schema.Type<
   typeof SurfaceSchema.ListPreparedSpellcastingCreationSchema
 >;
+export type ListPreparedSpellcastingProgressionCreation = Schema.Schema.Type<
+  typeof SurfaceSchema.ListPreparedSpellcastingProgressionCreationSchema
+>;
 export type PactMagicSpellcastingCreation = Schema.Schema.Type<
   typeof SurfaceSchema.PactMagicSpellcastingCreationSchema
 >;

@@ -44,12 +44,13 @@ export const INITIAL_CHARACTER_DRAFT_PATHS = [
 // facts and SRD species admission while keeping Soldier origin facts
 // manifest-owned.
 export const PHASE1_CLASS_FIGHTER_UNIT_ID = "class_fighter";
+export const SRD_BARD_CLASS_UNIT_ID = "class_bard";
 export const WIDTH_CLASS_WIZARD_UNIT_ID = "class_wizard";
 export const SRD_ROGUE_CLASS_UNIT_ID = "class_rogue";
 export const SRD_PALADIN_CLASS_UNIT_ID = "class_paladin";
 export const SRD_LEVEL_ONE_CLASS_UNIT_IDS = [
   "class_barbarian",
-  "class_bard",
+  SRD_BARD_CLASS_UNIT_ID,
   "class_cleric",
   "class_druid",
   PHASE1_CLASS_FIGHTER_UNIT_ID,

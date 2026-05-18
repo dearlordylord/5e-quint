@@ -216,6 +216,7 @@ export {
   FighterClassFeatureRecordSchema,
   ListPreparedSpellcastingClassRecordSchema,
   ListPreparedSpellcastingCreationSchema,
+  ListPreparedSpellcastingProgressionCreationSchema,
   NonWizardClassRecordSchema,
   NonSpellcastingClassRecordSchema,
   OtherClassFeatureRecordSchema,

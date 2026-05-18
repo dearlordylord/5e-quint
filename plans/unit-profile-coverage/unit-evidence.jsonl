@@ -225,5 +225,6 @@
 {"unitId":"mastery_cleave","evidence":{"tag":"selected-identity-mbt","taskId":"weapon-mastery-properties","ownerPath":"packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts"}}
 {"unitId":"thaumaturgy","evidence":{"tag":"deterministic-admission-projection","taskId":"L1D2-THAUMATURGY-BOOMING-VOICE","ownerPath":"packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts"}}
 {"unitId":"barbarian_danger_sense","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-CLASS-BARBARIAN-DANGER-SENSE","ownerPath":"packages/battle-runtime/src/unit-profile-admission-danger-sense.test.ts"}}
+{"unitId":"bard_expertise","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-AUTHOR-BARD-EXPERTISE","ownerPath":"packages/character-creation-runtime/src/bard-expertise.test.ts"}}
 {"unitId":"bard_jack_of_all_trades","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-CLASS-BARD-JACK-OF-ALL-TRADES","ownerPath":"packages/character-sheet-runtime/src/index.test.ts"}}
 {"unitId":"wizard_scholar","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-CLASS-WIZARD-SCHOLAR","ownerPath":"packages/character-creation-runtime/src/wizard-scholar.test.ts"}}
