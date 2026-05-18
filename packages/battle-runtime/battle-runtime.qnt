@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.creature-type-protection-and-charm spell.find-familiar-lifecycle spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-dancing-lights-movable-dim-light spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-self-ability-check-advantage spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.passive-saving-throw-roll-mode unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.creature-type-protection-and-charm spell.find-familiar-lifecycle spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-beam-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-dancing-lights-movable-dim-light spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-self-ability-check-advantage spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-self-ability-check-advantage
@@ -95,9 +95,11 @@ module battleRuntime {
   // - Spells/Descriptions-A-D.md lines 1599-1609, Playing-the-Game.md lines
   //   694-703, Spells/Gaining-and-Casting.md lines 33-65, and
   //   UBIQUITOUS_LANGUAGE.md: Divine Smite is a Bonus Action spell cast
-  //   immediately after a melee weapon or Unarmed Strike hit. It spends a Spell
-  //   Slot, adds Radiant damage to that already-hit attack, scales by slot
-  //   level, and adds one die against Fiends or Undead.
+  //   immediately after a melee weapon or Unarmed Strike hit. Ordinary casting
+  //   spends a Spell Slot, adds Radiant damage to that already-hit attack,
+  //   scales by slot level, and adds one die against Fiends or Undead.
+  //   Classes/Paladin.md lines 95-99 grants Paladin's Smite slotless Long Rest
+  //   casts of Divine Smite as a class resource, not as Spell Slot state.
   // - Spells/Descriptions-E-L.md lines 1275-1288, Playing-the-Game.md lines
   //   582-589 and 694-703, Rules-Glossary.md lines 138-140 and 239-247,
   //   and UBIQUITOUS_LANGUAGE.md: Hunter's Mark is a Bonus Action
@@ -138,6 +140,10 @@ module battleRuntime {
   //   apply only to Dexterity Saving Throw damage procedures whose successful
   //   save outcome is half damage; success becomes no damage and failure
   //   becomes half damage.
+  // - Classes/Barbarian.md lines 90-92, Playing-the-Game.md lines 116-124
+  //   and 185-199, and Rules-Glossary.md lines 594-604: Danger Sense gives
+  //   Advantage on Dexterity Saving Throws unless the Barbarian has the
+  //   Incapacitated condition.
   // - Spells/Gaining-and-Casting.md lines 3-65 and 92-96, Rules-Glossary.md
   //   lines 698-702, and Classes/Wizard.md lines 56-82: prepared level-1
   //   Wizard spells spend Spell Slots; cantrips do not.
@@ -2339,6 +2345,12 @@ module battleRuntime {
     else
       NormalSavingThrow
 
+  pure def dangerSenseSavingThrowMode(ability: Ability, incapacitated: bool): SavingThrowRollMode =
+    if (ability == DexAbility and not(incapacitated))
+      AdvantageSavingThrow
+    else
+      NormalSavingThrow
+
   pure def spellEffectConcentrationActiveEffects(): Set[ActiveEffect] =
     Set(ShieldOfFaithArmorClassBonus, HeroismFrightenedImmunity, BaneD20RollPenalty, BlessD20RollBonus, GuidanceAbilityCheckBonus, EntangleRestrained, FaerieFireOutline, ProtectionFromEvilAndGoodCreatureTypeProtection, ExpeditiousRetreatDashBonusAction)
 
@@ -3749,13 +3761,40 @@ module battleRuntime {
       not(state.fighter.incapacitated) and
       not(fighterHasRage(state))
     )
-	      commitActorSpellSlotUse({
-	        ...state,
-	        bonusActionAvailable: false,
-	        goblin: applyDamageFromSource(state.goblin, smiteDamageRoll * (if (attackCritical) 2 else 1), 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter),
-	      }, Fighter)
+      commitActorSpellSlotUse({
+        ...state,
+        bonusActionAvailable: false,
+        goblin: applyDamageFromSource(state.goblin, smiteDamageRoll * (if (attackCritical) 2 else 1), 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter),
+      }, Fighter)
     else
       state
+
+  pure def resolvePaladinsSmiteAfterMeleeHit(
+    state: BattleState,
+    paladinsSmiteUsesRemaining: int,
+    smiteDamageRoll: int,
+    targetCreatureType: RuntimeCreatureType,
+    attackCritical: bool,
+    concentrationSaveSucceeded: bool,
+  ): { state: BattleState, paladinsSmiteUsesRemaining: int } =
+    if (
+      currentActor(state) == Fighter and
+      paladinsSmiteUsesRemaining > 0 and
+      state.bonusActionAvailable and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(fighterHasRage(state))
+    )
+      {
+        state: {
+          ...state,
+          bonusActionAvailable: false,
+          goblin: applyDamageFromSource(state.goblin, smiteDamageRoll * (if (attackCritical) 2 else 1), 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter),
+        },
+        paladinsSmiteUsesRemaining: paladinsSmiteUsesRemaining - 1,
+      }
+    else
+      { state: state, paladinsSmiteUsesRemaining: paladinsSmiteUsesRemaining }
 
   pure def activeEffectsWithoutEnsnaringStrike(effects: Set[ActiveEffect]): Set[ActiveEffect] =
     effects.filter(effect => match effect {
@@ -10247,12 +10286,21 @@ module battleRuntime {
     val smote = resolveDivineSmiteAfterMeleeHit(initialState, 1, 5, HumanoidCreature, false, true)
     val alreadySpent = resolveDivineSmiteAfterMeleeHit(commitActorSpellSlotUse(initialState, Fighter), 1, 5, HumanoidCreature, false, true)
     val critical = resolveDivineSmiteAfterMeleeHit(initialState, 1, 5, HumanoidCreature, true, true)
+    val freeSmote = resolvePaladinsSmiteAfterMeleeHit(initialState, 1, 5, HumanoidCreature, false, true)
+    val freeAfterSlot = resolvePaladinsSmiteAfterMeleeHit(commitActorSpellSlotUse(initialState, Fighter), 1, 5, HumanoidCreature, false, true)
+    val freeExhausted = resolvePaladinsSmiteAfterMeleeHit(initialState, 0, 5, HumanoidCreature, false, true)
     all {
       assert(smote.goblin.hp == 5),
       assert(not(smote.bonusActionAvailable)),
       assert(battleActorHasCommittedSpellSlotUse(smote, Fighter)),
       assert(alreadySpent.goblin.hp == initialState.goblin.hp),
       assert(critical.goblin.hp == 0),
+      assert(freeSmote.state.goblin.hp == 5),
+      assert(freeSmote.paladinsSmiteUsesRemaining == 0),
+      assert(not(freeSmote.state.bonusActionAvailable)),
+      assert(not(battleActorHasSpellSlotUse(freeSmote.state, Fighter))),
+      assert(freeAfterSlot.state.goblin.hp == 5),
+      assert(freeExhausted.state == initialState),
     }
   }
 
@@ -10679,6 +10727,14 @@ module battleRuntime {
     all {
       assert(eldritchMindConcentrationSavingThrowMode(true) == AdvantageSavingThrow),
       assert(eldritchMindConcentrationSavingThrowMode(false) == NormalSavingThrow),
+    }
+  }
+
+  run test_danger_sense_changes_dexterity_saving_throw_mode_until_incapacitated = {
+    all {
+      assert(dangerSenseSavingThrowMode(DexAbility, false) == AdvantageSavingThrow),
+      assert(dangerSenseSavingThrowMode(DexAbility, true) == NormalSavingThrow),
+      assert(dangerSenseSavingThrowMode(ConAbility, false) == NormalSavingThrow),
     }
   }
 

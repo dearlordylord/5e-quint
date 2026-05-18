@@ -622,7 +622,7 @@ function greaseGroundHazardEntrySaveActs(
       if (effect.kind !== "greaseGroundHazard") {
         return [];
       }
-      return [greaseGroundHazardSaveAct(actorId, effect, "entersArea")];
+      return [greaseGroundHazardSaveAct(state, actorId, effect, "entersArea")];
     }),
   );
 }
@@ -636,12 +636,15 @@ function greaseGroundHazardEndTurnActs(
       if (effect.kind !== "greaseGroundHazard") {
         return [];
       }
-      return [greaseGroundHazardSaveAct(actorId, effect, "endsTurnInArea")];
+      return [
+        greaseGroundHazardSaveAct(state, actorId, effect, "endsTurnInArea"),
+      ];
     }),
   );
 }
 
 function greaseGroundHazardSaveAct(
+  state: BattleState,
   actorId: CombatantId,
   effect: GreaseGroundHazardEffect,
   trigger: "entersArea" | "endsTurnInArea",
@@ -662,7 +665,7 @@ function greaseGroundHazardSaveAct(
         ? "Resolve the table-supplied Grease area-entry Dexterity Saving Throw."
         : "Resolve the table-supplied Grease end-turn Dexterity Saving Throw.",
     initialHoles: [
-      greaseGroundHazardSavingThrowOutcomeHole(actorId, effect, trigger),
+      greaseGroundHazardSavingThrowOutcomeHole(state, actorId, effect, trigger),
     ],
   };
 }

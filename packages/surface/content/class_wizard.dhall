@@ -16,14 +16,26 @@ let StartingEquipmentOption
 
 let SpellbookSpell : Type = { spellId : Text, spellLevel : Natural }
 
+let SpellSlotCapacity : Type = { spellLevel : Natural, count : Natural }
+
+let WizardSpellcastingProgressionRow
+    : Type
+    = { atLevel : Natural
+      , cantripCount : Natural
+      , spellbookSpellCount : Natural
+      , preparedSpellCount : Natural
+      , spellSlots : List SpellSlotCapacity
+      }
+
 let wizard =
       { armorTraining = { kind = "none" }
       , className = "wizard"
       , description =
-          "SRD Wizard class creation facts for a level-1 character, including spellbook, prepared spells, Spell Slots, Ritual Adept, Arcane Recovery, and spellcasting focus facts."
+          "SRD Wizard class creation facts, including level-scaled spellbook, prepared spells, Spell Slots, Ritual Adept, Arcane Recovery, Scholar, and spellcasting focus facts."
       , featureGrants =
         [ { level = 1, unitId = "wizard_ritual_adept" }
         , { level = 1, unitId = "wizard_arcane_recovery" }
+        , { level = 2, unitId = "wizard_scholar" }
         ]
       , hitPointDie = 6
       , id = "class_wizard"
@@ -33,7 +45,7 @@ let wizard =
       , primaryAbilities = { abilities = [ "int" ], kind = "all_of" }
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Classes/Wizard.md:3-25,31-35,56-82,94-114,134-190"
+        , section = "Classes/Wizard.md:3-25,31-36,56-82,94-114,134-190"
         }
       , savingThrowProficiencies = [ "int", "wis" ]
       , skillProficiencyChoice =
@@ -63,11 +75,13 @@ let wizard =
               , choose = 6
               , spells =
                 [ { spellId = "detect_magic", spellLevel = 1 }
+                , { spellId = "feather_fall", spellLevel = 1 }
                 , { spellId = "mage_armor", spellLevel = 1 }
                 , { spellId = "magic_missile", spellLevel = 1 }
                 , { spellId = "shield", spellLevel = 1 }
                 , { spellId = "sleep", spellLevel = 1 }
                 , { spellId = "thunderwave", spellLevel = 1 }
+                , { spellId = "chromatic_orb", spellLevel = 1 }
                 ] : List SpellbookSpell
               }
           , preparedAccess =
@@ -75,11 +89,13 @@ let wizard =
               , choose = 4
               , spellIds =
                 [ "detect_magic"
+                , "feather_fall"
                 , "mage_armor"
                 , "magic_missile"
                 , "shield"
                 , "sleep"
                 , "thunderwave"
+                , "chromatic_orb"
                 ]
               , changeOn = { kind = "long_rest" }
               }
@@ -88,6 +104,20 @@ let wizard =
               , slots = [ { spellLevel = 1, count = 2 } ]
               , resetCadence = { kind = "long_rest" }
               }
+          , spellcastingProgression =
+              [ { atLevel = 1
+                , cantripCount = 3
+                , spellbookSpellCount = 6
+                , preparedSpellCount = 4
+                , spellSlots = [ { spellLevel = 1, count = 2 } ]
+                }
+              , { atLevel = 2
+                , cantripCount = 3
+                , spellbookSpellCount = 8
+                , preparedSpellCount = 5
+                , spellSlots = [ { spellLevel = 1, count = 3 } ]
+                }
+              ] : List WizardSpellcastingProgressionRow
           , spellcastingFocuses = [ "arcane_focus", "spellbook" ]
           }
       , subclassChoices =

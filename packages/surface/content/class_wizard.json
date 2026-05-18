@@ -3,7 +3,7 @@
     "kind": "none"
   },
   "className": "wizard",
-  "description": "SRD Wizard class creation facts for a level-1 character, including spellbook, prepared spells, Spell Slots, Ritual Adept, Arcane Recovery, and spellcasting focus facts.",
+  "description": "SRD Wizard class creation facts, including level-scaled spellbook, prepared spells, Spell Slots, Ritual Adept, Arcane Recovery, Scholar, and spellcasting focus facts.",
   "featureGrants": [
     {
       "level": 1,
@@ -12,6 +12,10 @@
     {
       "level": 1,
       "unitId": "wizard_arcane_recovery"
+    },
+    {
+      "level": 2,
+      "unitId": "wizard_scholar"
     }
   ],
   "hitPointDie": 6,
@@ -29,7 +33,7 @@
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Wizard.md:3-25,31-35,56-82,94-114,134-190"
+    "section": "Classes/Wizard.md:3-25,31-36,56-82,94-114,134-190"
   },
   "savingThrowProficiencies": [
     "int",
@@ -61,8 +65,8 @@
         "ray_of_frost"
       ]
     },
-    "kind": "wizard_spellcasting_creation",
     "featureLevel": 1,
+    "kind": "wizard_spellcasting_creation",
     "preparedAccess": {
       "changeOn": {
         "kind": "long_rest"
@@ -71,11 +75,13 @@
       "kind": "prepared_from_spellbook",
       "spellIds": [
         "detect_magic",
+        "feather_fall",
         "mage_armor",
         "magic_missile",
         "shield",
         "sleep",
-        "thunderwave"
+        "thunderwave",
+        "chromatic_orb"
       ]
     },
     "spellSlotProjection": {
@@ -99,6 +105,10 @@
           "spellLevel": 1
         },
         {
+          "spellId": "feather_fall",
+          "spellLevel": 1
+        },
+        {
           "spellId": "mage_armor",
           "spellLevel": 1
         },
@@ -117,6 +127,10 @@
         {
           "spellId": "thunderwave",
           "spellLevel": 1
+        },
+        {
+          "spellId": "chromatic_orb",
+          "spellLevel": 1
         }
       ]
     },
@@ -124,6 +138,32 @@
     "spellcastingFocuses": [
       "arcane_focus",
       "spellbook"
+    ],
+    "spellcastingProgression": [
+      {
+        "atLevel": 1,
+        "cantripCount": 3,
+        "preparedSpellCount": 4,
+        "spellSlots": [
+          {
+            "count": 2,
+            "spellLevel": 1
+          }
+        ],
+        "spellbookSpellCount": 6
+      },
+      {
+        "atLevel": 2,
+        "cantripCount": 3,
+        "preparedSpellCount": 5,
+        "spellSlots": [
+          {
+            "count": 3,
+            "spellLevel": 1
+          }
+        ],
+        "spellbookSpellCount": 8
+      }
     ]
   },
   "startingEquipment": [

@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 363,
-      "numerator": 128,
-      "percent": "35.3%"
+      "numerator": 133,
+      "percent": "36.6%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 435,
-      "numerator": 160,
-      "percent": "36.8%"
+      "numerator": 165,
+      "percent": "37.9%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,47 +59,47 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 161
+      "value": 166
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 105,
-      "numerator": 105,
+      "denominator": 109,
+      "numerator": 109,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 161,
-      "numerator": 161,
+      "denominator": 166,
+      "numerator": 166,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 64,
-      "numerator": 64,
+      "denominator": 65,
+      "numerator": 65,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 64,
-      "numerator": 64,
+      "denominator": 65,
+      "numerator": 65,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 64,
-      "numerator": 64,
+      "denominator": 65,
+      "numerator": 65,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 64,
-      "numerator": 64,
+      "denominator": 65,
+      "numerator": 65,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 105,
+      "denominator": 109,
       "numerator": 104,
-      "percent": "99%"
+      "percent": "95.4%"
     },
     "supportedProfileCoverage": {
-      "denominator": 129,
-      "numerator": 105,
-      "percent": "81.4%"
+      "denominator": 134,
+      "numerator": 109,
+      "percent": "81.3%"
     }
   },
   "metricSemantics": [
@@ -617,6 +617,38 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "unit-feature.passive-saving-throw-roll-mode",
+      "profileKind": "passive",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/unit-feature-support.ts",
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts"
+      ],
+      "taskRefs": [
+        "QCORE9",
+        "L12G-CLASS-BARBARIAN-DANGER-SENSE"
+      ],
+      "title": "Unit feature passively grants Saving Throw roll mode while a condition predicate is absent",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-feature-bridge.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-danger-sense.test.ts"
         }
       ]
     },
@@ -2383,6 +2415,25 @@
           "ownerPath": "packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts"
         }
       ]
+    },
+    {
+      "id": "character-sheet.ability-check-proficiency-bonus",
+      "profileKind": "character-sheet",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "CharacterBuild class progression, Surface Bard level 2 feature grant, CharacterBuild skill and Expertise proficiency facts, caller-supplied Ability Check skill witness, and caller-supplied no-other-Proficiency-Bonus gate.",
+      "taskRefs": [
+        "L12G-CLASS-BARD-JACK-OF-ALL-TRADES"
+      ],
+      "title": "Character Sheet projects Ability Check Proficiency Bonus from skill proficiency, Expertise, and Jack of All Trades gates",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+        }
+      ]
     }
   ],
   "taskClaims": [
@@ -2415,6 +2466,7 @@
         "unit-feature.first-attack-roll-reckless-advantage",
         "unit-feature.passive-armor-class-bonus",
         "unit-feature.passive-ranged-attack-roll-bonus",
+        "unit-feature.passive-saving-throw-roll-mode",
         "unit-feature.passive-speed-bonus",
         "unit-feature.passive-speed-kind-grants",
         "unit-feature.reaction-roll-or-damage-reduction",
@@ -2654,6 +2706,14 @@
         "unit-feature.reaction-roll-or-damage-reduction"
       ],
       "taskId": "QMBT65"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Danger Sense admission and save-roll-mode projection tests cover Dexterity Saving Throw Advantage and Incapacitated suppression from the authored Unit profile.",
+      "profileIds": [
+        "unit-feature.passive-saving-throw-roll-mode"
+      ],
+      "taskId": "L12G-CLASS-BARBARIAN-DANGER-SENSE"
     },
     {
       "claimKind": "qnt-proof",
@@ -3960,6 +4020,14 @@
         "spell.invocation-self-ability-check-advantage"
       ],
       "taskId": "L1D2-THAUMATURGY-BOOMING-VOICE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Character Sheet runtime tests cover skill proficiency, Expertise, Jack of All Trades half Proficiency Bonus rounded down, the no-other-Proficiency-Bonus gate, and Bard level 2 feature ownership.",
+      "profileIds": [
+        "character-sheet.ability-check-proficiency-bonus"
+      ],
+      "taskId": "L12G-CLASS-BARD-JACK-OF-ALL-TRADES"
     }
   ],
   "units": [
@@ -4994,6 +5062,68 @@
       },
       "claim": {
         "profileIds": [
+          "unit-feature.passive-saving-throw-roll-mode"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-danger-sense.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-CLASS-BARBARIAN-DANGER-SENSE"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.passive-saving-throw-roll-mode",
+          "profileKind": "passive",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt",
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts"
+          ],
+          "taskRefs": [
+            "QCORE9",
+            "L12G-CLASS-BARBARIAN-DANGER-SENSE"
+          ],
+          "title": "Unit feature passively grants Saving Throw roll mode while a condition predicate is absent",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-feature-bridge.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-danger-sense.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/barbarian_danger_sense.json",
+      "unitId": "barbarian_danger_sense"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
           "unit-feature.passive-speed-bonus"
         ],
         "rawRequirementIds": [
@@ -5311,6 +5441,59 @@
       ],
       "sourceRecordPath": "packages/surface/content/bard_cutting_words.json",
       "unitId": "bard_cutting_words"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "character-sheet.ability-check-proficiency-bonus"
+        ],
+        "rawRequirementIds": [],
+        "supportedMechanics": [
+          "Character Sheet projects ordinary skill proficiency into the Proficiency Bonus for Ability Checks using an owned skill proficiency",
+          "Character Sheet projects Expertise into doubled Proficiency Bonus for Ability Checks using an owned Expertise skill",
+          "Character Sheet projects Jack of All Trades into half Proficiency Bonus rounded down for unproficient skill Ability Checks only when no other Proficiency Bonus applies",
+          "The projection derives feature ownership from Bard level 2 class feature grants and existing CharacterBuild skill and Expertise facts without storing parallel skill state"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-CLASS-BARD-JACK-OF-ALL-TRADES"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "character-sheet.ability-check-proficiency-bonus",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "CharacterBuild class progression, Surface Bard level 2 feature grant, CharacterBuild skill and Expertise proficiency facts, caller-supplied Ability Check skill witness, and caller-supplied no-other-Proficiency-Bonus gate.",
+          "taskRefs": [
+            "L12G-CLASS-BARD-JACK-OF-ALL-TRADES"
+          ],
+          "title": "Character Sheet projects Ability Check Proficiency Bonus from skill proficiency, Expertise, and Jack of All Trades gates",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/bard_jack_of_all_trades.json",
+      "unitId": "bard_jack_of_all_trades"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -6375,6 +6558,60 @@
         "status": "installed"
       },
       "claim": {
+        "profileIds": [
+          "character-creation.skill-expertise-choice"
+        ],
+        "rawRequirementIds": [],
+        "supportedMechanics": [
+          "Wizard Scholar is installed as a level-2 Surface class-feature grant on class_wizard",
+          "Surface Wizard spellcasting carries level-1 and level-2 table rows so admitting same-class Wizard 2 projects five prepared spells, eight spellbook spells, and three level-1 Spell Slots",
+          "Surface grant_expertise represents the acquisition-time choice as listed owned skill proficiencies without existing Expertise over Arcana, History, Investigation, Medicine, Nature, or Religion",
+          "Character Creation admits supported Wizard level-2 progression, discovers exactly one Scholar Expertise choice from the intersection of owned skill proficiencies and the Scholar skill list, and rejects owned skills outside that list or skills that already have Expertise",
+          "Character Creation finalizes the selected Scholar skill as CharacterBuild Expertise without duplicating skill proficiency state"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/wizard-scholar.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-CLASS-WIZARD-SCHOLAR"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "character-creation.skill-expertise-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface grant-expertise class-feature choices over existing CharacterBuild skill proficiencies projected into Expertise proficiency levels.",
+          "taskRefs": [
+            "AT-L1-03S"
+          ],
+          "title": "Character Creation finalizes skill Expertise choices into build proficiency levels",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/wizard_scholar.json",
+      "unitId": "wizard_scholar"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
           "owner": "character-creation-runtime",
@@ -6683,6 +6920,149 @@
       ],
       "sourceRecordPath": "packages/surface/content/paladin_lay_on_hands.json",
       "unitId": "paladin_lay_on_hands"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "later-level-only",
+              "owner": "future Paladin advancement cantrip replacement owner",
+              "reason": "Blessed Warrior cantrip replacement only occurs on later Paladin level gains after the level-2 acquisition choice is complete."
+            },
+            "mechanic": "Blessed Warrior cantrip replacement when later gaining Paladin levels after acquiring the feature"
+          }
+        ],
+        "profileIds": [
+          "character-creation.class-feature-feat-choice",
+          "character-creation.class-feature-option-projection"
+        ],
+        "supportedMechanics": [
+          "Paladin Fighting Style is installed as a Surface class-feature acquisition choice between the Fighting Style feat branch and the Blessed Warrior branch",
+          "Character Creation admits a supported Paladin level-2 same-class progression, discovers the Paladin Fighting Style branch choice through the normal draft hole workflow, and fill/finalizes both supported branches end to end",
+          "Character Creation admits the Fighting Style feat branch, discovers exactly one supported Fighting Style feat choice, and finalizes the selected feat as a selected CharacterBuild class-choice ref with selectedFromUnitId paladin_fighting_style",
+          "Character Creation admits the Blessed Warrior branch, discovers exactly two Cleric cantrip choices from the selected branch, and projects selected cantrips as Paladin spellcasting cantrips using the Paladin Charisma spellcasting source",
+          "Selected Fighting Style feat Units and selected cantrip Spell Units own their executable behavior; the Paladin feature owns only the branch and grant selection container"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-CLASS-PALADIN-FIGHTING-STYLE"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "character-creation.class-feature-feat-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface class-feature grant_feat records plus Character Draft Unit-backed selections; selected feat execution remains owned by the selected feat Unit profile.",
+          "taskRefs": [
+            "AT-L1-03S"
+          ],
+          "title": "Character Creation finalizes class-feature feat choices as selected build feature refs",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-creation.class-feature-option-projection",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface class-feature option records such as Divine Order and Primal Order projected from accepted Character Draft selections into CharacterBuild facts.",
+          "taskRefs": [
+            "AT-L1-03S"
+          ],
+          "title": "Character Creation projects class-feature option choices into build facts",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/paladin_fighting_style.json",
+      "unitId": "paladin_fighting_style"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "spell.invocation-after-hit-damage"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "always-prepared Divine Smite access through retained prepared Spell Access",
+          "one-use Paladin's Smite Long Rest free-cast resource at Paladin level 2",
+          "free-cast Divine Smite uses the existing after-hit damage spell procedure without expending a Spell Slot",
+          "ordinary Spell Slot Divine Smite casting remains available when the free-cast resource is exhausted"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-favored-enemy.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-CLASS-PALADINS-SMITE"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "spell.invocation-after-hit-damage",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV31C"
+          ],
+          "title": "Spell invocation spends a Bonus Action and Spell Slot after an eligible melee hit to add damage to that attack",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-true-strike-and-divine-smite.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/paladin_paladins_smite.json",
+      "unitId": "paladin_paladins_smite"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -14089,34 +14469,6 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "later-level-only",
-          "owner": "future unit-feature.passive-saving-throw-roll-mode owner",
-          "reason": "The feature is acquired after level 1 and grants Advantage on Dexterity Saving Throws unless the creature has the Incapacitated condition. Current promoted Unit profiles do not consume class-feature passive Saving Throw roll-mode grants or make both the saveAbilityFilter and passive condition suppressor executable at admission."
-        },
-        "reason": "Danger Sense is a level-2 passive Dexterity Saving Throw Advantage feature; no promoted Unit profile is claimed until a passive Saving Throw roll-mode profile can execute the Dexterity ability filter and Incapacitated suppression gate together.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/barbarian_danger_sense.json",
-      "unitId": "barbarian_danger_sense"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "later-level-only",
           "owner": "future level-20 Character Sheet ability-score projection owner",
           "reason": "The feature mutates durable Character Sheet Ability Scores at level 20, capping Strength and Constitution at 25. Battle runtime should consume derived creature statistics rather than duplicate this class-feature ability-score state."
         },
@@ -14214,34 +14566,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/bard_epic_boon.json",
       "unitId": "bard_epic_boon"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "later-level-only",
-          "owner": "future character-sheet.ability-check-proficiency-bonus profile",
-          "reason": "The feature is acquired after level 1 and depends on a concrete Ability Check witness with a skill, the existing CharacterBuild skill and Expertise proficiency facts, and whether another rule already contributes Proficiency Bonus. Current promoted Unit profiles do not model that passive half-proficiency computation, and generic modify_roll_numeric cannot make the RAW gate executable."
-        },
-        "reason": "Jack of All Trades is a level-2 passive Ability Check proficiency supplement; no promoted Unit profile is claimed until a Character Sheet Ability Check Proficiency Bonus projection can execute the skill-proficiency and no-other-Proficiency-Bonus gates.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/bard_jack_of_all_trades.json",
-      "unitId": "bard_jack_of_all_trades"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -17221,62 +17545,6 @@
       "authoredSurfaceDuplicateIdCount": 1,
       "catalogAdmission": {
         "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "selection-grant-container",
-          "owner": "selected Fighting Style feat Unit profiles and future Blessed Warrior Spell Access character owner",
-          "reason": "The class feature opens a level-2 choice between a Fighting Style feat and Blessed Warrior's Cleric cantrip Spell Access. Selected Fighting Style feat Units own executable battle behavior, and Blessed Warrior cantrip access and replacement belong to Character Sheet Spell Access rather than duplicate battle Unit state."
-        },
-        "reason": "Paladin Fighting Style is a level-2 Fighting Style feat or Blessed Warrior cantrip-selection grant; no standalone promoted battle Unit profile is claimed for the authored class-feature record.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/paladin_fighting_style.json",
-      "unitId": "paladin_fighting_style"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "later-level-only",
-          "owner": "future Paladin's Smite Spell Access and class-feature free-cast resource owner",
-          "reason": "The feature is acquired after level 1, makes Divine Smite always prepared, and grants one Long Rest no-slot Divine Smite cast. The Divine Smite spell Unit already owns after-hit damage invocation behavior; a future Paladin feature owner should retain this source Unit for Spell Access and free-cast resource projection without duplicating the spell procedure."
-        },
-        "reason": "Paladin's Smite is a level-2 Divine Smite Spell Access and once-per-Long-Rest free-cast grant; no standalone promoted battle Unit profile is claimed for the authored class-feature record until class-feature free-cast support is widened beyond Favored Enemy.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/paladin_paladins_smite.json",
-      "unitId": "paladin_paladins_smite"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
           "category": "srd-candidate",
           "planningLane": "QMBT14-QMBT16",
           "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
@@ -18830,34 +19098,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/wizard_ability_score_improvement_l4.json",
       "unitId": "wizard_ability_score_improvement_l4"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "later-level-only",
-          "owner": "future constrained Character Creation skill Expertise choice owner",
-          "reason": "The feature is acquired after level 1 and belongs to durable Character Sheet proficiency projection. Existing Rogue Expertise support admits owned skill proficiencies without Expertise, but Scholar additionally intersects that owned-skill set with a fixed six-skill list; the current authored modify-roll shape cannot represent that acquisition-time prerequisite without semantic leakage."
-        },
-        "reason": "Scholar is a level-2 build-time Expertise choice constrained to one of six skills in which the character already has proficiency; no standalone promoted battle Unit profile is claimed until the constrained Character Creation Expertise choice is modeled.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/wizard_scholar.json",
-      "unitId": "wizard_scholar"
     }
   ]
 }

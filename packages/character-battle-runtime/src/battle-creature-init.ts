@@ -4,7 +4,7 @@ import {
   characterBattleResourceSupportedForUnit,
   scoreModifier,
   startBattle,
-  unitIsFavoredEnemyHuntersMarkFreeCastResource,
+  unitIsSupportedClassFeatureSpellFreeCastResource,
   type CharacterBattleFeatureInit,
   type CharacterBattleResourceInit,
   type CharacterBattleSpellSlotState,
@@ -39,6 +39,7 @@ import {
   type Condition,
 } from "@dnd/shared/types";
 import type { SpeciesRecord, UnitRecord } from "@dnd/surface/surface/types";
+import { supportedClassFeatureSpellFreeCastGrantsForUnit } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either, Option } from "effect";
 import {
@@ -429,22 +430,27 @@ function characterBattlePersistedUsesRemaining(
   unit: UnitRecord,
   resourceExpenditures: readonly CharacterSheetResourceExpenditure[],
 ): Either.Either<number | undefined, BattleCreatureInitIssue> {
-  if (!unitIsFavoredEnemyHuntersMarkFreeCastResource(unit)) {
+  if (!unitIsSupportedClassFeatureSpellFreeCastResource(unit)) {
+    return Either.right(undefined);
+  }
+  const profile =
+    supportedClassFeatureSpellFreeCastGrantsForUnit(unit)?.profile;
+  if (profile === undefined) {
     return Either.right(undefined);
   }
   const resource = characterBattleResourceForUnit(unit);
   if (resource.cap.kind !== "fixed") {
     return battleCreatureInitIssue(
-      "Favored Enemy Hunter's Mark free casts must use a fixed battle resource cap.",
+      "Class feature spell free casts must use a fixed battle resource cap.",
     );
   }
   const expended =
     resourceExpenditures.find(
-      (expenditure) => expenditure.tag === "favoredEnemyHuntersMarkFreeCasts",
+      (expenditure) => expenditure.tag === profile.resourceTag,
     )?.expended ?? 0;
   if (expended > resource.cap.uses) {
     return battleCreatureInitIssue(
-      "Favored Enemy Hunter's Mark free-cast expenditure exceeds its battle resource cap.",
+      "Class feature spell free-cast expenditure exceeds its battle resource cap.",
     );
   }
   return Either.right(resource.cap.uses - expended);

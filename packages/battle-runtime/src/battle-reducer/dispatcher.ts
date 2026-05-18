@@ -151,7 +151,6 @@ import {
 } from "./spells-holes-fills.ts";
 
 import {
-  combatantHasSpellSlotUseThisTurn,
   claimPendingSpellSlotUseThisTurn,
   markSpellSlotExpendedThisTurn,
   releasePendingSpellSlotUseThisTurn,
@@ -170,7 +169,11 @@ import {
   spellFillSetContainsOnlySpellCastReactionFacts,
 } from "./spells-resolve-fill-set.ts";
 import { validateSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
-import { spendSpellCastResources } from "./spells-resolve-resources.ts";
+import {
+  spendClassFeatureFreeCastResource,
+  spendSpellCastResources,
+  type SpellCastResourceSpendResult,
+} from "./spells-resolve-resources.ts";
 
 import { attackActionOptionName } from "./statblock-attacks.ts";
 
@@ -2537,25 +2540,26 @@ export function resolveCastAttackHitBonusActionSpellCommand(
       "Bonus Action spell is no longer available for the current actor.",
     );
   }
-  const nextTurnResources = markSpellSlotExpendedThisTurn(
-    spentBonusAction.right,
-    input.subject.casterId,
-  );
-  if (Either.isLeft(nextTurnResources)) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "This turn has already expended a Spell Slot.",
-    );
+  const resourced =
+    invocation.resource.tag === "classFeatureFreeCast"
+      ? spendClassFeatureFreeCastResource(
+          {
+            ...input.state,
+            currentTurnResources: spentBonusAction.right,
+          },
+          input.subject.casterId,
+          invocation.resource.resourceUnitId,
+          input.state,
+        )
+      : spendAttackHitSpellSlot(
+          input.state,
+          input.subject.casterId,
+          spentBonusAction.right,
+          invocation.resource.slotLevel,
+        );
+  if (resourced.tag === "invalid") {
+    return resourced;
   }
-  const slotted = expendSpellSlot(
-    {
-      ...input.state,
-      currentTurnResources: nextTurnResources.right,
-    },
-    input.subject.casterId,
-    invocation.resource.slotLevel,
-  );
   const targetCreatureType = battleCreatureType(target);
   const conditionalBonusApplies =
     invocation.procedure === "afterHitDamage" &&
@@ -2596,11 +2600,11 @@ export function resolveCastAttackHitBonusActionSpellCommand(
   const effected =
     invocation.procedure === "afterHitTimedDamageAndSave"
       ? applyAfterHitTimedDamageAndSaveSpellEffect(
-          slotted,
+          resourced.state,
           target.combatantId,
           invocation,
         )
-      : slotted;
+      : resourced.state;
   const nextState = {
     ...effected,
     interruptStack: [
@@ -2623,6 +2627,36 @@ export function resolveCastAttackHitBonusActionSpellCommand(
     tag: "resolved",
     state: nextState,
     snapshot: snapshotBattle(nextState),
+  };
+}
+
+function spendAttackHitSpellSlot(
+  state: BattleState,
+  casterId: CombatantId,
+  spentBonusAction: BattleTurnResources,
+  slotLevel: SpellSlotInvocationResource["slotLevel"],
+): SpellCastResourceSpendResult {
+  const nextTurnResources = markSpellSlotExpendedThisTurn(
+    spentBonusAction,
+    casterId,
+  );
+  if (Either.isLeft(nextTurnResources)) {
+    return invalidResult(
+      state,
+      "staleSubject",
+      "This turn has already expended a Spell Slot.",
+    );
+  }
+  return {
+    tag: "resolved",
+    state: expendSpellSlot(
+      {
+        ...state,
+        currentTurnResources: nextTurnResources.right,
+      },
+      casterId,
+      slotLevel,
+    ),
   };
 }
 
@@ -4064,9 +4098,10 @@ export function attackHitBonusActionSpellReactionChoices(
           frame.attackHitTriggerKind,
         ) ||
         !spellHasAvailableSpend(actor, invocation) ||
-        combatantHasSpellSlotUseThisTurn(
+        !spellActTurnResourceAvailable(
           state.currentTurnResources,
           frame.attackerId,
+          invocation,
         )
       ) {
         return [];

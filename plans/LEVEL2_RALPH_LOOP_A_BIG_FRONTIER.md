@@ -7,55 +7,55 @@
     {
       "number": 1,
       "id": "L12G-OWNER-BARBARIAN-RECKLESS-ATTACK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Barbarian Reckless Attack Owner Evidence"
     },
     {
       "number": 2,
       "id": "L12G-OWNER-FIGHTER-ACTION-SURGE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Fighter Action Surge Owner Evidence"
     },
     {
       "number": 3,
       "id": "L12G-OWNER-FIGHTER-TACTICAL-MIND",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Fighter Tactical Mind Owner Evidence"
     },
     {
       "number": 4,
       "id": "L12G-OWNER-ROGUE-CUNNING-ACTION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Rogue Cunning Action Owner Evidence"
     },
     {
       "number": 5,
       "id": "L12G-CLASS-BARBARIAN-DANGER-SENSE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Barbarian Danger Sense Support"
     },
     {
       "number": 6,
       "id": "L12G-CLASS-BARD-JACK-OF-ALL-TRADES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Bard Jack Of All Trades Support"
     },
     {
       "number": 7,
       "id": "L12G-CLASS-PALADIN-FIGHTING-STYLE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Paladin Fighting Style Support"
     },
     {
       "number": 8,
       "id": "L12G-CLASS-PALADINS-SMITE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Paladins Smite Spell Access And Free Cast"
     },
     {
       "number": 9,
       "id": "L12G-CLASS-WIZARD-SCHOLAR",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Wizard Scholar Constrained Expertise"
     },
     {
@@ -629,7 +629,7 @@ frontier and Loop L's language-access frontier.
 
 ### Task 1 - L12G-OWNER-BARBARIAN-RECKLESS-ATTACK - Barbarian Reckless Attack Owner Evidence
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `barbarian_reckless_attack`. Gate task: 1 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -656,7 +656,7 @@ Acceptance:
 
 ### Task 2 - L12G-OWNER-FIGHTER-ACTION-SURGE - Fighter Action Surge Owner Evidence
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `fighter_action_surge`. Gate task: 2 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -683,7 +683,7 @@ Acceptance:
 
 ### Task 3 - L12G-OWNER-FIGHTER-TACTICAL-MIND - Fighter Tactical Mind Owner Evidence
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `fighter_tactical_mind`. Gate task: 3 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -710,7 +710,7 @@ Acceptance:
 
 ### Task 4 - L12G-OWNER-ROGUE-CUNNING-ACTION - Rogue Cunning Action Owner Evidence
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `rogue_cunning_action`. Gate task: 4 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -737,7 +737,7 @@ Acceptance:
 
 ### Task 5 - L12G-CLASS-BARBARIAN-DANGER-SENSE - Barbarian Danger Sense Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `barbarian_danger_sense`. Gate task: 5 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -764,7 +764,7 @@ Acceptance:
 
 ### Task 6 - L12G-CLASS-BARD-JACK-OF-ALL-TRADES - Bard Jack Of All Trades Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `bard_jack_of_all_trades`. Gate task: 6 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -791,7 +791,7 @@ Acceptance:
 
 ### Task 7 - L12G-CLASS-PALADIN-FIGHTING-STYLE - Paladin Fighting Style Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `paladin_fighting_style`. Gate task: 7 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -818,7 +818,7 @@ Acceptance:
 
 ### Task 8 - L12G-CLASS-PALADINS-SMITE - Paladins Smite Spell Access And Free Cast
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `paladin_paladins_smite`. Gate task: 8 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -845,7 +845,7 @@ Acceptance:
 
 ### Task 9 - L12G-CLASS-WIZARD-SCHOLAR - Wizard Scholar Constrained Expertise
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `wizard_scholar`. Gate task: 9 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 

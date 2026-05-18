@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
 
 module unitFeatureProcedureProfiles {
   import hitPointDamage.* from "./hit-point-damage"
@@ -14,7 +14,7 @@ module unitFeatureProcedureProfiles {
   // RAW anchors:
   // - Classes/Fighter.md: Second Wind, Action Surge, Champion Improved Critical.
   // - Classes/Rogue.md: Cunning Action, Sneak Attack, Evasion, Uncanny Dodge.
-  // - Classes/Barbarian.md: Rage, Reckless Attack.
+  // - Classes/Barbarian.md: Rage, Reckless Attack, Danger Sense.
   // - Classes/Bard.md: Bardic Inspiration and College of Lore Cutting Words.
   // - Classes/Sorcerer.md: Innate Sorcery activation.
   // - Classes/Monk.md: Martial Arts attack projection, Deflect Attacks.
@@ -189,6 +189,15 @@ module unitFeatureProcedureProfiles {
     | StrengthSavingThrowFact
     | DexteritySavingThrowFact
     | ConstitutionSavingThrowFact
+
+  type PassiveSavingThrowRollMode =
+    | NormalSavingThrowMode
+    | AdvantageSavingThrowMode
+
+  type PassiveSavingThrowRollModeFacts = {
+    savingThrowAbility: SavingThrowAbilityFact,
+    incapacitated: bool,
+  }
 
   type SaveDamageReplacementFacts = {
     savingThrowAbility: SavingThrowAbilityFact,
@@ -1165,6 +1174,12 @@ module unitFeatureProcedureProfiles {
       else normalFailedSaveDamage
     }
 
+  pure def passiveSavingThrowRollMode(facts: PassiveSavingThrowRollModeFacts): PassiveSavingThrowRollMode =
+    if (facts.savingThrowAbility == DexteritySavingThrowFact and not(facts.incapacitated))
+      AdvantageSavingThrowMode
+    else
+      NormalSavingThrowMode
+
   pure def cuttingWordsRollTotalAfterReduction(facts: CuttingWordsRollFacts): int =
     nonnegative(facts.originalTotal - facts.bardicDieRoll)
 
@@ -1691,6 +1706,23 @@ module unitFeatureProcedureProfiles {
       assert(success == 0),
       assert(failure == 10),
       assert(incapacitated == 10),
+    }
+  }
+
+  run test_danger_sense_grants_dexterity_saving_throw_advantage_when_not_incapacitated = {
+    all {
+      assert(passiveSavingThrowRollMode({
+        savingThrowAbility: DexteritySavingThrowFact,
+        incapacitated: false,
+      }) == AdvantageSavingThrowMode),
+      assert(passiveSavingThrowRollMode({
+        savingThrowAbility: DexteritySavingThrowFact,
+        incapacitated: true,
+      }) == NormalSavingThrowMode),
+      assert(passiveSavingThrowRollMode({
+        savingThrowAbility: ConstitutionSavingThrowFact,
+        incapacitated: false,
+      }) == NormalSavingThrowMode),
     }
   }
 

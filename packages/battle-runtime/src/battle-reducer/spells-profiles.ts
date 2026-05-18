@@ -265,6 +265,7 @@ export function supportedSpellActs(
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedAfterHitDamageSpellProfile(
+        actor,
         spell,
         spellcasting.spellSlots,
       ),

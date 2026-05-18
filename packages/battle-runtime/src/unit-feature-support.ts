@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement
 import { Match } from "effect";
 import * as Either from "effect/Either";
 import {
@@ -51,6 +51,8 @@ export const PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE =
   "passiveRangedAttackRollBonus";
 export const ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE =
   "attackRollMissToHitReplacement";
+export const PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE =
+  "passiveSavingThrowRollMode";
 export const PASSIVE_SPEED_BONUS_SUPPORT_PROFILE = "passiveSpeedBonus";
 export const PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE =
   "passiveSpeedKindGrants";
@@ -113,6 +115,7 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
   PASSIVE_ARMOR_CLASS_BONUS_SUPPORT_PROFILE,
   PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
   ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
+  PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
   PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
   PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE,
   WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
@@ -154,6 +157,15 @@ export type AttackRollMissToHitReplacementProfile = {
 export type BattleAttackRollMissToHitReplacementSupportProfile = {
   readonly kind: typeof ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE;
   readonly replacement: AttackRollMissToHitReplacementProfile;
+};
+export type PassiveSavingThrowRollModeProfile = {
+  readonly mode: "advantage";
+  readonly ability: "dex";
+  readonly suppressedByCondition: "incapacitated";
+};
+export type BattlePassiveSavingThrowRollModeSupportProfile = {
+  readonly kind: typeof PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE;
+  readonly savingThrow: PassiveSavingThrowRollModeProfile;
 };
 export type BattleAttackActionAttackCountScalingSupportProfile = {
   readonly kind: typeof ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE;
@@ -234,6 +246,7 @@ export type BattleUnitSupportProfile =
   | BattleAlternateActionCostSupportProfile
   | BattlePassiveRangedAttackRollBonusSupportProfile
   | BattleAttackRollMissToHitReplacementSupportProfile
+  | BattlePassiveSavingThrowRollModeSupportProfile
   | BattlePassiveSpeedBonusSupportProfile
   | BattlePassiveSpeedKindGrantsSupportProfile
   | BattleAttackActionAttackCountScalingSupportProfile
@@ -244,6 +257,7 @@ export type BattleUnitSupportProfile =
       | "alternateActionCost"
       | "passiveRangedAttackRollBonus"
       | "attackRollMissToHitReplacement"
+      | "passiveSavingThrowRollMode"
       | "passiveSpeedBonus"
       | "passiveSpeedKindGrants"
       | "attackActionAttackCountScaling"
@@ -388,6 +402,17 @@ export function battleUnitSupportProfilesForUnit(input: {
   }
   if (attackRollMissToHitReplacementSupport !== null) {
     supportProfiles.push(attackRollMissToHitReplacementSupport);
+  }
+
+  const passiveSavingThrowRollModeSupport =
+    battlePassiveSavingThrowRollModeSupportForUnit(input.unit);
+  if (passiveSavingThrowRollModeSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle passive Saving Throw roll-mode Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (passiveSavingThrowRollModeSupport !== null) {
+    supportProfiles.push(passiveSavingThrowRollModeSupport);
   }
 
   const passiveSpeedBonusSupport = battlePassiveSpeedBonusSupportForUnit(
@@ -933,6 +958,11 @@ export type SupportedUnitFeatureProfile =
       readonly replacement: AttackRollMissToHitReplacementProfile;
     }
   | {
+      readonly kind: "passiveSavingThrowRollMode";
+      readonly unit: UnitRecord;
+      readonly savingThrow: PassiveSavingThrowRollModeProfile;
+    }
+  | {
       readonly kind: "passiveSpeedBonus";
       readonly unit: UnitRecord;
       readonly speed: PassiveSpeedBonusProfile;
@@ -1238,6 +1268,11 @@ export type BattleAttackRollMissToHitReplacementSupport =
   | "unsupported"
   | null;
 
+export type BattlePassiveSavingThrowRollModeSupport =
+  | BattlePassiveSavingThrowRollModeSupportProfile
+  | "unsupported"
+  | null;
+
 export type BattlePassiveSpeedBonusSupport =
   | BattlePassiveSpeedBonusSupportProfile
   | "unsupported"
@@ -1328,6 +1363,21 @@ export function battleAttackRollMissToHitReplacementSupportForUnit(
     : {
         kind: ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
         replacement,
+      };
+}
+
+export function battlePassiveSavingThrowRollModeSupportForUnit(
+  unit: UnitRecord,
+): BattlePassiveSavingThrowRollModeSupport {
+  if (!hasPassiveSavingThrowRollModeMechanics(unit)) {
+    return null;
+  }
+  const savingThrow = passiveSavingThrowRollModeProfileForUnit(unit);
+  return savingThrow === null
+    ? "unsupported"
+    : {
+        kind: PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
+        savingThrow,
       };
 }
 
@@ -1461,6 +1511,14 @@ function hasAttackRollMissToHitReplacementMechanics(unit: UnitRecord): boolean {
     unit.mechanics.family === "triggered_replacement" &&
     unit.mechanics.trigger.kind === "miss_with_attack_roll"
   );
+}
+
+function hasPassiveSavingThrowRollModeMechanics(unit: UnitRecord): boolean {
+  if (unit.kind !== "class_feature" || unit.mechanics.family !== "passive") {
+    return false;
+  }
+  const [effect] = unit.mechanics.grants;
+  return effect?.kind === "modify_roll_advantage";
 }
 
 function hasPassiveSpeedBonusMechanics(unit: UnitRecord): boolean {
@@ -1756,6 +1814,45 @@ export function attackRollMissToHitReplacementProfileForUnit(
     trigger: "missWithAttackRoll",
     effect: "replaceMissWithHit",
     resetCadence: "startOfNextTurn",
+  };
+}
+
+export function passiveSavingThrowRollModeProfileForUnit(
+  unit: UnitRecord,
+): PassiveSavingThrowRollModeProfile | null {
+  if (unit.kind !== "class_feature" || unit.mechanics.family !== "passive") {
+    return null;
+  }
+  const [effect, ...extraEffects] = unit.mechanics.grants;
+  const [suppressor, ...extraSuppressors] = unit.mechanics.suppressedBy ?? [];
+  if (
+    effect?.kind !== "modify_roll_advantage" ||
+    effect.mode !== "advantage" ||
+    !sameStringSet(effect.on, ["saving_throw"]) ||
+    !sameStringSet(effect.saveAbilityFilter ?? [], ["dex"]) ||
+    effect.affects !== undefined ||
+    effect.spellSourceFilter !== undefined ||
+    effect.attackerTypeFilter !== undefined ||
+    effect.skillFilter !== undefined ||
+    effect.conditionFilter !== undefined ||
+    effect.abilityFilter !== undefined ||
+    effect.saveSourceFilter !== undefined ||
+    effect.contextRangeFeet !== undefined ||
+    effect.count !== undefined ||
+    effect.expiresOn !== undefined ||
+    extraEffects.length > 0 ||
+    unit.mechanics.condition !== undefined ||
+    unit.mechanics.operations !== undefined ||
+    suppressor?.kind !== "condition_active" ||
+    !sameStringSet(suppressor.conditions, ["incapacitated"]) ||
+    extraSuppressors.length > 0
+  ) {
+    return null;
+  }
+  return {
+    mode: "advantage",
+    ability: "dex",
+    suppressedByCondition: "incapacitated",
   };
 }
 
@@ -2205,6 +2302,7 @@ export function parseSupportedUnitFeatureProfile(
     parsePassiveArmorClassBonusUnitFeatureProfile(unit) ??
     parsePassiveRangedAttackRollBonusUnitFeatureProfile(unit) ??
     parseAttackRollMissToHitReplacementUnitFeatureProfile(unit) ??
+    parsePassiveSavingThrowRollModeUnitFeatureProfile(unit) ??
     parsePassiveSpeedBonusUnitFeatureProfile(unit) ??
     parsePassiveSpeedKindGrantsUnitFeatureProfile(unit) ??
     parseWeaponDamageDiceRollChoiceUnitFeatureProfile(unit) ??
@@ -2788,6 +2886,22 @@ function parsePassiveSpeedBonusUnitFeatureProfile(
         kind: "passiveSpeedBonus",
         unit,
         speed,
+      };
+}
+
+function parsePassiveSavingThrowRollModeUnitFeatureProfile(
+  unit: UnitRecord,
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "passiveSavingThrowRollMode" }
+> | null {
+  const savingThrow = passiveSavingThrowRollModeProfileForUnit(unit);
+  return savingThrow === null
+    ? null
+    : {
+        kind: "passiveSavingThrowRollMode",
+        unit,
+        savingThrow,
       };
 }
 

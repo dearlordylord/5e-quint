@@ -49,6 +49,7 @@ import {
   type ThaumaturgyBoomingVoiceSpellInvocation,
 } from "../battle-reducer.ts";
 import {
+  characterResourceIsClassFeatureFreeCastForSpell,
   characterResourceIsFavoredEnemyFreeCast,
   resourceHasUsesRemaining,
   type CharacterBattleSpellcastingState,
@@ -777,6 +778,7 @@ export function supportedPreparedWeaponDamageRiderSpellProfile(
 }
 
 export function supportedPreparedAfterHitDamageSpellProfile(
+  actor: BattleCreatureState,
   spell: SpellRecord,
   spellSlots: CharacterBattleSpellcastingState["spellSlots"],
 ): readonly SupportedSpellInvocation[] {
@@ -784,37 +786,79 @@ export function supportedPreparedAfterHitDamageSpellProfile(
   if (projection === null) {
     return [];
   }
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
-    if (Number(slot.spellLevel) < spell.mechanics.level) {
-      return [];
-    }
-    const damageExpr = supportedDamageAmountExpr({
-      amount: projection.damageAmount,
-      spellLevel: spell.mechanics.level,
-      slotLevel: slot.spellLevel,
-    });
-    if (damageExpr === null) {
-      return [];
-    }
-    return [
-      {
-        access: { tag: "prepared" },
-        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-        procedure: "afterHitDamage",
-        spell,
-        actionCost: "bonusAction",
-        damage: {
-          expr: damageExpr,
-          damageType: projection.damageType,
-        },
-        conditionalBonusDamage: {
-          targetCreatureTypes: projection.conditionalBonusTargetTypes,
-          expr: projection.conditionalBonusExpr,
-          damageType: projection.conditionalBonusDamageType,
-        },
-      },
-    ];
+  const freeCastSlotLevel = spellSlotLevel(spell.mechanics.level);
+  const freeCastDamageExpr = supportedDamageAmountExpr({
+    amount: projection.damageAmount,
+    spellLevel: spell.mechanics.level,
+    slotLevel: freeCastSlotLevel,
   });
+  const freeCastInvocations: readonly SupportedSpellInvocation[] =
+    actor.origin.kind !== "character" || freeCastDamageExpr === null
+      ? []
+      : actor.origin.resources.flatMap(
+          (resource): readonly SupportedSpellInvocation[] =>
+            characterResourceIsClassFeatureFreeCastForSpell(
+              resource,
+              spell.id,
+            ) && resourceHasUsesRemaining(resource)
+              ? [
+                  {
+                    access: { tag: "prepared" },
+                    resource: {
+                      tag: "classFeatureFreeCast",
+                      resourceUnitId: resource.unit.id,
+                    },
+                    procedure: "afterHitDamage",
+                    spell,
+                    actionCost: "bonusAction",
+                    damage: {
+                      expr: freeCastDamageExpr,
+                      damageType: projection.damageType,
+                    },
+                    conditionalBonusDamage: {
+                      targetCreatureTypes:
+                        projection.conditionalBonusTargetTypes,
+                      expr: projection.conditionalBonusExpr,
+                      damageType: projection.conditionalBonusDamageType,
+                    },
+                  },
+                ]
+              : [],
+        );
+  const slotInvocations = spellSlots.flatMap(
+    (slot): readonly SupportedSpellInvocation[] => {
+      if (Number(slot.spellLevel) < spell.mechanics.level) {
+        return [];
+      }
+      const damageExpr = supportedDamageAmountExpr({
+        amount: projection.damageAmount,
+        spellLevel: spell.mechanics.level,
+        slotLevel: slot.spellLevel,
+      });
+      if (damageExpr === null) {
+        return [];
+      }
+      return [
+        {
+          access: { tag: "prepared" },
+          resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+          procedure: "afterHitDamage",
+          spell,
+          actionCost: "bonusAction",
+          damage: {
+            expr: damageExpr,
+            damageType: projection.damageType,
+          },
+          conditionalBonusDamage: {
+            targetCreatureTypes: projection.conditionalBonusTargetTypes,
+            expr: projection.conditionalBonusExpr,
+            damageType: projection.conditionalBonusDamageType,
+          },
+        },
+      ];
+    },
+  );
+  return [...freeCastInvocations, ...slotInvocations];
 }
 
 export function supportedPreparedAfterHitSaveGatedConditionSpellProfile(

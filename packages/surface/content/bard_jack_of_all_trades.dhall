@@ -3,17 +3,11 @@
 -- RAW: "You can add half your Proficiency Bonus (round down) to any
 --       ability check you make that uses a skill proficiency you lack
 --       and that doesn't otherwise use your Proficiency Bonus."
---
--- Reference encoding for DiceDelta source variants:
---   • modify_roll_numeric.delta uses the proficiency_bonus source
---     (scale = "half") instead of a literal fixed_dice delta.
---
 -- The "uses a skill proficiency you lack" and "doesn't otherwise use
 -- your Proficiency Bonus" clauses are predicates over an Ability Check
--- and the character's existing proficiency facts. The generic
--- modify_roll_numeric atom below is retained as authored pressure only;
--- it is not a supported Unit profile until the owning Ability Check
--- proficiency projection can execute those gates.
+-- and the character's existing proficiency facts. Keep this as a
+-- Jack-specific atom so the authored Surface record cannot masquerade
+-- as a generic Ability Check roll modifier.
 
 let jackOfAllTrades =
       { kind = "class_feature"
@@ -30,15 +24,7 @@ let jackOfAllTrades =
       , mechanics =
           { family = "passive"
           , grants =
-              [ { kind = "modify_roll_numeric"
-                , on = [ "ability_check" ]
-                , delta =
-                    { kind = "proficiency_bonus"
-                    , sign = "+"
-                    , scale = Some "half"
-                    }
-                }
-              ]
+              [ { kind = "jack_of_all_trades_ability_check_bonus" } ]
           }
       }
 

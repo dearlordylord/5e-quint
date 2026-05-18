@@ -233,13 +233,13 @@ These distinctions are caller-side concerns (which attacks to resolve, whether g
 
 **Changes:** `creature.qnt`: `init` adds `nondet pcClass = Set("Fighter", "Barbarian").oneOf()`, sets `fighterLevel`/`barbarianLevel` based on selection. `creature.mbt.test.ts`: init handler reads `pcClass` and sets levels accordingly.
 
-## A27: TS-only barbarian features
+## A27: Remaining TS-only barbarian features
 
-**Assumption:** Brutal Strike effects (Forceful Blow, Hamstring Blow, Staggering Blow, Sundering Blow), Frenzy bonus damage, Danger Sense advantage, and Relentless Rage save resolution remain TS-only features. These are caller-side composition (e.g., applying extra damage dice, granting advantage on DEX saves) rather than resource tracking, so they don't need Quint state variables.
+**Assumption:** Brutal Strike effects (Forceful Blow, Hamstring Blow, Staggering Blow, Sundering Blow), Frenzy bonus damage, and Relentless Rage save resolution remain TS-only features. These are caller-side composition (e.g., applying extra damage dice and resolving replacement saves) rather than resource tracking, so they don't need Quint state variables. Danger Sense is no longer TS-only at the promoted battle-runtime boundary; it is modeled as a passive Saving Throw roll-mode profile that grants Advantage on Dexterity Saving Throws unless the target has the Incapacitated condition.
 
-**Rules basis:** These features modify attack rolls, damage totals, or saving throws — all computed by the caller using the existing spec mechanics (damage, advantage, saves). The spec tracks only the resource charges and state flags that constrain when these features can be used.
+**Rules basis:** These features modify attack rolls, damage totals, or saving throws — all computed by the caller using the existing spec mechanics (damage, advantage, saves). The spec tracks only the resource charges and state flags that constrain when these features can be used. Danger Sense is different because SRD 5.2.1 Barbarian level 2 grants a passive roll-mode fact: Advantage on Dexterity Saving Throws unless Incapacitated.
 
-**Changes:** Retaliation after-damage reaction eligibility is modeled in `battle.qnt` from battle-owned trigger qualifiers. The remaining TS-only features are implemented in `class-barbarian.ts`.
+**Changes:** Retaliation after-damage reaction eligibility is modeled in `battle.qnt` from battle-owned trigger qualifiers. Danger Sense is modeled in the promoted battle-runtime passive Saving Throw roll-mode profile and corresponding Quint/runtime proofs. The remaining TS-only features are implemented in `class-barbarian.ts`.
 
 ## A30: Wholeness of Body — WIS modifier range
 

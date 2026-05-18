@@ -7,7 +7,9 @@ import animalFriendshipInput from "../../content/animal_friendship.json";
 import backgroundSoldierInput from "../../content/background_soldier.json";
 import bardBardicInspirationInput from "../../content/bard_bardic_inspiration.json";
 import bardCuttingWordsInput from "../../content/bard_cutting_words.json";
+import bardJackOfAllTradesInput from "../../content/bard_jack_of_all_trades.json";
 import barbarianRageInput from "../../content/barbarian_rage.json";
+import barbarianDangerSenseInput from "../../content/barbarian_danger_sense.json";
 import barbarianFastMovementInput from "../../content/barbarian_fast_movement.json";
 import barbarianRecklessAttackInput from "../../content/barbarian_reckless_attack.json";
 import barbarianUnarmoredDefenseInput from "../../content/barbarian_unarmored_defense.json";
@@ -98,7 +100,9 @@ import orcDarkvisionInput from "../../content/species_orc_darkvision.json";
 import orcRelentlessEnduranceInput from "../../content/orc_relentless_endurance.json";
 import elfDarkvisionInput from "../../content/darkvision_elf.json";
 import paladinExtraAttackInput from "../../content/paladin_extra_attack.json";
+import paladinFightingStyleInput from "../../content/paladin_fighting_style.json";
 import paladinLayOnHandsInput from "../../content/paladin_lay_on_hands.json";
+import paladinPaladinsSmiteInput from "../../content/paladin_paladins_smite.json";
 import paladinWeaponMasteryInput from "../../content/paladin_weapon_mastery.json";
 import poisonSprayInput from "../../content/poison_spray.json";
 import protectionFromEvilAndGoodInput from "../../content/protection_from_evil_and_good.json";
@@ -161,6 +165,7 @@ import weaponShortswordInput from "../../content/weapon_shortsword.json";
 import weaponSpearInput from "../../content/weapon_spear.json";
 import wizardArcaneRecoveryInput from "../../content/wizard_arcane_recovery.json";
 import wizardRitualAdeptInput from "../../content/wizard_ritual_adept.json";
+import wizardScholarInput from "../../content/wizard_scholar.json";
 import acidSplashInput from "../../content/acid_splash.json";
 import { decodeUnitRecordSync } from "./schema.ts";
 import type {
@@ -305,10 +310,12 @@ export const srdUnitCollection = defineSrdUnitCollection({
     barbarianRageInput,
     barbarianUnarmoredDefenseInput,
     barbarianRecklessAttackInput,
+    barbarianDangerSenseInput,
     barbarianFastMovementInput,
     barbarianWeaponMasteryInput,
     bardBardicInspirationInput,
     bardCuttingWordsInput,
+    bardJackOfAllTradesInput,
     clericDivineOrderInput,
     druidDruidicInput,
     druidPrimalOrderInput,
@@ -326,12 +333,15 @@ export const srdUnitCollection = defineSrdUnitCollection({
     warlockEldritchInvocationsInput,
     wizardRitualAdeptInput,
     wizardArcaneRecoveryInput,
+    wizardScholarInput,
     featAbilityScoreImprovementInput,
     featArcheryInput,
     featBoonOfCombatProwessInput,
     featDefenseInput,
     featSavageAttackerInput,
     paladinLayOnHandsInput,
+    paladinFightingStyleInput,
+    paladinPaladinsSmiteInput,
     paladinExtraAttackInput,
     paladinWeaponMasteryInput,
     rangerExtraAttackInput,

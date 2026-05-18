@@ -24,10 +24,6 @@ import {
   type SpellMarkedDamageRider,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
-import {
-  resourceHasUsesRemaining,
-  spendCharacterResourceUse,
-} from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   damageDispositionFillFor,
@@ -84,15 +80,14 @@ import {
   selectedAttackRollMissToHitReplacement,
 } from "./statblock-attacks.ts";
 import {
+  spendClassFeatureFreeCastResource,
   spendSpellCastResources,
   startSpellEffectConcentration,
+  type SpellCastResourceSpendResult,
 } from "./spells-resolve-resources.ts";
 import { resolveChainedSpellAttackDamageAct } from "./spells-resolve-chained.ts";
 import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
 
-type SpellCastResourceSpendResult =
-  | { readonly tag: "resolved"; readonly state: BattleState }
-  | Extract<BattleResolutionResult, { readonly tag: "invalid" }>;
 import { resolvePreparedSlotSpellRelease } from "./spells-resolve-prepared-slot.ts";
 import { resolveSaveGateDamageSpellRelease } from "./spells-resolve-save-gates.ts";
 import {
@@ -196,7 +191,11 @@ export function resolveDancingLightsCastSpellAct(input: {
   const placement = input.fillSet.dancingLightsPlacement?.value;
   if (placement === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
-      spellDancingLightsPlacementHole(input.invocation, input.invocation.form, []),
+      spellDancingLightsPlacementHole(
+        input.invocation,
+        input.invocation.form,
+        [],
+      ),
     ]);
   }
   const placementError = dancingLightsCastPlacementError(
@@ -204,11 +203,7 @@ export function resolveDancingLightsCastSpellAct(input: {
     placement,
   );
   if (placementError !== null) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      placementError,
-    );
+    return invalidResult(input.input.state, "invalidFill", placementError);
   }
   if (placement.mode !== "cast") {
     return invalidResult(
@@ -296,17 +291,13 @@ export function resolveDancingLightsRepositionSpellAct(input: {
         "Dancing Lights movement requires active lights from this spell.",
       );
     }
-    return needsHolesResult(
-      input.input.state,
-      input.input.subject,
-      [
-        spellDancingLightsPlacementHole(
-          input.invocation,
-          activeEffect.form,
-          dancingLightsFromEffect(activeEffect).map((light) => light.lightId),
-        ),
-      ],
-    );
+    return needsHolesResult(input.input.state, input.input.subject, [
+      spellDancingLightsPlacementHole(
+        input.invocation,
+        activeEffect.form,
+        dancingLightsFromEffect(activeEffect).map((light) => light.lightId),
+      ),
+    ]);
   }
   const placementError = dancingLightsRepositionPlacementError(
     input.input.state,
@@ -315,11 +306,7 @@ export function resolveDancingLightsRepositionSpellAct(input: {
     placement,
   );
   if (placementError !== null) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      placementError,
-    );
+    return invalidResult(input.input.state, "invalidFill", placementError);
   }
   if (placement.mode !== "reposition") {
     return invalidResult(
@@ -1016,51 +1003,6 @@ function markedDamageRiderTransferIsAvailable(
     currentActorId(state) !== activeMark.transfer.droppedOnTurn.actorId ||
     state.initiative.round !== activeMark.transfer.droppedOnTurn.round
   );
-}
-
-function spendClassFeatureFreeCastResource(
-  state: BattleState,
-  actorId: CombatantId,
-  resourceUnitId: string,
-  errorState: BattleState,
-): SpellCastResourceSpendResult {
-  const actor = state.combatants.get(actorId);
-  if (actor?.origin.kind !== "character") {
-    return invalidResult(
-      errorState,
-      "staleSubject",
-      "Class feature free spell cast is no longer available for the current actor.",
-    );
-  }
-  const resource = actor.origin.resources.find(
-    (candidate) =>
-      candidate.unit.id === resourceUnitId &&
-      resourceHasUsesRemaining(candidate),
-  );
-  if (resource === undefined) {
-    return invalidResult(
-      errorState,
-      "staleSubject",
-      "Class feature free spell cast is no longer available for the current actor.",
-    );
-  }
-  return {
-    tag: "resolved",
-    state: {
-      ...state,
-      combatants: new Map(state.combatants).set(actorId, {
-        ...actor,
-        origin: {
-          ...actor.origin,
-          resources: actor.origin.resources.map((candidate) =>
-            candidate.unit.id === resourceUnitId
-              ? spendCharacterResourceUse(candidate)
-              : candidate,
-          ),
-        },
-      }),
-    },
-  };
 }
 
 export function resolveReadySpellAct(

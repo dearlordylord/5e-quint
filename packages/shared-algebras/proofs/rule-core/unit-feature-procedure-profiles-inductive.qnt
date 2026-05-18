@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: verification-owner:qnt-proof RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.martial-arts-attack-projection unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.martial-arts-attack-projection unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
 
 module unitFeatureProcedureProfilesInductive {
   import hitPointDamage.* from "./hit-point-damage"
@@ -393,6 +393,35 @@ module unitFeatureProcedureProfilesInductive {
     }
   }
 
+  action doPassiveSavingThrowRollMode = {
+    nondet incapacitated = Set(true, false).oneOf()
+    nondet savingThrowAbility = Set(
+      StrengthSavingThrowFact,
+      DexteritySavingThrowFact,
+      ConstitutionSavingThrowFact
+    ).oneOf()
+    val mode = passiveSavingThrowRollMode({
+      savingThrowAbility: savingThrowAbility,
+      incapacitated: incapacitated,
+    })
+    all {
+      qLastDamageAmount' = if (mode == AdvantageSavingThrowMode) 1 else 0,
+      qLastArmorClass' = qLastArmorClass,
+      qFeatureUsesRemaining' = qFeatureUsesRemaining,
+      qFeatureMaximumUses' = qFeatureMaximumUses,
+      qActionSurgeGrant' = qActionSurgeGrant,
+      qRageOccurrence' = qRageOccurrence,
+      qInterruptedConcentration' = qInterruptedConcentration,
+      qReactorConcentration' = qReactorConcentration,
+      qRecklessOccurrence' = qRecklessOccurrence,
+      qAttackRollMadeThisTurn' = qAttackRollMadeThisTurn,
+      qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
+      qWeaponDamageDiceRollChoiceUsedThisTurn' = qWeaponDamageDiceRollChoiceUsedThisTurn,
+      qAttackRollMissToHitReplacementUsedSinceTurnStart' = qAttackRollMissToHitReplacementUsedSinceTurnStart,
+      recordTurn(qTurn),
+    }
+  }
+
   action doDefenseArmorClass = {
     nondet wearingLightArmor = Set(true, false).oneOf()
     nondet wearingMediumArmor = Set(true, false).oneOf()
@@ -641,8 +670,8 @@ module unitFeatureProcedureProfilesInductive {
   }
 
   action step = any {
-    // Branch budget: 14 feature-profile branches plus turn refresh. Each branch
-    // samples at most three bounded booleans or small fixture values.
+    // Branch budget: feature-profile branches plus turn refresh. Each branch
+    // samples bounded booleans or small fixture values.
     doActionSurge,
     doSecondWind,
     doCunningAction,
@@ -652,6 +681,7 @@ module unitFeatureProcedureProfilesInductive {
     doReactionReduction,
     doCriticalThreshold,
     doEvasionReplacement,
+    doPassiveSavingThrowRollMode,
     doDefenseArmorClass,
     doArcheryAttackRollBonus,
     doFastMovementSpeedBonus,

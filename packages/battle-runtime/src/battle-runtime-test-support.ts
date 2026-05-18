@@ -2561,6 +2561,30 @@ export function rangerFavoredEnemyResource(input?: {
   };
 }
 
+export function paladinsSmiteResource(input?: {
+  readonly usesRemaining?: number;
+}): NonNullable<
+  Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["resources"]
+>[number] {
+  const unit = unitLibrary.requireUnit("paladin_paladins_smite");
+  if (
+    unit.kind !== "class_feature" ||
+    unit.className !== "paladin" ||
+    unit.mechanics.family !== "passive"
+  ) {
+    throw new Error("Expected Paladin's Smite resource Unit.");
+  }
+  return {
+    unit,
+    ...(input?.usesRemaining === undefined
+      ? {}
+      : { usesRemaining: input.usesRemaining }),
+  };
+}
+
 export function recklessAttackFeature(): NonNullable<
   Extract<
     BattleCreatureInit["creatureInit"],

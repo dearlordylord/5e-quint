@@ -332,12 +332,8 @@ describe("Character Sheet battle handoff", () => {
 
     const favoredEnemy = unitLibrary.requireUnit("ranger_favored_enemy");
     const favoredEnemyResource = characterBattleResourceForUnit(favoredEnemy);
-    expect(favoredEnemyResource.cap.kind).toBe("fixed");
-    if (favoredEnemyResource.cap.kind !== "fixed") return;
-    const limitedFavoredEnemyResource =
-      favoredEnemyResource as CharacterBattleResourceState["resource"] & {
-        readonly cap: { readonly kind: "fixed" };
-      };
+    expect(hasFixedCharacterBattleResourceCap(favoredEnemyResource)).toBe(true);
+    if (!hasFixedCharacterBattleResourceCap(favoredEnemyResource)) return;
     const handoff = applyBattleHandoffToCharacterSheet({
       sheet: sheet.right,
       unitLibrary,
@@ -348,7 +344,7 @@ describe("Character Sheet battle handoff", () => {
           resources: [
             {
               unit: favoredEnemy,
-              resource: limitedFavoredEnemyResource,
+              resource: favoredEnemyResource,
               usedThisTurn: false,
               usesRemaining: resourceCount(1),
             },
@@ -378,6 +374,68 @@ describe("Character Sheet battle handoff", () => {
       expect.objectContaining({
         unit: favoredEnemy,
         usesRemaining: 1,
+      }),
+    );
+  });
+
+  test("persists Paladin's Smite free-cast spends for the next battle before Long Rest", () => {
+    const sheet = createFreshCharacterSheet({
+      characterId: characterSheetId("character:paladin-smite-handoff"),
+      build: paladinsSmitePaladinBuild(),
+      maximumHp: Hp(20),
+      currentHp: Hp(20),
+      tempHp: Hp(0),
+      unitLibrary,
+    });
+    expect(Either.isRight(sheet)).toBe(true);
+    if (Either.isLeft(sheet)) return;
+
+    const paladinsSmite = unitLibrary.requireUnit("paladin_paladins_smite");
+    const paladinsSmiteResource = characterBattleResourceForUnit(paladinsSmite);
+    expect(hasFixedCharacterBattleResourceCap(paladinsSmiteResource)).toBe(
+      true,
+    );
+    if (!hasFixedCharacterBattleResourceCap(paladinsSmiteResource)) return;
+    const handoff = applyBattleHandoffToCharacterSheet({
+      sheet: sheet.right,
+      unitLibrary,
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:paladin-smite-handoff"),
+          resources: [
+            {
+              unit: paladinsSmite,
+              resource: paladinsSmiteResource,
+              usedThisTurn: false,
+              usesRemaining: resourceCount(0),
+            },
+          ],
+        },
+        hp: Hp(20),
+        maxHp: Hp(20),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+
+    const settled = expectRight(handoff);
+    expect(settled.resourceExpenditures).toEqual([
+      { tag: "paladinsSmiteDivineSmiteFreeCast", expended: 1 },
+    ]);
+
+    const nextBattleResources = expectRight(
+      characterBattleResourceInitsFromBuild(
+        settled.build,
+        unitLibrary,
+        settled.resourceExpenditures,
+      ),
+    );
+
+    expect(nextBattleResources).toContainEqual(
+      expect.objectContaining({
+        unit: paladinsSmite,
+        usesRemaining: 0,
       }),
     );
   });
@@ -431,7 +489,7 @@ describe("Character Sheet battle handoff", () => {
       Either.left({
         tag: "characterSheetBattleHandoffIssue",
         message:
-          "Favored Enemy Hunter's Mark free casts must use a fixed battle resource cap during battle handoff.",
+          "Class feature spell free casts must use a fixed battle resource cap during battle handoff.",
       }),
     );
   });
@@ -572,6 +630,23 @@ describe("Character Build battle projection", () => {
       {
         sourceUnitId: "ranger_favored_enemy",
         spell: unitLibrary.requireUnit("hunters_mark"),
+      },
+    ]);
+  });
+
+  test("projects Paladin's Smite Divine Smite as feature-prepared Spell Access", () => {
+    const spellcasting = expectRight(
+      characterSpellcasting({
+        build: paladinsSmitePaladinBuild(),
+        unitLibrary,
+      }),
+    );
+
+    expect(spellcasting.preparedSpells).toEqual([]);
+    expect(spellcasting.featurePreparedSpells).toEqual([
+      {
+        sourceUnitId: "paladin_paladins_smite",
+        spell: unitLibrary.requireUnit("divine_smite"),
       },
     ]);
   });
@@ -2341,6 +2416,67 @@ function favoredEnemyRangerResourceBuild(): CharacterBuild {
       loadout: {},
     },
   };
+}
+
+function paladinsSmitePaladinBuild(): CharacterBuild {
+  return {
+    progression: {
+      startingClass: classUnitId("class_paladin"),
+      advancements: [
+        {
+          classUnitId: classUnitId("class_paladin"),
+          hitPointRule: { tag: "fixedHigherLevelGain" },
+        },
+      ],
+    },
+    background: "background_soldier",
+    species: "species_orc",
+    originLanguages: ["Common", "Dwarvish", "Goblin"],
+    classFeatureLanguages: [],
+    alignment: { order: "lawful", morality: "good" },
+    abilityScores: expectRight(
+      abilityScoreAssignment({
+        str: 15,
+        dex: 10,
+        con: 13,
+        int: 8,
+        wis: 12,
+        cha: 14,
+      }),
+    ),
+    proficiencyChoices: [],
+    features: [],
+    equipment: {
+      owned: [],
+      loadout: {},
+    },
+    spellcasting: {
+      sources: [
+        {
+          sourceUnitId: "class_paladin",
+          spellcastingAbility: "cha",
+          cantrips: [],
+          spellbook: [],
+          preparedSpells: [],
+          spellcastingFocuses: ["holy_symbol"],
+        },
+      ],
+      slotPools: {
+        spellcasting: {
+          kind: "spellcasting",
+          slots: [{ spellLevel: 1, count: 2 }],
+        },
+      },
+    },
+  };
+}
+
+function hasFixedCharacterBattleResourceCap(
+  resource: CharacterBattleResourceState["resource"],
+): resource is CharacterBattleResourceState["resource"] & {
+  readonly cap: { readonly kind: "fixed" };
+} {
+  return resource.cap.kind === "fixed";
 }
 
 function armorOfShadowsWarlockBuild(

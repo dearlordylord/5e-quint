@@ -164,6 +164,22 @@
         "packages/character-sheet-runtime/src/index.test.ts:wizardWarlockBuild",
         "packages/character-sheet-runtime/src/index.test.ts:expectRight"
       ]
+    },
+    "srd521:classes/bard:level-2:class-feature-grant:bard_jack_of_all_trades": {
+      "taskId": "L12G-CLASS-BARD-JACK-OF-ALL-TRADES",
+      "profile": "Character Sheet Ability Check Proficiency Bonus runtime",
+      "summary": "Bard Jack of All Trades is read from the installed Surface class-feature record and projected by the Character Sheet runtime only for unproficient skill Ability Checks when no other Proficiency Bonus applies. The runtime derives ordinary skill proficiency and Expertise from existing CharacterBuild proficiency facts, derives Jack ownership from the Bard level 2 class feature grant, and stores no parallel skill state.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/index.ts:characterSheetAbilityCheckProficiencyBonus",
+        "packages/character-sheet-runtime/src/index.ts:characterBuildOwnsJackOfAllTradesFeature",
+        "packages/character-sheet-runtime/src/index.ts:proficiencyBonusForCharacterLevel"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/index.test.ts:jackOfAllTradesAddsHalfProficiencyBonusTestName",
+        "packages/character-sheet-runtime/src/index.test.ts:skillProficiencyOverridesJackOfAllTradesTestName",
+        "packages/character-sheet-runtime/src/index.test.ts:jackOfAllTradesRequiresNoOtherProficiencyBonusTestName",
+        "packages/character-sheet-runtime/src/index.test.ts:jackOfAllTradesRequiresBardLevelTwoFeatureTestName"
+      ]
     }
   }
 }

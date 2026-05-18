@@ -161,6 +161,7 @@ describe("character-creation Surface records", () => {
         featureGrants: [
           { level: 1, unitId: "wizard_ritual_adept" },
           { level: 1, unitId: "wizard_arcane_recovery" },
+          { level: 2, unitId: "wizard_scholar" },
         ],
         startingEquipment: expect.arrayContaining([
           {
@@ -198,11 +199,13 @@ describe("character-creation Surface records", () => {
             kind: "spellbook",
             spells: [
               { spellId: "detect_magic", spellLevel: 1 },
+              { spellId: "feather_fall", spellLevel: 1 },
               { spellId: "mage_armor", spellLevel: 1 },
               { spellId: "magic_missile", spellLevel: 1 },
               { spellId: "shield", spellLevel: 1 },
               { spellId: "sleep", spellLevel: 1 },
               { spellId: "thunderwave", spellLevel: 1 },
+              { spellId: "chromatic_orb", spellLevel: 1 },
             ],
           },
           preparedAccess: {
@@ -210,11 +213,13 @@ describe("character-creation Surface records", () => {
             kind: "prepared_from_spellbook",
             spellIds: [
               "detect_magic",
+              "feather_fall",
               "mage_armor",
               "magic_missile",
               "shield",
               "sleep",
               "thunderwave",
+              "chromatic_orb",
             ],
           },
           spellSlotProjection: {
@@ -222,6 +227,22 @@ describe("character-creation Surface records", () => {
             resetCadence: { kind: "long_rest" },
             slots: [{ count: 2, spellLevel: 1 }],
           },
+          spellcastingProgression: [
+            {
+              atLevel: 1,
+              cantripCount: 3,
+              spellbookSpellCount: 6,
+              preparedSpellCount: 4,
+              spellSlots: [{ count: 2, spellLevel: 1 }],
+            },
+            {
+              atLevel: 2,
+              cantripCount: 3,
+              spellbookSpellCount: 8,
+              preparedSpellCount: 5,
+              spellSlots: [{ count: 3, spellLevel: 1 }],
+            },
+          ],
           spellcastingFocuses: ["arcane_focus", "spellbook"],
         },
       },
@@ -792,7 +813,7 @@ describe("character-creation Surface records", () => {
         description: "Divine Order test shape.",
         mechanics: {
           choiceKey: "divine_order",
-          family: "suborder_choice",
+          family: "class_feature_acquisition_choice",
           timing: "class_feature_acquisition",
           options: [
             {
@@ -888,7 +909,7 @@ describe("character-creation Surface records", () => {
         description: "Primal Order test shape.",
         mechanics: {
           choiceKey: "primal_order",
-          family: "suborder_choice",
+          family: "class_feature_acquisition_choice",
           timing: "class_feature_acquisition",
           options: [
             {

@@ -85,7 +85,10 @@ import {
   type CharacterBuildClassLevelGain,
   type ClassHitPointRule,
 } from "./index.ts";
-import { classFeatureGrantChoiceHoles } from "./discovery.ts";
+import {
+  classFeatureGrantChoiceHoles,
+  selectedClassFeatureAcquisitionGrantChoiceHoles,
+} from "./discovery.ts";
 import { parseCharacterProgressionShape } from "./character-progression-algebra.ts";
 import { classUnitId } from "./character-progression-types.ts";
 import {
@@ -102,8 +105,10 @@ import {
 } from "./support-gates.ts";
 import {
   CLASS_CANTRIP_CHOICE_KEY,
+  CLASS_FEATURE_FEAT_CHOICE_KEY,
   CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
   CLASS_PREPARED_SPELL_CHOICE_KEY,
+  PALADIN_FIGHTING_STYLE_CHOICE_KEY,
   abilityScoreIncreaseChoiceOptions,
   ELDRITCH_INVOCATIONS_CHOICE_KEY,
   progressionOptionId,
@@ -126,6 +131,7 @@ import {
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-03 fighter_fighting_style
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L1C-WARLOCK-ELDRITCH-INVOCATION-LIFECYCLE warlock_eldritch_invocations
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-06 cleric_divine_order druid_primal_order
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-CLASS-PALADIN-FIGHTING-STYLE paladin_fighting_style
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-07 rogue_expertise
 
 const unitCatalogResult = buildUnitCatalog({
@@ -714,6 +720,7 @@ describe("character creation hole discovery", () => {
           "13:class_fighter|12:class_wizard:level_2:fixed_hp_gain",
           "10:class_monk:level_1:maximum_hit_die",
           "13:class_paladin:level_1:maximum_hit_die",
+          "13:class_paladin|13:class_paladin:level_2:fixed_hp_gain",
           "12:class_ranger:level_1:maximum_hit_die",
           "11:class_rogue:level_1:maximum_hit_die",
           "11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue:level_6:fixed_hp_gain",
@@ -896,6 +903,223 @@ describe("character creation hole discovery", () => {
     ).toEqual(["option_a", "option_b", "option_c"]);
   });
 
+  test("models Paladin Fighting Style as a feat or Blessed Warrior acquisition choice", () => {
+    const paladinFacts = readClassCreationFacts(
+      unitLibrary.requireUnit("class_paladin"),
+    );
+    expect(paladinFacts.tag).toBe("readable");
+    if (paladinFacts.tag !== "readable") return;
+    expect(paladinFacts.value.featureGrants).toEqual(
+      expect.arrayContaining([{ level: 2, unitId: "paladin_fighting_style" }]),
+    );
+
+    const branchHole = classFeatureGrantChoiceHoles(
+      "paladin_fighting_style",
+      unitLibrary,
+      { classLevel: 2 },
+    )[0];
+    expect(branchHole).toBeDefined();
+    if (branchHole === undefined) return;
+    expect(branchHole).toMatchObject({
+      kind: "choice",
+      source: {
+        unitId: "paladin_fighting_style",
+        choiceKey: PALADIN_FIGHTING_STYLE_CHOICE_KEY,
+      },
+      cardinality: { tag: "exactly", count: 1 },
+    });
+    expect(optionIds(branchHole)).toEqual([
+      "fighting_style_feat",
+      "blessed_warrior",
+    ]);
+    expect(supportedHoleOptionIds(branchHole)).toEqual([
+      "fighting_style_feat",
+      "blessed_warrior",
+    ]);
+
+    const featBranchHoles = selectedClassFeatureAcquisitionGrantChoiceHoles({
+      choices: [
+        selectedChoice(
+          "paladin_fighting_style",
+          PALADIN_FIGHTING_STYLE_CHOICE_KEY,
+          "fighting_style_feat",
+        ),
+      ],
+      classUnitId: "class_paladin",
+      classFacts: paladinFacts.value,
+      classLevel: 2,
+      unitLibrary,
+    });
+    expect(featBranchHoles[0]).toBeDefined();
+    if (featBranchHoles[0] === undefined) return;
+    expect(featBranchHoles[0]).toMatchObject({
+      kind: "choice",
+      source: {
+        unitId: "paladin_fighting_style",
+        choiceKey: CLASS_FEATURE_FEAT_CHOICE_KEY,
+      },
+      cardinality: { tag: "exactly", count: 1 },
+    });
+    expect(optionIds(featBranchHoles[0])).toEqual(
+      expect.arrayContaining(["defense", "feat_archery"]),
+    );
+
+    const blessedWarriorHoles = selectedClassFeatureAcquisitionGrantChoiceHoles(
+      {
+        choices: [
+          selectedChoice(
+            "paladin_fighting_style",
+            PALADIN_FIGHTING_STYLE_CHOICE_KEY,
+            "blessed_warrior",
+          ),
+        ],
+        classUnitId: "class_paladin",
+        classFacts: paladinFacts.value,
+        classLevel: 2,
+        unitLibrary,
+      },
+    );
+    expect(blessedWarriorHoles[0]).toBeDefined();
+    if (blessedWarriorHoles[0] === undefined) return;
+    expect(blessedWarriorHoles[0]).toMatchObject({
+      kind: "choice",
+      source: {
+        unitId: "paladin_fighting_style",
+        choiceKey: CLASS_CANTRIP_CHOICE_KEY,
+      },
+      cardinality: { tag: "exactly", count: 2 },
+    });
+    expect(optionIds(blessedWarriorHoles[0])).toEqual(
+      expect.arrayContaining(["guidance", "sacred_flame"]),
+    );
+    expect(optionIds(blessedWarriorHoles[0])).not.toContain("fire_bolt");
+  });
+
+  test("fills and finalizes Paladin level 2 Fighting Style branches through the supported workflow", () => {
+    const progression = testProgression("class_paladin", 2);
+    const initialDraft = createTestDraft(
+      "draft:paladin-fighting-style-initial",
+    );
+    expect(
+      optionIds(
+        holeById(
+          discoverCreationHoles({ draft: initialDraft, unitLibrary }),
+          "cc:draft:draft.progression.initial",
+        ),
+      ),
+    ).toContain(progressionOptionId(progression));
+    const afterInitial = requireAcceptedBatch(
+      fillCreationHoles({
+        draft: initialDraft,
+        unitLibrary,
+        expectedRevision: initialDraft.revision,
+        fills: initialManifestFills(progressionOptionId(progression)),
+      }),
+    );
+    expect(
+      holeById(
+        discoverCreationHoles({ draft: afterInitial, unitLibrary }),
+        testUnitHoleId(
+          "paladin_fighting_style",
+          PALADIN_FIGHTING_STYLE_CHOICE_KEY,
+        ),
+      ),
+    ).toMatchObject({
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 1 },
+    });
+
+    const featDraft = completeSupportedProgressionDraft({
+      draftId: "draft:paladin-fighting-style-feat",
+      progression,
+      preferredOptionIdsBySource: {
+        [testUnitChoiceSourceKey(
+          "paladin_fighting_style",
+          PALADIN_FIGHTING_STYLE_CHOICE_KEY,
+        )]: [creationChoiceOptionId("fighting_style_feat")],
+        [testUnitChoiceSourceKey(
+          "paladin_fighting_style",
+          CLASS_FEATURE_FEAT_CHOICE_KEY,
+        )]: [creationChoiceOptionId("defense")],
+      },
+    });
+    expect(
+      selectedChoiceOptionIds(
+        featDraft,
+        "paladin_fighting_style",
+        PALADIN_FIGHTING_STYLE_CHOICE_KEY,
+      ),
+    ).toEqual(["fighting_style_feat"]);
+    expect(
+      selectedChoiceOptionIds(
+        featDraft,
+        "paladin_fighting_style",
+        CLASS_FEATURE_FEAT_CHOICE_KEY,
+      ),
+    ).toEqual(["defense"]);
+    const paladinFeatBuild = finalizeCharacterDraft({
+      draft: featDraft,
+      unitLibrary,
+    });
+    expect(paladinFeatBuild.tag).toBe("ready");
+    if (paladinFeatBuild.tag !== "ready") return;
+    expect(
+      characterBuildFeatureUnitIds(paladinFeatBuild.build, unitLibrary),
+    ).toEqual(expect.arrayContaining(["paladin_fighting_style", "defense"]));
+    expect(
+      selectedBuildClassChoiceUnitIds(
+        paladinFeatBuild.build,
+        "paladin_fighting_style",
+      ),
+    ).toEqual(["defense"]);
+
+    const blessedWarriorDraft = completeSupportedProgressionDraft({
+      draftId: "draft:paladin-fighting-style-blessed-warrior",
+      progression,
+      preferredOptionIdsBySource: {
+        [testUnitChoiceSourceKey(
+          "paladin_fighting_style",
+          PALADIN_FIGHTING_STYLE_CHOICE_KEY,
+        )]: [creationChoiceOptionId("blessed_warrior")],
+        [testUnitChoiceSourceKey(
+          "paladin_fighting_style",
+          CLASS_CANTRIP_CHOICE_KEY,
+        )]: [
+          creationChoiceOptionId("guidance"),
+          creationChoiceOptionId("sacred_flame"),
+        ],
+      },
+    });
+    expect(
+      selectedChoiceOptionIds(
+        blessedWarriorDraft,
+        "paladin_fighting_style",
+        PALADIN_FIGHTING_STYLE_CHOICE_KEY,
+      ),
+    ).toEqual(["blessed_warrior"]);
+    expect(
+      selectedChoiceOptionIds(
+        blessedWarriorDraft,
+        "paladin_fighting_style",
+        CLASS_CANTRIP_CHOICE_KEY,
+      ),
+    ).toEqual(["guidance", "sacred_flame"]);
+    const blessedWarriorBuild = finalizeCharacterDraft({
+      draft: blessedWarriorDraft,
+      unitLibrary,
+    });
+    expect(blessedWarriorBuild.tag).toBe("ready");
+    if (blessedWarriorBuild.tag !== "ready") return;
+    expect(
+      spellcastingSourceCantrips(blessedWarriorBuild.build, "class_paladin"),
+    ).toEqual(["guidance", "sacred_flame"]);
+    expect(
+      blessedWarriorBuild.build.spellcasting?.sources.find(
+        (source) => source.sourceUnitId === "class_paladin",
+      )?.spellcastingAbility,
+    ).toBe("cha");
+  });
+
   test("opens Rogue Thieves' Cant extra language choice from Character Creation language tables", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
@@ -906,10 +1130,7 @@ describe("character creation hole discovery", () => {
     });
     const languageHole = holeById(
       holes,
-      testUnitHoleId(
-        "rogue_thieves_cant",
-        CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
-      ),
+      testUnitHoleId("rogue_thieves_cant", CLASS_FEATURE_LANGUAGE_CHOICE_KEY),
     );
 
     expect(languageHole).toMatchObject({
