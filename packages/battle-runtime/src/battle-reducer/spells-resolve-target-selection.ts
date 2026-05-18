@@ -49,6 +49,10 @@ export type CreatureTypeProtectionSpellTargetSelection =
   | { readonly tag: "ok"; readonly targetIds: readonly [CombatantId] }
   | { readonly tag: "needsHoles"; readonly hole: BattleHole }
   | { readonly tag: "invalid"; readonly message: string };
+export type ConditionRemovalProtectionSpellTargetSelection =
+  | { readonly tag: "ok"; readonly targetIds: readonly [CombatantId] }
+  | { readonly tag: "needsHoles"; readonly hole: BattleHole }
+  | { readonly tag: "invalid"; readonly message: string };
 
 export type RollModifierSpellEffectSelection =
   | { readonly tag: "ok"; readonly effect: SelectedRollModifierSpellEffect }
@@ -402,6 +406,42 @@ export function creatureTypeProtectionSpellTargetSelection(input: {
         tag: "invalid",
         message:
           "Creature-type protection spell target must be a combatant within the selected spell's supported range.",
+      };
+}
+
+export function conditionRemovalProtectionSpellTargetSelection(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "conditionRemovalProtection" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): ConditionRemovalProtectionSpellTargetSelection {
+  if (input.fillSet.targetList !== undefined) {
+    return {
+      tag: "invalid",
+      message: "Condition-removal protection spells require one target choice.",
+    };
+  }
+  if (input.fillSet.targetId === undefined) {
+    return {
+      tag: "needsHoles",
+      hole: spellTargetHole(input.input.state, input.actorId, input.invocation),
+    };
+  }
+  return spellTargetIsLegal(
+    input.input.state,
+    input.actorId,
+    input.fillSet.targetId,
+    input.invocation,
+    input.fillSet.targetSpatialFacts,
+  )
+    ? { tag: "ok", targetIds: [input.fillSet.targetId] }
+    : {
+        tag: "invalid",
+        message:
+          "Condition-removal protection spell target must be a combatant within the selected spell's supported range.",
       };
 }
 

@@ -41,6 +41,16 @@
                 "kind": "remove_condition"
               },
               {
+                "conditionFilter": [
+                  "poisoned"
+                ],
+                "kind": "modify_roll_advantage",
+                "mode": "advantage",
+                "on": [
+                  "saving_throw"
+                ]
+              },
+              {
                 "damageType": "poison",
                 "kind": "grant_resistance"
               }

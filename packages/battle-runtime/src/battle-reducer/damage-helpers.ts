@@ -486,12 +486,7 @@ export function damageAmountAfterTargetAdjustments(
   damageType: DamageType,
 ): number {
   if (target.origin.kind !== "statBlock") {
-    return [...activeOngoingFeatureOccurrencesForCombatant(target)].some(
-      ([key]) =>
-        ongoingFeatureProfileForSourceKey(target, key)?.resistances.includes(
-          damageType,
-        ) === true,
-    )
+    return targetHasRuntimeDamageResistance(target, damageType)
       ? Math.floor(amount / 2)
       : amount;
   }
@@ -501,13 +496,33 @@ export function damageAmountAfterTargetAdjustments(
     return 0;
   }
 
-  const afterResiongoingFeature =
-    statBlock.resistances?.kind === "fixed" &&
-    statBlock.resistances.damageTypes.includes(damageType)
+  const afterResistance =
+    targetHasRuntimeDamageResistance(target, damageType) ||
+    (statBlock.resistances?.kind === "fixed" &&
+      statBlock.resistances.damageTypes.includes(damageType))
       ? Math.floor(amount / 2)
       : amount;
 
   return statBlock.vulnerabilities?.damageTypes.includes(damageType) === true
-    ? afterResiongoingFeature * 2
-    : afterResiongoingFeature;
+    ? afterResistance * 2
+    : afterResistance;
+}
+
+function targetHasRuntimeDamageResistance(
+  target: BattleCreatureState,
+  damageType: DamageType,
+): boolean {
+  return (
+    target.activeEffects.some(
+      (effect) =>
+        effect.kind === "damageResistance" &&
+        effect.damageType === damageType,
+    ) ||
+    [...activeOngoingFeatureOccurrencesForCombatant(target)].some(
+      ([key]) =>
+        ongoingFeatureProfileForSourceKey(target, key)?.resistances.includes(
+          damageType,
+        ) === true,
+    )
+  );
 }

@@ -161,6 +161,7 @@ export {
 } from "./spells-resolve-save-gates.ts";
 export {
   resolveBlurAttackRollDefenseSpellAct,
+  resolveConditionRemovalProtectionSpellAct,
   resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
   resolveCreatureTypeProtectionSpellAct,
   resolveDamageReductionSpellAct,
@@ -173,6 +174,7 @@ export {
   resolveThaumaturgyBoomingVoiceSpellAct,
 } from "./spells-resolve-support-effects.ts";
 export {
+  conditionRemovalProtectionSpellTargetSelection,
   conditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection,
   creatureTypeProtectionSpellTargetSelection,
   healingSpellTargetSelection,
@@ -180,6 +182,7 @@ export {
   rollModifierSpellEffectSelection,
   rollModifierSpellTargetSelection,
   scalarBuffSpellTargetSelection,
+  type ConditionRemovalProtectionSpellTargetSelection,
   type ConditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection,
   type CreatureTypeProtectionSpellTargetSelection,
   type HealingSpellTargetSelection,
@@ -191,6 +194,7 @@ export {
 
 import {
   resolveBlurAttackRollDefenseSpellAct,
+  resolveConditionRemovalProtectionSpellAct,
   resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
   resolveCreatureTypeProtectionSpellAct,
   resolveDamageReductionSpellAct,
@@ -614,6 +618,14 @@ export function resolveSpellAct(
   }
   if (invocation.procedure === "blurAttackRollDefense") {
     return resolveBlurAttackRollDefenseSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "conditionRemovalProtection") {
+    return resolveConditionRemovalProtectionSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

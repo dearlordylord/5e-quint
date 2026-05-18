@@ -13,6 +13,7 @@ import { isIncapacitated } from "@dnd/shared-algebras/conditions-algebra";
 import {
   damageAmount,
   Hp,
+  type Condition,
   type DamageAmount,
   type DieRollResult,
 } from "@dnd/shared/types";
@@ -48,6 +49,7 @@ import { battleCreatureType } from "./domain-helpers.ts";
 import {
   ATTACK_ROLL_HOLE_ID,
   ATTACK_ROLL_HOLE_INSTANCE,
+  type BattleActiveEffect,
   type BattleAttackDamageDisposition,
   type BattleCreatureState,
   type BattleFill,
@@ -798,7 +800,14 @@ export function spellSavingThrowOutcomeHole(
           : invocation.ability,
       invocation.procedure === "saveGatedCondition" ||
         invocation.procedure === "saveGatedDamage"
-        ? { actorId, invocation }
+        ? {
+            actorId,
+            invocation,
+            ...(invocation.procedure === "saveGatedCondition" &&
+            invocation.effect.kind === "fixed"
+              ? { condition: invocation.effect.condition }
+              : {}),
+          }
         : undefined,
     ),
   };
@@ -884,13 +893,7 @@ export function spellAreaTargetingLabel(
 export function savingThrowRollModeProjections(
   state: BattleState,
   ability: Ability,
-  spellSaveRollMode?: {
-    readonly actorId: CombatantId;
-    readonly invocation: Extract<
-      SupportedSpellInvocation,
-      { readonly procedure: "saveGatedCondition" | "saveGatedDamage" }
-    >;
-  },
+  rollModeContext?: SavingThrowRollModeContext,
 ): readonly BattleSavingThrowRollModeProjection[] {
   const dodgeProjections =
     ability === "dex"
@@ -905,13 +908,24 @@ export function savingThrowRollModeProjections(
     state,
     ability,
   );
-  const baseProjections = [...dodgeProjections, ...passiveRollModeProjections];
-  const saveRollModeRule = spellSaveRollMode?.invocation.saveRollModeRule;
+  const baseProjections = [
+    ...dodgeProjections,
+    ...passiveRollModeProjections,
+    ...conditionSavingThrowRollModeProjections(
+      state,
+      rollModeContext?.condition,
+    ),
+  ];
+  const saveRollModeRule =
+    rollModeContext === undefined || !("invocation" in rollModeContext)
+      ? undefined
+      : rollModeContext.invocation.saveRollModeRule;
   if (
-    spellSaveRollMode !== undefined &&
+    rollModeContext !== undefined &&
+    "invocation" in rollModeContext &&
     saveRollModeRule?.kind === "hostileTarget"
   ) {
-    const { actorId, invocation } = spellSaveRollMode;
+    const { actorId, invocation } = rollModeContext;
     return uniqueSavingThrowRollModeProjections([
       ...baseProjections,
       ...[...state.combatants]
@@ -932,10 +946,11 @@ export function savingThrowRollModeProjections(
     ]);
   }
   if (
-    spellSaveRollMode !== undefined &&
+    rollModeContext !== undefined &&
+    "invocation" in rollModeContext &&
     saveRollModeRule?.kind === "creatureType"
   ) {
-    const { actorId, invocation } = spellSaveRollMode;
+    const { actorId, invocation } = rollModeContext;
     return uniqueSavingThrowRollModeProjections([
       ...baseProjections,
       ...[...state.combatants]
@@ -958,6 +973,42 @@ export function savingThrowRollModeProjections(
     ]);
   }
   return uniqueSavingThrowRollModeProjections(baseProjections);
+}
+
+type SavingThrowRollModeContext =
+  | {
+      readonly condition: Condition;
+    }
+  | {
+      readonly actorId: CombatantId;
+      readonly invocation: Extract<
+        SupportedSpellInvocation,
+        { readonly procedure: "saveGatedCondition" | "saveGatedDamage" }
+      >;
+      readonly condition?: Condition;
+    };
+
+function conditionSavingThrowRollModeProjections(
+  state: BattleState,
+  condition: Condition | undefined,
+): readonly BattleSavingThrowRollModeProjection[] {
+  if (condition === undefined) {
+    return [];
+  }
+  return [...state.combatants].flatMap(([targetId, target]) =>
+    target.activeEffects
+      .filter(
+        (
+          effect,
+        ): effect is Extract<
+          BattleActiveEffect,
+          { readonly kind: "conditionSavingThrowRollMode" }
+        > =>
+          effect.kind === "conditionSavingThrowRollMode" &&
+          effect.condition === condition,
+      )
+      .map((effect) => ({ targetId, rollMode: effect.mode })),
+  );
 }
 
 function passiveSavingThrowRollModeProjections(

@@ -25,19 +25,19 @@
     {
       "number": 40,
       "id": "L12G-SPELL-PRAYER-OF-HEALING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Prayer Of Healing Runtime Support Or Closure"
     },
     {
       "number": 41,
       "id": "L12G-SPELL-PROTECTION-FROM-POISON",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Protection From Poison Runtime Support"
     },
     {
       "number": 42,
       "id": "L12G-SPELL-RAY-OF-ENFEEBLEMENT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Ray Of Enfeeblement Runtime Support"
     },
     {
@@ -45,96 +45,12 @@
       "id": "L12G-AUTHOR-DRUID-WILD-COMPANION",
       "status": "ready-for-research",
       "title": "Druid Wild Companion Boundary Closure"
-    },
-    {
-      "number": 77,
-      "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
-      "status": "ready-for-research",
-      "title": "Druid Wild Shape Character Facts And Resource Projection"
-    },
-    {
-      "number": 78,
-      "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME",
-      "status": "ready-for-research",
-      "title": "Druid Wild Shape Shape-Shifting Runtime"
-    },
-    {
-      "number": 79,
-      "id": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS",
-      "status": "ready-for-research",
-      "title": "Monk's Focus Character Facts And Resource Projection"
-    },
-    {
-      "number": 80,
-      "id": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS",
-      "status": "ready-for-research",
-      "title": "Monk's Focus Battle Option Execution"
-    },
-    {
-      "number": 81,
-      "id": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS",
-      "status": "ready-for-research",
-      "title": "Monk Uncanny Metabolism Character Facts And Use State"
-    },
-    {
-      "number": 82,
-      "id": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME",
-      "status": "ready-for-research",
-      "title": "Monk Uncanny Metabolism Initiative Recovery Runtime"
-    },
-    {
-      "number": 83,
-      "id": "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS",
-      "status": "ready-for-research",
-      "title": "Sorcerer Font Of Magic Sorcery Point Resource Facts"
-    },
-    {
-      "number": 84,
-      "id": "L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS",
-      "status": "ready-for-research",
-      "title": "Sorcerer Font Of Magic Spell Slot To Sorcery Points"
-    },
-    {
-      "number": 85,
-      "id": "L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS",
-      "status": "ready-for-research",
-      "title": "Sorcerer Font Of Magic Sorcery Points To Spell Slot"
-    },
-    {
-      "number": 86,
-      "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS",
-      "status": "ready-for-research",
-      "title": "Sorcerer Metamagic Character Facts And Option Projection"
-    },
-    {
-      "number": 87,
-      "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION",
-      "status": "ready-for-research",
-      "title": "Sorcerer Metamagic Cast-Time Option Execution"
-    },
-    {
-      "number": 90,
-      "id": "L12G-FOLLOWUP-MOONBEAM-SURFACE-LIFECYCLE",
-      "status": "ready-for-research",
-      "title": "Moonbeam Surface Area Lifecycle"
-    },
-    {
-      "number": 91,
-      "id": "L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME",
-      "status": "ready-for-research",
-      "title": "Moonbeam Movable Zone Runtime"
-    },
-    {
-      "number": 92,
-      "id": "L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER",
-      "status": "ready-for-research",
-      "title": "Moonbeam Shape-Shifting Rider Runtime"
     }
   ]
 }
 -->
 
-This is the third level-2 execution lane split from Loop A tail work. Loop C owns Tasks 37-42 and follow-up Tasks 76-87 and 90-92 only.
+This is the third level-2 execution lane split from Loop A tail work. Loop C owns Tasks 37-42 and follow-up Tasks 76-87 and 90-96 only.
 
 ## Worktree Safety Prefix
 
@@ -189,7 +105,7 @@ use the repository MBT scarcity protocol.
 
 ## Included Work
 
-Loop C contains 21 atomic tasks: the remaining Loop A spell tail from Misty Step through Ray of Enfeeblement, Druid/Monk/Sorcerer follow-up profile/runtime work moved out of Loop A, and the Moonbeam follow-up split discovered by Task 38.
+Loop C contains 25 atomic tasks: the remaining Loop A spell tail from Misty Step through Ray of Enfeeblement, Druid/Monk/Sorcerer follow-up profile/runtime work moved out of Loop A, the Moonbeam follow-up split discovered by Task 38, the Prayer of Healing follow-up split discovered by Task 40, and the Ray of Enfeeblement follow-up split discovered by Task 42.
 
 It excludes Loop A Tasks 22-36 and 88-89, Loop B Tasks 43-58, Loop D Tasks 59-75, all level-1 Loop D/L work, companion autonomous-control, familiar autonomous-control, and Counterspell work. Wild Companion work in this lane is only the table-choice/source-link boundary; no autonomous companion decision engine belongs here.
 
@@ -216,6 +132,10 @@ It excludes Loop A Tasks 22-36 and 88-89, Loop B Tasks 43-58, Loop D Tasks 59-75
 | 90 | 38 follow-up | `L12G-FOLLOWUP-MOONBEAM-SURFACE-LIFECYCLE` | `moonbeam` |
 | 91 | 38 follow-up | `L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME` | `moonbeam` |
 | 92 | 38 follow-up | `L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER` | `moonbeam` |
+| 93 | 40 follow-up | `L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST` | `prayer_of_healing` |
+| 94 | 40 follow-up | `L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST` | `prayer_of_healing` |
+| 95 | 42 follow-up | `L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE` | `ray_of_enfeeblement` |
+| 96 | 42 follow-up | `L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY` | `ray_of_enfeeblement` |
 
 ## Follow-Up Dependencies
 
@@ -236,8 +156,18 @@ It excludes Loop A Tasks 22-36 and 88-89, Loop B Tasks 43-58, Loop D Tasks 59-75
 | `L12G-FOLLOWUP-MOONBEAM-SURFACE-LIFECYCLE` | `L12G-SPELL-MOONBEAM` | Moonbeam Surface authoring must capture the RAW movable Cylinder, Dim Light, recurring save, once-per-turn, slot-scaling, and shape-shift rider facts before runtime owners consume them. |
 | `L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME` | `L12G-FOLLOWUP-MOONBEAM-SURFACE-LIFECYCLE` | Runtime zone execution should consume the repaired Moonbeam Spell Definition facts and caller-supplied table/spatial witnesses instead of duplicating area membership or geometry derivation. |
 | `L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER` | `L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME`, `L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME` | The failed-save rider should attach to Moonbeam save results and consume a promoted shape-shifted/true-form state instead of creating Moonbeam-local shape-shifting state. |
+| `L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST` | `L12G-SPELL-PRAYER-OF-HEALING` | Prayer of Healing Surface authoring must capture the Short Rest benefit, per-recipient Long Rest lockout, completed 10-minute casting boundary, and slot-scaled healing facts before Character Sheet runtime consumes them. |
+| `L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST` | `L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST` | Character Sheet runtime should consume repaired Spell Definition facts and existing rest/spell-slot owners instead of duplicating Short Rest algorithms, Hit Point maximum capping, or Spell Slot recovery state. |
+| `L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE` | `L12G-SPELL-RAY-OF-ENFEEBLEMENT` | Ray of Enfeeblement runtime must first own the cast, save, Concentration, repeat-save, success-side next-attack, and failed-save Strength D20 Test lifecycle before damage-roll subtraction consumes that active effect. |
+| `L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY` | `L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE` | Damage-roll subtraction should consume the promoted failed-save Ray effect identity and lifecycle instead of duplicating spell duration, save, or Concentration state in the damage pipeline. |
 
 ## Task Details
+
+## Wrap-Up Directive
+
+This lane is in organic shutdown mode. Complete only Task 76 - L12G-AUTHOR-DRUID-WILD-COMPANION - Druid Wild Companion Boundary Closure, run reviewer-loop convergence, merge the completed task through this integration branch, and then stop. Do not start another task from this file.
+
+All other unfinished tasks from this lane were moved to `plans/LEVEL2_RALPH_WRAPUP_BACKLOG.md`. That backlog is storage for future orchestration, not active work for this lane.
 
 ### Task 37 - L12G-SPELL-MISTY-STEP - Misty Step Runtime Support
 
@@ -322,7 +252,7 @@ Acceptance:
 
 ### Task 40 - L12G-SPELL-PRAYER-OF-HEALING - Prayer Of Healing Runtime Support Or Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `prayer_of_healing`. Gate task: 42 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -349,7 +279,7 @@ Acceptance:
 
 ### Task 41 - L12G-SPELL-PROTECTION-FROM-POISON - Protection From Poison Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `protection_from_poison`. Gate task: 43 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -376,7 +306,7 @@ Acceptance:
 
 ### Task 42 - L12G-SPELL-RAY-OF-ENFEEBLEMENT - Ray Of Enfeeblement Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `ray_of_enfeeblement`. Gate task: 44 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -429,442 +359,3 @@ Acceptance:
 - the level 1-2 metric row for `druid_wild_companion` is supported, accepted-closed, or precisely blocked by a smaller companion follow-up split;
 - no level-1 Loop D/L work or broad companion runtime execution is pulled into this lane;
 - focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 77 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS - Druid Wild Shape Character Facts And Resource Projection
-
-Status: `ready-for-research`
-
-Unit: `druid_wild_shape`. Follow-up split from Task 12.
-
-Dependency: Task 76 (`L12G-AUTHOR-DRUID-WILD-COMPANION`) done.
-
-Inputs:
-
-- `packages/surface/content/druid_wild_shape.json`;
-- the `druid_wild_shape` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/Classes/Druid.md`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- character-creation and character-sheet resource/profile owner evidence.
-
-Outputs:
-
-- owner evidence for projecting Wild Shape use count, partial Short Rest/full Long Rest reset, rounded-down duration, learned Beast forms, and one known-form replacement on Long Rest;
-- projection derives these facts from the retained Surface feature and class progression without duplicating class progression state;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the character-facts/resource portion of `druid_wild_shape` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no stat-block shape-shifting runtime, equipment handling, Beast attack execution, or companion boundary work is implemented in this task;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 78 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME - Druid Wild Shape Shape-Shifting Runtime
-
-Status: `ready-for-research`
-
-Unit: `druid_wild_shape`. Follow-up split from Task 12.
-
-Dependency: Task 77 (`L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS`) done.
-
-Inputs:
-
-- `packages/surface/content/druid_wild_shape.json`;
-- the `druid_wild_shape` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/Classes/Druid.md` and `.references/srd-5.2.1/Rules-Glossary.md`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- stat-block-control, battle-runtime, Unit profile, owner-evidence, and focused tests for shape-shifting execution.
-
-Outputs:
-
-- supported runtime profile and owner evidence for Beast form choice, game-statistic replacement and retained facts, Temporary Hit Points, no spellcasting, equipment choice/effects, and Wild Shape reversion triggers;
-- Quint/runtime parity updates if promoted battle-runtime behavior changes;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the shape-shifting runtime portion of `druid_wild_shape` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- runtime behavior traces to SRD Wild Shape and Shape-Shift rules without homebrew extensions;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.
-
-### Task 79 - L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS - Monk's Focus Character Facts And Resource Projection
-
-Status: `ready-for-research`
-
-Unit: `monk_monks_focus`. Follow-up split from Task 13.
-
-Dependency: Tasks 13 (`L12G-AUTHOR-MONK-MONKS-FOCUS`), 14 (`L12G-AUTHOR-MONK-UNARMORED-MOVEMENT`), and 15 (`L12G-AUTHOR-MONK-UNCANNY-METABOLISM`) done.
-
-Inputs:
-
-- `packages/surface/content/monk_monks_focus.json`;
-- the `monk_monks_focus` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/Classes/Monk.md`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- character-creation and character-sheet resource/profile owner evidence.
-
-Outputs:
-
-- owner evidence for admitting Monk level-2 progression after the full Monk level-2 feature grant set can be retained;
-- Focus Point count, Short or Long Rest reset, initial Focus feature option names, and Focus save DC projection derive from the authored Surface feature and class progression without duplicating class progression or option execution state;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the character-facts/resource portion of `monk_monks_focus` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no Flurry of Blows, Patient Defense, Step of the Wind battle option execution is implemented in this task;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 80 - L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS - Monk's Focus Battle Option Execution
-
-Status: `ready-for-research`
-
-Unit: `monk_monks_focus`. Follow-up split from Task 13.
-
-Dependency: Task 79 (`L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS`) done.
-
-Inputs:
-
-- `packages/surface/content/monk_monks_focus.json`;
-- the `monk_monks_focus` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/Classes/Monk.md`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- battle-runtime, character-battle-runtime resource handoff, Unit profile, owner-evidence, and focused tests for Monk's Focus option execution.
-
-Outputs:
-
-- supported runtime profile and owner evidence for Flurry of Blows, Patient Defense, and Step of the Wind option modes;
-- Bonus Action economy, Focus Point spending where RAW requires it, Dodge and jump-distance effects, and later Focus spenders consume one shared Focus Point resource rather than synthetic per-feature pools;
-- Quint/runtime parity updates if promoted battle-runtime behavior changes;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the battle-option execution portion of `monk_monks_focus` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- runtime behavior traces to SRD Monk's Focus without homebrew extensions and consumes projected Focus Point facts instead of duplicating class progression state;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.
-
-### Task 81 - L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS - Monk Uncanny Metabolism Character Facts And Use State
-
-Status: `ready-for-research`
-
-Unit: `monk_uncanny_metabolism`. Follow-up split from Task 15.
-
-Dependency: Task 15 (`L12G-AUTHOR-MONK-UNCANNY-METABOLISM`) and Task 79 (`L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS`) done.
-
-Inputs:
-
-- `packages/surface/content/monk_uncanny_metabolism.json`;
-- `packages/surface/content/monk_monks_focus.json`;
-- the `monk_uncanny_metabolism` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/Classes/Monk.md`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- character-creation and character-sheet retained-feature and use-state owner evidence.
-
-Outputs:
-
-- owner evidence for the retained Uncanny Metabolism feature ref, once-per-Long-Rest use state, and links to the shared Focus Point resource and existing Martial Arts die source;
-- use-state projection derives from the retained Surface feature and Monk progression without duplicating Focus Point, Martial Arts die, or class progression state;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the character-facts/use-state portion of `monk_uncanny_metabolism` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no Initiative-window choice execution, self-healing runtime, or battle-runtime Focus Point recovery is implemented in this task;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 82 - L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME - Monk Uncanny Metabolism Initiative Recovery Runtime
-
-Status: `ready-for-research`
-
-Unit: `monk_uncanny_metabolism`. Follow-up split from Task 15.
-
-Dependency: Task 80 (`L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS`) and Task 81 (`L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS`) done.
-
-Inputs:
-
-- `packages/surface/content/monk_uncanny_metabolism.json`;
-- the `monk_uncanny_metabolism` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/Classes/Monk.md`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- battle-runtime, character-battle-runtime resource handoff, Unit profile, owner-evidence, and focused tests for Initiative-window recovery and self-healing execution.
-
-Outputs:
-
-- supported runtime profile and owner evidence for optional Initiative-window Focus Point recovery, self-healing, and Long Rest recharge;
-- Quint/runtime parity updates if promoted battle-runtime behavior changes;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the runtime execution portion of `monk_uncanny_metabolism` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- runtime behavior traces to SRD Uncanny Metabolism without homebrew extensions and consumes projected shared Focus Point, once-per-Long-Rest use, and Martial Arts die facts instead of duplicating class progression or die-table state;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.
-
-### Task 83 - L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS - Sorcerer Font Of Magic Sorcery Point Resource Facts
-
-Status: `ready-for-research`
-
-Unit: `sorcerer_font_of_magic`. Follow-up split from Task 18.
-
-Dependency: Task 18 (`L12G-AUTHOR-SORCERER-FONT-OF-MAGIC`) and Task 19 (`L12G-AUTHOR-SORCERER-METAMAGIC`) done.
-
-Inputs:
-
-- `packages/surface/content/sorcerer_font_of_magic.json`;
-- `packages/surface/content/class_sorcerer.json`;
-- the `sorcerer_font_of_magic` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/Classes/Sorcerer.md`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- character-creation and character-sheet retained-feature and resource owner evidence.
-
-Outputs:
-
-- owner evidence for retaining the Font of Magic feature ref with Sorcerer level-2 progression after the full Sorcerer level-2 feature grant set can be retained;
-- shared Sorcery Point pool facts, Sorcerer-level cap, and Long Rest reset derive from the authored Surface feature and class progression without duplicating class progression or Metamagic option state;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the character-facts/resource portion of `sorcerer_font_of_magic` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no Spell Slot conversion execution or Metamagic option execution is implemented in this task;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 84 - L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS - Sorcerer Font Of Magic Spell Slot To Sorcery Points
-
-Status: `ready-for-research`
-
-Unit: `sorcerer_font_of_magic`. Follow-up split from Task 18.
-
-Dependency: Task 83 (`L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS`) done.
-
-Inputs:
-
-- `packages/surface/content/sorcerer_font_of_magic.json`;
-- the `sorcerer_font_of_magic` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/Classes/Sorcerer.md`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- character-battle-runtime, spellcasting resource owner, Unit profile, owner-evidence, and focused tests for Spell Slot to Sorcery Point conversion.
-
-Outputs:
-
-- supported runtime profile and owner evidence for the no-action conversion that expends one Spell Slot and grants Sorcery Points equal to the expended slot's level;
-- conversion consumes existing Spell Slot state and the projected shared Sorcery Point resource, respecting the shared Sorcery Point cap;
-- Quint/runtime parity updates if promoted battle-runtime behavior changes;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the Spell Slot to Sorcery Point conversion portion of `sorcerer_font_of_magic` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no Sorcery Point to temporary Spell Slot creation or Metamagic option execution is implemented in this task;
-- runtime behavior traces to SRD Font of Magic without homebrew extensions and consumes projected shared Sorcery Point facts instead of duplicating class progression or spellcasting resource state;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.
-
-### Task 85 - L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS - Sorcerer Font Of Magic Sorcery Points To Spell Slot
-
-Status: `ready-for-research`
-
-Unit: `sorcerer_font_of_magic`. Follow-up split from Task 18.
-
-Dependency: Task 83 (`L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS`) done.
-
-Inputs:
-
-- `packages/surface/content/sorcerer_font_of_magic.json`;
-- the `sorcerer_font_of_magic` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/Classes/Sorcerer.md`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- character-battle-runtime, spellcasting resource owner, Unit profile, owner-evidence, and focused tests for Sorcery Point to temporary Spell Slot creation.
-
-Outputs:
-
-- supported runtime profile and owner evidence for the Bonus Action conversion that spends Sorcery Points by the Creating Spell Slots table;
-- execution enforces the minimum Sorcerer level for the target slot, creates one Spell Slot no higher than level 5, and expires created slots on Long Rest;
-- conversion consumes the projected shared Sorcery Point resource and existing Spell Slot state without duplicating class progression state;
-- Quint/runtime parity updates if promoted battle-runtime behavior changes;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the Sorcery Point to temporary Spell Slot conversion portion of `sorcerer_font_of_magic` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no Spell Slot to Sorcery Point conversion or Metamagic option execution is implemented in this task;
-- runtime behavior traces to SRD Font of Magic without homebrew extensions and consumes projected shared Sorcery Point facts instead of duplicating class progression or spellcasting resource state;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.
-
-### Task 86 - L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS - Sorcerer Metamagic Character Facts And Option Projection
-
-Status: `ready-for-research`
-
-Unit: `sorcerer_metamagic`. Follow-up split from Task 19.
-
-Dependency: Task 19 (`L12G-AUTHOR-SORCERER-METAMAGIC`) and Task 83 (`L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS`) done.
-
-Inputs:
-
-- `packages/surface/content/sorcerer_metamagic.json`;
-- `packages/surface/content/class_sorcerer.json`;
-- `packages/surface/content/sorcerer_font_of_magic.json`;
-- the `sorcerer_metamagic` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/Classes/Sorcerer.md`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- character-creation and character-sheet retained-feature, choice, and resource-reference owner evidence.
-
-Outputs:
-
-- owner evidence for retaining the Metamagic feature ref with Sorcerer level-2 progression;
-- chosen Metamagic option count, Sorcerer-level replacement lifecycle, unique known-option roster, option costs, stacking facts, and source link to the shared Font of Magic Sorcery Point resource derive from authored Surface records without duplicating class progression or Sorcery Point pool state;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the character-facts and option-projection portion of `sorcerer_metamagic` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no cast-time Metamagic option execution or Font of Magic Spell Slot conversion execution is implemented in this task;
-- owner evidence links Metamagic option facts to the shared Font of Magic Sorcery Point resource instead of creating a Metamagic-local point pool;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 87 - L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION - Sorcerer Metamagic Cast-Time Option Execution
-
-Status: `ready-for-research`
-
-Unit: `sorcerer_metamagic`. Follow-up split from Task 19.
-
-Dependency: Task 86 (`L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS`) and Task 83 (`L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS`) done.
-
-Inputs:
-
-- `packages/surface/content/sorcerer_metamagic.json`;
-- `packages/surface/content/sorcerer_font_of_magic.json`;
-- the `sorcerer_metamagic` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/Classes/Sorcerer.md`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- character-battle-runtime, battle-runtime spell invocation hooks, Unit profile, owner-evidence, and focused tests for known Metamagic option execution.
-
-Outputs:
-
-- supported runtime profile and owner evidence for known Metamagic option execution at spell-cast time;
-- execution spends the shared Sorcery Point resource projected from Font of Magic, enforces the one-option-per-spell rule plus Empowered Spell and Seeking Spell stacking exceptions, enforces Quickened Spell level-1-plus spell turn limits, and applies the option-specific spell modifications for Careful, Distant, Empowered, Extended, Heightened, Quickened, Seeking, Subtle, Transmuted, and Twinned Spell;
-- Quint/runtime parity updates if promoted battle-runtime behavior changes;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the cast-time execution portion of `sorcerer_metamagic` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- runtime behavior traces to SRD Metamagic without homebrew extensions and consumes projected shared Sorcery Point facts instead of duplicating Font of Magic resource state;
-- no Font of Magic Spell Slot conversion behavior is implemented in this task;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.
-
-### Task 90 - L12G-FOLLOWUP-MOONBEAM-SURFACE-LIFECYCLE - Moonbeam Surface Area Lifecycle
-
-Status: `ready-for-research`
-
-Unit: `moonbeam`. Follow-up split from Task 38.
-
-Dependency: Task 38 (`L12G-SPELL-MOONBEAM`) done.
-
-Inputs:
-
-- `packages/surface/content/moonbeam.dhall`;
-- `packages/surface/content/moonbeam.json`;
-- the `moonbeam` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/Spells/Descriptions-M-P.md` and `.references/srd-5.2.1/Rules-Glossary.md`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- Surface Spell Definition schema, tracer, and admission code for spell mechanics.
-
-Outputs:
-
-- Moonbeam Dhall and JSON content represent the point-origin 5-foot-radius, 40-foot-high Cylinder, Concentration duration, Dim Light area, later Magic-action Cylinder movement up to 60 feet, the initial, area-moved, creature-enter, and end-turn Constitution Saving Throw triggers, the once-per-turn save limiter, slot-scaled Radiant damage, and failed-save shape-shift reversion plus shape-shift prevention until the creature leaves the Cylinder;
-- schema and tracer support are updated where required so those facts are executable source facts rather than comments or lossy prose;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the Surface authoring portion of `moonbeam` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no battle-runtime zone execution, table/spatial geometry derivation, or shape-shifting rider execution is implemented in this task;
-- authored facts trace to SRD Moonbeam, Cylinder, Dim Light, Concentration, Magic Action, Saving Throw, and Shape-Shifting text without homebrew extensions;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
-
-### Task 91 - L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME - Moonbeam Movable Zone Runtime
-
-Status: `ready-for-research`
-
-Unit: `moonbeam`. Follow-up split from Task 38.
-
-Dependency: Task 90 (`L12G-FOLLOWUP-MOONBEAM-SURFACE-LIFECYCLE`) done.
-
-Inputs:
-
-- `packages/surface/content/moonbeam.json`;
-- the `moonbeam` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/Spells/Descriptions-M-P.md`, `.references/srd-5.2.1/Rules-Glossary.md`, and `.references/srd-5.2.1/Playing-the-Game.md`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- battle-runtime spell invocation/effect lifecycle, table/spatial owner evidence, Unit profile evidence, and focused tests for movable area effects.
-
-Outputs:
-
-- supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Moonbeam casting with Magic Action and Spell Slot spend, caller-supplied Cylinder area identity and affected-creature facts, appearance saves, Concentration-owned movable area effect, later Magic-action beam movement up to 60 feet, table-triggered area-moves-into-creature-space, creature-enters-area, and end-turn saves at most once per creature per turn, slot-scaled Radiant damage with half damage on success, Dim Light and Lightly Obscured projection for the active Cylinder, and concentration/duration cleanup;
-- automatic geometry, destination validity, and area membership derivation remain table/spatial owner facts rather than Moonbeam runtime state;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the movable-zone runtime portion of `moonbeam` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- no failed-save shape-shift reversion or shape-shift suppression rider is implemented in this task;
-- runtime behavior traces to SRD Moonbeam and area/light/concentration rules without homebrew extensions and consumes Surface facts rather than duplicating authored mechanics;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.
-
-### Task 92 - L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER - Moonbeam Shape-Shifting Rider Runtime
-
-Status: `ready-for-research`
-
-Unit: `moonbeam`. Follow-up split from Task 38.
-
-Dependency: Task 91 (`L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME`) and Task 78 (`L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME`) done.
-
-Inputs:
-
-- `packages/surface/content/moonbeam.json`;
-- the `moonbeam` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
-- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
-- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
-- local RAW under `.references/srd-5.2.1/Spells/Descriptions-M-P.md` and `.references/srd-5.2.1/Rules-Glossary.md`;
-- `UBIQUITOUS_LANGUAGE.md`;
-- stat-block-control shape-shifting runtime, battle-runtime spell effect lifecycle, Unit profile evidence, and focused tests for shape-shift reversion and suppression.
-
-Outputs:
-
-- supported runtime profile or profile-subset evidence for reverting a shape-shifted target to its true form when it fails the Moonbeam Constitution Saving Throw, preventing that creature from shape-shifting again while it remains in the Moonbeam Cylinder, and clearing the prevention when it leaves the Cylinder or the spell ends;
-- execution consumes battle-visible shape-shifted and true-form state from the shape-shifting owner and Moonbeam save/area lifecycle facts from the movable-zone runtime without duplicating either owner state;
-- promoted Quint/runtime parity updates if battle-runtime behavior changes;
-- regenerated coverage artifacts.
-
-Acceptance:
-
-- the shape-shifting rider portion of `moonbeam` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
-- runtime behavior traces to SRD Moonbeam and Shape-Shifting rules without homebrew extensions and does not create Moonbeam-local duplicate shape-shifting state;
-- automatic area membership derivation remains table/spatial owned;
-- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.

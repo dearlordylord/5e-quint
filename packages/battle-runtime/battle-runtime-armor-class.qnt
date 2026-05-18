@@ -52,6 +52,8 @@ module battleRuntimeArmorClass {
         | EnhanceAbilityCheckAdvantage(_) => false
         | ThaumaturgyBoomingVoice(_) => false
         | ResistanceDamageReduction(_) => false
+        | ProtectionFromPoisonSavingThrowAdvantage(_) => false
+        | ProtectionFromPoisonPoisonResistance(_) => false
         | DivineFavorWeaponDamageRider(_) => false
         | HuntersMarkDamageRider(_) => false
         | HexDamageRider(_) => false

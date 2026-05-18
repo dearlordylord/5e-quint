@@ -230,6 +230,14 @@ export function supportedSpellInvocationRef(
       procedure: "blurAttackRollDefense",
     };
   }
+  if (invocation.procedure === "conditionRemovalProtection") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "conditionRemovalProtection",
+    };
+  }
   return Match.value(invocation).pipe(
     Match.when({ procedure: "heldLight" }, (cantrip) => ({
       tag: "cantrip" as const,

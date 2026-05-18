@@ -2,17 +2,17 @@
 --
 -- RAW (Spells / Descriptions M-P / Prayer of Healing):
 --   "Up to five creatures of your choice who remain within range for
---    the spell's entire casting regain Hit Points equal to 2d8 plus
---    your spellcasting ability modifier. This spell has no effect on
---    Undead or Constructs."
+--    the spell's entire casting gain the benefits of a Short Rest and
+--    also regain 2d8 Hit Points. A creature can't be affected by this
+--    spell again until that creature finishes a Long Rest."
 --   "Using a Higher-Level Spell Slot. The healing increases by 1d8
 --    for each spell slot level above 2."
 --
 -- Casting Time: 10 minutes. Range: 30 ft. Duration: Instantaneous.
 -- Components: V.
 --
--- ZERO-WIDENING VALIDATION REFERENCE. Encodes cleanly on the existing
--- surface:
+-- PARTIAL VALIDATION REFERENCE. Encodes the SRD 5.2.1 spell shell and
+-- fixed healing dice that fit the existing surface:
 --   • CastingTime.minutes with amount=10, ritual=False (second
 --     instance after Alarm — confirms the 10-minute-cast shape
 --     generalizes to non-ritual spells).
@@ -20,15 +20,13 @@
 --     SlotScaling — the cap doesn't widen per slot; the per-target
 --     heal does). Validation reference for TargetSelection.count's
 --     `number | SlotScaling<number>` union (fixed-count branch).
---   • heal_hp with linear_per_level DiceAmount (+1d8 per slot above 2).
+--   • heal_hp with linear_per_level DiceAmount (2d8, +1d8 per slot
+--     above 2; no spellcasting ability modifier in SRD 5.2.1).
 --
--- DEFERRED / omitted. "No effect on Undead or Constructs" is a
--- target-type exclusion filter (inverse of TargetTypeFilter which is
--- inclusive). No SRD spell yet pressures inclusive+exclusive
--- target-type gating together; defer until a second unit forces the
--- shape. "Who remain within range for the spell's entire casting" is
--- spatial / session-owned positioning (DM agenda, per
--- ARCHITECTURE.md §1).
+-- DEFERRED / omitted. This Surface schema has no lossless spell effect
+-- atom for granting Short Rest benefits, nor a per-recipient "can't be
+-- affected again until Long Rest" lockout. "Who remain within range for
+-- the spell's entire casting" is spatial/session-owned positioning.
 
 let prayerOfHealing =
       { kind = "spell"
@@ -39,7 +37,7 @@ let prayerOfHealing =
           , section = "Spells/Descriptions-M-P#Prayer of Healing"
           }
       , description =
-          "Up to five creatures of your choice who remain within range for the spell's entire casting regain Hit Points equal to 2d8 plus your spellcasting ability modifier. This spell has no effect on Undead or Constructs. Using a Higher-Level Spell Slot. The healing increases by 1d8 for each spell slot level above 2."
+          "Up to five creatures of your choice who remain within range for the spell's entire casting gain the benefits of a Short Rest and also regain 2d8 Hit Points. A creature can't be affected by this spell again until that creature finishes a Long Rest. Using a Higher-Level Spell Slot. The healing increases by 1d8 for each spell slot level above 2."
       , mechanics =
           { family = "activation"
           , level = 2
@@ -74,7 +72,6 @@ let prayerOfHealing =
                           , base =
                               { dice = 2
                               , dieSize = 8
-                              , spellcastingMod = True
                               }
                           , perLevel = { dice = 1 }
                           , startingAtLevel = 2

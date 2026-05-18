@@ -1652,6 +1652,23 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("conditionRemovalProtection"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      targeting: Schema.Struct({
+        kind: Schema.Literal("targetList"),
+        minTargets: Schema.Literal(1),
+        maxTargets: Schema.Literal(1),
+      }),
+      protection: Schema.Struct({
+        conditionSaveRollMode: BattleRuntimeObjectSchema,
+        damageResistance: BattleRuntimeObjectSchema,
+      }),
+      rangeFeet: MovementFeet,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("weaponDamageRider"),
       spell: BattleRuntimeObjectSchema,
       actionCost: Schema.Literal("bonusAction"),

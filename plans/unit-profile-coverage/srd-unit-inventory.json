@@ -179,12 +179,12 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 467,
-      "percent": "84%",
+      "numerator": 463,
+      "percent": "83.3%",
       "rowsByStatus": {
-        "accepted": 324,
-        "accepted-no-battle-effect": 143,
-        "battle-runtime-required": 79,
+        "accepted": 328,
+        "accepted-no-battle-effect": 135,
+        "battle-runtime-required": 83,
         "partial-battle-runtime": 6,
         "owner-evidence-required": 4
       }
@@ -201,19 +201,19 @@
       "catalog-installed-owner-evidence-required": 5
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 335,
+      "catalog-installed-owner-evidence-present": 339,
       "non-runtime": 24,
-      "catalog-only/dead-for-now": 114,
+      "catalog-only/dead-for-now": 106,
       "missing-authored-record": 58,
-      "catalog-installed-owner-evidence-required": 14,
-      "catalog-authored-executable-follow-up": 11
+      "catalog-installed-owner-evidence-required": 16,
+      "catalog-authored-executable-follow-up": 13
     },
     "spellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 176,
-      "catalog-only/dead-for-now": 114,
+      "catalog-installed-owner-evidence-present": 180,
+      "catalog-only/dead-for-now": 106,
       "missing-authored-record": 57,
-      "catalog-installed-owner-evidence-required": 9,
-      "catalog-authored-executable-follow-up": 11
+      "catalog-installed-owner-evidence-required": 11,
+      "catalog-authored-executable-follow-up": 13
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -8831,13 +8831,25 @@
         "sourceRecordPath": "packages/surface/content/prayer_of_healing.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "prayer_of_healing"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit prayer_of_healing is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "surface Spell Definition authoring; character-sheet-runtime plus spellcasting resource owner",
+          "evidence": "Promote follow-up split L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST, L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST: L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST owns Replace Prayer of Healing's partial mechanics with a lossless SRD Surface shape for 10-minute non-ritual casting, up-to-five recipients that remain within 30 feet for the entire casting, slot-scaled 2d8 plus 1d8 per slot above 2 Hit Point restoration, granted Short Rest benefits, and per-recipient immunity to being affected again until that creature finishes a Long Rest. Required output: Prayer of Healing Dhall and JSON content, with schema and tracer support where required, represent the Short Rest benefit and Long Rest recipient lockout as executable source facts instead of comments or prose-only description.; L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST owns Apply Prayer of Healing after the completed 10-minute cast by spending the spell slot at completion, consuming caller-supplied recipient eligibility facts, granting each selected Character Sheet the existing Short Rest benefits without duplicating rest algorithms, applying the slot-scaled healing roll capped by Hit Point maximum, and recording/clearing the per-recipient Long Rest lockout from the same rest state owner. Required output: Supported profile or profile-subset evidence, focused runtime tests, and owner evidence for Prayer of Healing's Character Sheet rest-benefit application, healing, Spell Slot spend timing, and Long Rest recipient lockout while leaving automatic range tracking and encounter-time casting interruption as caller/table facts.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST, L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST: L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST owns Replace Prayer of Healing's partial mechanics with a lossless SRD Surface shape for 10-minute non-ritual casting, up-to-five recipients that remain within 30 feet for the entire casting, slot-scaled 2d8 plus 1d8 per slot above 2 Hit Point restoration, granted Short Rest benefits, and per-recipient immunity to being affected again until that creature finishes a Long Rest. Required output: Prayer of Healing Dhall and JSON content, with schema and tracer support where required, represent the Short Rest benefit and Long Rest recipient lockout as executable source facts instead of comments or prose-only description.; L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST owns Apply Prayer of Healing after the completed 10-minute cast by spending the spell slot at completion, consuming caller-supplied recipient eligibility facts, granting each selected Character Sheet the existing Short Rest benefits without duplicating rest algorithms, applying the slot-scaled healing roll capped by Hit Point maximum, and recording/clearing the per-recipient Long Rest lockout from the same rest state owner. Required output: Supported profile or profile-subset evidence, focused runtime tests, and owner evidence for Prayer of Healing's Character Sheet rest-benefit application, healing, Spell Slot spend timing, and Long Rest recipient lockout while leaving automatic range tracking and encounter-time casting interruption as caller/table facts.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_protection_from_poison",
@@ -8862,13 +8874,25 @@
         "sourceRecordPath": "packages/surface/content/protection_from_poison.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "protection_from_poison"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit protection_from_poison is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-SPELL-PROTECTION-FROM-POISON at packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_silence",
@@ -11632,13 +11656,25 @@
         "sourceRecordPath": "packages/surface/content/protection_from_poison.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "protection_from_poison"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit protection_from_poison is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-SPELL-PROTECTION-FROM-POISON at packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_spike_growth",
@@ -14699,13 +14735,25 @@
         "sourceRecordPath": "packages/surface/content/prayer_of_healing.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "prayer_of_healing"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit prayer_of_healing is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "surface Spell Definition authoring; character-sheet-runtime plus spellcasting resource owner",
+          "evidence": "Promote follow-up split L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST, L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST: L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST owns Replace Prayer of Healing's partial mechanics with a lossless SRD Surface shape for 10-minute non-ritual casting, up-to-five recipients that remain within 30 feet for the entire casting, slot-scaled 2d8 plus 1d8 per slot above 2 Hit Point restoration, granted Short Rest benefits, and per-recipient immunity to being affected again until that creature finishes a Long Rest. Required output: Prayer of Healing Dhall and JSON content, with schema and tracer support where required, represent the Short Rest benefit and Long Rest recipient lockout as executable source facts instead of comments or prose-only description.; L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST owns Apply Prayer of Healing after the completed 10-minute cast by spending the spell slot at completion, consuming caller-supplied recipient eligibility facts, granting each selected Character Sheet the existing Short Rest benefits without duplicating rest algorithms, applying the slot-scaled healing roll capped by Hit Point maximum, and recording/clearing the per-recipient Long Rest lockout from the same rest state owner. Required output: Supported profile or profile-subset evidence, focused runtime tests, and owner evidence for Prayer of Healing's Character Sheet rest-benefit application, healing, Spell Slot spend timing, and Long Rest recipient lockout while leaving automatic range tracking and encounter-time casting interruption as caller/table facts.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST, L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST: L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST owns Replace Prayer of Healing's partial mechanics with a lossless SRD Surface shape for 10-minute non-ritual casting, up-to-five recipients that remain within 30 feet for the entire casting, slot-scaled 2d8 plus 1d8 per slot above 2 Hit Point restoration, granted Short Rest benefits, and per-recipient immunity to being affected again until that creature finishes a Long Rest. Required output: Prayer of Healing Dhall and JSON content, with schema and tracer support where required, represent the Short Rest benefit and Long Rest recipient lockout as executable source facts instead of comments or prose-only description.; L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST owns Apply Prayer of Healing after the completed 10-minute cast by spending the spell slot at completion, consuming caller-supplied recipient eligibility facts, granting each selected Character Sheet the existing Short Rest benefits without duplicating rest algorithms, applying the slot-scaled healing roll capped by Hit Point maximum, and recording/clearing the per-recipient Long Rest lockout from the same rest state owner. Required output: Supported profile or profile-subset evidence, focused runtime tests, and owner evidence for Prayer of Healing's Character Sheet rest-benefit application, healing, Spell Slot spend timing, and Long Rest recipient lockout while leaving automatic range tracking and encounter-time casting interruption as caller/table facts.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/paladin:spell-level-2:spell-unit-pressure:paladin_spell_list_protection_from_poison",
@@ -14730,13 +14778,25 @@
         "sourceRecordPath": "packages/surface/content/protection_from_poison.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "protection_from_poison"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit protection_from_poison is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-SPELL-PROTECTION-FROM-POISON at packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/paladin:spell-level-2:spell-unit-pressure:paladin_spell_list_shining_smite",
@@ -16599,13 +16659,25 @@
         "sourceRecordPath": "packages/surface/content/protection_from_poison.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "protection_from_poison"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit protection_from_poison is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-SPELL-PROTECTION-FROM-POISON at packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_silence",
@@ -22235,10 +22307,11 @@
         "state": "not-installed",
         "unitId": "ray_of_enfeeblement"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE, L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY: L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE owns Promote Ray of Enfeeblement's cast/save/lifecycle branch: Magic Action and level-2-or-higher Spell Slot spend, one creature target within 60 feet, Constitution save, success-side Disadvantage on the target's next attack roll until the start of the caster's next turn, failed-save Disadvantage on Strength-based D20 Tests, end-of-target-turn Constitution repeat saves ending the spell on success, and Concentration cleanup without modeling the damage-roll penalty in this slice. Required output: Profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for cast/save/lifecycle and Strength D20 roll-mode behavior while leaving damage-roll subtraction to the separate damage pipeline task.; L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY owns Promote Ray of Enfeeblement's failed-save source-side damage penalty: subtract 1d8 from all damage rolls made by the affected target while the spell effect is active, covering attack, spell, and other battle-owned damage rolls through one generic spell damage-roll penalty hole/fill path that applies before target-side Resistance, damage reductions, Concentration saves, and damage disposition. Required output: Supported-profile or profile-subset-supported Unit claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Ray damage-roll subtraction without duplicating damage state.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_spider_climb",
@@ -25763,10 +25836,11 @@
         "state": "not-installed",
         "unitId": "ray_of_enfeeblement"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE, L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY: L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE owns Promote Ray of Enfeeblement's cast/save/lifecycle branch: Magic Action and level-2-or-higher Spell Slot spend, one creature target within 60 feet, Constitution save, success-side Disadvantage on the target's next attack roll until the start of the caster's next turn, failed-save Disadvantage on Strength-based D20 Tests, end-of-target-turn Constitution repeat saves ending the spell on success, and Concentration cleanup without modeling the damage-roll penalty in this slice. Required output: Profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for cast/save/lifecycle and Strength D20 roll-mode behavior while leaving damage-roll subtraction to the separate damage pipeline task.; L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY owns Promote Ray of Enfeeblement's failed-save source-side damage penalty: subtract 1d8 from all damage rolls made by the affected target while the spell effect is active, covering attack, spell, and other battle-owned damage rolls through one generic spell damage-roll penalty hole/fill path that applies before target-side Resistance, damage reductions, Concentration saves, and damage disposition. Required output: Supported-profile or profile-subset-supported Unit claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Ray damage-roll subtraction without duplicating damage state.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_rope_trick",

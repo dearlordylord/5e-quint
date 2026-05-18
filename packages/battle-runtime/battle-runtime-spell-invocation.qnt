@@ -75,6 +75,7 @@ module battleRuntimeSpellInvocation {
       | CharmPerson => true
       | BlindnessDeafness => true
       | ProtectionFromEvilAndGood => true
+      | ProtectionFromPoison => true
       | IceKnife => true
       | HealingWord => true
       | CureWounds => true

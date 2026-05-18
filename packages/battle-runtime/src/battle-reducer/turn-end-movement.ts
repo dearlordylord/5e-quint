@@ -760,6 +760,7 @@ function spellConditionEndTurnSaveEffects(
 function spellConditionEndTurnSavingThrowOutcomeHole(
   targetId: CombatantId,
   effect: SpellConditionEndTurnSaveEffect,
+  state?: BattleState,
 ): BattleSpellConditionEndTurnSavingThrowOutcomeHole {
   const key = [
     "battle:spell-condition-end-turn-save",
@@ -785,7 +786,12 @@ function spellConditionEndTurnSavingThrowOutcomeHole(
     ability: effect.save.ability,
     dc: effect.save.dc,
     areaChoices: [],
-    targetRollModes: [],
+    targetRollModes:
+      state === undefined
+        ? []
+        : savingThrowRollModeProjections(state, effect.save.ability, {
+            condition: effect.condition,
+          }).filter((projection) => projection.targetId === targetId),
   };
 }
 
@@ -2469,7 +2475,11 @@ export function resolveEndTurnCommand(
   const spellConditionEndTurnSaveRequests =
     spellConditionEndTurnSaveEffects(actor).map((effect) => ({
       effect,
-      hole: spellConditionEndTurnSavingThrowOutcomeHole(actorId, effect),
+      hole: spellConditionEndTurnSavingThrowOutcomeHole(
+        actorId,
+        effect,
+        input.state,
+      ),
     }));
   const spellConditionEndTurnSaveHoles =
     spellConditionEndTurnSaveRequests.map((request) => request.hole);

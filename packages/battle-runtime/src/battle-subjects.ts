@@ -104,6 +104,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "conditionImmunityAndTurnStartTemporaryHitPoints",
   "creatureTypeProtection",
   "blurAttackRollDefense",
+  "conditionRemovalProtection",
   "weaponDamageRider",
   "afterHitDamage",
   "afterHitSaveGatedCondition",

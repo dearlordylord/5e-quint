@@ -23,6 +23,7 @@ import {
 } from "./damage-apply.ts";
 import { scalarBuffTemporaryHitPointsAmount } from "./spell-effects.ts";
 import {
+  battleCreatureAfterConditionRemoval,
   conditionsAfterApplyingSpellConditionEffects,
   conditionApplicationPreventedByCreatureTypeProtection,
   conditionHadNonSpellSourceBeforeSpellEffect,
@@ -2105,6 +2106,57 @@ export function applyCreatureTypeProtectionSpellEffect(
       ...nextState,
       combatants: new Map(nextState.combatants).set(targetId, {
         ...target,
+        activeEffects,
+      }),
+    };
+  }, state);
+}
+
+export function applyConditionRemovalProtectionSpellEffect(
+  state: BattleState,
+  actorId: CombatantId,
+  targetIds: readonly CombatantId[],
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "conditionRemovalProtection" }
+  >,
+): BattleState {
+  return targetIds.reduce((nextState, targetId) => {
+    const target = nextState.combatants.get(targetId);
+    if (target === undefined) {
+      return nextState;
+    }
+    const condition = invocation.protection.conditionSaveRollMode.condition;
+    const cleansedTarget = battleCreatureAfterConditionRemoval(
+      target,
+      condition,
+    );
+    const nextEffects = [
+      {
+        ...invocation.protection.conditionSaveRollMode,
+        sourceCombatantId: actorId,
+      },
+      {
+        ...invocation.protection.damageResistance,
+        sourceCombatantId: actorId,
+      },
+    ];
+    const activeEffects = [
+      ...cleansedTarget.activeEffects.filter(
+        (effect) =>
+          !(
+            (effect.kind === "conditionSavingThrowRollMode" ||
+              effect.kind === "damageResistance") &&
+            effect.sourceSpellId === invocation.spell.id &&
+            effect.sourceCombatantId === actorId
+          ),
+      ),
+      ...nextEffects,
+    ];
+    return {
+      ...nextState,
+      combatants: new Map(nextState.combatants).set(targetId, {
+        ...cleansedTarget,
         activeEffects,
       }),
     };

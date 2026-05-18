@@ -1814,17 +1814,15 @@
       "unitId": "pass_without_trace"
     },
     {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST: Replace Prayer of Healing's partial mechanics with a lossless SRD Surface shape for 10-minute non-ritual casting, up-to-five recipients that remain within 30 feet for the entire casting, slot-scaled 2d8 plus 1d8 per slot above 2 Hit Point restoration, granted Short Rest benefits, and per-recipient immunity to being affected again until that creature finishes a Long Rest. Owner: surface Spell Definition authoring. Required output: Prayer of Healing Dhall and JSON content, with schema and tracer support where required, represent the Short Rest benefit and Long Rest recipient lockout as executable source facts instead of comments or prose-only description.; L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST: Apply Prayer of Healing after the completed 10-minute cast by spending the spell slot at completion, consuming caller-supplied recipient eligibility facts, granting each selected Character Sheet the existing Short Rest benefits without duplicating rest algorithms, applying the slot-scaled healing roll capped by Hit Point maximum, and recording/clearing the per-recipient Long Rest lockout from the same rest state owner. Owner: character-sheet-runtime plus spellcasting resource owner. Required output: Supported profile or profile-subset evidence, focused runtime tests, and owner evidence for Prayer of Healing's Character Sheet rest-benefit application, healing, Spell Slot spend timing, and Long Rest recipient lockout while leaving automatic range tracking and encounter-time casting interruption as caller/table facts.",
       "sourceRecordPath": "packages/surface/content/prayer_of_healing.json",
       "sourceRows": [
         {
@@ -1852,76 +1850,9 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
       "unitId": "prayer_of_healing"
-    },
-    {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
-      "sourceRecordPath": "packages/surface/content/protection_from_poison.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Cleric spell list Protection from Poison",
-          "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_protection_from_poison",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 194,
-            "lineStart": 194,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Druid spell list Protection from Poison",
-          "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_protection_from_poison",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 246,
-            "lineStart": 246,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Paladin spell list Protection from Poison",
-          "id": "srd521:classes/paladin:spell-level-2:spell-unit-pressure:paladin_spell_list_protection_from_poison",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 201,
-            "lineStart": 201,
-            "path": ".references/srd-5.2.1/Classes/Paladin.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Ranger spell list Protection from Poison",
-          "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_protection_from_poison",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 194,
-            "lineStart": 194,
-            "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
-        }
-      ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
-      "unitId": "protection_from_poison"
     },
     {
       "catalogStatus": "installed",
@@ -1988,11 +1919,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE: Promote Ray of Enfeeblement's cast/save/lifecycle branch: Magic Action and level-2-or-higher Spell Slot spend, one creature target within 60 feet, Constitution save, success-side Disadvantage on the target's next attack roll until the start of the caster's next turn, failed-save Disadvantage on Strength-based D20 Tests, end-of-target-turn Constitution repeat saves ending the spell on success, and Concentration cleanup without modeling the damage-roll penalty in this slice. Owner: battle-runtime spell invocation/effect lifecycle plus promoted Quint parity. Required output: Profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for cast/save/lifecycle and Strength D20 roll-mode behavior while leaving damage-roll subtraction to the separate damage pipeline task.; L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY: Promote Ray of Enfeeblement's failed-save source-side damage penalty: subtract 1d8 from all damage rolls made by the affected target while the spell effect is active, covering attack, spell, and other battle-owned damage rolls through one generic spell damage-roll penalty hole/fill path that applies before target-side Resistance, damage reductions, Concentration saves, and damage disposition. Owner: battle-runtime damage-roll pipeline plus promoted Quint parity. Required output: Supported-profile or profile-subset-supported Unit claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Ray damage-roll subtraction without duplicating damage state.",
       "sourceRecordPath": "packages/surface/content/ray_of_enfeeblement.json",
       "sourceRows": [
         {
@@ -2020,8 +1954,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
       "unitId": "ray_of_enfeeblement"
     },
     {
@@ -2491,7 +2425,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 99,
+      "count": 100,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2561,6 +2495,7 @@
         "poison_spray",
         "produce_flame",
         "protection_from_evil_and_good",
+        "protection_from_poison",
         "ranger_deft_explorer",
         "ranger_weapon_mastery",
         "ray_of_frost",
@@ -2597,7 +2532,7 @@
       ]
     },
     {
-      "count": 17,
+      "count": 19,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
@@ -2613,6 +2548,8 @@
         "monk_monks_focus",
         "monk_uncanny_metabolism",
         "moonbeam",
+        "prayer_of_healing",
+        "ray_of_enfeeblement",
         "see_invisibility",
         "sorcerer_font_of_magic",
         "sorcerer_metamagic",
@@ -2642,7 +2579,7 @@
       ]
     },
     {
-      "count": 13,
+      "count": 10,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
@@ -2654,9 +2591,6 @@
         "lesser_restoration",
         "magic_weapon",
         "mind_spike",
-        "prayer_of_healing",
-        "protection_from_poison",
-        "ray_of_enfeeblement",
         "warding_bond",
         "web"
       ]
@@ -2687,45 +2621,45 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 467,
-      "percent": "84%",
+      "numerator": 463,
+      "percent": "83.3%",
       "rowsByStatus": {
-        "accepted": 324,
-        "accepted-no-battle-effect": 143,
-        "battle-runtime-required": 79,
+        "accepted": 328,
+        "accepted-no-battle-effect": 135,
+        "battle-runtime-required": 83,
         "owner-evidence-required": 4,
         "partial-battle-runtime": 6
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 70,
+      "denominator": 71,
       "numerator": 11,
-      "percent": "15.7%"
+      "percent": "15.5%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 70,
+      "denominator": 71,
       "numerator": 16,
-      "percent": "22.9%"
+      "percent": "22.5%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 99,
+      "denominator": 100,
       "numerator": 30,
-      "percent": "30.3%"
+      "percent": "30%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 151,
-      "numerator": 99,
-      "percent": "65.6%"
+      "numerator": 100,
+      "percent": "66.2%"
     },
     "strictTargetClosure": {
       "denominator": 151,
-      "numerator": 138,
-      "percent": "91.4%"
+      "numerator": 141,
+      "percent": "93.4%"
     }
   },
   "openFrontier": [
     {
-      "count": 13,
+      "count": 10,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
@@ -2737,9 +2671,6 @@
         "lesser_restoration",
         "magic_weapon",
         "mind_spike",
-        "prayer_of_healing",
-        "protection_from_poison",
-        "ray_of_enfeeblement",
         "warding_bond",
         "web"
       ]
@@ -5962,9 +5893,9 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 99,
+        "denominator": 100,
         "numerator": 30,
-        "percent": "30.3%"
+        "percent": "30%"
       }
     },
     "units": [
@@ -7159,6 +7090,18 @@
           {
             "joinStatus": "unmapped",
             "obligations": [],
+            "profileId": "spell.invocation-condition-removal-protection",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "protection_from_poison"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
             "profileId": "character-creation.skill-expertise-choice",
             "profileKind": "character-creation"
           }
@@ -7822,20 +7765,20 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
-      "missing": 13,
+      "missing": 10,
       "profile-subset-supported": 11,
-      "supported-profile": 99,
-      "unsupported-profile": 28
+      "supported-profile": 100,
+      "unsupported-profile": 30
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 17,
+      "blocked-follow-up-split": 19,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 14,
-      "open-runtime-behavior": 13,
-      "supported-profile": 99
+      "open-runtime-behavior": 10,
+      "supported-profile": 100
     },
-    "nonSupportedFrontier": 52,
+    "nonSupportedFrontier": 51,
     "strictDenominator": 151
   }
 }

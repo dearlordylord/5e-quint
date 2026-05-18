@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 379,
-      "numerator": 159,
-      "percent": "42%"
+      "numerator": 161,
+      "percent": "42.5%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 451,
-      "numerator": 191,
-      "percent": "42.4%"
+      "numerator": 193,
+      "percent": "42.8%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,62 +59,62 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 192
+      "value": 194
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 122,
-      "numerator": 122,
+      "denominator": 123,
+      "numerator": 123,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 192,
-      "numerator": 192,
+      "denominator": 194,
+      "numerator": 194,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 68,
-      "numerator": 68,
+      "denominator": 69,
+      "numerator": 69,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 68,
-      "numerator": 68,
+      "denominator": 69,
+      "numerator": 69,
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 89,
+      "denominator": 90,
       "numerator": 19,
-      "percent": "21.3%"
+      "percent": "21.1%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 89,
+      "denominator": 90,
       "numerator": 24,
-      "percent": "27%"
+      "percent": "26.7%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 122,
+      "denominator": 123,
       "numerator": 41,
-      "percent": "33.6%"
+      "percent": "33.3%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 68,
-      "numerator": 68,
+      "denominator": 69,
+      "numerator": 69,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 68,
-      "numerator": 68,
+      "denominator": 69,
+      "numerator": 69,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 122,
+      "denominator": 123,
       "numerator": 104,
-      "percent": "85.2%"
+      "percent": "84.6%"
     },
     "supportedProfileCoverage": {
-      "denominator": 160,
-      "numerator": 122,
-      "percent": "76.3%"
+      "denominator": 162,
+      "numerator": 123,
+      "percent": "75.9%"
     }
   },
   "metricSemantics": [
@@ -2597,20 +2597,45 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-blur.test.ts"
         }
       ]
+    },
+    {
+      "id": "spell.invocation-condition-removal-protection",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "sourceBoundary": "The runtime consumes authored direct condition-removal, damage Resistance, and condition-scoped Saving Throw Advantage facts on one touched creature. It spends the Magic Action and Spell Slot, removes the named condition and spell-owned active effects that directly apply it, records duration-bound target-side damage Resistance and condition-scoped Saving Throw roll-mode effects, applies damage Resistance through the normal target-side damage adjustment pipeline, and projects Advantage for Saving Throws to avoid or end the named condition.",
+      "taskRefs": [
+        "L12G-SPELL-PROTECTION-FROM-POISON"
+      ],
+      "title": "Spell invocation removes a condition and grants duration-bound damage Resistance plus condition-scoped Saving Throw Advantage",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 89,
+        "denominator": 90,
         "numerator": 19,
-        "percent": "21.3%"
+        "percent": "21.1%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 89,
+        "denominator": 90,
         "numerator": 24,
-        "percent": "27%"
+        "percent": "26.7%"
       }
     },
     "profileKinds": [
@@ -3347,6 +3372,12 @@
         "obligations": [],
         "profileId": "spell.invocation-blur-attack-roll-defense",
         "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-condition-removal-protection",
+        "profileKind": "spell-invocation"
       }
     ],
     "sourceArtifacts": {
@@ -3357,9 +3388,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 122,
+          "denominator": 123,
           "numerator": 41,
-          "percent": "33.6%"
+          "percent": "33.3%"
         }
       },
       "units": [
@@ -4844,6 +4875,18 @@
             }
           ],
           "unitId": "protection_from_evil_and_good"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-condition-removal-protection",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "protection_from_poison"
         },
         {
           "joinStatus": "unmapped",
@@ -7290,6 +7333,22 @@
         "spell.invocation-blur-attack-roll-defense"
       ],
       "taskId": "L12G-SPELL-BLUR"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Protection from Poison's Magic Action and Spell Slot spend, cast-time Poisoned cleanup, one-hour Poisoned-saving-throw Advantage projection, and one-hour Poison damage Resistance projection.",
+      "profileIds": [
+        "spell.invocation-condition-removal-protection"
+      ],
+      "taskId": "L12G-SPELL-PROTECTION-FROM-POISON"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime reducer tests cover Protection from Poison catalog admission, touched-creature target fill, Magic Action and level-2 Spell Slot spend, Poisoned condition cleanup including spell-owned Poisoned effects, duration-bound Poison damage Resistance, condition-scoped Saving Throw Advantage to end Poisoned, successful save cleanup, and duration cleanup.",
+      "profileIds": [
+        "spell.invocation-condition-removal-protection"
+      ],
+      "taskId": "L12G-SPELL-PROTECTION-FROM-POISON"
     }
   ],
   "units": [
@@ -15518,6 +15577,41 @@
         "status": "installed"
       },
       "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST",
+            "mechanic": "Replace Prayer of Healing's partial mechanics with a lossless SRD Surface shape for 10-minute non-ritual casting, up-to-five recipients that remain within 30 feet for the entire casting, slot-scaled 2d8 plus 1d8 per slot above 2 Hit Point restoration, granted Short Rest benefits, and per-recipient immunity to being affected again until that creature finishes a Long Rest.",
+            "owner": "surface Spell Definition authoring",
+            "requiredOutput": "Prayer of Healing Dhall and JSON content, with schema and tracer support where required, represent the Short Rest benefit and Long Rest recipient lockout as executable source facts instead of comments or prose-only description.",
+            "title": "Prayer Of Healing Surface Rest Shape"
+          },
+          {
+            "id": "L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST",
+            "mechanic": "Apply Prayer of Healing after the completed 10-minute cast by spending the spell slot at completion, consuming caller-supplied recipient eligibility facts, granting each selected Character Sheet the existing Short Rest benefits without duplicating rest algorithms, applying the slot-scaled healing roll capped by Hit Point maximum, and recording/clearing the per-recipient Long Rest lockout from the same rest state owner.",
+            "owner": "character-sheet-runtime plus spellcasting resource owner",
+            "requiredOutput": "Supported profile or profile-subset evidence, focused runtime tests, and owner evidence for Prayer of Healing's Character Sheet rest-benefit application, healing, Spell Slot spend timing, and Long Rest recipient lockout while leaving automatic range tracking and encounter-time casting interruption as caller/table facts.",
+            "title": "Prayer Of Healing Character Sheet Rest Runtime"
+          }
+        ],
+        "futureProfileOwner": "surface Spell Definition authoring plus character-sheet-runtime rest application plus spellcasting resource owner",
+        "reason": "Prayer of Healing is authored and installed as an SRD Surface Spell Definition with its 10-minute spell shell, fixed up-to-five target count, and slot-scaled 2d8 Hit Point restoration only. The local SRD 5.2.1 passage additionally grants each recipient the benefits of a Short Rest and prevents that creature from being affected by the spell again until it finishes a Long Rest. Task 40 claims no battle-runtime support and leaves the row blocked by the concrete follow-up split listed on this claim.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/prayer_of_healing.json",
+      "unitId": "prayer_of_healing"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "deferredMechanics": [],
         "profileIds": [
           "spell.creature-type-protection-and-charm"
@@ -15585,6 +15679,70 @@
       ],
       "sourceRecordPath": "packages/surface/content/protection_from_evil_and_good.json",
       "unitId": "protection_from_evil_and_good"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "deferredMechanics": [],
+        "profileIds": [
+          "spell.invocation-condition-removal-protection"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action level-2-or-higher Spell Slot casting",
+          "one touched creature target",
+          "cast-time Poisoned condition removal including active spell-owned Poisoned effects",
+          "one-hour spell-owned Poison damage Resistance through the normal target-side damage adjustment pipeline",
+          "one-hour spell-owned Advantage on Saving Throws to avoid or end the Poisoned condition through condition-scoped save roll-mode projections",
+          "duration cleanup removes both ongoing protection effects"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-SPELL-PROTECTION-FROM-POISON"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-condition-removal-protection",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "The runtime consumes authored direct condition-removal, damage Resistance, and condition-scoped Saving Throw Advantage facts on one touched creature. It spends the Magic Action and Spell Slot, removes the named condition and spell-owned active effects that directly apply it, records duration-bound target-side damage Resistance and condition-scoped Saving Throw roll-mode effects, applies damage Resistance through the normal target-side damage adjustment pipeline, and projects Advantage for Saving Throws to avoid or end the named condition.",
+          "taskRefs": [
+            "L12G-SPELL-PROTECTION-FROM-POISON"
+          ],
+          "title": "Spell invocation removes a condition and grants duration-bound damage Resistance plus condition-scoped Saving Throw Advantage",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/protection_from_poison.json",
+      "unitId": "protection_from_poison"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -22389,24 +22547,6 @@
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [],
-      "sourceRecordPath": "packages/surface/content/prayer_of_healing.json",
-      "unitId": "prayer_of_healing"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
       "sourceRecordPath": "packages/surface/content/prismatic_wall.json",
       "unitId": "prismatic_wall"
     },
@@ -22427,24 +22567,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/protection_from_energy.json",
       "unitId": "protection_from_energy"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/protection_from_poison.json",
-      "unitId": "protection_from_poison"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -22541,6 +22663,28 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE",
+            "mechanic": "Promote Ray of Enfeeblement's cast/save/lifecycle branch: Magic Action and level-2-or-higher Spell Slot spend, one creature target within 60 feet, Constitution save, success-side Disadvantage on the target's next attack roll until the start of the caster's next turn, failed-save Disadvantage on Strength-based D20 Tests, end-of-target-turn Constitution repeat saves ending the spell on success, and Concentration cleanup without modeling the damage-roll penalty in this slice.",
+            "owner": "battle-runtime spell invocation/effect lifecycle plus promoted Quint parity",
+            "requiredOutput": "Profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for cast/save/lifecycle and Strength D20 roll-mode behavior while leaving damage-roll subtraction to the separate damage pipeline task.",
+            "title": "Ray Of Enfeeblement D20 Lifecycle Runtime"
+          },
+          {
+            "id": "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY",
+            "mechanic": "Promote Ray of Enfeeblement's failed-save source-side damage penalty: subtract 1d8 from all damage rolls made by the affected target while the spell effect is active, covering attack, spell, and other battle-owned damage rolls through one generic spell damage-roll penalty hole/fill path that applies before target-side Resistance, damage reductions, Concentration saves, and damage disposition.",
+            "owner": "battle-runtime damage-roll pipeline plus promoted Quint parity",
+            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Ray damage-roll subtraction without duplicating damage state.",
+            "title": "Ray Of Enfeeblement Damage Roll Penalty Runtime"
+          }
+        ],
+        "futureProfileOwner": "battle-runtime spell invocation/effect lifecycle plus promoted Quint parity and damage-roll pipeline",
+        "reason": "Ray of Enfeeblement is authored as an SRD Surface Spell Definition with Magic Action Spell Slot casting, one creature within 60 feet, a Constitution save, a success-side next-attack Disadvantage rider until the start of the caster's next turn, and a failed-save Concentration effect that imposes Disadvantage on Strength-based D20 Tests, subtracts 1d8 from all damage rolls, and grants end-of-target-turn Constitution repeat saves. Task 42 claims no promoted battle-runtime profile yet because the runtime has no safe single Spell Effect that combines ability-scoped D20 Test roll modes, end-turn save-to-end lifecycle, success-side one-attack rider, and source-side all-damage-roll subtraction without either duplicating active state or silently omitting one RAW branch.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",

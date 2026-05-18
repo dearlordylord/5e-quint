@@ -116,6 +116,8 @@ const requiredFirstVerticalUnitIds = [
   "magic_missile",
   "mass_cure_wounds",
   "healing_word",
+  "prayer_of_healing",
+  "protection_from_poison",
   "shield",
   "shatter",
   "shining_smite",
@@ -221,6 +223,47 @@ describe("SRD Unit catalog boundary", () => {
         },
       ]);
     }
+  });
+
+  test("keeps Prayer of Healing's SRD 5.2.1 rest-healing shell in the catalog projection", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const prayerOfHealing = result.catalog.requireUnit("prayer_of_healing");
+
+    expect(prayerOfHealing).toMatchObject({
+      kind: "spell",
+      mechanics: {
+        castingTime: { amount: 10, kind: "minutes", ritual: false },
+        duration: { kind: "instantaneous" },
+        range: { feet: 30, kind: "point" },
+        phases: [
+          {
+            attachment: {
+              value: {
+                kind: "target",
+                selection: { count: 5, mode: "choose_up_to" },
+              },
+            },
+            effects: [
+              {
+                amount: {
+                  base: { dice: 2, dieSize: 8 },
+                  kind: "linear_per_level",
+                  perLevel: { dice: 1 },
+                  startingAtLevel: 2,
+                },
+                kind: "heal_hp",
+              },
+            ],
+          },
+        ],
+      },
+    });
+    expect(prayerOfHealing.description).toContain(
+      "gain the benefits of a Short Rest",
+    );
   });
 
   test("keeps Shatter's SRD save-damage clause in the catalog projection", () => {

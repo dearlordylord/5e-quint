@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.passive-saving-throw-roll-mode unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.creature-type-protection-and-charm spell.find-familiar-lifecycle spell.invocation-after-hit-damage spell.invocation-after-hit-damage-illumination spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-blur-attack-roll-defense spell.invocation-independent-attack-sequence spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-dancing-lights-movable-dim-light spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-self-ability-check-advantage spell.invocation-self-teleport spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.creature-type-protection-and-charm spell.find-familiar-lifecycle spell.invocation-after-hit-damage spell.invocation-after-hit-damage-illumination spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-blur-attack-roll-defense spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-removal-protection spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-dancing-lights-movable-dim-light spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-independent-attack-sequence spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-self-ability-check-advantage spell.invocation-self-teleport spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.scalar-buff unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.bardic-inspiration-failed-d20-test unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.martial-arts-attack-projection unit-feature.passive-saving-throw-roll-mode unit-feature.reaction-roll-or-damage-reduction unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-self-ability-check-advantage
@@ -30,6 +30,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-self-teleport
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-sanctuary-targeting-interdiction
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.creature-type-protection-and-charm
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-condition-removal-protection
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-object-light
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-held-light-emitter spell.invocation-dancing-lights-movable-dim-light
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-make-stable
@@ -73,6 +74,7 @@ module battleRuntime {
   import battleRuntimeWeaponHitSpellRiders.* from "./battle-runtime-weapon-hit-spell-riders"
   import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
+  import battleRuntimeProtectionFromPoison.* from "./battle-runtime-protection-from-poison"
   import battleRuntimeAttackFacts.* from "./battle-runtime-attack-facts"
   import battleRuntimeHidden.* from "./battle-runtime-hidden"
   import battleRuntimeMovement.* from "./battle-runtime-movement"
@@ -372,6 +374,11 @@ module battleRuntime {
   //   Barkskin is a level-2 Bonus Action Touch spell that targets a willing
   //   creature and grants a one-hour Armor Class floor of 17 that does not lower
   //   higher Armor Class values.
+  // - Spells/Descriptions-M-P.md lines 920-929, Rules-Glossary.md lines
+  //   788-790, 828-830, and 854-856, and UBIQUITOUS_LANGUAGE.md: Protection from
+  //   Poison is a level-2 Magic Action Touch spell that ends the Poisoned
+  //   condition, then grants one-hour Advantage on Saving Throws to avoid or
+  //   end Poisoned and Resistance to Poison damage.
   // - Spells/Descriptions-A-D.md lines 85-97 and 692-703,
   //   Spells/Descriptions-A-D.md lines 563-581,
   //   Spells/Descriptions-M-P.md lines 907-918, and
