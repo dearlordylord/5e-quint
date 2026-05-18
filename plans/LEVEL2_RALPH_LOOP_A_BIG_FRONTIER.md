@@ -181,7 +181,7 @@
     {
       "number": 30,
       "id": "L12G-SPELL-GENTLE-REPOSE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Gentle Repose Runtime-Detached Closure"
     }
   ]
@@ -1209,7 +1209,7 @@ Acceptance:
 
 ### Task 30 - L12G-SPELL-GENTLE-REPOSE - Gentle Repose Runtime-Detached Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `gentle_repose`. Gate task: 32 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 

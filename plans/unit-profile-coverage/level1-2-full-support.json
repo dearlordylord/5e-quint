@@ -1102,11 +1102,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "Corpse/remains preservation, Undead prevention, and raise-dead deadline extension are corpse/remains lifecycle and resurrection/adjudication facts supplied by the table or a future character/rest owner rather than promoted battle runtime state.",
       "sourceRecordPath": "packages/surface/content/gentle_repose.json",
       "sourceRows": [
         {
@@ -1146,8 +1149,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
       "unitId": "gentle_repose"
     },
     {
@@ -2645,29 +2648,6 @@
       ]
     },
     {
-      "count": 16,
-      "description": "No Unit profile claim records runtime support or an accepted strict closure.",
-      "status": "open-runtime-behavior",
-      "unitIds": [
-        "find_steed",
-        "gentle_repose",
-        "heat_metal",
-        "hold_person",
-        "invisibility",
-        "lesser_restoration",
-        "magic_weapon",
-        "mind_spike",
-        "prayer_of_healing",
-        "protection_from_poison",
-        "ray_of_enfeeblement",
-        "spider_climb",
-        "spike_growth",
-        "spiritual_weapon",
-        "warding_bond",
-        "web"
-      ]
-    },
-    {
       "count": 15,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
@@ -2690,7 +2670,7 @@
       ]
     },
     {
-      "count": 14,
+      "count": 15,
       "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
@@ -2702,12 +2682,35 @@
         "detect_magic",
         "detect_poison_and_disease",
         "find_traps",
+        "gentle_repose",
         "identify",
         "minor_illusion",
         "pass_without_trace",
         "silent_image",
         "speak_with_animals",
         "thaumaturgy"
+      ]
+    },
+    {
+      "count": 15,
+      "description": "No Unit profile claim records runtime support or an accepted strict closure.",
+      "status": "open-runtime-behavior",
+      "unitIds": [
+        "find_steed",
+        "heat_metal",
+        "hold_person",
+        "invisibility",
+        "lesser_restoration",
+        "magic_weapon",
+        "mind_spike",
+        "prayer_of_healing",
+        "protection_from_poison",
+        "ray_of_enfeeblement",
+        "spider_climb",
+        "spike_growth",
+        "spiritual_weapon",
+        "warding_bond",
+        "web"
       ]
     },
     {
@@ -2768,18 +2771,17 @@
     },
     "strictTargetClosure": {
       "denominator": 151,
-      "numerator": 135,
-      "percent": "89.4%"
+      "numerator": 136,
+      "percent": "90.1%"
     }
   },
   "openFrontier": [
     {
-      "count": 16,
+      "count": 15,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
         "find_steed",
-        "gentle_repose",
         "heat_metal",
         "hold_person",
         "invisibility",
@@ -7862,17 +7864,17 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
-      "missing": 16,
+      "missing": 15,
       "profile-subset-supported": 11,
       "supported-profile": 98,
-      "unsupported-profile": 26
+      "unsupported-profile": 27
     },
     "groupsByStatus": {
       "blocked-follow-up-split": 15,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 6,
-      "closed-runtime-detached-table-adjudication": 14,
-      "open-runtime-behavior": 16,
+      "closed-runtime-detached-table-adjudication": 15,
+      "open-runtime-behavior": 15,
       "supported-profile": 98
     },
     "nonSupportedFrontier": 53,
