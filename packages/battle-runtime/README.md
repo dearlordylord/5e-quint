@@ -1238,6 +1238,9 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
   arithmetic.
 - `battle-runtime-hidden.qnt` - Hidden execution facts, Hide-hole admission,
   Search DC projection, and reveal helpers.
+- `battle-runtime-movement.qnt` - Movement projection, Dash/Disengage/Dodge,
+  Grapple/Escape, forced movement, Opportunity Attack movement windows, light
+  weapon bonus attacks, and movement-backed action-cost spending.
 - `battle-runtime-*-tests.qnt` - package-local QNT self-tests split by domain
   so the canonical integration spec stays focused on reducer behavior.
 - `battle-runtime-self-tests.qnt` - import-only QNT self-test suite used by the

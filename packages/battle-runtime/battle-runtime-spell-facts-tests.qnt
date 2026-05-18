@@ -37,6 +37,7 @@ module battleRuntimeSpellFactsTests {
   import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
   import battleRuntimeAttackFacts.* from "./battle-runtime-attack-facts"
+  import battleRuntimeMovement.* from "./battle-runtime-movement"
 
   run test_spell_invocation_executable_spell_facts = {
     val animalFriendshipCharmed = AnimalFriendshipCharmed({ source: Fighter, durationTicks: 24 * 60 })

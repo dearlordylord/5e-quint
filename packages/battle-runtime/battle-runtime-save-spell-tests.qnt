@@ -37,6 +37,7 @@ module battleRuntimeSaveSpellTests {
   import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
   import battleRuntimeAttackFacts.* from "./battle-runtime-attack-facts"
+  import battleRuntimeMovement.* from "./battle-runtime-movement"
 
   run test_roll_modifier_concentration_effects_end_when_caster_concentration_breaks = {
     val concentrating = {

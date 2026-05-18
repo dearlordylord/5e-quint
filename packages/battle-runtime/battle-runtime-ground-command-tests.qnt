@@ -37,6 +37,7 @@ module battleRuntimeGroundCommandTests {
   import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
   import battleRuntimeAttackFacts.* from "./battle-runtime-attack-facts"
+  import battleRuntimeMovement.* from "./battle-runtime-movement"
 
   run test_grease_records_ground_hazard_and_prones_failed_appearance_save = {
     val resolved = resolveGrease(initialState, true, false)
