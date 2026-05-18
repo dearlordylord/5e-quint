@@ -8701,7 +8701,7 @@
       "detail": "Gentle Repose (Necromancy; R, M)",
       "candidateUnitId": "gentle_repose",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -8712,9 +8712,16 @@
         "state": "not-installed",
         "unitId": "gentle_repose"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached corpse/remains and resurrection-deadline owner",
+        "reason": "Corpse/remains preservation, Undead prevention, and raise-dead deadline extension are corpse/remains lifecycle and resurrection/adjudication facts supplied by the table or a future character/rest owner rather than promoted battle runtime state."
+      },
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
+      "nextAction": "Corpse/remains preservation, Undead prevention, and raise-dead deadline extension are corpse/remains lifecycle and resurrection/adjudication facts supplied by the table or a future character/rest owner rather than promoted battle runtime state.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -14639,7 +14646,7 @@
       "detail": "Gentle Repose (Necromancy; R, M)",
       "candidateUnitId": "gentle_repose",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -14650,9 +14657,16 @@
         "state": "not-installed",
         "unitId": "gentle_repose"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached corpse/remains and resurrection-deadline owner",
+        "reason": "Corpse/remains preservation, Undead prevention, and raise-dead deadline extension are corpse/remains lifecycle and resurrection/adjudication facts supplied by the table or a future character/rest owner rather than promoted battle runtime state."
+      },
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
+      "nextAction": "Corpse/remains preservation, Undead prevention, and raise-dead deadline extension are corpse/remains lifecycle and resurrection/adjudication facts supplied by the table or a future character/rest owner rather than promoted battle runtime state.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -25549,7 +25563,7 @@
       "detail": "Gentle Repose (Necromancy; R, M)",
       "candidateUnitId": "gentle_repose",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
         "state": "authored-record-present",
@@ -25560,9 +25574,16 @@
         "state": "not-installed",
         "unitId": "gentle_repose"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached corpse/remains and resurrection-deadline owner",
+        "reason": "Corpse/remains preservation, Undead prevention, and raise-dead deadline extension are corpse/remains lifecycle and resurrection/adjudication facts supplied by the table or a future character/rest owner rather than promoted battle runtime state."
+      },
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
+      "nextAction": "Corpse/remains preservation, Undead prevention, and raise-dead deadline extension are corpse/remains lifecycle and resurrection/adjudication facts supplied by the table or a future character/rest owner rather than promoted battle runtime state.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {

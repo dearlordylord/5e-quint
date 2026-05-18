@@ -1102,11 +1102,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "Corpse/remains preservation, Undead prevention, and raise-dead deadline extension are corpse/remains lifecycle and resurrection/adjudication facts supplied by the table or a future character/rest owner rather than promoted battle runtime state.",
       "sourceRecordPath": "packages/surface/content/gentle_repose.json",
       "sourceRows": [
         {
@@ -1146,8 +1149,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
       "unitId": "gentle_repose"
     },
     {
@@ -2625,7 +2628,7 @@
       ]
     },
     {
-      "count": 14,
+      "count": 15,
       "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
@@ -2637,6 +2640,7 @@
         "detect_magic",
         "detect_poison_and_disease",
         "find_traps",
+        "gentle_repose",
         "identify",
         "minor_illusion",
         "pass_without_trace",
@@ -2646,12 +2650,11 @@
       ]
     },
     {
-      "count": 10,
+      "count": 9,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
         "find_steed",
-        "gentle_repose",
         "heat_metal",
         "hold_person",
         "invisibility",
@@ -2720,18 +2723,17 @@
     },
     "strictTargetClosure": {
       "denominator": 153,
-      "numerator": 143,
-      "percent": "93.5%"
+      "numerator": 144,
+      "percent": "94.1%"
     }
   },
   "openFrontier": [
     {
-      "count": 10,
+      "count": 9,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
         "find_steed",
-        "gentle_repose",
         "heat_metal",
         "hold_person",
         "invisibility",
@@ -7748,17 +7750,17 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
-      "missing": 10,
+      "missing": 9,
       "profile-subset-supported": 11,
       "supported-profile": 101,
-      "unsupported-profile": 31
+      "unsupported-profile": 32
     },
     "groupsByStatus": {
       "blocked-follow-up-split": 20,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 6,
-      "closed-runtime-detached-table-adjudication": 14,
-      "open-runtime-behavior": 10,
+      "closed-runtime-detached-table-adjudication": 15,
+      "open-runtime-behavior": 9,
       "supported-profile": 101
     },
     "nonSupportedFrontier": 52,

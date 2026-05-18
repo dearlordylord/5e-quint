@@ -20660,6 +20660,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached corpse/remains and resurrection-deadline owner",
+          "reason": "Corpse/remains preservation, Undead prevention, and raise-dead deadline extension are corpse/remains lifecycle and resurrection/adjudication facts supplied by the table or a future character/rest owner rather than promoted battle runtime state."
+        },
+        "reason": "Gentle Repose is authored as an SRD Surface Spell Definition for a consumed-copper-piece Action-or-Ritual touch spell with a 10-day corpse or remains target duration, but Task 30 claims no promoted battle-runtime profile because preventing decay, preventing the target from becoming Undead, and excluding affected days from raising-from-dead time limits are corpse/remains lifecycle and resurrection-deadline facts outside promoted battle Unit profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
