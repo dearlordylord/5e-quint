@@ -1193,6 +1193,8 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
   canonical spec and focused death-save lane.
 - `battle-runtime-turn-order.qnt` - initiative turn ownership, attack-turn
   eligibility, next-initiative calculation, and end-of-caster-next-turn timing.
+- `battle-runtime-damage-adjustments.qnt` - damage type projection,
+  resistance/vulnerability/immunity adjustment, and Resistance spell reduction.
 - `battle-runtime.mbt.qnt` - package-local randomized model for the selected
   integrated promoted MBT path.
 

@@ -23,8 +23,9 @@ QNT modules, such as `battle-runtime-find-familiar.qnt`,
 `battle-runtime-light.qnt`, and `battle-runtime-creature-type-protection.qnt`,
 `battle-runtime-armor-class.qnt`, `battle-runtime-thaumaturgy.qnt`, and
 `battle-runtime-bardic-inspiration.qnt`, and `battle-runtime-hit-points.qnt`,
-and `battle-runtime-turn-order.qnt`, when the split follows SRD language and
-avoids duplicate state names or compatibility-wrapper churn.
+`battle-runtime-turn-order.qnt`, and `battle-runtime-damage-adjustments.qnt`,
+when the split follows SRD language and avoids duplicate state names or
+compatibility-wrapper churn.
 
 The promoted MBT strategy is selective. MBT proves reducer facts after Surface
 decode/projection; it must not enumerate all Surface-authored content multiplied
