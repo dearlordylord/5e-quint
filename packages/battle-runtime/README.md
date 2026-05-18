@@ -1229,6 +1229,9 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
 - `battle-runtime-fighter-ongoing-features.qnt` - Fighter Rage and Reckless
   Attack ongoing-feature lifecycle, extension, resistance, and attack-roll
   hooks.
+- `battle-runtime-timed-effects.qnt` - end-turn, start-turn, and round-duration
+  active-effect cleanup, including timed Concentration and Hideous Laughter
+  restoration.
 - `battle-runtime.mbt.qnt` - package-local randomized model for the selected
   integrated promoted MBT path.
 
