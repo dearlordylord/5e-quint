@@ -7,7 +7,7 @@
     {
       "number": 37,
       "id": "L12G-SPELL-MISTY-STEP",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Misty Step Runtime Support"
     },
     {
@@ -217,7 +217,7 @@ It excludes Loop A Tasks 22-36 and 88-89, Loop B Tasks 43-58, Loop D Tasks 59-75
 
 ### Task 37 - L12G-SPELL-MISTY-STEP - Misty Step Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `misty_step`. Gate task: 39 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
