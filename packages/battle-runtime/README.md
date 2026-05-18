@@ -1188,6 +1188,9 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
 - `battle-runtime-bardic-inspiration.qnt` - Bardic Inspiration and Cutting
   Words d20-test helpers imported by the canonical spec and focused Bardic
   selected-identity lane.
+- `battle-runtime-hit-points.qnt` - Hit Point, healing, stabilization,
+  zero-Hit-Point, and Death Saving Throw lifecycle helpers imported by the
+  canonical spec and focused death-save lane.
 - `battle-runtime.mbt.qnt` - package-local randomized model for the selected
   integrated promoted MBT path.
 

@@ -54,6 +54,7 @@ module battleRuntime {
   import battleRuntimeArmorClass.* from "./battle-runtime-armor-class"
   import battleRuntimeThaumaturgy.* from "./battle-runtime-thaumaturgy"
   import battleRuntimeBardicInspiration.* from "./battle-runtime-bardic-inspiration"
+  import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
 
   // SRD traceability for this canonical battle runtime spec:
   // - Playing-the-Game.md lines 479-495: combat proceeds in rounds and turns
@@ -2321,77 +2322,6 @@ module battleRuntime {
     else
       { ...state, fighter: damagedFighter }
 
-  // Rule-core CreatureKind is the HP lifecycle policy, not source provenance.
-  pure def combatantCreatureKind(target: Combatant): CreatureKind =
-    match target.lifecycle {
-      | DiesAtZeroHp => MonsterCreature
-      | UsesDeathSavingThrows => PlayerCharacter
-    }
-
-  pure def combatantIsDead(target: Combatant): bool =
-    match target.lifecycle {
-      | DiesAtZeroHp => target.hp == 0
-      | UsesDeathSavingThrows => target.deathFailures >= 3
-    }
-
-  pure def combatantVitals(target: Combatant): CreatureVitals = {
-    kind: combatantCreatureKind(target),
-    hitPoints: target.hp,
-    hitPointMaximum: target.maxHp,
-    temporaryHitPoints: target.tempHp,
-    dead: combatantIsDead(target),
-    unconscious:
-      target.unconscious
-        or (target.lifecycle == UsesDeathSavingThrows and target.hp == 0 and target.deathFailures < 3),
-  }
-
-  pure def combatantDeathSavingThrows(target: Combatant): DeathSavingThrowLifecycle =
-    match target.lifecycle {
-      | DiesAtZeroHp => resetDeathSavingThrowLifecycle
-      | UsesDeathSavingThrows => {
-          successes: target.deathSuccesses,
-          failures: target.deathFailures,
-          stable: target.stable,
-          hpRegained: false,
-        }
-    }
-
-  pure def combatantPositiveHitPointUnconsciousRecovery(target: Combatant): PositiveHitPointUnconsciousRecovery =
-    if (target.knockedOut) EndsWhenHitPointsRegained else NoPositiveHitPointUnconsciousRecovery
-
-  pure def combatantWithHitPointState(
-    target: Combatant,
-    vitals: CreatureVitals,
-    deathSavingThrows: DeathSavingThrowLifecycle,
-    recovery: PositiveHitPointUnconsciousRecovery
-  ): Combatant =
-    match target.lifecycle {
-      | DiesAtZeroHp => {
-          ...target,
-          hp: vitals.hitPoints,
-          tempHp: vitals.temporaryHitPoints,
-          unconscious: vitals.unconscious,
-          knockedOut: recovery == EndsWhenHitPointsRegained,
-          stable: false,
-        }
-      | UsesDeathSavingThrows => {
-          ...target,
-          hp: vitals.hitPoints,
-          tempHp: vitals.temporaryHitPoints,
-          unconscious: vitals.unconscious or vitals.dead,
-          knockedOut: recovery == EndsWhenHitPointsRegained,
-          stable: deathSavingThrows.stable,
-          deathSuccesses: deathSavingThrows.successes,
-          deathFailures: if (vitals.dead) 3 else deathSavingThrows.failures,
-        }
-    }
-
-  pure def combatantWithHitPointRecoveryResult(target: Combatant, result: HitPointRecoveryResult): Combatant =
-    combatantWithHitPointState(target, result.vitals, result.deathSavingThrows, result.positiveHitPointUnconsciousRecovery)
-
-  pure def combatantWithZeroHitPointLifecycleResult(target: Combatant, result: ZeroHitPointLifecycleResult): Combatant =
-    combatantWithHitPointState(target, result.vitals, result.deathSavingThrows, NoPositiveHitPointUnconsciousRecovery)
-
   pure def applyDamage(target: Combatant, damage: int, deathFailuresAtZeroHp: int, concentrationSaveSucceeded: bool): Combatant =
     applyDamageWithDisposition(target, damage, deathFailuresAtZeroHp, concentrationSaveSucceeded, OrdinaryDamage)
 
@@ -3338,47 +3268,6 @@ module battleRuntime {
       })
     else
       applyFighterMovementWithSpeedKind(state, speedKind, movementCost)
-
-  pure def activeEffectsPreventHitPointRegain(effects: Set[ActiveEffect]): bool =
-    effects.exists(effect => match effect {
-      | ChillTouchHitPointRegainPrevented(_) => true
-      | _ => false
-    })
-
-  pure def applyHealing(target: Combatant, healing: int): Combatant = {
-    val result = applyHitPointHealing(
-      combatantVitals(target),
-      combatantDeathSavingThrows(target),
-      combatantPositiveHitPointUnconsciousRecovery(target),
-      healing,
-    )
-    if (activeEffectsPreventHitPointRegain(target.activeEffects))
-      target
-    else
-      combatantWithHitPointRecoveryResult(target, result)
-  }
-
-  pure def spareTheDyingRangeFeet(characterLevel: int): int =
-    if (characterLevel >= 17) 120
-    else if (characterLevel >= 11) 60
-    else if (characterLevel >= 5) 30
-    else 15
-
-  pure def spareTheDyingTargetAdmitted(target: Combatant): bool =
-    target.hp == 0 and
-    target.lifecycle == UsesDeathSavingThrows and
-    target.deathFailures < 3
-
-  pure def applySpareTheDying(target: Combatant): Combatant =
-    if (not(spareTheDyingTargetAdmitted(target)))
-      target
-    else
-      {
-        ...target,
-        stable: true,
-        deathSuccesses: 0,
-        deathFailures: 0,
-      }
 
   pure def spendFighterSpellActionCost(state: BattleState, actionCost: SpellActionCost): BattleState =
     stateWithFighterMovementStep(
@@ -6931,28 +6820,6 @@ module battleRuntime {
       }
     )
   }
-
-  pure def applyDamageAtZeroHp(target: Combatant, deathFailuresAtZeroHp: int): Combatant =
-    combatantWithZeroHitPointLifecycleResult(
-      target,
-      addDeathSavingThrowFailures(
-        combatantVitals(target),
-        combatantDeathSavingThrows(target),
-        deathFailuresAtZeroHp,
-      )
-    )
-
-  pure def applyInstantDeath(target: Combatant): Combatant =
-    combatantWithZeroHitPointLifecycleResult(
-      target,
-      addDeathSavingThrowFailures(combatantVitals(target), combatantDeathSavingThrows(target), 3)
-    )
-
-  pure def applyStartTurnDeathSave(target: Combatant, deathSaveRoll: int): Combatant =
-    combatantWithZeroHitPointLifecycleResult(
-      target,
-      resolveStartTurnDeathSavingThrow(combatantVitals(target), combatantDeathSavingThrows(target), deathSaveRoll)
-    )
 
   run test_initial_holes_cover_attack_target = {
     assert(openHoles(initialState).contains(TargetChoice))
