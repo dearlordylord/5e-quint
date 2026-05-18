@@ -1,6 +1,6 @@
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { movementFeet, type DamageType } from "@dnd/shared/types";
-import type { Size } from "@dnd/surface/surface/types";
+import type { Ability, Size } from "@dnd/surface/surface/types";
 import { expect } from "vitest";
 import type { SupportedDamageSpellInvocation } from "./battle-reducer.ts";
 import {
@@ -631,6 +631,13 @@ export function skillChoiceFill(
   value: Extract<BattleFill, { readonly kind: "skillChoice" }>["value"],
 ): Extract<BattleFill, { readonly kind: "skillChoice" }> {
   return { kind: "skillChoice", holeId: hole.holeId, value };
+}
+
+export function abilityChoiceFill(
+  hole: Extract<BattleHole, { readonly kind: "abilityChoice" }>,
+  value: Ability,
+): Extract<BattleFill, { readonly kind: "abilityChoice" }> {
+  return { kind: "abilityChoice", holeId: hole.holeId, value };
 }
 
 export function isSelectedSorcerousBurstDamageInvocation(

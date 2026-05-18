@@ -1,23 +1,24 @@
 // Spell target-selection projections extracted from spells-resolve.ts.
-// Owns target, target-list, and skill-choice interpretation for resolved spell fills.
+// Owns target, target-list, and roll-modifier choice interpretation for resolved spell fills.
 
-import type { Skill } from "@dnd/surface/surface/types";
 import {
-isScalarBuffTargetListInvocation,
-type ActionSpellBattleResolutionInput,
-type BattleHole,
-type BonusActionSpellBattleResolutionInput,
-type SupportedSpellInvocation
+  isScalarBuffTargetListInvocation,
+  type SelectedRollModifierSpellEffect,
+  type ActionSpellBattleResolutionInput,
+  type BattleHole,
+  type BonusActionSpellBattleResolutionInput,
+  type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import type { CombatantId } from "../identity.ts";
 import {
-sameCombatantIdSet,
-spellRollModifierSkillChoiceHole,
-spellSavingThrowOutcomeHole,
-spellTargetHole,
-spellTargetIsLegal,
-spellTargetListHole,
-validateSpellTargetList
+  sameCombatantIdSet,
+  spellRollModifierAbilityChoiceHole,
+  spellRollModifierSkillChoiceHole,
+  spellSavingThrowOutcomeHole,
+  spellTargetHole,
+  spellTargetIsLegal,
+  spellTargetListHole,
+  validateSpellTargetList,
 } from "./spells-holes-fills.ts";
 
 import { validateSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
@@ -49,8 +50,8 @@ export type CreatureTypeProtectionSpellTargetSelection =
   | { readonly tag: "needsHoles"; readonly hole: BattleHole }
   | { readonly tag: "invalid"; readonly message: string };
 
-export type RollModifierSpellSkillSelection =
-  | { readonly tag: "ok"; readonly skill: Skill | null }
+export type RollModifierSpellEffectSelection =
+  | { readonly tag: "ok"; readonly effect: SelectedRollModifierSpellEffect }
   | { readonly tag: "needsHoles"; readonly hole: BattleHole }
   | { readonly tag: "invalid"; readonly message: string };
 
@@ -398,33 +399,90 @@ export function creatureTypeProtectionSpellTargetSelection(input: {
       };
 }
 
-export function rollModifierSpellSkillSelection(input: {
+export function rollModifierSpellEffectSelection(input: {
+  readonly actorId: CombatantId;
   readonly invocation: Extract<
     SupportedSpellInvocation,
     { readonly procedure: "rollModifier" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-}): RollModifierSpellSkillSelection {
-  if (input.invocation.skillChoices === null) {
-    return input.fillSet.skillChoice === undefined
-      ? { tag: "ok", skill: input.invocation.effect.skill }
+}): RollModifierSpellEffectSelection {
+  if (input.invocation.effect.kind === "d20RollModifier") {
+    if (input.fillSet.abilityChoice !== undefined) {
+      return {
+        tag: "invalid",
+        message: "This roll modifier spell does not choose an ability.",
+      };
+    }
+    if (input.invocation.skillChoices === null) {
+      return input.fillSet.skillChoice === undefined
+        ? {
+            tag: "ok",
+            effect: {
+              ...input.invocation.effect,
+              sourceCombatantId: input.actorId,
+              skill: input.invocation.effect.skill,
+            },
+          }
+        : {
+            tag: "invalid",
+            message: "This roll modifier spell does not choose a skill.",
+          };
+    }
+    if (input.fillSet.skillChoice === undefined) {
+      return {
+        tag: "needsHoles",
+        hole: spellRollModifierSkillChoiceHole(input.invocation),
+      };
+    }
+    return input.invocation.skillChoices.includes(input.fillSet.skillChoice)
+      ? {
+          tag: "ok",
+          effect: {
+            ...input.invocation.effect,
+            sourceCombatantId: input.actorId,
+            skill: input.fillSet.skillChoice,
+          },
+        }
       : {
           tag: "invalid",
-          message: "This roll modifier spell does not choose a skill.",
+          message:
+            "Roll modifier spell skill choice is not legal for this spell.",
         };
   }
-  if (input.fillSet.skillChoice === undefined) {
+
+  if (input.fillSet.skillChoice !== undefined) {
     return {
-      tag: "needsHoles",
-      hole: spellRollModifierSkillChoiceHole(input.invocation),
+      tag: "invalid",
+      message: "This roll modifier spell does not choose a skill.",
     };
   }
-  return input.invocation.skillChoices.includes(input.fillSet.skillChoice)
-    ? { tag: "ok", skill: input.fillSet.skillChoice }
+  const abilityChoices = input.invocation.abilityChoices;
+  if (abilityChoices === null) {
+    return {
+      tag: "invalid",
+      message: "This roll modifier spell does not choose an ability.",
+    };
+  }
+  if (input.fillSet.abilityChoice === undefined) {
+    return {
+      tag: "needsHoles",
+      hole: spellRollModifierAbilityChoiceHole(input.invocation),
+    };
+  }
+  return abilityChoices.includes(input.fillSet.abilityChoice)
+    ? {
+        tag: "ok",
+        effect: {
+          ...input.invocation.effect,
+          sourceCombatantId: input.actorId,
+          ability: input.fillSet.abilityChoice,
+        },
+      }
     : {
         tag: "invalid",
         message:
-          "Roll modifier spell skill choice is not legal for this spell.",
+          "Roll modifier spell ability choice is not legal for this spell.",
       };
 }
 

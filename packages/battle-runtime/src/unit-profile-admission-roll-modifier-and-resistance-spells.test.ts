@@ -1,10 +1,12 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30B bane bless guidance
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-MISSING-ENHANCE-ABILITY enhance_ability
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30F resistance
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-roll-modifier spell.invocation-damage-reduction
 import { describe, expect, test } from "vitest";
 import {
   baneUnitId,
   blessUnitId,
+  enhanceAbilityUnitId,
   guidanceUnitId,
   rayOfFrostUnitId,
   resistanceUnitId,
@@ -25,6 +27,7 @@ import {
 } from "./unit-profile-admission-creature-fixture-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
+  abilityChoiceFill,
   requireSpellDamageReductionHole,
   savingThrowOutcomeFill,
   skillChoiceFill,
@@ -46,6 +49,7 @@ import type {
   BattleState,
   BattleSubject,
 } from "./unit-profile-admission-test-support.ts";
+import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
 
 describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
   test("bless is admitted as a concentration d4 bonus with slot-scaled targets", () => {
@@ -340,6 +344,85 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         skill: "stealth",
       }),
     );
+  });
+
+  test("enhance ability requires a chosen ability and projects Ability Check Advantage for that ability", () => {
+    const spell = spellRecord(enhanceAbilityUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = spellAct({ state, spellId: enhanceAbilityUnitId });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const abilityHole = requireHole(act.initialHoles, "abilityChoice");
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(
+        enhanceAbilityUnitId,
+        2,
+        "rollModifier",
+      ),
+      mode: { tag: "cast" },
+    });
+    expect(targetHole.choices).toContain(spellTargetId);
+    expect(abilityHole.choices).toEqual(["str", "dex", "int", "wis", "cha"]);
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(
+          targetHole,
+          enhanceAbilityUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+        abilityChoiceFill(abilityHole, "dex"),
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          expect.objectContaining({
+            combatantId: spellCasterId,
+            concentrating: true,
+          }),
+          expect.anything(),
+        ],
+      },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Enhance Ability to resolve.");
+    }
+    expect(
+      resolved.state.combatants.get(spellTargetId)?.activeEffects,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "abilityCheckRollMode",
+        sourceSpellId: enhanceAbilityUnitId,
+        sourceCombatantId: spellCasterId,
+        mode: "advantage",
+        ability: "dex",
+        expiresAt: {
+          kind: "concentration",
+          combatantId: spellCasterId,
+        },
+      }),
+    );
+    expect(
+      requiredAbilityCheckRollMode(resolved.state, spellTargetId, "dex", {
+        skill: "stealth",
+      }),
+    ).toBe("advantage");
+    expect(
+      requiredAbilityCheckRollMode(resolved.state, spellTargetId, "str", {
+        skill: "athletics",
+      }),
+    ).toBeUndefined();
   });
 
   test("resistance stores a chosen damage-type reduction with a once-per-turn use marker", () => {

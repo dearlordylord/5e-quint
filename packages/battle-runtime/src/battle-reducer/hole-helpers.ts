@@ -184,16 +184,29 @@ export function requiredAbilityCheckRollMode(
     readonly targetId?: CombatantId;
   },
 ): AttackRollMode | undefined {
-  const hasDisadvantage = [...state.combatants.values()].some((combatant) =>
-    combatant.activeEffects.some(
-      (effect) =>
-        effect.kind === "spellMarkedDamageRider" &&
-        effect.targetCombatantId === actorId &&
-        effect.abilityCheckBehavior.kind === "abilityDisadvantage" &&
-        effect.abilityCheckBehavior.ability === ability,
-    ),
-  );
+  const hasDisadvantage =
+    activeAbilityCheckRollModeEffectMatches(
+      state,
+      actorId,
+      ability,
+      "disadvantage",
+    ) ||
+    [...state.combatants.values()].some((combatant) =>
+      combatant.activeEffects.some(
+        (effect) =>
+          effect.kind === "spellMarkedDamageRider" &&
+          effect.targetCombatantId === actorId &&
+          effect.abilityCheckBehavior.kind === "abilityDisadvantage" &&
+          effect.abilityCheckBehavior.ability === ability,
+      ),
+    );
   const hasAdvantage =
+    activeAbilityCheckRollModeEffectMatches(
+      state,
+      actorId,
+      ability,
+      "advantage",
+    ) ||
     (context?.skill !== undefined &&
       activeThaumaturgyBoomingVoiceAdvantageMatches(
         state,
@@ -214,6 +227,23 @@ export function requiredAbilityCheckRollMode(
     return undefined;
   }
   return hasAdvantage ? "advantage" : "disadvantage";
+}
+
+function activeAbilityCheckRollModeEffectMatches(
+  state: BattleState,
+  actorId: CombatantId,
+  ability: Ability,
+  mode: AttackRollMode,
+): boolean {
+  const actor = state.combatants.get(actorId);
+  return (
+    actor?.activeEffects.some(
+      (effect) =>
+        effect.kind === "abilityCheckRollMode" &&
+        effect.ability === ability &&
+        effect.mode === mode,
+    ) ?? false
+  );
 }
 
 function activeThaumaturgyBoomingVoiceAdvantageMatches(

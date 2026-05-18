@@ -40,6 +40,7 @@ import {
   spellBeamTargetHole,
   spellObjectTargetHole,
   spellAreaChoiceHole,
+  spellRollModifierAbilityChoiceHole,
   spellRollModifierSkillChoiceHole,
   spellSavingThrowAbility,
   spellSavingThrowOutcomeHole,
@@ -208,6 +209,9 @@ export function discoverSupportedSpellInvocations(
                 ...(invocation.skillChoices === null
                   ? []
                   : [spellRollModifierSkillChoiceHole(invocation)]),
+                ...(invocation.abilityChoices === null
+                  ? []
+                  : [spellRollModifierAbilityChoiceHole(invocation)]),
               ];
         const castActs =
           initialHoles.length === 0

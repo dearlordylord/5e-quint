@@ -13,7 +13,7 @@
     {
       "number": 60,
       "id": "L12G-MISSING-ENHANCE-ABILITY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Enhance Ability Definition And Support"
     },
     {
@@ -117,6 +117,12 @@
       "id": "L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION",
       "status": "ready-for-research",
       "title": "Dragon's Breath Granted Magic Action"
+    },
+    {
+      "number": 92,
+      "id": "L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES",
+      "status": "ready-for-research",
+      "title": "Enhance Ability Upcast Per-Target Ability Choices"
     }
   ]
 }
@@ -177,7 +183,7 @@ use the repository MBT scarcity protocol.
 
 ## Included Work
 
-Loop D contains 19 atomic tasks: the missing-definition/runtime-or-closure tail from Dragons Breath through Zone of Truth, plus the Dragon's Breath initial-cast and granted-action follow-up split.
+Loop D contains 20 atomic tasks: the missing-definition/runtime-or-closure tail from Dragons Breath through Zone of Truth, plus the Dragon's Breath initial-cast and granted-action follow-up split and the Enhance Ability upcast per-target ability follow-up.
 
 It excludes Loop A Tasks 22-36 and 88-89, Loop B Tasks 43-58, Loop C Tasks 37-42 and 76-87, all level-1 Loop D/L work, companion/familiar boundary work, and Counterspell work.
 
@@ -202,6 +208,7 @@ It excludes Loop A Tasks 22-36 and 88-89, Loop B Tasks 43-58, Loop C Tasks 37-42
 | 75 | 77 | `L12G-MISSING-ZONE-OF-TRUTH` | `zone_of_truth` |
 | 90 | 61 follow-up | `L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST` | `dragons_breath` |
 | 91 | 61 follow-up | `L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION` | `dragons_breath` |
+| 92 | 62 follow-up | `L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES` | `enhance_ability` |
 
 ## Follow-Up Dependencies
 
@@ -209,6 +216,7 @@ It excludes Loop A Tasks 22-36 and 88-89, Loop B Tasks 43-58, Loop C Tasks 37-42
 | --- | --- | --- |
 | `L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST` | `L12G-MISSING-DRAGONS-BREATH` | Runtime support should consume the authored SRD Surface spell definition rather than duplicating Dragon's Breath spell facts in battle-runtime code. |
 | `L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION` | `L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST` | Target-granted Magic action execution needs the initial cast to own Spell Slot spending, caster Concentration, target attachment, chosen damage type, caster spell save DC, and original slot level state. |
+| `L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES` | `L12G-MISSING-ENHANCE-ABILITY` | Slot-scaled Enhance Ability casting needs the authored spell definition and one-target chosen-ability runtime subset before widening the target-list fill protocol to carry independent ability choices per target. |
 
 ## Task Details
 
@@ -241,7 +249,7 @@ Acceptance:
 
 ### Task 60 - L12G-MISSING-ENHANCE-ABILITY - Enhance Ability Definition And Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `enhance_ability`. Gate task: 62 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -732,5 +740,37 @@ Acceptance:
 
 - the granted-action execution portion of `dragons_breath` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
 - runtime behavior traces to SRD Dragon's Breath without homebrew extensions and consumes Task 90 effect state rather than creating a parallel spell-action owner;
+- no unrelated level-1 Loop D/L spell frontier work is implemented in this task;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.
+
+### Task 92 - L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES - Enhance Ability Upcast Per-Target Ability Choices
+
+Status: `ready-for-research`
+
+Unit: `enhance_ability`. Follow-up split from Task 60.
+
+Dependency: Task 60 (`L12G-MISSING-ENHANCE-ABILITY`) done.
+
+Inputs:
+
+- `packages/surface/content/enhance_ability.json`;
+- `packages/surface/content/enhance_ability.dhall`;
+- the `enhance_ability` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Spells/Descriptions-E-L.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- battle-runtime roll-modifier spell invocation target-list fills, chosen-ability active effects, promoted Quint parity, and focused tests for Enhance Ability.
+
+Outputs:
+
+- supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for level 3+ Enhance Ability casts that can target one additional creature per spell slot level above 2;
+- target-list ability-choice fills retain a distinct Strength, Dexterity, Intelligence, Wisdom, or Charisma choice for each selected target, without allowing Constitution and without sharing one cast-level ability choice across all targets;
+- each affected target receives only its own chosen Ability Check Advantage effect, with normal Advantage/Disadvantage cancellation and Concentration cleanup, without duplicating Spell Access or spell-slot state.
+
+Acceptance:
+
+- the upcast per-target ability-choice portion of `enhance_ability` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- runtime behavior traces to SRD Enhance Ability without reintroducing 2014 Bear/Bull/Constitution effects absent from SRD 5.2.1;
 - no unrelated level-1 Loop D/L spell frontier work is implemented in this task;
 - focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.

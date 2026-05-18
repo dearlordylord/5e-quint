@@ -117,6 +117,12 @@ module battleRuntimeMarkedRiders {
       })
     ) AdvantageAbilityCheck else NormalAbilityCheck
 
+  pure def enhanceAbilityCheckRollMode(effects: Set[ActiveEffect], ability: Ability): AbilityCheckRollMode =
+    if (effects.exists(effect => match effect {
+      | EnhanceAbilityCheckAdvantage(data) => data.ability == ability
+      | _ => false
+    })) AdvantageAbilityCheck else NormalAbilityCheck
+
   pure def requiredAbilityCheckRollMode(
     disadvantageMode: AbilityCheckRollMode,
     advantageMode: AbilityCheckRollMode,

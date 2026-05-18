@@ -973,6 +973,95 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES: Promote level 3+ Enhance Ability casting so each additional target selected by the upcast can carry its own Strength, Dexterity, Intelligence, Wisdom, or Charisma choice without sharing one cast-level ability choice across all targets. Owner: battle-runtime spell invocation target-list ability-choice lifecycle plus promoted Quint parity. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for slot-scaled target count and per-target chosen Ability Check Advantage effects.",
+      "sourceRecordPath": "packages/surface/content/enhance_ability.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Enhance Ability",
+          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_enhance_ability",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 195,
+            "lineStart": 195,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Cleric spell list Enhance Ability",
+          "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_enhance_ability",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 187,
+            "lineStart": 187,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Druid spell list Enhance Ability",
+          "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_enhance_ability",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 233,
+            "lineStart": 233,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Ranger spell list Enhance Ability",
+          "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_enhance_ability",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 186,
+            "lineStart": 186,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Sorcerer spell list Enhance Ability",
+          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_enhance_ability",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 277,
+            "lineStart": 277,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Enhance Ability",
+          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_enhance_ability",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 209,
+            "lineStart": 209,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
+      "unitId": "enhance_ability"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
         "later-level-only"
       ],
       "collectionId": "srd-5.2.1",
@@ -2852,13 +2941,14 @@
       ]
     },
     {
-      "count": 7,
+      "count": 8,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
         "acid_arrow",
         "dragons_breath",
         "druid_wild_shape",
+        "enhance_ability",
         "monk_monks_focus",
         "monk_uncanny_metabolism",
         "sorcerer_font_of_magic",
@@ -2904,19 +2994,20 @@
       "rowsByStatus": {
         "accepted": 297,
         "accepted-no-battle-effect": 178,
-        "battle-runtime-required": 77,
-        "owner-evidence-required": 4
+        "battle-runtime-required": 71,
+        "owner-evidence-required": 4,
+        "partial-battle-runtime": 6
       }
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 147,
+      "denominator": 148,
       "numerator": 90,
-      "percent": "61.2%"
+      "percent": "60.8%"
     },
     "strictTargetClosure": {
-      "denominator": 147,
-      "numerator": 116,
-      "percent": "78.9%"
+      "denominator": 148,
+      "numerator": 117,
+      "percent": "79.1%"
     }
   },
   "openFrontier": [
@@ -3411,84 +3502,6 @@
           }
         ],
         "unitId": "elementalism"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "spell Unit pressure",
-            "concept": "Bard spell list Enhance Ability",
-            "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_enhance_ability",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 195,
-              "lineStart": 195,
-              "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Cleric spell list Enhance Ability",
-            "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_enhance_ability",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 187,
-              "lineStart": 187,
-              "path": ".references/srd-5.2.1/Classes/Cleric.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Druid spell list Enhance Ability",
-            "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_enhance_ability",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 233,
-              "lineStart": 233,
-              "path": ".references/srd-5.2.1/Classes/Druid.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Ranger spell list Enhance Ability",
-            "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_enhance_ability",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 186,
-              "lineStart": 186,
-              "path": ".references/srd-5.2.1/Classes/Ranger.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Sorcerer spell list Enhance Ability",
-            "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_enhance_ability",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 277,
-              "lineStart": 277,
-              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Wizard spell list Enhance Ability",
-            "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_enhance_ability",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 209,
-              "lineStart": 209,
-              "path": ".references/srd-5.2.1/Classes/Wizard.md"
-            }
-          }
-        ],
-        "unitId": "enhance_ability"
       },
       {
         "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
@@ -6405,12 +6418,12 @@
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
       "missing": 30,
-      "profile-subset-supported": 9,
+      "profile-subset-supported": 10,
       "supported-profile": 90,
       "unsupported-profile": 18
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 7,
+      "blocked-follow-up-split": 8,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 11,
@@ -6418,7 +6431,7 @@
       "open-runtime-behavior": 30,
       "supported-profile": 90
     },
-    "nonSupportedFrontier": 57,
-    "strictDenominator": 147
+    "nonSupportedFrontier": 58,
+    "strictDenominator": 148
   }
 }

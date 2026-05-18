@@ -837,13 +837,15 @@ module battleRuntime {
       | BaneRollModifier => 3 + (if (slotLevel > 1) slotLevel - 1 else 0)
       | BlessRollModifier => 3 + (if (slotLevel > 1) slotLevel - 1 else 0)
       | GuidanceRollModifier => 1
+      | EnhanceAbilityRollModifier => 1
     }
 
-  pure def rollModifierActiveEffect(invocation: RollModifierSpell): ActiveEffect =
+  pure def rollModifierActiveEffect(invocation: RollModifierSpell, chosenAbility: Ability): ActiveEffect =
     match invocation {
       | BaneRollModifier => BaneD20RollPenalty
       | BlessRollModifier => BlessD20RollBonus
       | GuidanceRollModifier => GuidanceAbilityCheckBonus
+      | EnhanceAbilityRollModifier => EnhanceAbilityCheckAdvantage({ ability: chosenAbility })
     }
 
   pure def rollModifierRequiresFailedSave(invocation: RollModifierSpell): bool =
@@ -856,11 +858,12 @@ module battleRuntime {
     state: BattleState,
     invocation: RollModifierSpell,
     targets: Set[Actor],
+    chosenAbility: Ability,
   ): BattleState =
     {
       ...state,
-      fighter: if (targets.contains(Fighter)) { ...state.fighter, activeEffects: state.fighter.activeEffects.union(Set(rollModifierActiveEffect(invocation))) } else state.fighter,
-      goblin: if (targets.contains(Goblin)) { ...state.goblin, activeEffects: state.goblin.activeEffects.union(Set(rollModifierActiveEffect(invocation))) } else state.goblin,
+      fighter: if (targets.contains(Fighter)) { ...state.fighter, activeEffects: state.fighter.activeEffects.union(Set(rollModifierActiveEffect(invocation, chosenAbility))) } else state.fighter,
+      goblin: if (targets.contains(Goblin)) { ...state.goblin, activeEffects: state.goblin.activeEffects.union(Set(rollModifierActiveEffect(invocation, chosenAbility))) } else state.goblin,
     }
 
   pure def resolveRollModifierSpell(
@@ -869,6 +872,7 @@ module battleRuntime {
     selectedTargets: Set[Actor],
     failedSaveTargets: Set[Actor],
     slotLevel: int,
+    chosenAbility: Ability,
   ): BattleState = {
     val targetCount = selectedTargets.size()
     val validTargetCount = targetCount >= 1 and targetCount <= rollModifierMaximumTargets(invocation, slotLevel)
@@ -889,7 +893,7 @@ module battleRuntime {
         fighter: breakConcentration(state.fighter),
         goblin: { ...state.goblin, activeEffects: activeEffectsWithoutSpellEffectConcentration(state.goblin.activeEffects) },
       }
-      val effected = rollModifierTargetedState(concentrationBase, invocation, affectedTargets)
+      val effected = rollModifierTargetedState(concentrationBase, invocation, affectedTargets, chosenAbility)
       val resolved = {
         ...effected,
         fighter: { ...effected.fighter, concentrating: true },

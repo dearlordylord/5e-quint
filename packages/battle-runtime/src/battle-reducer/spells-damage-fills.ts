@@ -600,6 +600,33 @@ export function spellRollModifierSkillChoiceHole(
   };
 }
 
+export function spellRollModifierAbilityChoiceHoleId(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "rollModifier" }
+  >,
+): BattleHoleId {
+  return holeId(`battle:spell:ability-choice:${invocation.spell.id}`);
+}
+
+export function spellRollModifierAbilityChoiceHole(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "rollModifier" }
+  >,
+): BattleSpellAbilityChoiceHole {
+  return {
+    kind: "abilityChoice",
+    holeId: spellRollModifierAbilityChoiceHoleId(invocation),
+    holeInstanceKey: holeInstanceKey(
+      `battle:spell:ability-choice:${invocation.spell.id}`,
+    ),
+    label: `${invocation.spell.name} ability`,
+    spell: invocation,
+    choices: invocation.abilityChoices ?? [],
+  };
+}
+
 export function spellAbilityChoiceHoleId(
   invocation: Extract<
     SupportedSpellInvocation,
@@ -831,10 +858,7 @@ export function savingThrowRollModeProjections(
     state,
     ability,
   );
-  const baseProjections = [
-    ...dodgeProjections,
-    ...passiveRollModeProjections,
-  ];
+  const baseProjections = [...dodgeProjections, ...passiveRollModeProjections];
   const saveRollModeRule = spellSaveRollMode?.invocation.saveRollModeRule;
   if (
     spellSaveRollMode !== undefined &&
@@ -908,7 +932,10 @@ function passiveSavingThrowRollModeProjection(
   target: BattleCreatureState,
   ability: Ability,
 ): BattleSavingThrowRollModeProjection | null {
-  if (target.origin.kind !== "character" || isIncapacitated(target.conditions)) {
+  if (
+    target.origin.kind !== "character" ||
+    isIncapacitated(target.conditions)
+  ) {
     return null;
   }
   const profile = [

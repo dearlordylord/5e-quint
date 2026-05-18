@@ -85,6 +85,7 @@ module battleRuntimeSpellInvocation {
       | Bane => true
       | Bless => true
       | Guidance => false
+      | EnhanceAbility => true
       | Thaumaturgy => false
       | DivineFavor => true
       | DivineSmite => true

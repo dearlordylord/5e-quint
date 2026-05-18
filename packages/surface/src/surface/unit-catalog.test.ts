@@ -126,6 +126,7 @@ const requiredFirstVerticalUnitIds = [
   "charm_person",
   "command",
   "dissonant_whispers",
+  "enhance_ability",
   "expeditious_retreat",
   "feather_fall",
   "jump",
@@ -827,6 +828,68 @@ describe("SRD Unit catalog boundary", () => {
                 kind: "choice",
                 label: "cursed ability",
                 options: ["str", "dex", "con", "int", "wis", "cha"],
+              },
+            },
+          },
+        },
+      ]);
+    }
+  });
+
+  test("decodes Enhance Ability as chosen-ability Ability Check Advantage with slot-scaled touched targets", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const enhanceAbility = result.catalog.requireUnit("enhance_ability");
+      expect(enhanceAbility.kind).toBe("spell");
+      if (enhanceAbility.kind !== "spell") return;
+      expect(enhanceAbility.mechanics.family).toBe("ongoing_effect");
+      if (enhanceAbility.mechanics.family !== "ongoing_effect") return;
+
+      expect(enhanceAbility.mechanics.level).toBe(2);
+      expect(enhanceAbility.mechanics.castingTime).toEqual({
+        kind: "action",
+      });
+      expect(enhanceAbility.mechanics.range).toEqual({ kind: "touch" });
+      expect(enhanceAbility.mechanics.duration).toEqual({
+        kind: "concentration",
+        upTo: { unit: "hour", amount: 1 },
+      });
+      expect(enhanceAbility.mechanics.attachment).toEqual({
+        kind: "hole",
+        holeId: "enhance_ability_target",
+        label: "target",
+        value: {
+          kind: "target",
+          selection: {
+            mode: "choose_up_to",
+            count: {
+              kind: "linear",
+              base: 1,
+              perSlotAboveBase: 1,
+              baseLevel: 2,
+            },
+            targetKinds: ["creature"],
+          },
+        },
+      });
+      expect(enhanceAbility.mechanics.operations).toEqual([
+        {
+          trigger: { kind: "passive" },
+          effect: {
+            kind: "modify_roll_advantage",
+            mode: "advantage",
+            affects: "self_roll",
+            on: ["ability_check"],
+            abilityFilter: {
+              kind: "hole",
+              holeId: "enhance_ability_chosen_ability",
+              label: "chosen ability",
+              value: {
+                kind: "choice",
+                label: "chosen ability",
+                options: ["str", "dex", "int", "wis", "cha"],
               },
             },
           },

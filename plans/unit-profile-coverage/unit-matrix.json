@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 375,
-      "numerator": 144,
-      "percent": "38.4%"
+      "denominator": 376,
+      "numerator": 145,
+      "percent": "38.6%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 447,
-      "numerator": 176,
-      "percent": "39.4%"
+      "denominator": 448,
+      "numerator": 177,
+      "percent": "39.5%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 177
+      "value": 178
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 113,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 177,
-      "numerator": 177,
+      "denominator": 178,
+      "numerator": 178,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -97,9 +97,9 @@
       "percent": "92%"
     },
     "supportedProfileCoverage": {
-      "denominator": 145,
+      "denominator": 146,
       "numerator": 113,
-      "percent": "77.9%"
+      "percent": "77.4%"
     }
   },
   "metricSemantics": [
@@ -2005,10 +2005,12 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
+      "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets, optional skill or ability choice fills, and optional Saving Throw outcomes; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 numeric modifiers, and chosen-ability Ability Check roll-mode active effects.",
       "taskRefs": [
-        "SRDINV30B"
+        "SRDINV30B",
+        "L12G-MISSING-ENHANCE-ABILITY"
       ],
-      "title": "Spell invocation applies concentration d20 roll modifiers from target-list or skill-choice spell effects",
+      "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list spells",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -3000,6 +3002,22 @@
         "spell.invocation-roll-modifier"
       ],
       "taskId": "SRDINV30B"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts include Enhance Ability chosen-ability Ability Check Advantage as a roll-modifier spell subset with one runtime target pending the per-target upcast follow-up.",
+      "profileIds": [
+        "spell.invocation-roll-modifier"
+      ],
+      "taskId": "L12G-MISSING-ENHANCE-ABILITY"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover Enhance Ability Magic Action Spell Slot casting, chosen ability fill, Concentration, and Ability Check Advantage projection for one target.",
+      "profileIds": [
+        "spell.invocation-roll-modifier"
+      ],
+      "taskId": "L12G-MISSING-ENHANCE-ABILITY"
     },
     {
       "claimKind": "completed-runtime-parity",
@@ -8865,10 +8883,12 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
+          "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets, optional skill or ability choice fills, and optional Saving Throw outcomes; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 numeric modifiers, and chosen-ability Ability Check roll-mode active effects.",
           "taskRefs": [
-            "SRDINV30B"
+            "SRDINV30B",
+            "L12G-MISSING-ENHANCE-ABILITY"
           ],
-          "title": "Spell invocation applies concentration d20 roll modifiers from target-list or skill-choice spell effects",
+          "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list spells",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -8924,10 +8944,12 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
+          "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets, optional skill or ability choice fills, and optional Saving Throw outcomes; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 numeric modifiers, and chosen-ability Ability Check roll-mode active effects.",
           "taskRefs": [
-            "SRDINV30B"
+            "SRDINV30B",
+            "L12G-MISSING-ENHANCE-ABILITY"
           ],
-          "title": "Spell invocation applies concentration d20 roll modifiers from target-list or skill-choice spell effects",
+          "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list spells",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
@@ -9916,6 +9938,82 @@
         "status": "installed"
       },
       "claim": {
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES",
+            "mechanic": "higher-level Spell Slot casts can target one additional creature per slot level above 2 and can choose a different ability for each target"
+          }
+        ],
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES",
+            "mechanic": "Promote level 3+ Enhance Ability casting so each additional target selected by the upcast can carry its own Strength, Dexterity, Intelligence, Wisdom, or Charisma choice without sharing one cast-level ability choice across all targets.",
+            "owner": "battle-runtime spell invocation target-list ability-choice lifecycle plus promoted Quint parity",
+            "requiredOutput": "Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for slot-scaled target count and per-target chosen Ability Check Advantage effects.",
+            "title": "Enhance Ability Upcast Per-Target Ability Choices"
+          }
+        ],
+        "futureProfileOwner": "battle-runtime spell invocation target-list ability-choice lifecycle plus promoted Quint parity",
+        "profileIds": [
+          "spell.invocation-roll-modifier"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "SRD Surface definition records level-2 Magic Action Spell Slot casting, Touch range, V/S/M components, Concentration up to 1 hour, and Strength/Dexterity/Intelligence/Wisdom/Charisma Ability Check Advantage choices without Constitution",
+          "Battle runtime admits prepared Enhance Ability through the roll-modifier spell profile, spends the Magic Action and Spell Slot, starts caster-owned Concentration, accepts one touched creature target, accepts one chosen ability from the SRD 5.2.1 list, and projects Ability Check Advantage for that ability with normal Advantage/Disadvantage cancellation"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-MISSING-ENHANCE-ABILITY"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-roll-modifier",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets, optional skill or ability choice fills, and optional Saving Throw outcomes; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 numeric modifiers, and chosen-ability Ability Check roll-mode active effects.",
+          "taskRefs": [
+            "SRDINV30B",
+            "L12G-MISSING-ENHANCE-ABILITY"
+          ],
+          "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list spells",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/enhance_ability.json",
+      "unitId": "enhance_ability"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "profileIds": [
           "spell.invocation-after-hit-restraint-turn-start-damage"
         ],
@@ -10688,10 +10786,12 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
+          "sourceBoundary": "The runtime consumes authored roll-modifier spell facts, caller-selected targets, optional skill or ability choice fills, and optional Saving Throw outcomes; it owns Magic Action/Spell Slot or cantrip admission, Concentration replacement and cleanup, d20 numeric modifiers, and chosen-ability Ability Check roll-mode active effects.",
           "taskRefs": [
-            "SRDINV30B"
+            "SRDINV30B",
+            "L12G-MISSING-ENHANCE-ABILITY"
           ],
-          "title": "Spell invocation applies concentration d20 roll modifiers from target-list or skill-choice spell effects",
+          "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list spells",
           "verificationOwners": [
             {
               "kind": "qnt-proof",

@@ -16,6 +16,7 @@ import type {
   Ability,
   Attachment,
   DamageType,
+  DcSource,
   DiceExpr,
   EffectAtom,
   Skill,
@@ -32,16 +33,16 @@ import {
   type BattleState,
   type BattleD20RollModifierDelta,
   type BattleD20RollModifierKind,
+  type AbilityCheckRollModeSpellEffect,
   type AfterHitTimedDamageAndSaveSpellInvocation,
   type ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation,
   type CreatureTypeProtectionSpellInvocation,
   type DamageReductionSpellInvocation,
+  type D20RollModifierSpellEffect,
   type JumpMovementReplacementSpellInvocation,
   type HealingSpellActionCost,
   type MarkedDamageRiderCastAbilityCheckBehavior,
   type MarkedDamageRiderRetargetTiming,
-  type RollModifierSpellEffect,
-  type RollModifierSpellInvocation,
   type RollModifierSpellTargeting,
   type ScalarBuffSpellEffect,
   type ScalarBuffSpellTargeting,
@@ -71,6 +72,35 @@ import {
 } from "./spells-profile-shared.ts";
 export * from "./spells-profiles-healing.ts";
 export * from "./spells-profiles-repeated-damage.ts";
+
+type D20RollModifierSpellProjection = {
+  readonly effect: D20RollModifierSpellEffect;
+  readonly rangeFeet: MovementFeet;
+  readonly saveGate: {
+    readonly ability: Ability;
+    readonly dc: DcSource;
+  } | null;
+  readonly skillChoices: readonly Skill[] | null;
+  readonly abilityChoices: null;
+  readonly targeting: RollModifierSpellTargeting;
+};
+type AbilityCheckRollModeSpellProjection = {
+  readonly effect: AbilityCheckRollModeSpellEffect;
+  readonly rangeFeet: MovementFeet;
+  readonly saveGate: null;
+  readonly skillChoices: null;
+  readonly abilityChoices: readonly Ability[];
+  readonly targeting: RollModifierSpellTargeting;
+};
+type RollModifierSpellProjection =
+  | D20RollModifierSpellProjection
+  | AbilityCheckRollModeSpellProjection;
+
+function isD20RollModifierSpellProjection(
+  projection: RollModifierSpellProjection,
+): projection is D20RollModifierSpellProjection {
+  return projection.effect.kind === "d20RollModifier";
+}
 
 export function supportedPreparedExpeditiousRetreatDashSpellProfile(
   actorId: CombatantId,
@@ -460,18 +490,37 @@ export function supportedPreparedRollModifierSpellProfile(
       spell,
       slot.spellLevel,
     );
-    return projection === null
-      ? []
-      : [
-          {
-            access: { tag: "prepared" },
-            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-            procedure: "rollModifier",
-            spell,
-            actionCost: "magicAction",
-            ...projection,
-          },
-        ];
+    if (projection === null) {
+      return [];
+    }
+    const base = {
+      access: { tag: "prepared" as const },
+      resource: { tag: "spellSlot" as const, slotLevel: slot.spellLevel },
+      procedure: "rollModifier" as const,
+      spell,
+      actionCost: "magicAction" as const,
+      targeting: projection.targeting,
+      rangeFeet: projection.rangeFeet,
+      saveGate: projection.saveGate,
+    };
+    if (isD20RollModifierSpellProjection(projection)) {
+      return [
+        {
+          ...base,
+          effect: projection.effect,
+          skillChoices: projection.skillChoices,
+          abilityChoices: null,
+        },
+      ];
+    }
+    return [
+      {
+        ...base,
+        effect: projection.effect,
+        skillChoices: null,
+        abilityChoices: projection.abilityChoices,
+      },
+    ];
   });
 }
 
@@ -1502,18 +1551,37 @@ export function supportedCantripRollModifierSpellProfile(
     spell,
     spellSlotLevel(0),
   );
-  return projection === null
-    ? []
-    : [
-        {
-          access: { tag: "classCantrip" },
-          resource: { tag: "none" },
-          procedure: "rollModifier",
-          spell,
-          actionCost: "magicAction",
-          ...projection,
-        },
-      ];
+  if (projection === null) {
+    return [];
+  }
+  const base = {
+    access: { tag: "classCantrip" as const },
+    resource: { tag: "none" as const },
+    procedure: "rollModifier" as const,
+    spell,
+    actionCost: "magicAction" as const,
+    targeting: projection.targeting,
+    rangeFeet: projection.rangeFeet,
+    saveGate: projection.saveGate,
+  };
+  if (isD20RollModifierSpellProjection(projection)) {
+    return [
+      {
+        ...base,
+        effect: projection.effect,
+        skillChoices: projection.skillChoices,
+        abilityChoices: null,
+      },
+    ];
+  }
+  return [
+    {
+      ...base,
+      effect: projection.effect,
+      skillChoices: null,
+      abilityChoices: projection.abilityChoices,
+    },
+  ];
 }
 
 export function supportedCantripThaumaturgyBoomingVoiceSpellProfile(
@@ -1722,10 +1790,7 @@ export function rollModifierSpellProjection(
   actorId: CombatantId,
   spell: SpellRecord,
   slotLevel: SpellSlotLevel,
-): Pick<
-  RollModifierSpellInvocation,
-  "effect" | "rangeFeet" | "saveGate" | "skillChoices" | "targeting"
-> | null {
+): RollModifierSpellProjection | null {
   if (spell.mechanics.castingTime.kind !== "action") {
     return null;
   }
@@ -1742,31 +1807,61 @@ export function rollModifierSpellProjection(
     const operation = spell.mechanics.operations[0];
     if (
       spell.mechanics.operations.length !== 1 ||
-      operation?.trigger.kind !== "passive" ||
-      operation.effect.kind !== "modify_roll_numeric"
+      operation?.trigger.kind !== "passive"
     ) {
       return null;
     }
-    const targeting = rollModifierSpellTargeting(
-      spell.mechanics.attachment,
-      spell.mechanics.level,
-      slotLevel,
-    );
-    const modifier = rollModifierActiveEffect(
-      actorId,
-      spell,
-      operation.effect,
-      expiresAt,
-    );
-    return targeting === null || modifier === null
-      ? null
-      : {
-          targeting,
-          effect: modifier.effect,
-          rangeFeet,
-          saveGate: null,
-          skillChoices: modifier.skillChoices,
-        };
+    if (operation.effect.kind === "modify_roll_numeric") {
+      const targeting = rollModifierSpellTargeting(
+        spell.mechanics.attachment,
+        spell.mechanics.level,
+        slotLevel,
+      );
+      const modifier = rollModifierActiveEffect(
+        actorId,
+        spell,
+        operation.effect,
+        expiresAt,
+      );
+      return targeting === null || modifier === null
+        ? null
+        : {
+            targeting,
+            effect: modifier.effect,
+            rangeFeet,
+            saveGate: null,
+            skillChoices: modifier.skillChoices,
+            abilityChoices: null,
+          };
+    }
+    if (operation.effect.kind === "modify_roll_advantage") {
+      const modifier = rollModifierAbilityCheckRollModeEffect(
+        actorId,
+        spell,
+        operation.effect,
+        expiresAt,
+      );
+      return modifier === null ||
+        rollModifierSpellTargeting(
+          spell.mechanics.attachment,
+          spell.mechanics.level,
+          spellSlotLevel(spell.mechanics.level),
+        ) === null
+        ? null
+        : {
+            targeting: {
+              kind: "targetList",
+              minTargets: 1,
+              maxTargets: 1,
+            },
+            effect: modifier.effect,
+            rangeFeet,
+            saveGate: null,
+            skillChoices: null,
+            abilityChoices: modifier.abilityChoices,
+          };
+    }
+    return null;
   }
 
   if (spell.mechanics.family !== "activation") {
@@ -1800,6 +1895,7 @@ export function rollModifierSpellProjection(
         rangeFeet,
         saveGate: { ability: phase.ability, dc: phase.dc },
         skillChoices: modifier.skillChoices,
+        abilityChoices: null,
       };
 }
 
@@ -1827,7 +1923,7 @@ export function rollModifierActiveEffect(
   effect: Extract<EffectAtom, { readonly kind: "modify_roll_numeric" }>,
   expiresAt: BattleActiveEffectExpiration,
 ): {
-  readonly effect: RollModifierSpellEffect;
+  readonly effect: D20RollModifierSpellEffect;
   readonly skillChoices: readonly Skill[] | null;
 } | null {
   const delta = rollModifierDelta(effect.delta);
@@ -1850,6 +1946,74 @@ export function rollModifierActiveEffect(
     },
     skillChoices: skillFilter.kind === "choice" ? skillFilter.options : null,
   };
+}
+
+export function rollModifierAbilityCheckRollModeEffect(
+  actorId: CombatantId,
+  spell: SpellRecord,
+  effect: Extract<EffectAtom, { readonly kind: "modify_roll_advantage" }>,
+  expiresAt: BattleActiveEffectExpiration,
+): {
+  readonly effect: AbilityCheckRollModeSpellEffect;
+  readonly abilityChoices: readonly Ability[];
+} | null {
+  const abilityFilter = rollModifierAbilityChoiceFilter(effect.abilityFilter);
+  if (
+    (effect.affects ?? "self_roll") !== "self_roll" ||
+    effect.mode !== "advantage" ||
+    !sameStringSet(effect.on, ["ability_check"]) ||
+    effect.skillFilter !== undefined ||
+    effect.conditionFilter !== undefined ||
+    effect.saveAbilityFilter !== undefined ||
+    effect.saveSourceFilter !== undefined ||
+    effect.contextRangeFeet !== undefined ||
+    effect.spellSourceFilter !== undefined ||
+    effect.attackerTypeFilter !== undefined ||
+    effect.count !== undefined ||
+    effect.expiresOn !== undefined ||
+    abilityFilter === null
+  ) {
+    return null;
+  }
+  return {
+    effect: {
+      kind: "abilityCheckRollMode",
+      sourceSpellId: spell.id,
+      sourceCombatantId: actorId,
+      mode: effect.mode,
+      expiresAt,
+    },
+    abilityChoices: abilityFilter.value.options,
+  };
+}
+
+type RollModifierAbilityChoiceFilter = Extract<
+  NonNullable<
+    Extract<
+      EffectAtom,
+      { readonly kind: "modify_roll_advantage" }
+    >["abilityFilter"]
+  >,
+  { readonly kind: "hole" }
+>;
+
+function rollModifierAbilityChoiceFilter(
+  abilityFilter: Extract<
+    EffectAtom,
+    { readonly kind: "modify_roll_advantage" }
+  >["abilityFilter"],
+): RollModifierAbilityChoiceFilter | null {
+  if (abilityFilter === undefined || !("kind" in abilityFilter)) {
+    return null;
+  }
+  if (
+    abilityFilter.kind !== "hole" ||
+    abilityFilter.value.kind !== "choice" ||
+    abilityFilter.value.options.length === 0
+  ) {
+    return null;
+  }
+  return abilityFilter;
 }
 
 export function damageReductionSpellProjection(

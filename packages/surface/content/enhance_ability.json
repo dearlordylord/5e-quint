@@ -1,0 +1,84 @@
+{
+  "description": "You touch a creature and choose Strength, Dexterity, Intelligence, Wisdom, or Charisma. For the duration, the target has Advantage on ability checks using the chosen ability. Using a Higher-Level Spell Slot. You can target one additional creature for each spell slot level above 2. You can choose a different ability for each target.",
+  "id": "enhance_ability",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "holeId": "enhance_ability_target",
+      "kind": "hole",
+      "label": "target",
+      "value": {
+        "kind": "target",
+        "selection": {
+          "count": {
+            "base": 1,
+            "baseLevel": 2,
+            "kind": "linear",
+            "perSlotAboveBase": 1
+          },
+          "mode": "choose_up_to",
+          "targetKinds": [
+            "creature"
+          ]
+        }
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "fur or a feather",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "hour"
+      }
+    },
+    "family": "ongoing_effect",
+    "level": 2,
+    "operations": [
+      {
+        "effect": {
+          "abilityFilter": {
+            "holeId": "enhance_ability_chosen_ability",
+            "kind": "hole",
+            "label": "chosen ability",
+            "value": {
+              "kind": "choice",
+              "label": "chosen ability",
+              "options": [
+                "str",
+                "dex",
+                "int",
+                "wis",
+                "cha"
+              ]
+            }
+          },
+          "affects": "self_roll",
+          "kind": "modify_roll_advantage",
+          "mode": "advantage",
+          "on": [
+            "ability_check"
+          ]
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      }
+    ],
+    "range": {
+      "kind": "touch"
+    },
+    "school": "transmutation"
+  },
+  "name": "Enhance Ability",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Enhance Ability"
+  }
+}
