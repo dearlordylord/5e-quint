@@ -103,6 +103,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "scalarBuff",
   "conditionImmunityAndTurnStartTemporaryHitPoints",
   "creatureTypeProtection",
+  "blurAttackRollDefense",
   "weaponDamageRider",
   "afterHitDamage",
   "afterHitSaveGatedCondition",
@@ -116,6 +117,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "persistentArmorEffect",
   "shieldReaction",
   "counterspell",
+  "objectLight",
   "featherFallMitigation",
 ] as const;
 export type SpellSlotProcedure = (typeof SPELL_SLOT_PROCEDURES)[number];

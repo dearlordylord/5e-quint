@@ -72,7 +72,15 @@ type SingleObjectSpellInvocation =
     >;
 type ObjectLightTargetFact = Extract<
   BattleTargetSpatialFact,
+  { readonly kind: "spellObjectLightTarget" | "spellTouchedObjectTarget" }
+>;
+type LightCantripObjectTargetFact = Extract<
+  ObjectLightTargetFact,
   { readonly kind: "spellObjectLightTarget" }
+>;
+type TouchedObjectTargetFact = Extract<
+  ObjectLightTargetFact,
+  { readonly kind: "spellTouchedObjectTarget" }
 >;
 type ObjectTargetSightFact = Extract<
   BattleTargetSpatialFact,
@@ -82,7 +90,7 @@ type ObjectIgnitionFact = Extract<
   BattleTargetSpatialFact,
   { readonly kind: "spellObjectIgnition" }
 >;
-type ObjectLightTargetSize = ObjectLightTargetFact["size"];
+type ObjectLightTargetSize = LightCantripObjectTargetFact["size"];
 
 export function spellTargetHole(
   state: BattleState,
@@ -546,13 +554,26 @@ export function spellObjectLightTargetFact(
     { readonly procedure: "objectLight" }
   >,
 ): ObjectLightTargetFact | null {
+  if (invocation.targeting.object.kind === "touchedObject") {
+    return (
+      facts.find(
+        (fact): fact is TouchedObjectTargetFact =>
+          fact.kind === "spellTouchedObjectTarget" &&
+          fact.casterId === actorId &&
+          fact.objectId === objectId &&
+          fact.spellId === invocation.spell.id,
+      ) ?? null
+    );
+  }
+  const objectTargeting = invocation.targeting.object;
   return (
     facts.find(
-      (fact) =>
+      (fact): fact is LightCantripObjectTargetFact =>
+        fact.kind === "spellObjectLightTarget" &&
         fact.casterId === actorId &&
         fact.objectId === objectId &&
         fact.spellId === invocation.spell.id &&
-        objectSizeIsAtMost(fact.size, invocation.targeting.maxSize) &&
+        objectSizeIsAtMost(fact.size, objectTargeting.maxSize) &&
         fact.wornOrCarried.kind !== "someoneElse",
     ) ?? null
   );

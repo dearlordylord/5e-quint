@@ -78,6 +78,7 @@ type SpellObjectTargetFact = Extract<
   {
     readonly kind:
       | "spellObjectLightTarget"
+      | "spellTouchedObjectTarget"
       | "spellObjectIgnition"
       | "spellObjectTarget"
       | "spellObjectTargetSight";
@@ -97,6 +98,7 @@ export type SpellFillSet =
               {
                 readonly kind:
                   | "spellObjectLightTarget"
+                  | "spellTouchedObjectTarget"
                   | "spellObjectIgnition"
                   | "spellObjectTarget"
                   | "spellObjectTargetSight";
@@ -187,6 +189,7 @@ export function spellFillSet(
           {
             readonly kind:
               | "spellObjectLightTarget"
+              | "spellTouchedObjectTarget"
               | "spellObjectIgnition"
               | "spellObjectTarget"
               | "spellObjectTargetSight";
@@ -420,6 +423,7 @@ export function spellFillSet(
         spatialFacts: fill.spatialFacts.filter(
           (fact): fact is SpellObjectTargetFact =>
             fact.kind === "spellObjectLightTarget" ||
+            fact.kind === "spellTouchedObjectTarget" ||
             fact.kind === "spellObjectIgnition" ||
             fact.kind === "spellObjectTarget" ||
             fact.kind === "spellObjectTargetSight",

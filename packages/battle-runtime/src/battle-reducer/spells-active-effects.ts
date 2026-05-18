@@ -152,6 +152,11 @@ export type ThaumaturgyBoomingVoiceInvocation = Extract<
   { readonly procedure: "thaumaturgyBoomingVoice" }
 >;
 
+export type BlurAttackRollDefenseInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "blurAttackRollDefense" }
+>;
+
 export function isThaumaturgyBoomingVoiceEffectForInvocation(
   effect: BattleActiveEffect,
   actorId: CombatantId,
@@ -1839,16 +1844,20 @@ export function applyObjectLightSpellEffect(
     { readonly procedure: "objectLight" }
   >,
 ): BattleState {
+  const retainedEmitters =
+    invocation.targeting.object.kind === "lightCantripObject"
+      ? state.lightEmitters.filter(
+          (emitter) =>
+            !(
+              emitter.sourceSpellId === invocation.spell.id &&
+              emitter.sourceCombatantId === actorId
+            ),
+        )
+      : state.lightEmitters;
   return {
     ...state,
     lightEmitters: [
-      ...state.lightEmitters.filter(
-        (emitter) =>
-          !(
-            emitter.sourceSpellId === invocation.spell.id &&
-            emitter.sourceCombatantId === actorId
-          ),
-      ),
+      ...retainedEmitters,
       {
         kind: "spellLightEmitter",
         sourceSpellId: invocation.spell.id,
@@ -2181,6 +2190,39 @@ export function applyJumpMovementReplacementSpellEffect(
       }),
     };
   }, state);
+}
+
+export function applyBlurAttackRollDefenseSpellEffect(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: BlurAttackRollDefenseInvocation,
+): BattleState {
+  const actor = state.combatants.get(actorId);
+  if (actor === undefined) {
+    return state;
+  }
+  const nextEffect = {
+    ...invocation.activeEffect,
+    sourceCombatantId: actorId,
+  };
+  const activeEffects = [
+    ...actor.activeEffects.filter(
+      (effect) =>
+        !(
+          effect.kind === "blurred" &&
+          effect.sourceSpellId === invocation.spell.id &&
+          effect.sourceCombatantId === actorId
+        ),
+    ),
+    nextEffect,
+  ];
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(
+      actorId,
+      battleCreatureWithSpellActiveEffects(actor, activeEffects),
+    ),
+  };
 }
 
 export function applyConditionImmunityAndTurnStartTemporaryHitPointsEffects(

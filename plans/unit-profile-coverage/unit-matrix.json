@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 379,
-      "numerator": 156,
-      "percent": "41.2%"
+      "numerator": 158,
+      "percent": "41.7%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 451,
-      "numerator": 188,
-      "percent": "41.7%"
+      "numerator": 190,
+      "percent": "42.1%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,62 +59,62 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 189
+      "value": 191
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 120,
-      "numerator": 120,
+      "denominator": 121,
+      "numerator": 121,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 189,
-      "numerator": 189,
+      "denominator": 191,
+      "numerator": 191,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 67,
-      "numerator": 67,
+      "denominator": 68,
+      "numerator": 68,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 67,
-      "numerator": 67,
+      "denominator": 68,
+      "numerator": 68,
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 88,
+      "denominator": 89,
       "numerator": 19,
-      "percent": "21.6%"
+      "percent": "21.3%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 88,
+      "denominator": 89,
       "numerator": 24,
-      "percent": "27.3%"
+      "percent": "27%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 120,
+      "denominator": 121,
       "numerator": 41,
-      "percent": "34.2%"
+      "percent": "33.9%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 67,
-      "numerator": 67,
+      "denominator": 68,
+      "numerator": 68,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 67,
-      "numerator": 67,
+      "denominator": 68,
+      "numerator": 68,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 120,
+      "denominator": 121,
       "numerator": 104,
-      "percent": "86.7%"
+      "percent": "86%"
     },
     "supportedProfileCoverage": {
-      "denominator": 157,
-      "numerator": 120,
-      "percent": "76.4%"
+      "denominator": 159,
+      "numerator": 121,
+      "percent": "76.1%"
     }
   },
   "metricSemantics": [
@@ -1366,10 +1366,11 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
-      "sourceBoundary": "Runtime consumes typed table-supplied touched-object identity, size, worn/carried, emitter-distance, and opaque-cover witnesses; runtime owns the spell source, object attachment, Bright/Dim radii, one-hour duration, same-caster recast replacement, duration cleanup, opaque-cover suppression for the Light object emitter, and derived Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences. Colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation are runtime-detached table adjudication/presentation outside this object-emitter boundary.",
+      "sourceBoundary": "Runtime consumes typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
       "taskRefs": [
         "SRDINV70B",
-        "SRDINV89C"
+        "SRDINV89C",
+        "L12G-SPELL-CONTINUAL-FLAME"
       ],
       "title": "Spell invocation creates a source-owned object light emitter",
       "verificationOwners": [
@@ -2571,20 +2572,45 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-misty-step.test.ts"
         }
       ]
+    },
+    {
+      "id": "spell.invocation-blur-attack-roll-defense",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "sourceBoundary": "The runtime consumes the authored Blur spell and caller-supplied attack-target spatial facts for Blindsight or Truesight perception; it owns the self Spell Effect, Attack Roll Disadvantage projection against the caster, Advantage/Disadvantage cancellation, Spell Slot spend, and Concentration cleanup.",
+      "taskRefs": [
+        "L12G-SPELL-BLUR"
+      ],
+      "title": "Spell invocation applies concentration attack-roll Disadvantage against the caster with Blindsight and Truesight bypass witnesses",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-blur.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 88,
+        "denominator": 89,
         "numerator": 19,
-        "percent": "21.6%"
+        "percent": "21.3%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 88,
+        "denominator": 89,
         "numerator": 24,
-        "percent": "27.3%"
+        "percent": "27%"
       }
     },
     "profileKinds": [
@@ -3315,6 +3341,12 @@
         "obligations": [],
         "profileId": "spell.invocation-self-teleport",
         "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-blur-attack-roll-defense",
+        "profileKind": "spell-invocation"
       }
     ],
     "sourceArtifacts": {
@@ -3325,9 +3357,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 120,
+          "denominator": 121,
           "numerator": 41,
-          "percent": "34.2%"
+          "percent": "33.9%"
         }
       },
       "units": [
@@ -3576,6 +3608,18 @@
             }
           ],
           "unitId": "blindness_deafness"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-blur-attack-roll-defense",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "blur"
         },
         {
           "joinStatus": "covered",
@@ -7105,6 +7149,22 @@
       "taskId": "SRDINV89C"
     },
     {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Continual Flame's Magic Action object-light spell invocation, Spell Slot spending, Bright/Dim 20-foot object emitter, until-dispelled non-ticking persistence, and preservation of prior Continual Flame emitters from the same caster.",
+      "profileIds": [
+        "spell.invocation-object-light"
+      ],
+      "taskId": "L12G-SPELL-CONTINUAL-FLAME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime tests cover Continual Flame catalog admission, level-2 Spell Slot object-light casting, touched-object table fact validation, Bright/Dim emitter projection through existing light witnesses, Magic Action and Spell Slot spending, until-dispelled persistence across turns, and no same-caster recast replacement.",
+      "profileIds": [
+        "spell.invocation-object-light"
+      ],
+      "taskId": "L12G-SPELL-CONTINUAL-FLAME"
+    },
+    {
       "claimKind": "completed-runtime-parity",
       "note": "Focused character-creation runtime tests cover CharacterBuild class-level gain with Fighter Fighting Style replacement as one advancement operation.",
       "profileIds": [
@@ -7202,6 +7262,22 @@
         "spell.invocation-after-hit-damage-illumination"
       ],
       "taskId": "L12G-SPELL-SHINING-SMITE"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Blur's self concentration effect, attack-roll Disadvantage against the blurred caster, Blindsight or Truesight bypass witness, Advantage/Disadvantage cancellation, Spell Slot spending, and Concentration cleanup.",
+      "profileIds": [
+        "spell.invocation-blur-attack-roll-defense"
+      ],
+      "taskId": "L12G-SPELL-BLUR"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission tests cover Blur Magic Action level-2 Spell Slot casting, self active-effect projection, attack-roll Disadvantage against the caster, Blindsight and Truesight bypass facts, Advantage/Disadvantage cancellation, and Concentration cleanup.",
+      "profileIds": [
+        "spell.invocation-blur-attack-roll-defense"
+      ],
+      "taskId": "L12G-SPELL-BLUR"
     }
   ],
   "units": [
@@ -12261,6 +12337,69 @@
       },
       "claim": {
         "profileIds": [
+          "spell.invocation-blur-attack-roll-defense"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action level-2 Spell Slot casting",
+          "self Spell Effect with Concentration up to 1 minute",
+          "Attack Rolls against the caster have Disadvantage while the effect is active",
+          "caller-supplied Blindsight or Truesight perception facts bypass the Disadvantage",
+          "normal Advantage/Disadvantage cancellation with other attack-roll sources",
+          "Concentration cleanup removes the spell-owned blurred effect"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-blur.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-SPELL-BLUR"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-blur-attack-roll-defense",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the authored Blur spell and caller-supplied attack-target spatial facts for Blindsight or Truesight perception; it owns the self Spell Effect, Attack Roll Disadvantage projection against the caster, Advantage/Disadvantage cancellation, Spell Slot spend, and Concentration cleanup.",
+          "taskRefs": [
+            "L12G-SPELL-BLUR"
+          ],
+          "title": "Spell invocation applies concentration attack-roll Disadvantage against the caster with Blindsight and Truesight bypass witnesses",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-blur.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/blur.json",
+      "unitId": "blur"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
           "spell.invocation-damage-save-or-attack",
           "spell.readied-action-time-spell"
         ],
@@ -12799,6 +12938,109 @@
       ],
       "sourceRecordPath": "packages/surface/content/command.json",
       "unitId": "command"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "future dispel/suppression spell-effect lifecycle owner",
+              "reason": "The object-light profile records Continual Flame as until-dispelled state, but this task does not promote a generic Dispel Magic or antimagic spell-effect removal procedure."
+            },
+            "followUpTaskId": "L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL",
+            "mechanic": "Dispel Magic, antimagic, or other future spell-suppression/removal procedures that consume the until-dispelled emitter marker and remove or suppress the object-attached spell occurrence"
+          },
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-battle-runtime",
+              "owner": "character inventory/equipment spell-component legality owner",
+              "reason": "SRD component rules require the costly consumed Material component for Continual Flame. Promoted battle runtime spends the Magic Action and Spell Slot and records battle-visible spell effects; inventory, hand access, focus/component substitution eligibility, and costly consumed Material component consumption belong to the character equipment/component legality boundary."
+            },
+            "mechanic": "ruby dust worth 50+ GP Material component availability, hand/access legality, and consumption on cast"
+          },
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "runtime-detached object presentation and table adjudication owner",
+              "reason": "Promoted battle runtime consumes object light and opaque-cover facts; it does not render flame appearance, object covering/hiding, heat, fuel, smothering, or quenching presentation facts."
+            },
+            "mechanic": "regular-flame visual presentation, non-heat/fuel presentation, covering or hiding the flame as an object/presentation fact, and not-smothered/not-quenched adjudication"
+          }
+        ],
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL",
+            "mechanic": "Consume until-dispelled spell-effect markers such as Continual Flame object emitters from Dispel Magic, antimagic, or another promoted spell-suppression/removal procedure without making each spell maintain a parallel removal registry.",
+            "owner": "battle-runtime generic dispel/suppression spell-effect lifecycle",
+            "requiredOutput": "Supported runtime profile and owner evidence for removing or suppressing object-attached until-dispelled spell occurrences, with focused tests and promoted Quint/runtime parity for Continual Flame cleanup through the generic dispel/suppression owner.",
+            "title": "Continual Flame Dispel And Suppression Removal"
+          }
+        ],
+        "futureProfileOwner": "battle-runtime generic dispel/suppression spell-effect lifecycle plus character inventory/equipment component legality plus runtime-detached object presentation owner",
+        "profileIds": [
+          "spell.invocation-object-light"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action prepared spell cast with a level-2-or-higher Spell Slot",
+          "caller-supplied touched object identity fact",
+          "source-owned object-attached Bright Light 20-foot radius plus Dim Light for an additional 20 feet",
+          "until-dispelled persistence represented by a non-ticking light-emitter expiration",
+          "preserves prior Continual Flame emitters from the same caster because SRD Continual Flame has no recast-ending clause",
+          "caller-supplied emitter projection facts derive Bright Light, Dim Light, and opaque-cover suppression from the object emitter",
+          "derived Dim Light illumination projects Lightly Obscured sight consequences and Darkvision-adjusted sight consequences without duplicating emitter state"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-object-light-spells.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-SPELL-CONTINUAL-FLAME"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-object-light",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "Runtime consumes typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
+          "taskRefs": [
+            "SRDINV70B",
+            "SRDINV89C",
+            "L12G-SPELL-CONTINUAL-FLAME"
+          ],
+          "title": "Spell invocation creates a source-owned object light emitter",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-object-light-spells.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/continual_flame.json",
+      "unitId": "continual_flame"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -14921,10 +15163,11 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
-          "sourceBoundary": "Runtime consumes typed table-supplied touched-object identity, size, worn/carried, emitter-distance, and opaque-cover witnesses; runtime owns the spell source, object attachment, Bright/Dim radii, one-hour duration, same-caster recast replacement, duration cleanup, opaque-cover suppression for the Light object emitter, and derived Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences. Colored-light presentation, automatic line-of-sight drawing, and automatic map geometry/pathfinding derivation are runtime-detached table adjudication/presentation outside this object-emitter boundary.",
+          "sourceBoundary": "Runtime consumes typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
           "taskRefs": [
             "SRDINV70B",
-            "SRDINV89C"
+            "SRDINV89C",
+            "L12G-SPELL-CONTINUAL-FLAME"
           ],
           "title": "Spell invocation creates a source-owned object light emitter",
           "verificationOwners": [
@@ -19101,24 +19344,6 @@
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [],
-      "sourceRecordPath": "packages/surface/content/blur.json",
-      "unitId": "blur"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
       "sourceRecordPath": "packages/surface/content/call_lightning.json",
       "unitId": "call_lightning"
     },
@@ -19385,24 +19610,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/conjure_woodland_beings.json",
       "unitId": "conjure_woodland_beings"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/continual_flame.json",
-      "unitId": "continual_flame"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -19891,6 +20098,28 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE",
+            "mechanic": "Replace the lossy Flame Blade mechanics with a lossless SRD Surface shape for the spell-created held blade: Bonus Action creation and re-evocation, free-hand requirement, let-go disappearance, Concentration up to 10 minutes, self-attached held Bright Light 10 feet plus Dim Light for an additional 10 feet, active-blade-gated Magic Action melee spell attack, Fire damage equal to 3d6 plus the caster's spellcasting ability modifier, and +1d6 per slot level above 2.",
+            "owner": "surface Spell Definition authoring",
+            "requiredOutput": "Flame Blade Dhall/JSON content, and schema/tracer support if needed, represent the held spell-created object lifecycle and active-blade-gated attack as executable facts that can be projected by battle-runtime without relying on prose or runtime constants.",
+            "title": "Flame Blade Surface Lifecycle Shape"
+          },
+          {
+            "id": "L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT",
+            "mechanic": "Promote Flame Blade as a level-2-or-higher prepared spell: Bonus Action Spell Slot spend, caster-owned Concentration, caller-supplied free-hand and holding witnesses, active spell-created blade state, source-owned held light emitter, Magic Action melee spell attack while the blade is active, Fire damage slot scaling with spellcasting ability modifier, Concentration and duration cleanup, let-go cleanup, and Bonus Action re-evocation from the same active spell occurrence without a second Spell Slot spend while the spell lasts.",
+            "owner": "battle-runtime spell-created held object lifecycle plus promoted Quint parity",
+            "requiredOutput": "Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial creation, active attack, light projection, cleanup, and re-evocation.",
+            "title": "Flame Blade Runtime Support"
+          }
+        ],
+        "futureProfileOwner": "surface Spell Definition held-created-object shape plus battle-runtime spell-created held object lifecycle and promoted Quint parity",
+        "reason": "Flame Blade is authored as an SRD Surface Spell Definition, but the authored executable shape records only the light rider and Magic Action attack while explicitly deferring the held spell-created blade lifecycle. Task 29 claims no promoted battle-runtime profile because the RAW spell-created blade must appear in a free hand, disappear when let go, be evoked again as a Bonus Action while the spell lasts, emit self-held light, and gate repeat Magic Action melee spell attacks on the active blade. Existing Produce Flame held-light/hurl and Shillelagh held-weapon profiles do not model that spell-created held melee object lifecycle.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",

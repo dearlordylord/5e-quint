@@ -61,6 +61,7 @@ module battleRuntimeArmorClass {
         | GuidingBoltNextAttackAdvantage => false
         | ViciousMockeryNextAttackDisadvantage => false
         | WeaponMasterySapNextAttackDisadvantage(_) => false
+        | Blurred => false
         | ColorSprayBlinded(_) => false
         | EntangleRestrained => false
         | EnsnaringStrikeRestrained(_) => false

@@ -10,9 +10,9 @@
 -- gets disadvantage. Contrasts with Protection from Evil and Good
 -- which uses the same atom with a creature-type filter.
 --
--- The Blindsight/Truesight immunity is DM agenda — the session
--- resolves whether the attacker has a sense that pierces the blur.
--- Omitted per ARCHITECTURE.md §1.
+-- The Blindsight/Truesight immunity remains table-supplied spatial knowledge:
+-- runtime consumes a typed attack-target fact when an attacker perceives the
+-- blurred caster with either sense.
 
 let blur =
       { kind = "spell"

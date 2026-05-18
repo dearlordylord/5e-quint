@@ -624,8 +624,14 @@ export function resolveObjectLightSpellAct(input: {
         fact,
       ): fact is Extract<
         (typeof objectTarget.spatialFacts)[number],
-        { readonly kind: "spellObjectLightTarget" }
-      > => fact.kind === "spellObjectLightTarget",
+        {
+          readonly kind:
+            | "spellObjectLightTarget"
+            | "spellTouchedObjectTarget";
+        }
+      > =>
+        fact.kind === "spellObjectLightTarget" ||
+        fact.kind === "spellTouchedObjectTarget",
     ),
     input.actorId,
     objectTarget.objectId,
@@ -635,7 +641,7 @@ export function resolveObjectLightSpellAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Light object target must be Large or smaller and not worn or carried by someone else.",
+      "Object light target does not satisfy the selected spell's object targeting requirements.",
     );
   }
 

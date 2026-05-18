@@ -179,12 +179,12 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 472,
-      "percent": "84.9%",
+      "numerator": 470,
+      "percent": "84.5%",
       "rowsByStatus": {
-        "accepted": 316,
-        "accepted-no-battle-effect": 156,
-        "battle-runtime-required": 74,
+        "accepted": 321,
+        "accepted-no-battle-effect": 149,
+        "battle-runtime-required": 76,
         "partial-battle-runtime": 6,
         "owner-evidence-required": 4
       }
@@ -201,19 +201,19 @@
       "catalog-installed-owner-evidence-required": 5
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 327,
+      "catalog-installed-owner-evidence-present": 332,
       "non-runtime": 24,
-      "catalog-only/dead-for-now": 127,
+      "catalog-only/dead-for-now": 120,
       "missing-authored-record": 58,
       "catalog-installed-owner-evidence-required": 14,
-      "catalog-authored-executable-follow-up": 6
+      "catalog-authored-executable-follow-up": 8
     },
     "spellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 168,
-      "catalog-only/dead-for-now": 127,
+      "catalog-installed-owner-evidence-present": 173,
+      "catalog-only/dead-for-now": 120,
       "missing-authored-record": 57,
       "catalog-installed-owner-evidence-required": 9,
-      "catalog-authored-executable-follow-up": 6
+      "catalog-authored-executable-follow-up": 8
     },
     "levelOneRowsByCategory": {
       "class container": 12,
@@ -8568,13 +8568,31 @@
         "sourceRecordPath": "packages/surface/content/continual_flame.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "continual_flame"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "future dispel/suppression spell-effect lifecycle owner; character inventory/equipment spell-component legality owner; runtime-detached object presentation and table adjudication owner",
+        "reason": "The object-light profile records Continual Flame as until-dispelled state, but this task does not promote a generic Dispel Magic or antimagic spell-effect removal procedure.; SRD component rules require the costly consumed Material component for Continual Flame. Promoted battle runtime spends the Magic Action and Spell Slot and records battle-visible spell effects; inventory, hand access, focus/component substitution eligibility, and costly consumed Material component consumption belong to the character equipment/component legality boundary.; Promoted battle runtime consumes object light and opaque-cover facts; it does not render flame appearance, object covering/hiding, heat, fuel, smothering, or quenching presentation facts."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit continual_flame is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-SPELL-CONTINUAL-FLAME at packages/battle-runtime/src/unit-profile-admission-object-light-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_enhance_ability",
@@ -11078,13 +11096,31 @@
         "sourceRecordPath": "packages/surface/content/continual_flame.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "continual_flame"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "future dispel/suppression spell-effect lifecycle owner; character inventory/equipment spell-component legality owner; runtime-detached object presentation and table adjudication owner",
+        "reason": "The object-light profile records Continual Flame as until-dispelled state, but this task does not promote a generic Dispel Magic or antimagic spell-effect removal procedure.; SRD component rules require the costly consumed Material component for Continual Flame. Promoted battle runtime spends the Magic Action and Spell Slot and records battle-visible spell effects; inventory, hand access, focus/component substitution eligibility, and costly consumed Material component consumption belong to the character equipment/component legality boundary.; Promoted battle runtime consumes object light and opaque-cover facts; it does not render flame appearance, object covering/hiding, heat, fuel, smothering, or quenching presentation facts."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit continual_flame is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-SPELL-CONTINUAL-FLAME at packages/battle-runtime/src/unit-profile-admission-object-light-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_darkvision",
@@ -11276,10 +11312,11 @@
         "state": "not-installed",
         "unitId": "flame_blade"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE, L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT: L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE owns Replace the lossy Flame Blade mechanics with a lossless SRD Surface shape for the spell-created held blade: Bonus Action creation and re-evocation, free-hand requirement, let-go disappearance, Concentration up to 10 minutes, self-attached held Bright Light 10 feet plus Dim Light for an additional 10 feet, active-blade-gated Magic Action melee spell attack, Fire damage equal to 3d6 plus the caster's spellcasting ability modifier, and +1d6 per slot level above 2. Required output: Flame Blade Dhall/JSON content, and schema/tracer support if needed, represent the held spell-created object lifecycle and active-blade-gated attack as executable facts that can be projected by battle-runtime without relying on prose or runtime constants.; L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT owns Promote Flame Blade as a level-2-or-higher prepared spell: Bonus Action Spell Slot spend, caster-owned Concentration, caller-supplied free-hand and holding witnesses, active spell-created blade state, source-owned held light emitter, Magic Action melee spell attack while the blade is active, Fire damage slot scaling with spellcasting ability modifier, Concentration and duration cleanup, let-go cleanup, and Bonus Action re-evocation from the same active spell occurrence without a second Spell Slot spend while the spell lasts. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial creation, active attack, light projection, cleanup, and re-evocation.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_flaming_sphere",
@@ -19725,13 +19762,25 @@
         "sourceRecordPath": "packages/surface/content/blur.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "blur"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit blur is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-SPELL-BLUR at packages/battle-runtime/src/unit-profile-admission-blur.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_darkness",
@@ -19964,10 +20013,11 @@
         "state": "not-installed",
         "unitId": "flame_blade"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-authored-executable-follow-up",
       "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE, L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT: L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE owns Replace the lossy Flame Blade mechanics with a lossless SRD Surface shape for the spell-created held blade: Bonus Action creation and re-evocation, free-hand requirement, let-go disappearance, Concentration up to 10 minutes, self-attached held Bright Light 10 feet plus Dim Light for an additional 10 feet, active-blade-gated Magic Action melee spell attack, Fire damage equal to 3d6 plus the caster's spellcasting ability modifier, and +1d6 per slot level above 2. Required output: Flame Blade Dhall/JSON content, and schema/tracer support if needed, represent the held spell-created object lifecycle and active-blade-gated attack as executable facts that can be projected by battle-runtime without relying on prose or runtime constants.; L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT owns Promote Flame Blade as a level-2-or-higher prepared spell: Bonus Action Spell Slot spend, caster-owned Concentration, caller-supplied free-hand and holding witnesses, active spell-created blade state, source-owned held light emitter, Magic Action melee spell attack while the blade is active, Fire damage slot scaling with spellcasting ability modifier, Concentration and duration cleanup, let-go cleanup, and Bonus Action re-evocation from the same active spell occurrence without a second Spell Slot spend while the spell lasts. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial creation, active attack, light projection, cleanup, and re-evocation.",
+      "battleReadinessStatus": "battle-runtime-required"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_flaming_sphere",
@@ -24967,13 +25017,25 @@
         "sourceRecordPath": "packages/surface/content/blur.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "blur"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit blur is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-SPELL-BLUR at packages/battle-runtime/src/unit-profile-admission-blur.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_continual_flame",
@@ -24998,13 +25060,31 @@
         "sourceRecordPath": "packages/surface/content/continual_flame.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "continual_flame"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "future dispel/suppression spell-effect lifecycle owner; character inventory/equipment spell-component legality owner; runtime-detached object presentation and table adjudication owner",
+        "reason": "The object-light profile records Continual Flame as until-dispelled state, but this task does not promote a generic Dispel Magic or antimagic spell-effect removal procedure.; SRD component rules require the costly consumed Material component for Continual Flame. Promoted battle runtime spends the Magic Action and Spell Slot and records battle-visible spell effects; inventory, hand access, focus/component substitution eligibility, and costly consumed Material component consumption belong to the character equipment/component legality boundary.; Promoted battle runtime consumes object light and opaque-cover facts; it does not render flame appearance, object covering/hiding, heat, fuel, smothering, or quenching presentation facts."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit continual_flame is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-SPELL-CONTINUAL-FLAME at packages/battle-runtime/src/unit-profile-admission-object-light-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_darkness",

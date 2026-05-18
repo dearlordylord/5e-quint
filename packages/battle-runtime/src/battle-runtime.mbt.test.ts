@@ -195,6 +195,9 @@ type LightEmitterExpirationMbtProjection =
   | {
       readonly kind: "duration";
       readonly durationTicks: number;
+    }
+  | {
+      readonly kind: "untilDispelled";
     };
 type LightEmitterMbtProjection =
   | {
@@ -3242,6 +3245,9 @@ function projectLightEmitterExpiration(
       kind: "duration" as const,
       durationTicks: Number(duration.durationTicks),
     })),
+    Match.when({ kind: "untilDispelled" }, () => ({
+      kind: "untilDispelled" as const,
+    })),
     Match.exhaustive,
   );
 }
@@ -3374,6 +3380,9 @@ function lightEmitterExpirationFromQuint(
       combatantId: actorIdFromQuint(fields["actor"], "actor"),
     };
   }
+  if (tag === "UntilDispelledLightEmitterExpiration") {
+    return { kind: "untilDispelled" };
+  }
 
   throw new Error(`Unknown Quint light emitter expiration variant: ${tag}`);
 }
@@ -3475,6 +3484,9 @@ function spellIdFromQuint(raw: unknown, field: string): string {
   }
   if (tag === "Light") {
     return "light";
+  }
+  if (tag === "ContinualFlame") {
+    return "continual_flame";
   }
 
   throw new Error(`Unknown Quint spell field ${field}: ${tag}`);

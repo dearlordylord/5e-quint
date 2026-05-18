@@ -8,12 +8,12 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 
 | Metric | Covered |
 | --- | ---: |
-| Strict runtime/profile support | 97/151 (64.2%) |
-| Strict target closure | 132/151 (87.4%) |
-| Product readiness | 472/556 (84.9%) |
-| Rules-kernel profile join | 16/69 (23.2%) |
-| Rules-kernel covered profile join | 11/69 (15.9%) |
-| Supported Unit rules-kernel chain | 30/97 (30.9%) |
+| Strict runtime/profile support | 98/151 (64.9%) |
+| Strict target closure | 135/151 (89.4%) |
+| Product readiness | 470/556 (84.5%) |
+| Rules-kernel profile join | 16/70 (22.9%) |
+| Rules-kernel covered profile join | 11/70 (15.7%) |
+| Supported Unit rules-kernel chain | 30/98 (30.6%) |
 
 ## Scope
 
@@ -24,16 +24,16 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | SRD pressure with no Unit matrix row | 33 |
 | Non-executable class containers | 12 |
 | Strict executable denominator | 151 |
-| Non-supported frontier | 54 |
+| Non-supported frontier | 53 |
 
 ## Status Groups
 
 | Status | Count | Units |
 | --- | ---: | --- |
-| supported-profile | 97 | `acid_splash`, `aid`, `animal_friendship`, `bane`, `barbarian_danger_sense`, `barbarian_rage`, `barbarian_reckless_attack`, `barbarian_unarmored_defense`, `bard_bardic_inspiration`, `bard_jack_of_all_trades`, `barkskin`, `bless`, `blindness_deafness`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_channel_divinity`, `cleric_divine_order`, `color_spray`, `command`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `druid_primal_order`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feather_fall`, `fighter_action_surge`, `fighter_fighting_style`, `fighter_second_wind`, `fighter_tactical_mind`, `fire_bolt`, `fog_cloud`, `grease`, `guidance`, `guiding_bolt`, `healing_word`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hunters_mark`, `ice_knife`, `inflict_wounds`, `jump`, `light`, `longstrider`, `mage_armor`, `magic_missile`, `misty_step`, `monk_martial_arts`, `monk_unarmored_defense`, `monk_unarmored_movement`, `paladin_lay_on_hands`, `paladin_paladins_smite`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `ranger_deft_explorer`, `ranger_weapon_mastery`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_cunning_action`, `rogue_expertise`, `rogue_sneak_attack`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `scorching_ray`, `searing_smite`, `shatter`, `shield`, `shield_of_faith`, `shillelagh`, `shining_smite`, `shocking_grasp`, `sleep`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `starry_wisp`, `thunderwave`, `true_strike`, `vicious_mockery`, `warlock_eldritch_invocations`, `warlock_magical_cunning`, `wizard_arcane_recovery`, `wizard_ritual_adept`, `wizard_scholar` |
-| open-runtime-behavior | 19 | `blur`, `continual_flame`, `find_steed`, `flame_blade`, `gentle_repose`, `heat_metal`, `hold_person`, `invisibility`, `lesser_restoration`, `magic_weapon`, `mind_spike`, `prayer_of_healing`, `protection_from_poison`, `ray_of_enfeeblement`, `spider_climb`, `spike_growth`, `spiritual_weapon`, `warding_bond`, `web` |
+| supported-profile | 98 | `acid_splash`, `aid`, `animal_friendship`, `bane`, `barbarian_danger_sense`, `barbarian_rage`, `barbarian_reckless_attack`, `barbarian_unarmored_defense`, `bard_bardic_inspiration`, `bard_jack_of_all_trades`, `barkskin`, `bless`, `blindness_deafness`, `blur`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_channel_divinity`, `cleric_divine_order`, `color_spray`, `command`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `druid_primal_order`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feather_fall`, `fighter_action_surge`, `fighter_fighting_style`, `fighter_second_wind`, `fighter_tactical_mind`, `fire_bolt`, `fog_cloud`, `grease`, `guidance`, `guiding_bolt`, `healing_word`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hunters_mark`, `ice_knife`, `inflict_wounds`, `jump`, `light`, `longstrider`, `mage_armor`, `magic_missile`, `misty_step`, `monk_martial_arts`, `monk_unarmored_defense`, `monk_unarmored_movement`, `paladin_lay_on_hands`, `paladin_paladins_smite`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `ranger_deft_explorer`, `ranger_weapon_mastery`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_cunning_action`, `rogue_expertise`, `rogue_sneak_attack`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `scorching_ray`, `searing_smite`, `shatter`, `shield`, `shield_of_faith`, `shillelagh`, `shining_smite`, `shocking_grasp`, `sleep`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `starry_wisp`, `thunderwave`, `true_strike`, `vicious_mockery`, `warlock_eldritch_invocations`, `warlock_magical_cunning`, `wizard_arcane_recovery`, `wizard_ritual_adept`, `wizard_scholar` |
+| open-runtime-behavior | 16 | `find_steed`, `gentle_repose`, `heat_metal`, `hold_person`, `invisibility`, `lesser_restoration`, `magic_weapon`, `mind_spike`, `prayer_of_healing`, `protection_from_poison`, `ray_of_enfeeblement`, `spider_climb`, `spike_growth`, `spiritual_weapon`, `warding_bond`, `web` |
+| blocked-follow-up-split | 15 | `acid_arrow`, `alter_self`, `continual_flame`, `dragons_breath`, `druid_wild_shape`, `enhance_ability`, `enlarge_reduce`, `enthrall`, `flame_blade`, `monk_monks_focus`, `monk_uncanny_metabolism`, `moonbeam`, `see_invisibility`, `sorcerer_font_of_magic`, `sorcerer_metamagic` |
 | closed-runtime-detached-table-adjudication | 14 | `alarm`, `arcane_lock`, `charm_person`, `comprehend_languages`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `find_traps`, `identify`, `minor_illusion`, `pass_without_trace`, `silent_image`, `speak_with_animals`, `thaumaturgy` |
-| blocked-follow-up-split | 13 | `acid_arrow`, `alter_self`, `dragons_breath`, `druid_wild_shape`, `enhance_ability`, `enlarge_reduce`, `enthrall`, `monk_monks_focus`, `monk_uncanny_metabolism`, `moonbeam`, `see_invisibility`, `sorcerer_font_of_magic`, `sorcerer_metamagic` |
 | closed-later-level-only | 6 | `barbarian_weapon_mastery`, `bard_expertise`, `fighter_weapon_mastery`, `paladin_fighting_style`, `ranger_favored_enemy`, `ranger_fighting_style` |
 | closed-character-fact-and-runtime-detached-split | 2 | `druid_druidic`, `rogue_thieves_cant` |
 
@@ -41,7 +41,7 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 
 | Status | Count | Units |
 | --- | ---: | --- |
-| open-runtime-behavior | 19 | `blur`, `continual_flame`, `find_steed`, `flame_blade`, `gentle_repose`, `heat_metal`, `hold_person`, `invisibility`, `lesser_restoration`, `magic_weapon`, `mind_spike`, `prayer_of_healing`, `protection_from_poison`, `ray_of_enfeeblement`, `spider_climb`, `spike_growth`, `spiritual_weapon`, `warding_bond`, `web` |
+| open-runtime-behavior | 16 | `find_steed`, `gentle_repose`, `heat_metal`, `hold_person`, `invisibility`, `lesser_restoration`, `magic_weapon`, `mind_spike`, `prayer_of_healing`, `protection_from_poison`, `ray_of_enfeeblement`, `spider_climb`, `spike_growth`, `spiritual_weapon`, `warding_bond`, `web` |
 
 ## Rules-Kernel Join
 
@@ -58,6 +58,7 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `barkskin` | unmapped | `spell.scalar-buff` (unmapped: no obligation mapping) |
 | `bless` | unmapped | `spell.invocation-roll-modifier` (unmapped: no obligation mapping) |
 | `blindness_deafness` | unmapped | `spell.invocation-condition-save` (unmapped: no obligation mapping) |
+| `blur` | unmapped | `spell.invocation-blur-attack-roll-defense` (unmapped: no obligation mapping) |
 | `chromatic_orb` | unmapped | `spell.invocation-chained-attack-damage` (unmapped: no obligation mapping) |
 | `cleric_channel_divinity` | unmapped | `character-creation.class-feature-resource-projection` (unmapped: no obligation mapping) |
 | `cleric_divine_order` | unmapped | `character-creation.class-feature-option-projection` (unmapped: no obligation mapping) |
@@ -127,10 +128,9 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `arcane_lock` | closed-runtime-detached-table-adjudication | unsupported-profile | not-in-unit-catalog | outside-runtime-presentation-exploration | Object lock state, designated opener and passcode/password handling, the one-minute password unlock window, nonmagical-unlock prevention, magic-suppression interaction for the object-attached lock, and any forced-entry Difficulty Class adjudication are object/table facts outside promoted battle runtime; local SRD 5.2.1 Arcane Lock does not define a forced-entry DC mechanic. |
 | `barbarian_weapon_mastery` | closed-later-level-only | profile-subset-supported | installed | later-level-only | The remaining Barbarian Weapon Mastery selected-weapon count increases occur only after level 1. |
 | `bard_expertise` | closed-later-level-only | profile-subset-supported | installed | later-level-only | The remaining Bard Expertise selected-skill count increase occurs only at Bard level 9, outside the level 1-2 support lane. |
-| `blur` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
 | `charm_person` | closed-runtime-detached-table-adjudication | profile-subset-supported | installed | social-knowledge-effect | Friendly disposition, the Charmed condition's Social Advantage, social interaction adjudication, and target knowledge when the spell ends are social/knowledge facts outside promoted battle runtime state. |
 | `comprehend_languages` | closed-runtime-detached-table-adjudication | unsupported-profile | not-in-unit-catalog | outside-runtime-presentation-exploration | Language comprehension and secret-message adjudication are table-owned communication facts outside promoted battle runtime. |
-| `continual_flame` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
+| `continual_flame` | blocked-follow-up-split | profile-subset-supported | installed | follow-up-split | L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL: Consume until-dispelled spell-effect markers such as Continual Flame object emitters from Dispel Magic, antimagic, or another promoted spell-suppression/removal procedure without making each spell maintain a parallel removal registry. Owner: battle-runtime generic dispel/suppression spell-effect lifecycle. Required output: Supported runtime profile and owner evidence for removing or suppressing object-attached until-dispelled spell occurrences, with focused tests and promoted Quint/runtime parity for Continual Flame cleanup through the generic dispel/suppression owner. |
 | `detect_evil_and_good` | closed-runtime-detached-table-adjudication | unsupported-profile | installed | outside-runtime-presentation-exploration | Sensing, occlusion, and Hallow discovery are exploration/detection state outside promoted battle runtime. |
 | `detect_magic` | closed-runtime-detached-table-adjudication | unsupported-profile | installed | outside-runtime-presentation-exploration | Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime. |
 | `detect_poison_and_disease` | closed-runtime-detached-table-adjudication | unsupported-profile | installed | outside-runtime-presentation-exploration | Poison, disease, creature-kind sensing, occlusion, and identification are exploration/detection state outside promoted battle runtime. |
@@ -143,7 +143,7 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `fighter_weapon_mastery` | closed-later-level-only | profile-subset-supported | installed | later-level-only | The remaining Fighter Weapon Mastery selected-weapon count increases occur only after level 1. |
 | `find_steed` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
 | `find_traps` | closed-runtime-detached-table-adjudication | unsupported-profile | installed | outside-runtime-presentation-exploration | Trap presence, line of sight, non-location warning, and general-danger disclosure are exploration/detection facts supplied by the table rather than promoted battle runtime state. |
-| `flame_blade` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
+| `flame_blade` | blocked-follow-up-split | unsupported-profile | not-in-unit-catalog | follow-up-split | L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE: Replace the lossy Flame Blade mechanics with a lossless SRD Surface shape for the spell-created held blade: Bonus Action creation and re-evocation, free-hand requirement, let-go disappearance, Concentration up to 10 minutes, self-attached held Bright Light 10 feet plus Dim Light for an additional 10 feet, active-blade-gated Magic Action melee spell attack, Fire damage equal to 3d6 plus the caster's spellcasting ability modifier, and +1d6 per slot level above 2. Owner: surface Spell Definition authoring. Required output: Flame Blade Dhall/JSON content, and schema/tracer support if needed, represent the held spell-created object lifecycle and active-blade-gated attack as executable facts that can be projected by battle-runtime without relying on prose or runtime constants.; L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT: Promote Flame Blade as a level-2-or-higher prepared spell: Bonus Action Spell Slot spend, caster-owned Concentration, caller-supplied free-hand and holding witnesses, active spell-created blade state, source-owned held light emitter, Magic Action melee spell attack while the blade is active, Fire damage slot scaling with spellcasting ability modifier, Concentration and duration cleanup, let-go cleanup, and Bonus Action re-evocation from the same active spell occurrence without a second Spell Slot spend while the spell lasts. Owner: battle-runtime spell-created held object lifecycle plus promoted Quint parity. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial creation, active attack, light projection, cleanup, and re-evocation. |
 | `gentle_repose` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
 | `heat_metal` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
 | `hold_person` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |

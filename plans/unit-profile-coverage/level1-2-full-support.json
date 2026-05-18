@@ -219,49 +219,6 @@
       "unitId": "bard_expertise"
     },
     {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
-      "sourceRecordPath": "packages/surface/content/blur.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Blur",
-          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_blur",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 272,
-            "lineStart": 272,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Blur",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_blur",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 203,
-            "lineStart": 203,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
-      "unitId": "blur"
-    },
-    {
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
@@ -409,17 +366,15 @@
       "unitId": "comprehend_languages"
     },
     {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL: Consume until-dispelled spell-effect markers such as Continual Flame object emitters from Dispel Magic, antimagic, or another promoted spell-suppression/removal procedure without making each spell maintain a parallel removal registry. Owner: battle-runtime generic dispel/suppression spell-effect lifecycle. Required output: Supported runtime profile and owner evidence for removing or suppressing object-attached until-dispelled spell occurrences, with focused tests and promoted Quint/runtime parity for Continual Flame cleanup through the generic dispel/suppression owner.",
       "sourceRecordPath": "packages/surface/content/continual_flame.json",
       "sourceRows": [
         {
@@ -459,8 +414,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
       "unitId": "continual_flame"
     },
     {
@@ -1101,11 +1056,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE: Replace the lossy Flame Blade mechanics with a lossless SRD Surface shape for the spell-created held blade: Bonus Action creation and re-evocation, free-hand requirement, let-go disappearance, Concentration up to 10 minutes, self-attached held Bright Light 10 feet plus Dim Light for an additional 10 feet, active-blade-gated Magic Action melee spell attack, Fire damage equal to 3d6 plus the caster's spellcasting ability modifier, and +1d6 per slot level above 2. Owner: surface Spell Definition authoring. Required output: Flame Blade Dhall/JSON content, and schema/tracer support if needed, represent the held spell-created object lifecycle and active-blade-gated attack as executable facts that can be projected by battle-runtime without relying on prose or runtime constants.; L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT: Promote Flame Blade as a level-2-or-higher prepared spell: Bonus Action Spell Slot spend, caster-owned Concentration, caller-supplied free-hand and holding witnesses, active spell-created blade state, source-owned held light emitter, Magic Action melee spell attack while the blade is active, Fire damage slot scaling with spellcasting ability modifier, Concentration and duration cleanup, let-go cleanup, and Bonus Action re-evocation from the same active spell occurrence without a second Spell Slot spend while the spell lasts. Owner: battle-runtime spell-created held object lifecycle plus promoted Quint parity. Required output: Supported-profile Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for initial creation, active attack, light projection, cleanup, and re-evocation.",
       "sourceRecordPath": "packages/surface/content/flame_blade.json",
       "sourceRows": [
         {
@@ -1133,8 +1091,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
       "unitId": "flame_blade"
     },
     {
@@ -2582,7 +2540,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 97,
+      "count": 98,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2599,6 +2557,7 @@
         "barkskin",
         "bless",
         "blindness_deafness",
+        "blur",
         "burning_hands",
         "chill_touch",
         "chromatic_orb",
@@ -2686,14 +2645,11 @@
       ]
     },
     {
-      "count": 19,
+      "count": 16,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
-        "blur",
-        "continual_flame",
         "find_steed",
-        "flame_blade",
         "gentle_repose",
         "heat_metal",
         "hold_person",
@@ -2709,6 +2665,28 @@
         "spiritual_weapon",
         "warding_bond",
         "web"
+      ]
+    },
+    {
+      "count": 15,
+      "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
+      "status": "blocked-follow-up-split",
+      "unitIds": [
+        "acid_arrow",
+        "alter_self",
+        "continual_flame",
+        "dragons_breath",
+        "druid_wild_shape",
+        "enhance_ability",
+        "enlarge_reduce",
+        "enthrall",
+        "flame_blade",
+        "monk_monks_focus",
+        "monk_uncanny_metabolism",
+        "moonbeam",
+        "see_invisibility",
+        "sorcerer_font_of_magic",
+        "sorcerer_metamagic"
       ]
     },
     {
@@ -2730,26 +2708,6 @@
         "silent_image",
         "speak_with_animals",
         "thaumaturgy"
-      ]
-    },
-    {
-      "count": 13,
-      "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
-      "status": "blocked-follow-up-split",
-      "unitIds": [
-        "acid_arrow",
-        "alter_self",
-        "dragons_breath",
-        "druid_wild_shape",
-        "enhance_ability",
-        "enlarge_reduce",
-        "enthrall",
-        "monk_monks_focus",
-        "monk_uncanny_metabolism",
-        "moonbeam",
-        "see_invisibility",
-        "sorcerer_font_of_magic",
-        "sorcerer_metamagic"
       ]
     },
     {
@@ -2778,52 +2736,49 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 472,
-      "percent": "84.9%",
+      "numerator": 470,
+      "percent": "84.5%",
       "rowsByStatus": {
-        "accepted": 316,
-        "accepted-no-battle-effect": 156,
-        "battle-runtime-required": 74,
+        "accepted": 321,
+        "accepted-no-battle-effect": 149,
+        "battle-runtime-required": 76,
         "owner-evidence-required": 4,
         "partial-battle-runtime": 6
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 69,
+      "denominator": 70,
       "numerator": 11,
-      "percent": "15.9%"
+      "percent": "15.7%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 69,
+      "denominator": 70,
       "numerator": 16,
-      "percent": "23.2%"
+      "percent": "22.9%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 97,
+      "denominator": 98,
       "numerator": 30,
-      "percent": "30.9%"
+      "percent": "30.6%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 151,
-      "numerator": 97,
-      "percent": "64.2%"
+      "numerator": 98,
+      "percent": "64.9%"
     },
     "strictTargetClosure": {
       "denominator": 151,
-      "numerator": 132,
-      "percent": "87.4%"
+      "numerator": 135,
+      "percent": "89.4%"
     }
   },
   "openFrontier": [
     {
-      "count": 19,
+      "count": 16,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
-        "blur",
-        "continual_flame",
         "find_steed",
-        "flame_blade",
         "gentle_repose",
         "heat_metal",
         "hold_person",
@@ -6059,9 +6014,9 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 97,
+        "denominator": 98,
         "numerator": 30,
-        "percent": "30.9%"
+        "percent": "30.6%"
       }
     },
     "units": [
@@ -6273,6 +6228,18 @@
           }
         ],
         "unitId": "blindness_deafness"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-blur-attack-roll-defense",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "blur"
       },
       {
         "joinStatus": "covered",
@@ -7895,20 +7862,20 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
-      "missing": 19,
-      "profile-subset-supported": 10,
-      "supported-profile": 97,
-      "unsupported-profile": 25
+      "missing": 16,
+      "profile-subset-supported": 11,
+      "supported-profile": 98,
+      "unsupported-profile": 26
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 13,
+      "blocked-follow-up-split": 15,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 14,
-      "open-runtime-behavior": 19,
-      "supported-profile": 97
+      "open-runtime-behavior": 16,
+      "supported-profile": 98
     },
-    "nonSupportedFrontier": 54,
+    "nonSupportedFrontier": 53,
     "strictDenominator": 151
   }
 }

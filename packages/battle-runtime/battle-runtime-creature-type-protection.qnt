@@ -2,6 +2,7 @@
 
 module battleRuntimeCreatureTypeProtection {
   import battleRuntimeModel.* from "./battle-runtime-model"
+  import battleRuntimeSpellAttack.* from "./battle-runtime-spell-attack"
 
   pure def protectionFromEvilAndGoodCreatureTypeIsScoped(creatureType: RuntimeCreatureType): bool =
     creatureType == AberrationCreature or
@@ -17,29 +18,14 @@ module battleRuntimeCreatureTypeProtection {
     targetEffects: Set[ActiveEffect],
     attackerCanSeeTarget: bool,
   ): SpellAttackRollMode = {
-    val hasAdvantage =
-      targetEffects.contains(GuidingBoltNextAttackAdvantage)
-      or targetEffects.exists(effect => match effect {
-        | ShiningSmiteIllumination(_) => true
-        | _ => false
-      })
-      or (
-        attackerCanSeeTarget
-          and targetEffects.contains(FaerieFireOutline)
-      )
-    val hasDisadvantage =
-      attackerEffects.contains(ViciousMockeryNextAttackDisadvantage)
-      or attackerEffects.exists(effect => match effect { | WeaponMasterySapNextAttackDisadvantage(_) => true | _ => false })
-      or (
+    val hasDisadvantage = activeEffectsGrantAttackRollDisadvantage(attackerEffects) or (
         targetEffects.contains(ProtectionFromEvilAndGoodCreatureTypeProtection)
         and protectionFromEvilAndGoodCreatureTypeIsScoped(attackerCreatureType)
       )
-    if (hasAdvantage and not(hasDisadvantage))
-      AdvantageSpellAttackRoll
-    else if (hasDisadvantage and not(hasAdvantage))
-      DisadvantageSpellAttackRoll
-    else
-      NormalSpellAttackRoll
+    attackRollModeFromFlags(
+      activeEffectsGrantAttackRollAdvantage(targetEffects, attackerCanSeeTarget),
+      hasDisadvantage,
+    )
   }
 
   pure def protectionFromEvilAndGoodConditionIsPrevented(condition: PreventedProtectionCondition): bool =

@@ -160,6 +160,20 @@ module battleRuntimeLightConcentrationMovementReactionTests {
     }
   }
 
+  run test_continual_flame_records_until_dispelled_object_emitter = {
+    val result = resolveContinualFlameObject(initialState, LightObjectTarget)
+    all {
+      assert(result.lightEmitters.contains(continualFlameObjectEmitter(LightObjectTarget))),
+      assert(not(result.actionAvailable)),
+      assert(result.bonusActionAvailable),
+      assert(battleActorHasSpellSlotUse(result, Fighter)),
+      assert(result.fighter.activeEffects == Set()),
+      assert(result.goblin.activeEffects == Set()),
+      assert(continualFlameBrightLightRadiusFeet == 20),
+      assert(continualFlameDimLightAdditionalFeet == 20),
+    }
+  }
+
   run test_light_visibility_projection = {
     val lit = resolveLightObject(initialState, LightObjectTarget, ObjectLarge, ObjectNotWornOrCarriedBySomeoneElse)
     val brightFact = ObjectLightEmitterProjectionFact({
@@ -212,6 +226,19 @@ module battleRuntimeLightConcentrationMovementReactionTests {
     }
   }
 
+  run test_continual_flame_object_cast_preserves_prior_flames = {
+    val prior = {
+      ...initialState,
+      lightEmitters: Set(continualFlameObjectEmitter(PriorLightObjectTarget)),
+    }
+    val recast = resolveContinualFlameObject(prior, LightObjectTarget)
+    all {
+      assert(recast.lightEmitters.contains(continualFlameObjectEmitter(PriorLightObjectTarget))),
+      assert(recast.lightEmitters.contains(continualFlameObjectEmitter(LightObjectTarget))),
+      assert(recast.lightEmitters.size() == 2),
+    }
+  }
+
   run test_light_object_emitter_expires_after_duration_tick = {
     val nearlyExpired = {
       ...initialState,
@@ -232,6 +259,19 @@ module battleRuntimeLightConcentrationMovementReactionTests {
     all {
       assert(stillSameRound.lightEmitters.size() == 1),
       assert(nextRound.lightEmitters == Set()),
+    }
+  }
+
+  run test_continual_flame_object_emitter_survives_duration_tick = {
+    val ongoing = {
+      ...initialState,
+      lightEmitters: Set(continualFlameObjectEmitter(LightObjectTarget)),
+    }
+    val stillSameRound = endTurn(ongoing)
+    val nextRound = endTurn(stillSameRound)
+    all {
+      assert(stillSameRound.lightEmitters == Set(continualFlameObjectEmitter(LightObjectTarget))),
+      assert(nextRound.lightEmitters == Set(continualFlameObjectEmitter(LightObjectTarget))),
     }
   }
 

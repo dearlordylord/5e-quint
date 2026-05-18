@@ -75,6 +75,7 @@ import {
   supportedPreparedAfterHitDamageAndIlluminationSpellProfile,
   supportedPreparedAfterHitSaveGatedConditionSpellProfile,
   supportedPreparedAfterHitTimedDamageAndSaveSpellProfile,
+  supportedPreparedBlurAttackRollDefenseSpellProfile,
   supportedPreparedCreatureTypeProtectionSpellProfile,
   supportedPreparedExpeditiousRetreatDashSpellProfile,
   supportedPreparedFeatherFallMitigationSpellProfile,
@@ -130,7 +131,7 @@ type ActivationPhase = Extract<
   SpellRecord["mechanics"],
   { readonly family: "activation" }
 >["phases"][number];
-type ObjectLightDirectPhase = Extract<
+type LightCantripObjectLightDirectPhase = Extract<
   ActivationPhase,
   { readonly kind: "direct" }
 > & {
@@ -143,6 +144,19 @@ type ObjectLightDirectPhase = Extract<
         readonly heldOrWorn: "forbidden";
         readonly maxSize: typeof LIGHT_OBJECT_MAX_SIZE;
       };
+    };
+  };
+};
+type TouchedObjectLightDirectPhase = Extract<
+  ActivationPhase,
+  { readonly kind: "direct" }
+> & {
+  readonly attachment: {
+    readonly kind: "hole";
+    readonly value: {
+      readonly kind: "object";
+      readonly count: 1;
+      readonly filter?: undefined;
     };
   };
 };
@@ -255,6 +269,19 @@ export function supportedSpellActs(
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedCreatureTypeProtectionSpellProfile(
         actor.combatantId,
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedBlurAttackRollDefenseSpellProfile(
+        actor.combatantId,
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedObjectLightSpellProfile(
         spell,
         spellcasting.spellSlots,
       ),
@@ -609,7 +636,13 @@ export function supportedCantripObjectLightSpellProfile(
           procedure: "objectLight",
           spell,
           actionCost: "magicAction",
-          targeting: { kind: "singleObject", maxSize: maxObjectSize },
+          targeting: {
+            kind: "singleObject",
+            object: {
+              kind: "lightCantripObject",
+              maxSize: maxObjectSize,
+            },
+          },
           light: {
             kind: "brightAndDim",
             brightRadiusFeet: movementFeet(lightEffect.brightRadiusFeet),
@@ -622,7 +655,7 @@ export function supportedCantripObjectLightSpellProfile(
 
 function isObjectLightDirectPhase(
   phase: ActivationPhase,
-): phase is ObjectLightDirectPhase {
+): phase is LightCantripObjectLightDirectPhase {
   return (
     phase.kind === "direct" &&
     phase.attachment.kind === "hole" &&
@@ -630,6 +663,71 @@ function isObjectLightDirectPhase(
     phase.attachment.value.count === 1 &&
     phase.attachment.value.filter?.heldOrWorn === "forbidden" &&
     phase.attachment.value.filter?.maxSize === LIGHT_OBJECT_MAX_SIZE &&
+    phase.effects?.some((effect) => effect.kind === "emit_light") === true
+  );
+}
+
+export function supportedPreparedObjectLightSpellProfile(
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  if (!isContinualFlameObjectSpell(spell)) {
+    return [];
+  }
+  const lightPhase = spell.mechanics.phases.find(
+    isTouchedObjectLightDirectPhase,
+  );
+  const lightEffects =
+    lightPhase === undefined || !("effects" in lightPhase)
+      ? undefined
+      : lightPhase.effects;
+  const lightEffect = lightEffects?.find(
+    (effect) => effect.kind === "emit_light",
+  );
+  const brightRadiusFeet = lightEffect?.brightRadiusFeet;
+  const dimAdditionalFeet = lightEffect?.dimAdditionalFeet;
+  if (
+    lightEffect === undefined ||
+    lightEffect.kind !== "emit_light" ||
+    brightRadiusFeet !== 20 ||
+    dimAdditionalFeet !== 20
+  ) {
+    return [];
+  }
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] =>
+    Number(slot.spellLevel) < spell.mechanics.level
+      ? []
+      : [
+          {
+            access: { tag: "prepared" },
+            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+            procedure: "objectLight",
+            spell,
+            actionCost: "magicAction",
+            targeting: {
+              kind: "singleObject",
+              object: { kind: "touchedObject" },
+            },
+            light: {
+              kind: "brightAndDim",
+              brightRadiusFeet: movementFeet(brightRadiusFeet),
+              dimAdditionalFeet: movementFeet(dimAdditionalFeet),
+            },
+            expiresAt: { kind: "untilDispelled" },
+          },
+        ],
+  );
+}
+
+function isTouchedObjectLightDirectPhase(
+  phase: ActivationPhase,
+): phase is TouchedObjectLightDirectPhase {
+  return (
+    phase.kind === "direct" &&
+    phase.attachment.kind === "hole" &&
+    phase.attachment.value.kind === "object" &&
+    phase.attachment.value.count === 1 &&
+    phase.attachment.value.filter === undefined &&
     phase.effects?.some((effect) => effect.kind === "emit_light") === true
   );
 }
@@ -879,6 +977,38 @@ export function isLightObjectSpell(spell: SpellRecord): spell is SpellRecord & {
     spell.mechanics.duration.value.amount === 1 &&
     earlyEnd.length === 1 &&
     earlyEnd[0]?.kind === "caster_recasts_spell"
+  );
+}
+
+export function isContinualFlameObjectSpell(
+  spell: SpellRecord,
+): spell is SpellRecord & {
+  readonly mechanics: Extract<
+    SpellRecord["mechanics"],
+    { family: "activation" }
+  >;
+} {
+  const endsOn =
+    spell.mechanics.duration.kind === "permanent"
+      ? (spell.mechanics.duration.endsOn ?? [])
+      : [];
+  return (
+    spell.name === "Continual Flame" &&
+    spell.provenance.kind === "srd-5.2.1" &&
+    spell.provenance.section ===
+      "Spells/Descriptions-A-D#Continual Flame" &&
+    spell.mechanics.family === "activation" &&
+    spell.mechanics.level === 2 &&
+    spell.mechanics.castingTime.kind === "action" &&
+    spell.mechanics.range.kind === "touch" &&
+    spell.mechanics.duration.kind === "permanent" &&
+    endsOn.length === 1 &&
+    endsOn[0] === "dispel" &&
+    spell.mechanics.components.v === true &&
+    spell.mechanics.components.s === true &&
+    spell.mechanics.components.m !== false &&
+    spell.mechanics.components.materialConsumed === true &&
+    spell.mechanics.components.materialCostGp === 50
   );
 }
 

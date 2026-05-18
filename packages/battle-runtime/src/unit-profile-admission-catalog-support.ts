@@ -91,11 +91,15 @@ export const blindnessDeafnessUnitId = "blindness_deafness";
 
 export const blessUnitId = "bless";
 
+export const blurUnitId = "blur";
+
 export const burningHandsUnitId = "burning_hands";
 
 export const chromaticOrbUnitId = "chromatic_orb";
 
 export const colorSprayUnitId = "color_spray";
+
+export const continualFlameUnitId = "continual_flame";
 
 export const counterspellUnitId = "counterspell";
 

@@ -20,6 +20,7 @@ import barkskinInput from "../../content/barkskin.json";
 import blindnessDeafnessInput from "../../content/blindness_deafness.json";
 import baneInput from "../../content/bane.json";
 import blessInput from "../../content/bless.json";
+import blurInput from "../../content/blur.json";
 import burningHandsInput from "../../content/burning_hands.json";
 import classBardInput from "../../content/class_bard.json";
 import classBarbarianInput from "../../content/class_barbarian.json";
@@ -40,6 +41,7 @@ import clericChannelDivinityInput from "../../content/cleric_channel_divinity.js
 import clericDivineOrderInput from "../../content/cleric_divine_order.json";
 import colorSprayInput from "../../content/color_spray.json";
 import commandInput from "../../content/command.json";
+import continualFlameInput from "../../content/continual_flame.json";
 import counterspellInput from "../../content/counterspell.json";
 import cureWoundsInput from "../../content/cure_wounds.json";
 import dancingLightsInput from "../../content/dancing_lights.json";
@@ -403,11 +405,13 @@ export const srdUnitCollection = defineSrdUnitCollection({
     blindnessDeafnessInput,
     baneInput,
     blessInput,
+    blurInput,
     burningHandsInput,
     chillTouchInput,
     chromaticOrbInput,
     colorSprayInput,
     commandInput,
+    continualFlameInput,
     counterspellInput,
     cureWoundsInput,
     dancingLightsInput,

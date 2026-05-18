@@ -78,6 +78,7 @@ import type {
 import { PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS } from "../find-familiar-forms.ts";
 import {
   BATTLE_ATTACK_RANGE_BANDS,
+  BLUR_ATTACK_ROLL_BYPASS_SENSES,
   COMMAND_OPTIONS,
   ELDRITCH_BLAST_BEAM_COUNTS,
   SCORCHING_RAY_RAY_COUNTS,
@@ -680,6 +681,12 @@ const BattleTargetSpatialFactSchema = Schema.Union(
     targetId: CombatantId,
   }),
   Schema.Struct({
+    kind: Schema.Literal("attackAttackerPerceivesBlurredTargetWithSense"),
+    attackerId: CombatantId,
+    targetId: CombatantId,
+    sense: Schema.Literal(...BLUR_ATTACK_ROLL_BYPASS_SENSES),
+  }),
+  Schema.Struct({
     kind: Schema.Literal("spellTarget"),
     casterId: CombatantId,
     targetId: CombatantId,
@@ -735,6 +742,12 @@ const BattleTargetSpatialFactSchema = Schema.Union(
         relation: Schema.Literal("worn", "carried"),
       }),
     ),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("spellTouchedObjectTarget"),
+    casterId: CombatantId,
+    objectId: BattleObjectId,
+    spellId: Schema.String,
   }),
   Schema.Struct({
     kind: Schema.Literal("spellLeapTargetWithinRange"),
@@ -1021,7 +1034,29 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       actionCost: Schema.Literal("magicAction"),
       targeting: Schema.Struct({
         kind: Schema.Literal("singleObject"),
-        maxSize: SizeSchema,
+        object: Schema.Struct({
+          kind: Schema.Literal("lightCantripObject"),
+          maxSize: SizeSchema,
+        }),
+      }),
+      light: Schema.Struct({
+        kind: Schema.Literal("brightAndDim"),
+        brightRadiusFeet: MovementFeet,
+        dimAdditionalFeet: MovementFeet,
+      }),
+      expiresAt: BattleRuntimeObjectSchema,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("objectLight"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      targeting: Schema.Struct({
+        kind: Schema.Literal("singleObject"),
+        object: Schema.Struct({
+          kind: Schema.Literal("touchedObject"),
+        }),
       }),
       light: Schema.Struct({
         kind: Schema.Literal("brightAndDim"),
@@ -1605,6 +1640,14 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
       }),
       activeEffect: BattleRuntimeObjectSchema,
       rangeFeet: MovementFeet,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("blurAttackRollDefense"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      activeEffect: BattleRuntimeObjectSchema,
     }),
     Schema.Struct({
       access: PreparedSpellAccessSchema,
@@ -2495,6 +2538,12 @@ type BattleFillEncoded =
                   readonly relation: "worn" | "carried";
                 };
           }
+        | {
+            readonly kind: "spellTouchedObjectTarget";
+            readonly casterId: string;
+            readonly objectId: string;
+            readonly spellId: string;
+          }
       )[];
     }
   | {
@@ -2968,6 +3017,12 @@ export const BattleFillSchema: Schema.Schema<
                 relation: Schema.Literal("worn", "carried"),
               }),
             ),
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("spellTouchedObjectTarget"),
+            casterId: CombatantId,
+            objectId: BattleObjectId,
+            spellId: Schema.String,
           }),
         ),
       ),

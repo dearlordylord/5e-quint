@@ -222,6 +222,7 @@ function attackRollSourceFlags(
     hasCondition(attacker?.conditions ?? EMPTY_CONDITION_STATE, "poisoned") ||
     activeEffectGrantsAttackRollMode(state, attacker, target, "disadvantage", {
       attackerCanSeeTarget,
+      targetSpatialFacts,
     }) ||
     ongoingFeatureGrantsAttackRollMode(
       attacker,
@@ -613,6 +614,7 @@ export function activeEffectGrantsAttackRollMode(
   mode: AttackRollMode,
   context: {
     readonly attackerCanSeeTarget?: boolean;
+    readonly targetSpatialFacts?: readonly BattleTargetSpatialFact[];
   } = {},
 ): boolean {
   const attackerCreatureType =
@@ -638,8 +640,30 @@ export function activeEffectGrantsAttackRollMode(
         (effect.kind === "creatureTypeProtection" &&
           effect.attackRollMode === mode &&
           attackerCreatureType !== null &&
-          effect.protectedAgainstCreatureTypes.includes(attackerCreatureType)),
+          effect.protectedAgainstCreatureTypes.includes(attackerCreatureType)) ||
+        (effect.kind === "blurred" &&
+          mode === "disadvantage" &&
+          attacker !== undefined &&
+          target !== undefined &&
+          !attackerPerceivesBlurredTargetWithBypassSense(
+            context.targetSpatialFacts ?? [],
+            attacker.combatantId,
+            target.combatantId,
+          )),
     ) === true
+  );
+}
+
+function attackerPerceivesBlurredTargetWithBypassSense(
+  facts: readonly BattleTargetSpatialFact[],
+  attackerId: CombatantId,
+  targetId: CombatantId,
+): boolean {
+  return facts.some(
+    (fact) =>
+      fact.kind === "attackAttackerPerceivesBlurredTargetWithSense" &&
+      fact.attackerId === attackerId &&
+      fact.targetId === targetId,
   );
 }
 

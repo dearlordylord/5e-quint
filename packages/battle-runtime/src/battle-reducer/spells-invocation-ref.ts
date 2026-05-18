@@ -173,6 +173,14 @@ export function supportedSpellInvocationRef(
     };
   }
   if (invocation.procedure === "objectLight") {
+    if (invocation.resource.tag === "spellSlot") {
+      return {
+        tag: "spellSlot",
+        spellId: spellId(invocation.spell.id),
+        slotLevel: invocation.resource.slotLevel,
+        procedure: "objectLight",
+      };
+    }
     return {
       tag: "cantrip",
       spellId: spellId(invocation.spell.id),
@@ -212,6 +220,14 @@ export function supportedSpellInvocationRef(
       tag: "cantrip",
       spellId: spellId(invocation.spell.id),
       procedure: "thaumaturgyBoomingVoice",
+    };
+  }
+  if (invocation.procedure === "blurAttackRollDefense") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "blurAttackRollDefense",
     };
   }
   return Match.value(invocation).pipe(

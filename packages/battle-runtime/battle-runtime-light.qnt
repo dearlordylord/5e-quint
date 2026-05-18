@@ -12,6 +12,7 @@ module battleRuntimeLight {
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
   import battleRuntimeHidden.* from "./battle-runtime-hidden"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
+  import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
 
   pure def lightEmittersWithoutExpiredEndOfTurnEmitters(
     emitters: Set[LightEmitter],
@@ -23,6 +24,7 @@ module battleRuntimeLight {
           | EndOfTurnLightEmitterExpiration(expiresAt) => expiresAt.actor != actor or expiresAt.round != round
           | ConcentrationLightEmitterExpiration(_) => true
           | DurationLightEmitterExpiration(_) => true
+          | UntilDispelledLightEmitterExpiration => true
         }
       | ObjectInvisibleRevealLightEmitter(data) => data.expiresAtActor != actor or data.expiresAtRound != round
     })
@@ -43,6 +45,7 @@ module battleRuntimeLight {
               emitter
           | EndOfTurnLightEmitterExpiration(_) => emitter
           | ConcentrationLightEmitterExpiration(_) => emitter
+          | UntilDispelledLightEmitterExpiration => emitter
         }
         | ObjectInvisibleRevealLightEmitter(_) => emitter
       })
@@ -52,6 +55,7 @@ module battleRuntimeLight {
             battleRuntimeTimedSpellEffectRemainsActive(expiresAt.durationTicks)
           | EndOfTurnLightEmitterExpiration(_) => true
           | ConcentrationLightEmitterExpiration(_) => true
+          | UntilDispelledLightEmitterExpiration => true
         }
         | ObjectInvisibleRevealLightEmitter(_) => true
       })
@@ -72,6 +76,10 @@ module battleRuntimeLight {
   pure def lightDimLightAdditionalFeet: int = 20
 
   pure def lightDurationTicks: int = 600
+
+  pure def continualFlameBrightLightRadiusFeet: int = 20
+
+  pure def continualFlameDimLightAdditionalFeet: int = 20
 
   pure def dancingLightsDimLightRadiusFeet: int = 10
 
@@ -208,6 +216,19 @@ module battleRuntimeLight {
       }),
       opaqueCoverInteraction: LightEmitterBlocksOpaqueCover,
       expiresAt: DurationLightEmitterExpiration({ durationTicks: lightDurationTicks }),
+    })
+
+  pure def continualFlameObjectEmitter(objectTarget: ObjectTarget): LightEmitter =
+    SpellLightEmitter({
+      source: Fighter,
+      sourceSpell: ContinualFlame,
+      attachment: ObjectLightEmitter({ object: objectTarget }),
+      emission: BrightAndDimLightEmission({
+        brightRadiusFeet: continualFlameBrightLightRadiusFeet,
+        dimAdditionalFeet: continualFlameDimLightAdditionalFeet,
+      }),
+      opaqueCoverInteraction: LightEmitterBlocksOpaqueCover,
+      expiresAt: UntilDispelledLightEmitterExpiration,
     })
 
   pure def lightEmitterAttachmentMatchesProjectionFact(
@@ -538,6 +559,27 @@ module battleRuntimeLight {
           .union(Set(lightObjectEmitter(objectTarget))),
         actionAvailable: false,
       }
+    } else {
+      state
+    }
+
+  pure def resolveContinualFlameObject(
+    state: BattleState,
+    objectTarget: ObjectTarget,
+  ): BattleState =
+    if (
+      currentActor(state) == Fighter and
+      state.actionAvailable and
+      canExpendSpellSlotThisTurn(state) and
+      not(state.fighter.unconscious) and
+      not(state.fighter.incapacitated) and
+      not(fighterHasRage(state))
+    ) {
+      commitActorSpellSlotUse({
+        ...state,
+        lightEmitters: state.lightEmitters.union(Set(continualFlameObjectEmitter(objectTarget))),
+        actionAvailable: false,
+      }, Fighter)
     } else {
       state
     }
