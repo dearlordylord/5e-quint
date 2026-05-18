@@ -75,6 +75,7 @@ import falseLifeInput from "../../content/false_life.json";
 import fireBoltInput from "../../content/fire_bolt.json";
 import fireballInput from "../../content/fireball.json";
 import findFamiliarInput from "../../content/find_familiar.json";
+import findTrapsInput from "../../content/find_traps.json";
 import fogCloudInput from "../../content/fog_cloud.json";
 import guidanceInput from "../../content/guidance.json";
 import greaseInput from "../../content/grease.json";
@@ -414,6 +415,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     fireBoltInput,
     fireballInput,
     findFamiliarInput,
+    findTrapsInput,
     fogCloudInput,
     guidanceInput,
     greaseInput,

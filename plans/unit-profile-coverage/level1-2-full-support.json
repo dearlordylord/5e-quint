@@ -1225,6 +1225,59 @@
       "unitId": "find_steed"
     },
     {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Trap presence, line of sight, non-location warning, and general-danger disclosure are exploration/detection facts supplied by the table rather than promoted battle runtime state.",
+      "sourceRecordPath": "packages/surface/content/find_traps.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Cleric spell list Find Traps",
+          "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_find_traps",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 188,
+            "lineStart": 188,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Druid spell list Find Traps",
+          "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_find_traps",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 235,
+            "lineStart": 235,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Ranger spell list Find Traps",
+          "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_find_traps",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 187,
+            "lineStart": 187,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
+        }
+      ],
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
+      "unitId": "find_traps"
+    },
+    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -3029,7 +3082,7 @@
       ]
     },
     {
-      "count": 11,
+      "count": 12,
       "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
@@ -3039,6 +3092,7 @@
         "detect_evil_and_good",
         "detect_magic",
         "detect_poison_and_disease",
+        "find_traps",
         "identify",
         "minor_illusion",
         "silent_image",
@@ -3097,25 +3151,25 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 475,
-      "percent": "85.4%",
+      "numerator": 478,
+      "percent": "86%",
       "rowsByStatus": {
         "accepted": 297,
-        "accepted-no-battle-effect": 178,
-        "battle-runtime-required": 71,
+        "accepted-no-battle-effect": 181,
+        "battle-runtime-required": 68,
         "owner-evidence-required": 4,
         "partial-battle-runtime": 6
       }
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 150,
+      "denominator": 151,
       "numerator": 90,
-      "percent": "60%"
+      "percent": "59.6%"
     },
     "strictTargetClosure": {
-      "denominator": 150,
-      "numerator": 119,
-      "percent": "79.3%"
+      "denominator": 151,
+      "numerator": 120,
+      "percent": "79.5%"
     }
   },
   "openFrontier": [
@@ -3610,48 +3664,6 @@
           }
         ],
         "unitId": "elementalism"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "spell Unit pressure",
-            "concept": "Cleric spell list Find Traps",
-            "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_find_traps",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 188,
-              "lineStart": 188,
-              "path": ".references/srd-5.2.1/Classes/Cleric.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Druid spell list Find Traps",
-            "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_find_traps",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 235,
-              "lineStart": 235,
-              "path": ".references/srd-5.2.1/Classes/Druid.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Ranger spell list Find Traps",
-            "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_find_traps",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 187,
-              "lineStart": 187,
-              "path": ".references/srd-5.2.1/Classes/Ranger.md"
-            }
-          }
-        ],
-        "unitId": "find_traps"
       },
       {
         "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
@@ -6444,18 +6456,18 @@
       "missing": 30,
       "profile-subset-supported": 10,
       "supported-profile": 90,
-      "unsupported-profile": 20
+      "unsupported-profile": 21
     },
     "groupsByStatus": {
       "blocked-follow-up-split": 10,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 6,
-      "closed-runtime-detached-table-adjudication": 11,
+      "closed-runtime-detached-table-adjudication": 12,
       "open-profile-accounting": 1,
       "open-runtime-behavior": 30,
       "supported-profile": 90
     },
-    "nonSupportedFrontier": 60,
-    "strictDenominator": 150
+    "nonSupportedFrontier": 61,
+    "strictDenominator": 151
   }
 }

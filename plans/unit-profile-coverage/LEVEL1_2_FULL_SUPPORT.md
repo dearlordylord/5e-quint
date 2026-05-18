@@ -8,9 +8,9 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 
 | Metric | Covered |
 | --- | ---: |
-| Strict runtime/profile support | 90/150 (60%) |
-| Strict target closure | 119/150 (79.3%) |
-| Product readiness | 475/556 (85.4%) |
+| Strict runtime/profile support | 90/151 (59.6%) |
+| Strict target closure | 120/151 (79.5%) |
+| Product readiness | 478/556 (86%) |
 
 ## Scope
 
@@ -18,10 +18,10 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | --- | ---: |
 | Candidate Unit ids before exclusions | 197 |
 | Companion-worktree exclusions | 1 |
-| SRD pressure with no Unit matrix row | 34 |
+| SRD pressure with no Unit matrix row | 33 |
 | Non-executable class containers | 12 |
-| Strict executable denominator | 150 |
-| Non-supported frontier | 60 |
+| Strict executable denominator | 151 |
+| Non-supported frontier | 61 |
 
 ## Status Groups
 
@@ -29,7 +29,7 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | --- | ---: | --- |
 | supported-profile | 90 | `acid_splash`, `animal_friendship`, `bane`, `barbarian_danger_sense`, `barbarian_rage`, `barbarian_reckless_attack`, `barbarian_unarmored_defense`, `bard_bardic_inspiration`, `bard_jack_of_all_trades`, `bless`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_channel_divinity`, `cleric_divine_order`, `color_spray`, `command`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `druid_primal_order`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feather_fall`, `fighter_action_surge`, `fighter_fighting_style`, `fighter_second_wind`, `fighter_tactical_mind`, `fire_bolt`, `fog_cloud`, `grease`, `guidance`, `guiding_bolt`, `healing_word`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hunters_mark`, `ice_knife`, `inflict_wounds`, `jump`, `light`, `longstrider`, `mage_armor`, `magic_missile`, `monk_martial_arts`, `monk_unarmored_defense`, `monk_unarmored_movement`, `paladin_lay_on_hands`, `paladin_paladins_smite`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `ranger_deft_explorer`, `ranger_weapon_mastery`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_cunning_action`, `rogue_expertise`, `rogue_sneak_attack`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `searing_smite`, `shield`, `shield_of_faith`, `shillelagh`, `shocking_grasp`, `sleep`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `starry_wisp`, `thunderwave`, `true_strike`, `vicious_mockery`, `warlock_eldritch_invocations`, `warlock_magical_cunning`, `wizard_arcane_recovery`, `wizard_ritual_adept`, `wizard_scholar` |
 | open-runtime-behavior | 30 | `aid`, `alter_self`, `arcane_lock`, `barkskin`, `blindness_deafness`, `blur`, `continual_flame`, `find_steed`, `flame_blade`, `gentle_repose`, `heat_metal`, `hold_person`, `invisibility`, `lesser_restoration`, `magic_weapon`, `mind_spike`, `misty_step`, `moonbeam`, `pass_without_trace`, `prayer_of_healing`, `protection_from_poison`, `ray_of_enfeeblement`, `scorching_ray`, `see_invisibility`, `shining_smite`, `spider_climb`, `spike_growth`, `spiritual_weapon`, `warding_bond`, `web` |
-| closed-runtime-detached-table-adjudication | 11 | `alarm`, `charm_person`, `comprehend_languages`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `identify`, `minor_illusion`, `silent_image`, `speak_with_animals`, `thaumaturgy` |
+| closed-runtime-detached-table-adjudication | 12 | `alarm`, `charm_person`, `comprehend_languages`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `find_traps`, `identify`, `minor_illusion`, `silent_image`, `speak_with_animals`, `thaumaturgy` |
 | blocked-follow-up-split | 10 | `acid_arrow`, `dragons_breath`, `druid_wild_shape`, `enhance_ability`, `enlarge_reduce`, `enthrall`, `monk_monks_focus`, `monk_uncanny_metabolism`, `sorcerer_font_of_magic`, `sorcerer_metamagic` |
 | closed-later-level-only | 6 | `barbarian_weapon_mastery`, `bard_expertise`, `fighter_weapon_mastery`, `paladin_fighting_style`, `ranger_favored_enemy`, `ranger_fighting_style` |
 | closed-character-fact-and-runtime-detached-split | 2 | `druid_druidic`, `rogue_thieves_cant` |
@@ -70,6 +70,7 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `enthrall` | blocked-follow-up-split | unsupported-profile | installed | follow-up-split | L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME: Promote Enthrall's battle-visible Perception subset: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, caller-supplied eligible creature target list after applying the fighting-caster-or-companions auto-success predicate at the table boundary, Wisdom save, failed-save active -10 modifier to Wisdom (Perception) Ability Checks, derived Passive Perception consequence from the same modifier, and cleanup when Concentration or duration ends. Owner: battle-runtime spell invocation/effect lifecycle plus promoted Quint parity. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for Enthrall's Perception penalty without modeling social attention state. |
 | `fighter_weapon_mastery` | closed-later-level-only | profile-subset-supported | installed | later-level-only | The remaining Fighter Weapon Mastery selected-weapon count increases occur only after level 1. |
 | `find_steed` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
+| `find_traps` | closed-runtime-detached-table-adjudication | unsupported-profile | installed | outside-runtime-presentation-exploration | Trap presence, line of sight, non-location warning, and general-danger disclosure are exploration/detection facts supplied by the table rather than promoted battle runtime state. |
 | `flame_blade` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
 | `gentle_repose` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
 | `heat_metal` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
@@ -148,7 +149,6 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `druid_wild_companion` | 1 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Druid Wild Companion |
 | `druidcraft` | 1 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/druidcraft.md` | Druid spell list Druidcraft |
 | `elementalism` | 3 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/elementalism.md` | Druid spell list Elementalism; Sorcerer spell list Elementalism; Wizard spell list Elementalism |
-| `find_traps` | 3 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Cleric spell list Find Traps; Druid spell list Find Traps; Ranger spell list Find Traps |
 | `flaming_sphere` | 3 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Druid spell list Flaming Sphere; Sorcerer spell list Flaming Sphere; Wizard spell list Flaming Sphere |
 | `floating_disk` | 1 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/floating_disk.md` | Wizard spell list Floating Disk |
 | `goodberry` | 2 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/goodberry.md` | Druid spell list Goodberry; Ranger spell list Goodberry |

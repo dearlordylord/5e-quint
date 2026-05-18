@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 378,
-      "numerator": 147,
-      "percent": "38.9%"
+      "denominator": 379,
+      "numerator": 148,
+      "percent": "39.1%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 450,
-      "numerator": 179,
-      "percent": "39.8%"
+      "denominator": 451,
+      "numerator": 180,
+      "percent": "39.9%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 180
+      "value": 181
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 113,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 180,
-      "numerator": 180,
+      "denominator": 181,
+      "numerator": 181,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -97,9 +97,9 @@
       "percent": "92%"
     },
     "supportedProfileCoverage": {
-      "denominator": 148,
+      "denominator": 149,
       "numerator": 113,
-      "percent": "76.4%"
+      "percent": "75.8%"
     }
   },
   "metricSemantics": [
@@ -10734,6 +10734,29 @@
       ],
       "sourceRecordPath": "packages/surface/content/find_familiar.json",
       "unitId": "find_familiar"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "exploration/detection owner",
+          "reason": "Trap presence, line of sight, non-location warning, and general-danger disclosure are exploration/detection facts supplied by the table rather than promoted battle runtime state."
+        },
+        "reason": "Find Traps is authored as an SRD Surface Spell Definition with Magic Action Spell Slot casting, 120-foot range, Instantaneous duration, and trap-sensing metadata. Task 63 claims no promoted battle-runtime profile because trap qualification, line of sight, trap presence disclosure, the explicit non-location warning, and the general nature of trap danger are exploration/table knowledge facts outside promoted battle Unit profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/find_traps.json",
+      "unitId": "find_traps"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

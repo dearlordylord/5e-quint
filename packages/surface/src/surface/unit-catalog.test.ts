@@ -129,6 +129,7 @@ const requiredFirstVerticalUnitIds = [
   "enhance_ability",
   "enlarge_reduce",
   "enthrall",
+  "find_traps",
   "expeditious_retreat",
   "feather_fall",
   "jump",
@@ -949,6 +950,49 @@ describe("SRD Unit catalog boundary", () => {
           onSuccess: { kind: "none" },
         },
       ]);
+    }
+  });
+
+  test("decodes Find Traps as instantaneous trap detection without a target save", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const findTraps = result.catalog.requireUnit("find_traps");
+      expect(findTraps.kind).toBe("spell");
+      if (findTraps.kind !== "spell") return;
+      expect(findTraps.mechanics.family).toBe("activation");
+      if (findTraps.mechanics.family !== "activation") return;
+
+      expect(findTraps.mechanics.level).toBe(2);
+      expect(findTraps.mechanics.castingTime).toEqual({
+        kind: "action",
+      });
+      expect(findTraps.mechanics.range).toEqual({
+        kind: "point",
+        feet: 120,
+      });
+      expect(findTraps.mechanics.duration).toEqual({
+        kind: "instantaneous",
+      });
+      expect(findTraps.mechanics.phases).toEqual([
+        {
+          kind: "direct",
+          attachment: {
+            kind: "self",
+          },
+          effects: [
+            {
+              kind: "detect",
+              property: "traps",
+              radiusFeet: 120,
+            },
+          ],
+        },
+      ]);
+      expect(findTraps.description).toContain(
+        "reveals that a trap is present but not its location",
+      );
     }
   });
 

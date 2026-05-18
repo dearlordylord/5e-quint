@@ -179,12 +179,12 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 475,
-      "percent": "85.4%",
+      "numerator": 478,
+      "percent": "86%",
       "rowsByStatus": {
         "accepted": 297,
-        "accepted-no-battle-effect": 178,
-        "battle-runtime-required": 71,
+        "accepted-no-battle-effect": 181,
+        "battle-runtime-required": 68,
         "partial-battle-runtime": 6,
         "owner-evidence-required": 4
       }
@@ -203,15 +203,15 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 308,
       "non-runtime": 24,
-      "catalog-only/dead-for-now": 149,
-      "missing-authored-record": 61,
+      "catalog-only/dead-for-now": 152,
+      "missing-authored-record": 58,
       "catalog-installed-owner-evidence-required": 11,
       "catalog-authored-executable-follow-up": 3
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 149,
-      "catalog-only/dead-for-now": 149,
-      "missing-authored-record": 60,
+      "catalog-only/dead-for-now": 152,
+      "missing-authored-record": 57,
       "catalog-installed-owner-evidence-required": 6,
       "catalog-authored-executable-follow-up": 3
     },
@@ -8574,19 +8574,39 @@
       "detail": "Find Traps (Divination; —)",
       "candidateUnitId": "find_traps",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "find_traps",
+        "sourceRecordPath": "packages/surface/content/find_traps.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "find_traps"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "exploration/detection owner",
+        "reason": "Trap presence, line of sight, non-location warning, and general-danger disclosure are exploration/detection facts supplied by the table rather than promoted battle runtime state."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit find_traps is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "exploration/detection owner",
+          "evidence": "Trap presence, line of sight, non-location warning, and general-danger disclosure are exploration/detection facts supplied by the table rather than promoted battle runtime state.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Trap presence, line of sight, non-location warning, and general-danger disclosure are exploration/detection facts supplied by the table rather than promoted battle runtime state.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_gentle_repose",
@@ -11112,19 +11132,39 @@
       "detail": "Find Traps (Divination; —)",
       "candidateUnitId": "find_traps",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "find_traps",
+        "sourceRecordPath": "packages/surface/content/find_traps.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "find_traps"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "exploration/detection owner",
+        "reason": "Trap presence, line of sight, non-location warning, and general-danger disclosure are exploration/detection facts supplied by the table rather than promoted battle runtime state."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit find_traps is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "exploration/detection owner",
+          "evidence": "Trap presence, line of sight, non-location warning, and general-danger disclosure are exploration/detection facts supplied by the table rather than promoted battle runtime state.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Trap presence, line of sight, non-location warning, and general-danger disclosure are exploration/detection facts supplied by the table rather than promoted battle runtime state.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_flame_blade",
@@ -16108,19 +16148,39 @@
       "detail": "Find Traps (Divination; —)",
       "candidateUnitId": "find_traps",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "find_traps",
+        "sourceRecordPath": "packages/surface/content/find_traps.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "find_traps"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "exploration/detection owner",
+        "reason": "Trap presence, line of sight, non-location warning, and general-danger disclosure are exploration/detection facts supplied by the table rather than promoted battle runtime state."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit find_traps is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "exploration/detection owner",
+          "evidence": "Trap presence, line of sight, non-location warning, and general-danger disclosure are exploration/detection facts supplied by the table rather than promoted battle runtime state.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Trap presence, line of sight, non-location warning, and general-danger disclosure are exploration/detection facts supplied by the table rather than promoted battle runtime state.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_gust_of_wind",

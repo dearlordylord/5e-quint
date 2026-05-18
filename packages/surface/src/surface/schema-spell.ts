@@ -59,6 +59,16 @@ export const SpellSchoolSchema = Schema.Literal(
   "transmutation",
 );
 
+const DETECTION_PROPERTIES = [
+  "magic",
+  "evil_and_good",
+  "poison_and_disease",
+  "thoughts",
+  "traps",
+] as const satisfies ReadonlyNonEmptyArray<string>;
+const DetectionPropertySchema = Schema.Literal(...DETECTION_PROPERTIES);
+type DetectionProperty = Schema.Schema.Type<typeof DetectionPropertySchema>;
+
 export const LinearPerLevelNumberSchema = Schema.Struct({
   kind: Schema.Literal("linear_per_level"),
   axis: LevelAxisSchema,
@@ -848,11 +858,7 @@ type EffectAtom =
     }
   | {
       readonly kind: "detect";
-      readonly property:
-        | "magic"
-        | "evil_and_good"
-        | "poison_and_disease"
-        | "thoughts";
+      readonly property: DetectionProperty;
       readonly radiusFeet: number;
     }
   | {
@@ -2512,12 +2518,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       }),
       Schema.Struct({
         kind: Schema.Literal("detect"),
-        property: Schema.Literal(
-          "magic",
-          "evil_and_good",
-          "poison_and_disease",
-          "thoughts",
-        ),
+        property: DetectionPropertySchema,
         radiusFeet: Schema.Number,
       }),
       Schema.Struct({
