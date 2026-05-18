@@ -31,7 +31,7 @@
     {
       "number": 63,
       "id": "L12G-MISSING-FIND-TRAPS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Find Traps Definition And Closure"
     },
     {
@@ -354,7 +354,7 @@ Acceptance:
 
 ### Task 63 - L12G-MISSING-FIND-TRAPS - Find Traps Definition And Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `find_traps`. Gate task: 65 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
