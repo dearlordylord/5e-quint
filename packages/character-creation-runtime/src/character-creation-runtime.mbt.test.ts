@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: parity-witness CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";

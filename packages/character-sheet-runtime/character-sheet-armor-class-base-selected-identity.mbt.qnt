@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE
 
 module characterSheetArmorClassBaseSelectedIdentityMbt {
   var qSourceUnitId: str

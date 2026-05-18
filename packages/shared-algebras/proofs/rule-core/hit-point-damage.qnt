@@ -1,5 +1,7 @@
 // -*- mode: Bluespec; -*-
 
+// KERNEL-COVERAGE: qnt-owner SHARED.HIT_POINTS.POSITIVE_DAMAGE
+
 module hitPointDamage {
   type CreatureKind = PlayerCharacter | MonsterCreature
 

@@ -73,3 +73,8 @@ Deferred homes:
 - mutable carried/equipped equipment belongs in a future equipment module,
   initialized from `CharacterBuild.equipment` once equipment-change workflows
   exist.
+
+Rules-kernel coverage for current sheet reducer semantics is tracked in
+`plans/rules-kernel-coverage/`. New sheet reducer behavior should add or extend
+a semantic obligation and connect QNT ownership to production TS through MBT or
+deterministic QNT replay.

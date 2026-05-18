@@ -328,6 +328,11 @@ duplicating authored-id checks.
 Focused QMBT lanes compare promoted rule-core Quint procedures with production
 runtime replay without widening into the full battle state space.
 
+Rules-kernel coverage for these lanes is tracked in
+`plans/rules-kernel-coverage/`. New reducer semantics should add or extend a
+semantic obligation there, then connect QNT ownership to production TS with a
+focused MBT or deterministic QNT replay witness.
+
 Placement:
 
 - battle-runtime-focused lanes live in this package when the stable production

@@ -277,6 +277,11 @@ When changing reducer behavior in this package, update the affected `src/*`
 runtime module, focused tests, `character-creation-runtime-slice.qnt`, and
 `character-creation-runtime.mbt.qnt` together.
 
+Rules-kernel coverage for current reducer semantics is tracked in
+`plans/rules-kernel-coverage/`. New character-creation reducer behavior should
+add or extend a semantic obligation and connect QNT ownership to production TS
+through MBT or deterministic QNT replay.
+
 ## Files And Verification
 
 - `src/index.ts` - public API barrel.

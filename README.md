@@ -72,6 +72,11 @@ the runtime packages.
 
 **QA pipeline** (`scripts/qa/`) — community Q&A turned into Quint test assertions by LLM. See [`scripts/qa/QA_README.md`](scripts/qa/QA_README.md).
 
+**Rules kernel coverage** (`plans/rules-kernel-coverage/`) — semantic
+obligation manifest for TS-current reducer behavior. New reducer semantics are
+QNT-first and must connect back to production runtime behavior through a focused
+MBT or deterministic QNT replay witness.
+
 ## Running It
 
 ```sh

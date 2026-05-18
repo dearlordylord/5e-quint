@@ -1,6 +1,7 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt armor-class-base-formula barbarian_unarmored_defense monk_unarmored_defense
 // UNIT-IDENTITY-MBT-REPLAY: armor-class-base-formula barbarian_unarmored_defense doSelectBarbarianUnarmoredDefense doSelectBarbarianUnarmoredDefenseWithShield
 // UNIT-IDENTITY-MBT-REPLAY: armor-class-base-formula monk_unarmored_defense doSelectMonkUnarmoredDefense
+// KERNEL-COVERAGE: parity-witness SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
