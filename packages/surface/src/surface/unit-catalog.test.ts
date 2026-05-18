@@ -127,6 +127,7 @@ const requiredFirstVerticalUnitIds = [
   "command",
   "dissonant_whispers",
   "enhance_ability",
+  "enlarge_reduce",
   "expeditious_retreat",
   "feather_fall",
   "jump",
@@ -893,6 +894,131 @@ describe("SRD Unit catalog boundary", () => {
               },
             },
           },
+        },
+      ]);
+    }
+  });
+
+  test("decodes Enlarge/Reduce as a creature-branch size and Strength-mode spell", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const enlargeReduce = result.catalog.requireUnit("enlarge_reduce");
+      expect(enlargeReduce.kind).toBe("spell");
+      if (enlargeReduce.kind !== "spell") return;
+      expect(enlargeReduce.mechanics.family).toBe("activation");
+      if (enlargeReduce.mechanics.family !== "activation") return;
+
+      expect(enlargeReduce.mechanics.level).toBe(2);
+      expect(enlargeReduce.mechanics.castingTime).toEqual({
+        kind: "action",
+      });
+      expect(enlargeReduce.mechanics.range).toEqual({
+        kind: "point",
+        feet: 30,
+      });
+      expect(enlargeReduce.mechanics.duration).toEqual({
+        kind: "concentration",
+        upTo: { unit: "minute", amount: 1 },
+      });
+
+      const phase = enlargeReduce.mechanics.phases[0];
+      expect(phase?.kind).toBe("save_gate");
+      if (phase?.kind !== "save_gate") return;
+      expect(phase.ability).toBe("con");
+      expect(phase.saveAppliesIf).toBe("unwilling_target");
+      expect(phase.attachment).toEqual({
+        kind: "hole",
+        holeId: "enlarge_reduce_target",
+        label: "creature target",
+        value: {
+          kind: "target",
+          selection: {
+            mode: "one",
+            targetKinds: ["creature"],
+          },
+        },
+      });
+      expect(phase.onSuccess).toEqual({ kind: "none" });
+
+      const modeChoice = phase.onFail;
+      expect(modeChoice.kind).toBe("choose_effect_mode");
+      if (modeChoice.kind !== "choose_effect_mode") return;
+      expect(modeChoice.label).toBe("Enlarge/Reduce effect");
+      expect(modeChoice.options).toEqual([
+        {
+          id: "enlarge",
+          displayName: "Enlarge",
+          effects: [
+            {
+              kind: "modify_size_category",
+              direction: "increase",
+              steps: 1,
+            },
+            {
+              kind: "modify_roll_advantage",
+              mode: "advantage",
+              on: ["ability_check"],
+              abilityFilter: ["str"],
+            },
+            {
+              kind: "modify_roll_advantage",
+              mode: "advantage",
+              on: ["saving_throw"],
+              saveAbilityFilter: ["str"],
+            },
+            {
+              kind: "modify_damage_numeric",
+              delta: {
+                kind: "fixed_dice",
+                dice: 1,
+                dieSize: 4,
+                sign: "+",
+              },
+              damageSourceFilter: {
+                kind: "attack_hit",
+                attackRollFilter: "weapon_or_unarmed_strike",
+              },
+            },
+          ],
+        },
+        {
+          id: "reduce",
+          displayName: "Reduce",
+          effects: [
+            {
+              kind: "modify_size_category",
+              direction: "decrease",
+              steps: 1,
+            },
+            {
+              kind: "modify_roll_advantage",
+              mode: "disadvantage",
+              on: ["ability_check"],
+              abilityFilter: ["str"],
+            },
+            {
+              kind: "modify_roll_advantage",
+              mode: "disadvantage",
+              on: ["saving_throw"],
+              saveAbilityFilter: ["str"],
+            },
+            {
+              kind: "modify_damage_numeric",
+              delta: {
+                kind: "fixed_dice",
+                dice: 1,
+                dieSize: 4,
+                sign: "-",
+              },
+              damageSourceFilter: {
+                kind: "attack_hit",
+                attackRollFilter: "weapon_or_unarmed_strike",
+              },
+              minimumDamageTotal: 1,
+            },
+          ],
         },
       ]);
     }

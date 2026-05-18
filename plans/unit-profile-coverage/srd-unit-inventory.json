@@ -204,14 +204,15 @@
       "catalog-installed-owner-evidence-present": 308,
       "non-runtime": 24,
       "catalog-only/dead-for-now": 149,
-      "missing-authored-record": 67,
-      "catalog-installed-owner-evidence-required": 5,
+      "missing-authored-record": 63,
+      "catalog-installed-owner-evidence-required": 9,
       "catalog-authored-executable-follow-up": 3
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 149,
       "catalog-only/dead-for-now": 149,
-      "missing-authored-record": 66,
+      "missing-authored-record": 62,
+      "catalog-installed-owner-evidence-required": 4,
       "catalog-authored-executable-follow-up": 3
     },
     "levelOneRowsByCategory": {
@@ -6294,15 +6295,29 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "enlarge_reduce",
+        "sourceRecordPath": "packages/surface/content/enlarge_reduce.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "enlarge_reduce"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit enlarge_reduce is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/effect lifecycle plus promoted Quint parity; surface target selection plus battle-runtime object and item lifecycle",
+          "evidence": "Promote follow-up split L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME, L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH: L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME owns Promote the Enlarge/Reduce creature branch: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, willing target application, unwilling target Constitution save gate, cast-time Enlarge/Reduce mode choice, active size-category projection used by size-dependent runtime rules, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage with normal cancellation, Enlarge +1d4 and Reduce -1d4 minimum 1 damage for attacks with affected weapons or Unarmed Strikes, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without object-target behavior.; L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH owns Represent and promote the object branch: a target object that is neither worn nor carried, object size-category change and cleanup, carried/worn item size changes while the creature branch is active, dropped item normalization, and thrown weapon/ammunition normalization immediately after hit or miss if those item lifecycle facts belong to promoted runtime. Required output: Surface schema/content support for the object target constraint, runtime object/item lifecycle owner decision, focused tests, and coverage disposition that either supports the object branch or closes it with an accepted runtime-boundary reason.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME, L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH: L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME owns Promote the Enlarge/Reduce creature branch: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, willing target application, unwilling target Constitution save gate, cast-time Enlarge/Reduce mode choice, active size-category projection used by size-dependent runtime rules, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage with normal cancellation, Enlarge +1d4 and Reduce -1d4 minimum 1 damage for attacks with affected weapons or Unarmed Strikes, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without object-target behavior.; L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH owns Represent and promote the object branch: a target object that is neither worn nor carried, object size-category change and cleanup, carried/worn item size changes while the creature branch is active, dropped item normalization, and thrown weapon/ammunition normalization immediately after hit or miss if those item lifecycle facts belong to promoted runtime. Required output: Surface schema/content support for the object target constraint, runtime object/item lifecycle owner decision, focused tests, and coverage disposition that either supports the object branch or closes it with an accepted runtime-boundary reason.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {
@@ -11043,15 +11058,29 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "enlarge_reduce",
+        "sourceRecordPath": "packages/surface/content/enlarge_reduce.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "enlarge_reduce"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit enlarge_reduce is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/effect lifecycle plus promoted Quint parity; surface target selection plus battle-runtime object and item lifecycle",
+          "evidence": "Promote follow-up split L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME, L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH: L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME owns Promote the Enlarge/Reduce creature branch: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, willing target application, unwilling target Constitution save gate, cast-time Enlarge/Reduce mode choice, active size-category projection used by size-dependent runtime rules, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage with normal cancellation, Enlarge +1d4 and Reduce -1d4 minimum 1 damage for attacks with affected weapons or Unarmed Strikes, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without object-target behavior.; L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH owns Represent and promote the object branch: a target object that is neither worn nor carried, object size-category change and cleanup, carried/worn item size changes while the creature branch is active, dropped item normalization, and thrown weapon/ammunition normalization immediately after hit or miss if those item lifecycle facts belong to promoted runtime. Required output: Surface schema/content support for the object target constraint, runtime object/item lifecycle owner decision, focused tests, and coverage disposition that either supports the object branch or closes it with an accepted runtime-boundary reason.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME, L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH: L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME owns Promote the Enlarge/Reduce creature branch: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, willing target application, unwilling target Constitution save gate, cast-time Enlarge/Reduce mode choice, active size-category projection used by size-dependent runtime rules, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage with normal cancellation, Enlarge +1d4 and Reduce -1d4 minimum 1 damage for attacks with affected weapons or Unarmed Strikes, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without object-target behavior.; L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH owns Represent and promote the object branch: a target object that is neither worn nor carried, object size-category change and cleanup, carried/worn item size changes while the creature branch is active, dropped item normalization, and thrown weapon/ammunition normalization immediately after hit or miss if those item lifecycle facts belong to promoted runtime. Required output: Surface schema/content support for the object target constraint, runtime object/item lifecycle owner decision, focused tests, and coverage disposition that either supports the object branch or closes it with an accepted runtime-boundary reason.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {
@@ -19622,15 +19651,29 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "enlarge_reduce",
+        "sourceRecordPath": "packages/surface/content/enlarge_reduce.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "enlarge_reduce"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit enlarge_reduce is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/effect lifecycle plus promoted Quint parity; surface target selection plus battle-runtime object and item lifecycle",
+          "evidence": "Promote follow-up split L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME, L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH: L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME owns Promote the Enlarge/Reduce creature branch: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, willing target application, unwilling target Constitution save gate, cast-time Enlarge/Reduce mode choice, active size-category projection used by size-dependent runtime rules, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage with normal cancellation, Enlarge +1d4 and Reduce -1d4 minimum 1 damage for attacks with affected weapons or Unarmed Strikes, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without object-target behavior.; L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH owns Represent and promote the object branch: a target object that is neither worn nor carried, object size-category change and cleanup, carried/worn item size changes while the creature branch is active, dropped item normalization, and thrown weapon/ammunition normalization immediately after hit or miss if those item lifecycle facts belong to promoted runtime. Required output: Surface schema/content support for the object target constraint, runtime object/item lifecycle owner decision, focused tests, and coverage disposition that either supports the object branch or closes it with an accepted runtime-boundary reason.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME, L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH: L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME owns Promote the Enlarge/Reduce creature branch: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, willing target application, unwilling target Constitution save gate, cast-time Enlarge/Reduce mode choice, active size-category projection used by size-dependent runtime rules, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage with normal cancellation, Enlarge +1d4 and Reduce -1d4 minimum 1 damage for attacks with affected weapons or Unarmed Strikes, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without object-target behavior.; L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH owns Represent and promote the object branch: a target object that is neither worn nor carried, object size-category change and cleanup, carried/worn item size changes while the creature branch is active, dropped item normalization, and thrown weapon/ammunition normalization immediately after hit or miss if those item lifecycle facts belong to promoted runtime. Required output: Surface schema/content support for the object target constraint, runtime object/item lifecycle owner decision, focused tests, and coverage disposition that either supports the object branch or closes it with an accepted runtime-boundary reason.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {
@@ -24787,15 +24830,29 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "enlarge_reduce",
+        "sourceRecordPath": "packages/surface/content/enlarge_reduce.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "enlarge_reduce"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit enlarge_reduce is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/effect lifecycle plus promoted Quint parity; surface target selection plus battle-runtime object and item lifecycle",
+          "evidence": "Promote follow-up split L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME, L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH: L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME owns Promote the Enlarge/Reduce creature branch: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, willing target application, unwilling target Constitution save gate, cast-time Enlarge/Reduce mode choice, active size-category projection used by size-dependent runtime rules, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage with normal cancellation, Enlarge +1d4 and Reduce -1d4 minimum 1 damage for attacks with affected weapons or Unarmed Strikes, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without object-target behavior.; L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH owns Represent and promote the object branch: a target object that is neither worn nor carried, object size-category change and cleanup, carried/worn item size changes while the creature branch is active, dropped item normalization, and thrown weapon/ammunition normalization immediately after hit or miss if those item lifecycle facts belong to promoted runtime. Required output: Surface schema/content support for the object target constraint, runtime object/item lifecycle owner decision, focused tests, and coverage disposition that either supports the object branch or closes it with an accepted runtime-boundary reason.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME, L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH: L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME owns Promote the Enlarge/Reduce creature branch: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, willing target application, unwilling target Constitution save gate, cast-time Enlarge/Reduce mode choice, active size-category projection used by size-dependent runtime rules, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage with normal cancellation, Enlarge +1d4 and Reduce -1d4 minimum 1 damage for attacks with affected weapons or Unarmed Strikes, and cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without object-target behavior.; L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH owns Represent and promote the object branch: a target object that is neither worn nor carried, object size-category change and cleanup, carried/worn item size changes while the creature branch is active, dropped item normalization, and thrown weapon/ammunition normalization immediately after hit or miss if those item lifecycle facts belong to promoted runtime. Required output: Surface schema/content support for the object target constraint, runtime object/item lifecycle owner decision, focused tests, and coverage disposition that either supports the object branch or closes it with an accepted runtime-boundary reason.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {

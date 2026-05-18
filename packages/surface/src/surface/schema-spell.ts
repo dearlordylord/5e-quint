@@ -241,6 +241,11 @@ export const AreaPushUnsecuredObjectsSchema = strictStruct({
   distanceFeet: PositiveIntegerSchema,
 });
 
+export const DamageSourceFilterSchema = strictStruct({
+  kind: Schema.Literal("attack_hit"),
+  attackRollFilter: Schema.Literal("weapon_or_unarmed_strike"),
+});
+
 export const ForceMovePushEffectSchema = strictStruct({
   kind: Schema.Literal("force_move"),
   movementKind: Schema.Literal("push"),
@@ -362,6 +367,7 @@ type AudibleEffect = Schema.Schema.Type<typeof AudibleEffectSchema>;
 type AreaPushUnsecuredObjects = Schema.Schema.Type<
   typeof AreaPushUnsecuredObjectsSchema
 >;
+type DamageSourceFilter = Schema.Schema.Type<typeof DamageSourceFilterSchema>;
 type AreaScopedEffectAtom = AreaPushUnsecuredObjects;
 type AreaDirectEffectAtom = EffectAtom | AreaScopedEffectAtom;
 type ShapeShiftRevertTrigger = Schema.Schema.Type<
@@ -603,8 +609,15 @@ type EffectAtom =
   | {
       readonly kind: "modify_damage_numeric";
       readonly delta: DiceDelta;
+      readonly damageSourceFilter?: DamageSourceFilter;
       readonly weaponFilter?: WeaponFilter;
       readonly abilityFilter?: ReadonlyNonEmptyArray<Ability>;
+      readonly minimumDamageTotal?: 1;
+    }
+  | {
+      readonly kind: "modify_size_category";
+      readonly direction: "increase" | "decrease";
+      readonly steps: 1;
     }
   | {
       readonly kind: "modify_crit_range";
@@ -2061,8 +2074,15 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       Schema.Struct({
         kind: Schema.Literal("modify_damage_numeric"),
         delta: DiceDeltaSchema,
+        damageSourceFilter: optionalExact(DamageSourceFilterSchema),
         weaponFilter: optionalExact(WeaponFilterSchema),
         abilityFilter: optionalExact(nonEmpty(AbilitySchema)),
+        minimumDamageTotal: optionalExact(Schema.Literal(1)),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("modify_size_category"),
+        direction: Schema.Literal("increase", "decrease"),
+        steps: Schema.Literal(1),
       }),
       Schema.Struct({
         kind: Schema.Literal("modify_crit_range"),

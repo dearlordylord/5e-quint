@@ -19,7 +19,7 @@
     {
       "number": 61,
       "id": "L12G-MISSING-ENLARGE-REDUCE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Enlarge Reduce Definition And Support"
     },
     {
@@ -123,12 +123,24 @@
       "id": "L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES",
       "status": "ready-for-research",
       "title": "Enhance Ability Upcast Per-Target Ability Choices"
+    },
+    {
+      "number": 93,
+      "id": "L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Enlarge Reduce Creature Runtime Support"
+    },
+    {
+      "number": 94,
+      "id": "L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH",
+      "status": "ready-for-research",
+      "title": "Enlarge Reduce Object Branch"
     }
   ]
 }
 -->
 
-This is the fourth level-2 execution lane split from Loop B tail work. Loop D owns Tasks 59-75 and Dragon's Breath follow-up Tasks 90-91 only.
+This is the fourth level-2 execution lane split from Loop B tail work. Loop D owns Tasks 59-75 plus follow-up Tasks 90-94 only.
 
 ## Worktree Safety Prefix
 
@@ -183,7 +195,7 @@ use the repository MBT scarcity protocol.
 
 ## Included Work
 
-Loop D contains 20 atomic tasks: the missing-definition/runtime-or-closure tail from Dragons Breath through Zone of Truth, plus the Dragon's Breath initial-cast and granted-action follow-up split and the Enhance Ability upcast per-target ability follow-up.
+Loop D contains 22 atomic tasks: the missing-definition/runtime-or-closure tail from Dragons Breath through Zone of Truth, plus the Dragon's Breath initial-cast and granted-action follow-up split, the Enhance Ability upcast per-target ability follow-up, and the Enlarge/Reduce creature-runtime and object-branch follow-up split.
 
 It excludes Loop A Tasks 22-36 and 88-89, Loop B Tasks 43-58, Loop C Tasks 37-42 and 76-87, all level-1 Loop D/L work, companion/familiar boundary work, and Counterspell work.
 
@@ -209,6 +221,8 @@ It excludes Loop A Tasks 22-36 and 88-89, Loop B Tasks 43-58, Loop C Tasks 37-42
 | 90 | 61 follow-up | `L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST` | `dragons_breath` |
 | 91 | 61 follow-up | `L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION` | `dragons_breath` |
 | 92 | 62 follow-up | `L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES` | `enhance_ability` |
+| 93 | 63 follow-up | `L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME` | `enlarge_reduce` |
+| 94 | 63 follow-up | `L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH` | `enlarge_reduce` |
 
 ## Follow-Up Dependencies
 
@@ -217,6 +231,8 @@ It excludes Loop A Tasks 22-36 and 88-89, Loop B Tasks 43-58, Loop C Tasks 37-42
 | `L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST` | `L12G-MISSING-DRAGONS-BREATH` | Runtime support should consume the authored SRD Surface spell definition rather than duplicating Dragon's Breath spell facts in battle-runtime code. |
 | `L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION` | `L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST` | Target-granted Magic action execution needs the initial cast to own Spell Slot spending, caster Concentration, target attachment, chosen damage type, caster spell save DC, and original slot level state. |
 | `L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES` | `L12G-MISSING-ENHANCE-ABILITY` | Slot-scaled Enhance Ability casting needs the authored spell definition and one-target chosen-ability runtime subset before widening the target-list fill protocol to carry independent ability choices per target. |
+| `L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME` | `L12G-MISSING-ENLARGE-REDUCE` | Creature-branch runtime support should consume the authored SRD Surface spell definition rather than duplicating Enlarge/Reduce spell facts in battle-runtime code. |
+| `L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH` | `L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME` | Object and item size lifecycle work needs the creature branch's active-effect representation before adding object-target behavior and worn/carried/dropped/thrown item normalization. |
 
 ## Task Details
 
@@ -276,7 +292,7 @@ Acceptance:
 
 ### Task 61 - L12G-MISSING-ENLARGE-REDUCE - Enlarge Reduce Definition And Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `enlarge_reduce`. Gate task: 63 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 
@@ -772,5 +788,70 @@ Acceptance:
 
 - the upcast per-target ability-choice portion of `enhance_ability` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
 - runtime behavior traces to SRD Enhance Ability without reintroducing 2014 Bear/Bull/Constitution effects absent from SRD 5.2.1;
+- no unrelated level-1 Loop D/L spell frontier work is implemented in this task;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.
+
+### Task 93 - L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME - Enlarge Reduce Creature Runtime Support
+
+Status: `ready-for-research`
+
+Unit: `enlarge_reduce`. Follow-up split from Task 61.
+
+Dependency: Task 61 (`L12G-MISSING-ENLARGE-REDUCE`) done.
+
+Inputs:
+
+- `packages/surface/content/enlarge_reduce.json`;
+- `packages/surface/content/enlarge_reduce.dhall`;
+- the `enlarge_reduce` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Spells/Descriptions-E-L.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- battle-runtime spell invocation/effect lifecycle, promoted Quint parity, Unit profile, owner evidence, and focused tests for Enlarge/Reduce creature targets.
+
+Outputs:
+
+- supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the Enlarge/Reduce creature branch without object-target behavior;
+- Magic Action and level-2+ Spell Slot spending, caster-owned Concentration, willing target application, unwilling target Constitution save gate, and cast-time Enlarge/Reduce mode choice consume the authored Surface spell definition rather than duplicating spell facts;
+- active creature effects project one-step size-category changes, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage with normal cancellation, Enlarge +1d4 and Reduce -1d4 minimum 1 damage for attacks with affected weapons or Unarmed Strikes, and cleanup when Concentration or duration ends.
+
+Acceptance:
+
+- the creature-branch portion of `enlarge_reduce` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- no object-target behavior, object size lifecycle, or worn/carried/dropped/thrown item normalization is implemented in this task;
+- runtime behavior traces to SRD Enlarge/Reduce without homebrew extensions and consumes the authored Spell Definition facts rather than duplicating spell mechanics in runtime code;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.
+
+### Task 94 - L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH - Enlarge Reduce Object Branch
+
+Status: `ready-for-research`
+
+Unit: `enlarge_reduce`. Follow-up split from Task 61.
+
+Dependency: Task 93 (`L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME`) done.
+
+Inputs:
+
+- `packages/surface/content/enlarge_reduce.json`;
+- `packages/surface/content/enlarge_reduce.dhall`;
+- the `enlarge_reduce` Unit claim follow-up split in `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/Spells/Descriptions-E-L.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- Task 93 creature-branch active-effect representation;
+- surface target selection plus battle-runtime object and item lifecycle owner evidence and focused tests.
+
+Outputs:
+
+- Surface schema/content support for the Enlarge/Reduce object target constraint, runtime object/item lifecycle owner decision, focused tests, and coverage disposition that either supports the object branch or closes it with an accepted runtime-boundary reason;
+- object-target behavior represents a target object that is neither worn nor carried, object size-category change and cleanup, and any promoted object lifecycle facts without weakening the creature-branch target type;
+- item lifecycle handling covers carried/worn item size changes while the creature branch is active, dropped item normalization, and thrown weapon/ammunition normalization immediately after hit or miss only if those lifecycle facts belong to promoted runtime.
+
+Acceptance:
+
+- the object-branch and item-lifecycle portion of `enlarge_reduce` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
+- runtime behavior traces to SRD Enlarge/Reduce without inventing object inventory, dropped-item, or thrown-item state outside accepted runtime owners;
 - no unrelated level-1 Loop D/L spell frontier work is implemented in this task;
 - focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, package-local promoted MBT if runtime behavior changes, and reviewer-loop convergence are complete.

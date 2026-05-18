@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 376,
-      "numerator": 145,
-      "percent": "38.6%"
+      "denominator": 377,
+      "numerator": 146,
+      "percent": "38.7%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 448,
-      "numerator": 177,
-      "percent": "39.5%"
+      "denominator": 449,
+      "numerator": 178,
+      "percent": "39.6%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 178
+      "value": 179
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 113,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 178,
-      "numerator": 178,
+      "denominator": 179,
+      "numerator": 179,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -97,9 +97,9 @@
       "percent": "92%"
     },
     "supportedProfileCoverage": {
-      "denominator": 146,
+      "denominator": 147,
       "numerator": 113,
-      "percent": "77.4%"
+      "percent": "76.9%"
     }
   },
   "metricSemantics": [
@@ -10006,6 +10006,41 @@
       ],
       "sourceRecordPath": "packages/surface/content/enhance_ability.json",
       "unitId": "enhance_ability"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME",
+            "mechanic": "Promote the Enlarge/Reduce creature branch: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration, willing target application, unwilling target Constitution save gate, cast-time Enlarge/Reduce mode choice, active size-category projection used by size-dependent runtime rules, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage with normal cancellation, Enlarge +1d4 and Reduce -1d4 minimum 1 damage for attacks with affected weapons or Unarmed Strikes, and cleanup when Concentration or duration ends.",
+            "owner": "battle-runtime spell invocation/effect lifecycle plus promoted Quint parity",
+            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without object-target behavior.",
+            "title": "Enlarge Reduce Creature Runtime Support"
+          },
+          {
+            "id": "L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH",
+            "mechanic": "Represent and promote the object branch: a target object that is neither worn nor carried, object size-category change and cleanup, carried/worn item size changes while the creature branch is active, dropped item normalization, and thrown weapon/ammunition normalization immediately after hit or miss if those item lifecycle facts belong to promoted runtime.",
+            "owner": "surface target selection plus battle-runtime object and item lifecycle",
+            "requiredOutput": "Surface schema/content support for the object target constraint, runtime object/item lifecycle owner decision, focused tests, and coverage disposition that either supports the object branch or closes it with an accepted runtime-boundary reason.",
+            "title": "Enlarge Reduce Object Branch"
+          }
+        ],
+        "futureProfileOwner": "surface object target widening plus battle-runtime spell invocation/effect lifecycle and promoted Quint parity",
+        "reason": "Enlarge/Reduce is authored as an SRD Surface Spell Definition for the creature branch, including Magic Action Spell Slot casting, Concentration up to 1 minute, Constitution save only for unwilling creature targets, an Enlarge/Reduce mode choice, one-step size category changes, Strength Ability Check and Strength Saving Throw Advantage/Disadvantage, and weapon-or-Unarmed-Strike attack-hit damage adjustment with the Reduce minimum-damage floor. Task 61 claims no promoted battle-runtime profile yet because runtime has no active size projection owner, no active Strength Saving Throw roll-mode projection from spell effects, no same-source weapon/Unarmed-Strike damage adjustment with subtract-and-floor semantics, and no object target or worn/carried item lifecycle owner.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/enlarge_reduce.json",
+      "unitId": "enlarge_reduce"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

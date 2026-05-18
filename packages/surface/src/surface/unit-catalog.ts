@@ -47,6 +47,7 @@ import druidPrimalOrderInput from "../../content/druid_primal_order.json";
 import druidWildShapeInput from "../../content/druid_wild_shape.json";
 import eldritchBlastInput from "../../content/eldritch_blast.json";
 import enhanceAbilityInput from "../../content/enhance_ability.json";
+import enlargeReduceInput from "../../content/enlarge_reduce.json";
 import ensnaringStrikeInput from "../../content/ensnaring_strike.json";
 import entangleInput from "../../content/entangle.json";
 import expeditiousRetreatInput from "../../content/expeditious_retreat.json";
@@ -401,6 +402,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     divineFavorInput,
     divineSmiteInput,
     enhanceAbilityInput,
+    enlargeReduceInput,
     ensnaringStrikeInput,
     entangleInput,
     expeditiousRetreatInput,
