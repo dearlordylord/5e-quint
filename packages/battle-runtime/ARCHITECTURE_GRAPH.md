@@ -35,6 +35,10 @@ QNT modules, such as `battle-runtime-find-familiar.qnt`,
 `battle-runtime-fighter-ongoing-features.qnt`, and
 `battle-runtime-timed-effects.qnt`, when the split follows SRD language and
 avoids duplicate state names or compatibility-wrapper churn.
+Package-local `battle-runtime-*-tests.qnt` files group QNT self-tests by domain
+so test context can be loaded without the full canonical integration spec body;
+`battle-runtime-self-tests.qnt` imports those modules for the Vitest self-test
+lane in one Quint invocation.
 
 The promoted MBT strategy is selective. MBT proves reducer facts after Surface
 decode/projection; it must not enumerate all Surface-authored content multiplied

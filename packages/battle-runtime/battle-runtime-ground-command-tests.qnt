@@ -1,0 +1,369 @@
+// -*- mode: Bluespec; -*-
+
+module battleRuntimeGroundCommandTests {
+  import battleRuntime.* from "./battle-runtime"
+  import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
+  import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
+  import hitPointRecovery.* from "../shared-algebras/proofs/rule-core/hit-point-recovery"
+  import zeroHitPointLifecycle.* from "../shared-algebras/proofs/rule-core/zero-hit-point-lifecycle"
+  import battleRuntimeMovementBridge.* from "./battle-runtime-movement-bridge"
+  import battleRuntimeInterruptBridge.* from "./battle-runtime-interrupt-bridge"
+  import battleRuntimeStatBlockBridge.* from "./battle-runtime-stat-block-bridge"
+  import battleRuntimeFeatureBridge.* from "./battle-runtime-feature-bridge"
+  import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"
+  import battleRuntimeModel.* from "./battle-runtime-model"
+  import battleRuntimeFindFamiliar.* from "./battle-runtime-find-familiar"
+  import battleRuntimeLight.* from "./battle-runtime-light"
+  import battleRuntimeCreatureTypeProtection.* from "./battle-runtime-creature-type-protection"
+  import battleRuntimeArmorClass.* from "./battle-runtime-armor-class"
+  import battleRuntimeThaumaturgy.* from "./battle-runtime-thaumaturgy"
+  import battleRuntimeBardicInspiration.* from "./battle-runtime-bardic-inspiration"
+  import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
+  import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
+  import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
+  import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
+  import battleRuntimeSpellAttack.* from "./battle-runtime-spell-attack"
+  import battleRuntimeChainedSpellAttack.* from "./battle-runtime-chained-spell-attack"
+  import battleRuntimeSaveGatedSpell.* from "./battle-runtime-save-gated-spell"
+  import battleRuntimeMarkedRiders.* from "./battle-runtime-marked-riders"
+  import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
+  import battleRuntimeCombatantSide.* from "./battle-runtime-combatant-side"
+  import battleRuntimeConcentration.* from "./battle-runtime-concentration"
+  import battleRuntimeActorCombatants.* from "./battle-runtime-actor-combatants"
+  import battleRuntimeSanctuary.* from "./battle-runtime-sanctuary"
+  import battleRuntimeFeatherFall.* from "./battle-runtime-feather-fall"
+  import battleRuntimeJumpMovement.* from "./battle-runtime-jump-movement"
+  import battleRuntimeWeaponHitSpellRiders.* from "./battle-runtime-weapon-hit-spell-riders"
+  import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
+  import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
+
+  run test_grease_records_ground_hazard_and_prones_failed_appearance_save = {
+    val resolved = resolveGrease(initialState, true, false)
+    all {
+      assert(resolved.fighter.activeEffects.contains(GreaseGroundHazard({ areaId: greaseAreaId, durationTicks: greaseDurationTicks }))),
+      assert(resolved.goblin.prone),
+      assert(not(resolved.actionAvailable)),
+      assert(battleActorHasCommittedSpellSlotUse(resolved, Fighter)),
+    }
+  }
+
+  run test_grease_empty_area_records_hazard_without_target_membership_state = {
+    val resolved = resolveGrease(initialState, false, true)
+    all {
+      assert(resolved.fighter.activeEffects.contains(GreaseGroundHazard({ areaId: greaseAreaId, durationTicks: greaseDurationTicks }))),
+      assert(not(resolved.goblin.prone)),
+    }
+  }
+
+  run test_grease_ground_hazard_entry_save_applies_prone = {
+    val resolved = resolveGrease(initialState, false, true)
+    val entryFailed = resolveGreaseGroundHazardSave(resolved, Goblin, greaseAreaId, false)
+    all {
+      assert(entryFailed.goblin.prone),
+      assert(currentActor(entryFailed) == Fighter),
+    }
+  }
+
+  run test_grease_difficult_terrain_movement_cost_adds_extra_grease_distance = {
+    val resolved = resolveGrease(initialState, false, true)
+    val moved = moveFighterThroughGreaseGroundDifficultTerrain(resolved, greaseAreaId, 10, 5, false)
+    val expired = { ...resolved, fighter: { ...resolved.fighter, activeEffects: Set() } }
+    all {
+      assert(greaseGroundDifficultTerrainMovementCost(resolved, greaseAreaId, 10, 5) == 15),
+      assert(moved.fighter.movementSpent == 15),
+      assert(greaseGroundDifficultTerrainMovementCost(expired, greaseAreaId, 10, 5) == 0),
+    }
+  }
+
+  run test_grease_ground_hazard_end_turn_save_advances_turn = {
+    val resolved = resolveGrease(initialState, false, true)
+    val goblinTurn = endTurn(resolved)
+    val endTurnFailed = endTurnWithGreaseGroundHazardSave(goblinTurn, Goblin, greaseAreaId, false)
+    all {
+      assert(endTurnFailed.goblin.prone),
+      assert(currentActor(endTurnFailed) == Fighter),
+    }
+  }
+
+  run test_fog_cloud_records_heavily_obscured_area_and_concentration = {
+    val resolved = resolveFogCloud(initialState, fogCloudAreaId, 1)
+    all {
+      assert(resolved.fighter.activeEffects.contains(FogCloudObscurement({
+        areaId: fogCloudAreaId,
+        radiusFeet: 20,
+        durationTicks: fogCloudDurationTicks,
+      }))),
+      assert(resolved.fighter.concentrating),
+      assert(not(resolved.actionAvailable)),
+      assert(battleActorHasCommittedSpellSlotUse(resolved, Fighter)),
+    }
+  }
+
+  run test_fog_cloud_slot_scaling_increases_radius_by_twenty_feet = {
+    val resolved = resolveFogCloud(initialState, fogCloudAreaId, 3)
+    all {
+      assert(fogCloudRadiusFeet(1) == 20),
+      assert(fogCloudRadiusFeet(3) == 60),
+      assert(resolved.fighter.activeEffects.contains(FogCloudObscurement({
+        areaId: fogCloudAreaId,
+        radiusFeet: 60,
+        durationTicks: fogCloudDurationTicks,
+      }))),
+    }
+  }
+
+  run test_fog_cloud_concentration_break_removes_obscurement = {
+    val resolved = resolveFogCloud(initialState, fogCloudAreaId, 1)
+    val broken = breakConcentrationSpellEffects(resolved, Fighter)
+    all {
+      assert(not(fogCloudObscurementActive(broken, fogCloudAreaId))),
+      assert(not(broken.fighter.concentrating)),
+    }
+  }
+
+  run test_fog_cloud_strong_wind_dispersal_removes_obscurement = {
+    val resolved = resolveFogCloud(initialState, fogCloudAreaId, 1)
+    val dispersed = disperseFogCloudByStrongWind(resolved, fogCloudAreaId)
+    all {
+      assert(not(fogCloudObscurementActive(dispersed, fogCloudAreaId))),
+      assert(not(dispersed.fighter.concentrating)),
+    }
+  }
+
+  run test_command_grovel_records_next_turn_pending_effect_on_failed_save = {
+    val resolved = resolveCommand(initialState, Set(Goblin), Set(Goblin), 1, CommandGrovelOption)
+    all {
+      assert(battleActorHasCommittedSpellSlotUse(resolved, Fighter)),
+      assert(not(resolved.actionAvailable)),
+      assert(resolved.goblin.activeEffects.contains(CommandPending({
+        source: Fighter,
+        option: CommandGrovelOption,
+        expiresAtActor: Goblin,
+        expiresAtRound: 1,
+      }))),
+      assert(not(resolved.goblin.prone)),
+    }
+  }
+
+  run test_command_grovel_target_turn_applies_prone_and_ends_turn = {
+    val resolved = resolveCommand(initialState, Set(Goblin), Set(Goblin), 1, CommandGrovelOption)
+    val goblinTurn = endTurn(resolved)
+    val followed = followCommandGrovel(goblinTurn)
+    all {
+      assert(followed.goblin.prone),
+      assert(currentActor(followed) == Fighter),
+      assert(not(followed.goblin.activeEffects.contains(CommandPending({
+        source: Fighter,
+        option: CommandGrovelOption,
+        expiresAtActor: Goblin,
+        expiresAtRound: 1,
+      })))),
+    }
+  }
+
+  run test_command_halt_target_turn_suppresses_action_bonus_action_and_movement = {
+    val resolved = resolveCommand(initialState, Set(Goblin), Set(Goblin), 1, CommandHaltOption)
+    val goblinTurn = endTurn(resolved)
+    val halted = followCommandHalt(goblinTurn)
+    val ended = endCommandHaltTurn(halted)
+    all {
+      assert(resolved.goblin.activeEffects.contains(CommandPending({
+        source: Fighter,
+        option: CommandHaltOption,
+        expiresAtActor: Goblin,
+        expiresAtRound: 1,
+      }))),
+      assert(not(halted.actionAvailable)),
+      assert(not(halted.bonusActionAvailable)),
+      assert(halted.goblin.movementSpent == halted.goblin.speed),
+      assert(not(ended.goblin.activeEffects.contains(CommandPending({
+        source: Fighter,
+        option: CommandHaltOption,
+        expiresAtActor: Goblin,
+        expiresAtRound: 1,
+      })))),
+    }
+  }
+
+  run test_command_drop_target_turn_emits_held_object_outcomes_and_ends_turn = {
+    val resolved = resolveCommand(initialState, Set(Goblin), Set(Goblin), 1, CommandDropOption)
+    val goblinTurn = endTurn(resolved)
+    val followed = followCommandDrop(goblinTurn, 2)
+    all {
+      assert(commandDropOutcomeCount(goblinTurn, 2) == 2),
+      assert(currentActor(followed) == Fighter),
+      assert(not(followed.goblin.activeEffects.contains(CommandPending({
+        source: Fighter,
+        option: CommandDropOption,
+        expiresAtActor: Goblin,
+        expiresAtRound: 1,
+      })))),
+    }
+  }
+
+  run test_command_drop_known_empty_held_objects_still_ends_turn = {
+    val resolved = resolveCommand(initialState, Set(Goblin), Set(Goblin), 1, CommandDropOption)
+    val goblinTurn = endTurn(resolved)
+    val followed = followCommandDrop(goblinTurn, 0)
+    all {
+      assert(commandDropOutcomeCount(goblinTurn, 0) == 0),
+      assert(currentActor(followed) == Fighter),
+    }
+  }
+
+  run test_command_approach_spends_supplied_movement_and_continues_when_not_within_five_feet = {
+    val resolved = resolveCommand(initialState, Set(Goblin), Set(Goblin), 1, CommandApproachOption)
+    val goblinTurn = endTurn(resolved)
+    val followed = followCommandApproach(goblinTurn, WalkSpeedKind, 10, false)
+    all {
+      assert(currentActor(followed) == Goblin),
+      assert(followed.goblin.movementSpent == 10),
+      assert(not(followed.goblin.activeEffects.contains(CommandPending({
+        source: Fighter,
+        option: CommandApproachOption,
+        expiresAtActor: Goblin,
+        expiresAtRound: 1,
+      })))),
+    }
+  }
+
+  run test_command_approach_ends_turn_when_supplied_proximity_reached = {
+    val resolved = resolveCommand(initialState, Set(Goblin), Set(Goblin), 1, CommandApproachOption)
+    val goblinTurn = endTurn(resolved)
+    val followed = followCommandApproach(goblinTurn, WalkSpeedKind, 10, true)
+    all {
+      assert(currentActor(followed) == Fighter),
+      assert(followed.goblin.movementSpent == 10),
+      assert(not(followed.goblin.activeEffects.contains(CommandPending({
+        source: Fighter,
+        option: CommandApproachOption,
+        expiresAtActor: Goblin,
+        expiresAtRound: 1,
+      })))),
+    }
+  }
+
+  run test_command_approach_no_movement_clears_pending_and_continues_turn = {
+    val resolved = resolveCommand(initialState, Set(Goblin), Set(Goblin), 1, CommandApproachOption)
+    val goblinTurn = endTurn(resolved)
+    val immobile = { ...goblinTurn, goblin: { ...goblinTurn.goblin, speed: 0 } }
+    val followed = followCommandApproach(immobile, WalkSpeedKind, 10, false)
+    all {
+      assert(currentActor(followed) == Goblin),
+      assert(followed.goblin.movementSpent == 0),
+      assert(not(followed.goblin.activeEffects.contains(CommandPending({
+        source: Fighter,
+        option: CommandApproachOption,
+        expiresAtActor: Goblin,
+        expiresAtRound: 1,
+      })))),
+    }
+  }
+
+  run test_command_flee_spends_full_supplied_movement_and_ends_turn = {
+    val resolved = resolveCommand(initialState, Set(Goblin), Set(Goblin), 1, CommandFleeOption)
+    val goblinTurn = endTurn(resolved)
+    val followed = followCommandFlee(goblinTurn, WalkSpeedKind, 30, false)
+    all {
+      assert(currentActor(followed) == Fighter),
+      assert(followed.goblin.movementSpent == 30),
+      assert(not(followed.goblin.activeEffects.contains(CommandPending({
+        source: Fighter,
+        option: CommandFleeOption,
+        expiresAtActor: Goblin,
+        expiresAtRound: 1,
+      })))),
+    }
+  }
+
+  run test_command_flee_rejects_partial_movement_budget = {
+    val resolved = resolveCommand(initialState, Set(Goblin), Set(Goblin), 1, CommandFleeOption)
+    val goblinTurn = endTurn(resolved)
+    val followed = followCommandFlee(goblinTurn, WalkSpeedKind, 10, false)
+    all {
+      assert(currentActor(followed) == Goblin),
+      assert(followed.goblin.movementSpent == 0),
+      assert(followed.goblin.activeEffects.contains(CommandPending({
+        source: Fighter,
+        option: CommandFleeOption,
+        expiresAtActor: Goblin,
+        expiresAtRound: 1,
+      }))),
+    }
+  }
+
+  run test_command_flee_no_movement_clears_pending_and_ends_turn = {
+    val resolved = resolveCommand(initialState, Set(Goblin), Set(Goblin), 1, CommandFleeOption)
+    val goblinTurn = endTurn(resolved)
+    val immobile = { ...goblinTurn, goblin: { ...goblinTurn.goblin, speed: 0 } }
+    val followed = followCommandFlee(immobile, WalkSpeedKind, 30, false)
+    all {
+      assert(currentActor(followed) == Fighter),
+      assert(followed.goblin.movementSpent == 0),
+      assert(not(followed.goblin.activeEffects.contains(CommandPending({
+        source: Fighter,
+        option: CommandFleeOption,
+        expiresAtActor: Goblin,
+        expiresAtRound: 1,
+      })))),
+    }
+  }
+
+  run test_command_flee_movement_threat_opens_opportunity_attack_window = {
+    val resolved = resolveCommand(initialState, Set(Goblin), Set(Goblin), 1, CommandFleeOption)
+    val goblinTurn = endTurn(resolved)
+    val followed = followCommandFlee(goblinTurn, WalkSpeedKind, 30, true)
+    all {
+      assert(currentActor(followed) == Goblin),
+      assert(followed.interruptStack.length() == 1),
+      assert(pendingReactionFrame(followed.interruptStack[0]) == HasPendingReactionFrame({
+        trigger: OpportunityAttack,
+        procedure: OpportunityAttackReactionProcedure,
+        eligibleReactors: Set(Fighter),
+        offeredReactors: Set(),
+        continuation: ResumeCommandFleeMovement({
+          speedKind: WalkSpeedKind,
+          movementCost: 30,
+        }),
+      })),
+    }
+  }
+
+  run test_direct_hit_point_restoration_spends_action_cost_slot_and_heals = {
+    val wounded = { ...initialState, fighter: { ...initialState.fighter, hp: 4 } }
+    val cure = resolveDirectHitPointRestoration(wounded, CureWoundsRestoration, 1, 7, 3)
+    val massWord = resolveDirectHitPointRestoration(wounded, MassHealingWordRestoration, 6, 7, 3)
+    all {
+      assert(cure.fighter.hp == 12),
+      assert(not(cure.actionAvailable)),
+      assert(cure.bonusActionAvailable),
+      assert(battleActorHasCommittedSpellSlotUse(cure, Fighter)),
+      assert(massWord.fighter.hp == 12),
+      assert(massWord.actionAvailable),
+      assert(not(massWord.bonusActionAvailable)),
+      assert(battleActorHasCommittedSpellSlotUse(massWord, Fighter)),
+    }
+  }
+
+  run test_direct_hit_point_restoration_rejects_second_slot_spell_in_same_turn = {
+    val wounded = commitActorSpellSlotUse({ ...initialState, fighter: { ...initialState.fighter, hp: 4 } }, Fighter)
+    assert(resolveDirectHitPointRestoration(wounded, CureWoundsRestoration, 1, 7, 3) == wounded)
+  }
+
+  run test_mass_healing_word_rejects_adjacent_invalid_target_counts = {
+    val wounded = { ...initialState, fighter: { ...initialState.fighter, hp: 4 } }
+    all {
+      assert(resolveDirectHitPointRestoration(wounded, MassHealingWordRestoration, 0, 7, 3) == wounded),
+      assert(resolveDirectHitPointRestoration(wounded, MassHealingWordRestoration, 7, 7, 3) == wounded),
+    }
+  }
+
+  run test_spell_act_discovery_respects_spellcasting_gate = {
+    all {
+      assert(canDiscoverSpellActs(true, false)),
+      assert(not(canDiscoverSpellActs(false, false))),
+      assert(not(canDiscoverSpellActs(true, true))),
+    }
+  }
+
+}
