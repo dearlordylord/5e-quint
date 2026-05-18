@@ -1220,6 +1220,8 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
   for reducer procedures that update a selected creature in `BattleState`.
 - `battle-runtime-sanctuary.qnt` - Sanctuary ward active-effect lifecycle and
   targeting-interdiction outcome helpers.
+- `battle-runtime-feather-fall.qnt` - Feather Fall reaction admission,
+  mitigation active-effect projection, and landing cleanup outcomes.
 - `battle-runtime.mbt.qnt` - package-local randomized model for the selected
   integrated promoted MBT path.
 
