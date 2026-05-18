@@ -4,6 +4,7 @@ import {
   formatTimeSpanDuration,
   timeSpanDuration,
 } from "@dnd/shared/elapsed-time";
+import { Match } from "effect";
 import * as Either from "effect/Either";
 
 import type {
@@ -426,6 +427,10 @@ export type SurfaceChoiceCount =
       { readonly family: "feature_choice" }
     >["choiceCount"]
   | Extract<EffectAtom, { readonly kind: "grant_expertise" }>["choiceCount"];
+type ExpertiseSkillSource = Extract<
+  EffectAtom,
+  { readonly kind: "grant_expertise" }
+>["skills"];
 
 export function describeClassLevelChoiceCount(
   choiceCount: SurfaceChoiceCount,
@@ -447,6 +452,24 @@ export function describeClassLevelChoiceCount(
       return _exhaustive;
     }
   }
+}
+
+export function describeExpertiseSkillSource(
+  skills: ExpertiseSkillSource,
+): string {
+  return Match.value(skills).pipe(
+    Match.when(
+      { kind: "owned_skill_proficiencies_without_expertise" },
+      () => "owned skill proficiencies without Expertise",
+    ),
+    Match.when(
+      { kind: "listed_owned_skill_proficiencies_without_expertise" },
+      (listed) =>
+        "listed owned skill proficiencies without Expertise: " +
+        listed.skills.join(", "),
+    ),
+    Match.exhaustive,
+  );
 }
 
 export function describeContainerStorage(

@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "L12G-CLASS-WIZARD-SCHOLAR",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Wizard Scholar Constrained Expertise"
     },
     {
@@ -845,7 +845,7 @@ Acceptance:
 
 ### Task 9 - L12G-CLASS-WIZARD-SCHOLAR - Wizard Scholar Constrained Expertise
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `wizard_scholar`. Gate task: 9 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
 

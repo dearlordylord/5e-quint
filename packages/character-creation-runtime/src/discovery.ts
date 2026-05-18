@@ -126,6 +126,16 @@ import {
   weaponMasteryChoiceProfileForFeature,
   type WeaponMasteryChoiceFeature,
 } from "./weapon-mastery.ts";
+import { wizardSpellcastingCreationAtLevel } from "./wizard-spellcasting.ts";
+
+type GrantExpertiseEffect = Extract<
+  EffectAtom,
+  { readonly kind: "grant_expertise" }
+>;
+type GrantExpertiseSkillSource = Extract<
+  EffectAtom,
+  { readonly kind: "grant_expertise" }
+>["skills"];
 
 const SRD_GAMING_SET_OPTIONS = [
   {
@@ -378,6 +388,9 @@ function classSpellcastingCreation(
   }
   if (facts.spellcasting.featureLevel > classLevel) {
     return undefined;
+  }
+  if (isWizardSpellcastingCreation(facts.spellcasting)) {
+    return wizardSpellcastingCreationAtLevel(facts.spellcasting, classLevel);
   }
 
   return facts.spellcasting;
@@ -1208,6 +1221,11 @@ export function discoverClassFeatureGrantHoles(
 ): readonly CreationHole[] {
   return classFeatureGrantChoiceHoles(featureUnitId, unitLibrary, {
     classLevel,
+    ownedSkillExpertise: draftOwnedSkillExpertise(
+      draft,
+      featureUnitId,
+      unitLibrary,
+    ),
     ownedSkillProficiencies: draftOwnedSkillProficiencies(draft, unitLibrary),
     knownLanguages: draftKnownLanguages(draft, featureUnitId, unitLibrary),
   }).flatMap((hole) => unselectedUnitChoiceHole(draft, hole));
@@ -1218,6 +1236,7 @@ export function classFeatureGrantChoiceHoles(
   unitLibrary: UnitCatalog,
   input: {
     readonly classLevel?: number;
+    readonly ownedSkillExpertise?: readonly Skill[];
     readonly ownedSkillProficiencies?: readonly Skill[];
     readonly knownLanguages?: readonly Language[];
   } = {},
@@ -1312,6 +1331,7 @@ function passiveGrantChoiceHoles(
   unitLibrary: UnitCatalog,
   input: {
     readonly classLevel?: number;
+    readonly ownedSkillExpertise?: readonly Skill[];
     readonly ownedSkillProficiencies?: readonly Skill[];
     readonly knownLanguages?: readonly Language[];
   },
@@ -1327,7 +1347,9 @@ function passiveGrantChoiceHoles(
     return expertiseGrantChoiceHole(
       featureUnitId,
       classLevelChoiceCountAtLevel(grant.choiceCount, input.classLevel ?? 1),
+      grant.skills,
       input.ownedSkillProficiencies ?? [],
+      input.ownedSkillExpertise ?? [],
     );
   }
   if (grant.kind === "grant_language_choice") {
@@ -1495,9 +1517,15 @@ function selectedClassFeatureLanguageChoices(
 function expertiseGrantChoiceHole(
   sourceUnitId: UnitRecord["id"],
   count: number,
+  skills: GrantExpertiseSkillSource,
   ownedSkillProficiencies: readonly Skill[],
+  ownedSkillExpertise: readonly Skill[],
 ): readonly ChoiceCreationHole[] {
-  const options = uniqueSkills(ownedSkillProficiencies).map(skillOption);
+  const options = eligibleExpertiseSkills(
+    skills,
+    ownedSkillProficiencies,
+    ownedSkillExpertise,
+  ).map(skillOption);
   const cardinality = exactChoiceCardinality(count);
   if (
     cardinality === undefined ||
@@ -1516,6 +1544,99 @@ function expertiseGrantChoiceHole(
   return hole === undefined ? [] : [hole];
 }
 
+export function eligibleExpertiseSkills(
+  skills: GrantExpertiseSkillSource,
+  ownedSkillProficiencies: readonly Skill[],
+  ownedSkillExpertise: readonly Skill[] = [],
+): readonly Skill[] {
+  const uniqueOwnedExpertise = uniqueSkills(ownedSkillExpertise);
+  const uniqueOwnedSkills = uniqueSkills(ownedSkillProficiencies).filter(
+    (skill) => !uniqueOwnedExpertise.includes(skill),
+  );
+  return Match.value(skills).pipe(
+    Match.when({ kind: "owned_skill_proficiencies_without_expertise" }, () =>
+      uniqueOwnedSkills,
+    ),
+    Match.when(
+      { kind: "listed_owned_skill_proficiencies_without_expertise" },
+      (listed) =>
+        uniqueOwnedSkills.filter((skill) => listed.skills.includes(skill)),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function draftOwnedSkillExpertise(
+  draft: CharacterDraft,
+  expertiseChoiceSourceUnitId: UnitRecord["id"],
+  unitLibrary: UnitCatalog,
+): readonly Skill[] {
+  return skillExpertiseFromChoiceSelections(
+    draft.selections.choices,
+    unitLibrary,
+    (selection) =>
+      selection.kind === "unitChoice" &&
+      selection.source.unitId === expertiseChoiceSourceUnitId &&
+      selection.source.choiceKey === CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
+  );
+}
+
+export function skillExpertiseFromChoiceSelections(
+  choices: readonly CharacterChoiceSelection[],
+  unitLibrary: UnitCatalog,
+  shouldIgnoreSelection: (
+    selection: CharacterChoiceSelection,
+  ) => boolean = () => false,
+): readonly Skill[] {
+  return uniqueSkills(
+    choices.flatMap((selection) => {
+      if (shouldIgnoreSelection(selection)) {
+        return [];
+      }
+      if (
+        grantExpertiseSkillSourceForSelection(selection, unitLibrary) ===
+        undefined
+      ) {
+        return [];
+      }
+
+      return selection.options.flatMap((option) => {
+        const skill = skillFromChoiceOptionId(option.optionId);
+        return skill === undefined ? [] : [skill];
+      });
+    }),
+  );
+}
+
+export function grantExpertiseSkillSourceForSelection(
+  selection: CharacterChoiceSelection,
+  unitLibrary: UnitCatalog,
+): GrantExpertiseSkillSource | undefined {
+  if (selection.kind !== "unitChoice") {
+    return undefined;
+  }
+  const feature = unitLibrary.getUnit(selection.source.unitId);
+  if (
+    Option.isNone(feature) ||
+    feature.value.kind !== "class_feature" ||
+    feature.value.mechanics.family !== "passive"
+  ) {
+    return undefined;
+  }
+
+  const grant = feature.value.mechanics.grants.find(
+    (candidate): candidate is GrantExpertiseEffect =>
+      candidate.kind === "grant_expertise",
+  );
+  return grant?.skills;
+}
+
+function skillFromChoiceOptionId(
+  optionId: CreationChoiceOptionId,
+): Skill | undefined {
+  return SKILLS.find((candidate) => candidate === optionId);
+}
+
 function draftOwnedSkillProficiencies(
   draft: CharacterDraft,
   unitLibrary: UnitCatalog,
@@ -1526,6 +1647,10 @@ function draftOwnedSkillProficiencies(
       : backgroundSkillProficiencies(draft.selections.background, unitLibrary);
   const selectedSkills = skillProficienciesFromChoiceSelections(
     draft.selections.choices,
+    (selection) =>
+      selection.kind === "unitChoice" &&
+      grantExpertiseSkillSourceForSelection(selection, unitLibrary) !==
+        undefined,
   );
 
   return uniqueSkills([...backgroundSkills, ...selectedSkills]);

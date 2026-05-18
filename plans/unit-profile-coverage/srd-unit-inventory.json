@@ -130,7 +130,8 @@
         "srd521:classes/wizard:level-1:core-trait:wizard_weapon_proficiencies",
         "srd521:classes/wizard:level-1:equipment-pressure:wizard_starting_equipment",
         "srd521:classes/wizard:level-1:multiclass-entry:wizard_multiclass_entry_traits",
-        "srd521:classes/wizard:level-1:spell-access:wizard_spellcasting"
+        "srd521:classes/wizard:level-1:spell-access:wizard_spellcasting",
+        "srd521:classes/wizard:level-2:class-feature-grant:wizard_scholar"
       ],
       "issues": []
     },
@@ -176,8 +177,8 @@
       "numerator": 470,
       "percent": "84.5%",
       "rowsByStatus": {
-        "accepted": 290,
-        "accepted-no-battle-effect": 180,
+        "accepted": 291,
+        "accepted-no-battle-effect": 179,
         "owner-evidence-required": 12,
         "battle-runtime-required": 74
       }
@@ -188,16 +189,15 @@
       "non-runtime": 12
     },
     "levelTwoRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 8,
+      "catalog-installed-owner-evidence-present": 9,
       "non-runtime": 12,
-      "missing-authored-record": 12,
-      "catalog-only/dead-for-now": 1
+      "missing-authored-record": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 295,
+      "catalog-installed-owner-evidence-present": 296,
       "non-runtime": 24,
       "missing-authored-record": 86,
-      "catalog-only/dead-for-now": 151
+      "catalog-only/dead-for-now": 150
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 143,
@@ -22225,20 +22225,25 @@
         "sourceRecordPath": "packages/surface/content/wizard_scholar.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "wizard_scholar"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-only/dead-for-now",
-      "battleReadinessClosure": {
-        "source": "unit-claim",
-        "kind": "later-level-only",
-        "owner": "future constrained Character Creation skill Expertise choice owner",
-        "reason": "The feature is acquired after level 1 and belongs to durable Character Sheet proficiency projection. Existing Rogue Expertise support admits owned skill proficiencies without Expertise, but Scholar additionally intersects that owned-skill set with a fixed six-skill list; the current authored modify-roll shape cannot represent that acquisition-time prerequisite without semantic leakage."
-      },
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit wizard_scholar is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L12G-CLASS-WIZARD-SCHOLAR level-2 Wizard Scholar support profile; Wizard Scholar is discovered from the listed-owned-skill grant-expertise acquisition choice, finalized from one selected skill that is owned, in the Scholar skill list, and not already Expertise, and projected into CharacterBuild Expertise evidence while Wizard level-2 spellcasting projects its level-scaled prepared spell and Spell Slot facts.",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:level-2:class-table-summary:wizard_level_2_feature_table_row",

@@ -4,6 +4,7 @@ import {
   describeAbilityScoreBounds,
   describeClassLevelChoiceCount,
   describeDiceAmount,
+  describeExpertiseSkillSource,
   describeGrantedSpellAreaOverride,
   describeGrantedSpellDcOverride,
   describeGrantedSpellDurationOverride,
@@ -300,7 +301,9 @@ export function traceObjectAndBarrierEffectAtom(
         id,
         category: "effect",
         atomKind: "grant_expertise",
-        label: `grant_expertise\n${describeClassLevelChoiceCount(e.choiceCount)} owned skill proficiencies without Expertise`,
+        label:
+          `grant_expertise\n${describeClassLevelChoiceCount(e.choiceCount)} ` +
+          describeExpertiseSkillSource(e.skills),
       });
       return id;
     }

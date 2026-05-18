@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 363,
-      "numerator": 132,
-      "percent": "36.4%"
+      "numerator": 133,
+      "percent": "36.6%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 435,
-      "numerator": 164,
-      "percent": "37.7%"
+      "numerator": 165,
+      "percent": "37.9%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 165
+      "value": 166
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 108,
-      "numerator": 108,
+      "denominator": 109,
+      "numerator": 109,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 165,
-      "numerator": 165,
+      "denominator": 166,
+      "numerator": 166,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -92,14 +92,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 108,
+      "denominator": 109,
       "numerator": 104,
-      "percent": "96.3%"
+      "percent": "95.4%"
     },
     "supportedProfileCoverage": {
-      "denominator": 133,
-      "numerator": 108,
-      "percent": "81.2%"
+      "denominator": 134,
+      "numerator": 109,
+      "percent": "81.3%"
     }
   },
   "metricSemantics": [
@@ -6550,6 +6550,60 @@
       ],
       "sourceRecordPath": "packages/surface/content/wizard_arcane_recovery.json",
       "unitId": "wizard_arcane_recovery"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "character-creation.skill-expertise-choice"
+        ],
+        "rawRequirementIds": [],
+        "supportedMechanics": [
+          "Wizard Scholar is installed as a level-2 Surface class-feature grant on class_wizard",
+          "Surface Wizard spellcasting carries level-1 and level-2 table rows so admitting same-class Wizard 2 projects five prepared spells, eight spellbook spells, and three level-1 Spell Slots",
+          "Surface grant_expertise represents the acquisition-time choice as listed owned skill proficiencies without existing Expertise over Arcana, History, Investigation, Medicine, Nature, or Religion",
+          "Character Creation admits supported Wizard level-2 progression, discovers exactly one Scholar Expertise choice from the intersection of owned skill proficiencies and the Scholar skill list, and rejects owned skills outside that list or skills that already have Expertise",
+          "Character Creation finalizes the selected Scholar skill as CharacterBuild Expertise without duplicating skill proficiency state"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/wizard-scholar.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-CLASS-WIZARD-SCHOLAR"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "character-creation.skill-expertise-choice",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface grant-expertise class-feature choices over existing CharacterBuild skill proficiencies projected into Expertise proficiency levels.",
+          "taskRefs": [
+            "AT-L1-03S"
+          ],
+          "title": "Character Creation finalizes skill Expertise choices into build proficiency levels",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/wizard_scholar.json",
+      "unitId": "wizard_scholar"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -19044,34 +19098,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/wizard_ability_score_improvement_l4.json",
       "unitId": "wizard_ability_score_improvement_l4"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "unsupported-widening-pressure",
-          "planningLane": "QMBT18",
-          "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "later-level-only",
-          "owner": "future constrained Character Creation skill Expertise choice owner",
-          "reason": "The feature is acquired after level 1 and belongs to durable Character Sheet proficiency projection. Existing Rogue Expertise support admits owned skill proficiencies without Expertise, but Scholar additionally intersects that owned-skill set with a fixed six-skill list; the current authored modify-roll shape cannot represent that acquisition-time prerequisite without semantic leakage."
-        },
-        "reason": "Scholar is a level-2 build-time Expertise choice constrained to one of six skills in which the character already has proficiency; no standalone promoted battle Unit profile is claimed until the constrained Character Creation Expertise choice is modeled.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/wizard_scholar.json",
-      "unitId": "wizard_scholar"
     }
   ]
 }

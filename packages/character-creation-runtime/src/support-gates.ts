@@ -170,6 +170,7 @@ const SUPPORTED_PROGRESSIONS = [
   ...SRD_LEVEL_ONE_CLASS_UNIT_IDS.map(supportedLevelOneProgression),
   supportedSameClassSecondLevelProgression(PHASE1_CLASS_FIGHTER_UNIT_ID),
   supportedSameClassSecondLevelProgression(SRD_PALADIN_CLASS_UNIT_ID),
+  supportedSameClassSecondLevelProgression(WIDTH_CLASS_WIZARD_UNIT_ID),
   supportedSameClassProgression(SRD_ROGUE_CLASS_UNIT_ID, 6),
   ...SRD_LEVEL_ONE_CLASS_UNIT_IDS.filter(
     (classUnitId) => classUnitId !== PHASE1_CLASS_FIGHTER_UNIT_ID,
@@ -329,18 +330,23 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
     ],
     [WIZARD_SPELLBOOK_CHOICE_KEY]: [
       creationChoiceOptionId("detect_magic"),
+      creationChoiceOptionId("feather_fall"),
       creationChoiceOptionId("mage_armor"),
       creationChoiceOptionId("magic_missile"),
       creationChoiceOptionId("shield"),
       creationChoiceOptionId("sleep"),
       creationChoiceOptionId("thunderwave"),
+      creationChoiceOptionId("chromatic_orb"),
     ],
     [WIZARD_PREPARED_SPELL_CHOICE_KEY]: [
       creationChoiceOptionId("detect_magic"),
+      creationChoiceOptionId("feather_fall"),
       creationChoiceOptionId("mage_armor"),
       creationChoiceOptionId("magic_missile"),
       creationChoiceOptionId("shield"),
       creationChoiceOptionId("sleep"),
+      creationChoiceOptionId("thunderwave"),
+      creationChoiceOptionId("chromatic_orb"),
     ],
     [BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY]: [
       PHASE1_BACKGROUND_ABILITY_SCORE_INCREASE_OPTION_ID,

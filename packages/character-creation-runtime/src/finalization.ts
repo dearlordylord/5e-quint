@@ -43,9 +43,12 @@ import {
   classSpellcastingChoiceHoles,
   choiceSelectionOptionIds,
   choiceSelectionMatchesHole,
+  eligibleExpertiseSkills,
+  grantExpertiseSkillSourceForSelection,
   sameCreationHoleSource,
   selectedFeatAbilityScoreIncreaseOptions,
   sameOptionIdMultiset,
+  skillExpertiseFromChoiceSelections,
   skillProficienciesFromChoiceSelections,
   startingEquipmentChoiceHole,
 } from "./discovery.ts";
@@ -86,6 +89,7 @@ import {
   ELDRITCH_INVOCATIONS_CHOICE_KEY,
 } from "./phase1-manifest.ts";
 import { selectedEldritchInvocationFeatures } from "./eldritch-invocations.ts";
+import { wizardSpellcastingCreationAtLevel } from "./wizard-spellcasting.ts";
 import {
   languageFromCreationChoiceOptionId,
   languageFromSurfaceLanguageId,
@@ -194,7 +198,9 @@ export function finalizeCharacterDraft(input: {
   readonly unitLibrary: UnitCatalog;
 }): CreationFinalizationResult {
   const holes = discoverCreationHoles(input);
-  const openHoles = nonEmptyReadonlyArray(holes);
+  const openHoles = nonEmptyReadonlyArray(
+    unfilledFinalizationHoles(input.draft, holes),
+  );
   if (openHoles != null) {
     return {
       tag: "incomplete",
@@ -236,6 +242,35 @@ export function finalizeCharacterDraft(input: {
     tag: "ready",
     build: build.right,
   };
+}
+
+function unfilledFinalizationHoles(
+  draft: CharacterDraft,
+  holes: readonly CreationHole[],
+): readonly CreationHole[] {
+  return holes.filter(
+    (hole) => !hasCardinalityCompleteChoiceSelection(draft, hole),
+  );
+}
+
+function hasCardinalityCompleteChoiceSelection(
+  draft: CharacterDraft,
+  hole: CreationHole,
+): boolean {
+  if (hole.kind !== "choice") {
+    return false;
+  }
+
+  const selection = draft.selections.choices.find((candidate) =>
+    sameCreationHoleSource(candidate.source, hole.source),
+  );
+  if (selection === undefined) {
+    return false;
+  }
+
+  const bounds = choiceCardinalityBounds(hole.cardinality);
+  const optionCount = choiceSelectionOptionIds(selection).length;
+  return optionCount >= bounds.min && optionCount <= bounds.max;
 }
 
 export function finalizedSelections(
@@ -333,6 +368,13 @@ export function executableSupportIssues(
       "Finalized build must carry exactly the supported choices for the selected progression.",
     ),
     ...expectedValueIssue(
+      spellcastingFactsAuthoredForSelectedClassLevels(
+        selections,
+        unitLibrary,
+      ),
+      "Finalized build must have authored spellcasting facts for the selected class levels.",
+    ),
+    ...expectedValueIssue(
       selectedPreparedSpellsAreInSelectedSpellbook(selections, unitLibrary),
       "Finalized Wizard prepared spells must be selected from the spellbook and match available Spell Slot levels.",
     ),
@@ -341,6 +383,29 @@ export function executableSupportIssues(
       "Finalized build must own supported purchased equipment.",
     ),
   ];
+}
+
+function spellcastingFactsAuthoredForSelectedClassLevels(
+  selections: Pick<FinalizedCharacterSelections, "progression">,
+  unitLibrary: UnitCatalog,
+): boolean {
+  const classFactsByUnitId = allClassFactsForFinalization(
+    selections.progression,
+    unitLibrary,
+  );
+  if (Either.isLeft(classFactsByUnitId)) {
+    return false;
+  }
+
+  return [...classFactsByUnitId.right].every(([classUnitId, classFacts]) => {
+    const classLevel = classLevelForUnit(selections.progression, classUnitId);
+    return (
+      !("spellcasting" in classFacts) ||
+      classFacts.spellcasting == null ||
+      classFacts.spellcasting.featureLevel > classLevel ||
+      classSpellcastingCreation(classFacts, classLevel) !== undefined
+    );
+  });
 }
 
 export function selectedPreparedSpellsAreInSelectedSpellbook(
@@ -1395,6 +1460,14 @@ function supportedFinalizationChoiceHoles(input: {
           input.selections.progression,
           classUnitId,
         ),
+        ownedSkillExpertise: skillExpertiseFromChoiceSelections(
+          input.selections.choices,
+          input.unitLibrary,
+          (selection) =>
+            selection.kind === "unitChoice" &&
+            selection.source.unitId === grant.unitId &&
+            selection.source.choiceKey === CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
+        ),
         ownedSkillProficiencies: selectedSkillProficiencies(
           input.selections,
           input.unitLibrary,
@@ -2312,6 +2385,9 @@ function classSpellcastingCreation(
   if (facts.spellcasting.featureLevel > classLevel) {
     return undefined;
   }
+  if (isWizardSpellcastingCreation(facts.spellcasting)) {
+    return wizardSpellcastingCreationAtLevel(facts.spellcasting, classLevel);
+  }
 
   return facts.spellcasting;
 }
@@ -2781,10 +2857,29 @@ function expertiseSubjectsForSelection(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
 ): readonly CharacterBuildProficiencyChoiceSubject[] {
+  const skillSource = grantExpertiseSkillSourceForSelection(
+    selection,
+    unitLibrary,
+  );
+  if (skillSource === undefined) {
+    return [];
+  }
   const ownedSkills = selectedSkillProficiencies(selections, unitLibrary);
+  const ownedSkillExpertise = skillExpertiseFromChoiceSelections(
+    selections.choices,
+    unitLibrary,
+    (candidate) =>
+      candidate.kind === "unitChoice" &&
+      sameCreationHoleSource(candidate.source, selection.source),
+  );
+  const eligibleSkills = eligibleExpertiseSkills(
+    skillSource,
+    ownedSkills,
+    ownedSkillExpertise,
+  );
   return choiceSelectionOptionIds(selection).flatMap((optionId) => {
     const skill = SKILLS.find((candidate) => candidate === optionId);
-    return skill != null && ownedSkills.includes(skill)
+    return skill != null && eligibleSkills.includes(skill)
       ? [{ kind: "skill_expertise" as const, skill }]
       : [];
   });
@@ -2812,15 +2907,7 @@ function isGrantExpertiseSelection(
   selection: UnitChoiceSelection,
   unitLibrary: UnitCatalog,
 ): boolean {
-  const feature = unitLibrary.getUnit(selection.source.unitId);
-  return (
-    Option.isSome(feature) &&
-    feature.value.kind === "class_feature" &&
-    feature.value.mechanics.family === "passive" &&
-    feature.value.mechanics.grants.some(
-      (grant) => grant.kind === "grant_expertise",
-    )
-  );
+  return grantExpertiseSkillSourceForSelection(selection, unitLibrary) != null;
 }
 
 function backgroundSkillProficiencies(

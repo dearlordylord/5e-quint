@@ -2443,46 +2443,12 @@
       "status": "open-runtime-behavior",
       "strictTargetClosed": false,
       "unitId": "web"
-    },
-    {
-      "catalogDisposition": {
-        "category": "unsupported-widening-pressure",
-        "planningLane": "QMBT18",
-        "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "later-level-only"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "The feature is acquired after level 1 and belongs to durable Character Sheet proficiency projection. Existing Rogue Expertise support admits owned skill proficiencies without Expertise, but Scholar additionally intersects that owned-skill set with a fixed six-skill list; the current authored modify-roll shape cannot represent that acquisition-time prerequisite without semantic leakage.",
-      "sourceRecordPath": "packages/surface/content/wizard_scholar.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Wizard Scholar",
-          "id": "srd521:classes/wizard:level-2:class-feature-grant:wizard_scholar",
-          "levelBand": "level-2",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 107,
-            "lineStart": 104,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "open-profile-accounting",
-      "strictTargetClosed": false,
-      "unitId": "wizard_scholar"
     }
   ],
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 85,
+      "count": 86,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2570,7 +2536,8 @@
         "vicious_mockery",
         "warlock_eldritch_invocations",
         "wizard_arcane_recovery",
-        "wizard_ritual_adept"
+        "wizard_ritual_adept",
+        "wizard_scholar"
       ]
     },
     {
@@ -2650,12 +2617,11 @@
       ]
     },
     {
-      "count": 2,
+      "count": 1,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
-        "shatter",
-        "wizard_scholar"
+        "shatter"
       ]
     }
   ],
@@ -2665,21 +2631,21 @@
       "numerator": 470,
       "percent": "84.5%",
       "rowsByStatus": {
-        "accepted": 290,
-        "accepted-no-battle-effect": 180,
+        "accepted": 291,
+        "accepted-no-battle-effect": 179,
         "battle-runtime-required": 74,
         "owner-evidence-required": 12
       }
     },
     "strictRuntimeProfileSupport": {
       "denominator": 135,
-      "numerator": 85,
-      "percent": "63%"
+      "numerator": 86,
+      "percent": "63.7%"
     },
     "strictTargetClosure": {
       "denominator": 135,
-      "numerator": 102,
-      "percent": "75.6%"
+      "numerator": 103,
+      "percent": "76.3%"
     }
   },
   "openFrontier": [
@@ -2722,12 +2688,11 @@
       ]
     },
     {
-      "count": 2,
+      "count": 1,
       "description": "A Unit claim exists, but strict support or closure accounting still needs profile, evidence, or classifier work.",
       "status": "open-profile-accounting",
       "unitIds": [
-        "shatter",
-        "wizard_scholar"
+        "shatter"
       ]
     }
   ],
@@ -6399,18 +6364,18 @@
     "groupsByClaimTag": {
       "missing": 31,
       "profile-subset-supported": 7,
-      "supported-profile": 85,
-      "unsupported-profile": 12
+      "supported-profile": 86,
+      "unsupported-profile": 11
     },
     "groupsByStatus": {
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 4,
       "closed-runtime-detached-table-adjudication": 11,
-      "open-profile-accounting": 2,
+      "open-profile-accounting": 1,
       "open-runtime-behavior": 31,
-      "supported-profile": 85
+      "supported-profile": 86
     },
-    "nonSupportedFrontier": 50,
+    "nonSupportedFrontier": 49,
     "strictDenominator": 135
   }
 }

@@ -165,6 +165,7 @@ import weaponShortswordInput from "../../content/weapon_shortsword.json";
 import weaponSpearInput from "../../content/weapon_spear.json";
 import wizardArcaneRecoveryInput from "../../content/wizard_arcane_recovery.json";
 import wizardRitualAdeptInput from "../../content/wizard_ritual_adept.json";
+import wizardScholarInput from "../../content/wizard_scholar.json";
 import acidSplashInput from "../../content/acid_splash.json";
 import { decodeUnitRecordSync } from "./schema.ts";
 import type {
@@ -332,6 +333,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     warlockEldritchInvocationsInput,
     wizardRitualAdeptInput,
     wizardArcaneRecoveryInput,
+    wizardScholarInput,
     featAbilityScoreImprovementInput,
     featArcheryInput,
     featBoonOfCombatProwessInput,

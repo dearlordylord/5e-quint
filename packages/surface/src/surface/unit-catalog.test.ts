@@ -81,6 +81,7 @@ const requiredFirstVerticalUnitIds = [
   "rogue_evasion",
   "wizard_ritual_adept",
   "wizard_arcane_recovery",
+  "wizard_scholar",
   "feat_ability_score_improvement",
   "feat_archery",
   "feat_boon_of_combat_prowess",

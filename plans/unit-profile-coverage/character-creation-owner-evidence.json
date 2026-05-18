@@ -2238,6 +2238,32 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes Wizard 1 spellcasting build facts from selected spell access"
       ]
     },
+    "srd521:classes/wizard:level-2:class-feature-grant:wizard_scholar": {
+      "taskId": "L12G-CLASS-WIZARD-SCHOLAR",
+      "profile": "level-2 Wizard Scholar support profile",
+      "summary": "Wizard Scholar is discovered from the listed-owned-skill grant-expertise acquisition choice, finalized from one selected skill that is owned, in the Scholar skill list, and not already Expertise, and projected into CharacterBuild Expertise evidence while Wizard level-2 spellcasting projects its level-scaled prepared spell and Spell Slot facts.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:classFeatureGrantChoiceHoles",
+        "packages/character-creation-runtime/src/discovery.ts:eligibleExpertiseSkills"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:supportedFinalizationChoiceHoles",
+        "packages/character-creation-runtime/src/finalization.ts:expertiseSubjectsForSelection",
+        "packages/character-creation-runtime/src/wizard-spellcasting.ts:wizardSpellcastingCreationAtLevel"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildProficiencies"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/wizard-scholar.test.ts:finalizes one listed owned skill as Scholar Expertise",
+        "packages/character-creation-runtime/src/wizard-scholar.test.ts:rejects Scholar Expertise outside the listed skills",
+        "packages/character-creation-runtime/src/wizard-scholar.test.ts:excludes existing Expertise from listed owned skill eligibility"
+      ]
+    },
     "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration": {
       "taskId": "SRDINV18",
       "profile": "level-1 Bard class-feature support profile",
