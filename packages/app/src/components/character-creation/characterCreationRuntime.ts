@@ -1,5 +1,6 @@
 import {
   abilityScoreAssignment,
+  characterBuildDruidWildShapeFacts,
   characterBuildHitPoints,
   type CharacterDraft,
   type CharacterDraftId,
@@ -26,9 +27,11 @@ import {
 } from "@dnd/character-sheet-runtime"
 import type { Ability } from "@dnd/shared/game-facts"
 import { Hp } from "@dnd/shared/types"
+import type { StatBlockId } from "@dnd/surface/surface/stat-block-catalog"
 import { buildUnitCatalog, srdUnitCollection } from "@dnd/surface/surface/unit-catalog"
 import { Either } from "effect"
 
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
 const catalogBuild = buildUnitCatalog({ collections: [srdUnitCollection] })
 if (catalogBuild.tag !== "ok") {
   throw new Error(`SRD Unit catalog failed to build: ${JSON.stringify(catalogBuild.issues)}`)
@@ -42,6 +45,26 @@ export type DraftAssessment = {
 }
 
 export type AbilityScoreInput = Readonly<Record<Ability, number>>
+export type CharacterSheetFromDraftInput = {
+  readonly druidWildShapeKnownFormStatBlockIds?: ReadonlyArray<StatBlockId>
+}
+export type CharacterSheetFromDraftIssue =
+  | {
+      readonly tag: "draftNotReady"
+      readonly message: string
+    }
+  | {
+      readonly tag: "characterBuildHitPointsInvalid"
+      readonly message: string
+    }
+  | {
+      readonly tag: "wildShapeKnownFormsRequired"
+      readonly message: string
+    }
+  | {
+      readonly tag: "characterSheetInvalid"
+      readonly message: string
+    }
 
 export function assessCharacterDraft(draft: CharacterDraft): DraftAssessment {
   return {
@@ -53,11 +76,33 @@ export function assessCharacterDraft(draft: CharacterDraft): DraftAssessment {
   }
 }
 
-export function createCharacterSheetFromDraft(draft: CharacterDraft): Either.Either<CharacterSheet, string> {
+export function createCharacterSheetFromDraft(
+  draft: CharacterDraft,
+  input: CharacterSheetFromDraftInput = {}
+): Either.Either<CharacterSheet, CharacterSheetFromDraftIssue> {
   const finalization = finalizeCharacterDraft({ draft, unitLibrary: characterCreationUnitLibrary })
-  if (finalization.tag !== "ready") return Either.left("Character Draft is not ready.")
+  if (finalization.tag !== "ready")
+    return characterSheetFromDraftIssue("draftNotReady", "Character Draft is not ready.")
   const hitPoints = characterBuildHitPoints(finalization.build, characterCreationUnitLibrary)
-  if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left.map((issue) => issue.message).join("; "))
+  if (Either.isLeft(hitPoints)) {
+    return characterSheetFromDraftIssue(
+      "characterBuildHitPointsInvalid",
+      hitPoints.left.map((issue) => issue.message).join("; ")
+    )
+  }
+  const wildShapeFacts = characterBuildDruidWildShapeFacts({
+    build: finalization.build,
+    unitLibrary: characterCreationUnitLibrary
+  })
+  if (Either.isLeft(wildShapeFacts)) {
+    return characterSheetFromDraftIssue("characterSheetInvalid", wildShapeFacts.left.message)
+  }
+  if (wildShapeFacts.right !== undefined && input.druidWildShapeKnownFormStatBlockIds === undefined) {
+    return characterSheetFromDraftIssue(
+      "wildShapeKnownFormsRequired",
+      "Wild Shape known forms require selected Beast Stat Block identities."
+    )
+  }
   const sheet = createFreshCharacterSheet({
     characterId: characterSheetId(`app:character:${encodeURIComponent(String(draft.draftId))}`),
     build: finalization.build,
@@ -65,9 +110,21 @@ export function createCharacterSheetFromDraft(draft: CharacterDraft): Either.Eit
     currentHp: Hp(hitPoints.right.maximum),
     tempHp: Hp(0),
     conditions: [],
-    unitLibrary: characterCreationUnitLibrary
+    unitLibrary: characterCreationUnitLibrary,
+    ...(input.druidWildShapeKnownFormStatBlockIds === undefined
+      ? {}
+      : { druidWildShapeKnownFormStatBlockIds: input.druidWildShapeKnownFormStatBlockIds })
   })
-  return Either.isLeft(sheet) ? Either.left(sheet.left.message) : Either.right(sheet.right)
+  return Either.isLeft(sheet)
+    ? characterSheetFromDraftIssue("characterSheetInvalid", sheet.left.message)
+    : Either.right(sheet.right)
+}
+
+function characterSheetFromDraftIssue(
+  tag: CharacterSheetFromDraftIssue["tag"],
+  message: string
+): Either.Either<never, CharacterSheetFromDraftIssue> {
+  return Either.left({ tag, message })
 }
 
 export function appendStoredCharacterSheet(

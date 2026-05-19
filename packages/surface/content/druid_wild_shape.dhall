@@ -1,5 +1,5 @@
 -- Wild Shape - SRD 5.2.1 Druid level 2.
--- Bonus Action: spend one Wild Shape use to assume a learned Beast form.
+-- Bonus Action: spend one Wild Shape use to assume a known Beast form.
 -- Uses: 2 at level 2, 3 at level 6, 4 at level 17.
 -- Reset: regain one expended use on Short Rest and all on Long Rest.
 -- Known forms and Beast CR/speed limits follow the Druid's Wild Shape table.
@@ -32,6 +32,7 @@ let BeastFormSource =
       , creatureType : Text
       , knownForms :
           { kind : Text, levels : List ClassLevelChoice }
+      , recommendedFormStatBlockIds : List Text
       , knownFormChange : { kind : Text, replacementCount : Natural }
       , maxChallengeRating :
           { kind : Text
@@ -76,6 +77,12 @@ let wildShapeForm =
               , { atLevel = 8, total = 8 }
               ]
           }
+      , recommendedFormStatBlockIds =
+          [ "stat_block_rat"
+          , "stat_block_riding_horse"
+          , "stat_block_spider"
+          , "stat_block_wolf"
+          ]
       , knownFormChange = { kind = "long_rest", replacementCount = 1 }
       , maxChallengeRating =
           { kind = "threshold_tiers"
@@ -148,7 +155,7 @@ let wildShape =
           , section = "Classes/Druid.md:30-49,95-122"
           }
       , description =
-          "As a Bonus Action, expend one Wild Shape use to shape-shift into a learned Beast form for a number of hours equal to half your Druid level, rounded down. You retain the SRD-listed character facts, cannot cast spells, gain Temporary Hit Points equal to your Druid level, and revert when the duration expires, you use Wild Shape again, you have the Incapacitated condition, you die, or you dismiss the form as a Bonus Action."
+          "As a Bonus Action, expend one Wild Shape use to shape-shift into a known Beast form for a number of hours equal to half your Druid level, rounded down. You retain the SRD-listed character facts, cannot cast spells, gain Temporary Hit Points equal to your Druid level, and revert when the duration expires, you use Wild Shape again, you have the Incapacitated condition, you die, or you dismiss the form as a Bonus Action."
       , mechanics =
           { family = "activation"
           , activationCost = { kind = "bonus_action" }

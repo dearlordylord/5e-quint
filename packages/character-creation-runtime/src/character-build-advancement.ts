@@ -16,10 +16,10 @@ import type {
 } from "@dnd/surface/surface/types";
 
 import {
-  classLevelChoiceCountAtLevel,
   classFeatureGrantChoiceHoles,
   choiceOptionIdsFitHole,
 } from "./discovery.ts";
+import { classLevelChoiceCountAtLevel } from "./class-level-scaling.ts";
 import {
   CLASS_FEATURE_FEAT_CHOICE_KEY,
   ELDRITCH_INVOCATIONS_CHOICE_KEY,

@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.invocation-marked-damage-rider
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-use-count-resource
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B mastery_sap mastery_topple mastery_cleave
 import type {
   BattleFill,
@@ -27,6 +28,7 @@ import {
 } from "@dnd/character-creation-runtime";
 import {
   characterSheetPactSlots,
+  characterSheetDruidWildShapeKnownForms,
   characterSheetSpellSlots,
   characterSheetId,
   characterSheetTempHp,
@@ -77,6 +79,12 @@ if (unitCatalogResult.tag !== "ok" || statBlockCatalogResult.tag !== "ok") {
 }
 const unitLibrary = unitCatalogResult.catalog;
 const statBlockCatalog = statBlockCatalogResult.catalog;
+const DRUID_WILD_SHAPE_KNOWN_FORM_IDS = [
+  "stat_block_rat",
+  "stat_block_riding_horse",
+  "stat_block_spider",
+  "stat_block_wolf",
+] as const;
 
 function createFreshCharacterSheet(
   input: Omit<CharacterSheetInput, "conditions"> &
@@ -173,6 +181,43 @@ describe("Character Sheet battle handoff", () => {
     expect(Either.isRight(handoff)).toBe(true);
     if (Either.isRight(handoff)) {
       expect(characterSheetTempHp(handoff.right)).toBe(4);
+    }
+  });
+
+  test("preserves Druid Wild Shape known forms during battle handoff", () => {
+    const sheet = createFreshCharacterSheet({
+      characterId: characterSheetId("character:druid-wild-shape-handoff"),
+      build: druidWildShapeBuild(),
+      maximumHp: Hp(16),
+      currentHp: Hp(16),
+      tempHp: Hp(0),
+      unitLibrary,
+      druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
+    });
+    expect(Either.isRight(sheet)).toBe(true);
+    if (Either.isLeft(sheet)) return;
+
+    const handoff = applyBattleHandoffToCharacterSheet({
+      sheet: sheet.right,
+      unitLibrary,
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:druid-wild-shape-handoff"),
+        },
+        hp: Hp(12),
+        maxHp: Hp(16),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+
+    expect(Either.isRight(handoff)).toBe(true);
+    if (Either.isRight(handoff)) {
+      expect(characterSheetDruidWildShapeKnownForms(handoff.right)).toEqual({
+        unitId: "druid_wild_shape",
+        statBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
+      });
     }
   });
 
@@ -2691,6 +2736,34 @@ function druidDruidicBuild(): CharacterBuild {
         spellcasting: {
           kind: "spellcasting",
           slots: [{ spellLevel: 1, count: 2 }],
+        },
+      },
+    },
+  };
+}
+
+function druidWildShapeBuild(): CharacterBuild {
+  const base = druidDruidicBuild();
+  if (base.spellcasting === undefined) {
+    throw new Error("Expected Druid Wild Shape test build to cast spells.");
+  }
+  return {
+    ...base,
+    progression: {
+      startingClass: classUnitId("class_druid"),
+      advancements: [
+        {
+          classUnitId: classUnitId("class_druid"),
+          hitPointRule: { tag: "fixedHigherLevelGain" },
+        },
+      ],
+    },
+    spellcasting: {
+      sources: base.spellcasting.sources,
+      slotPools: {
+        spellcasting: {
+          kind: "spellcasting",
+          slots: [{ spellLevel: 1, count: 3 }],
         },
       },
     },

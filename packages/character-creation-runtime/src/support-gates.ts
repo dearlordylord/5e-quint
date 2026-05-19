@@ -295,6 +295,7 @@ const CHARACTER_BUILD_RESOURCE_UNIT_IDS = [
   "barbarian_rage",
   "bard_bardic_inspiration",
   "cleric_channel_divinity",
+  "druid_wild_shape",
   "fighter_action_surge",
   "fighter_second_wind",
   "paladin_lay_on_hands",

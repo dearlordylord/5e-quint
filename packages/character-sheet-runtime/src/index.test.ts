@@ -1,9 +1,11 @@
 import type { CharacterBuild } from "@dnd/character-creation-runtime";
 import {
   abilityScoreAssignment,
+  characterBuildResources,
   characterEquipmentItemId,
   characterEquipmentItemUnitId,
   classUnitId,
+  DRUID_WILD_SHAPE_UNIT_ID,
 } from "@dnd/character-creation-runtime";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { elapsedTimeTicks, timeSpanDuration } from "@dnd/shared/elapsed-time";
@@ -27,6 +29,7 @@ import {
   applyLayOnHands,
   characterSheetAbilityCheckProficiencyBonus,
   characterSheetArmorClassState,
+  characterSheetDruidWildShapeKnownForms,
   characterSheetHitDice,
   characterSheetPactSlots,
   characterSheetResources,
@@ -52,10 +55,12 @@ import {
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.weapon-mastery-reselection
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.ability-check-proficiency-bonus
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.pact-slot-recovery
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-use-count-resource
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B barbarian_unarmored_defense monk_unarmored_defense paladin_lay_on_hands wizard_arcane_recovery wizard_ritual_adept
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-04 fighter_weapon_mastery barbarian_weapon_mastery paladin_weapon_mastery ranger_weapon_mastery rogue_weapon_mastery
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-CLASS-BARD-JACK-OF-ALL-TRADES bard_jack_of_all_trades
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-AUTHOR-WARLOCK-MAGICAL-CUNNING warlock_magical_cunning
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS druid_wild_shape
 
 const build = armorClassBuild({ startingClass: "class_fighter" });
 
@@ -91,6 +96,14 @@ const jackOfAllTradesRequiresNoOtherProficiencyBonusTestName =
   "Jack of All Trades does not apply when another Proficiency Bonus applies";
 const jackOfAllTradesRequiresBardLevelTwoFeatureTestName =
   "Jack of All Trades requires the Bard level 2 feature grant";
+const druidWildShapeShortRestRecoveryTestName =
+  "Short Rest partially restores the Druid Wild Shape use pool";
+const druidWildShapeFixtureKnownFormStatBlockIds = [
+  "stat_block_rat",
+  "stat_block_riding_horse",
+  "stat_block_spider",
+  "stat_block_wolf",
+] as const;
 
 function createFreshCharacterSheet(
   input: Omit<CharacterSheetInput, "conditions"> &
@@ -1505,6 +1518,125 @@ describe("Character Sheet runtime", () => {
         expect.objectContaining({
           unitId: "paladin_paladins_smite",
           count: 1,
+          expended: 0,
+        }),
+      ]),
+    });
+  });
+
+  test(druidWildShapeShortRestRecoveryTestName, () => {
+    const druidBuild = armorClassBuild({
+      startingClass: "class_druid",
+      advancements: ["class_druid"],
+    });
+    expect(characterBuildResources(druidBuild, unitLibrary)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          unitId: DRUID_WILD_SHAPE_UNIT_ID,
+          resource: expect.objectContaining({ kind: "use_count" }),
+        }),
+      ]),
+    );
+
+    const spent = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:druid-wild-shape-rest"),
+        build: druidBuild,
+        maximumHp: Hp(16),
+        currentHp: Hp(16),
+        tempHp: Hp(0),
+        unitLibrary,
+        druidWildShapeKnownFormStatBlockIds:
+          druidWildShapeFixtureKnownFormStatBlockIds,
+        resourceExpenditures: [
+          {
+            tag: "useCountResource",
+            unitId: DRUID_WILD_SHAPE_UNIT_ID,
+            expended: resourceCount(2),
+          },
+        ],
+      }),
+    );
+
+    expect(
+      Either.isLeft(
+        createFreshCharacterSheet({
+          characterId: characterSheetId(
+            "character:druid-wild-shape-missing-forms",
+          ),
+          build: druidBuild,
+          maximumHp: Hp(16),
+          currentHp: Hp(16),
+          tempHp: Hp(0),
+          unitLibrary,
+        }),
+      ),
+    ).toBe(true);
+    expect(characterSheetDruidWildShapeKnownForms(spent)).toEqual({
+      unitId: DRUID_WILD_SHAPE_UNIT_ID,
+      statBlockIds: druidWildShapeFixtureKnownFormStatBlockIds,
+    });
+    expect(characterSheetResources(spent, unitLibrary)).toMatchObject({
+      _tag: "Right",
+      right: expect.arrayContaining([
+        expect.objectContaining({
+          tag: "useCountResource",
+          unitId: DRUID_WILD_SHAPE_UNIT_ID,
+          count: 2,
+          expended: 2,
+          resetCadence: { kind: "partial_short_full_long", shortRestRefill: 1 },
+        }),
+      ]),
+    });
+
+    const shortRested = requireRight(
+      completeShortRest({ sheet: spent, unitLibrary }),
+    );
+
+    expect(characterSheetDruidWildShapeKnownForms(shortRested)).toEqual({
+      unitId: DRUID_WILD_SHAPE_UNIT_ID,
+      statBlockIds: druidWildShapeFixtureKnownFormStatBlockIds,
+    });
+    expect(characterSheetResources(shortRested, unitLibrary)).toMatchObject({
+      _tag: "Right",
+      right: expect.arrayContaining([
+        expect.objectContaining({
+          tag: "useCountResource",
+          unitId: DRUID_WILD_SHAPE_UNIT_ID,
+          count: 2,
+          expended: 1,
+        }),
+      ]),
+    });
+
+    const longRested = requireRight(
+      completeLongRest({
+        sheet: shortRested,
+        unitLibrary,
+        druidWildShapeKnownFormReplacement: {
+          replaceStatBlockId: "stat_block_rat",
+          selectedStatBlockId: "stat_block_cat",
+        },
+      }),
+    );
+
+    expect(longRested.resourceExpenditures).toEqual([]);
+    expect(characterSheetDruidWildShapeKnownForms(longRested)).toEqual({
+      unitId: DRUID_WILD_SHAPE_UNIT_ID,
+      statBlockIds: [
+        "stat_block_cat",
+        "stat_block_riding_horse",
+        "stat_block_spider",
+        "stat_block_wolf",
+      ],
+    });
+    expect(characterSheetResources(longRested, unitLibrary)).toMatchObject({
+      _tag: "Right",
+      right: expect.arrayContaining([
+        expect.objectContaining({
+          tag: "useCountResource",
+          unitId: DRUID_WILD_SHAPE_UNIT_ID,
+          count: 2,
           expended: 0,
         }),
       ]),

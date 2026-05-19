@@ -1865,6 +1865,7 @@ export const ShapeShiftKnownFormsRosterSourceSchema = Schema.Struct({
   kind: Schema.Literal("known_forms_roster"),
   creatureType: CreatureTypeSchema,
   knownForms: ClassLevelChoiceCountSchema,
+  recommendedFormStatBlockIds: nonEmpty(Schema.NonEmptyTrimmedString),
   knownFormChange: Schema.Struct({
     kind: Schema.Literal("long_rest"),
     replacementCount: Schema.Literal(1),

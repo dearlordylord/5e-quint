@@ -11,6 +11,10 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
+import {
+  buildStatBlockCatalog,
+  srdStatBlockCollection,
+} from "@dnd/surface/surface/stat-block-catalog";
 import { readClassCreationFacts } from "@dnd/surface/surface/character-creation-readers";
 import type {
   ProficiencyGrant,
@@ -26,9 +30,11 @@ import {
   characterEquipmentItemUnitId,
   characterBuildArmorTraining,
   characterBuildFeatureUnitIds,
+  characterBuildDruidWildShapeFacts,
   characterBuildHitPoints,
   characterBuildProficiencies,
   characterBuildResources,
+  DRUID_WILD_SHAPE_UNIT_ID,
   exactChoiceCardinality,
   boundedChoiceCardinality,
   choiceCardinalityBounds,
@@ -58,6 +64,7 @@ import {
   parseCreationHoleId,
   parseLoadoutSourceKey,
   parseUnitChoiceSourceKey,
+  replaceDruidWildShapeKnownForm,
   startingClassUnitId,
   unitChoiceKey,
   unitChoiceSourceHoleIdText,
@@ -139,9 +146,13 @@ import {
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-AUTHOR-RANGER-FIGHTING-STYLE ranger_deft_explorer ranger_fighting_style
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-07 rogue_expertise
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY cleric_channel_divinity
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS druid_wild_shape
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
+});
+const statBlockCatalogResult = buildStatBlockCatalog({
+  collections: [srdStatBlockCollection],
 });
 
 function testAbilityScoreAssignment(
@@ -159,8 +170,20 @@ function testAbilityScoreAssignment(
 if (unitCatalogResult.tag !== "ok") {
   throw new Error("SRD Unit catalog test fixture must build successfully.");
 }
+if (statBlockCatalogResult.tag !== "ok") {
+  throw new Error(
+    "SRD Stat Block catalog test fixture must build successfully.",
+  );
+}
 
 const unitLibrary = unitCatalogResult.catalog;
+const statBlockCatalog = statBlockCatalogResult.catalog;
+const druidWildShapeFixtureKnownFormStatBlockIds = [
+  "stat_block_rat",
+  "stat_block_riding_horse",
+  "stat_block_spider",
+  "stat_block_wolf",
+] as const;
 
 function expectRight<T, E>(result: Either.Either<T, E>): T {
   if (Either.isLeft(result)) {
@@ -3824,7 +3847,7 @@ describe("character creation finalization", () => {
     });
   });
 
-  test("accepts Druid 2 Wild Shape and Wild Companion as sibling feature refs", () => {
+  test("accepts Druid 2 Wild Shape and projects character facts", () => {
     const druidTwo = completeSupportedProgressionDraft({
       draftId: "draft:druid-wild-companion",
       progression: testProgression("class_druid", 2),
@@ -3838,16 +3861,18 @@ describe("character creation finalization", () => {
       expect.arrayContaining([
         "druid_druidic",
         "druid_primal_order",
-        "druid_wild_shape",
+        DRUID_WILD_SHAPE_UNIT_ID,
         "druid_wild_companion",
       ]),
     );
     expect(
-      characterBuildUnitRefs(result.build, unitLibrary).map((ref) => ref.unitId),
+      characterBuildUnitRefs(result.build, unitLibrary).map(
+        (ref) => ref.unitId,
+      ),
     ).toEqual(
       expect.arrayContaining([
         "class_druid",
-        "druid_wild_shape",
+        DRUID_WILD_SHAPE_UNIT_ID,
         "druid_wild_companion",
       ]),
     );
@@ -3859,7 +3884,123 @@ describe("character creation finalization", () => {
     expect(result.build.spellcasting?.slotPools.spellcasting?.slots).toEqual([
       { spellLevel: 1, count: 3 },
     ]);
-    expect(characterBuildResources(result.build, unitLibrary)).toEqual([]);
+    expect(
+      characterBuildResources(result.build, unitLibrary).find(
+        (resource) => resource.unitId === DRUID_WILD_SHAPE_UNIT_ID,
+      ),
+    ).toEqual({
+      unitId: DRUID_WILD_SHAPE_UNIT_ID,
+      resource: {
+        kind: "use_count",
+        cap: {
+          kind: "threshold_tiers",
+          axis: "class",
+          base: 2,
+          tiers: [
+            { atLevel: 6, value: 3 },
+            { atLevel: 17, value: 4 },
+          ],
+        },
+      },
+    });
+    const wildShapeFacts = expectRight(
+      characterBuildDruidWildShapeFacts({
+        build: result.build,
+        unitLibrary,
+      }),
+    );
+    if (wildShapeFacts === undefined) {
+      throw new Error("Expected Druid 2 build to project Wild Shape facts.");
+    }
+    expect(wildShapeFacts).toEqual({
+      unitId: DRUID_WILD_SHAPE_UNIT_ID,
+      useCount: {
+        maximum: 2,
+        shortRestRefill: 1,
+        longRestRefillsAll: true,
+      },
+      duration: { unit: "hour", amount: 1 },
+      knownFormRoster: {
+        creatureType: "beast",
+        count: 4,
+        maxChallengeRating: 0.25,
+        flySpeed: "forbidden",
+        longRestReplacementCount: 1,
+      },
+    });
+    expect(
+      expectRight(
+        replaceDruidWildShapeKnownForm({
+          facts: wildShapeFacts,
+          currentKnownFormStatBlockIds:
+            druidWildShapeFixtureKnownFormStatBlockIds,
+          replacement: {
+            replaceStatBlockId: "stat_block_rat",
+            selectedStatBlockId: "stat_block_cat",
+          },
+          statBlockCatalog,
+        }),
+      ),
+    ).toEqual([
+      "stat_block_cat",
+      "stat_block_riding_horse",
+      "stat_block_spider",
+      "stat_block_wolf",
+    ]);
+    expect(
+      Either.isLeft(
+        replaceDruidWildShapeKnownForm({
+          facts: wildShapeFacts,
+          currentKnownFormStatBlockIds:
+            druidWildShapeFixtureKnownFormStatBlockIds,
+          replacement: {
+            replaceStatBlockId: "stat_block_rat",
+            selectedStatBlockId: "stat_block_hawk",
+          },
+          statBlockCatalog,
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test("projects Druid 4 Wild Shape roster thresholds without known-form defaults", () => {
+    const druidTwo = completeSupportedProgressionDraft({
+      draftId: "draft:druid-wild-shape-level-four",
+      progression: testProgression("class_druid", 2),
+    });
+    const result = finalizeCharacterDraft({ draft: druidTwo, unitLibrary });
+
+    expect(result.tag).toBe("ready");
+    if (result.tag !== "ready") return;
+
+    const wildShapeFacts = expectRight(
+      characterBuildDruidWildShapeFacts({
+        build: {
+          features: result.build.features,
+          progression: testProgression("class_druid", 4),
+        },
+        unitLibrary,
+      }),
+    );
+    if (wildShapeFacts === undefined) {
+      throw new Error("Expected Druid 4 build to project Wild Shape facts.");
+    }
+    expect(wildShapeFacts).toEqual({
+      unitId: DRUID_WILD_SHAPE_UNIT_ID,
+      useCount: {
+        maximum: 2,
+        shortRestRefill: 1,
+        longRestRefillsAll: true,
+      },
+      duration: { unit: "hour", amount: 2 },
+      knownFormRoster: {
+        creatureType: "beast",
+        count: 6,
+        maxChallengeRating: 0.5,
+        flySpeed: "forbidden",
+        longRestReplacementCount: 1,
+      },
+    });
   });
 
   test("advances a finalized Fighter build and replaces Fighting Style in one level-gain operation", () => {

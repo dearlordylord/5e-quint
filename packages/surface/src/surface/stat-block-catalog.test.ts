@@ -322,6 +322,31 @@ describe("Stat Block catalog boundary", () => {
     }
   });
 
+  test("exports SRD Stat Blocks for Wild Shape recommended forms not used by Find Familiar", () => {
+    const valid = buildStatBlockCatalog({
+      collections: [srdStatBlockCollection],
+    });
+
+    expect(valid.tag).toBe("ok");
+    if (valid.tag === "ok") {
+      const ridingHorse = valid.catalog.requireStatBlock(
+        "stat_block_riding_horse",
+      );
+      expect(ridingHorse.statBlock.displayName).toBe("Riding Horse");
+      expect(ridingHorse.statBlock.creatureType).toBe("beast");
+      expect(ridingHorse.challengeRating).toBe(0.25);
+
+      const wolf = valid.catalog.requireStatBlock("stat_block_wolf");
+      expect(wolf.statBlock.displayName).toBe("Wolf");
+      expect(wolf.statBlock.creatureType).toBe("beast");
+      expect(wolf.challengeRating).toBe(0.25);
+      expect(wolf.statBlock.skillModifiers ?? []).toEqual([
+        { modifier: 5, skill: "perception" },
+        { modifier: 4, skill: "stealth" },
+      ]);
+    }
+  });
+
   test("exports SRD action and skill details for Pact special familiar forms", () => {
     const valid = buildStatBlockCatalog({
       collections: [srdStatBlockCollection],

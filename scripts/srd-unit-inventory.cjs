@@ -805,41 +805,28 @@ function installedLevelTwoClassFeatureOwnerClassification(
       requirement: followUpTaskRequirement(followUpTasks),
     };
   }
-  if (
-    characterCreationEvidence &&
-    claimUsesOnlyProfilePrefix(claim, characterCreationProfileIdPrefix)
-  ) {
-    return {
-      kind: "evidence-present",
-      owner: "character-creation-runtime",
-      evidence: characterCreationEvidence,
-    };
-  }
-  if (claimUsesOnlyProfilePrefix(claim, characterCreationProfileIdPrefix)) {
-    return {
-      kind: "evidence-required",
-      owner: "character-creation-runtime",
-      requirement:
-        "Add checker-readable character-creation owner evidence before treating this level-2 class feature as operationally supported.",
-    };
-  }
-  if (
-    characterSheetEvidence &&
-    claimUsesOnlyProfilePrefix(claim, characterSheetProfileIdPrefix)
-  ) {
-    return {
-      kind: "evidence-present",
-      owner: "character-sheet-runtime",
-      evidence: characterSheetEvidence,
-    };
-  }
-  if (claimUsesOnlyProfilePrefix(claim, characterSheetProfileIdPrefix)) {
-    return {
-      kind: "evidence-required",
-      owner: "character-sheet-runtime",
-      requirement:
-        "Add checker-readable character-sheet owner evidence before treating this level-2 class feature as operationally supported.",
-    };
+  const profileOwnerClassification =
+    claimedLevelTwoClassFeatureProfileOwnerClassification(
+      claim,
+      [
+        {
+          profileIdPrefix: characterCreationProfileIdPrefix,
+          owner: "character-creation-runtime",
+          evidence: characterCreationEvidence,
+          requirement:
+            "Add checker-readable character-creation owner evidence before treating this level-2 class feature as operationally supported.",
+        },
+        {
+          profileIdPrefix: characterSheetProfileIdPrefix,
+          owner: "character-sheet-runtime",
+          evidence: characterSheetEvidence,
+          requirement:
+            "Add checker-readable character-sheet owner evidence before treating this level-2 class feature as operationally supported.",
+        },
+      ],
+    );
+  if (profileOwnerClassification !== undefined) {
+    return profileOwnerClassification;
   }
   if (!levelTwoBattleRuntimeOwnerEvidenceUnitIds.has(row.candidateUnitId)) {
     return undefined;
@@ -859,6 +846,46 @@ function installedLevelTwoClassFeatureOwnerClassification(
     owner: "battle-runtime",
     requirement:
       "Add a supported-profile Unit claim plus deterministic admission/projection evidence before treating this level-2 class feature as operationally supported.",
+  };
+}
+
+function claimedLevelTwoClassFeatureProfileOwnerClassification(
+  claim,
+  ownerProfiles,
+) {
+  if (
+    !Array.isArray(claim?.profileIds) ||
+    claim.profileIds.length === 0 ||
+    !claim.profileIds.every((profileId) =>
+      ownerProfiles.some(({ profileIdPrefix }) =>
+        profileId.startsWith(profileIdPrefix),
+      ),
+    )
+  ) {
+    return undefined;
+  }
+  const claimedOwners = ownerProfiles.filter(({ profileIdPrefix }) =>
+    claim.profileIds.some((profileId) => profileId.startsWith(profileIdPrefix)),
+  );
+  const missingOwners = claimedOwners.filter(({ evidence }) => !evidence);
+  if (missingOwners.length > 0) {
+    return {
+      kind: "evidence-required",
+      owner: missingOwners.map(({ owner }) => owner).join("; "),
+      requirement: missingOwners
+        .map(({ owner, requirement }) => `${owner}: ${requirement}`)
+        .join(" "),
+    };
+  }
+  const entries = claimedOwners.map(({ owner, evidence }) => ({
+    owner,
+    evidence,
+  }));
+  return {
+    kind: "evidence-present",
+    owner: entries.map(({ owner }) => owner).join("; "),
+    evidence: entries.map(({ evidence }) => evidence).join(" "),
+    entries,
   };
 }
 
@@ -1790,7 +1817,7 @@ function withState(rows, authored, installedIds, ownerEvidenceSources) {
               },
               ...(installedClassification === undefined
                 ? []
-                : [ownerEvidenceEntry(installedClassification)]),
+                : ownerEvidenceEntries(installedClassification)),
             ]
           : [],
       nextAction: nextAction(
@@ -1838,6 +1865,20 @@ function ownerEvidenceEntry(classification) {
     evidence: classification.reason,
     status: "catalog-only/dead-for-now closure",
   };
+}
+
+function ownerEvidenceEntries(classification) {
+  if (
+    classification.kind === "evidence-present" &&
+    Array.isArray(classification.entries)
+  ) {
+    return classification.entries.map((entry) => ({
+      owner: entry.owner,
+      evidence: entry.evidence,
+      status: "owner evidence present",
+    }));
+  }
+  return [ownerEvidenceEntry(classification)];
 }
 
 function countBy(rows, key) {

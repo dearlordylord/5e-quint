@@ -27,6 +27,7 @@ import {
   createCharacterDraftInputSchema,
   draftIdInputSchema,
   emptyInputSchema,
+  finalizeCharacterInputSchema,
   fillCreationHolesInputSchema,
   type CharacterToolCall,
   type CharacterToolName,
@@ -41,6 +42,7 @@ import {
 import { mcpOutputJsonSchema, schemaJsonContent } from "./schema-codec.ts";
 import { errorContent } from "./tool-content.ts";
 
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
 export const characterToolDefinitions = [
   {
     name: characterToolNames.createCharacterDraft,
@@ -66,8 +68,8 @@ export const characterToolDefinitions = [
   {
     name: characterToolNames.finalizeCharacter,
     description:
-      "Finalize a complete supported character draft. A ready finalization stores the resulting in-play record by characterId and removes the active draft.",
-    inputSchema: draftIdInputSchema,
+      "Finalize a complete supported character draft. A ready finalization stores the resulting in-play record by characterId and removes the active draft. Druid Wild Shape drafts require selected known Beast Stat Block ids.",
+    inputSchema: finalizeCharacterInputSchema,
     outputSchema: mcpOutputJsonSchema(FinalizeCharacterOutputSchema),
   },
   {
@@ -180,6 +182,12 @@ export function handleCharacterToolCall(
           tempHp: Hp(0),
           conditions: [],
           unitLibrary: root.unitLibrary,
+          ...(matched.args.druidWildShapeKnownFormStatBlockIds === undefined
+            ? {}
+            : {
+                druidWildShapeKnownFormStatBlockIds:
+                  matched.args.druidWildShapeKnownFormStatBlockIds,
+              }),
         });
         if (Either.isLeft(session)) {
           return errorContent("Character finalization session failed.", {

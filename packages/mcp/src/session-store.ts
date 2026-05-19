@@ -28,6 +28,7 @@ import type {
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import { Either, Option } from "effect";
 
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
 export type AvailableCharacterSession = CharacterSheet;
 export type AvailableCharacterSessionInput = CharacterSheetInput;
 export type CharacterSessionIssue = {

@@ -8,6 +8,7 @@ import {
 import {
   CHARACTER_SHEET_KNOCKED_OUT_UNCONSCIOUS,
   characterSheetCurrentHp,
+  characterSheetDruidWildShapeKnownForms,
   characterSheetPactSlots,
   characterSheetSpellSlots,
   characterSheetTempHp,
@@ -36,6 +37,7 @@ import {
 } from "./battle-creature-init.ts";
 import { battleCreatureInitIssue } from "./battle-character-build-projection.ts";
 
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
 export {
   battleCreatureInitFromCharacterBuild,
   characterBattleResourceInitsFromBuild,
@@ -142,6 +144,9 @@ export function applyBattleHandoffToCharacterSheet(input: {
     return Either.left(resourceExpenditures.left);
   }
   const bookOfShadowsPresence = bookOfShadowsPresenceFromBattle(input);
+  const druidWildShapeKnownForms = characterSheetDruidWildShapeKnownForms(
+    input.sheet,
+  );
 
   return createFreshCharacterSheet({
     characterId: input.sheet.characterId,
@@ -165,6 +170,12 @@ export function applyBattleHandoffToCharacterSheet(input: {
       : { spellSlots: input.combatant.origin.spellcasting.spellSlots }),
     ...(pactSlots === undefined ? {} : { pactSlots }),
     ...(bookOfShadowsPresence === undefined ? {} : { bookOfShadowsPresence }),
+    ...(druidWildShapeKnownForms === undefined
+      ? {}
+      : {
+          druidWildShapeKnownFormStatBlockIds:
+            druidWildShapeKnownForms.statBlockIds,
+        }),
     spentHitDice: input.sheet.spentHitDice,
     restFeatureUses: input.sheet.restFeatureUses,
     resourceExpenditures: resourceExpenditures.right,

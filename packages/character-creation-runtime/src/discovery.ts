@@ -77,6 +77,7 @@ import {
   unitOption,
   unitSource,
 } from "./hole-factories.ts";
+import { classLevelChoiceCountAtLevel } from "./class-level-scaling.ts";
 import {
   creationChoiceOptionId,
   creationHoleId,
@@ -1672,27 +1673,6 @@ function uniqueSkills(skills: readonly Skill[]): readonly Skill[] {
 
 function uniqueLanguages(languages: readonly Language[]): readonly Language[] {
   return [...new Set(languages)];
-}
-
-export function classLevelChoiceCountAtLevel(
-  choiceCount:
-    | Extract<EffectAtom, { readonly kind: "grant_expertise" }>["choiceCount"]
-    | FeatureChoiceMechanics["choiceCount"],
-  classLevel: number,
-): number {
-  if (choiceCount.kind === "class_level_additional_choices") {
-    return (
-      choiceCount.initial +
-      choiceCount.increases
-        .filter((increase) => increase.atLevel <= classLevel)
-        .reduce((total, increase) => total + increase.choose, 0)
-    );
-  }
-
-  return (
-    choiceCount.levels.filter((level) => level.atLevel <= classLevel).at(-1)
-      ?.total ?? 0
-  );
 }
 
 function requireClassFeature(

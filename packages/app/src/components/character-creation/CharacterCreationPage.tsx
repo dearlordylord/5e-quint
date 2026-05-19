@@ -134,7 +134,7 @@ export function CharacterCreationPage() {
               onClick={() => {
                 const sheet = createCharacterSheetFromDraft(draft)
                 if (Either.isLeft(sheet)) {
-                  setLastSheetIssue(sheet.left)
+                  setLastSheetIssue(sheet.left.message)
                   return
                 }
                 setSheets((storedSheets) => appendStoredCharacterSheet(storedSheets, sheet.right))

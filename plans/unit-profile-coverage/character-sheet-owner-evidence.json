@@ -49,6 +49,24 @@
         "packages/character-sheet-runtime/src/index.test.ts:layOnHandsLongRestRecoveryTestName"
       ]
     },
+    "srd521:classes/druid:level-2:class-feature-grant:druid_wild_shape": {
+      "taskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
+      "profile": "Character Sheet class-feature use-count resource runtime",
+      "summary": "Druid Wild Shape is read from the installed Surface class-feature record and projected as Character Sheet use-count and known-form state. The runtime requires explicit selected known Beast form Stat Block identities for Wild Shape sheet creation, validates and stores them as current known-form state, derives capacity and reset cadence from CharacterBuild resources and Surface feature facts, stores only expended use-count state plus current known-form identities, regains one expended use on Short Rest, clears expended uses on Long Rest, and applies one eligible known-form replacement on Long Rest.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/index.ts:characterSheetResources",
+        "packages/character-sheet-runtime/src/index.ts:characterSheetDruidWildShapeKnownForms",
+        "packages/character-sheet-runtime/src/index.ts:classFeatureUseCountResourcesForBuild",
+        "packages/character-sheet-runtime/src/index.ts:druidWildShapeKnownFormsFromInput",
+        "packages/character-sheet-runtime/src/index.ts:recoverShortRestUseCountResources",
+        "packages/character-sheet-runtime/src/index.ts:completeShortRest",
+        "packages/character-sheet-runtime/src/index.ts:completeLongRest",
+        "packages/character-sheet-runtime/src/index.ts:druidWildShapeKnownFormsAfterLongRest"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/index.test.ts:druidWildShapeShortRestRecoveryTestName"
+      ]
+    },
     "srd521:classes/fighter:level-1:mastery-pressure:fighter_weapon_mastery": {
       "taskId": "AT-L1-04",
       "profile": "Character Sheet Weapon Mastery Long Rest reselection runtime",
