@@ -69,6 +69,14 @@ const DETECTION_PROPERTIES = [
 const DetectionPropertySchema = Schema.Literal(...DETECTION_PROPERTIES);
 type DetectionProperty = Schema.Schema.Type<typeof DetectionPropertySchema>;
 
+const LOCATE_KIND_SUBJECTS = [
+  "beast",
+  "plant_creature",
+  "nonmagical_plant",
+] as const satisfies ReadonlyNonEmptyArray<string>;
+const LocateKindSubjectSchema = Schema.Literal(...LOCATE_KIND_SUBJECTS);
+type LocateKindSubject = Schema.Schema.Type<typeof LocateKindSubjectSchema>;
+
 export const LinearPerLevelNumberSchema = Schema.Struct({
   kind: Schema.Literal("linear_per_level"),
   axis: LevelAxisSchema,
@@ -882,6 +890,14 @@ type EffectAtom =
       readonly kind: "detect";
       readonly property: DetectionProperty;
       readonly radiusFeet: number;
+    }
+  | {
+      readonly kind: "locate_kind";
+      readonly subjectKinds: ReadonlyNonEmptyArray<LocateKindSubject>;
+      readonly maxDistanceFeet: number;
+      readonly match: "closest";
+      readonly query: "described_or_named_specific_kind";
+      readonly result: "direction_and_distance";
     }
   | {
       readonly kind: "grant_speed";
@@ -2599,6 +2615,14 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         kind: Schema.Literal("detect"),
         property: DetectionPropertySchema,
         radiusFeet: Schema.Number,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("locate_kind"),
+        subjectKinds: nonEmpty(LocateKindSubjectSchema),
+        maxDistanceFeet: PositiveIntegerSchema,
+        match: Schema.Literal("closest"),
+        query: Schema.Literal("described_or_named_specific_kind"),
+        result: Schema.Literal("direction_and_distance"),
       }),
       Schema.Struct({
         kind: Schema.Literal("grant_speed"),

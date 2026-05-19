@@ -141,6 +141,7 @@ const requiredFirstVerticalUnitIds = [
   "jump",
   "knock",
   "levitate",
+  "locate_animals_or_plants",
   "hellish_rebuke",
   "armor_chain_mail",
   "equipment_shield",
@@ -1409,6 +1410,51 @@ describe("SRD Unit catalog boundary", () => {
         "reveals that a trap is present but not its location",
       );
     }
+  });
+
+  test("decodes Locate Animals or Plants as ritual nearest-kind location disclosure", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const locate = result.catalog.requireUnit("locate_animals_or_plants");
+
+    expect(locate.kind).toBe("spell");
+    if (locate.kind !== "spell") return;
+    expect(locate.mechanics.family).toBe("activation");
+    if (locate.mechanics.family !== "activation") return;
+
+    expect(locate.mechanics).toMatchObject({
+      level: 2,
+      school: "divination",
+      castingTime: { kind: "action", ritual: true },
+      range: { kind: "self" },
+      components: {
+        v: true,
+        s: true,
+        m: "fur from a bloodhound",
+      },
+      duration: { kind: "instantaneous" },
+    });
+    expect(locate.mechanics.phases).toEqual([
+      {
+        kind: "direct",
+        attachment: { kind: "self" },
+        effects: [
+          {
+            kind: "locate_kind",
+            subjectKinds: ["beast", "plant_creature", "nonmagical_plant"],
+            maxDistanceFeet: 26400,
+            match: "closest",
+            query: "described_or_named_specific_kind",
+            result: "direction_and_distance",
+          },
+        ],
+      },
+    ]);
+    expect(locate.description).toContain(
+      "direction and distance to the closest creature or plant",
+    );
   });
 
   test("decodes Knock as object access release plus Arcane Lock suppression", () => {

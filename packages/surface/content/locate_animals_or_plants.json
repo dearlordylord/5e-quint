@@ -1,0 +1,52 @@
+{
+  "description": "Describe or name a specific kind of Beast, Plant creature, or nonmagical plant. You learn the direction and distance to the closest creature or plant of that kind within 5 miles, if any are present.",
+  "id": "locate_animals_or_plants",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action",
+      "ritual": true
+    },
+    "components": {
+      "m": "fur from a bloodhound",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 2,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "self"
+        },
+        "effects": [
+          {
+            "kind": "locate_kind",
+            "match": "closest",
+            "maxDistanceFeet": 26400,
+            "query": "described_or_named_specific_kind",
+            "result": "direction_and_distance",
+            "subjectKinds": [
+              "beast",
+              "plant_creature",
+              "nonmagical_plant"
+            ]
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "kind": "self"
+    },
+    "school": "divination"
+  },
+  "name": "Locate Animals or Plants",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Locate Animals or Plants"
+  }
+}

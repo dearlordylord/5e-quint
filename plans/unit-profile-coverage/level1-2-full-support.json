@@ -1668,6 +1668,59 @@
       "unitId": "levitate"
     },
     {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Kind matching, target presence, closest-target selection, and direction/distance disclosure for Beasts, Plant creatures, or nonmagical plants are exploration/table facts outside promoted battle runtime.",
+      "sourceRecordPath": "packages/surface/content/locate_animals_or_plants.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Locate Animals or Plants",
+          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_locate_animals_or_plants",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 203,
+            "lineStart": 203,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Druid spell list Locate Animals or Plants",
+          "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_locate_animals_or_plants",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 242,
+            "lineStart": 242,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Ranger spell list Locate Animals or Plants",
+          "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_locate_animals_or_plants",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 190,
+            "lineStart": 190,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
+        }
+      ],
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
+      "unitId": "locate_animals_or_plants"
+    },
+    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -2752,7 +2805,7 @@
       ]
     },
     {
-      "count": 16,
+      "count": 17,
       "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
@@ -2767,6 +2820,7 @@
         "gentle_repose",
         "identify",
         "knock",
+        "locate_animals_or_plants",
         "minor_illusion",
         "pass_without_trace",
         "silent_image",
@@ -2824,12 +2878,12 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 470,
-      "percent": "84.5%",
+      "numerator": 473,
+      "percent": "85.1%",
       "rowsByStatus": {
         "accepted": 332,
-        "accepted-no-battle-effect": 138,
-        "battle-runtime-required": 77,
+        "accepted-no-battle-effect": 141,
+        "battle-runtime-required": 74,
         "owner-evidence-required": 3,
         "partial-battle-runtime": 6
       }
@@ -2850,14 +2904,14 @@
       "percent": "29.7%"
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 156,
+      "denominator": 157,
       "numerator": 101,
-      "percent": "64.7%"
+      "percent": "64.3%"
     },
     "strictTargetClosure": {
-      "denominator": 156,
-      "numerator": 147,
-      "percent": "94.2%"
+      "denominator": 157,
+      "numerator": 148,
+      "percent": "94.3%"
     }
   },
   "openFrontier": [
@@ -3398,48 +3452,6 @@
           }
         ],
         "unitId": "illusory_script"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "spell Unit pressure",
-            "concept": "Bard spell list Locate Animals or Plants",
-            "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_locate_animals_or_plants",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 203,
-              "lineStart": 203,
-              "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Druid spell list Locate Animals or Plants",
-            "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_locate_animals_or_plants",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 242,
-              "lineStart": 242,
-              "path": ".references/srd-5.2.1/Classes/Druid.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Ranger spell list Locate Animals or Plants",
-            "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_locate_animals_or_plants",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 190,
-              "lineStart": 190,
-              "path": ".references/srd-5.2.1/Classes/Ranger.md"
-            }
-          }
-        ],
-        "unitId": "locate_animals_or_plants"
       },
       {
         "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
@@ -7796,18 +7808,18 @@
       "missing": 9,
       "profile-subset-supported": 12,
       "supported-profile": 101,
-      "unsupported-profile": 34
+      "unsupported-profile": 35
     },
     "groupsByStatus": {
       "blocked-follow-up-split": 21,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
-      "closed-runtime-detached-table-adjudication": 16,
+      "closed-runtime-detached-table-adjudication": 17,
       "open-runtime-behavior": 9,
       "supported-profile": 101
     },
-    "nonSupportedFrontier": 55,
-    "strictDenominator": 156
+    "nonSupportedFrontier": 56,
+    "strictDenominator": 157
   }
 }

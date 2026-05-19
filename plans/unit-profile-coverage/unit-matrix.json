@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 384,
-      "numerator": 166,
-      "percent": "43.2%"
+      "denominator": 385,
+      "numerator": 167,
+      "percent": "43.4%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 456,
-      "numerator": 198,
-      "percent": "43.4%"
+      "denominator": 457,
+      "numerator": 199,
+      "percent": "43.5%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 199
+      "value": 200
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 124,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 199,
-      "numerator": 199,
+      "denominator": 200,
+      "numerator": 200,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "83.9%"
     },
     "supportedProfileCoverage": {
-      "denominator": 167,
+      "denominator": 168,
       "numerator": 124,
-      "percent": "74.3%"
+      "percent": "73.8%"
     }
   },
   "metricSemantics": [
@@ -15465,6 +15465,29 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/levitate.json",
       "unitId": "levitate"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "exploration/detection owner",
+          "reason": "Kind matching, target presence, closest-target selection, and direction/distance disclosure for Beasts, Plant creatures, or nonmagical plants are exploration/table facts outside promoted battle runtime."
+        },
+        "reason": "Locate Animals or Plants is authored and installed as an SRD Surface Spell Definition with Action or Ritual casting, Self range, Instantaneous duration, a described-or-named Beast, Plant creature, or nonmagical plant kind query, and closest-match direction and distance disclosure within 5 miles. Task 3 claims no promoted battle-runtime profile because target presence, kind matching, closest-target selection, distance/direction calculation, and plant/creature world state are runtime-detached exploration/table knowledge facts outside promoted battle Unit profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/locate_animals_or_plants.json",
+      "unitId": "locate_animals_or_plants"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

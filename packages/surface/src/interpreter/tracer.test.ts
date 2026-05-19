@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import classFighterInput from "../../content/class_fighter.json";
 import dragonsBreathInput from "../../content/dragons_breath.json";
+import locateAnimalsOrPlantsInput from "../../content/locate_animals_or_plants.json";
 import { decodeUnitRecordSync } from "../surface/schema.ts";
 import { traceUnit } from "./tracer.ts";
 
@@ -51,6 +52,24 @@ describe("Surface trace interpreter", () => {
         expect.objectContaining({
           atomKind: "save_gate",
           label: "save_gate\nDEX vs caster spell save DC",
+        }),
+      ]),
+    );
+  });
+
+  test("renders Locate Animals or Plants as nearest-kind location disclosure", () => {
+    const trace = traceUnit(decodeUnitRecordSync(locateAnimalsOrPlantsInput));
+
+    expect(trace.nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          atomKind: "locate_kind",
+          label: [
+            "locate_kind",
+            "subjects: beast, plant_creature, nonmagical_plant",
+            "closest within 26400 ft",
+            "direction_and_distance",
+          ].join("\n"),
         }),
       ]),
     );

@@ -180,12 +180,12 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 470,
-      "percent": "84.5%",
+      "numerator": 473,
+      "percent": "85.1%",
       "rowsByStatus": {
         "accepted": 332,
-        "accepted-no-battle-effect": 138,
-        "battle-runtime-required": 77,
+        "accepted-no-battle-effect": 141,
+        "battle-runtime-required": 74,
         "partial-battle-runtime": 6,
         "owner-evidence-required": 3
       }
@@ -203,15 +203,15 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 343,
       "non-runtime": 24,
-      "catalog-only/dead-for-now": 109,
-      "missing-authored-record": 45,
+      "catalog-only/dead-for-now": 112,
+      "missing-authored-record": 42,
       "catalog-installed-owner-evidence-required": 22,
       "catalog-authored-executable-follow-up": 13
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 183,
-      "catalog-only/dead-for-now": 109,
-      "missing-authored-record": 45,
+      "catalog-only/dead-for-now": 112,
+      "missing-authored-record": 42,
       "catalog-installed-owner-evidence-required": 17,
       "catalog-authored-executable-follow-up": 13
     },
@@ -6575,19 +6575,39 @@
       "detail": "Locate Animals or Plants (Divination; R)",
       "candidateUnitId": "locate_animals_or_plants",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "locate_animals_or_plants",
+        "sourceRecordPath": "packages/surface/content/locate_animals_or_plants.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "locate_animals_or_plants"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "exploration/detection owner",
+        "reason": "Kind matching, target presence, closest-target selection, and direction/distance disclosure for Beasts, Plant creatures, or nonmagical plants are exploration/table facts outside promoted battle runtime."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit locate_animals_or_plants is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "exploration/detection owner",
+          "evidence": "Kind matching, target presence, closest-target selection, and direction/distance disclosure for Beasts, Plant creatures, or nonmagical plants are exploration/table facts outside promoted battle runtime.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Kind matching, target presence, closest-target selection, and direction/distance disclosure for Beasts, Plant creatures, or nonmagical plants are exploration/table facts outside promoted battle runtime.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_locate_object",
@@ -11590,19 +11610,39 @@
       "detail": "Locate Animals or Plants (Divination; R)",
       "candidateUnitId": "locate_animals_or_plants",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "locate_animals_or_plants",
+        "sourceRecordPath": "packages/surface/content/locate_animals_or_plants.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "locate_animals_or_plants"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "exploration/detection owner",
+        "reason": "Kind matching, target presence, closest-target selection, and direction/distance disclosure for Beasts, Plant creatures, or nonmagical plants are exploration/table facts outside promoted battle runtime."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit locate_animals_or_plants is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "exploration/detection owner",
+          "evidence": "Kind matching, target presence, closest-target selection, and direction/distance disclosure for Beasts, Plant creatures, or nonmagical plants are exploration/table facts outside promoted battle runtime.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Kind matching, target presence, closest-target selection, and direction/distance disclosure for Beasts, Plant creatures, or nonmagical plants are exploration/table facts outside promoted battle runtime.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_locate_object",
@@ -16615,19 +16655,39 @@
       "detail": "Locate Animals or Plants (Divination; R)",
       "candidateUnitId": "locate_animals_or_plants",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "locate_animals_or_plants",
+        "sourceRecordPath": "packages/surface/content/locate_animals_or_plants.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "locate_animals_or_plants"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "exploration/detection owner",
+        "reason": "Kind matching, target presence, closest-target selection, and direction/distance disclosure for Beasts, Plant creatures, or nonmagical plants are exploration/table facts outside promoted battle runtime."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit locate_animals_or_plants is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "exploration/detection owner",
+          "evidence": "Kind matching, target presence, closest-target selection, and direction/distance disclosure for Beasts, Plant creatures, or nonmagical plants are exploration/table facts outside promoted battle runtime.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Kind matching, target presence, closest-target selection, and direction/distance disclosure for Beasts, Plant creatures, or nonmagical plants are exploration/table facts outside promoted battle runtime.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_locate_object",

@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L12G-MISSING-LOCATE-ANIMALS-OR-PLANTS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Locate Animals Or Plants Definition And Closure"
     },
     {
@@ -180,7 +180,7 @@ Do not run battle-runtime MBT unless the task changes promoted battle-runtime be
 | ---: | --- | --- | --- | --- |
 | 1 | L12G-MISSING-KNOCK - Knock Definition And Closure | done | completed baseline | Original backlog task 66; Unit `knock`. |
 | 2 | L12G-MISSING-LEVITATE - Levitate Definition And Support Or Closure | done | completed baseline | Original backlog task 67; Unit `levitate`. |
-| 3 | L12G-MISSING-LOCATE-ANIMALS-OR-PLANTS - Locate Animals Or Plants Definition And Closure | ready-for-research | completed baseline | Original backlog task 68; Unit `locate_animals_or_plants`. |
+| 3 | L12G-MISSING-LOCATE-ANIMALS-OR-PLANTS - Locate Animals Or Plants Definition And Closure | done | completed baseline | Original backlog task 68; Unit `locate_animals_or_plants`. |
 | 4 | L12G-MISSING-LOCATE-OBJECT - Locate Object Definition And Closure | ready-for-research | completed baseline | Original backlog task 69; Unit `locate_object`. |
 | 5 | L12G-MISSING-MAGIC-MOUTH - Magic Mouth Definition And Closure | ready-for-research | completed baseline | Original backlog task 70; Unit `magic_mouth`. |
 | 6 | L12G-MISSING-MIRROR-IMAGE - Mirror Image Definition And Runtime Support | ready-for-research | completed baseline | Original backlog task 71; Unit `mirror_image`. |
@@ -267,7 +267,7 @@ Acceptance:
 
 ### Task 3 - L12G-MISSING-LOCATE-ANIMALS-OR-PLANTS - Locate Animals Or Plants Definition And Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Original backlog task: `Task 68 - L12G-MISSING-LOCATE-ANIMALS-OR-PLANTS - Locate Animals Or Plants Definition And Closure`.
 Unit: `locate_animals_or_plants`.

@@ -165,6 +165,7 @@ export function traceEffectAtomScaling(
     case "ignore_web_restrictions":
     case "alter_item_kind":
     case "detect":
+    case "locate_kind":
     case "set_speed":
     case "negate_triggering_spell":
     case "reflect_triggering_spell":

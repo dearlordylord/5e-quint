@@ -197,6 +197,7 @@ export function traceEffectAtom(
     case "natural_weapons":
     case "water_breathing":
     case "detect":
+    case "locate_kind":
     case "negate_triggering_spell":
     case "reflect_triggering_spell":
     case "waste_triggering_spell_or_effect":
