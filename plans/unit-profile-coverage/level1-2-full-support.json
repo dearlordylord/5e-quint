@@ -1627,6 +1627,47 @@
       "unitId": "lesser_restoration"
     },
     {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME: Promote Levitate's creature branch: Magic Action and level-2+ Spell Slot spend, one visible creature target within 60 feet, caster-owned Concentration up to 10 minutes, unwilling-creature Constitution save gate, active levitated-target state with initial rise up to 20 feet, suspended/aloft projection, target movement only through caller-supplied fixed-object or surface-within-reach witnesses as if climbing, caster Magic Action altitude changes up to 20 feet while the target remains within range, self-target altitude changes as part of the target's move, and gentle-grounding cleanup when Concentration or duration ends. Owner: battle-runtime spell invocation/effect lifecycle plus table/spatial vertical movement witness boundary. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without loose-object target behavior or automatic elevation/pathfinding derivation.; L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH: Represent and promote or close Levitate's loose object branch: one visible loose object target within 60 feet weighing up to 500 pounds, no creature saving throw, spell-owned suspension and altitude changes, fixed-object or surface movement restrictions where relevant, range-gated caster movement, and gentle grounding when the spell ends without inventing spell-specific object position state. Owner: surface Spell Definition authoring plus battle-runtime object lifecycle owner decision. Required output: Focused Surface/runtime owner decision with tests or accepted runtime-detached closure for loose-object suspension, altitude control, range, and gentle-grounding facts, reusing any future object lifecycle owner rather than duplicating object state inside Levitate.",
+      "sourceRecordPath": "packages/surface/content/levitate.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Sorcerer spell list Levitate",
+          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_levitate",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 285,
+            "lineStart": 285,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Levitate",
+          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_levitate",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 217,
+            "lineStart": 217,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
+      "unitId": "levitate"
+    },
+    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -2683,7 +2724,7 @@
       ]
     },
     {
-      "count": 20,
+      "count": 21,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
@@ -2697,6 +2738,7 @@
         "enthrall",
         "flame_blade",
         "gust_of_wind",
+        "levitate",
         "monk_monks_focus",
         "monk_uncanny_metabolism",
         "moonbeam",
@@ -2808,13 +2850,13 @@
       "percent": "29.7%"
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 155,
+      "denominator": 156,
       "numerator": 101,
-      "percent": "65.2%"
+      "percent": "64.7%"
     },
     "strictTargetClosure": {
-      "denominator": 155,
-      "numerator": 146,
+      "denominator": 156,
+      "numerator": 147,
       "percent": "94.2%"
     }
   },
@@ -3356,36 +3398,6 @@
           }
         ],
         "unitId": "illusory_script"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "spell Unit pressure",
-            "concept": "Sorcerer spell list Levitate",
-            "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_levitate",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 285,
-              "lineStart": 285,
-              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Wizard spell list Levitate",
-            "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_levitate",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 217,
-              "lineStart": 217,
-              "path": ".references/srd-5.2.1/Classes/Wizard.md"
-            }
-          }
-        ],
-        "unitId": "levitate"
       },
       {
         "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
@@ -7784,10 +7796,10 @@
       "missing": 9,
       "profile-subset-supported": 12,
       "supported-profile": 101,
-      "unsupported-profile": 33
+      "unsupported-profile": 34
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 20,
+      "blocked-follow-up-split": 21,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
@@ -7795,7 +7807,7 @@
       "open-runtime-behavior": 9,
       "supported-profile": 101
     },
-    "nonSupportedFrontier": 54,
-    "strictDenominator": 155
+    "nonSupportedFrontier": 55,
+    "strictDenominator": 156
   }
 }

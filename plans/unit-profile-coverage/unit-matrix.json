@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 383,
-      "numerator": 165,
-      "percent": "43.1%"
+      "denominator": 384,
+      "numerator": 166,
+      "percent": "43.2%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 455,
-      "numerator": 197,
-      "percent": "43.3%"
+      "denominator": 456,
+      "numerator": 198,
+      "percent": "43.4%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 198
+      "value": 199
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 124,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 198,
-      "numerator": 198,
+      "denominator": 199,
+      "numerator": 199,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "83.9%"
     },
     "supportedProfileCoverage": {
-      "denominator": 166,
+      "denominator": 167,
       "numerator": 124,
-      "percent": "74.7%"
+      "percent": "74.3%"
     }
   },
   "metricSemantics": [
@@ -15430,6 +15430,41 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/knock.json",
       "unitId": "knock"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME",
+            "mechanic": "Promote Levitate's creature branch: Magic Action and level-2+ Spell Slot spend, one visible creature target within 60 feet, caster-owned Concentration up to 10 minutes, unwilling-creature Constitution save gate, active levitated-target state with initial rise up to 20 feet, suspended/aloft projection, target movement only through caller-supplied fixed-object or surface-within-reach witnesses as if climbing, caster Magic Action altitude changes up to 20 feet while the target remains within range, self-target altitude changes as part of the target's move, and gentle-grounding cleanup when Concentration or duration ends.",
+            "owner": "battle-runtime spell invocation/effect lifecycle plus table/spatial vertical movement witness boundary",
+            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without loose-object target behavior or automatic elevation/pathfinding derivation.",
+            "title": "Levitate Creature Runtime Support"
+          },
+          {
+            "id": "L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH",
+            "mechanic": "Represent and promote or close Levitate's loose object branch: one visible loose object target within 60 feet weighing up to 500 pounds, no creature saving throw, spell-owned suspension and altitude changes, fixed-object or surface movement restrictions where relevant, range-gated caster movement, and gentle grounding when the spell ends without inventing spell-specific object position state.",
+            "owner": "surface Spell Definition authoring plus battle-runtime object lifecycle owner decision",
+            "requiredOutput": "Focused Surface/runtime owner decision with tests or accepted runtime-detached closure for loose-object suspension, altitude control, range, and gentle-grounding facts, reusing any future object lifecycle owner rather than duplicating object state inside Levitate.",
+            "title": "Levitate Loose Object Branch"
+          }
+        ],
+        "futureProfileOwner": "battle-runtime spell invocation/effect lifecycle plus table/spatial vertical movement witness boundary and object lifecycle owner",
+        "reason": "Levitate is authored and installed as an SRD Surface Spell Definition with Magic Action Spell Slot casting, one visible creature-or-loose-object target within 60 feet, a loose-object 500-pound target limit, an unwilling-creature Constitution save gate, an initial vertical rise up to 20 feet, duration-long suspension, target movement only by pushing or pulling a fixed object or surface within reach as if climbing, caster and self altitude-control clauses, and gentle grounding when the spell ends. Task 2 claims no promoted battle-runtime profile yet because runtime has no levitated-target active effect owner, no elevation or aloft state projection, no fixed-object or surface-within-reach witness boundary, no vertical altitude-control action or movement protocol, and no loose-object lifecycle owner.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/levitate.json",
+      "unitId": "levitate"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

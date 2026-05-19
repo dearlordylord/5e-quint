@@ -708,6 +708,27 @@ type EffectAtom =
       readonly maxDistanceFeet?: number;
       readonly impactAsNormalFall?: true;
     }
+  | {
+      readonly kind: "levitate_target";
+      readonly initialRiseMaxFeet: 20;
+      readonly suspension: "spell_duration";
+      readonly targetMovement: {
+        readonly allowedBy: "push_or_pull_fixed_object_or_surface_within_reach";
+        readonly movementMode: "as_if_climbing";
+      };
+      readonly casterAltitudeControl: {
+        readonly maxDistanceFeet: 20;
+        readonly direction: "up_or_down";
+        readonly cost: "magic_action_on_caster_turn";
+        readonly targetMustRemainWithinSpellRange: true;
+      };
+      readonly selfAltitudeControl: {
+        readonly maxDistanceFeet: 20;
+        readonly direction: "up_or_down";
+        readonly cost: "part_of_move";
+      };
+      readonly ending: "float_gently_to_ground_if_aloft";
+    }
   | { readonly kind: "grab_fixed_object" }
   | {
       readonly kind: "suspend_in_area";
@@ -1187,7 +1208,7 @@ type ActivationPhase =
       readonly onSuccess: SaveSuccessOutcome;
       readonly repeatSaves?: ReadonlyNonEmptyArray<RepeatSaveSpec>;
       readonly autoSuccessIfCasterSlotGte?: "triggering_spell_level";
-      readonly saveAppliesIf?: "unwilling_target";
+      readonly saveAppliesIf?: "unwilling_target" | "unwilling_creature_target";
     }
   | {
       readonly kind: "ability_check_gate";
@@ -1393,8 +1414,17 @@ export const TargetStateFilterSchema = nonEmpty(
   Schema.Literal("falling", "zero_hp_not_dead"),
 );
 const CreatureTargetKindsSchema = nonEmpty(Schema.Literal("creature"));
+const CreatureOrObjectTargetKindsSchema = Schema.Union(
+  Schema.Tuple(Schema.Literal("creature"), Schema.Literal("object")),
+  Schema.Tuple(Schema.Literal("object"), Schema.Literal("creature")),
+);
 
 export const TargetSelectionSchema = Schema.Union(
+  strictStruct({
+    mode: Schema.Literal("one"),
+    targetKinds: CreatureOrObjectTargetKindsSchema,
+    objectFilter: Schema.suspend(() => ObjectFilterSchema),
+  }),
   strictStruct({
     mode: Schema.Literal("one"),
     targetKinds: optionalExact(nonEmpty(TargetKindSchema)),
@@ -1574,13 +1604,18 @@ export const SizeSchema = Schema.Literal(
 
 export const ObjectMaterialSchema = Schema.Literal("metal", "flammable");
 
-export const ObjectAccessPreventionMeansSchema = Schema.Literal(
-  "mundane_or_magical",
+export const ObjectTargetRelationSchema = Schema.Literal(
+  "loose",
+  "not_worn_or_carried",
 );
+
+export const ObjectAccessPreventionMeansSchema =
+  Schema.Literal("mundane_or_magical");
 
 export const ObjectFilterSchema = Schema.Struct({
   material: optionalExact(ObjectMaterialSchema),
-  heldOrWorn: optionalExact(Schema.Literal("required", "forbidden")),
+  targetRelation: optionalExact(ObjectTargetRelationSchema),
+  maxWeightPounds: optionalExact(PositiveIntegerSchema),
   manufactured: optionalExact(Schema.Boolean),
   maxSize: optionalExact(SizeSchema),
   accessPreventionMeans: optionalExact(ObjectAccessPreventionMeansSchema),
@@ -2213,6 +2248,29 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         direction: Schema.Literal("upward", "downward"),
         maxDistanceFeet: optionalExact(Schema.Number),
         impactAsNormalFall: optionalExact(Schema.Literal(true)),
+      }),
+      strictStruct({
+        kind: Schema.Literal("levitate_target"),
+        initialRiseMaxFeet: Schema.Literal(20),
+        suspension: Schema.Literal("spell_duration"),
+        targetMovement: strictStruct({
+          allowedBy: Schema.Literal(
+            "push_or_pull_fixed_object_or_surface_within_reach",
+          ),
+          movementMode: Schema.Literal("as_if_climbing"),
+        }),
+        casterAltitudeControl: strictStruct({
+          maxDistanceFeet: Schema.Literal(20),
+          direction: Schema.Literal("up_or_down"),
+          cost: Schema.Literal("magic_action_on_caster_turn"),
+          targetMustRemainWithinSpellRange: Schema.Literal(true),
+        }),
+        selfAltitudeControl: strictStruct({
+          maxDistanceFeet: Schema.Literal(20),
+          direction: Schema.Literal("up_or_down"),
+          cost: Schema.Literal("part_of_move"),
+        }),
+        ending: Schema.Literal("float_gently_to_ground_if_aloft"),
       }),
       Schema.Struct({ kind: Schema.Literal("grab_fixed_object") }),
       Schema.Struct({
@@ -2875,7 +2933,9 @@ export const ActivationPhaseSchema: Schema.suspend<
       autoSuccessIfCasterSlotGte: optionalExact(
         Schema.Literal("triggering_spell_level"),
       ),
-      saveAppliesIf: optionalExact(Schema.Literal("unwilling_target")),
+      saveAppliesIf: optionalExact(
+        Schema.Literal("unwilling_target", "unwilling_creature_target"),
+      ),
     }),
     Schema.Struct({
       kind: Schema.Literal("ability_check_gate"),

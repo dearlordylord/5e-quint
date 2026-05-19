@@ -104,6 +104,7 @@ export function traceEffectAtomScaling(
     case "suspend_target":
     case "fall_at_end_of_next_turn_unless_reapplied":
     case "force_fall":
+    case "levitate_target":
     case "grab_fixed_object":
     case "suspend_in_area":
     case "fall_when_effect_ends":

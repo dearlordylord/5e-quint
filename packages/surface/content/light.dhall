@@ -54,7 +54,7 @@ let light =
                         { kind = "object"
                         , count = 1
                         , filter =
-                            { heldOrWorn = "forbidden"
+                            { targetRelation = "not_worn_or_carried"
                             , maxSize = "large"
                             }
                         }

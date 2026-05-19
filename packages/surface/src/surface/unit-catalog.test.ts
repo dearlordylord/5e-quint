@@ -140,6 +140,7 @@ const requiredFirstVerticalUnitIds = [
   "feather_fall",
   "jump",
   "knock",
+  "levitate",
   "hellish_rebuke",
   "armor_chain_mail",
   "equipment_shield",
@@ -218,7 +219,7 @@ describe("SRD Unit catalog boundary", () => {
               kind: "ignite_objects",
               filter: {
                 material: "flammable",
-                heldOrWorn: "forbidden",
+                targetRelation: "not_worn_or_carried",
               },
             },
           ],
@@ -266,6 +267,61 @@ describe("SRD Unit catalog boundary", () => {
     expect(prayerOfHealing.description).toContain(
       "gain the benefits of a Short Rest",
     );
+  });
+
+  test("keeps Levitate's SRD suspension and altitude-control shell in the catalog projection", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const levitate = result.catalog.requireUnit("levitate");
+
+    expect(levitate).toMatchObject({
+      kind: "spell",
+      mechanics: {
+        duration: {
+          kind: "concentration",
+          upTo: { amount: 10, unit: "minute" },
+        },
+        level: 2,
+        phases: [
+          {
+            ability: "con",
+            attachment: {
+              value: {
+                kind: "target",
+                selection: {
+                  mode: "one",
+                  objectFilter: {
+                    targetRelation: "loose",
+                    maxWeightPounds: 500,
+                  },
+                  targetKinds: ["creature", "object"],
+                },
+              },
+            },
+            kind: "save_gate",
+            onFail: {
+              casterAltitudeControl: {
+                cost: "magic_action_on_caster_turn",
+                maxDistanceFeet: 20,
+                targetMustRemainWithinSpellRange: true,
+              },
+              ending: "float_gently_to_ground_if_aloft",
+              initialRiseMaxFeet: 20,
+              kind: "levitate_target",
+              selfAltitudeControl: { cost: "part_of_move" },
+              suspension: "spell_duration",
+              targetMovement: {
+                allowedBy: "push_or_pull_fixed_object_or_surface_within_reach",
+                movementMode: "as_if_climbing",
+              },
+            },
+            saveAppliesIf: "unwilling_creature_target",
+          },
+        ],
+      },
+    });
   });
 
   test("keeps Shatter's SRD save-damage clause in the catalog projection", () => {
@@ -820,7 +876,10 @@ describe("SRD Unit catalog boundary", () => {
           trigger: { kind: "passive" },
           effect: {
             kind: "ignite_objects",
-            filter: { material: "flammable", heldOrWorn: "forbidden" },
+            filter: {
+              material: "flammable",
+              targetRelation: "not_worn_or_carried",
+            },
           },
         },
         {
@@ -1055,7 +1114,7 @@ describe("SRD Unit catalog boundary", () => {
           kind: "ignite_objects",
           filter: {
             material: "flammable",
-            heldOrWorn: "forbidden",
+            targetRelation: "not_worn_or_carried",
           },
         },
       ]);

@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L12G-MISSING-LEVITATE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Levitate Definition And Support Or Closure"
     },
     {
@@ -99,12 +99,24 @@
       "id": "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME",
       "status": "ready-for-research",
       "title": "Enthrall Perception Penalty Runtime Support"
+    },
+    {
+      "number": 17,
+      "id": "L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Levitate Creature Runtime Support"
+    },
+    {
+      "number": 18,
+      "id": "L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH",
+      "status": "ready-for-research",
+      "title": "Levitate Loose Object Branch"
     }
   ]
 }
 -->
 
-Lane D owns the remaining missing-spell closures from Knock through Zone of Truth plus Dragon's Breath, Enhance Ability, Enlarge/Reduce, and Enthrall followups. It does not touch Warding Bond or A/C-owned followups.
+Lane D owns the remaining missing-spell closures from Knock through Zone of Truth plus Dragon's Breath, Enhance Ability, Enlarge/Reduce, Levitate, and Enthrall followups. It does not touch Warding Bond or A/C-owned followups.
 
 This is an active Ralph execution plan created from `plans/LEVEL2_RALPH_WRAPUP_BACKLOG.md`. The backlog remains the archived pre-research source; this file is the runnable queue.
 
@@ -167,7 +179,7 @@ Do not run battle-runtime MBT unless the task changes promoted battle-runtime be
 | # | Task | Status | Depends On | Notes |
 | ---: | --- | --- | --- | --- |
 | 1 | L12G-MISSING-KNOCK - Knock Definition And Closure | done | completed baseline | Original backlog task 66; Unit `knock`. |
-| 2 | L12G-MISSING-LEVITATE - Levitate Definition And Support Or Closure | ready-for-research | completed baseline | Original backlog task 67; Unit `levitate`. |
+| 2 | L12G-MISSING-LEVITATE - Levitate Definition And Support Or Closure | done | completed baseline | Original backlog task 67; Unit `levitate`. |
 | 3 | L12G-MISSING-LOCATE-ANIMALS-OR-PLANTS - Locate Animals Or Plants Definition And Closure | ready-for-research | completed baseline | Original backlog task 68; Unit `locate_animals_or_plants`. |
 | 4 | L12G-MISSING-LOCATE-OBJECT - Locate Object Definition And Closure | ready-for-research | completed baseline | Original backlog task 69; Unit `locate_object`. |
 | 5 | L12G-MISSING-MAGIC-MOUTH - Magic Mouth Definition And Closure | ready-for-research | completed baseline | Original backlog task 70; Unit `magic_mouth`. |
@@ -182,6 +194,8 @@ Do not run battle-runtime MBT unless the task changes promoted battle-runtime be
 | 14 | L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME - Enlarge Reduce Creature Runtime Support | ready-for-research | completed baseline | Original backlog task 93; Unit `enlarge_reduce`. |
 | 15 | L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH - Enlarge Reduce Object Branch | blocked | L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME | Original backlog task 94; Unit `enlarge_reduce`. |
 | 16 | L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME - Enthrall Perception Penalty Runtime Support | ready-for-research | completed baseline | Original backlog task 95; Unit `enthrall`. |
+| 17 | L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME - Levitate Creature Runtime Support | ready-for-research | L12G-MISSING-LEVITATE | Task 2 follow-up split; Unit `levitate`; creature branch without loose-object behavior. |
+| 18 | L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH - Levitate Loose Object Branch | ready-for-research | L12G-MISSING-LEVITATE | Task 2 follow-up split; Unit `levitate`; loose-object branch support or closure. |
 
 ## Task Details
 
@@ -220,7 +234,7 @@ Acceptance:
 
 ### Task 2 - L12G-MISSING-LEVITATE - Levitate Definition And Support Or Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Original backlog task: `Task 67 - L12G-MISSING-LEVITATE - Levitate Definition And Support Or Closure`.
 Unit: `levitate`.
@@ -711,6 +725,69 @@ Outputs:
 
 Acceptance:
 
+- RAW and ubiquitous-language checks are performed before modeling;
+- no Warding Bond task, active B-lane task, companion-control behavior, or sibling-lane task is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence complete;
+- package typechecks are run for touched packages when dependencies are available;
+- MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
+
+### Task 17 - L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME - Levitate Creature Runtime Support
+
+Status: `ready-for-research`
+
+Origin: Task 2 follow-up split from `L12G-MISSING-LEVITATE`.
+Unit: `levitate`.
+
+Inputs:
+
+- `packages/surface/content/levitate.dhall` and `packages/surface/content/levitate.json`;
+- the `levitate` Unit claim and generated coverage rows;
+- local RAW under `.references/srd-5.2.1/Spells/Descriptions-E-L.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- promoted `@dnd/battle-runtime` spell invocation/effect lifecycle owners and package-local Quint spec;
+- focused tests for spell casting, Concentration cleanup, vertical movement witnesses, and active effect projection.
+
+Outputs:
+
+- promote Levitate's creature branch: Magic Action and level-2+ Spell Slot spend, one visible creature target within 60 feet, caster-owned Concentration up to 10 minutes, unwilling-creature Constitution save gate, active levitated-target state with initial rise up to 20 feet, suspended/aloft projection, target movement only through caller-supplied fixed-object or surface-within-reach witnesses as if climbing, caster Magic Action altitude changes up to 20 feet while the target remains within range, self-target altitude changes as part of the target's move, and gentle-grounding cleanup when Concentration or duration ends;
+- update the relevant promoted Quint model before runtime behavior when behavior changes;
+- leave loose-object target behavior and automatic elevation/pathfinding derivation outside this task;
+- regenerate coverage artifacts.
+
+Acceptance:
+
+- supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch;
+- RAW and ubiquitous-language checks are performed before modeling;
+- no Warding Bond task, active B-lane task, companion-control behavior, or sibling-lane task is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence complete;
+- package typechecks are run for touched packages when dependencies are available;
+- MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
+
+### Task 18 - L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH - Levitate Loose Object Branch
+
+Status: `ready-for-research`
+
+Origin: Task 2 follow-up split from `L12G-MISSING-LEVITATE`.
+Unit: `levitate`.
+
+Inputs:
+
+- `packages/surface/content/levitate.dhall` and `packages/surface/content/levitate.json`;
+- the `levitate` Unit claim and generated coverage rows;
+- local RAW under `.references/srd-5.2.1/Spells/Descriptions-E-L.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing object target, object lifecycle, spell invocation/effect lifecycle, and table/spatial witness owners;
+- focused tests for whichever Surface/runtime boundary is chosen.
+
+Outputs:
+
+- represent and promote or close Levitate's loose-object branch: one visible loose object target within 60 feet weighing up to 500 pounds, no creature saving throw, spell-owned suspension and altitude changes, fixed-object or surface movement restrictions where relevant, range-gated caster movement, and gentle grounding when the spell ends without inventing spell-specific object position state;
+- reuse any future object lifecycle owner rather than duplicating object state inside Levitate;
+- update the Unit claim and generated coverage artifacts with either supported evidence or an accepted runtime-boundary closure.
+
+Acceptance:
+
+- focused Surface/runtime owner decision with tests or accepted runtime-detached closure for loose-object suspension, altitude control, range, and gentle-grounding facts;
 - RAW and ubiquitous-language checks are performed before modeling;
 - no Warding Bond task, active B-lane task, companion-control behavior, or sibling-lane task is pulled into this lane;
 - focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence complete;

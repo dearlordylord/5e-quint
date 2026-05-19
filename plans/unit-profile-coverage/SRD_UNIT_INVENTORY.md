@@ -66,9 +66,9 @@ This is the default `%` for level-1 plus level-2 readiness questions. It uses th
 
 - catalog-authored-executable-follow-up: 13
 - catalog-installed-owner-evidence-present: 183
-- catalog-installed-owner-evidence-required: 15
+- catalog-installed-owner-evidence-required: 17
 - catalog-only/dead-for-now: 109
-- missing-authored-record: 47
+- missing-authored-record: 45
 
 ## Recommended Ralph Batches
 

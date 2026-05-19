@@ -204,15 +204,15 @@
       "catalog-installed-owner-evidence-present": 343,
       "non-runtime": 24,
       "catalog-only/dead-for-now": 109,
-      "missing-authored-record": 47,
-      "catalog-installed-owner-evidence-required": 20,
+      "missing-authored-record": 45,
+      "catalog-installed-owner-evidence-required": 22,
       "catalog-authored-executable-follow-up": 13
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 183,
       "catalog-only/dead-for-now": 109,
-      "missing-authored-record": 47,
-      "catalog-installed-owner-evidence-required": 15,
+      "missing-authored-record": 45,
+      "catalog-installed-owner-evidence-required": 17,
       "catalog-authored-executable-follow-up": 13
     },
     "levelOneRowsByCategory": {
@@ -20417,15 +20417,29 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "levitate",
+        "sourceRecordPath": "packages/surface/content/levitate.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "levitate"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit levitate is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/effect lifecycle plus table/spatial vertical movement witness boundary; surface Spell Definition authoring plus battle-runtime object lifecycle owner decision",
+          "evidence": "Promote follow-up split L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME, L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH: L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME owns Promote Levitate's creature branch: Magic Action and level-2+ Spell Slot spend, one visible creature target within 60 feet, caster-owned Concentration up to 10 minutes, unwilling-creature Constitution save gate, active levitated-target state with initial rise up to 20 feet, suspended/aloft projection, target movement only through caller-supplied fixed-object or surface-within-reach witnesses as if climbing, caster Magic Action altitude changes up to 20 feet while the target remains within range, self-target altitude changes as part of the target's move, and gentle-grounding cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without loose-object target behavior or automatic elevation/pathfinding derivation.; L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH owns Represent and promote or close Levitate's loose object branch: one visible loose object target within 60 feet weighing up to 500 pounds, no creature saving throw, spell-owned suspension and altitude changes, fixed-object or surface movement restrictions where relevant, range-gated caster movement, and gentle grounding when the spell ends without inventing spell-specific object position state. Required output: Focused Surface/runtime owner decision with tests or accepted runtime-detached closure for loose-object suspension, altitude control, range, and gentle-grounding facts, reusing any future object lifecycle owner rather than duplicating object state inside Levitate.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME, L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH: L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME owns Promote Levitate's creature branch: Magic Action and level-2+ Spell Slot spend, one visible creature target within 60 feet, caster-owned Concentration up to 10 minutes, unwilling-creature Constitution save gate, active levitated-target state with initial rise up to 20 feet, suspended/aloft projection, target movement only through caller-supplied fixed-object or surface-within-reach witnesses as if climbing, caster Magic Action altitude changes up to 20 feet while the target remains within range, self-target altitude changes as part of the target's move, and gentle-grounding cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without loose-object target behavior or automatic elevation/pathfinding derivation.; L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH owns Represent and promote or close Levitate's loose object branch: one visible loose object target within 60 feet weighing up to 500 pounds, no creature saving throw, spell-owned suspension and altitude changes, fixed-object or surface movement restrictions where relevant, range-gated caster movement, and gentle grounding when the spell ends without inventing spell-specific object position state. Required output: Focused Surface/runtime owner decision with tests or accepted runtime-detached closure for loose-object suspension, altitude control, range, and gentle-grounding facts, reusing any future object lifecycle owner rather than duplicating object state inside Levitate.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {
@@ -25818,15 +25832,29 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "levitate",
+        "sourceRecordPath": "packages/surface/content/levitate.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "levitate"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit levitate is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/effect lifecycle plus table/spatial vertical movement witness boundary; surface Spell Definition authoring plus battle-runtime object lifecycle owner decision",
+          "evidence": "Promote follow-up split L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME, L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH: L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME owns Promote Levitate's creature branch: Magic Action and level-2+ Spell Slot spend, one visible creature target within 60 feet, caster-owned Concentration up to 10 minutes, unwilling-creature Constitution save gate, active levitated-target state with initial rise up to 20 feet, suspended/aloft projection, target movement only through caller-supplied fixed-object or surface-within-reach witnesses as if climbing, caster Magic Action altitude changes up to 20 feet while the target remains within range, self-target altitude changes as part of the target's move, and gentle-grounding cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without loose-object target behavior or automatic elevation/pathfinding derivation.; L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH owns Represent and promote or close Levitate's loose object branch: one visible loose object target within 60 feet weighing up to 500 pounds, no creature saving throw, spell-owned suspension and altitude changes, fixed-object or surface movement restrictions where relevant, range-gated caster movement, and gentle grounding when the spell ends without inventing spell-specific object position state. Required output: Focused Surface/runtime owner decision with tests or accepted runtime-detached closure for loose-object suspension, altitude control, range, and gentle-grounding facts, reusing any future object lifecycle owner rather than duplicating object state inside Levitate.",
+          "status": "owner evidence required"
+        }
+      ],
+      "nextAction": "Promote follow-up split L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME, L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH: L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME owns Promote Levitate's creature branch: Magic Action and level-2+ Spell Slot spend, one visible creature target within 60 feet, caster-owned Concentration up to 10 minutes, unwilling-creature Constitution save gate, active levitated-target state with initial rise up to 20 feet, suspended/aloft projection, target movement only through caller-supplied fixed-object or surface-within-reach witnesses as if climbing, caster Magic Action altitude changes up to 20 feet while the target remains within range, self-target altitude changes as part of the target's move, and gentle-grounding cleanup when Concentration or duration ends. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without loose-object target behavior or automatic elevation/pathfinding derivation.; L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH owns Represent and promote or close Levitate's loose object branch: one visible loose object target within 60 feet weighing up to 500 pounds, no creature saving throw, spell-owned suspension and altitude changes, fixed-object or surface movement restrictions where relevant, range-gated caster movement, and gentle grounding when the spell ends without inventing spell-specific object position state. Required output: Focused Surface/runtime owner decision with tests or accepted runtime-detached closure for loose-object suspension, altitude control, range, and gentle-grounding facts, reusing any future object lifecycle owner rather than duplicating object state inside Levitate.",
       "battleReadinessStatus": "battle-runtime-required"
     },
     {
