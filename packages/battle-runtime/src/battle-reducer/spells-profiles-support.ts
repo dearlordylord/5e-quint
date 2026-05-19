@@ -2327,9 +2327,6 @@ export function thaumaturgyBoomingVoiceProjection(
   "activeEffect" | "rangeFeet"
 > | null {
   if (
-    spell.name !== "Thaumaturgy" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-S-Z#Thaumaturgy" ||
     spell.mechanics.family !== "ongoing_effect" ||
     spell.mechanics.level !== 0 ||
     spell.mechanics.castingTime.kind !== "action" ||
