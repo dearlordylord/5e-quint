@@ -16,6 +16,7 @@ import type { IdGen } from "./tracer-rule-labels.ts";
 
 import { traceDuration } from "./tracer-duration.ts";
 import type { SpellCtx } from "./tracer-spell-context.ts";
+import { traceAttachment } from "./tracer-attachments.ts";
 
 import { traceOngoingEffect } from "./tracer-spell-ongoing.ts";
 
@@ -100,6 +101,9 @@ export function traceSpellMechanics(
     case "triggered_reaction":
       traceTriggeredReaction(m, ctx, nodes, edges, ids);
       break;
+    case "passive_hit_intercept":
+      tracePassiveHitIntercept(m, ctx, nodes, edges, ids);
+      break;
     case "anchored_trigger":
       traceAnchoredTrigger(m, ctx, nodes, edges, ids);
       break;
@@ -150,6 +154,26 @@ function traceMaterialComponents(
       throw new Error(`unhandled material component: ${String(_exhaustive)}`);
     }
   }
+}
+
+function tracePassiveHitIntercept(
+  m: Extract<SpellMechanics, { readonly family: "passive_hit_intercept" }>,
+  ctx: SpellCtx,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  const attachmentId = traceAttachment(m.attachment, m.range, nodes, ids);
+  edges.push({ from: ctx.procId, to: attachmentId, relation: "attaches" });
+
+  const effectId = ids("eff");
+  nodes.push({
+    id: effectId,
+    category: "effect",
+    atomKind: "passive_hit_intercept",
+    label: `hit intercept\n${m.duplicatePool.count} duplicates\n${m.duplicatePool.dicePerRemainingDuplicate}d${m.duplicatePool.dieSize} per duplicate, ${m.duplicatePool.successAtLeast}+`,
+  });
+  edges.push({ from: attachmentId, to: effectId, relation: "applies" });
 }
 
 export function traceCastingTimeQuota(

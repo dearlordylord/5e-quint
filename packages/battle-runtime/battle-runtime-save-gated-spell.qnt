@@ -15,6 +15,7 @@ module battleRuntimeSaveGatedSpell {
   import battleRuntimeAttackFacts.* from "./battle-runtime-attack-facts"
   import battleRuntimeHidden.* from "./battle-runtime-hidden"
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
+  import battleRuntimeMirrorImage.* from "./battle-runtime-mirror-image"
 
   pure def battleRuntimeSaveGatedDamageProfileForInvocation(
     invocation: SaveGatedDamageInvocation
@@ -809,12 +810,47 @@ module battleRuntimeSaveGatedSpell {
     goblinConcentrationSaveSucceeded: bool,
     fighterConcentrationSaveSucceeded: bool,
   ): BattleState =
+    resolveIceKnifeWithMirrorImageDuplicateRoll(
+      state,
+      attackTotal,
+      naturalD20,
+      attackDamageRoll,
+      goblinSavingThrowSucceeded,
+      fighterIncludedInBurst,
+      fighterSavingThrowSucceeded,
+      burstDamageRoll,
+      goblinConcentrationSaveSucceeded,
+      fighterConcentrationSaveSucceeded,
+      0,
+      false,
+    )
+
+  pure def resolveIceKnifeWithMirrorImageDuplicateRoll(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    attackDamageRoll: int,
+    goblinSavingThrowSucceeded: bool,
+    fighterIncludedInBurst: bool,
+    fighterSavingThrowSucceeded: bool,
+    burstDamageRoll: int,
+    goblinConcentrationSaveSucceeded: bool,
+    fighterConcentrationSaveSucceeded: bool,
+    mirrorImageDuplicateHighestRoll: int,
+    attackerPerceivesTargetWithBlindsightOrTruesight: bool,
+  ): BattleState =
     if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)))
       state
     else {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
       val hit = attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), 20)
-      if (hit and state.goblin.reactionAvailable and not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
+      val mirrorImageRedirects = hit and mirrorImageRedirectsAttackRollHit(
+        rolled.fighter.activeEffects,
+        rolled.goblin.activeEffects,
+        attackerPerceivesTargetWithBlindsightOrTruesight,
+        mirrorImageDuplicateHighestRoll,
+      )
+      if (hit and not(mirrorImageRedirects) and state.goblin.reactionAvailable and not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
         openReactionWindow(rolled, {
           trigger: AttackHit,
           procedure: ShieldReactionProcedure,
@@ -823,8 +859,18 @@ module battleRuntimeSaveGatedSpell {
           continuation: ResumeIceKnife,
         })
       } else {
+        val attackResolvedGoblin =
+          if (mirrorImageRedirects)
+            combatantAfterMirrorImageAttackRollHit(
+              rolled.fighter.activeEffects,
+              rolled.goblin,
+              attackerPerceivesTargetWithBlindsightOrTruesight,
+              mirrorImageDuplicateHighestRoll,
+            )
+          else
+            rolled.goblin
         val attackDamage =
-          if (hit)
+          if (hit and not(mirrorImageRedirects))
             adjustedAttackBurstSaveDamage(
               attackDamageRoll * (if (attackIsCritical(naturalD20, 20)) 2 else 1),
               attackBurstSaveDamageAttackType(IceKnifeAttackBurstSaveDamage),
@@ -837,7 +883,7 @@ module battleRuntimeSaveGatedSpell {
           else
             adjustedAttackBurstSaveDamage(burstDamageRoll, attackBurstSaveDamageBurstType(IceKnifeAttackBurstSaveDamage))
         val damagedGoblin = applyIceKnifeDamageWithSingleConcentrationCheck(
-          rolled.goblin,
+          attackResolvedGoblin,
           attackDamage,
           burstDamage,
           goblinConcentrationSaveSucceeded,

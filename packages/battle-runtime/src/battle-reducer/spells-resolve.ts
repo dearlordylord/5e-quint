@@ -26,6 +26,7 @@ import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import type { DamageType } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import {
+  ATTACK_ROLL_HOLE_ID,
   ATTACK_TARGET_HOLE_ID,
   activeOngoingFeaturesPreventSpellcasting,
   attackRollIsCriticalHit,
@@ -73,6 +74,7 @@ import {
 import { needsHolesResult, revealHidden } from "./hole-helpers.ts";
 import { applyDashToActor } from "./attack-resolution.ts";
 import { invalidResult } from "./result-helpers.ts";
+import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
 import { expendSpellSlot } from "./spell-effects.ts";
 import {
   isReadiedSpellInvocation,
@@ -174,6 +176,7 @@ export {
   resolveDamageReductionSpellAct,
   resolveJumpMovementReplacementSpellAct,
   resolveMakeStableSpellAct,
+  resolveMirrorImageHitInterceptionSpellAct,
   resolvePreparedHealingSpellAct,
   resolveRollModifierSpellAct,
   resolveScalarBuffSpellAct,
@@ -208,6 +211,7 @@ import {
   resolveDamageReductionSpellAct,
   resolveJumpMovementReplacementSpellAct,
   resolveMakeStableSpellAct,
+  resolveMirrorImageHitInterceptionSpellAct,
   resolvePreparedHealingSpellAct,
   resolveRollModifierSpellAct,
   resolveScalarBuffSpellAct,
@@ -319,6 +323,19 @@ function selectedSpellAttackDamageInvocation(
   };
 }
 
+function spellAttackPostMirrorImageFillsArePresent(
+  fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>,
+): boolean {
+  return (
+    fillSet.damageRoll !== undefined ||
+    fillSet.damageDispositions.length > 0 ||
+    fillSet.spellDamageReductionRolls.length > 0 ||
+    fillSet.concentrationSavingThrows.length > 0 ||
+    fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
+    fillSet.attackBurstDamageRoll !== undefined
+  );
+}
+
 export function resolveSpellAct(
   input: ActionSpellBattleResolutionInput,
 ): BattleResolutionResult {
@@ -383,6 +400,7 @@ export function resolveSpellAct(
       invocation.procedure === "thaumaturgyBoomingVoice" ||
       invocation.procedure === "creatureTypeProtection" ||
       invocation.procedure === "blurAttackRollDefense" ||
+      invocation.procedure === "mirrorImageHitInterception" ||
       invocation.procedure ===
         "conditionImmunityAndTurnStartTemporaryHitPoints" ||
       invocation.procedure === "afterHitDamage" ||
@@ -645,6 +663,14 @@ export function resolveSpellAct(
   }
   if (invocation.procedure === "blurAttackRollDefense") {
     return resolveBlurAttackRollDefenseSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "mirrorImageHitInterception") {
+    return resolveMirrorImageHitInterceptionSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
@@ -988,6 +1014,62 @@ export function resolveSpellAct(
       subject.actorId,
       invocationForResolution,
     );
+    if (!hit && fillSet.mirrorImageDuplicateRoll !== undefined) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Mirror Image duplicate roll is only valid after an attack-roll hit.",
+      );
+    }
+    if (hit) {
+      const mirrorImageAttacker = attackRolledStateAfterHurl.combatants.get(
+        subject.actorId,
+      );
+      if (mirrorImageAttacker === undefined) {
+        return invalidResult(
+          input.state,
+          "missingCombatant",
+          "Spell attack actor is no longer in this battle.",
+        );
+      }
+      const mirrorImageCheck = mirrorImageHitInterceptionCheck({
+        state: attackRolledStateAfterHurl,
+        attacker: mirrorImageAttacker,
+        target:
+          attackRolledStateAfterHurl.combatants.get(target.combatantId) ??
+          target,
+        targetSpatialFacts: fillSet.targetSpatialFacts,
+        triggeringAttackRollHoleId: ATTACK_ROLL_HOLE_ID,
+        fill: fillSet.mirrorImageDuplicateRoll,
+      });
+      if (mirrorImageCheck.tag === "needsHoles") {
+        return needsHolesResult(attackRolledStateAfterHurl, input.subject, [
+          mirrorImageCheck.hole,
+        ]);
+      }
+      if (mirrorImageCheck.tag === "invalid") {
+        return invalidResult(
+          input.state,
+          "invalidFill",
+          mirrorImageCheck.message,
+        );
+      }
+      if (mirrorImageCheck.tag === "hitDuplicate") {
+        if (spellAttackPostMirrorImageFillsArePresent(fillSet)) {
+          return invalidResult(
+            input.state,
+            "invalidFill",
+            "Spell attack damage and after-hit fills are not valid when Mirror Image redirects the hit to a duplicate.",
+          );
+        }
+        return spendSpellCastResources({
+          state: mirrorImageCheck.state,
+          actorId: subject.actorId,
+          invocation: invocationForResolution,
+          errorState: input.state,
+        });
+      }
+    }
     spellMarkedDamageRiders = hit
       ? activeMarkedDamageRiders(
           attackRolledStateAfterHurl.combatants.get(subject.actorId),

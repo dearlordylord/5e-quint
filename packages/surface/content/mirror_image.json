@@ -1,0 +1,47 @@
+{
+  "description": "Three illusory duplicates appear in your space. Each time a creature hits you with an attack roll during the duration, roll 1d6 for each remaining duplicate. If any die is a 3 or higher, one duplicate is hit instead of you and destroyed. Duplicates ignore all other damage and effects. The spell ends when all three duplicates are destroyed. A creature is unaffected if it has the Blinded condition or perceives you with Blindsight or Truesight.",
+  "id": "mirror_image",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "kind": "self"
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duplicatePool": {
+      "count": 3,
+      "dicePerRemainingDuplicate": 1,
+      "dieSize": 6,
+      "endsWhen": "all_duplicates_destroyed",
+      "ignoresOtherDamageAndEffects": true,
+      "onFailure": "caster_hit_normally",
+      "onHit": "duplicate_hit_instead_and_destroyed",
+      "successAtLeast": 3,
+      "unaffectedBy": ["blinded", "blindsight", "truesight"]
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "passive_hit_intercept",
+    "level": 2,
+    "range": {
+      "kind": "self"
+    },
+    "school": "illusion"
+  },
+  "name": "Mirror Image",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-M-P#Mirror Image"
+  }
+}

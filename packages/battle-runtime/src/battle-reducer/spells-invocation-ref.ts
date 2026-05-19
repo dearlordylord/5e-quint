@@ -246,6 +246,14 @@ export function supportedSpellInvocationRef(
       procedure: "blurAttackRollDefense",
     };
   }
+  if (invocation.procedure === "mirrorImageHitInterception") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "mirrorImageHitInterception",
+    };
+  }
   if (invocation.procedure === "conditionRemovalProtection") {
     return {
       tag: "spellSlot",

@@ -36,6 +36,7 @@ export type ActionAndRollEffectAtom = Extract<
       | "suspend_target"
       | "fall_at_end_of_next_turn_unless_reapplied"
       | "force_fall"
+      | "levitate_target"
       | "grab_fixed_object"
       | "suspend_in_area"
       | "fall_when_effect_ends"
@@ -308,6 +309,25 @@ export function traceActionAndRollEffectAtom(
         category: "effect",
         atomKind: "force_fall",
         label: `force_fall\n${e.direction}${distance}${impact}`,
+      });
+      return id;
+    }
+    case "levitate_target": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "levitate_target",
+        label: [
+          `levitate_target\nrise up to ${e.initialRiseMaxFeet} ft`,
+          `suspend: ${e.suspension}`,
+          `movement: ${e.targetMovement.allowedBy}`,
+          `mode: ${e.targetMovement.movementMode}`,
+          `caster altitude: ${e.casterAltitudeControl.direction} ${e.casterAltitudeControl.maxDistanceFeet} ft`,
+          `cost: ${e.casterAltitudeControl.cost}`,
+          `self altitude: ${e.selfAltitudeControl.cost}`,
+          `ending: ${e.ending}`,
+        ].join("\n"),
       });
       return id;
     }

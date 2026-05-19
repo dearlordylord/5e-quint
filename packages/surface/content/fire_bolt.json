@@ -70,8 +70,8 @@
           },
           {
             "filter": {
-              "heldOrWorn": "forbidden",
-              "material": "flammable"
+              "material": "flammable",
+              "targetRelation": "not_worn_or_carried"
             },
             "kind": "ignite_objects"
           }

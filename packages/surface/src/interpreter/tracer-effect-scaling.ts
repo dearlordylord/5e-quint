@@ -104,6 +104,7 @@ export function traceEffectAtomScaling(
     case "suspend_target":
     case "fall_at_end_of_next_turn_unless_reapplied":
     case "force_fall":
+    case "levitate_target":
     case "grab_fixed_object":
     case "suspend_in_area":
     case "fall_when_effect_ends":
@@ -164,6 +165,8 @@ export function traceEffectAtomScaling(
     case "ignore_web_restrictions":
     case "alter_item_kind":
     case "detect":
+    case "locate_kind":
+    case "object_location_sense":
     case "set_speed":
     case "negate_triggering_spell":
     case "reflect_triggering_spell":
@@ -188,6 +191,8 @@ export function traceEffectAtomScaling(
     case "bury_in_rubble":
     case "bond_objects":
     case "lock_object":
+    case "release_object_access":
+    case "suppress_arcane_lock":
     case "reposition_attachment":
     case "area_is_difficult_terrain":
     case "area_is_lightly_obscured":

@@ -34,8 +34,8 @@
           "value": {
             "count": 1,
             "filter": {
-              "heldOrWorn": "forbidden",
-              "maxSize": "large"
+              "maxSize": "large",
+              "targetRelation": "not_worn_or_carried"
             },
             "kind": "object"
           }

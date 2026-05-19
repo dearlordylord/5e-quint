@@ -54,7 +54,7 @@ let DamageEffect : Type =
 
 let ObjectFilter : Type =
       { material : Optional Text
-      , heldOrWorn : Optional Text
+      , targetRelation : Optional Text
       , manufactured : Optional Bool
       , maxSize : Optional Text
       }
@@ -138,7 +138,7 @@ let igniteEffect =
       , filter =
           Some
             { material = Some "flammable"
-            , heldOrWorn = Some "forbidden"
+            , targetRelation = Some "not_worn_or_carried"
             , manufactured = None Bool
             , maxSize = None Text
             }

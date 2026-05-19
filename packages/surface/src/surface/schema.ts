@@ -74,6 +74,7 @@ export {
   OngoingOperationSchema,
   OngoingPredicateSchema,
   OngoingTriggerSchema,
+  PassiveHitInterceptMechanicsSchema,
   ModifyAcSetBaseEffectSchema,
   ModifyAcSetFloorEffectSchema,
   PhaseContinuationSchema,

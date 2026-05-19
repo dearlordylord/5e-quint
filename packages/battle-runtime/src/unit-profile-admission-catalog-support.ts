@@ -117,6 +117,8 @@ export const jumpUnitId = "jump";
 
 export const mistyStepUnitId = "misty_step";
 
+export const mirrorImageUnitId = "mirror_image";
+
 export const searingSmiteUnitId = "searing_smite";
 
 export const shiningSmiteUnitId = "shining_smite";

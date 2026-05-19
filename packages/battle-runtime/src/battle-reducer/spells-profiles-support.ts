@@ -32,6 +32,7 @@ import {
   BATTLE_D20_ROLL_MODIFIER_KINDS,
   BATTLE_SPECIAL_SPEED_KINDS,
   type BlurAttackRollDefenseSpellInvocation,
+  type MirrorImageHitInterceptionSpellInvocation,
   type BattleActiveEffectExpiration,
   type BattleCreatureState,
   type BattleSpecialSpeedKind,
@@ -71,6 +72,11 @@ import {
   BATTLE_D20_ROLL_MODIFIER_DIE_SIZES,
   BLUR_UNIT_ID,
   HUNTERS_MARK_FINDING_SKILLS,
+  MIRROR_IMAGE_DUPLICATE_DIE_SIZE,
+  MIRROR_IMAGE_DUPLICATE_SUCCESS_AT_LEAST,
+  MIRROR_IMAGE_INITIAL_DUPLICATES,
+  MIRROR_IMAGE_UNAFFECTED_BY,
+  MIRROR_IMAGE_UNIT_ID,
   PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES,
   PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS,
   THAUMATURGY_BOOMING_VOICE_DURATION_TICKS,
@@ -892,6 +898,31 @@ export function supportedPreparedBlurAttackRollDefenseSpellProfile(
   );
 }
 
+export function supportedPreparedMirrorImageHitInterceptionSpellProfile(
+  actorId: CombatantId,
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  const projection = mirrorImageHitInterceptionSpellProjection(actorId, spell);
+  if (projection === null) {
+    return [];
+  }
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] =>
+    Number(slot.spellLevel) < spell.mechanics.level
+      ? []
+      : [
+          {
+            access: { tag: "prepared" },
+            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+            procedure: "mirrorImageHitInterception",
+            spell,
+            actionCost: "magicAction",
+            ...projection,
+          },
+        ],
+  );
+}
+
 export function supportedPreparedConditionRemovalProtectionSpellProfile(
   actorId: CombatantId,
   spell: SpellRecord,
@@ -965,6 +996,62 @@ function blurAttackRollDefenseSpellProjection(
       expiresAt,
     },
   };
+}
+
+function mirrorImageHitInterceptionSpellProjection(
+  actorId: CombatantId,
+  spell: SpellRecord,
+): Pick<MirrorImageHitInterceptionSpellInvocation, "activeEffect"> | null {
+  if (
+    spell.id !== MIRROR_IMAGE_UNIT_ID ||
+    spell.name !== "Mirror Image" ||
+    spell.provenance.kind !== "srd-5.2.1" ||
+    spell.provenance.section !== "Spells/Descriptions-M-P#Mirror Image" ||
+    spell.mechanics.family !== "passive_hit_intercept" ||
+    spell.mechanics.level !== 2 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "self" ||
+    !spell.mechanics.components.v ||
+    !spell.mechanics.components.s ||
+    spell.mechanics.components.m !== false ||
+    spell.mechanics.duration.kind !== "timed" ||
+    spell.mechanics.duration.value.unit !== "minute" ||
+    spell.mechanics.duration.value.amount !== 1 ||
+    spell.mechanics.attachment.kind !== "self" ||
+    spell.mechanics.duplicatePool.count !== MIRROR_IMAGE_INITIAL_DUPLICATES ||
+    spell.mechanics.duplicatePool.dicePerRemainingDuplicate !== 1 ||
+    spell.mechanics.duplicatePool.dieSize !== MIRROR_IMAGE_DUPLICATE_DIE_SIZE ||
+    spell.mechanics.duplicatePool.successAtLeast !==
+      MIRROR_IMAGE_DUPLICATE_SUCCESS_AT_LEAST ||
+    spell.mechanics.duplicatePool.onHit !==
+      "duplicate_hit_instead_and_destroyed" ||
+    spell.mechanics.duplicatePool.onFailure !== "caster_hit_normally" ||
+    !spell.mechanics.duplicatePool.ignoresOtherDamageAndEffects ||
+    spell.mechanics.duplicatePool.endsWhen !== "all_duplicates_destroyed" ||
+    !sameStringSet(
+      spell.mechanics.duplicatePool.unaffectedBy,
+      MIRROR_IMAGE_UNAFFECTED_BY,
+    )
+  ) {
+    return null;
+  }
+  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
+    spell.mechanics.duration.value,
+  );
+  return Either.isLeft(durationTicks)
+    ? null
+    : {
+        activeEffect: {
+          kind: "mirrorImageDuplicates",
+          sourceSpellId: spell.id,
+          sourceCombatantId: actorId,
+          remainingDuplicates: MIRROR_IMAGE_INITIAL_DUPLICATES,
+          expiresAt: {
+            kind: "duration",
+            durationTicks: durationTicks.right,
+          },
+        },
+      };
 }
 
 export function conditionRemovalProtectionSpellProjection(

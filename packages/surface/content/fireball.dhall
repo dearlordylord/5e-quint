@@ -34,7 +34,7 @@ let Effect : Type =
       , filter :
           Optional
             { material : Optional Text
-            , heldOrWorn : Optional Text
+            , targetRelation : Optional Text
             }
       }
 
@@ -52,7 +52,7 @@ let fireDamage : Effect =
       , filter =
           None
             { material : Optional Text
-            , heldOrWorn : Optional Text
+            , targetRelation : Optional Text
             }
       }
 
@@ -63,7 +63,7 @@ let halfDamage : Effect =
       , filter =
           None
             { material : Optional Text
-            , heldOrWorn : Optional Text
+            , targetRelation : Optional Text
             }
       }
 
@@ -74,7 +74,7 @@ let igniteUnattendedFlammableObjects : Effect =
       , filter =
           Some
             { material = Some "flammable"
-            , heldOrWorn = Some "forbidden"
+            , targetRelation = Some "not_worn_or_carried"
             }
       }
 

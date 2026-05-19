@@ -6,6 +6,7 @@ import {
   describeDamageTypeRef,
   describeDc,
   describeDiceAmount,
+  describeDurationValue,
   describeObjectFilter,
 } from "./tracer-rule-labels.ts";
 import type { IdGen } from "./tracer-rule-labels.ts";
@@ -40,6 +41,8 @@ export type AttachmentAndAreaEffectAtom = Extract<
       | "bury_in_rubble"
       | "bond_objects"
       | "lock_object"
+      | "release_object_access"
+      | "suppress_arcane_lock"
       | "reposition_attachment"
       | "area_is_difficult_terrain"
       | "area_is_lightly_obscured"
@@ -350,6 +353,26 @@ export function traceAttachmentAndAreaEffectAtom(
         category: "effect",
         atomKind: "lock_object",
         label: `lock_object${pwTag}`,
+      });
+      return id;
+    }
+    case "release_object_access": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "release_object_access",
+        label: `release_object_access\nmundane locks: ${e.mundaneLockLimit}`,
+      });
+      return id;
+    }
+    case "suppress_arcane_lock": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "suppress_arcane_lock",
+        label: `suppress_arcane_lock\n${describeDurationValue(e.duration)}\nopen/close allowed`,
       });
       return id;
     }

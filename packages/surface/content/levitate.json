@@ -1,0 +1,87 @@
+{
+  "description": "One creature or loose object of your choice that you can see rises vertically up to 20 feet and remains suspended there for the duration. The spell can levitate an object that weighs up to 500 pounds. An unwilling creature that succeeds on a Constitution saving throw is unaffected. The target can move only by pushing or pulling against a fixed object or surface within reach, which allows it to move as if it were climbing. You can change the target's altitude by up to 20 feet in either direction on your turn. If you are the target, you can move up or down as part of your move. Otherwise, you can take a Magic action to move the target, which must remain within the spell's range. When the spell ends, the target floats gently to the ground if it is still aloft.",
+  "id": "levitate",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a metal spring",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 10,
+        "unit": "minute"
+      }
+    },
+    "family": "activation",
+    "level": 2,
+    "phases": [
+      {
+        "ability": "con",
+        "attachment": {
+          "holeId": "levitate_target",
+          "kind": "hole",
+          "label": "creature or loose object",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "mode": "one",
+              "objectFilter": {
+                "maxWeightPounds": 500,
+                "targetRelation": "loose"
+              },
+              "targetKinds": [
+                "creature",
+                "object"
+              ]
+            }
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "casterAltitudeControl": {
+            "cost": "magic_action_on_caster_turn",
+            "direction": "up_or_down",
+            "maxDistanceFeet": 20,
+            "targetMustRemainWithinSpellRange": true
+          },
+          "ending": "float_gently_to_ground_if_aloft",
+          "initialRiseMaxFeet": 20,
+          "kind": "levitate_target",
+          "selfAltitudeControl": {
+            "cost": "part_of_move",
+            "direction": "up_or_down",
+            "maxDistanceFeet": 20
+          },
+          "suspension": "spell_duration",
+          "targetMovement": {
+            "allowedBy": "push_or_pull_fixed_object_or_surface_within_reach",
+            "movementMode": "as_if_climbing"
+          }
+        },
+        "onSuccess": {
+          "kind": "none"
+        },
+        "saveAppliesIf": "unwilling_creature_target"
+      }
+    ],
+    "range": {
+      "feet": 60,
+      "kind": "point"
+    },
+    "school": "transmutation"
+  },
+  "name": "Levitate",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Levitate"
+  }
+}

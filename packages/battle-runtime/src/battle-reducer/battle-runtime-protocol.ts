@@ -208,6 +208,7 @@ export type AttackFillSet =
       readonly damageDisposition: BattleAttackDamageDisposition;
       readonly damageDispositionFilled: boolean;
       readonly damageRoll: BattleRolledDiceFill | undefined;
+      readonly mirrorImageDuplicateRoll: BattleRolledDiceFill | undefined;
       readonly spellDamageReductionRoll: BattleRolledDiceFill | undefined;
       readonly attackDamageReductionRedirectTarget:
         | Extract<BattleFill, { readonly kind: "targetChoice" }>

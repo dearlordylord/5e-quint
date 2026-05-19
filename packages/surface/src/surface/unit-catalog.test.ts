@@ -115,6 +115,7 @@ const requiredFirstVerticalUnitIds = [
   "detect_poison_and_disease",
   "mage_armor",
   "magic_missile",
+  "magic_mouth",
   "mass_cure_wounds",
   "healing_word",
   "prayer_of_healing",
@@ -140,6 +141,10 @@ const requiredFirstVerticalUnitIds = [
   "expeditious_retreat",
   "feather_fall",
   "jump",
+  "knock",
+  "levitate",
+  "locate_animals_or_plants",
+  "locate_object",
   "hellish_rebuke",
   "armor_chain_mail",
   "equipment_shield",
@@ -218,7 +223,7 @@ describe("SRD Unit catalog boundary", () => {
               kind: "ignite_objects",
               filter: {
                 material: "flammable",
-                heldOrWorn: "forbidden",
+                targetRelation: "not_worn_or_carried",
               },
             },
           ],
@@ -266,6 +271,61 @@ describe("SRD Unit catalog boundary", () => {
     expect(prayerOfHealing.description).toContain(
       "gain the benefits of a Short Rest",
     );
+  });
+
+  test("keeps Levitate's SRD suspension and altitude-control shell in the catalog projection", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const levitate = result.catalog.requireUnit("levitate");
+
+    expect(levitate).toMatchObject({
+      kind: "spell",
+      mechanics: {
+        duration: {
+          kind: "concentration",
+          upTo: { amount: 10, unit: "minute" },
+        },
+        level: 2,
+        phases: [
+          {
+            ability: "con",
+            attachment: {
+              value: {
+                kind: "target",
+                selection: {
+                  mode: "one",
+                  objectFilter: {
+                    targetRelation: "loose",
+                    maxWeightPounds: 500,
+                  },
+                  targetKinds: ["creature", "object"],
+                },
+              },
+            },
+            kind: "save_gate",
+            onFail: {
+              casterAltitudeControl: {
+                cost: "magic_action_on_caster_turn",
+                maxDistanceFeet: 20,
+                targetMustRemainWithinSpellRange: true,
+              },
+              ending: "float_gently_to_ground_if_aloft",
+              initialRiseMaxFeet: 20,
+              kind: "levitate_target",
+              selfAltitudeControl: { cost: "part_of_move" },
+              suspension: "spell_duration",
+              targetMovement: {
+                allowedBy: "push_or_pull_fixed_object_or_surface_within_reach",
+                movementMode: "as_if_climbing",
+              },
+            },
+            saveAppliesIf: "unwilling_creature_target",
+          },
+        ],
+      },
+    });
   });
 
   test("keeps Shatter's SRD save-damage clause in the catalog projection", () => {
@@ -826,7 +886,10 @@ describe("SRD Unit catalog boundary", () => {
           trigger: { kind: "passive" },
           effect: {
             kind: "ignite_objects",
-            filter: { material: "flammable", heldOrWorn: "forbidden" },
+            filter: {
+              material: "flammable",
+              targetRelation: "not_worn_or_carried",
+            },
           },
         },
         {
@@ -1061,7 +1124,7 @@ describe("SRD Unit catalog boundary", () => {
           kind: "ignite_objects",
           filter: {
             material: "flammable",
-            heldOrWorn: "forbidden",
+            targetRelation: "not_worn_or_carried",
           },
         },
       ]);
@@ -1476,6 +1539,303 @@ describe("SRD Unit catalog boundary", () => {
         "reveals that a trap is present but not its location",
       );
     }
+  });
+
+  test("decodes Locate Animals or Plants as ritual nearest-kind location disclosure", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const locate = result.catalog.requireUnit("locate_animals_or_plants");
+
+    expect(locate.kind).toBe("spell");
+    if (locate.kind !== "spell") return;
+    expect(locate.mechanics.family).toBe("activation");
+    if (locate.mechanics.family !== "activation") return;
+
+    expect(locate.mechanics).toMatchObject({
+      level: 2,
+      school: "divination",
+      castingTime: { kind: "action", ritual: true },
+      range: { kind: "self" },
+      components: {
+        v: true,
+        s: true,
+        m: "fur from a bloodhound",
+      },
+      duration: { kind: "instantaneous" },
+    });
+    expect(locate.mechanics.phases).toEqual([
+      {
+        kind: "direct",
+        attachment: { kind: "self" },
+        effects: [
+          {
+            kind: "locate_kind",
+            subjectKinds: ["beast", "plant_creature", "nonmagical_plant"],
+            maxDistanceFeet: 26400,
+            match: "closest",
+            query: "described_or_named_specific_kind",
+            result: "direction_and_distance",
+          },
+        ],
+      },
+    ]);
+    expect(locate.description).toContain(
+      "direction and distance to the closest creature or plant",
+    );
+  });
+
+  test("decodes Locate Object as object location and motion disclosure", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const locate = result.catalog.requireUnit("locate_object");
+
+    expect(locate.kind).toBe("spell");
+    if (locate.kind !== "spell") return;
+    expect(locate.mechanics.family).toBe("activation");
+    if (locate.mechanics.family !== "activation") return;
+
+    expect(locate.mechanics).toMatchObject({
+      level: 2,
+      school: "divination",
+      castingTime: { kind: "action" },
+      range: { kind: "self" },
+      components: {
+        v: true,
+        s: true,
+        m: "a forked twig",
+      },
+      duration: {
+        kind: "concentration",
+        upTo: { unit: "minute", amount: 10 },
+      },
+    });
+    expect(locate.mechanics.phases).toEqual([
+      {
+        kind: "direct",
+        attachment: { kind: "self" },
+        effects: [
+          {
+            kind: "object_location_sense",
+            searchModes: {
+              specificKnownObject: { seenUpCloseWithinFeet: 30 },
+              nearestObjectKind: "particular_kind",
+            },
+            maxDistanceFeet: 1000,
+            result: "direction_to_location_and_movement",
+            blockedBy: "any_thickness_of_lead_direct_path",
+          },
+        ],
+      },
+    ]);
+    expect(locate.description).toContain(
+      "you know the direction of its movement",
+    );
+  });
+
+  test("decodes Magic Mouth as an object-anchored spoken-message trigger", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const magicMouth = result.catalog.requireUnit("magic_mouth");
+
+    expect(magicMouth.kind).toBe("spell");
+    if (magicMouth.kind !== "spell") return;
+    expect(magicMouth.mechanics.family).toBe("anchored_trigger");
+    if (magicMouth.mechanics.family !== "anchored_trigger") return;
+
+    expect(magicMouth.mechanics).toMatchObject({
+      level: 2,
+      school: "illusion",
+      castingTime: { kind: "minutes", amount: 1, ritual: true },
+      range: { kind: "point", feet: 30 },
+      components: {
+        v: true,
+        s: true,
+        m: "jade dust worth 10+ GP, which the spell consumes",
+        materialCostGp: 10,
+        materialConsumed: true,
+      },
+      duration: { kind: "permanent", endsOn: ["dispel"] },
+    });
+    expect(magicMouth.mechanics.anchor).toEqual({
+      kind: "object",
+      visibility: "caster_can_see",
+      wornOrCarried: "not_worn_or_carried_by_another_creature",
+    });
+    expect(magicMouth.mechanics.events).toEqual([
+      {
+        kind: "caster_defined_visual_or_audible_condition",
+        maxDistanceFeet: 30,
+      },
+    ]);
+    expect(magicMouth.mechanics.filters).toEqual([]);
+    expect(magicMouth.mechanics.signals).toEqual([
+      {
+        kind: "spoken_message",
+        voice: "caster_voice",
+        volume: "same_as_spoken",
+        maxWords: 25,
+        maxDeliveryMinutes: 10,
+        mouthPlacement: "object_mouth_if_present",
+        repetition: "caster_choice_once_or_repeating",
+      },
+    ]);
+    expect(magicMouth.description).toContain(
+      "visual or audible conditions within 30 feet",
+    );
+  });
+
+  test("rejects non-RAW Locate Object subject variants", () => {
+    const decode = Schema.decodeUnknownEither(EffectAtomSchema);
+
+    expect(
+      Either.isLeft(
+        decode({
+          kind: "object_location_sense",
+          searchModes: {
+            specificKnownObject: { seenUpCloseWithinFeet: 31 },
+            nearestObjectKind: "particular_kind",
+          },
+          maxDistanceFeet: 1000,
+          result: "direction_to_location_and_movement",
+          blockedBy: "any_thickness_of_lead_direct_path",
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          kind: "object_location_sense",
+          searchModes: {
+            specificKnownObject: { seenUpCloseWithinFeet: 30 },
+            nearestObjectKind: "any_kind",
+          },
+          maxDistanceFeet: 1000,
+          result: "direction_to_location_and_movement",
+          blockedBy: "any_thickness_of_lead_direct_path",
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          kind: "object_location_sense",
+          searchModes: {
+            specificKnownObject: { seenUpCloseWithinFeet: 30 },
+            nearestObjectKind: "particular_kind",
+          },
+          maxDistanceFeet: 1000,
+          result: "direction_to_location",
+          blockedBy: "any_thickness_of_lead_direct_path",
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          kind: "object_location_sense",
+          searchModes: {
+            specificKnownObject: { seenUpCloseWithinFeet: 30 },
+            nearestObjectKind: "particular_kind",
+          },
+          maxDistanceFeet: 1000,
+          result: "direction_to_location_and_movement",
+          blockedBy: "lead",
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test("decodes Knock as object access release plus Arcane Lock suppression", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const knock = result.catalog.requireUnit("knock");
+
+    expect(knock.kind).toBe("spell");
+    if (knock.kind !== "spell") return;
+    expect(knock.mechanics.family).toBe("activation");
+    if (knock.mechanics.family !== "activation") return;
+
+    expect(knock.mechanics).toMatchObject({
+      level: 2,
+      school: "transmutation",
+      castingTime: { kind: "action" },
+      range: { kind: "point", feet: 60 },
+      components: { v: true, s: false, m: false },
+      duration: { kind: "instantaneous" },
+    });
+
+    expect(knock.mechanics.phases).toEqual([
+      {
+        kind: "direct",
+        attachment: {
+          kind: "hole",
+          holeId: "knock_target_object",
+          label: "target object",
+          value: {
+            kind: "object",
+            count: 1,
+            filter: { accessPreventionMeans: "mundane_or_magical" },
+          },
+        },
+        effects: [
+          { kind: "release_object_access", mundaneLockLimit: 1 },
+          {
+            kind: "suppress_arcane_lock",
+            duration: { unit: "minute", amount: 10 },
+            allowsOpenClose: true,
+          },
+          {
+            kind: "audible",
+            sound: "loud knock",
+            audibleRadiusFeet: 300,
+          },
+        ],
+      },
+    ]);
+    expect(knock.description).toContain(
+      "a loud knock, audible up to 300 feet away",
+    );
+  });
+
+  test("rejects non-RAW Knock Arcane Lock suppression variants", () => {
+    const decode = Schema.decodeUnknownEither(EffectAtomSchema);
+
+    expect(
+      Either.isLeft(
+        decode({
+          kind: "suppress_arcane_lock",
+          duration: { unit: "minute", amount: 9 },
+          allowsOpenClose: true,
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          kind: "suppress_arcane_lock",
+          duration: { unit: "hour", amount: 10 },
+          allowsOpenClose: true,
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          kind: "suppress_object_access_spell",
+          spellId: "arcane_lock",
+          duration: { unit: "minute", amount: 10 },
+          allowsOpenClose: true,
+        }),
+      ),
+    ).toBe(true);
   });
 
   test("decodes Enlarge/Reduce as a creature-branch size and Strength-mode spell", () => {

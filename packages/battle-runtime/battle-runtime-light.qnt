@@ -13,6 +13,7 @@ module battleRuntimeLight {
   import battleRuntimeHidden.* from "./battle-runtime-hidden"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
   import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
+  import battleRuntimeMirrorImage.* from "./battle-runtime-mirror-image"
 
   pure def lightEmittersWithoutExpiredEndOfTurnEmitters(
     emitters: Set[LightEmitter],
@@ -708,6 +709,25 @@ module battleRuntimeLight {
     damageRoll: int,
     concentrationSaveSucceeded: bool,
   ): BattleState =
+    resolveProduceFlameHurlWithMirrorImageDuplicateRoll(
+      state,
+      attackTotal,
+      naturalD20,
+      damageRoll,
+      concentrationSaveSucceeded,
+      0,
+      false,
+    )
+
+  pure def resolveProduceFlameHurlWithMirrorImageDuplicateRoll(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+    mirrorImageDuplicateHighestRoll: int,
+    attackerPerceivesTargetWithBlindsightOrTruesight: bool,
+  ): BattleState =
     if (
       not(state.actionAvailable) or
       currentActor(state) != Fighter or
@@ -720,6 +740,27 @@ module battleRuntimeLight {
     else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), 20))) {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
       { ...rolled, fighter: fighterWithoutProduceFlameHeldLight(rolled), actionAvailable: false }
+    }
+    else if (
+      mirrorImageRedirectsAttackRollHit(
+        state.fighter.activeEffects,
+        state.goblin.activeEffects,
+        attackerPerceivesTargetWithBlindsightOrTruesight,
+        mirrorImageDuplicateHighestRoll,
+      )
+    ) {
+      val rolled = recordFighterAttackRoll(revealFighterHidden(state))
+      {
+        ...rolled,
+        fighter: fighterWithoutProduceFlameHeldLight(rolled),
+        goblin: combatantAfterMirrorImageAttackRollHit(
+          rolled.fighter.activeEffects,
+          rolled.goblin,
+          attackerPerceivesTargetWithBlindsightOrTruesight,
+          mirrorImageDuplicateHighestRoll,
+        ),
+        actionAvailable: false,
+      }
     }
     else if (state.goblin.reactionAvailable and not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))

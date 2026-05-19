@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 382,
-      "numerator": 165,
-      "percent": "43.2%"
+      "denominator": 388,
+      "numerator": 171,
+      "percent": "44.1%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 454,
-      "numerator": 197,
-      "percent": "43.4%"
+      "denominator": 460,
+      "numerator": 203,
+      "percent": "44.1%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,62 +59,62 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 198
+      "value": 204
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 125,
-      "numerator": 125,
+      "denominator": 126,
+      "numerator": 126,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 198,
-      "numerator": 198,
+      "denominator": 204,
+      "numerator": 204,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 70,
-      "numerator": 70,
+      "denominator": 71,
+      "numerator": 71,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 70,
-      "numerator": 70,
+      "denominator": 71,
+      "numerator": 71,
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 93,
+      "denominator": 94,
       "numerator": 19,
-      "percent": "20.4%"
+      "percent": "20.2%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 93,
+      "denominator": 94,
       "numerator": 24,
-      "percent": "25.8%"
+      "percent": "25.5%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 125,
+      "denominator": 126,
       "numerator": 41,
-      "percent": "32.8%"
+      "percent": "32.5%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 70,
-      "numerator": 70,
+      "denominator": 71,
+      "numerator": 71,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 70,
-      "numerator": 70,
+      "denominator": 71,
+      "numerator": 71,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 125,
+      "denominator": 126,
       "numerator": 104,
-      "percent": "83.2%"
+      "percent": "82.5%"
     },
     "supportedProfileCoverage": {
-      "denominator": 166,
-      "numerator": 125,
-      "percent": "75.3%"
+      "denominator": 172,
+      "numerator": 126,
+      "percent": "73.3%"
     }
   },
   "metricSemantics": [
@@ -2666,6 +2666,31 @@
       ]
     },
     {
+      "id": "spell.invocation-mirror-image-hit-interception",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "sourceBoundary": "The runtime consumes the authored Mirror Image spell, the attacker's Blinded condition, and caller-supplied attack-target spatial facts for Blindsight or Truesight perception. It owns Magic Action and Spell Slot spend, the self timed duplicate pool, d6-per-remaining-duplicate hit interception, duplicate destruction, final-duplicate cleanup, and normal continuation when the duplicate roll fails.",
+      "taskRefs": [
+        "L12G-MISSING-MIRROR-IMAGE"
+      ],
+      "title": "Spell invocation creates timed Mirror Image duplicates that can intercept attack-roll hits",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-mirror-image.test.ts"
+        }
+      ]
+    },
+    {
       "id": "spell.invocation-condition-removal-protection",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -2730,14 +2755,14 @@
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 93,
+        "denominator": 94,
         "numerator": 19,
-        "percent": "20.4%"
+        "percent": "20.2%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 93,
+        "denominator": 94,
         "numerator": 24,
-        "percent": "25.8%"
+        "percent": "25.5%"
       }
     },
     "profileKinds": [
@@ -3490,6 +3515,12 @@
       {
         "joinStatus": "unmapped",
         "obligations": [],
+        "profileId": "spell.invocation-mirror-image-hit-interception",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
         "profileId": "spell.invocation-condition-removal-protection",
         "profileKind": "spell-invocation"
       },
@@ -3508,9 +3539,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 125,
+          "denominator": 126,
           "numerator": 41,
-          "percent": "32.8%"
+          "percent": "32.5%"
         }
       },
       "units": [
@@ -4754,6 +4785,18 @@
             }
           ],
           "unitId": "mastery_topple"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-mirror-image-hit-interception",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "mirror_image"
         },
         {
           "joinStatus": "unmapped",
@@ -7502,6 +7545,22 @@
         "spell.invocation-blur-attack-roll-defense"
       ],
       "taskId": "L12G-SPELL-BLUR"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Mirror Image Spell Slot spending, timed duplicate-pool state, 3+ duplicate-roll interception, duplicate destruction, final-duplicate cleanup, and timed duration cleanup.",
+      "profileIds": [
+        "spell.invocation-mirror-image-hit-interception"
+      ],
+      "taskId": "L12G-MISSING-MIRROR-IMAGE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission tests cover Mirror Image Magic Action level-2 Spell Slot casting, self timed active-effect projection without Concentration, attack-hit duplicate roll holes, successful hit redirection and duplicate destruction, failed-roll continuation to damage, final duplicate cleanup, Blindsight and Truesight witness bypass, and Blinded-attacker bypass.",
+      "profileIds": [
+        "spell.invocation-mirror-image-hit-interception"
+      ],
+      "taskId": "L12G-MISSING-MIRROR-IMAGE"
     },
     {
       "claimKind": "qnt-proof",
@@ -15621,6 +15680,110 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached object/table owner",
+          "reason": "Object access-prevention state, Arcane Lock suppression on a target object, open/close adjudication, and audible sound propagation are table/object facts outside promoted battle runtime."
+        },
+        "reason": "Knock is authored and installed as an SRD Surface Spell Definition with Magic Action Spell Slot casting, a visible object target within 60 feet, one mundane access-prevention release, 10-minute Arcane Lock suppression that allows opening and closing the target, and a loud knock audible up to 300 feet from the target. Task 1 claims no promoted battle-runtime profile because object lock state, stuck or barred object state, Arcane Lock object attachment and suppression, object open/close state, and sound propagation are runtime-detached table/object facts outside promoted battle Unit profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/knock.json",
+      "unitId": "knock"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME",
+            "mechanic": "Promote Levitate's creature branch: Magic Action and level-2+ Spell Slot spend, one visible creature target within 60 feet, caster-owned Concentration up to 10 minutes, unwilling-creature Constitution save gate, active levitated-target state with initial rise up to 20 feet, suspended/aloft projection, target movement only through caller-supplied fixed-object or surface-within-reach witnesses as if climbing, caster Magic Action altitude changes up to 20 feet while the target remains within range, self-target altitude changes as part of the target's move, and gentle-grounding cleanup when Concentration or duration ends.",
+            "owner": "battle-runtime spell invocation/effect lifecycle plus table/spatial vertical movement witness boundary",
+            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without loose-object target behavior or automatic elevation/pathfinding derivation.",
+            "title": "Levitate Creature Runtime Support"
+          },
+          {
+            "id": "L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH",
+            "mechanic": "Represent and promote or close Levitate's loose object branch: one visible loose object target within 60 feet weighing up to 500 pounds, no creature saving throw, spell-owned suspension and altitude changes, fixed-object or surface movement restrictions where relevant, range-gated caster movement, and gentle grounding when the spell ends without inventing spell-specific object position state.",
+            "owner": "surface Spell Definition authoring plus battle-runtime object lifecycle owner decision",
+            "requiredOutput": "Focused Surface/runtime owner decision with tests or accepted runtime-detached closure for loose-object suspension, altitude control, range, and gentle-grounding facts, reusing any future object lifecycle owner rather than duplicating object state inside Levitate.",
+            "title": "Levitate Loose Object Branch"
+          }
+        ],
+        "futureProfileOwner": "battle-runtime spell invocation/effect lifecycle plus table/spatial vertical movement witness boundary and object lifecycle owner",
+        "reason": "Levitate is authored and installed as an SRD Surface Spell Definition with Magic Action Spell Slot casting, one visible creature-or-loose-object target within 60 feet, a loose-object 500-pound target limit, an unwilling-creature Constitution save gate, an initial vertical rise up to 20 feet, duration-long suspension, target movement only by pushing or pulling a fixed object or surface within reach as if climbing, caster and self altitude-control clauses, and gentle grounding when the spell ends. Task 2 claims no promoted battle-runtime profile yet because runtime has no levitated-target active effect owner, no elevation or aloft state projection, no fixed-object or surface-within-reach witness boundary, no vertical altitude-control action or movement protocol, and no loose-object lifecycle owner.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/levitate.json",
+      "unitId": "levitate"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "exploration/detection owner",
+          "reason": "Kind matching, target presence, closest-target selection, and direction/distance disclosure for Beasts, Plant creatures, or nonmagical plants are exploration/table facts outside promoted battle runtime."
+        },
+        "reason": "Locate Animals or Plants is authored and installed as an SRD Surface Spell Definition with Action or Ritual casting, Self range, Instantaneous duration, a described-or-named Beast, Plant creature, or nonmagical plant kind query, and closest-match direction and distance disclosure within 5 miles. Task 3 claims no promoted battle-runtime profile because target presence, kind matching, closest-target selection, distance/direction calculation, and plant/creature world state are runtime-detached exploration/table knowledge facts outside promoted battle Unit profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/locate_animals_or_plants.json",
+      "unitId": "locate_animals_or_plants"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "exploration/detection owner",
+          "reason": "Object presence, object-kind matching, direct-path lead blocking, and location/motion direction disclosure are exploration/table facts outside promoted battle runtime."
+        },
+        "reason": "Locate Object is authored and installed as an SRD Surface Spell Definition with Magic Action Spell Slot casting, Self range, Concentration up to 10 minutes, a familiar object or nearest particular object-kind query, 1,000-foot direction disclosure, moving-object direction disclosure, seen-up-close within 30 feet requirement for specific known objects, and direct-path lead blocking. Task 4 claims no promoted battle-runtime profile because object presence, object-kind matching, familiarity and seen-distance adjudication, direct-path lead blocking, location and motion direction calculation, and world object state are runtime-detached exploration/table knowledge facts outside promoted battle Unit profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/locate_object.json",
+      "unitId": "locate_object"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "profileIds": [
           "spell.invocation-object-light"
         ],
@@ -17761,6 +17924,99 @@
       ],
       "sourceRecordPath": "packages/surface/content/magic_missile.json",
       "unitId": "magic_missile"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached object/presentation owner",
+          "reason": "Durable object attachment, arbitrary visual/audible trigger adjudication, message playback, mouth placement, sound volume presentation, and repeat-or-end scheduling are object/presentation facts outside promoted battle runtime."
+        },
+        "reason": "Magic Mouth is authored and installed as an SRD Surface Spell Definition with 1-minute or Ritual casting, consumed 10+ GP jade dust, an object anchor the caster can see that is not worn or carried by another creature, a caster-spoken message capped at 25 words and 10 minutes, a caster-defined visual-or-audible trigger within 30 feet of the object, caster-voice playback from a magical mouth, and the cast-time choice to end after delivery or repeat. Task 5 claims no promoted battle-runtime profile because durable object attachment, arbitrary visual/audible trigger adjudication, message playback, mouth placement, sound volume presentation, and repeat-or-end scheduling are runtime-detached object/presentation facts outside promoted battle Unit profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_mouth.json",
+      "unitId": "magic_mouth"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "table/sight owner",
+          "reason": "Automatic Blindsight and Truesight perception derivation remains caller-supplied table/sight state; battle runtime consumes an explicit attack-target witness fact and owns the Mirror Image duplicate-pool mechanics."
+        },
+        "profileIds": [
+          "spell.invocation-mirror-image-hit-interception"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action level-2 Spell Slot casting",
+          "self timed Spell Effect for 1 minute without Concentration",
+          "three spell-owned duplicates tracked as a single duplicate pool",
+          "each attack-roll hit against the caster opens a 1d6-per-remaining-duplicate roll before attack damage",
+          "any duplicate roll of 3 or higher makes a duplicate take the hit instead of the caster and destroys one duplicate",
+          "the final destroyed duplicate removes the active effect",
+          "failed duplicate rolls leave the caster as the normal hit target and continue the attack damage workflow",
+          "the attacker's Blinded condition and caller-supplied Blindsight or Truesight perception facts bypass Mirror Image"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-mirror-image.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-MISSING-MIRROR-IMAGE"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-mirror-image-hit-interception",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the authored Mirror Image spell, the attacker's Blinded condition, and caller-supplied attack-target spatial facts for Blindsight or Truesight perception. It owns Magic Action and Spell Slot spend, the self timed duplicate pool, d6-per-remaining-duplicate hit interception, duplicate destruction, final-duplicate cleanup, and normal continuation when the duplicate roll fails.",
+          "taskRefs": [
+            "L12G-MISSING-MIRROR-IMAGE"
+          ],
+          "title": "Spell invocation creates timed Mirror Image duplicates that can intercept attack-roll hits",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-mirror-image.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/mirror_image.json",
+      "unitId": "mirror_image"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

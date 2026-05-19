@@ -59,6 +59,7 @@ export function procedureForFamily(
       return "store";
     case "ongoing_effect":
     case "activation":
+    case "passive_hit_intercept":
     case "spawned_creature":
     case "reanimated_creature":
     case "templated_multi_spawn":
@@ -230,19 +231,25 @@ export function describeObjectFilter(f: ObjectFilter | undefined): string {
   const parts: string[] = [];
   if (f.material !== undefined) parts.push(f.material);
   if (f.manufactured === true) parts.push("manufactured");
+  if (f.maxWeightPounds !== undefined) {
+    parts.push(`max_${f.maxWeightPounds}_lb`);
+  }
   if (f.maxSize !== undefined) parts.push(`${f.maxSize}_or_smaller`);
-  switch (f.heldOrWorn) {
-    case "required":
-      parts.push("held_or_worn");
+  if (f.accessPreventionMeans !== undefined) {
+    parts.push(`${f.accessPreventionMeans}_access_prevention`);
+  }
+  switch (f.targetRelation) {
+    case "loose":
+      parts.push("loose");
       break;
-    case "forbidden":
-      parts.push("not_held_or_worn");
+    case "not_worn_or_carried":
+      parts.push("not_worn_or_carried");
       break;
     case undefined:
       break;
     default: {
-      const _: never = f.heldOrWorn;
-      throw new Error(`unhandled heldOrWorn: ${String(_)}`);
+      const _: never = f.targetRelation;
+      throw new Error(`unhandled targetRelation: ${String(_)}`);
     }
   }
   return parts.length > 0 ? `\nfilter: ${parts.join(", ")}` : "";
@@ -274,10 +281,18 @@ export function describeDamageTypeRef(d: DamageTypeRef): string {
 }
 
 export function describeTargetSelection(s: TargetSelection): string {
+  const targetKinds =
+    "targetKinds" in s &&
+    s.targetKinds !== undefined &&
+    s.targetKinds.length > 0
+      ? `\ntarget: ${s.targetKinds.join("/")}`
+      : "";
   const typeFilter =
-    s.typeFilter !== undefined && s.typeFilter.length > 0
+    "typeFilter" in s && s.typeFilter !== undefined && s.typeFilter.length > 0
       ? `\ntype: ${s.typeFilter.join("/")}`
       : "";
+  const objectFilter =
+    "objectFilter" in s ? describeObjectFilter(s.objectFilter) : "";
   const stateFilter =
     "stateFilter" in s &&
     s.stateFilter !== undefined &&
@@ -286,11 +301,13 @@ export function describeTargetSelection(s: TargetSelection): string {
       : "";
   const disposition =
     "disposition" in s ? `\ndisposition: ${s.disposition}` : "";
-  if (s.mode === "one") return `one${typeFilter}${stateFilter}${disposition}`;
+  if (s.mode === "one") {
+    return `one${targetKinds}${typeFilter}${objectFilter}${stateFilter}${disposition}`;
+  }
   if (s.mode === "any_number")
-    return `any_number${typeFilter}${stateFilter}${disposition}`;
+    return `any_number${targetKinds}${typeFilter}${objectFilter}${stateFilter}${disposition}`;
   const repeats = s.repeatsAllowed === true ? " (repeats allowed)" : "";
-  return `choose_up_to: ${describeScaling(s.count)}${repeats}${typeFilter}${stateFilter}${disposition}`;
+  return `choose_up_to: ${describeScaling(s.count)}${repeats}${targetKinds}${typeFilter}${objectFilter}${stateFilter}${disposition}`;
 }
 
 export function describeAreaOrigin(

@@ -66,6 +66,7 @@ import { spellAttackSequencePartName } from "./spells-profile-shared.ts";
 import {
   applySpellDamage,
   spellAttackSequencePartAttackRollHole,
+  spellAttackSequencePartAttackRollHoleId,
   spellAttackSequencePartDamageHole,
   spellDamageByTypeForTarget,
   spellDamageTypes,
@@ -77,6 +78,7 @@ import {
   spellTargetIsLegal,
   validateSpellAttackSequencePartDamageFill,
 } from "./spells-holes-fills.ts";
+import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
 import type {
   SpellFillSet,
   SpellAttackSequencePartFillSet,
@@ -105,6 +107,7 @@ export function resolveSpellAttackSequenceAct(input: {
     input.fillSet.targetId !== undefined ||
     input.fillSet.objectTarget !== undefined ||
     input.fillSet.attackRoll !== undefined ||
+    input.fillSet.mirrorImageDuplicateRoll !== undefined ||
     input.fillSet.damageRoll !== undefined
   ) {
     return invalidResult(
@@ -125,7 +128,10 @@ export function resolveSpellAttackSequenceAct(input: {
         input.invocation,
         missingTargetIndex,
       ),
-      spellAttackSequencePartObjectTargetHole(input.invocation, missingTargetIndex),
+      spellAttackSequencePartObjectTargetHole(
+        input.invocation,
+        missingTargetIndex,
+      ),
     ]);
   }
 
@@ -156,7 +162,10 @@ export function resolveSpellAttackSequenceAct(input: {
   const objectDamages: BattleObjectDamageOutcome[] = [];
   const afterDamageEvents: BattleAfterDamageEvent[] = [];
   const usedExtraFillHoleIds = new Set<string>();
-  for (const [partIndex, partFill] of input.fillSet.attackSequencePartFills.entries()) {
+  for (const [
+    partIndex,
+    partFill,
+  ] of input.fillSet.attackSequencePartFills.entries()) {
     const resolved = resolveSpellAttackSequencePart({
       state,
       input: input.input,
@@ -441,6 +450,63 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       attackRoll: input.partFill.attackRoll,
     },
   );
+  if (!hit && input.partFill.mirrorImageDuplicateRoll !== undefined) {
+    const partName = spellAttackSequencePartName(input.invocation.spell);
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      `${input.invocation.spell.name} ${partName} Mirror Image duplicate roll is only valid after an attack-roll hit.`,
+    );
+  }
+  if (hit) {
+    const mirrorImageAttacker = attackRolledState.combatants.get(input.actorId);
+    if (mirrorImageAttacker === undefined) {
+      return invalidResult(
+        input.input.state,
+        "missingCombatant",
+        "Spell attack sequence actor is no longer in this battle.",
+      );
+    }
+    const mirrorImageCheck = mirrorImageHitInterceptionCheck({
+      state: attackRolledState,
+      attacker: mirrorImageAttacker,
+      target: attackRolledState.combatants.get(target.combatantId) ?? target,
+      targetSpatialFacts: input.target.spatialFacts,
+      triggeringAttackRollHoleId: spellAttackSequencePartAttackRollHoleId(
+        input.invocation,
+        input.partIndex,
+      ),
+      fill: input.partFill.mirrorImageDuplicateRoll,
+    });
+    if (mirrorImageCheck.tag === "needsHoles") {
+      return needsHolesResult(attackRolledState, input.input.subject, [
+        mirrorImageCheck.hole,
+      ]);
+    }
+    if (mirrorImageCheck.tag === "invalid") {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        mirrorImageCheck.message,
+      );
+    }
+    if (mirrorImageCheck.tag === "hitDuplicate") {
+      if (input.partFill.damageRoll !== undefined) {
+        return invalidResult(
+          input.input.state,
+          "invalidFill",
+          "Spell attack sequence damage is not valid when Mirror Image redirects the hit to a duplicate.",
+        );
+      }
+      return {
+        tag: "resolved",
+        state: mirrorImageCheck.state,
+        objectDamages: [],
+        afterDamageEvents: [],
+        usedExtraFillHoleIds: [],
+      };
+    }
+  }
   const spellMarkedDamageRiders = hit
     ? activeMarkedDamageRiders(
         attackRolledState.combatants.get(input.actorId),
@@ -739,6 +805,13 @@ function resolveSpellAttackSequenceObjectPart(input: {
       readonly usedExtraFillHoleIds: readonly string[];
     }
   | Exclude<BattleResolutionResult, { readonly tag: "resolved" }> {
+  if (input.partFill.mirrorImageDuplicateRoll !== undefined) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Mirror Image duplicate roll is only valid for a hit against a combatant.",
+    );
+  }
   const objectFact = spellObjectTargetFact(
     input.target.spatialFacts.filter(
       (
@@ -847,7 +920,11 @@ function resolveSpellAttackSequenceObjectPart(input: {
   }
   if (input.partFill.damageRoll === undefined) {
     return needsHolesResult(attackRolledState, input.input.subject, [
-      spellAttackSequencePartDamageHole(input.invocation, input.partIndex, critical),
+      spellAttackSequencePartDamageHole(
+        input.invocation,
+        input.partIndex,
+        critical,
+      ),
     ]);
   }
   const damageValidation = validateSpellAttackSequencePartDamageFill(

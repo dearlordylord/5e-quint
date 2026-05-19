@@ -350,6 +350,7 @@ module battleRuntimeSpellFactsTests {
       assert(spellInvocationSpendsSpellSlot(IceKnife)),
       assert(spellInvocationSpendsSpellSlot(AnimalFriendship)),
       assert(spellInvocationSpendsSpellSlot(Blur)),
+      assert(spellInvocationSpendsSpellSlot(MirrorImage)),
       assert(spellInvocationSpendsSpellSlot(CharmPerson)),
       assert(spellInvocationSpendsSpellSlot(ProtectionFromEvilAndGood)),
       assert(spellInvocationSpendsSpellSlot(DivineFavor)),

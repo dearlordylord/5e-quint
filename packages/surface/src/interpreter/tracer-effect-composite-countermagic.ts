@@ -22,6 +22,8 @@ export type CompositeAndCountermagicEffectAtom = Extract<
       | "natural_weapons"
       | "water_breathing"
       | "detect"
+      | "locate_kind"
+      | "object_location_sense"
       | "negate_triggering_spell"
       | "reflect_triggering_spell"
       | "waste_triggering_spell_or_effect"
@@ -366,6 +368,34 @@ export function traceCompositeAndCountermagicEffectAtom(
         category: "effect",
         atomKind: "detect",
         label: `detect\nproperty: ${e.property}\nradius ${e.radiusFeet} ft`,
+      });
+      return id;
+    }
+    case "locate_kind": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "locate_kind",
+        label:
+          `locate_kind\nsubjects: ${e.subjectKinds.join(", ")}\n` +
+          `${e.match} within ${e.maxDistanceFeet} ft\n${e.result}`,
+      });
+      return id;
+    }
+    case "object_location_sense": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "object_location_sense",
+        label: [
+          "object_location_sense",
+          `specific known object seen within ${e.searchModes.specificKnownObject.seenUpCloseWithinFeet} ft`,
+          `nearest ${e.searchModes.nearestObjectKind} within ${e.maxDistanceFeet} ft`,
+          e.result,
+          `blocked_by: ${e.blockedBy}`,
+        ].join("\n"),
       });
       return id;
     }

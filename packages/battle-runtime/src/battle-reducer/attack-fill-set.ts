@@ -26,6 +26,7 @@ import {
   WEAPON_MASTERY_CLEAVE_TARGET_HOLE_ID,
 } from "./domain-constants.ts";
 import { isHideousLaughterDamageRepeatSaveFill } from "./hideous-laughter-repeat-save.ts";
+import { isMirrorImageDuplicateRollFill } from "./mirror-image-hit-interception.ts";
 
 export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
   let targetId: CombatantId | undefined;
@@ -47,6 +48,7 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
   };
   let weaponMasteryCleaveDamageDispositionFilled = false;
   let damageRoll: BattleRolledDiceFill | undefined;
+  let mirrorImageDuplicateRoll: BattleRolledDiceFill | undefined;
   let spellDamageReductionRoll: BattleRolledDiceFill | undefined;
   let attackDamageReductionRedirectTarget:
     | Extract<BattleFill, { readonly kind: "targetChoice" }>
@@ -254,6 +256,17 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
       continue;
     }
 
+    if (fill.kind === "rolledDice" && isMirrorImageDuplicateRollFill(fill)) {
+      if (mirrorImageDuplicateRoll !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Mirror Image duplicate roll was filled twice.",
+        };
+      }
+      mirrorImageDuplicateRoll = fill;
+      continue;
+    }
+
     if (fill.kind === "rolledDice" && isSpellDamageReductionRollFill(fill)) {
       if (spellDamageReductionRoll !== undefined) {
         return {
@@ -355,6 +368,7 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     damageDisposition,
     damageDispositionFilled,
     damageRoll,
+    mirrorImageDuplicateRoll,
     spellDamageReductionRoll,
     attackDamageReductionRedirectTarget,
     attackDamageReductionRedirectSave,

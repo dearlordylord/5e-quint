@@ -330,6 +330,21 @@ export function discoverSupportedSpellInvocations(
           },
         ];
       }
+      if (invocation.procedure === "mirrorImageHitInterception") {
+        return [
+          {
+            subject: {
+              tag: "actionSpell" as const,
+              actorId,
+              invocation: supportedSpellInvocationRef(invocation),
+              mode: { tag: "cast" as const },
+            },
+            label: invocation.spell.name,
+            summary: spellInvocationCastSummary(invocation),
+            initialHoles: [],
+          },
+        ];
+      }
       if (invocation.procedure === "damageReduction") {
         const targetHole = spellTargetHole(state, actorId, invocation);
         const castActs =
@@ -829,6 +844,9 @@ export function spellInvocationCastSummary(
   if (invocation.procedure === "blurAttackRollDefense") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
+  if (invocation.procedure === "mirrorImageHitInterception") {
+    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+  }
   if (invocation.procedure === "conditionRemovalProtection") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
@@ -929,6 +947,7 @@ export function spellActivationInvocationCastSummary(
         | "thaumaturgyBoomingVoice"
         | "creatureTypeProtection"
         | "blurAttackRollDefense"
+        | "mirrorImageHitInterception"
         | "saveGatedDamage"
         | "saveGatedCondition"
         | "saveGatedAttackRollAdvantage"
@@ -1057,6 +1076,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "wardingBond" &&
     invocation.procedure !== "creatureTypeProtection" &&
     invocation.procedure !== "blurAttackRollDefense" &&
+    invocation.procedure !== "mirrorImageHitInterception" &&
     invocation.procedure !== "conditionRemovalProtection" &&
     invocation.procedure !== "scalarBuff" &&
     invocation.procedure !== "weaponDamageRider" &&
@@ -1111,6 +1131,7 @@ export function readiedSpellAct(
     invocation.procedure === "rollModifier" ||
     invocation.procedure === "creatureTypeProtection" ||
     invocation.procedure === "blurAttackRollDefense" ||
+    invocation.procedure === "mirrorImageHitInterception" ||
     invocation.procedure === "conditionRemovalProtection" ||
     invocation.procedure === "attackBurstSaveDamage" ||
     invocation.procedure === "saveGatedCondition" ||

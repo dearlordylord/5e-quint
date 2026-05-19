@@ -12,7 +12,7 @@
 -- Ranged spell attack; on hit: 1d10 Fire damage (cantrip scaling).
 -- The "creature or object" target is authored as a target-kind list. The
 -- flammable object rider is authored with the shared object filter used by
--- Fire Storm: material=flammable and heldOrWorn=forbidden. Burning hazard
+-- Fire Storm: material=flammable and targetRelation=not_worn_or_carried. Burning hazard
 -- consequences remain runtime/session execution facts, not duplicate Surface
 -- state.
 
@@ -36,7 +36,7 @@ let HitRider
       , filter :
           Optional
             { material : Optional Text
-            , heldOrWorn : Optional Text
+            , targetRelation : Optional Text
             }
       }
 
@@ -57,7 +57,7 @@ let fireDamage : HitRider =
       , filter =
           None
             { material : Optional Text
-            , heldOrWorn : Optional Text
+            , targetRelation : Optional Text
             }
       }
 
@@ -68,7 +68,7 @@ let igniteUnattendedFlammableObject : HitRider =
       , filter =
           Some
             { material = Some "flammable"
-            , heldOrWorn = Some "forbidden"
+            , targetRelation = Some "not_worn_or_carried"
             }
       }
 

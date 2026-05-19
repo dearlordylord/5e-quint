@@ -97,16 +97,22 @@ import huntersMarkInput from "../../content/hunters_mark.json";
 import iceKnifeInput from "../../content/ice_knife.json";
 import inflictWoundsInput from "../../content/inflict_wounds.json";
 import jumpInput from "../../content/jump.json";
+import knockInput from "../../content/knock.json";
+import levitateInput from "../../content/levitate.json";
 import lightInput from "../../content/light.json";
+import locateAnimalsOrPlantsInput from "../../content/locate_animals_or_plants.json";
+import locateObjectInput from "../../content/locate_object.json";
 import longstriderInput from "../../content/longstrider.json";
 import mageArmorInput from "../../content/mage_armor.json";
 import magicMissileInput from "../../content/magic_missile.json";
+import magicMouthInput from "../../content/magic_mouth.json";
 import massCureWoundsInput from "../../content/mass_cure_wounds.json";
 import massHealingWordInput from "../../content/mass_healing_word.json";
 import masteryCleaveInput from "../../content/mastery_cleave.json";
 import masterySapInput from "../../content/mastery_sap.json";
 import masteryToppleInput from "../../content/mastery_topple.json";
 import mistyStepInput from "../../content/misty_step.json";
+import mirrorImageInput from "../../content/mirror_image.json";
 import minorIllusionInput from "../../content/minor_illusion.json";
 import monkDeflectAttacksInput from "../../content/monk_deflect_attacks.json";
 import monkMartialArtsInput from "../../content/monk_martial_arts.json";
@@ -451,6 +457,10 @@ export const srdUnitCollection = defineSrdUnitCollection({
     iceKnifeInput,
     inflictWoundsInput,
     jumpInput,
+    knockInput,
+    levitateInput,
+    locateAnimalsOrPlantsInput,
+    locateObjectInput,
     lightInput,
     longstriderInput,
     mistyStepInput,
@@ -479,6 +489,8 @@ export const srdUnitCollection = defineSrdUnitCollection({
     detectPoisonAndDiseaseInput,
     mageArmorInput,
     magicMissileInput,
+    magicMouthInput,
+    mirrorImageInput,
     massCureWoundsInput,
     massHealingWordInput,
     healingWordInput,

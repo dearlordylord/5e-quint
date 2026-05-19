@@ -100,6 +100,7 @@ import {
   supportedPreparedJumpMovementReplacementSpellProfile,
   supportedPreparedHealingSpellProfile,
   supportedPreparedMarkedDamageRiderSpellProfile,
+  supportedPreparedMirrorImageHitInterceptionSpellProfile,
   supportedPreparedRollModifierSpellProfile,
   supportedPreparedScalarBuffSpellProfile,
   supportedPreparedSelfTeleportSpellProfile,
@@ -310,6 +311,13 @@ export function supportedSpellActs(
       ),
     ),
     ...preparedSpells.flatMap((spell) =>
+      supportedPreparedMirrorImageHitInterceptionSpellProfile(
+        actor.combatantId,
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...preparedSpells.flatMap((spell) =>
       supportedPreparedConditionRemovalProtectionSpellProfile(
         actor.combatantId,
         spell,
@@ -317,10 +325,7 @@ export function supportedSpellActs(
       ),
     ),
     ...preparedSpells.flatMap((spell) =>
-      supportedPreparedObjectLightSpellProfile(
-        spell,
-        spellcasting.spellSlots,
-      ),
+      supportedPreparedObjectLightSpellProfile(spell, spellcasting.spellSlots),
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedConditionImmunityAndTurnStartTemporaryHitPointsSpellProfile(
@@ -1185,8 +1190,7 @@ export function isContinualFlameObjectSpell(
   return (
     spell.name === "Continual Flame" &&
     spell.provenance.kind === "srd-5.2.1" &&
-    spell.provenance.section ===
-      "Spells/Descriptions-A-D#Continual Flame" &&
+    spell.provenance.section === "Spells/Descriptions-A-D#Continual Flame" &&
     spell.mechanics.family === "activation" &&
     spell.mechanics.level === 2 &&
     spell.mechanics.castingTime.kind === "action" &&
