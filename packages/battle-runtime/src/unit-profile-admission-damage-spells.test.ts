@@ -487,7 +487,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       }),
     );
   });
-  test("spell rider timing is admitted only for exact SRD target semantics", () => {
+  test("spell rider timing is admitted by effect shape, not authored identity", () => {
     const genericPoisonRay = {
       ...spellRecord(rayOfSicknessUnitId),
       id: "generic_poison_ray",
@@ -561,19 +561,19 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
         state: spellBattle({ preparedSpells: [genericPoisonRay] }),
         spellId: genericPoisonRay.id,
       }),
-    ).toBeUndefined();
+    ).toBeDefined();
     expect(
       maybeSpellAct({
         state: spellBattle({ cantrips: [genericOpportunityAttackDenial] }),
         spellId: genericOpportunityAttackDenial.id,
       }),
-    ).toBeUndefined();
+    ).toBeDefined();
     expect(
       maybeSpellAct({
         state: spellBattle({ preparedSpells: [genericNextAttackAdvantage] }),
         spellId: genericNextAttackAdvantage.id,
       }),
-    ).toBeUndefined();
+    ).toBeDefined();
     expect(
       maybeSpellAct({
         state: spellBattle({ cantrips: [genericIncomingAttackDisadvantage] }),

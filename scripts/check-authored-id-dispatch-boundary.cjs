@@ -116,6 +116,14 @@ function hasIdLikeToken(text) {
   return /\b(?:id|[A-Za-z_$][\w$]*Id)\b/.test(text);
 }
 
+function isAuthoredIdentityFieldExpression(text) {
+  const expression = text.trim();
+  return (
+    /(?:^|\.)(?:spell|unit)\.name$/.test(expression) ||
+    /(?:^|\.)(?:spell|unit)\.provenance\.section$/.test(expression)
+  );
+}
+
 function lineNumberForIndex(content, index) {
   let line = 1;
   for (let i = 0; i < index; i += 1) {
@@ -652,6 +660,53 @@ function collectComparisonViolations(
   return violations;
 }
 
+function collectAuthoredIdentityFieldComparisonViolations(
+  content,
+  relativePath,
+) {
+  const violations = [];
+  const lines = content.split("\n");
+  const identifierExpression = String.raw`[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*`;
+  const stringLiteral = String.raw`(?:"[^"\n]*"|'[^'\n]*'|\x60[^\x60\n]*\x60)`;
+  const comparableExpression = String.raw`(?:${identifierExpression}|${stringLiteral})`;
+  const comparison = new RegExp(
+    String.raw`\b(${identifierExpression}|${stringLiteral})\s*(===|==|!==|!=)\s*(${comparableExpression})`,
+    "g",
+  );
+
+  for (const [index, line] of lines.entries()) {
+    comparison.lastIndex = 0;
+    for (;;) {
+      const match = comparison.exec(line);
+      if (match == null) {
+        break;
+      }
+
+      const left = match[1] ?? "";
+      const right = match[3] ?? "";
+      const leftIsAuthoredIdentity =
+        isAuthoredIdentityFieldExpression(left);
+      const rightIsAuthoredIdentity =
+        isAuthoredIdentityFieldExpression(right);
+      if (!leftIsAuthoredIdentity && !rightIsAuthoredIdentity) {
+        continue;
+      }
+
+      violations.push({
+        relativePath,
+        line: index + 1,
+        literal: leftIsAuthoredIdentity ? left : right,
+        context: {
+          kind: "authored-identity-field-comparison",
+          detail: match[0],
+        },
+      });
+    }
+  }
+
+  return violations;
+}
+
 function switchExpressionBeforeCase(content, caseIndex) {
   const switchSearchWindow = content.slice(
     Math.max(0, caseIndex - 5000),
@@ -893,6 +948,7 @@ function findViolationsForFile(
       authoredAlternation,
       allLiteralAliases,
     ),
+    ...collectAuthoredIdentityFieldComparisonViolations(content, relativePath),
     ...collectSwitchViolations(
       content,
       relativePath,
@@ -1036,15 +1092,15 @@ function main() {
   const uniqueViolations = dedupeViolations(violations);
 
   if (uniqueViolations.length > 0) {
-    console.error("authored-id dispatch boundary violation(s) found:");
+    console.error("authored-identity dispatch boundary violation(s) found:");
     for (const violation of uniqueViolations) {
       console.error(
-        `  - ${violation.relativePath}:${violation.line} dispatches on authored id "${violation.literal}" (${violation.context.kind}: ${violation.context.detail})`,
+        `  - ${violation.relativePath}:${violation.line} dispatches on authored identity "${violation.literal}" (${violation.context.kind}: ${violation.context.detail})`,
       );
     }
     console.error("");
     console.error(
-      "If this usage is a valid boundary (catalog/composition/fixture/legacy/support-profile), add an explicit allowlist rule in scripts/check-authored-id-dispatch-boundary.cjs.",
+      "If this usage is a valid boundary (catalog/composition/fixture/legacy/support-profile admission), add an explicit allowlist rule in scripts/check-authored-id-dispatch-boundary.cjs.",
     );
     process.exit(1);
   }
@@ -1058,7 +1114,7 @@ function main() {
     0,
   );
 
-  console.log("authored-id dispatch boundary check passed");
+  console.log("authored-identity dispatch boundary check passed");
   console.log(`authored ids discovered: ${authoredIds.size}`);
   console.log(`checked source files: ${stats.checked}`);
   console.log(`excluded files: ${excludedTotal}`);

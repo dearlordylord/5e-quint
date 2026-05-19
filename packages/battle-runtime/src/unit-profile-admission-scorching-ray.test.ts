@@ -69,19 +69,19 @@ describe("L12G-SPELL-SCORCHING-RAY deterministic Scorching Ray admission", () =>
       "objectTargetChoice",
     ]);
     expect(act.initialHoles).toEqual([
-      expect.objectContaining({ label: "Scorching Ray ray 1 target" }),
+      expect.objectContaining({ label: "Scorching Ray attack 1 target" }),
       expect.objectContaining({
-        label: "Scorching Ray ray 1 object target",
+        label: "Scorching Ray attack 1 object target",
         requiresTableSpatialFact: true,
       }),
-      expect.objectContaining({ label: "Scorching Ray ray 2 target" }),
+      expect.objectContaining({ label: "Scorching Ray attack 2 target" }),
       expect.objectContaining({
-        label: "Scorching Ray ray 2 object target",
+        label: "Scorching Ray attack 2 object target",
         requiresTableSpatialFact: true,
       }),
-      expect.objectContaining({ label: "Scorching Ray ray 3 target" }),
+      expect.objectContaining({ label: "Scorching Ray attack 3 target" }),
       expect.objectContaining({
-        label: "Scorching Ray ray 3 object target",
+        label: "Scorching Ray attack 3 object target",
         requiresTableSpatialFact: true,
       }),
     ]);
@@ -154,7 +154,7 @@ describe("L12G-SPELL-SCORCHING-RAY deterministic Scorching Ray admission", () =>
     );
   });
 
-  test("malformed canonical Scorching Ray ray-count selections are not admitted", () => {
+  test("malformed Scorching Ray repeated ray-count selections are not admitted", () => {
     const spell = spellRecord(scorchingRayUnitId);
     const creatureOrObjectTargets = ["creature", "object"] as const;
     const malformedSpells = [
@@ -179,10 +179,6 @@ describe("L12G-SPELL-SCORCHING-RAY deterministic Scorching Ray admission", () =>
           baseLevel: 2,
           perSlotAboveBase: 2,
         },
-      }),
-      scorchingRayWithTargetSelection(spell, {
-        mode: "one",
-        targetKinds: creatureOrObjectTargets,
       }),
       scorchingRayWithTargetSelection(spell, {
         mode: "choose_up_to",

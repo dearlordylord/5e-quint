@@ -223,10 +223,6 @@ export function counterspellReactionSpellMatchesTrigger(
   if (
     frame.trigger !== "spellCast" ||
     frame.casterId === reactorId ||
-    invocation.spell.name !== "Counterspell" ||
-    invocation.spell.provenance.kind !== "srd-5.2.1" ||
-    invocation.spell.provenance.section !==
-      "Spells/Descriptions-A-D#Counterspell" ||
     invocation.spell.mechanics.family !== "triggered_reaction" ||
     castingTime.kind !== "reaction" ||
     castingTime.trigger.kind !== "creature_casts_spell"
@@ -260,10 +256,6 @@ export function hellishRebukeReactionSpellMatchesTrigger(
   return (
     frame.trigger === "afterDamage" &&
     Number(frame.damageAmount) > 0 &&
-    invocation.spell.name === "Hellish Rebuke" &&
-    invocation.spell.provenance.kind === "srd-5.2.1" &&
-    invocation.spell.provenance.section ===
-      "Spells/Descriptions-E-L#Hellish Rebuke" &&
     invocation.spell.mechanics.family === "triggered_reaction" &&
     castingTime.kind === "reaction" &&
     castingTime.trigger.kind === "takes_damage_from_creature" &&
@@ -304,10 +296,6 @@ export function featherFallReactionSpellMatchesTrigger(
   const castingTime = invocation.spell.mechanics.castingTime;
   return (
     frame.trigger === "creatureFalls" &&
-    invocation.spell.name === "Feather Fall" &&
-    invocation.spell.provenance.kind === "srd-5.2.1" &&
-    invocation.spell.provenance.section ===
-      "Spells/Descriptions-E-L#Feather Fall" &&
     invocation.spell.mechanics.family === "triggered_reaction" &&
     castingTime.kind === "reaction" &&
     castingTime.trigger.kind === "self_or_visible_creature_falls" &&

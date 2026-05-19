@@ -61,9 +61,6 @@ function directConditionProjection(
   readonly selection: TargetSelection;
 }) | null {
   if (
-    spell.name !== "Invisibility" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-E-L#Invisibility" ||
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 2 ||
     spell.mechanics.castingTime.kind !== "action" ||

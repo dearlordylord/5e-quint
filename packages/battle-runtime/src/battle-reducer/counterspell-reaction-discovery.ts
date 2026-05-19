@@ -82,10 +82,6 @@ function counterspellInvocationHasSpellCastTrigger(
 ): boolean {
   const castingTime = invocation.spell.mechanics.castingTime;
   return (
-    invocation.spell.name === "Counterspell" &&
-    invocation.spell.provenance.kind === "srd-5.2.1" &&
-    invocation.spell.provenance.section ===
-      "Spells/Descriptions-A-D#Counterspell" &&
     invocation.spell.mechanics.family === "triggered_reaction" &&
     castingTime.kind === "reaction" &&
     castingTime.trigger.kind === "creature_casts_spell" &&

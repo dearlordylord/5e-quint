@@ -943,7 +943,7 @@ export function spellInvocationCastSummary(
     return spellActivationInvocationCastSummary(invocation);
   }
   if (invocation.procedure === "spellAttackSequence") {
-    const partName = spellAttackSequencePartName(invocation.spell);
+    const partName = spellAttackSequencePartName();
     const resource =
       invocation.resource.tag === "spellSlot"
         ? `using a level ${invocation.resource.slotLevel} Spell Slot`

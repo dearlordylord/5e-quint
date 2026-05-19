@@ -157,8 +157,6 @@ const DEFAULT_SRD_STAT_BLOCK_CATALOG_RESULT = buildStatBlockCatalog({
 const byKind = Match.discriminator("kind");
 export const BARD_JACK_OF_ALL_TRADES_UNIT_ID =
   "bard_jack_of_all_trades" as const satisfies UnitRecord["id"];
-const WARLOCK_MAGICAL_CUNNING_UNIT_ID =
-  "warlock_magical_cunning" as const satisfies UnitRecord["id"];
 const ARCANE_RECOVERY_REST_FEATURE_TAG = "arcaneRecovery" as const;
 const MAGICAL_CUNNING_REST_FEATURE_TAG = "magicalCunning" as const;
 const JACK_OF_ALL_TRADES_PROFICIENCY_BONUS_DIVISOR = 2;
@@ -3350,7 +3348,6 @@ function isPactSlotRecoveryFeature(
 ): unit is CharacterSheetPactSlotRecoveryFeature {
   return (
     unit.kind === "class_feature" &&
-    unit.id === WARLOCK_MAGICAL_CUNNING_UNIT_ID &&
     unit.mechanics.family === "pact_slot_recovery" &&
     unit.mechanics.activationCost.kind === "one_minute_rite" &&
     unit.mechanics.resource.kind === "pact_slots" &&

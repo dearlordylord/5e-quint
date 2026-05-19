@@ -4,7 +4,6 @@
   "kind": "spell",
   "mechanics": {
     "attachment": {
-      "bondId": "warding_bond_mystic_connection",
       "kind": "caster_target_bond",
       "range": {
         "feet": 60,

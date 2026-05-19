@@ -158,33 +158,24 @@ type ModifyRollAdvantageEffect = Extract<
   { readonly kind: "modify_roll_advantage" }
 >;
 
-const FIREBALL_SPELL_NAME = "Fireball";
-const FIREBALL_PROVENANCE_SECTION = "Spells/Descriptions-E-L#Fireball";
 const FIREBALL_BASE_SPELL_LEVEL = 3;
 const FIREBALL_RANGE_FEET = 150;
 const FIREBALL_AREA_RADIUS_FEET = 20;
 const FIREBALL_BASE_DAMAGE_DICE = 8;
 const FIREBALL_DAMAGE_DIE_SIZE = 6;
 const FIREBALL_SLOT_DAMAGE_DICE_INCREMENT = 1;
-const SHATTER_SPELL_NAME = "Shatter";
-const SHATTER_PROVENANCE_SECTION = "Spells/Descriptions-S-Z#Shatter";
 const SHATTER_BASE_SPELL_LEVEL = 2;
 const SHATTER_RANGE_FEET = 60;
 const SHATTER_AREA_RADIUS_FEET = 10;
 const SHATTER_BASE_DAMAGE_DICE = 3;
 const SHATTER_DAMAGE_DIE_SIZE = 8;
 const SHATTER_SLOT_DAMAGE_DICE_INCREMENT = 1;
-const BLINDNESS_DEAFNESS_SPELL_NAME = "Blindness/Deafness";
-const BLINDNESS_DEAFNESS_PROVENANCE_SECTION =
-  "Spells/Descriptions-A-D#Blindness/Deafness";
 const BLINDNESS_DEAFNESS_BASE_SPELL_LEVEL = 2;
 const BLINDNESS_DEAFNESS_RANGE_FEET = 120;
 const BLINDNESS_DEAFNESS_FAILED_SAVE_CONDITION_CHOICES = [
   "blinded",
   "deafened",
 ] as const satisfies readonly [Condition, ...Condition[]];
-const HOLD_PERSON_SPELL_NAME = "Hold Person";
-const HOLD_PERSON_PROVENANCE_SECTION = "Spells/Descriptions-E-L#Hold Person";
 const HOLD_PERSON_BASE_SPELL_LEVEL = 2;
 const HOLD_PERSON_RANGE_FEET = 60;
 const HOLD_PERSON_FAILED_SAVE_CONDITION =
@@ -432,9 +423,6 @@ function commandSpell(spell: SpellRecord): {
   }
   const phase = spell.mechanics.phases[0];
   if (
-    spell.name !== "Command" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-A-D#Command" ||
     spell.mechanics.level !== 1 ||
     spell.mechanics.castingTime.kind !== "action" ||
     spell.mechanics.range.kind !== "point" ||
@@ -532,9 +520,6 @@ function greaseGroundHazardSpell(spell: SpellRecord): {
       ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.value)
       : null;
   if (
-    spell.name !== "Grease" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-E-L#Grease" ||
     spell.mechanics.level !== 1 ||
     spell.mechanics.castingTime.kind !== "action" ||
     spell.mechanics.range.kind !== "point" ||
@@ -598,9 +583,6 @@ function sleepTargetAdmissionSpell(spell: SpellRecord): {
       ? (spell.mechanics.duration.earlyEnd ?? [])
       : [];
   if (
-    spell.name !== "Sleep" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-S-Z#Sleep" ||
     spell.mechanics.level !== 1 ||
     spell.mechanics.castingTime.kind !== "action" ||
     spell.mechanics.range.kind !== "point" ||
@@ -667,9 +649,6 @@ function hideousLaughterSpell(spell: SpellRecord): {
   }
   const phase = spell.mechanics.phases[0];
   if (
-    spell.name !== "Hideous Laughter" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-E-L#Hideous Laughter" ||
     spell.mechanics.level !== 1 ||
     spell.mechanics.castingTime.kind !== "action" ||
     spell.mechanics.range.kind !== "point" ||
@@ -761,9 +740,6 @@ export function faerieFireSaveGateAttackRollAdvantageSpell(
   const attackAdvantageEffect =
     faerieFireFailedSaveAttackAdvantageEffect(failedEffect);
   if (
-    spell.name !== "Faerie Fire" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-E-L#Faerie Fire" ||
     spell.mechanics.level !== 1 ||
     spell.mechanics.castingTime.kind !== "action" ||
     spell.mechanics.range.kind !== "point" ||
@@ -831,8 +807,6 @@ export function animalFriendshipSaveGateConditionSpell(
 ): SaveGateConditionSpell | null {
   return creatureTypeCharmedSaveGateConditionSpell({
     spell,
-    name: "Animal Friendship",
-    provenanceSection: "Spells/Descriptions-A-D#Animal Friendship",
     duration: { unit: "hour", amount: 24 },
     targetCreatureType: "beast",
     saveRollModeRule: null,
@@ -844,8 +818,6 @@ export function charmPersonSaveGateConditionSpell(
 ): SaveGateConditionSpell | null {
   return creatureTypeCharmedSaveGateConditionSpell({
     spell,
-    name: "Charm Person",
-    provenanceSection: "Spells/Descriptions-A-D#Charm Person",
     duration: { unit: "hour", amount: 1 },
     targetCreatureType: "humanoid",
     saveRollModeRule: { kind: "hostileTarget", mode: "advantage" },
@@ -876,9 +848,6 @@ export function blindnessDeafnessSaveGateConditionSpell(
       ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.value)
       : null;
   if (
-    spell.name !== BLINDNESS_DEAFNESS_SPELL_NAME ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== BLINDNESS_DEAFNESS_PROVENANCE_SECTION ||
     spell.mechanics.level !== BLINDNESS_DEAFNESS_BASE_SPELL_LEVEL ||
     spell.mechanics.castingTime.kind !== "action" ||
     spell.mechanics.range.kind !== "point" ||
@@ -971,9 +940,6 @@ export function holdPersonSaveGateConditionSpell(
       ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.upTo)
       : null;
   if (
-    spell.name !== HOLD_PERSON_SPELL_NAME ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== HOLD_PERSON_PROVENANCE_SECTION ||
     spell.mechanics.level !== HOLD_PERSON_BASE_SPELL_LEVEL ||
     spell.mechanics.castingTime.kind !== "action" ||
     spell.mechanics.range.kind !== "point" ||
@@ -1042,8 +1008,6 @@ export function holdPersonSaveGateConditionSpell(
 
 function creatureTypeCharmedSaveGateConditionSpell(input: {
   readonly spell: SpellRecord;
-  readonly name: string;
-  readonly provenanceSection: string;
   readonly duration: { readonly unit: "hour"; readonly amount: 1 | 24 };
   readonly targetCreatureType: CreatureType;
   readonly saveRollModeRule: SpellSavingThrowRollModeRule | null;
@@ -1065,9 +1029,6 @@ function creatureTypeCharmedSaveGateConditionSpell(input: {
       ? (spell.mechanics.duration.earlyEnd ?? [])
       : [];
   if (
-    spell.name !== input.name ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== input.provenanceSection ||
     spell.mechanics.level !== 1 ||
     spell.mechanics.castingTime.kind !== "action" ||
     spell.mechanics.range.kind !== "point" ||
@@ -1409,9 +1370,6 @@ function fireballPointOriginSphereTargeting(
 ): Extract<SpellTargeting, { readonly kind: "pointOriginSphere" }> | null {
   const value = attachment.kind === "hole" ? attachment.value : attachment;
   if (
-    spell.name === FIREBALL_SPELL_NAME &&
-    spell.provenance.kind === "srd-5.2.1" &&
-    spell.provenance.section === FIREBALL_PROVENANCE_SECTION &&
     spell.mechanics.level === FIREBALL_BASE_SPELL_LEVEL &&
     spell.mechanics.castingTime.kind === "action" &&
     value.kind === "area" &&
@@ -1433,9 +1391,6 @@ function shatterPointOriginSphereTargeting(
 ): Extract<SpellTargeting, { readonly kind: "pointOriginSphere" }> | null {
   const value = attachment.kind === "hole" ? attachment.value : attachment;
   if (
-    spell.name === SHATTER_SPELL_NAME &&
-    spell.provenance.kind === "srd-5.2.1" &&
-    spell.provenance.section === SHATTER_PROVENANCE_SECTION &&
     spell.mechanics.level === SHATTER_BASE_SPELL_LEVEL &&
     spell.mechanics.castingTime.kind === "action" &&
     spell.mechanics.range.kind === "point" &&
@@ -1628,9 +1583,6 @@ export function isStarryWispDimLightRiderShape(
   phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
 ): boolean {
   return (
-    spell.name === "Starry Wisp" &&
-    spell.provenance.kind === "srd-5.2.1" &&
-    spell.provenance.section === "Spells/Descriptions-S-Z#Starry Wisp" &&
     spell.mechanics.level === 0 &&
     spell.mechanics.duration.kind === "instantaneous" &&
     phase.attackKind === "ranged_spell_attack"
@@ -1642,9 +1594,6 @@ export function isChillTouchHitPointRegainPreventionRiderShape(
   phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
 ): boolean {
   return (
-    spell.name === "Chill Touch" &&
-    spell.provenance.kind === "srd-5.2.1" &&
-    spell.provenance.section === "Spells/Descriptions-A-D#Chill Touch" &&
     spell.mechanics.level === 0 &&
     spell.mechanics.duration.kind === "instantaneous" &&
     phase.attackKind === "melee_spell_attack"
@@ -1656,9 +1605,6 @@ export function isRayOfSicknessPoisonedRiderShape(
   phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
 ): boolean {
   return (
-    spell.name === "Ray of Sickness" &&
-    spell.provenance.kind === "srd-5.2.1" &&
-    spell.provenance.section === "Spells/Descriptions-Q-R#Ray of Sickness" &&
     spell.mechanics.level === 1 &&
     spell.mechanics.duration.kind === "timed" &&
     spell.mechanics.duration.value.unit === "round" &&
@@ -1672,9 +1618,6 @@ export function isShockingGraspOpportunityAttackRiderShape(
   phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
 ): boolean {
   return (
-    spell.name === "Shocking Grasp" &&
-    spell.provenance.kind === "srd-5.2.1" &&
-    spell.provenance.section === "Spells/Descriptions-S-Z#Shocking Grasp" &&
     spell.mechanics.level === 0 &&
     spell.mechanics.duration.kind === "instantaneous" &&
     phase.attackKind === "melee_spell_attack"
@@ -1686,9 +1629,6 @@ export function isGuidingBoltNextAttackRiderShape(
   phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
 ): boolean {
   return (
-    spell.name === "Guiding Bolt" &&
-    spell.provenance.kind === "srd-5.2.1" &&
-    spell.provenance.section === "Spells/Descriptions-E-L#Guiding Bolt" &&
     spell.mechanics.level === 1 &&
     spell.mechanics.duration.kind === "timed" &&
     spell.mechanics.duration.value.unit === "round" &&
@@ -1728,7 +1668,7 @@ export function supportedSaveGateFailedSaveEffects(
   if (
     postSaveAreaEffect?.kind === "thunderwave" &&
     riders.filter((rider) =>
-      isThunderwaveCreaturePushRiderShape(spell, phase, rider),
+      isThunderwaveCreaturePushRiderShape(phase, rider),
     ).length !== 1
   ) {
     return null;
@@ -1764,7 +1704,7 @@ export function supportedFailedSavePostDamageRiders(
   for (const effect of effects) {
     if (
       postSaveAreaEffect?.kind === "thunderwave" &&
-      isThunderwaveCreaturePushRiderShape(spell, phase, effect)
+      isThunderwaveCreaturePushRiderShape(phase, effect)
     ) {
       continue;
     }
@@ -1807,9 +1747,6 @@ function isDissonantWhispersForcedReactionMovementShape(
   effect: SaveGateFailureEffect,
 ): boolean {
   return (
-    spell.name === "Dissonant Whispers" &&
-    spell.provenance.kind === "srd-5.2.1" &&
-    spell.provenance.section === "Spells/Descriptions-A-D#Dissonant Whispers" &&
     spell.mechanics.level === 1 &&
     spell.mechanics.castingTime.kind === "action" &&
     spell.mechanics.range.kind === "point" &&
@@ -1896,9 +1833,6 @@ function fireballPostSaveAreaEffect(
   const ignite =
     directPhase?.kind === "direct" ? directPhase.effects?.[0] : undefined;
   if (
-    spell.name !== FIREBALL_SPELL_NAME ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== FIREBALL_PROVENANCE_SECTION ||
     spell.mechanics.level !== FIREBALL_BASE_SPELL_LEVEL ||
     spell.mechanics.castingTime.kind !== "action" ||
     spell.mechanics.range.kind !== "point" ||
@@ -1953,9 +1887,6 @@ function isShatterSaveGateDamageShape(
 ): boolean {
   const damage = phase.onFail;
   return (
-    spell.name === SHATTER_SPELL_NAME &&
-    spell.provenance.kind === "srd-5.2.1" &&
-    spell.provenance.section === SHATTER_PROVENANCE_SECTION &&
     spell.mechanics.level === SHATTER_BASE_SPELL_LEVEL &&
     spell.mechanics.castingTime.kind === "action" &&
     spell.mechanics.range.kind === "point" &&
@@ -1991,9 +1922,6 @@ function thunderwavePostSaveAreaEffect(
   directPhase: SpellActivationPhase | undefined,
 ): SpellPostSaveAreaEffect | null {
   if (
-    spell.name !== "Thunderwave" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-S-Z#Thunderwave" ||
     spell.mechanics.level !== 1 ||
     spell.mechanics.castingTime.kind !== "action" ||
     spell.mechanics.range.kind !== "self" ||
@@ -2045,14 +1973,10 @@ function thunderwavePostSaveAreaEffect(
 }
 
 function isThunderwaveCreaturePushRiderShape(
-  spell: SpellRecord,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
   effect: SaveGateFailureEffect,
 ): boolean {
   return (
-    spell.name === "Thunderwave" &&
-    spell.provenance.kind === "srd-5.2.1" &&
-    spell.provenance.section === "Spells/Descriptions-S-Z#Thunderwave" &&
     phase.ability === "con" &&
     phase.onSuccess.kind === "half_damage" &&
     effect.kind === "force_move" &&
@@ -2087,9 +2011,6 @@ export function isViciousMockeryNextAttackRiderShape(
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
 ): boolean {
   return (
-    spell.name === "Vicious Mockery" &&
-    spell.provenance.kind === "srd-5.2.1" &&
-    spell.provenance.section === "Spells/Descriptions-S-Z#Vicious Mockery" &&
     spell.mechanics.level === 0 &&
     spell.mechanics.duration.kind === "timed" &&
     spell.mechanics.duration.value.unit === "round" &&

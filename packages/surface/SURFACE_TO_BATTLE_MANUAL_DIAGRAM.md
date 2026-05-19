@@ -43,9 +43,9 @@ flowchart TD
 
   TABLE_CHOICES["Table Choices"]
 
-  AUTHORED_NOTE["Authored records use Surface<br/>building blocks to describe<br/>rules content, for example fireball<br/>or a monster Stat Block.<br/>Authored records carry provenance.<br/>SRD authored content is allowed<br/>in the main repo.<br/>PHB and other licensed authored content<br/>is not allowed in the main repo,<br/>though tests may use renamed<br/>or adjusted fakes.<br/>Uses Surface as its schema."]
+  AUTHORED_NOTE["Authored records use Surface<br/>building blocks to describe<br/>rules content, for example fireball<br/>or a monster Stat Block.<br/>Authored records carry provenance.<br/>SRD authored content is allowed<br/>in the main repo.<br/>PHB+ / non-SRD official identity<br/>is not allowed in the main repo,<br/>though tests may use renamed<br/>or adjusted fakes.<br/>Uses Surface as its schema."]
   SURFACE_NOTE["Common language extraction.<br/>This must converge and stabilize.<br/>Changes here prompt source-code changes.<br/>It is a schema, not executable IR.<br/>Runtime packages consume typed<br/>authored-record boundaries and own<br/>their executable semantics."]
-  ID_NOTE["Production reducers must not<br/>dispatch on concrete authored ids.<br/>SRD ids may appear in catalogs,<br/>composition selections, and tests.<br/>Runtime semantics must come from<br/>Surface support profiles."]
+  ID_NOTE["Production reducers must not<br/>dispatch on authored identity:<br/>ids, names, slugs, or source refs.<br/>SRD identity may appear in catalogs,<br/>composition selections, and tests.<br/>Runtime semantics must come from<br/>Surface support profiles."]
   CONTENT_NOTE["Authored records and Surface schema,<br/>together, represent requirements,<br/>choices, and other runtime-needed facts.<br/>Most records are still not complete<br/>without runtime interpretation,<br/>user choices such as spell-slot choice,<br/>or table information such as roll results."]
   CHARACTER_NOTE["Character includes character creation,<br/>level ups, and character-owned features,<br/>for example class features."]
 
@@ -147,7 +147,7 @@ flowchart TD
   MERGED_SOURCES_NOTE["Rules sources provide provenance.<br/>Only SRD-derived authored content is allowed<br/>in the main repo.<br/>None of these source corpora are runtime code."]
   MERGED_AUTHORED_NOTE["Authored records carry provenance<br/>and use Surface as schema.<br/>Authored content is not runtime state<br/>or executable IR."]
   MERGED_RUNTIME_NOTE["Decoded records are validated authored content.<br/>Runtime packages own projections,<br/>support gates, and executable semantics."]
-  MERGED_ID_NOTE["Concrete authored ids are not<br/>runtime semantic switches.<br/>Support profiles parse Surface shapes;<br/>tests and catalogs may name SRD records."]
+  MERGED_ID_NOTE["Authored identity is not<br/>a runtime semantic switch.<br/>Support profiles parse Surface shapes;<br/>tests and catalogs may name SRD records."]
   MERGED_TEST_NOTE["The MBT lane injects randomized table choices<br/>and authored SRD records into reducers<br/>through the adapter."]
 
   MERGED_SOURCES_NOTE -. comment .-> MERGED_SOURCES

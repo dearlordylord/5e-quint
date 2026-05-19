@@ -70,13 +70,11 @@ import { currentActorId } from "./creature-state-leaves.ts";
 import { activeMarkedDamageRiderEffect } from "./damage-helpers.ts";
 import {
   BATTLE_D20_ROLL_MODIFIER_DIE_SIZES,
-  BLUR_UNIT_ID,
   HUNTERS_MARK_FINDING_SKILLS,
   MIRROR_IMAGE_DUPLICATE_DIE_SIZE,
   MIRROR_IMAGE_DUPLICATE_SUCCESS_AT_LEAST,
   MIRROR_IMAGE_INITIAL_DUPLICATES,
   MIRROR_IMAGE_UNAFFECTED_BY,
-  MIRROR_IMAGE_UNIT_ID,
   PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES,
   PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS,
   THAUMATURGY_BOOMING_VOICE_DURATION_TICKS,
@@ -85,7 +83,6 @@ import {
   WARDING_BOND_CAST_RANGE_FEET,
   WARDING_BOND_CONNECTION_RANGE_FEET,
   WARDING_BOND_SAVING_THROW_BONUS,
-  WARDING_BOND_SPELL_ID,
 } from "./domain-constants.ts";
 import { supportedDamageAmountExpr } from "./spells-profiles-save-gates.ts";
 import {
@@ -276,9 +273,6 @@ function featherFallMitigationSpellProjection(
   "activeEffect" | "rangeFeet"
 > | null {
   if (
-    spell.name !== "Feather Fall" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-E-L#Feather Fall" ||
     spell.mechanics.family !== "triggered_reaction" ||
     spell.mechanics.level !== 1 ||
     spell.mechanics.castingTime.kind !== "reaction" ||
@@ -349,10 +343,6 @@ function wardingBondSpellProjection(
   "activeEffect" | "rangeFeet" | "connectionRangeFeet"
 > | null {
   if (
-    spell.id !== WARDING_BOND_SPELL_ID ||
-    spell.name !== "Warding Bond" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-S-Z#Warding Bond" ||
     spell.mechanics.family !== "ongoing_effect" ||
     spell.mechanics.level !== 2 ||
     spell.mechanics.castingTime.kind !== "action" ||
@@ -361,8 +351,6 @@ function wardingBondSpellProjection(
     spell.mechanics.duration.value.unit !== "hour" ||
     spell.mechanics.duration.value.amount !== 1 ||
     spell.mechanics.attachment.kind !== "caster_target_bond" ||
-    spell.mechanics.attachment.bondId !==
-      "warding_bond_mystic_connection" ||
     spell.mechanics.attachment.range.kind !== "within_feet" ||
     spell.mechanics.attachment.range.feet !==
       Number(WARDING_BOND_CONNECTION_RANGE_FEET) ||
@@ -531,9 +519,6 @@ function jumpMovementReplacementSpellProjection(
   "activeEffect" | "rangeFeet"
 > | null {
   if (
-    spell.name !== "Jump" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-E-L#Jump" ||
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 1 ||
     spell.mechanics.castingTime.kind !== "bonus_action" ||
@@ -594,9 +579,6 @@ function selfTeleportSpellProjection(
   spell: SpellRecord,
 ): Pick<SelfTeleportSpellInvocation, "maxDistanceFeet"> | null {
   if (
-    spell.name !== "Misty Step" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-M-P#Misty Step" ||
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 2 ||
     spell.mechanics.castingTime.kind !== "bonus_action" ||
@@ -659,10 +641,6 @@ function expeditiousRetreatDashActiveEffect(
   const initialPhase = mechanics.initialPhase;
   const operation = mechanics.operations[0];
   if (
-    spell.name !== "Expeditious Retreat" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !==
-      "Spells/Descriptions-E-L#Expeditious Retreat" ||
     mechanics.level !== 1 ||
     mechanics.castingTime.kind !== "bonus_action" ||
     mechanics.range.kind !== "self" ||
@@ -953,10 +931,6 @@ function blurAttackRollDefenseSpellProjection(
   spell: SpellRecord,
 ): Pick<BlurAttackRollDefenseSpellInvocation, "activeEffect"> | null {
   if (
-    spell.id !== BLUR_UNIT_ID ||
-    spell.name !== "Blur" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-A-D#Blur" ||
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 2 ||
     spell.mechanics.castingTime.kind !== "action" ||
@@ -1003,10 +977,6 @@ function mirrorImageHitInterceptionSpellProjection(
   spell: SpellRecord,
 ): Pick<MirrorImageHitInterceptionSpellInvocation, "activeEffect"> | null {
   if (
-    spell.id !== MIRROR_IMAGE_UNIT_ID ||
-    spell.name !== "Mirror Image" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-M-P#Mirror Image" ||
     spell.mechanics.family !== "passive_hit_intercept" ||
     spell.mechanics.level !== 2 ||
     spell.mechanics.castingTime.kind !== "action" ||
@@ -1062,10 +1032,6 @@ export function conditionRemovalProtectionSpellProjection(
   "protection" | "rangeFeet" | "targeting"
 > | null {
   if (
-    spell.name !== "Protection from Poison" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !==
-      "Spells/Descriptions-M-P#Protection from Poison" ||
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 2 ||
     spell.mechanics.castingTime.kind !== "action" ||
@@ -1158,10 +1124,6 @@ export function creatureTypeProtectionSpellProjection(
   "activeEffect" | "rangeFeet" | "targeting"
 > | null {
   if (
-    spell.name !== "Protection from Evil and Good" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !==
-      "Spells/Descriptions-M-P#Protection from Evil and Good" ||
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 1 ||
     spell.mechanics.castingTime.kind !== "action" ||
@@ -1288,9 +1250,6 @@ export function conditionImmunityAndTurnStartTemporaryHitPointsSpellProjection(
   readonly activeEffects: ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation["activeEffects"];
 } | null {
   if (
-    spell.name !== "Heroism" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-E-L#Heroism" ||
     spell.mechanics.family !== "ongoing_effect" ||
     spell.mechanics.level !== 1 ||
     spell.mechanics.castingTime.kind !== "action" ||
@@ -1371,9 +1330,6 @@ export function supportedPreparedWeaponDamageRiderSpellProfile(
   spellSlots: CharacterBattleSpellcastingState["spellSlots"],
 ): readonly SupportedSpellInvocation[] {
   if (
-    spell.name !== "Divine Favor" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-A-D#Divine Favor" ||
     spell.mechanics.family !== "ongoing_effect" ||
     spell.mechanics.level !== 1 ||
     spell.mechanics.castingTime.kind !== "bonus_action" ||
@@ -1674,9 +1630,6 @@ export function afterHitDamageAndIlluminationSpellProjection(
   readonly expiresAt: AfterHitDamageAndIlluminationSpellInvocation["activeEffect"]["expiresAt"];
 } | null {
   if (
-    spell.name !== "Shining Smite" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-S-Z#Shining Smite" ||
     spell.mechanics.family !== "ongoing_effect" ||
     spell.mechanics.level !== 2 ||
     spell.mechanics.castingTime.kind !== "bonus_action" ||
@@ -1761,9 +1714,6 @@ export function afterHitTimedDamageAndSaveSpellProjection(
   readonly expiresAt: AfterHitTimedDamageAndSaveSpellInvocation["activeEffect"]["expiresAt"];
 } | null {
   if (
-    spell.name !== "Searing Smite" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-S-Z#Searing Smite" ||
     spell.mechanics.family !== "ongoing_effect" ||
     spell.mechanics.level !== 1 ||
     spell.mechanics.castingTime.kind !== "bonus_action" ||
@@ -1841,9 +1791,6 @@ export function afterHitSaveGatedConditionSpellProjection(spell: SpellRecord): {
   readonly turnStartDamageType: Extract<DamageType, "piercing">;
 } | null {
   if (
-    spell.name !== "Ensnaring Strike" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-E-L#Ensnaring Strike" ||
     spell.mechanics.family !== "ongoing_effect" ||
     spell.mechanics.level !== 1 ||
     spell.mechanics.castingTime.kind !== "bonus_action" ||
@@ -1893,9 +1840,6 @@ export function afterHitDamageSpellProjection(spell: SpellRecord): {
   readonly conditionalBonusDamageType: DamageType;
 } | null {
   if (
-    spell.name !== "Divine Smite" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-A-D#Divine Smite" ||
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 1 ||
     spell.mechanics.castingTime.kind !== "bonus_action" ||
@@ -2083,9 +2027,6 @@ function markedDamageRiderSpellProjection(spell: SpellRecord): {
   }
 
   if (
-    spell.name === "Hunter's Mark" &&
-    spell.provenance.kind === "srd-5.2.1" &&
-    spell.provenance.section === "Spells/Descriptions-G-P#Hunter's Mark" &&
     spell.mechanics.operations.length === 1
   ) {
     return markedDamageRiderDamageProjection(
@@ -2101,9 +2042,6 @@ function markedDamageRiderSpellProjection(spell: SpellRecord): {
   }
 
   if (
-    spell.name === "Hex" &&
-    spell.provenance.kind === "srd-5.2.1" &&
-    spell.provenance.section === "Spells/Descriptions-E-L#Hex" &&
     spell.mechanics.operations.length === 2
   ) {
     const passive = spell.mechanics.operations[1];
@@ -2344,9 +2282,6 @@ export function thaumaturgyBoomingVoiceProjection(
   "activeEffect" | "rangeFeet"
 > | null {
   if (
-    spell.name !== "Thaumaturgy" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-S-Z#Thaumaturgy" ||
     spell.mechanics.family !== "ongoing_effect" ||
     spell.mechanics.level !== 0 ||
     spell.mechanics.castingTime.kind !== "action" ||
@@ -2870,9 +2805,6 @@ export function damageReductionSpellProjection(
   "amount" | "damageTypeChoices" | "expiresAt" | "rangeFeet" | "targeting"
 > | null {
   if (
-    spell.name !== "Resistance" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-Q-R#Resistance" ||
     spell.mechanics.family !== "ongoing_effect" ||
     spell.mechanics.level !== 0 ||
     spell.mechanics.castingTime.kind !== "action" ||

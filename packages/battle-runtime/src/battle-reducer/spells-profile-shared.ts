@@ -1,13 +1,8 @@
 import type { SpellSlotLevel } from "@dnd/shared/types";
 import type {
   DiceExpr,
-  SpellRecord,
   TargetSelection,
 } from "@dnd/surface/surface/types";
-import {
-  ELDRITCH_BLAST_SPELL_ID,
-  SCORCHING_RAY_SPELL_ID,
-} from "./domain-constants.ts";
 
 export function sameStringSet(
   left: readonly string[],
@@ -28,15 +23,7 @@ export function sameDiceExpr(left: DiceExpr, right: DiceExpr): boolean {
   );
 }
 
-export function spellAttackSequencePartName(
-  spell: Pick<SpellRecord, "id">,
-): "attack" | "beam" | "ray" {
-  if (spell.id === ELDRITCH_BLAST_SPELL_ID) {
-    return "beam";
-  }
-  if (spell.id === SCORCHING_RAY_SPELL_ID) {
-    return "ray";
-  }
+export function spellAttackSequencePartName(): "attack" {
   return "attack";
 }
 

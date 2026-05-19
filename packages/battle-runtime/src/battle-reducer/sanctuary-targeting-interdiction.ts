@@ -60,9 +60,6 @@ function sanctuaryTargetingInterdictionProjection(
   "activeEffect" | "rangeFeet"
 > | null {
   if (
-    spell.name !== "Sanctuary" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-S-Z#Sanctuary" ||
     spell.mechanics.family !== "ongoing_effect" ||
     spell.mechanics.level !== 1 ||
     spell.mechanics.castingTime.kind !== "bonus_action" ||

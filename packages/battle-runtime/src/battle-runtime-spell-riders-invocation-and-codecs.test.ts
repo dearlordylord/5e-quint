@@ -791,6 +791,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
         targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
         targetCreatureTypes: ["humanoid"],
         effect: {
+          kind: "fixed",
           condition: "charmed",
           expiresAt: {
             kind: "duration",
@@ -798,6 +799,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
           },
           escape: { kind: "targetDamagedByCasterOrAlly" },
           turnStartDamage: null,
+          repeatSave: null,
         },
         saveRollModeRule: { kind: "hostileTarget", mode: "advantage" },
         rangeFeet: movementFeet(30),
@@ -806,6 +808,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
       dc: { kind: "caster_spell_save_dc" },
       areaChoices: [],
       targetRollModes: [{ targetId: goblinId, rollMode: "advantage" }],
+      targetFlatBonuses: [],
     };
 
     const decoded = Schema.decodeUnknownEither(BattleHoleSchema)(hole);

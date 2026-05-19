@@ -61,7 +61,7 @@ type ActionSpellAct = AvailableBattleAct & {
 };
 
 describe("Chromatic Orb chained spell attack", () => {
-  test("is offered only for the canonical SRD Chromatic Orb Spell Definition", () => {
+  test("is offered for the chained spell attack shape without requiring SRD identity", () => {
     const canonicalState = chromaticOrbBattle({ spellLevel: 1 });
     const canonicalAct = chromaticOrbAct(canonicalState);
     expect(canonicalAct.subject.invocation.spellId).toBe("chromatic_orb");
@@ -86,7 +86,7 @@ describe("Chromatic Orb chained spell attack", () => {
           candidate.subject.invocation.spellId === noncanonicalLookalike.id &&
           candidate.subject.invocation.procedure === "chainedSpellAttackDamage",
       ),
-    ).toBe(false);
+    ).toBe(true);
   });
 
   test("opens damage-type then step-scoped target, attack, and damage holes", () => {

@@ -56,14 +56,14 @@ describe("SRDINV39 deterministic Eldritch Blast Spell Unit admission", () => {
       "objectTargetChoice",
     ]);
     expect(act.initialHoles).toEqual([
-      expect.objectContaining({ label: "Eldritch Blast beam 1 target" }),
+      expect.objectContaining({ label: "Eldritch Blast attack 1 target" }),
       expect.objectContaining({
-        label: "Eldritch Blast beam 1 object target",
+        label: "Eldritch Blast attack 1 object target",
         requiresTableSpatialFact: true,
       }),
-      expect.objectContaining({ label: "Eldritch Blast beam 2 target" }),
+      expect.objectContaining({ label: "Eldritch Blast attack 2 target" }),
       expect.objectContaining({
-        label: "Eldritch Blast beam 2 object target",
+        label: "Eldritch Blast attack 2 object target",
         requiresTableSpatialFact: true,
       }),
     ]);
@@ -106,7 +106,7 @@ describe("SRDINV39 deterministic Eldritch Blast Spell Unit admission", () => {
     );
   });
 
-  test("canonical Eldritch Blast records with non-SRD beam count tiers are not admitted", () => {
+  test("Eldritch Blast-like records with non-SRD beam count tiers are not admitted", () => {
     const decoded = decodeUnitRecordSync(eldritchBlastInput);
     expect(decoded.kind).toBe("spell");
     if (decoded.kind !== "spell") return;

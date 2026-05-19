@@ -34,6 +34,39 @@ For monster data in this repo:
 - 5e-tools is valuable structured data and normalization inspiration, but it is **never** provenance.
 - If a collection is supposed to be "the SRD catalog", model it so mixed-provenance or mixed-license states are unrepresentable at the collection boundary.
 
+## Authored identity and PHB+ content (CRITICAL)
+
+**PHB+** means official D&D rules content that is not in this repo's
+redistributable SRD corpus: PHB material beyond the SRD plus other closed-licensed
+official books such as Xanathar's. Publishable source, tests, fixtures, docs, and
+generated artifacts must not copy real PHB+ ids, names, slugs, prose, examples,
+source headings, page references, or recognizable catalog identity. Use visibly
+synthetic renamed records for non-SRD mechanics examples.
+
+**Authored identity** means content identity or protected expression: record ids,
+names, slugs, source sections, provenance sections, prose labels, page refs, or
+recognizable official catalog labels. Authored identity is not a runtime rule
+model. Production runtime semantics must not dispatch on authored identity.
+
+SRD authored identity may appear in SRD content, provenance, catalogs, selection
+identity, and tests because SRD is redistributable here. Runtime code must still
+use Surface shape, support-profile readers, typed procedure facts, and explicit
+runtime state for SRD too, so SRD implementations set the safe pattern for PHB+
+support instead of teaching closed-licensed identity dispatch.
+
+Allowed authored-identity boundaries are narrow:
+
+- Surface catalog/schema/content boundaries.
+- Tests and fixtures that use SRD or synthetic identity.
+- Composition or user-selection boundaries that retain identity selected
+  elsewhere.
+- Data references whose domain is "reference another authored record" when the
+  source rule actually names that other record.
+- Explicitly documented support-profile admission boundaries. This is not a
+  blanket permission for profile parsers or reducers to branch on spell/unit
+  name, id, or provenance section; executable support should be admitted by
+  parsed shape and typed facts.
+
 General design rule:
 
 - **Make invalid states irrepresentable.** This is mandatory before proposing or implementing any data shape. If a proposed type can represent contradictory provenance, contradictory ownership, mismatched derived facts, support-status markers with no type/runtime consequence, or any field combination that is impossible in the code or rules domain, redesign the type before presenting it.
