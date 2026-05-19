@@ -130,6 +130,7 @@ export function traceEffectAtom(
     case "set_ability_score":
     case "modify_ability_score":
     case "modify_proficiency_bonus":
+    case "create_extradimensional_space":
       return traceObjectAndBarrierEffectAtom(
         e,
         nodes,

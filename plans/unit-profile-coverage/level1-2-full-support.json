@@ -2210,6 +2210,35 @@
       "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Rope object attachment, extradimensional-space occupancy, entry/exit climbing, line of sight through the portal, attack/spell/effect boundary blocking, and drop-out placement are table/spatial/object presentation facts outside promoted battle runtime.",
+      "sourceRecordPath": "packages/surface/content/rope_trick.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Rope Trick",
+          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_rope_trick",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 225,
+            "lineStart": 225,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
+      "unitId": "rope_trick"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
         "follow-up-split"
       ],
       "collectionId": "srd-5.2.1",
@@ -2742,7 +2771,7 @@
       ]
     },
     {
-      "count": 19,
+      "count": 20,
       "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
@@ -2762,6 +2791,7 @@
         "magic_mouth",
         "minor_illusion",
         "pass_without_trace",
+        "rope_trick",
         "silent_image",
         "speak_with_animals",
         "thaumaturgy"
@@ -2813,12 +2843,12 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 483,
-      "percent": "86.9%",
+      "numerator": 484,
+      "percent": "87.1%",
       "rowsByStatus": {
         "accepted": 348,
-        "accepted-no-battle-effect": 135,
-        "battle-runtime-required": 63,
+        "accepted-no-battle-effect": 136,
+        "battle-runtime-required": 62,
         "owner-evidence-required": 3,
         "partial-battle-runtime": 7
       }
@@ -2839,13 +2869,13 @@
       "percent": "29.5%"
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 160,
+      "denominator": 161,
       "numerator": 105,
-      "percent": "65.6%"
+      "percent": "65.2%"
     },
     "strictTargetClosure": {
-      "denominator": 160,
-      "numerator": 155,
+      "denominator": 161,
+      "numerator": 156,
       "percent": "96.9%"
     }
   },
@@ -3658,24 +3688,6 @@
           }
         ],
         "unitId": "purify_food_and_drink"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "spell Unit pressure",
-            "concept": "Wizard spell list Rope Trick",
-            "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_rope_trick",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 225,
-              "lineStart": 225,
-              "path": ".references/srd-5.2.1/Classes/Wizard.md"
-            }
-          }
-        ],
-        "unitId": "rope_trick"
       },
       {
         "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
@@ -7632,18 +7644,18 @@
       "missing": 5,
       "profile-subset-supported": 13,
       "supported-profile": 105,
-      "unsupported-profile": 37
+      "unsupported-profile": 38
     },
     "groupsByStatus": {
       "blocked-follow-up-split": 22,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
-      "closed-runtime-detached-table-adjudication": 19,
+      "closed-runtime-detached-table-adjudication": 20,
       "open-runtime-behavior": 5,
       "supported-profile": 105
     },
-    "nonSupportedFrontier": 55,
-    "strictDenominator": 160
+    "nonSupportedFrontier": 56,
+    "strictDenominator": 161
   }
 }

@@ -339,6 +339,9 @@ export type AttachmentRangeOrigin = Schema.Schema.Type<
 export type Attachment = Schema.Schema.Type<
   typeof SurfaceSchema.AttachmentSchema
 >;
+export type ExtradimensionalSpaceEffect = Schema.Schema.Type<
+  typeof SurfaceSchema.ExtradimensionalSpaceEffectSchema
+>;
 export type CreatedObjectDurability = Schema.Schema.Type<
   typeof SurfaceSchema.CreatedObjectDurabilitySchema
 >;

@@ -59,7 +59,8 @@ export type ObjectAndBarrierEffectAtom = Extract<
       | "block_max_hp_reduction"
       | "set_ability_score"
       | "modify_ability_score"
-      | "modify_proficiency_bonus";
+      | "modify_proficiency_bonus"
+      | "create_extradimensional_space";
   }
 >;
 
@@ -468,6 +469,25 @@ export function traceObjectAndBarrierEffectAtom(
         category: "effect",
         atomKind: "block_max_hp_reduction",
         label: "block_max_hp_reduction",
+      });
+      return id;
+    }
+    case "create_extradimensional_space": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "create_extradimensional_space",
+        label: [
+          "create_extradimensional_space",
+          `${e.entry.visibility} ${e.entry.widthFeet} ft x ${e.entry.heightFeet} ft portal at ${e.entry.location}`,
+          `${e.anchor.kind}: ${e.anchor.topEndMotion}`,
+          `access: ${e.access.kind}; ${e.access.anchorMovement}`,
+          `capacity: ${e.capacity.creatureCount} ${e.capacity.maxCreatureSize} or smaller creatures`,
+          `boundary: ${e.boundary.attacksSpellsAndEffects}`,
+          `occupant perception: ${e.boundary.occupantPerception}`,
+          `on end: ${e.onEnd.kind}`,
+        ].join("\n"),
       });
       return id;
     }

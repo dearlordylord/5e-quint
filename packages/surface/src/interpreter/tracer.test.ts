@@ -5,6 +5,7 @@ import dragonsBreathInput from "../../content/dragons_breath.json";
 import locateAnimalsOrPlantsInput from "../../content/locate_animals_or_plants.json";
 import locateObjectInput from "../../content/locate_object.json";
 import magicMouthInput from "../../content/magic_mouth.json";
+import ropeTrickInput from "../../content/rope_trick.json";
 import wardingBondInput from "../../content/warding_bond.json";
 import { decodeUnitRecordSync } from "../surface/schema.ts";
 import { traceUnit } from "./tracer.ts";
@@ -158,6 +159,32 @@ describe("Surface trace interpreter", () => {
         expect.objectContaining({
           atomKind: "release",
           label: expect.stringContaining("spoken message"),
+        }),
+      ]),
+    );
+  });
+
+  test("renders Rope Trick as an extradimensional refuge", () => {
+    const trace = traceUnit(decodeUnitRecordSync(ropeTrickInput));
+
+    expect(trace.nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          atomKind: "hole",
+          label: expect.stringContaining("touched rope"),
+        }),
+        expect.objectContaining({
+          atomKind: "create_extradimensional_space",
+          label: [
+            "create_extradimensional_space",
+            "invisible 3 ft x 5 ft portal at anchor_upper_end",
+            "touched_rope: hovers_until_perpendicular_or_ceiling",
+            "access: climb_anchor; can_be_pulled_into_or_dropped_out",
+            "capacity: 8 medium or smaller creatures",
+            "boundary: blocked_bidirectionally",
+            "occupant perception: can_see_out_through_portal",
+            "on end: drop_contents_out",
+          ].join("\n"),
         }),
       ]),
     );

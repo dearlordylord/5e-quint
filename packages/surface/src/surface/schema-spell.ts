@@ -364,6 +364,9 @@ type ContainerStorageProfile = {
   };
   readonly extradimensional?: true;
 };
+type ExtradimensionalSpaceEffect = Schema.Schema.Type<
+  typeof ExtradimensionalSpaceEffectSchema
+>;
 type Size = Schema.Schema.Type<typeof SizeSchema>;
 type AreaShapeSpec = Schema.Schema.Type<typeof AreaShapeSpecSchema>;
 type CreatedObjectDurability = Schema.Schema.Type<
@@ -948,6 +951,7 @@ type EffectAtom =
       readonly kind: "container_storage";
       readonly storage: ContainerStorageProfile;
     }
+  | ExtradimensionalSpaceEffect
   | {
       readonly kind: "create_sensor";
       readonly visibility: "invisible";
@@ -1751,6 +1755,35 @@ export const AttachmentSchema = Schema.Union(
   AttachmentBaseSchema,
   makeHoleSchema(AttachmentBaseSchema),
 );
+
+export const ExtradimensionalSpaceEffectSchema = strictStruct({
+  kind: Schema.Literal("create_extradimensional_space"),
+  anchor: strictStruct({
+    kind: Schema.Literal("touched_rope"),
+    topEndMotion: Schema.Literal("hovers_until_perpendicular_or_ceiling"),
+  }),
+  entry: strictStruct({
+    visibility: Schema.Literal("invisible"),
+    widthFeet: PositiveIntegerSchema,
+    heightFeet: PositiveIntegerSchema,
+    location: Schema.Literal("anchor_upper_end"),
+  }),
+  access: strictStruct({
+    kind: Schema.Literal("climb_anchor"),
+    anchorMovement: Schema.Literal("can_be_pulled_into_or_dropped_out"),
+  }),
+  capacity: strictStruct({
+    creatureCount: PositiveIntegerSchema,
+    maxCreatureSize: SizeSchema,
+  }),
+  boundary: strictStruct({
+    attacksSpellsAndEffects: Schema.Literal("blocked_bidirectionally"),
+    occupantPerception: Schema.Literal("can_see_out_through_portal"),
+  }),
+  onEnd: strictStruct({
+    kind: Schema.Literal("drop_contents_out"),
+  }),
+});
 
 export const ContinuationPredicateSchema = Schema.Struct({
   kind: Schema.Literal("damage_roll_has_duplicate_faces"),
@@ -2768,6 +2801,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
           extradimensional: optionalExact(Schema.Literal(true)),
         }),
       }),
+      ExtradimensionalSpaceEffectSchema,
       Schema.Struct({
         kind: Schema.Literal("create_sensor"),
         visibility: Schema.Literal("invisible"),

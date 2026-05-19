@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 388,
-      "numerator": 173,
-      "percent": "44.6%"
+      "denominator": 389,
+      "numerator": 174,
+      "percent": "44.7%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 460,
-      "numerator": 205,
-      "percent": "44.6%"
+      "denominator": 461,
+      "numerator": 206,
+      "percent": "44.7%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 206
+      "value": 207
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 128,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 206,
-      "numerator": 206,
+      "denominator": 207,
+      "numerator": 207,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "82%"
     },
     "supportedProfileCoverage": {
-      "denominator": 174,
+      "denominator": 175,
       "numerator": 128,
-      "percent": "73.6%"
+      "percent": "73.1%"
     }
   },
   "metricSemantics": [
@@ -16898,6 +16898,29 @@
       ],
       "sourceRecordPath": "packages/surface/content/resistance.json",
       "unitId": "resistance"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table/spatial/object presentation owner",
+          "reason": "Rope object attachment, extradimensional-space occupancy, entry/exit climbing, line of sight through the portal, attack/spell/effect boundary blocking, and drop-out placement are table/spatial/object presentation facts outside promoted battle runtime."
+        },
+        "reason": "Rope Trick is authored and installed as an SRD Surface Spell Definition with Magic Action Spell Slot casting, Touch range, V/S/M rope component, 1-hour non-Concentration duration, a touched-rope anchor whose end rises until perpendicular or blocked by a ceiling, an Invisible 3-foot-by-5-foot portal at the upper end, a climbable extradimensional space entry, rope pull/drop interaction, capacity for up to eight Medium or smaller creatures, bidirectional attack/spell/effect blocking, one-way sight out through the portal, and drop-out cleanup when the spell ends. Task 7 claims no promoted battle-runtime profile because rope object attachment, portal and extradimensional-space occupancy, entry/exit climbing, line of sight through the portal, attack/spell/effect boundary blocking, and drop-out placement are runtime-detached table/spatial/object presentation facts outside promoted battle Unit profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/rope_trick.json",
+      "unitId": "rope_trick"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
