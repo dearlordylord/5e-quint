@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L12G-MISSING-KNOCK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Knock Definition And Closure"
     },
     {
@@ -166,7 +166,7 @@ Do not run battle-runtime MBT unless the task changes promoted battle-runtime be
 
 | # | Task | Status | Depends On | Notes |
 | ---: | --- | --- | --- | --- |
-| 1 | L12G-MISSING-KNOCK - Knock Definition And Closure | ready-for-research | completed baseline | Original backlog task 66; Unit `knock`. |
+| 1 | L12G-MISSING-KNOCK - Knock Definition And Closure | done | completed baseline | Original backlog task 66; Unit `knock`. |
 | 2 | L12G-MISSING-LEVITATE - Levitate Definition And Support Or Closure | ready-for-research | completed baseline | Original backlog task 67; Unit `levitate`. |
 | 3 | L12G-MISSING-LOCATE-ANIMALS-OR-PLANTS - Locate Animals Or Plants Definition And Closure | ready-for-research | completed baseline | Original backlog task 68; Unit `locate_animals_or_plants`. |
 | 4 | L12G-MISSING-LOCATE-OBJECT - Locate Object Definition And Closure | ready-for-research | completed baseline | Original backlog task 69; Unit `locate_object`. |
@@ -187,7 +187,7 @@ Do not run battle-runtime MBT unless the task changes promoted battle-runtime be
 
 ### Task 1 - L12G-MISSING-KNOCK - Knock Definition And Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Original backlog task: `Task 66 - L12G-MISSING-KNOCK - Knock Definition And Closure`.
 Unit: `knock`.
