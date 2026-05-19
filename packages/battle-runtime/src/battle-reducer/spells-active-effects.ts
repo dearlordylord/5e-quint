@@ -24,6 +24,7 @@ import {
 import { scalarBuffTemporaryHitPointsAmount } from "./spell-effects.ts";
 import {
   battleCreatureAfterConditionRemoval,
+  combatantsAfterConcentrationSpellEffectsEndedIfNoEffects,
   conditionsAfterApplyingSpellConditionEffects,
   conditionApplicationPreventedByCreatureTypeProtection,
   conditionHadNonSpellSourceBeforeSpellEffect,
@@ -983,6 +984,48 @@ export function battleCreatureWithSpellActiveEffects(
     : { ...combatant, activeEffects };
 }
 
+export function applyDirectConditionSpellEffects(
+  state: BattleState,
+  actorId: CombatantId,
+  targetIds: readonly CombatantId[],
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "directCondition" }
+  >,
+): BattleState {
+  return targetIds.reduce((nextState, targetId) => {
+    const target = nextState.combatants.get(targetId);
+    if (target === undefined) {
+      return nextState;
+    }
+    const replacing = target.activeEffects.filter(
+      (effect) =>
+        effect.kind === "targetActionEndedSpellCondition" &&
+        effect.sourceSpellId === invocation.spell.id &&
+        effect.sourceCombatantId === actorId &&
+        effect.condition === invocation.activeEffect.condition,
+    );
+    const activeEffects = [
+      ...target.activeEffects.filter((effect) => !replacing.includes(effect)),
+      {
+        ...invocation.activeEffect,
+        conditionHadNonSpellSource:
+          conditionHadNonSpellSourceBeforeSpellEffect(
+            target,
+            invocation.activeEffect.condition,
+          ),
+      },
+    ];
+    return {
+      ...nextState,
+      combatants: new Map(nextState.combatants).set(
+        targetId,
+        battleCreatureWithSpellActiveEffects(target, activeEffects),
+      ),
+    };
+  }, state);
+}
+
 export function applyFailedSaveSpellActiveEffects(
   state: BattleState,
   actorId: CombatantId,
@@ -1120,7 +1163,55 @@ export function applyFailedSaveSpellConditionEffects(
       battleCreatureWithSpellActiveEffects(target, activeEffects),
     );
   }
-  return { ...state, combatants };
+  const effected: BattleState = { ...state, combatants };
+  const targetConcentrationReconciled = targetIds.reduce(
+    (nextState, targetId) =>
+      breakConcentrationIfCombatantIsIncapacitated(nextState, targetId),
+    effected,
+  );
+  return clearSourceConcentrationIfRepeatSaveConditionSpellHasNoEffects(
+    targetConcentrationReconciled,
+    actorId,
+    invocation.spell.id,
+    appliedEffect,
+  );
+}
+
+function breakConcentrationIfCombatantIsIncapacitated(
+  state: BattleState,
+  combatantId: CombatantId,
+): BattleState {
+  const combatant = state.combatants.get(combatantId);
+  return combatant !== undefined &&
+    combatant.concentration !== null &&
+    hasCondition(combatant.conditions, "incapacitated")
+    ? breakBattleConcentration(state, combatantId)
+    : state;
+}
+
+function clearSourceConcentrationIfRepeatSaveConditionSpellHasNoEffects(
+  state: BattleState,
+  sourceCombatantId: CombatantId,
+  sourceSpellId: string,
+  appliedEffect: SpellSelectedFailedSaveConditionEffect,
+): BattleState {
+  if (
+    appliedEffect.repeatSave === null ||
+    typeof appliedEffect.expiresAt !== "object" ||
+    appliedEffect.expiresAt.kind !== "concentration"
+  ) {
+    return state;
+  }
+  return {
+    ...state,
+    combatants: combatantsAfterConcentrationSpellEffectsEndedIfNoEffects(
+      state.combatants,
+      {
+        sourceCombatantId,
+        sourceSpellId,
+      },
+    ),
+  };
 }
 
 export function applySleepPendingRepeatSaveEffects(
@@ -1723,6 +1814,13 @@ export function activeEffectExpirationForPostDamageRider(
 ): BattleActiveEffectExpiration {
   if (typeof expiresAt === "object" && expiresAt.kind === "duration") {
     return expiresAt;
+  }
+  if (typeof expiresAt === "object" && expiresAt.kind === "concentration") {
+    return {
+      kind: "concentration",
+      combatantId: casterId,
+      durationTicks: expiresAt.durationTicks,
+    };
   }
   if (expiresAt === undefined) {
     return { kind: "startOfTurn", combatantId: casterId };

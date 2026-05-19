@@ -125,6 +125,7 @@
       "profiles": [
         "spell.hit-point-restoration",
         "spell.invocation-damage-save-or-attack",
+        "spell.invocation-direct-condition",
         "spell.reaction-shield",
         "spell.readied-action-time-spell"
       ],
@@ -449,6 +450,12 @@
     },
     {
       "obligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "spell.invocation-direct-condition"
+    },
+    {
+      "obligationIds": [
         "BATTLE.STAT_BLOCK.ATTACK_CONTROL"
       ],
       "profileId": "stat-block.attack-control"
@@ -540,27 +547,32 @@
     "spell.find-familiar-lifecycle",
     "spell.hit-point-restoration",
     "spell.invocation-after-hit-damage",
+    "spell.invocation-after-hit-damage-illumination",
     "spell.invocation-after-hit-restraint-turn-start-damage",
     "spell.invocation-after-hit-timed-damage-save",
     "spell.invocation-attack-roll-advantage-save",
-    "spell.invocation-beam-sequence",
+    "spell.invocation-blur-attack-roll-defense",
     "spell.invocation-chained-attack-damage",
     "spell.invocation-command-approach-route",
     "spell.invocation-command-drop-held-object",
     "spell.invocation-command-flee-route",
     "spell.invocation-command-halt-grovel",
     "spell.invocation-condition-immunity-turn-start-temporary-hit-points",
+    "spell.invocation-condition-removal-protection",
     "spell.invocation-condition-save",
     "spell.invocation-damage-reduction",
     "spell.invocation-damage-save-or-attack",
     "spell.invocation-dancing-lights-movable-dim-light",
+    "spell.invocation-direct-condition",
     "spell.invocation-expeditious-retreat-dash",
     "spell.invocation-feather-fall-mitigation",
+    "spell.invocation-flaming-sphere-hazard-ram",
     "spell.invocation-fog-cloud-obscurement",
     "spell.invocation-forced-reaction-movement",
     "spell.invocation-grease-ground-hazard",
     "spell.invocation-held-light-emitter",
     "spell.invocation-hideous-laughter-repeat-save-lifecycle",
+    "spell.invocation-independent-attack-sequence",
     "spell.invocation-jump-movement-replacement",
     "spell.invocation-make-stable",
     "spell.invocation-marked-damage-rider",
@@ -568,6 +580,7 @@
     "spell.invocation-roll-modifier",
     "spell.invocation-sanctuary-targeting-interdiction",
     "spell.invocation-self-ability-check-advantage",
+    "spell.invocation-self-teleport",
     "spell.invocation-sleep-repeat-save-lifecycle",
     "spell.invocation-sleep-target-admission",
     "spell.invocation-spell-hosted-weapon-attack",

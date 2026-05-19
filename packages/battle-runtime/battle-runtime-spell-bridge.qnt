@@ -45,6 +45,7 @@ module battleRuntimeSpellBridge {
     | BattleRuntimeAnimalFriendshipSaveCondition
     | BattleRuntimeCharmPersonSaveCondition
     | BattleRuntimeBlindnessDeafnessSaveCondition
+    | BattleRuntimeHoldPersonSaveCondition
     | BattleRuntimeFaerieFireSaveAttackRollAdvantage
 
   type BattleRuntimeSaveGatedTargeting =
@@ -77,6 +78,7 @@ module battleRuntimeSpellBridge {
     | BattleRuntimeCharmPersonCharmedEffect({ durationTicks: int })
     | BattleRuntimeBlindnessDeafnessBlindedEffect({ durationTicks: int })
     | BattleRuntimeBlindnessDeafnessDeafenedEffect({ durationTicks: int })
+    | BattleRuntimeHoldPersonParalyzedEffect({ durationTicks: int })
     | BattleRuntimeFaerieFireOutlineEffect
 
   type BattleRuntimeScalarBuffProfile =
@@ -247,6 +249,7 @@ module battleRuntimeSpellBridge {
       | BattleRuntimeAnimalFriendshipSaveCondition => AnimalFriendshipSaveConditionProfile
       | BattleRuntimeCharmPersonSaveCondition => CharmPersonSaveConditionProfile
       | BattleRuntimeBlindnessDeafnessSaveCondition => BlindnessDeafnessSaveConditionProfile
+      | BattleRuntimeHoldPersonSaveCondition => HoldPersonSaveConditionProfile
       | BattleRuntimeFaerieFireSaveAttackRollAdvantage => FaerieFireSaveAttackRollAdvantageProfile
     }
 
@@ -330,6 +333,7 @@ module battleRuntimeSpellBridge {
       | CharmPersonCharmedEffect(data) => BattleRuntimeCharmPersonCharmedEffect({ durationTicks: data.durationTicks })
       | BlindnessDeafnessBlindedEffect(data) => BattleRuntimeBlindnessDeafnessBlindedEffect({ durationTicks: data.durationTicks })
       | BlindnessDeafnessDeafenedEffect(data) => BattleRuntimeBlindnessDeafnessDeafenedEffect({ durationTicks: data.durationTicks })
+      | HoldPersonParalyzedEffect(data) => BattleRuntimeHoldPersonParalyzedEffect({ durationTicks: data.durationTicks })
       | FaerieFireOutlineEffect => BattleRuntimeFaerieFireOutlineEffect
     }
 
@@ -808,6 +812,7 @@ module battleRuntimeSpellBridge {
   run test_save_gated_profile_projection = {
     val animalTargets = battleRuntimeSaveGatedConditionTargeting(BattleRuntimeAnimalFriendshipSaveCondition)
     val blindnessTargets = battleRuntimeSaveGatedConditionTargeting(BattleRuntimeBlindnessDeafnessSaveCondition)
+    val holdPersonTargets = battleRuntimeSaveGatedConditionTargeting(BattleRuntimeHoldPersonSaveCondition)
     all {
       assert(battleRuntimeSaveGatedDamageTargeting(BattleRuntimeSacredFlameSaveDamage) == BattleRuntimeSingleSaveTarget),
       assert(battleRuntimeSaveGatedDamageTargeting(BattleRuntimeBurningHandsSaveDamage) == BattleRuntimeAreaSaveTargets),
@@ -837,17 +842,23 @@ module battleRuntimeSpellBridge {
       assert(battleRuntimeSaveGatedConditionSavingThrowAbility(BattleRuntimeColorSpraySaveCondition) == BattleRuntimeConstitutionSavingThrow),
       assert(battleRuntimeSaveGatedConditionSavingThrowAbility(BattleRuntimeEntangleSaveCondition) == BattleRuntimeStrengthSavingThrow),
       assert(battleRuntimeSaveGatedConditionSavingThrowAbility(BattleRuntimeBlindnessDeafnessSaveCondition) == BattleRuntimeConstitutionSavingThrow),
+      assert(battleRuntimeSaveGatedConditionSavingThrowAbility(BattleRuntimeHoldPersonSaveCondition) == BattleRuntimeWisdomSavingThrow),
       assert(battleRuntimeSaveGatedTargetMaxTargets(animalTargets, 2) == 2),
       assert(battleRuntimeSaveGatedTargetMaxTargets(blindnessTargets, 2) == 1),
       assert(battleRuntimeSaveGatedTargetMaxTargets(blindnessTargets, 3) == 2),
+      assert(battleRuntimeSaveGatedTargetMaxTargets(holdPersonTargets, 2) == 1),
+      assert(battleRuntimeSaveGatedTargetMaxTargets(holdPersonTargets, 3) == 2),
       assert(battleRuntimeSaveGatedConditionFailedSaveEffects(BattleRuntimeEntangleSaveCondition) == Set(BattleRuntimeEntangleRestrainedEffect)),
       assert(battleRuntimeSaveGatedConditionFailedSaveEffects(BattleRuntimeBlindnessDeafnessSaveCondition) == Set(
         BattleRuntimeBlindnessDeafnessBlindedEffect({ durationTicks: 10 }),
         BattleRuntimeBlindnessDeafnessDeafenedEffect({ durationTicks: 10 })
       )),
+      assert(battleRuntimeSaveGatedConditionFailedSaveEffects(BattleRuntimeHoldPersonSaveCondition) == Set(BattleRuntimeHoldPersonParalyzedEffect({ durationTicks: 10 }))),
       assert(battleRuntimeSaveGatedConditionFailedSaveEffects(BattleRuntimeFaerieFireSaveAttackRollAdvantage) == Set(BattleRuntimeFaerieFireOutlineEffect)),
       assert(battleRuntimeSaveGatedConditionTargetCreatureTypeIsLegal(BattleRuntimeAnimalFriendshipSaveCondition, true, false)),
       assert(not(battleRuntimeSaveGatedConditionTargetCreatureTypeIsLegal(BattleRuntimeAnimalFriendshipSaveCondition, false, true))),
+      assert(battleRuntimeSaveGatedConditionTargetCreatureTypeIsLegal(BattleRuntimeHoldPersonSaveCondition, false, true)),
+      assert(not(battleRuntimeSaveGatedConditionTargetCreatureTypeIsLegal(BattleRuntimeHoldPersonSaveCondition, true, false))),
       assert(battleRuntimeSaveGatedConditionSavingThrowHasAdvantage(BattleRuntimeCharmPersonSaveCondition, true)),
     }
   }

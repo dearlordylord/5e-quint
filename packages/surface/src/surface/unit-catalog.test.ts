@@ -146,6 +146,8 @@ const requiredFirstVerticalUnitIds = [
   "locate_animals_or_plants",
   "locate_object",
   "hellish_rebuke",
+  "hold_person",
+  "invisibility",
   "armor_chain_mail",
   "equipment_shield",
   "weapon_dagger",

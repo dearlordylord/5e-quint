@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 388,
-      "numerator": 171,
-      "percent": "44.1%"
+      "numerator": 173,
+      "percent": "44.6%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 460,
-      "numerator": 203,
-      "percent": "44.1%"
+      "numerator": 205,
+      "percent": "44.6%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,62 +59,62 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 204
+      "value": 206
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 126,
-      "numerator": 126,
+      "denominator": 128,
+      "numerator": 128,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 204,
-      "numerator": 204,
+      "denominator": 206,
+      "numerator": 206,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 71,
-      "numerator": 71,
+      "denominator": 72,
+      "numerator": 72,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 71,
-      "numerator": 71,
+      "denominator": 72,
+      "numerator": 72,
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 94,
-      "numerator": 19,
-      "percent": "20.2%"
+      "denominator": 95,
+      "numerator": 20,
+      "percent": "21.1%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 94,
-      "numerator": 24,
-      "percent": "25.5%"
+      "denominator": 95,
+      "numerator": 25,
+      "percent": "26.3%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 126,
-      "numerator": 41,
-      "percent": "32.5%"
+      "denominator": 128,
+      "numerator": 42,
+      "percent": "32.8%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 71,
-      "numerator": 71,
+      "denominator": 72,
+      "numerator": 72,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 71,
-      "numerator": 71,
+      "denominator": 72,
+      "numerator": 72,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 126,
-      "numerator": 104,
-      "percent": "82.5%"
+      "denominator": 128,
+      "numerator": 105,
+      "percent": "82%"
     },
     "supportedProfileCoverage": {
-      "denominator": 172,
-      "numerator": 126,
-      "percent": "73.3%"
+      "denominator": 174,
+      "numerator": 128,
+      "percent": "73.6%"
     }
   },
   "metricSemantics": [
@@ -2749,20 +2749,45 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-warding-bond.test.ts"
         }
       ]
+    },
+    {
+      "id": "spell.invocation-direct-condition",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "sourceBoundary": "The runtime consumes authored direct apply_condition effects, slot-scaled touched creature targets, and spell-level target-action early-end triggers. It owns Magic Action and Spell Slot spending, Concentration setup and cleanup, maximum-duration cleanup, Invisible condition application, preservation of independent non-spell condition sources, and source-wide spell expiration after an affected target makes an attack roll, deals damage, or casts a spell.",
+      "taskRefs": [
+        "L12G-SPELL-INVISIBILITY"
+      ],
+      "title": "Spell invocation applies direct spell-owned conditions with target-action early end",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-invisibility.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 94,
-        "numerator": 19,
-        "percent": "20.2%"
+        "denominator": 95,
+        "numerator": 20,
+        "percent": "21.1%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 94,
-        "numerator": 24,
-        "percent": "25.5%"
+        "denominator": 95,
+        "numerator": 25,
+        "percent": "26.3%"
       }
     },
     "profileKinds": [
@@ -3529,6 +3554,19 @@
         "obligations": [],
         "profileId": "spell.invocation-warding-bond-linked-effect",
         "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+          }
+        ],
+        "profileId": "spell.invocation-direct-condition",
+        "profileKind": "spell-invocation"
       }
     ],
     "sourceArtifacts": {
@@ -3539,9 +3577,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 126,
-          "numerator": 41,
-          "percent": "32.5%"
+          "denominator": 128,
+          "numerator": 42,
+          "percent": "32.8%"
         }
       },
       "units": [
@@ -4537,6 +4575,18 @@
             {
               "joinStatus": "unmapped",
               "obligations": [],
+              "profileId": "spell.invocation-condition-save",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "hold_person"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
               "profileId": "spell.invocation-marked-damage-rider",
               "profileKind": "spell-invocation"
             }
@@ -4599,6 +4649,25 @@
             }
           ],
           "unitId": "inflict_wounds"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.invocation-direct-condition",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "invisibility"
         },
         {
           "joinStatus": "unmapped",
@@ -7593,6 +7662,22 @@
         "spell.invocation-warding-bond-linked-effect"
       ],
       "taskId": "L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Invisibility's Magic Action and level-2-or-higher Spell Slot spend, touched-creature target scaling, caster-owned Concentration up to 1 hour, Invisible condition effect, duration and Concentration cleanup, and source-wide early end after an affected target makes an attack roll, deals damage, or casts a spell.",
+      "profileIds": [
+        "spell.invocation-direct-condition"
+      ],
+      "taskId": "L12G-SPELL-INVISIBILITY"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission tests cover Invisibility catalog admission, target-list fill validation, slot-scaled target count, active Invisible condition projection, Spell Slot and Magic Action spending, caster Concentration ownership, source-wide cleanup on affected target attack roll, damage dealt, or spell cast, and reuse of caller-supplied sight facts for Invisible attack-roll benefits.",
+      "profileIds": [
+        "spell.invocation-direct-condition"
+      ],
+      "taskId": "L12G-SPELL-INVISIBILITY"
     }
   ],
   "units": [
@@ -15607,6 +15692,70 @@
       },
       "claim": {
         "profileIds": [
+          "spell.invocation-direct-condition"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action level-2-or-higher Spell Slot casting",
+          "touched creature target-list admission with one target at level 2 and one additional target per Spell Slot level above 2",
+          "caster-owned Concentration up to 1 hour",
+          "Invisible condition application to selected targets",
+          "source-wide spell cleanup immediately after an affected target makes an attack roll, deals damage, or casts a spell",
+          "maximum-duration and Concentration cleanup remove the spell-owned Invisible condition without duplicating independent non-spell condition sources",
+          "Invisible attack-roll mode benefits and visibility caveats continue through the existing Invisible condition and sight/benefit-denial boundaries"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-invisibility.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-SPELL-INVISIBILITY"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-direct-condition",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "The runtime consumes authored direct apply_condition effects, slot-scaled touched creature targets, and spell-level target-action early-end triggers. It owns Magic Action and Spell Slot spending, Concentration setup and cleanup, maximum-duration cleanup, Invisible condition application, preservation of independent non-spell condition sources, and source-wide spell expiration after an affected target makes an attack roll, deals damage, or casts a spell.",
+          "taskRefs": [
+            "L12G-SPELL-INVISIBILITY"
+          ],
+          "title": "Spell invocation applies direct spell-owned conditions with target-action early end",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-invisibility.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/invisibility.json",
+      "unitId": "invisibility"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
           "spell.invocation-jump-movement-replacement"
         ],
         "rawRequirementIds": [
@@ -19336,6 +19485,78 @@
         "status": "installed"
       },
       "claim": {
+        "profileIds": [
+          "spell.invocation-condition-save"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action level-2 Spell Slot casting with Concentration up to 1 minute",
+          "Humanoid target filter at 60-foot range with one additional target per Spell Slot level above 2",
+          "Wisdom Spell Save DC gate",
+          "failed-save Paralyzed condition application",
+          "end-of-target-turn Wisdom repeat save ends the spell-owned condition on that target on success",
+          "Concentration cleanup and maximum-duration expiration remove the spell-owned Paralyzed condition without duplicating non-spell condition sources"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-SPELL-HOLD-PERSON"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "condition-saving-throw-lifecycle"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-condition-save",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV29B",
+            "SRDINV91C"
+          ],
+          "title": "Spell invocation resolves supported save-gated condition effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/hold_person.json",
+      "unitId": "hold_person"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "reason": "Equipment AC data is authored but not represented as an executable Unit profile row.",
         "tag": "unsupported-profile"
       },
@@ -21334,6 +21555,35 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE",
+            "mechanic": "Replace Heat Metal's lossy ongoing-effect encoding with a lossless SRD Surface shape for manufactured metal object targeting, object-contact creature recipients, immediate cast damage plus the same holding/wearing Constitution Saving Throw, later-turn Bonus Action repeat damage gated by object range, and conditional drop-if-possible or Disadvantage fallback until the caster's next turn. The shape must not encode drop and Disadvantage as an unconditional composite or omit the cast-time save.",
+            "owner": "surface Spell Definition authoring",
+            "requiredOutput": "Heat Metal Dhall/JSON content, with schema and tracer support where required, represents object-contact propagation and drop-or-fallback semantics as executable source facts rather than comments or prose-only description.",
+            "title": "Heat Metal Surface Contact Escape Shape"
+          },
+          {
+            "id": "L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME",
+            "mechanic": "Promote the Heat Metal damage lifecycle after the Surface shape exists: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration up to 1 minute, caller-supplied manufactured-metal object identity and contact-creature witnesses, immediate 2d8 Fire damage with slot scaling, later-turn Bonus Action repeat damage on caster turns when caller supplies object-within-range and contact witnesses, damage disposition and Concentration-save integration, and cleanup when Concentration or duration ends.",
+            "owner": "battle-runtime spell invocation/effect lifecycle plus table object-contact witness boundary",
+            "requiredOutput": "Profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the object-contact damage lifecycle without the holding/wearing penalty if that remains in the separate follow-up.",
+            "title": "Heat Metal Contact Damage Runtime"
+          },
+          {
+            "id": "L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY",
+            "mechanic": "Promote the holding/wearing penalty for creatures that take Heat Metal damage from the object: caller-supplied held-or-worn object facts, Constitution Saving Throw against caster Spell Save DC, drop-if-possible through the existing dropped-object outcome boundary without introducing inventory simulation, fallback Disadvantage on Attack Rolls and Ability Checks until the start of the caster's next turn when the object is not dropped, and cleanup/replacement behavior tied to the same Heat Metal spell occurrence.",
+            "owner": "battle-runtime object holding/wearing drop boundary plus D20 roll-mode projection",
+            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the save, drop outcome, fallback roll-mode projection, caster-turn-start expiry, and Concentration cleanup.",
+            "title": "Heat Metal Holding Wearing Penalty Runtime"
+          }
+        ],
+        "futureProfileOwner": "surface Spell Definition contact/drop shape plus battle-runtime object-contact spell invocation/effect lifecycle and object holding/wearing drop boundary",
+        "reason": "Heat Metal is authored as an SRD Surface Spell Definition with Magic Action Spell Slot casting, Concentration up to 1 minute, manufactured metal object targeting, immediate and later-turn object-contact Fire damage, and a holding/wearing Constitution Saving Throw that either drops the object if possible or applies Attack Roll and Ability Check Disadvantage until the caster's next turn. Task 33 claims no promoted battle-runtime profile yet because the executable Surface shape omits the cast-time save, encodes failed-save drop and Disadvantage as an unconditional composite for repeat damage, and lacks object-contact propagation; promoted battle runtime also lacks a Heat Metal object occurrence and generic all-Attack-Roll/all-Ability-Check Disadvantage projection tied to that object-contact damage path.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -21358,24 +21608,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/hold_monster.json",
       "unitId": "hold_monster"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/hold_person.json",
-      "unitId": "hold_person"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -21494,24 +21726,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/insect_plague.json",
       "unitId": "insect_plague"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/invisibility.json",
-      "unitId": "invisibility"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

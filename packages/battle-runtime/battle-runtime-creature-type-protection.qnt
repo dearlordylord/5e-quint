@@ -92,5 +92,6 @@ module battleRuntimeCreatureTypeProtection {
       | ColorSpraySaveGate => false
       | EntangleSaveGate => false
       | BlindnessDeafnessSaveGate => false
+      | HoldPersonSaveGate => false
     }
 }

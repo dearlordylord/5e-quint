@@ -15,6 +15,7 @@
 {"profileId":"spell.hit-point-restoration","obligationIds":["BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"spell.reaction-shield","obligationIds":["BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS","BATTLE.REACTION.OFFER_DECLINE_RESUME"]}
 {"profileId":"spell.readied-action-time-spell","obligationIds":["BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS","BATTLE.REACTION.OFFER_DECLINE_RESUME"]}
+{"profileId":"spell.invocation-direct-condition","obligationIds":["BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"stat-block.attack-control","obligationIds":["BATTLE.STAT_BLOCK.ATTACK_CONTROL"]}
 {"profileId":"character-sheet.armor-class-base-formula","obligationIds":["SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE"]}
 {"profileId":"character-creation.class-feature-feat-choice","obligationIds":["CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT"]}

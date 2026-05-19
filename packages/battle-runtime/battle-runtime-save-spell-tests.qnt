@@ -100,7 +100,7 @@ module battleRuntimeSaveSpellTests {
   }
 
   run test_pass_without_trace_applies_stealth_bonus_to_chosen_aura_targets = {
-    val result = resolveRollModifierSpell(initialState, PassWithoutTraceRollModifier, Set(Fighter, Goblin), Set(), 2)
+    val result = resolveRollModifierSpell(initialState, PassWithoutTraceRollModifier, Set(Fighter, Goblin), Set(), 2, StrAbility)
     all {
       assert(result.fighter.concentrating),
       assert(result.fighter.activeEffects.contains(PassWithoutTraceStealthBonus)),
@@ -110,7 +110,7 @@ module battleRuntimeSaveSpellTests {
   }
 
   run test_pass_without_trace_requires_caster_in_selected_targets = {
-    val result = resolveRollModifierSpell(initialState, PassWithoutTraceRollModifier, Set(Goblin), Set(), 2)
+    val result = resolveRollModifierSpell(initialState, PassWithoutTraceRollModifier, Set(Goblin), Set(), 2, StrAbility)
     all {
       assert(result == initialState),
       assert(not(result.fighter.activeEffects.contains(PassWithoutTraceStealthBonus))),
@@ -384,6 +384,9 @@ module battleRuntimeSaveSpellTests {
       assert(saveGatedConditionReplayHoles(BlindnessDeafnessSaveGate, true, true, false, false) == Set(ConditionChoice)),
       assert(saveGatedConditionReplayHoles(BlindnessDeafnessSaveGate, true, true, true, false) == Set(SavingThrowOutcome)),
       assert(saveGatedConditionReplayHoles(BlindnessDeafnessSaveGate, true, true, true, true) == Set()),
+      assert(saveGatedConditionReplayHoles(HoldPersonSaveGate, true, false, false, false) == Set(SpellTargetList)),
+      assert(saveGatedConditionReplayHoles(HoldPersonSaveGate, true, true, false, false) == Set(SavingThrowOutcome)),
+      assert(saveGatedConditionReplayHoles(HoldPersonSaveGate, true, true, false, true) == Set()),
       assert(saveGatedAttackRollAdvantageReplayHoles(FaerieFireSaveGate, true, false) == Set(SavingThrowOutcome)),
       assert(saveGatedAttackRollAdvantageReplayHoles(FaerieFireSaveGate, true, true) == Set()),
     }
@@ -758,6 +761,130 @@ module battleRuntimeSaveSpellTests {
         | BlindnessDeafnessDeafened(_) => true
         | _ => false
       }))),
+    }
+  }
+
+  run test_hold_person_humanoid_wisdom_save_paralyzed_concentration_and_repeat_save = {
+    val paralyzed = HoldPersonParalyzed({
+      source: Fighter,
+      hadIncapacitated: false,
+      durationTicks: holdPersonDurationTicks,
+    })
+    val rejectedBeast = resolveHoldPerson(
+      initialState,
+      2,
+      false,
+      HumanoidCreature,
+      true,
+      true,
+      BeastCreature,
+      false,
+    )
+    val paralyzedGoblin = resolveHoldPerson(
+      initialState,
+      2,
+      false,
+      HumanoidCreature,
+      true,
+      true,
+      HumanoidCreature,
+      false,
+    )
+    val allSuccess = resolveHoldPerson(
+      initialState,
+      2,
+      false,
+      HumanoidCreature,
+      true,
+      true,
+      HumanoidCreature,
+      true,
+    )
+    val concentratingGoblin = {
+      ...initialState,
+      goblin: {
+        ...initialState.goblin,
+        concentrating: true,
+        activeEffects: Set(HeroismTurnStartTemporaryHitPoints({ amount: 3 })),
+      },
+    }
+    val paralyzedConcentratingGoblin = resolveHoldPerson(
+      concentratingGoblin,
+      2,
+      false,
+      HumanoidCreature,
+      true,
+      true,
+      HumanoidCreature,
+      false,
+    )
+    val illegalLevelOne = resolveHoldPerson(
+      initialState,
+      1,
+      false,
+      HumanoidCreature,
+      true,
+      true,
+      HumanoidCreature,
+      false,
+    )
+    val illegalTwoTargetsLevelTwo = resolveHoldPerson(
+      initialState,
+      2,
+      true,
+      HumanoidCreature,
+      true,
+      true,
+      HumanoidCreature,
+      false,
+    )
+    val goblinTurn = endTurn(paralyzedGoblin)
+    val failedRepeat = endTurnWithHoldPersonRepeatSave(goblinTurn, Fighter, false)
+    val successfulRepeat = endTurnWithHoldPersonRepeatSave(goblinTurn, Fighter, true)
+    val broken = breakConcentrationSpellEffects(paralyzedGoblin, Fighter)
+    val nearlyExpired = {
+      ...paralyzedGoblin,
+      goblin: {
+        ...paralyzedGoblin.goblin,
+        activeEffects: Set(HoldPersonParalyzed({
+          source: Fighter,
+          hadIncapacitated: false,
+          durationTicks: 1,
+        })),
+      },
+    }
+    val expired = tickRoundDurationSpellEffects(nearlyExpired)
+    all {
+      assert(saveGatedConditionSavingThrowAbility(HoldPersonSaveGate) == WisAbility),
+      assert(rejectedBeast == initialState),
+      assert(illegalLevelOne == initialState),
+      assert(illegalTwoTargetsLevelTwo == initialState),
+      assert(paralyzedGoblin.fighter.concentrating),
+      assert(paralyzedGoblin.goblin.incapacitated),
+      assert(paralyzedGoblin.goblin.activeEffects.contains(paralyzed)),
+      assert(not(allSuccess.fighter.concentrating)),
+      assert(not(activeEffectsContainHoldPersonFrom(allSuccess.goblin.activeEffects, Fighter))),
+      assert(battleActorHasCommittedSpellSlotUse(allSuccess, Fighter)),
+      assert(not(allSuccess.actionAvailable)),
+      assert(not(paralyzedConcentratingGoblin.goblin.concentrating)),
+      assert(paralyzedConcentratingGoblin.goblin.incapacitated),
+      assert(activeEffectsContainHoldPersonFrom(paralyzedConcentratingGoblin.goblin.activeEffects, Fighter)),
+      assert(battleActorHasCommittedSpellSlotUse(paralyzedGoblin, Fighter)),
+      assert(not(paralyzedGoblin.actionAvailable)),
+      assert(failedRepeat.goblin.activeEffects.contains(HoldPersonParalyzed({
+        source: Fighter,
+        hadIncapacitated: false,
+        durationTicks: holdPersonDurationTicks - 1,
+      }))),
+      assert(not(successfulRepeat.fighter.concentrating)),
+      assert(not(successfulRepeat.goblin.incapacitated)),
+      assert(not(activeEffectsContainHoldPersonFrom(successfulRepeat.goblin.activeEffects, Fighter))),
+      assert(not(broken.fighter.concentrating)),
+      assert(not(broken.goblin.incapacitated)),
+      assert(not(activeEffectsContainHoldPersonFrom(broken.goblin.activeEffects, Fighter))),
+      assert(not(expired.fighter.concentrating)),
+      assert(not(expired.goblin.incapacitated)),
+      assert(not(activeEffectsContainHoldPersonFrom(expired.goblin.activeEffects, Fighter))),
     }
   }
 

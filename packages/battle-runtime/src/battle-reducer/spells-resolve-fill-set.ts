@@ -558,6 +558,7 @@ export function spellFillSet(
         invocation.procedure !== "jumpMovementReplacement" &&
         invocation.procedure !== "featherFallMitigation" &&
         invocation.procedure !== "sanctuaryTargetingInterdiction" &&
+        invocation.procedure !== "directCondition" &&
         invocation.procedure !==
           "conditionImmunityAndTurnStartTemporaryHitPoints"
       ) {
@@ -576,6 +577,8 @@ export function spellFillSet(
         (invocation.procedure === "command" &&
           !isTargetListSpellInvocation(invocation)) ||
         (invocation.procedure === "sanctuaryTargetingInterdiction" &&
+          !isTargetListSpellInvocation(invocation)) ||
+        (invocation.procedure === "directCondition" &&
           !isTargetListSpellInvocation(invocation))
       ) {
         return {

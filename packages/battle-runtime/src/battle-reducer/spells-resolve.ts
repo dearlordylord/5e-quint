@@ -174,6 +174,7 @@ export {
   resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
   resolveCreatureTypeProtectionSpellAct,
   resolveDamageReductionSpellAct,
+  resolveDirectConditionSpellAct,
   resolveJumpMovementReplacementSpellAct,
   resolveMakeStableSpellAct,
   resolveMirrorImageHitInterceptionSpellAct,
@@ -209,6 +210,7 @@ import {
   resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
   resolveCreatureTypeProtectionSpellAct,
   resolveDamageReductionSpellAct,
+  resolveDirectConditionSpellAct,
   resolveJumpMovementReplacementSpellAct,
   resolveMakeStableSpellAct,
   resolveMirrorImageHitInterceptionSpellAct,
@@ -235,7 +237,7 @@ import {
 } from "./spells-resolve-save-gates.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import {
-  battleStateAfterSanctuaryEarlyEndForActor,
+  battleStateAfterTargetActionEarlyEndForActor,
   combatantWithSanctuaryWard,
   sanctuaryTargetingInterdictionCheck,
 } from "./sanctuary-targeting-interdiction.ts";
@@ -414,6 +416,7 @@ export function resolveSpellAct(
       invocation.procedure === "fogCloudObscurement" ||
       invocation.procedure === "flamingSphere" ||
       invocation.procedure === "sanctuaryTargetingInterdiction" ||
+      invocation.procedure === "directCondition" ||
       invocation.procedure === "spellAttackSequence")
   ) {
     return invalidResult(
@@ -705,6 +708,14 @@ export function resolveSpellAct(
     invocation.procedure === "conditionImmunityAndTurnStartTemporaryHitPoints"
   ) {
     return resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "directCondition") {
+    return resolveDirectConditionSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
@@ -1986,7 +1997,7 @@ export function resolveBonusActionDashSpellAct(
     return spellCastReactionWindow;
   }
 
-  const spellCastState = battleStateAfterSanctuaryEarlyEndForActor(
+  const spellCastState = battleStateAfterTargetActionEarlyEndForActor(
     castingState,
     subject.actorId,
   );
@@ -2077,7 +2088,7 @@ function resolveSanctuaryTargetingInterdictionSpellAct(input: {
     );
   }
   const targetId = targetList.targetIds[0]!;
-  const spellCastState = battleStateAfterSanctuaryEarlyEndForActor(
+  const spellCastState = battleStateAfterTargetActionEarlyEndForActor(
     input.input.state,
     input.actorId,
   );
@@ -2107,6 +2118,6 @@ function resolveSanctuaryTargetingInterdictionSpellAct(input: {
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
-    skipSanctuarySpellCastEarlyEnd: true,
+    skipTargetActionSpellCastEarlyEnd: true,
   });
 }

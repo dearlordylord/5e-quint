@@ -43,6 +43,7 @@ module battleRuntimeMarkedRiders {
       | HexDamageRider(_) => true
       | FogCloudObscurement(_) => true
       | DancingLightsEffect(_) => true
+      | InvisibilityCondition(_) => true
       | _ => false
     })
 

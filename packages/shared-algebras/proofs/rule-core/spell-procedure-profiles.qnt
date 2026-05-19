@@ -97,6 +97,7 @@ module spellProcedureProfiles {
     | AnimalFriendshipSaveConditionProfile
     | CharmPersonSaveConditionProfile
     | BlindnessDeafnessSaveConditionProfile
+    | HoldPersonSaveConditionProfile
     | FaerieFireSaveAttackRollAdvantageProfile
 
   type SpellSaveGatedFailedEffect =
@@ -109,6 +110,7 @@ module spellProcedureProfiles {
     | CharmPersonCharmedEffect({ durationTicks: int })
     | BlindnessDeafnessBlindedEffect({ durationTicks: int })
     | BlindnessDeafnessDeafenedEffect({ durationTicks: int })
+    | HoldPersonParalyzedEffect({ durationTicks: int })
     | FaerieFireOutlineEffect
 
   type ScalarBuffSpellProfile =
@@ -474,6 +476,7 @@ module spellProcedureProfiles {
       | AnimalFriendshipSaveConditionProfile => SpellTargetListSaveTargets({ minTargets: 1, baseSlotLevel: 1, baseTargets: 1, additionalTargetsPerSlotLevel: 1 })
       | CharmPersonSaveConditionProfile => SpellTargetListSaveTargets({ minTargets: 1, baseSlotLevel: 1, baseTargets: 1, additionalTargetsPerSlotLevel: 1 })
       | BlindnessDeafnessSaveConditionProfile => SpellTargetListSaveTargets({ minTargets: 1, baseSlotLevel: 2, baseTargets: 1, additionalTargetsPerSlotLevel: 1 })
+      | HoldPersonSaveConditionProfile => SpellTargetListSaveTargets({ minTargets: 1, baseSlotLevel: 2, baseTargets: 1, additionalTargetsPerSlotLevel: 1 })
       | FaerieFireSaveAttackRollAdvantageProfile => SpellAreaSaveTargets
     }
 
@@ -484,6 +487,7 @@ module spellProcedureProfiles {
       | AnimalFriendshipSaveConditionProfile => SpellWisdomSavingThrow
       | CharmPersonSaveConditionProfile => SpellWisdomSavingThrow
       | BlindnessDeafnessSaveConditionProfile => SpellConstitutionSavingThrow
+      | HoldPersonSaveConditionProfile => SpellWisdomSavingThrow
       | FaerieFireSaveAttackRollAdvantageProfile => SpellDexteritySavingThrow
     }
 
@@ -508,6 +512,7 @@ module spellProcedureProfiles {
           BlindnessDeafnessBlindedEffect({ durationTicks: 10 }),
           BlindnessDeafnessDeafenedEffect({ durationTicks: 10 })
         )
+      | HoldPersonSaveConditionProfile => Set(HoldPersonParalyzedEffect({ durationTicks: 10 }))
       | FaerieFireSaveAttackRollAdvantageProfile => Set(FaerieFireOutlineEffect)
     }
 
@@ -520,6 +525,7 @@ module spellProcedureProfiles {
       | AnimalFriendshipSaveConditionProfile => targetIsBeast
       | CharmPersonSaveConditionProfile => targetIsHumanoid
       | BlindnessDeafnessSaveConditionProfile => true
+      | HoldPersonSaveConditionProfile => targetIsHumanoid
       | _ => true
     }
 

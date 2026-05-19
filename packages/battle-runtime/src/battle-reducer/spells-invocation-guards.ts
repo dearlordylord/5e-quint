@@ -65,7 +65,8 @@ export function isTargetListSpellInvocation(
       "conditionImmunityAndTurnStartTemporaryHitPoints" ||
     invocation.procedure === "jumpMovementReplacement" ||
     invocation.procedure === "featherFallMitigation" ||
-    invocation.procedure === "sanctuaryTargetingInterdiction"
+    invocation.procedure === "sanctuaryTargetingInterdiction" ||
+    invocation.procedure === "directCondition"
   );
 }
 

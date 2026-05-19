@@ -20,7 +20,7 @@ import type { CombatantId } from "../identity.ts";
 import { breakBattleConcentration } from "./damage-apply.ts";
 import { snapshotBattle } from "./dispatcher.ts";
 import { invalidResult } from "./result-helpers.ts";
-import { battleStateAfterSanctuaryEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
+import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
 import { expendSpellSlot } from "./spell-effects.ts";
 import { markSpellSlotExpendedThisTurn } from "./spells-profiles.ts";
 import { clearPendingAttackRollMissToHitReplacementSelection } from "./statblock-attacks.ts";
@@ -35,12 +35,15 @@ export function spendSpellCastResources(input: {
   readonly invocation: SupportedSpellInvocation;
   readonly errorState: BattleState;
   readonly startConcentration?: boolean;
-  readonly skipSanctuarySpellCastEarlyEnd?: boolean;
+  readonly skipTargetActionSpellCastEarlyEnd?: boolean;
 }): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
   const spellCastState =
-    input.skipSanctuarySpellCastEarlyEnd === true
+    input.skipTargetActionSpellCastEarlyEnd === true
       ? input.state
-      : battleStateAfterSanctuaryEarlyEndForActor(input.state, input.actorId);
+      : battleStateAfterTargetActionEarlyEndForActor(
+          input.state,
+          input.actorId,
+        );
   const actionCost =
     "actionCost" in input.invocation
       ? input.invocation.actionCost
@@ -135,7 +138,11 @@ export function spendClassFeatureFreeCastResource(
   resourceUnitId: string,
   errorState: BattleState,
 ): SpellCastResourceSpendResult {
-  const actor = state.combatants.get(actorId);
+  const spellCastState = battleStateAfterTargetActionEarlyEndForActor(
+    state,
+    actorId,
+  );
+  const actor = spellCastState.combatants.get(actorId);
   if (actor?.origin.kind !== "character") {
     return invalidResult(
       errorState,
@@ -158,8 +165,8 @@ export function spendClassFeatureFreeCastResource(
   return {
     tag: "resolved",
     state: {
-      ...state,
-      combatants: new Map(state.combatants).set(actorId, {
+      ...spellCastState,
+      combatants: new Map(spellCastState.combatants).set(actorId, {
         ...actor,
         origin: {
           ...actor.origin,

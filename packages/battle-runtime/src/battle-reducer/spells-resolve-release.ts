@@ -53,6 +53,7 @@ import {
 } from "./damage-helpers.ts";
 import { needsHolesResult, revealHidden } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
+import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
 import { expendSpellSlot } from "./spell-effects.ts";
 import {
   applyDancingLightsSpellEffect,
@@ -974,8 +975,12 @@ function spendMarkedDamageRiderSpellSlot(
   >["slotLevel"],
   errorState: BattleState,
 ): SpellCastResourceSpendResult {
+  const spellCastState = battleStateAfterTargetActionEarlyEndForActor(
+    state,
+    actorId,
+  );
   const slotTurnResources = markSpellSlotExpendedThisTurn(
-    state.currentTurnResources,
+    spellCastState.currentTurnResources,
     actorId,
   );
   if (Either.isLeft(slotTurnResources)) {
@@ -989,7 +994,7 @@ function spendMarkedDamageRiderSpellSlot(
     tag: "resolved",
     state: expendSpellSlot(
       {
-        ...state,
+        ...spellCastState,
         currentTurnResources: slotTurnResources.right,
       },
       actorId,
@@ -1047,8 +1052,12 @@ export function resolveReadySpellAct(
   const castingState = spellRequiresVerbal(invocation.spell)
     ? revealHidden(input.state, input.subject.actorId)
     : input.state;
-  const spellCastReactionWindow = maybeOpenReactionWindow(
+  const spellCastState = battleStateAfterTargetActionEarlyEndForActor(
     castingState,
+    input.subject.actorId,
+  );
+  const spellCastReactionWindow = maybeOpenReactionWindow(
+    spellCastState,
     spellCastReactionFrame({
       casterId: input.subject.actorId,
       invocation,
@@ -1068,7 +1077,7 @@ export function resolveReadySpellAct(
   }
 
   const afterPriorConcentration = breakBattleConcentration(
-    castingState,
+    spellCastState,
     input.subject.actorId,
   );
   const refreshedActor = afterPriorConcentration.combatants.get(

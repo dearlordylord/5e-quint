@@ -7,9 +7,18 @@ module battleRuntimeSanctuary {
   pure def sanctuaryWardActiveEffect(source: Actor): ActiveEffect =
     SanctuaryWard({ source: source, durationTicks: 10 })
 
+  pure def invisibilityConditionActiveEffect(source: Actor): ActiveEffect =
+    InvisibilityCondition({ source: source, durationTicks: 600 })
+
   pure def activeEffectsWithoutSanctuaryWard(effects: Set[ActiveEffect]): Set[ActiveEffect] =
     effects.filter(effect => match effect {
       | SanctuaryWard(_) => false
+      | _ => true
+    })
+
+  pure def activeEffectsWithoutInvisibilityConditionFrom(effects: Set[ActiveEffect], source: Actor): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | InvisibilityCondition(data) => data.source != source
       | _ => true
     })
 
@@ -19,11 +28,34 @@ module battleRuntimeSanctuary {
       | _ => false
     })
 
+  pure def activeEffectsContainInvisibilityCondition(effects: Set[ActiveEffect]): bool =
+    effects.exists(effect => match effect {
+      | InvisibilityCondition(_) => true
+      | _ => false
+    })
+
   pure def activeEffectsSanctuaryWardDurationTicks(effects: Set[ActiveEffect]): int =
     effects.map(effect => match effect {
       | SanctuaryWard(data) => data.durationTicks
       | _ => 0
     }).fold(0, (highest, ticks) => if (highest > ticks) highest else ticks)
+
+  pure def activeEffectsInvisibilityDurationTicks(effects: Set[ActiveEffect]): int =
+    effects.map(effect => match effect {
+      | InvisibilityCondition(data) => data.durationTicks
+      | _ => 0
+    }).fold(0, (highest, ticks) => if (highest > ticks) highest else ticks)
+
+  pure def activeEffectsInvisibilitySources(effects: Set[ActiveEffect]): Set[Actor] =
+    effects
+      .filter(effect => match effect {
+        | InvisibilityCondition(_) => true
+        | _ => false
+      })
+      .map(effect => match effect {
+        | InvisibilityCondition(data) => data.source
+        | _ => Fighter
+      })
 
   pure def combatantWithSanctuaryWard(target: Combatant, source: Actor): Combatant =
     {
@@ -31,13 +63,52 @@ module battleRuntimeSanctuary {
       activeEffects: activeEffectsWithoutSanctuaryWard(target.activeEffects).union(Set(sanctuaryWardActiveEffect(source))),
     }
 
-  pure def battleStateAfterSanctuaryEarlyEndForActor(state: BattleState, actor: Actor): BattleState = {
+  pure def combatantWithInvisibilityCondition(target: Combatant, source: Actor): Combatant =
+    {
+      ...target,
+      activeEffects: activeEffectsWithoutInvisibilityConditionFrom(target.activeEffects, source).union(Set(invisibilityConditionActiveEffect(source))),
+    }
+
+  pure def battleStateAfterInvisibilitySourceEarlyEnd(state: BattleState, source: Actor): BattleState =
+    match source {
+      | Fighter => {
+          ...state,
+          fighter: {
+            ...state.fighter,
+            concentrating: false,
+            activeEffects: activeEffectsWithoutInvisibilityConditionFrom(state.fighter.activeEffects, Fighter),
+          },
+          goblin: {
+            ...state.goblin,
+            activeEffects: activeEffectsWithoutInvisibilityConditionFrom(state.goblin.activeEffects, Fighter),
+          },
+        }
+      | Goblin => {
+          ...state,
+          goblin: {
+            ...state.goblin,
+            concentrating: false,
+            activeEffects: activeEffectsWithoutInvisibilityConditionFrom(state.goblin.activeEffects, Goblin),
+          },
+          fighter: {
+            ...state.fighter,
+            activeEffects: activeEffectsWithoutInvisibilityConditionFrom(state.fighter.activeEffects, Goblin),
+          },
+        }
+    }
+
+  pure def battleStateAfterTargetActionEarlyEndForActor(state: BattleState, actor: Actor): BattleState = {
     val combatant = combatantForActor(state, actor)
-    stateWithActorCombatant(state, actor, {
+    val invisibilitySources = activeEffectsInvisibilitySources(combatant.activeEffects)
+    val afterSanctuary = stateWithActorCombatant(state, actor, {
       ...combatant,
       activeEffects: activeEffectsWithoutSanctuaryWard(combatant.activeEffects),
     })
+    invisibilitySources.fold(afterSanctuary, (nextState, source) => battleStateAfterInvisibilitySourceEarlyEnd(nextState, source))
   }
+
+  pure def battleStateAfterSanctuaryEarlyEndForActor(state: BattleState, actor: Actor): BattleState =
+    battleStateAfterTargetActionEarlyEndForActor(state, actor)
 
   pure def wardTargetingInterdictionApplies(
     trigger: SanctuaryTargetingTrigger,

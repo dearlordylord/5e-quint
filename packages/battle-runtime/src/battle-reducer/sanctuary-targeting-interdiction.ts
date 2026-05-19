@@ -20,6 +20,10 @@ import type {
 import type { CharacterBattleSpellcastingState } from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
 import { battleCreatureWithSpellActiveEffects } from "./spells-active-effects.ts";
+import {
+  combatantsAfterConcentrationSpellEffectsEndedIfNoEffects,
+  conditionsAfterExpiringSpellConditionEffects,
+} from "./spell-condition-effects-helpers.ts";
 import { sameStringSet } from "./spells-profile-shared.ts";
 
 export function supportedPreparedSanctuaryTargetingInterdictionSpellProfile(
@@ -251,7 +255,23 @@ function sanctuaryTargetingInterdictionOutcomeHole(input: {
   };
 }
 
-export function battleStateAfterSanctuaryEarlyEndForActor(
+type TargetActionEndedSpellConditionEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "targetActionEndedSpellCondition" }
+>;
+
+function sameTargetActionConditionSource(
+  effect: BattleActiveEffect,
+  source: TargetActionEndedSpellConditionEffect,
+): boolean {
+  return (
+    effect.kind === "targetActionEndedSpellCondition" &&
+    effect.sourceCombatantId === source.sourceCombatantId &&
+    effect.sourceSpellId === source.sourceSpellId
+  );
+}
+
+export function battleStateAfterTargetActionEarlyEndForActor(
   state: BattleState,
   actorId: CombatantId,
 ): BattleState {
@@ -259,19 +279,91 @@ export function battleStateAfterSanctuaryEarlyEndForActor(
   if (actor === undefined) {
     return state;
   }
-  const activeEffects = actor.activeEffects.filter(
+  const targetActionConditionSources = actor.activeEffects
+    .filter(
+      (effect): effect is TargetActionEndedSpellConditionEffect =>
+        effect.kind === "targetActionEndedSpellCondition",
+    )
+    .reduce<readonly TargetActionEndedSpellConditionEffect[]>(
+      (sources, effect) =>
+        sources.some((source) =>
+          sameTargetActionConditionSource(effect, source),
+        )
+          ? sources
+          : [...sources, effect],
+      [],
+    );
+  const sanctuaryActiveEffects = actor.activeEffects.filter(
     (effect) => effect.kind !== "sanctuaryWard",
   );
-  if (activeEffects.length === actor.activeEffects.length) {
-    return state;
-  }
+  const sanctuaryEnded =
+    sanctuaryActiveEffects.length === actor.activeEffects.length
+      ? state
+      : {
+          ...state,
+          combatants: new Map(state.combatants).set(
+            actorId,
+            battleCreatureWithSpellActiveEffects(actor, sanctuaryActiveEffects),
+          ),
+        };
+  return targetActionConditionSources.reduce(
+    battleStateAfterTargetActionConditionSourceEarlyEnd,
+    sanctuaryEnded,
+  );
+}
+
+function battleStateAfterTargetActionConditionSourceEarlyEnd(
+  state: BattleState,
+  source: TargetActionEndedSpellConditionEffect,
+): BattleState {
+  const combatants = new Map(
+    [...state.combatants].map(([combatantId, combatant]) => {
+      const expiringEffects = combatant.activeEffects.filter((effect) =>
+        sameTargetActionConditionSource(effect, source),
+      );
+      const activeEffects = combatant.activeEffects.filter(
+        (effect) => !sameTargetActionConditionSource(effect, source),
+      );
+      return [
+        combatantId,
+        activeEffects.length === combatant.activeEffects.length
+          ? combatant
+          : battleCreatureWithoutExpiringSpellEffects(
+              combatant,
+              activeEffects,
+              expiringEffects,
+            ),
+      ] as const;
+    }),
+  );
   return {
     ...state,
-    combatants: new Map(state.combatants).set(
-      actorId,
-      battleCreatureWithSpellActiveEffects(actor, activeEffects),
+    combatants: combatantsAfterConcentrationSpellEffectsEndedIfNoEffects(
+      combatants,
+      {
+        sourceCombatantId: source.sourceCombatantId,
+        sourceSpellId: source.sourceSpellId,
+      },
     ),
   };
+}
+
+function battleCreatureWithoutExpiringSpellEffects(
+  combatant: BattleCreatureState,
+  activeEffects: readonly BattleActiveEffect[],
+  expiringEffects: readonly BattleActiveEffect[],
+): BattleCreatureState {
+  return combatant.positiveHpUnconscious === null
+    ? {
+        ...combatant,
+        activeEffects,
+        conditions: conditionsAfterExpiringSpellConditionEffects(
+          combatant.conditions,
+          activeEffects,
+          expiringEffects,
+        ),
+      }
+    : { ...combatant, activeEffects };
 }
 
 export function combatantWithSanctuaryWard(

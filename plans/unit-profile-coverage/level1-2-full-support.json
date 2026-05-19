@@ -1254,11 +1254,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE: Replace Heat Metal's lossy ongoing-effect encoding with a lossless SRD Surface shape for manufactured metal object targeting, object-contact creature recipients, immediate cast damage plus the same holding/wearing Constitution Saving Throw, later-turn Bonus Action repeat damage gated by object range, and conditional drop-if-possible or Disadvantage fallback until the caster's next turn. The shape must not encode drop and Disadvantage as an unconditional composite or omit the cast-time save. Owner: surface Spell Definition authoring. Required output: Heat Metal Dhall/JSON content, with schema and tracer support where required, represents object-contact propagation and drop-or-fallback semantics as executable source facts rather than comments or prose-only description.; L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME: Promote the Heat Metal damage lifecycle after the Surface shape exists: Magic Action and level-2+ Spell Slot spend, caster-owned Concentration up to 1 minute, caller-supplied manufactured-metal object identity and contact-creature witnesses, immediate 2d8 Fire damage with slot scaling, later-turn Bonus Action repeat damage on caster turns when caller supplies object-within-range and contact witnesses, damage disposition and Concentration-save integration, and cleanup when Concentration or duration ends. Owner: battle-runtime spell invocation/effect lifecycle plus table object-contact witness boundary. Required output: Profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the object-contact damage lifecycle without the holding/wearing penalty if that remains in the separate follow-up.; L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY: Promote the holding/wearing penalty for creatures that take Heat Metal damage from the object: caller-supplied held-or-worn object facts, Constitution Saving Throw against caster Spell Save DC, drop-if-possible through the existing dropped-object outcome boundary without introducing inventory simulation, fallback Disadvantage on Attack Rolls and Ability Checks until the start of the caster's next turn when the object is not dropped, and cleanup/replacement behavior tied to the same Heat Metal spell occurrence. Owner: battle-runtime object holding/wearing drop boundary plus D20 roll-mode projection. Required output: Supported-profile or profile-subset-supported Unit claim update, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the save, drop outcome, fallback roll-mode projection, caster-turn-start expiry, and Concentration cleanup.",
       "sourceRecordPath": "packages/surface/content/heat_metal.json",
       "sourceRows": [
         {
@@ -1286,100 +1289,9 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
       "unitId": "heat_metal"
-    },
-    {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
-      "sourceRecordPath": "packages/surface/content/hold_person.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Bard spell list Hold Person",
-          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_hold_person",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 199,
-            "lineStart": 199,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Cleric spell list Hold Person",
-          "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_hold_person",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 190,
-            "lineStart": 190,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Druid spell list Hold Person",
-          "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_hold_person",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 240,
-            "lineStart": 240,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Hold Person",
-          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_hold_person",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 282,
-            "lineStart": 282,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Warlock spell list Hold Person",
-          "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_hold_person",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 367,
-            "lineStart": 367,
-            "path": ".references/srd-5.2.1/Classes/Warlock.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Hold Person",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_hold_person",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 214,
-            "lineStart": 214,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
-      "unitId": "hold_person"
     },
     {
       "catalogDisposition": {
@@ -1426,73 +1338,6 @@
       "status": "closed-runtime-detached-table-adjudication",
       "strictTargetClosed": true,
       "unitId": "identify"
-    },
-    {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
-      "sourceRecordPath": "packages/surface/content/invisibility.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Bard spell list Invisibility",
-          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_invisibility",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 200,
-            "lineStart": 200,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Invisibility",
-          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_invisibility",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 283,
-            "lineStart": 283,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Warlock spell list Invisibility",
-          "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_invisibility",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 368,
-            "lineStart": 368,
-            "path": ".references/srd-5.2.1/Classes/Warlock.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Invisibility",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_invisibility",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 215,
-            "lineStart": 215,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
-      "unitId": "invisibility"
     },
     {
       "catalogStatus": "installed",
@@ -2756,7 +2601,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 103,
+      "count": 105,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2809,9 +2654,11 @@
         "heroism",
         "hex",
         "hideous_laughter",
+        "hold_person",
         "hunters_mark",
         "ice_knife",
         "inflict_wounds",
+        "invisibility",
         "jump",
         "light",
         "longstrider",
@@ -2866,7 +2713,7 @@
       ]
     },
     {
-      "count": 21,
+      "count": 22,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
@@ -2880,6 +2727,7 @@
         "enthrall",
         "flame_blade",
         "gust_of_wind",
+        "heat_metal",
         "levitate",
         "monk_monks_focus",
         "monk_uncanny_metabolism",
@@ -2920,21 +2768,6 @@
       ]
     },
     {
-      "count": 8,
-      "description": "No Unit profile claim records runtime support or an accepted strict closure.",
-      "status": "open-runtime-behavior",
-      "unitIds": [
-        "find_steed",
-        "heat_metal",
-        "hold_person",
-        "invisibility",
-        "lesser_restoration",
-        "magic_weapon",
-        "mind_spike",
-        "web"
-      ]
-    },
-    {
       "count": 6,
       "description": "The in-scope behavior is complete and every remaining residual is outside this strict accounting scope.",
       "status": "closed-later-level-only",
@@ -2945,6 +2778,18 @@
         "paladin_fighting_style",
         "ranger_favored_enemy",
         "ranger_fighting_style"
+      ]
+    },
+    {
+      "count": 5,
+      "description": "No Unit profile claim records runtime support or an accepted strict closure.",
+      "status": "open-runtime-behavior",
+      "unitIds": [
+        "find_steed",
+        "lesser_restoration",
+        "magic_weapon",
+        "mind_spike",
+        "web"
       ]
     },
     {
@@ -2968,52 +2813,49 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 485,
-      "percent": "87.2%",
+      "numerator": 483,
+      "percent": "86.9%",
       "rowsByStatus": {
-        "accepted": 338,
-        "accepted-no-battle-effect": 147,
-        "battle-runtime-required": 61,
+        "accepted": 348,
+        "accepted-no-battle-effect": 135,
+        "battle-runtime-required": 63,
         "owner-evidence-required": 3,
         "partial-battle-runtime": 7
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 74,
-      "numerator": 11,
-      "percent": "14.9%"
+      "denominator": 75,
+      "numerator": 12,
+      "percent": "16%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 74,
-      "numerator": 16,
-      "percent": "21.6%"
+      "denominator": 75,
+      "numerator": 17,
+      "percent": "22.7%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 103,
-      "numerator": 30,
-      "percent": "29.1%"
+      "denominator": 105,
+      "numerator": 31,
+      "percent": "29.5%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 160,
-      "numerator": 103,
-      "percent": "64.4%"
+      "numerator": 105,
+      "percent": "65.6%"
     },
     "strictTargetClosure": {
       "denominator": 160,
-      "numerator": 152,
-      "percent": "95%"
+      "numerator": 155,
+      "percent": "96.9%"
     }
   },
   "openFrontier": [
     {
-      "count": 8,
+      "count": 5,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
         "find_steed",
-        "heat_metal",
-        "hold_person",
-        "invisibility",
         "lesser_restoration",
         "magic_weapon",
         "mind_spike",
@@ -5848,9 +5690,9 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 103,
-        "numerator": 30,
-        "percent": "29.1%"
+        "denominator": 105,
+        "numerator": 31,
+        "percent": "29.5%"
       }
     },
     "units": [
@@ -6697,6 +6539,18 @@
           {
             "joinStatus": "unmapped",
             "obligations": [],
+            "profileId": "spell.invocation-condition-save",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "hold_person"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
             "profileId": "spell.invocation-marked-damage-rider",
             "profileKind": "spell-invocation"
           }
@@ -6759,6 +6613,25 @@
           }
         ],
         "unitId": "inflict_wounds"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.invocation-direct-condition",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "invisibility"
       },
       {
         "joinStatus": "unmapped",
@@ -7756,21 +7629,21 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
-      "missing": 8,
+      "missing": 5,
       "profile-subset-supported": 13,
-      "supported-profile": 103,
-      "unsupported-profile": 36
+      "supported-profile": 105,
+      "unsupported-profile": 37
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 21,
+      "blocked-follow-up-split": 22,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 19,
-      "open-runtime-behavior": 8,
-      "supported-profile": 103
+      "open-runtime-behavior": 5,
+      "supported-profile": 105
     },
-    "nonSupportedFrontier": 57,
+    "nonSupportedFrontier": 55,
     "strictDenominator": 160
   }
 }

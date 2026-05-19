@@ -6,6 +6,7 @@ module battleRuntimeTimedEffects {
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeLight.* from "./battle-runtime-light"
   import battleRuntimeMarkedRiders.* from "./battle-runtime-marked-riders"
+  import battleRuntimeConcentration.* from "./battle-runtime-concentration"
 
   pure def activeEffectsWithoutExpiredEndOfTurnRiders(
     effects: Set[ActiveEffect],
@@ -191,6 +192,11 @@ module battleRuntimeTimedEffects {
             source: data.source,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
+        | HoldPersonParalyzed(data) => HoldPersonParalyzed({
+            source: data.source,
+            hadIncapacitated: data.hadIncapacitated,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+          })
         | AidHitPointMaximumIncrease(data) => AidHitPointMaximumIncrease({
             amount: data.amount,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
@@ -231,6 +237,10 @@ module battleRuntimeTimedEffects {
         | MirrorImageDuplicates(data) => MirrorImageDuplicates({
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
             remainingDuplicates: data.remainingDuplicates,
+          })
+        | InvisibilityCondition(data) => InvisibilityCondition({
+            source: data.source,
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
         | HideousLaughterEffect(data) => HideousLaughterEffect({
             source: data.source,
@@ -276,6 +286,7 @@ module battleRuntimeTimedEffects {
         | CharmPersonCharmed(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | BlindnessDeafnessBlinded(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | BlindnessDeafnessDeafened(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | HoldPersonParalyzed(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | AidHitPointMaximumIncrease(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | BarkskinArmorClassFloor(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | DancingLightsEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
@@ -285,6 +296,7 @@ module battleRuntimeTimedEffects {
         | FeatherFallMitigation(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | SanctuaryWard(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | MirrorImageDuplicates(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | InvisibilityCondition(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | HideousLaughterEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | GreaseGroundHazard(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | FogCloudObscurement(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
@@ -302,6 +314,13 @@ module battleRuntimeTimedEffects {
   pure def hideousLaughterEffectsExpiringAfterRoundTick(effects: Set[ActiveEffect]): Set[ActiveEffect] =
     effects.filter(effect => match effect {
       | HideousLaughterEffect(data) =>
+          not(battleRuntimeTimedSpellEffectRemainsActive(battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks)))
+      | _ => false
+    })
+
+  pure def holdPersonEffectsExpiringAfterRoundTick(effects: Set[ActiveEffect]): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | HoldPersonParalyzed(data) =>
           not(battleRuntimeTimedSpellEffectRemainsActive(battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks)))
       | _ => false
     })
@@ -341,6 +360,36 @@ module battleRuntimeTimedEffects {
     }
   }
 
+  pure def combatantAfterHoldPersonDurationTick(target: Combatant, tickedEffects: Set[ActiveEffect]): Combatant = {
+    val expiring = holdPersonEffectsExpiringAfterRoundTick(target.activeEffects)
+    val hasExpiring = expiring.size() > 0
+    val remainingHoldPerson = tickedEffects.exists(effect => match effect {
+      | HoldPersonParalyzed(_) => true
+      | _ => false
+    })
+    val expiringHadIncapacitated = expiring.exists(effect => match effect {
+      | HoldPersonParalyzed(data) => data.hadIncapacitated
+      | _ => false
+    })
+    {
+      ...target,
+      incapacitated: if (hasExpiring and not(remainingHoldPerson)) expiringHadIncapacitated else target.incapacitated,
+      activeEffects: tickedEffects,
+    }
+  }
+
+  pure def combatantAfterConditionDurationTick(target: Combatant, tickedEffects: Set[ActiveEffect]): Combatant = {
+    val afterAid = combatantAfterAidDurationTick(target, tickedEffects)
+    val afterHideousLaughter = combatantAfterHideousLaughterDurationTick(afterAid, tickedEffects)
+    val afterHoldPerson = combatantAfterHoldPersonDurationTick(afterAid, tickedEffects)
+    val holdPersonExpired = holdPersonEffectsExpiringAfterRoundTick(target.activeEffects).size() > 0
+    {
+      ...afterHideousLaughter,
+      incapacitated: if (holdPersonExpired) afterHoldPerson.incapacitated else afterHideousLaughter.incapacitated,
+      activeEffects: tickedEffects,
+    }
+  }
+
   pure def tickRoundDurationSpellEffects(state: BattleState): BattleState = {
     val fighterEffects = tickDurationActiveEffects(state.fighter.activeEffects)
     val goblinEffects = tickDurationActiveEffects(state.goblin.activeEffects)
@@ -348,28 +397,36 @@ module battleRuntimeTimedEffects {
       activeEffectsContainTimedConcentrationSpellEffect(state.fighter.activeEffects)
         or activeEffectsContainHideousLaughterFrom(state.fighter.activeEffects, Fighter)
         or activeEffectsContainHideousLaughterFrom(state.goblin.activeEffects, Fighter)
+        or activeEffectsContainHoldPersonFrom(state.fighter.activeEffects, Fighter)
+        or activeEffectsContainHoldPersonFrom(state.goblin.activeEffects, Fighter)
     val fighterTimedConcentrationAfter =
       activeEffectsContainTimedConcentrationSpellEffect(fighterEffects)
         or activeEffectsContainHideousLaughterFrom(fighterEffects, Fighter)
         or activeEffectsContainHideousLaughterFrom(goblinEffects, Fighter)
+        or activeEffectsContainHoldPersonFrom(fighterEffects, Fighter)
+        or activeEffectsContainHoldPersonFrom(goblinEffects, Fighter)
     val goblinTimedConcentrationBefore =
       activeEffectsContainTimedConcentrationSpellEffect(state.goblin.activeEffects)
         or activeEffectsContainHideousLaughterFrom(state.fighter.activeEffects, Goblin)
         or activeEffectsContainHideousLaughterFrom(state.goblin.activeEffects, Goblin)
+        or activeEffectsContainHoldPersonFrom(state.fighter.activeEffects, Goblin)
+        or activeEffectsContainHoldPersonFrom(state.goblin.activeEffects, Goblin)
     val goblinTimedConcentrationAfter =
       activeEffectsContainTimedConcentrationSpellEffect(goblinEffects)
         or activeEffectsContainHideousLaughterFrom(fighterEffects, Goblin)
         or activeEffectsContainHideousLaughterFrom(goblinEffects, Goblin)
+        or activeEffectsContainHoldPersonFrom(fighterEffects, Goblin)
+        or activeEffectsContainHoldPersonFrom(goblinEffects, Goblin)
     {
       ...state,
       lightEmitters: tickDurationLightEmitters(state.lightEmitters),
       fighter: {
-        ...combatantAfterHideousLaughterDurationTick(combatantAfterAidDurationTick(state.fighter, fighterEffects), fighterEffects),
+        ...combatantAfterConditionDurationTick(state.fighter, fighterEffects),
         concentrating: state.fighter.concentrating
           and (not(fighterTimedConcentrationBefore) or fighterTimedConcentrationAfter),
       },
       goblin: {
-        ...combatantAfterHideousLaughterDurationTick(combatantAfterAidDurationTick(state.goblin, goblinEffects), goblinEffects),
+        ...combatantAfterConditionDurationTick(state.goblin, goblinEffects),
         concentrating: state.goblin.concentrating
           and (not(goblinTimedConcentrationBefore) or goblinTimedConcentrationAfter),
       },

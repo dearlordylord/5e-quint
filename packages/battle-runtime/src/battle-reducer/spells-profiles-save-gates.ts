@@ -183,6 +183,15 @@ const BLINDNESS_DEAFNESS_FAILED_SAVE_CONDITION_CHOICES = [
   "blinded",
   "deafened",
 ] as const satisfies readonly [Condition, ...Condition[]];
+const HOLD_PERSON_SPELL_NAME = "Hold Person";
+const HOLD_PERSON_PROVENANCE_SECTION = "Spells/Descriptions-E-L#Hold Person";
+const HOLD_PERSON_BASE_SPELL_LEVEL = 2;
+const HOLD_PERSON_RANGE_FEET = 60;
+const HOLD_PERSON_FAILED_SAVE_CONDITION =
+  "paralyzed" as const satisfies Condition;
+const HOLD_PERSON_TARGET_CREATURE_TYPES = [
+  "humanoid",
+] as const satisfies readonly [CreatureType, ...CreatureType[]];
 
 export function hasSaveGateRepeatSaves(
   phase: ActivationPhase | undefined,
@@ -257,6 +266,7 @@ export function supportedSaveGateConditionSpell(
     animalFriendshipSaveGateConditionSpell(spell) ??
     blindnessDeafnessSaveGateConditionSpell(spell) ??
     charmPersonSaveGateConditionSpell(spell) ??
+    holdPersonSaveGateConditionSpell(spell) ??
     colorSpraySaveGateConditionSpell(spell) ??
     entangleSaveGateConditionSpell(spell)
   );
@@ -927,6 +937,97 @@ export function blindnessDeafnessSaveGateConditionSpell(
       kind: "choice",
       choices: BLINDNESS_DEAFNESS_FAILED_SAVE_CONDITION_CHOICES,
       expiresAt: { kind: "duration", durationTicks: durationTicks.right },
+      escape: null,
+      turnStartDamage: null,
+      repeatSave: {
+        ability: phase.ability,
+        dc: phase.dc,
+      },
+    },
+    saveRollModeRule: null,
+    rangeFeet: movementFeet(spell.mechanics.range.feet),
+  };
+}
+
+export function holdPersonSaveGateConditionSpell(
+  spell: SpellRecord,
+): SaveGateConditionSpell | null {
+  if (spell.mechanics.family !== "activation") {
+    return null;
+  }
+  const phase = spell.mechanics.phases[0];
+  const failedEffect = phase?.kind === "save_gate" ? phase.onFail : undefined;
+  const targetSelection =
+    phase?.kind === "save_gate" &&
+    phase.attachment.kind === "hole" &&
+    phase.attachment.value.kind === "target"
+      ? phase.attachment.value.selection
+      : null;
+  const repeatSaves =
+    phase?.kind === "save_gate" ? (phase.repeatSaves ?? []) : [];
+  const repeatSave = repeatSaves.length === 1 ? repeatSaves[0] : undefined;
+  const durationTicks =
+    spell.mechanics.duration.kind === "concentration"
+      ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.upTo)
+      : null;
+  if (
+    spell.name !== HOLD_PERSON_SPELL_NAME ||
+    spell.provenance.kind !== "srd-5.2.1" ||
+    spell.provenance.section !== HOLD_PERSON_PROVENANCE_SECTION ||
+    spell.mechanics.level !== HOLD_PERSON_BASE_SPELL_LEVEL ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "point" ||
+    spell.mechanics.range.feet !== HOLD_PERSON_RANGE_FEET ||
+    spell.mechanics.duration.kind !== "concentration" ||
+    spell.mechanics.duration.upTo.unit !== "minute" ||
+    spell.mechanics.duration.upTo.amount !== 1 ||
+    spell.mechanics.phases.length !== 1 ||
+    phase?.kind !== "save_gate" ||
+    phase.ability !== "wis" ||
+    phase.dc.kind !== "caster_spell_save_dc" ||
+    phase.onSuccess.kind !== "none" ||
+    targetSelection === null ||
+    targetSelection.mode !== "choose_up_to" ||
+    targetSelection.count === undefined ||
+    !sameStringSet(
+      targetSelection.typeFilter ?? [],
+      HOLD_PERSON_TARGET_CREATURE_TYPES,
+    ) ||
+    failedEffect?.kind !== "apply_condition" ||
+    failedEffect.condition !== HOLD_PERSON_FAILED_SAVE_CONDITION ||
+    repeatSave === undefined ||
+    repeatSave.cadence !== "end_of_target_turn" ||
+    repeatSave.rollMode !== undefined ||
+    repeatSave.onSuccess !== "ends_on_target" ||
+    repeatSave.onFailAgain !== undefined ||
+    durationTicks === null ||
+    Either.isLeft(durationTicks)
+  ) {
+    return null;
+  }
+  const targetCountBySlot = commandTargetCountBySlot(
+    targetSelection,
+    spell.mechanics.level,
+  );
+  if (
+    targetCountBySlot === null ||
+    targetCountBySlot(spellSlotLevel(spell.mechanics.level)) !== 1
+  ) {
+    return null;
+  }
+
+  return {
+    phase,
+    targeting: (slotLevel) => ({
+      kind: "targetList",
+      minTargets: 1,
+      maxTargets: targetCountBySlot(slotLevel),
+    }),
+    targetCreatureTypes: HOLD_PERSON_TARGET_CREATURE_TYPES,
+    effect: {
+      kind: "fixed",
+      condition: HOLD_PERSON_FAILED_SAVE_CONDITION,
+      expiresAt: { kind: "concentration", durationTicks: durationTicks.right },
       escape: null,
       turnStartDamage: null,
       repeatSave: {

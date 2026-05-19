@@ -76,6 +76,7 @@ module battleRuntimeArmorClass {
         | CharmPersonCharmed(_) => false
         | BlindnessDeafnessBlinded(_) => false
         | BlindnessDeafnessDeafened(_) => false
+        | HoldPersonParalyzed(_) => false
         | ProtectionRelevantCharmed(_) => false
         | ProtectionRelevantFrightened(_) => false
         | ProtectionRelevantPossession(_) => false
@@ -87,6 +88,7 @@ module battleRuntimeArmorClass {
         | JumpMovementReplacement(_) => false
         | FeatherFallMitigation(_) => false
         | SanctuaryWard(_) => false
+        | InvisibilityCondition(_) => false
         | SleepPendingRepeatSave(_) => false
         | SleepUnconscious(_) => false
         | HideousLaughterEffect(_) => false

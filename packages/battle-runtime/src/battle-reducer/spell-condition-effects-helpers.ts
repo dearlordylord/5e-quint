@@ -42,6 +42,10 @@ type ProtectionRelevantEffectKind = ProtectionRelevantCondition | "possession";
 
 type ConditionApplyingActiveEffect =
   | Extract<BattleActiveEffect, { readonly kind: "spellCondition" }>
+  | Extract<
+      BattleActiveEffect,
+      { readonly kind: "targetActionEndedSpellCondition" }
+    >
   | Extract<BattleActiveEffect, { readonly kind: "spellConditionRepeatSave" }>
   | Extract<BattleActiveEffect, { readonly kind: "spellConditionEndTurnSave" }>
   | Extract<BattleActiveEffect, { readonly kind: "sleepPendingRepeatSave" }>
@@ -57,6 +61,10 @@ type HideousLaughterEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "hideousLaughter" }
 >;
+type SpellConcentrationEffectSource = {
+  readonly sourceCombatantId: CombatantId;
+  readonly sourceSpellId: string;
+};
 
 export type BattlePossessionAttemptInput = {
   readonly state: BattleState;
@@ -395,6 +403,8 @@ function activeEffectSourcesCondition(
     (effect.kind === "spellCondition" &&
       (effect.condition === condition ||
         (condition === "prone" && effect.condition === "unconscious"))) ||
+    (effect.kind === "targetActionEndedSpellCondition" &&
+      effect.condition === condition) ||
     (effect.kind === "spellConditionRepeatSave" &&
       effect.condition === condition) ||
     (effect.kind === "spellConditionEndTurnSave" &&
@@ -411,6 +421,8 @@ function activeEffectDirectlyAppliesCondition(
 ): boolean {
   return (
     (effect.kind === "spellCondition" && effect.condition === condition) ||
+    (effect.kind === "targetActionEndedSpellCondition" &&
+      effect.condition === condition) ||
     (effect.kind === "spellConditionRepeatSave" &&
       effect.condition === condition) ||
     (effect.kind === "spellConditionEndTurnSave" &&
@@ -651,6 +663,32 @@ export function combatantsAfterHideousLaughterSpellEndedIfNoEffects(
   });
 }
 
+export function combatantsAfterConcentrationSpellEffectsEndedIfNoEffects(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  source: SpellConcentrationEffectSource,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  const spellStillActive = [...combatants.values()].some((combatant) =>
+    combatant.activeEffects.some((effect) =>
+      sameConcentrationSpellEffectSource(effect, source),
+    ),
+  );
+  if (spellStillActive) {
+    return combatants;
+  }
+  const sourceCombatant = combatants.get(source.sourceCombatantId);
+  if (
+    sourceCombatant === undefined ||
+    sourceCombatant.concentration?.effectKind !== "spellEffect" ||
+    sourceCombatant.concentration.sourceSpellId !== source.sourceSpellId
+  ) {
+    return combatants;
+  }
+  return new Map(combatants).set(source.sourceCombatantId, {
+    ...sourceCombatant,
+    concentration: null,
+  });
+}
+
 function isHideousLaughterEffect(
   effect: BattleActiveEffect,
 ): effect is Extract<BattleActiveEffect, { readonly kind: "hideousLaughter" }> {
@@ -665,6 +703,19 @@ function sameHideousLaughterSpellEffect(
     effect.kind === "hideousLaughter" &&
     effect.sourceSpellId === source.sourceSpellId &&
     effect.sourceCombatantId === source.sourceCombatantId
+  );
+}
+
+function sameConcentrationSpellEffectSource(
+  effect: BattleActiveEffect,
+  source: SpellConcentrationEffectSource,
+): boolean {
+  return (
+    effect.sourceCombatantId === source.sourceCombatantId &&
+    "sourceSpellId" in effect &&
+    effect.sourceSpellId === source.sourceSpellId &&
+    "expiresAt" in effect &&
+    effect.expiresAt.kind === "concentration"
   );
 }
 
@@ -730,6 +781,7 @@ function isConditionApplyingActiveEffect(
 ): effect is ConditionApplyingActiveEffect {
   return (
     effect.kind === "spellCondition" ||
+    effect.kind === "targetActionEndedSpellCondition" ||
     effect.kind === "spellConditionRepeatSave" ||
     effect.kind === "spellConditionEndTurnSave" ||
     effect.kind === "sleepPendingRepeatSave" ||
@@ -751,6 +803,7 @@ function activeEffectCondition(
 ): Condition {
   if (
     effect.kind === "spellCondition" ||
+    effect.kind === "targetActionEndedSpellCondition" ||
     effect.kind === "spellConditionRepeatSave" ||
     effect.kind === "spellConditionEndTurnSave"
   )
