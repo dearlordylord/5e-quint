@@ -39,9 +39,7 @@ import {
   CHROMATIC_ORB_CONTINUATION_LIMIT_KINDS,
   CHROMATIC_ORB_DAMAGE_TYPES,
   CHROMATIC_ORB_LEAP_RANGE_FEET,
-  ELDRITCH_BLAST_SPELL_ID,
   ELDRITCH_BLAST_BEAM_COUNT_TIERS,
-  SCORCHING_RAY_SPELL_ID,
   scorchingRayRayCount,
   type EldritchBlastBeamCount,
   type ScorchingRayRayCount,
@@ -421,9 +419,6 @@ export function supportedPreparedSpellAttackProfile(
   spellcastingAbilityModifier: AbilityModifier,
   proficiencyBonus: ProficiencyBonusType,
 ): readonly SupportedSpellInvocation[] {
-  if (isCanonicalSrdScorchingRaySpellDefinition(spell)) {
-    return [];
-  }
   return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
     if (Number(slot.spellLevel) < spell.mechanics.level) {
       return [];
@@ -445,9 +440,6 @@ export function supportedPreparedSpellAttackSequenceProfile(
   spellcastingAbilityModifier: AbilityModifier,
   proficiencyBonus: ProficiencyBonusType,
 ): readonly SupportedSpellInvocation[] {
-  if (!isCanonicalSrdScorchingRaySpellDefinition(spell)) {
-    return [];
-  }
   const phase =
     spell.mechanics.family === "activation"
       ? spell.mechanics.phases[0]
@@ -510,17 +502,6 @@ export function supportedPreparedSpellAttackSequenceProfile(
       },
     ];
   });
-}
-
-export function isCanonicalSrdScorchingRaySpellDefinition(
-  spell: SpellRecord,
-): boolean {
-  return (
-    spell.name === "Scorching Ray" &&
-    spell.id === SCORCHING_RAY_SPELL_ID &&
-    spell.provenance.kind === "srd-5.2.1" &&
-    spell.provenance.section === "Spells/Descriptions-S-Z#Scorching Ray"
-  );
 }
 
 export function supportedPreparedChainedSpellAttackDamageProfile(
@@ -967,9 +948,6 @@ export function supportedCantripSpellAttackSequenceProfile(
   proficiencyBonus: ProficiencyBonusType,
   characterLevel: number,
 ): readonly SupportedSpellInvocation[] {
-  if (!isCanonicalSrdEldritchBlastSpellDefinition(spell)) {
-    return [];
-  }
   const phase =
     spell.mechanics.family === "activation"
       ? spell.mechanics.phases[0]
@@ -1024,17 +1002,6 @@ export function supportedCantripSpellAttackSequenceProfile(
       ),
     },
   ];
-}
-
-export function isCanonicalSrdEldritchBlastSpellDefinition(
-  spell: SpellRecord,
-): boolean {
-  return (
-    spell.name === "Eldritch Blast" &&
-    spell.id === ELDRITCH_BLAST_SPELL_ID &&
-    spell.provenance.kind === "srd-5.2.1" &&
-    spell.provenance.section === "Spells/Descriptions-E-L#Eldritch Blast"
-  );
 }
 
 function spellAttackSequenceTargeting(

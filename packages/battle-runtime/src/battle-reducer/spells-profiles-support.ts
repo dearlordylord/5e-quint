@@ -70,13 +70,11 @@ import { currentActorId } from "./creature-state-leaves.ts";
 import { activeMarkedDamageRiderEffect } from "./damage-helpers.ts";
 import {
   BATTLE_D20_ROLL_MODIFIER_DIE_SIZES,
-  BLUR_UNIT_ID,
   HUNTERS_MARK_FINDING_SKILLS,
   MIRROR_IMAGE_DUPLICATE_DIE_SIZE,
   MIRROR_IMAGE_DUPLICATE_SUCCESS_AT_LEAST,
   MIRROR_IMAGE_INITIAL_DUPLICATES,
   MIRROR_IMAGE_UNAFFECTED_BY,
-  MIRROR_IMAGE_UNIT_ID,
   PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES,
   PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS,
   THAUMATURGY_BOOMING_VOICE_DURATION_TICKS,
@@ -85,7 +83,6 @@ import {
   WARDING_BOND_CAST_RANGE_FEET,
   WARDING_BOND_CONNECTION_RANGE_FEET,
   WARDING_BOND_SAVING_THROW_BONUS,
-  WARDING_BOND_SPELL_ID,
 } from "./domain-constants.ts";
 import { supportedDamageAmountExpr } from "./spells-profiles-save-gates.ts";
 import {
@@ -349,10 +346,6 @@ function wardingBondSpellProjection(
   "activeEffect" | "rangeFeet" | "connectionRangeFeet"
 > | null {
   if (
-    spell.id !== WARDING_BOND_SPELL_ID ||
-    spell.name !== "Warding Bond" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-S-Z#Warding Bond" ||
     spell.mechanics.family !== "ongoing_effect" ||
     spell.mechanics.level !== 2 ||
     spell.mechanics.castingTime.kind !== "action" ||
@@ -361,8 +354,6 @@ function wardingBondSpellProjection(
     spell.mechanics.duration.value.unit !== "hour" ||
     spell.mechanics.duration.value.amount !== 1 ||
     spell.mechanics.attachment.kind !== "caster_target_bond" ||
-    spell.mechanics.attachment.bondId !==
-      "warding_bond_mystic_connection" ||
     spell.mechanics.attachment.range.kind !== "within_feet" ||
     spell.mechanics.attachment.range.feet !==
       Number(WARDING_BOND_CONNECTION_RANGE_FEET) ||
@@ -953,10 +944,6 @@ function blurAttackRollDefenseSpellProjection(
   spell: SpellRecord,
 ): Pick<BlurAttackRollDefenseSpellInvocation, "activeEffect"> | null {
   if (
-    spell.id !== BLUR_UNIT_ID ||
-    spell.name !== "Blur" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-A-D#Blur" ||
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 2 ||
     spell.mechanics.castingTime.kind !== "action" ||
@@ -1003,10 +990,6 @@ function mirrorImageHitInterceptionSpellProjection(
   spell: SpellRecord,
 ): Pick<MirrorImageHitInterceptionSpellInvocation, "activeEffect"> | null {
   if (
-    spell.id !== MIRROR_IMAGE_UNIT_ID ||
-    spell.name !== "Mirror Image" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-M-P#Mirror Image" ||
     spell.mechanics.family !== "passive_hit_intercept" ||
     spell.mechanics.level !== 2 ||
     spell.mechanics.castingTime.kind !== "action" ||

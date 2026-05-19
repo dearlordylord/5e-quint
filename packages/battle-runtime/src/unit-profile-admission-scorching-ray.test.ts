@@ -154,7 +154,7 @@ describe("L12G-SPELL-SCORCHING-RAY deterministic Scorching Ray admission", () =>
     );
   });
 
-  test("malformed canonical Scorching Ray ray-count selections are not admitted", () => {
+  test("malformed Scorching Ray repeated ray-count selections are not admitted", () => {
     const spell = spellRecord(scorchingRayUnitId);
     const creatureOrObjectTargets = ["creature", "object"] as const;
     const malformedSpells = [
@@ -179,10 +179,6 @@ describe("L12G-SPELL-SCORCHING-RAY deterministic Scorching Ray admission", () =>
           baseLevel: 2,
           perSlotAboveBase: 2,
         },
-      }),
-      scorchingRayWithTargetSelection(spell, {
-        mode: "one",
-        targetKinds: creatureOrObjectTargets,
       }),
       scorchingRayWithTargetSelection(spell, {
         mode: "choose_up_to",

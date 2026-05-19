@@ -68,7 +68,9 @@ describe("Surface trace interpreter", () => {
       expect.arrayContaining([
         expect.objectContaining({
           atomKind: "caster_target_bond",
-          label: expect.stringContaining("warding_bond_mystic_connection"),
+          label: expect.stringContaining(
+            "bond range: caster-target within 60 ft",
+          ),
         }),
         expect.objectContaining({
           atomKind: "paired_worn_material_component",

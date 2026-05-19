@@ -106,7 +106,7 @@ describe("SRDINV39 deterministic Eldritch Blast Spell Unit admission", () => {
     );
   });
 
-  test("canonical Eldritch Blast records with non-SRD beam count tiers are not admitted", () => {
+  test("Eldritch Blast-like records with non-SRD beam count tiers are not admitted", () => {
     const decoded = decodeUnitRecordSync(eldritchBlastInput);
     expect(decoded.kind).toBe("spell");
     if (decoded.kind !== "spell") return;

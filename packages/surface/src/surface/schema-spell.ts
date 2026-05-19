@@ -1721,7 +1721,6 @@ export const AttachmentBaseSchema = Schema.Union(
   TargetAttachmentBaseSchema,
   strictStruct({
     kind: Schema.Literal("caster_target_bond"),
-    bondId: Schema.NonEmptyTrimmedString,
     target: makeHoleSchema(TargetAttachmentBaseSchema),
     range: BondRangeSchema,
   }),

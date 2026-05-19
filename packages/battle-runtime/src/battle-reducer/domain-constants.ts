@@ -37,18 +37,12 @@ export const COMMAND_OPTIONS = [
 // targeted by the Magic Missile spell.
 export const SHIELD_MAGIC_MISSILE_SPELL_ID =
   "magic_missile" satisfies SpellRecord["id"];
-export const ELDRITCH_BLAST_SPELL_ID =
-  "eldritch_blast" satisfies SpellRecord["id"];
-export const SCORCHING_RAY_SPELL_ID =
-  "scorching_ray" satisfies SpellRecord["id"];
-export const BLUR_UNIT_ID = "blur" satisfies SpellRecord["id"];
 export const BLUR_ATTACK_ROLL_BYPASS_SENSES = [
   "blindsight",
   "truesight",
 ] as const satisfies ReadonlyArray<CreatureSense["kind"]>;
 export type BlurAttackRollBypassSense =
   (typeof BLUR_ATTACK_ROLL_BYPASS_SENSES)[number];
-export const MIRROR_IMAGE_UNIT_ID = "mirror_image" satisfies SpellRecord["id"];
 export const MIRROR_IMAGE_UNAFFECTED_SENSES = BLUR_ATTACK_ROLL_BYPASS_SENSES;
 export type MirrorImageUnaffectedSense =
   (typeof MIRROR_IMAGE_UNAFFECTED_SENSES)[number];
@@ -90,19 +84,17 @@ export const THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL =
   "intimidation" as const satisfies Skill;
 export const THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS = 3;
 export const THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID = holeId(
-  "battle:spell:thaumaturgy:active-one-minute-effect-count",
+  "battle:spell:active-one-minute-effect-count",
 );
 export const THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_INSTANCE =
-  holeInstanceKey("battle:spell:thaumaturgy:active-one-minute-effect-count");
+  holeInstanceKey("battle:spell:active-one-minute-effect-count");
 export const THAUMATURGY_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_ID = holeId(
-  "battle:spell:thaumaturgy:booming-voice:influence-ability-check",
+  "battle:spell:booming-voice:influence-ability-check",
 );
 export const THAUMATURGY_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_INSTANCE =
   holeInstanceKey(
-    "battle:spell:thaumaturgy:booming-voice:influence-ability-check",
+    "battle:spell:booming-voice:influence-ability-check",
   );
-export const WARDING_BOND_SPELL_ID =
-  "warding_bond" satisfies SpellRecord["id"];
 export const WARDING_BOND_ARMOR_CLASS_BONUS = 1;
 export const WARDING_BOND_SAVING_THROW_BONUS = 1;
 export const WARDING_BOND_CAST_RANGE_FEET = movementFeet(5);

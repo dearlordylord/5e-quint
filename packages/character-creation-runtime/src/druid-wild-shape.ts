@@ -31,7 +31,6 @@ const DRUID_WILD_SHAPE_DURATION_DIVISOR = 2;
 const byKind = Match.discriminator("kind");
 
 type DruidWildShapeFeature = ClassFeatureRecord & {
-  readonly id: typeof DRUID_WILD_SHAPE_UNIT_ID;
   readonly className: "druid";
   readonly mechanics: Extract<
     ClassFeatureRecord["mechanics"],
@@ -259,7 +258,6 @@ function isDruidWildShapeFeature(
 ): unit is DruidWildShapeFeature {
   if (
     unit.kind !== "class_feature" ||
-    unit.id !== DRUID_WILD_SHAPE_UNIT_ID ||
     unit.className !== "druid" ||
     unit.mechanics.family !== "activation"
   ) {

@@ -209,7 +209,7 @@ export function describeCasterTargetBondAttachment(
   range: Range,
 ): string {
   return [
-    `caster_target_bond\n${attachment.bondId}`,
+    "caster_target_bond",
     `bond range: caster-target within ${attachment.range.feet} ft`,
     describeAttachmentHole(attachment.target, range),
   ].join("\n");
