@@ -19,133 +19,133 @@
     {
       "number": 3,
       "id": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS",
-      "status": "ready-for-research",
+      "status": "deferred-to-loop-a",
       "title": "Monk's Focus Character Facts And Resource Projection"
     },
     {
       "number": 4,
       "id": "L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS",
-      "status": "blocked",
+      "status": "deferred-to-loop-a",
       "title": "Monk's Focus Battle Option Execution"
     },
     {
       "number": 5,
       "id": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS",
-      "status": "blocked",
+      "status": "deferred-to-loop-a",
       "title": "Monk Uncanny Metabolism Character Facts And Use State"
     },
     {
       "number": 6,
       "id": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME",
-      "status": "blocked",
+      "status": "deferred-to-loop-a",
       "title": "Monk Uncanny Metabolism Initiative Recovery Runtime"
     },
     {
       "number": 7,
       "id": "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS",
-      "status": "ready-for-research",
+      "status": "deferred-to-loop-a",
       "title": "Sorcerer Font Of Magic Sorcery Point Resource Facts"
     },
     {
       "number": 8,
       "id": "L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS",
-      "status": "blocked",
+      "status": "deferred-to-loop-a",
       "title": "Sorcerer Font Of Magic Spell Slot To Sorcery Points"
     },
     {
       "number": 9,
       "id": "L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS",
-      "status": "blocked",
+      "status": "deferred-to-loop-a",
       "title": "Sorcerer Font Of Magic Sorcery Points To Spell Slot"
     },
     {
       "number": 10,
       "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS",
-      "status": "blocked",
+      "status": "deferred-to-loop-a",
       "title": "Sorcerer Metamagic Character Facts And Option Projection"
     },
     {
       "number": 11,
       "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION",
-      "status": "blocked",
+      "status": "deferred-to-loop-a",
       "title": "Sorcerer Metamagic Cast-Time Option Execution"
     },
     {
       "number": 12,
       "id": "L12G-FOLLOWUP-MOONBEAM-SURFACE-LIFECYCLE",
-      "status": "ready-for-research",
+      "status": "deferred-to-loop-a",
       "title": "Moonbeam Surface Area Lifecycle"
     },
     {
       "number": 13,
       "id": "L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME",
-      "status": "blocked",
+      "status": "deferred-to-loop-a",
       "title": "Moonbeam Movable Zone Runtime"
     },
     {
       "number": 14,
       "id": "L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER",
-      "status": "blocked",
+      "status": "deferred-to-loop-a",
       "title": "Moonbeam Shape-Shifting Rider Runtime"
     },
     {
       "number": 15,
       "id": "L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST",
-      "status": "ready-for-research",
+      "status": "deferred-to-loop-a",
       "title": "Prayer Of Healing Surface Rest Shape"
     },
     {
       "number": 16,
       "id": "L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST",
-      "status": "blocked",
+      "status": "deferred-to-loop-a",
       "title": "Prayer Of Healing Character Sheet Rest Runtime"
     },
     {
       "number": 17,
       "id": "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE",
-      "status": "ready-for-research",
+      "status": "deferred-to-loop-a",
       "title": "Ray Of Enfeeblement D20 Lifecycle Runtime"
     },
     {
       "number": 18,
       "id": "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY",
-      "status": "blocked",
+      "status": "deferred-to-loop-a",
       "title": "Ray Of Enfeeblement Damage Roll Penalty Runtime"
     },
     {
       "number": 19,
       "id": "L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT",
-      "status": "ready-for-research",
+      "status": "deferred-to-loop-a",
       "title": "See Invisibility Observer Sight Runtime Support"
     },
     {
       "number": 20,
       "id": "L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME",
-      "status": "ready-for-research",
+      "status": "deferred-to-loop-a",
       "title": "Spike Growth Movement Hazard Runtime"
     },
     {
       "number": 21,
       "id": "L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION",
-      "status": "ready-for-research",
+      "status": "deferred-to-loop-a",
       "title": "Spike Growth Hazard Recognition Boundary"
     },
     {
       "number": 22,
       "id": "L12G-FOLLOWUP-SPIRITUAL-WEAPON-SURFACE-PROXY-SHAPE",
-      "status": "ready-for-research",
+      "status": "deferred-to-loop-a",
       "title": "Spiritual Weapon Proxy Surface Shape"
     },
     {
       "number": 23,
       "id": "L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME",
-      "status": "blocked",
+      "status": "deferred-to-loop-a",
       "title": "Spiritual Weapon Persistent Attack Runtime"
     },
     {
       "number": 24,
       "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-RETAINED-STATISTICS",
-      "status": "blocked",
+      "status": "deferred-to-loop-a",
       "title": "Druid Wild Shape Retained Statistics And Active Form Persistence"
     }
   ]
@@ -216,28 +216,28 @@ Do not run battle-runtime MBT unless the task changes promoted battle-runtime be
 | ---: | --- | --- | --- | --- |
 | 1 | L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS - Druid Wild Shape Character Facts And Resource Projection | done | completed baseline | Original backlog task 77; Unit `druid_wild_shape`. |
 | 2 | L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME - Druid Wild Shape Shape-Shifting Runtime And Promoted Parity | ready-for-research | L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS | Original backlog task 78 narrowed to battle-visible execution; Unit `druid_wild_shape`; consume Character Sheet known-form identities from Task 1 and land package-local promoted Quint/MBT parity with runtime support. |
-| 3 | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS - Monk's Focus Character Facts And Resource Projection | ready-for-research | completed baseline | Original backlog task 79; Unit `monk_monks_focus`. |
-| 4 | L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS - Monk's Focus Battle Option Execution | blocked | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS | Original backlog task 80; Unit `monk_monks_focus`. |
-| 5 | L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS - Monk Uncanny Metabolism Character Facts And Use State | blocked | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS | Original backlog task 81; Unit `monk_uncanny_metabolism`. |
-| 6 | L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME - Monk Uncanny Metabolism Initiative Recovery Runtime | blocked | L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS | Original backlog task 82; Unit `monk_uncanny_metabolism`. |
-| 7 | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS - Sorcerer Font Of Magic Sorcery Point Resource Facts | ready-for-research | completed baseline | Original backlog task 83; Unit `sorcerer_font_of_magic`. |
-| 8 | L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS - Sorcerer Font Of Magic Spell Slot To Sorcery Points | blocked | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS | Original backlog task 84; Unit `sorcerer_font_of_magic`. |
-| 9 | L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS - Sorcerer Font Of Magic Sorcery Points To Spell Slot | blocked | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS | Original backlog task 85; Unit `sorcerer_font_of_magic`. |
-| 10 | L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS - Sorcerer Metamagic Character Facts And Option Projection | blocked | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS | Original backlog task 86; Unit `sorcerer_metamagic`. |
-| 11 | L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION - Sorcerer Metamagic Cast-Time Option Execution | blocked | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS | Original backlog task 87; Unit `sorcerer_metamagic`. |
-| 12 | L12G-FOLLOWUP-MOONBEAM-SURFACE-LIFECYCLE - Moonbeam Surface Area Lifecycle | ready-for-research | completed baseline | Original backlog task 90; Unit `moonbeam`. |
-| 13 | L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME - Moonbeam Movable Zone Runtime | blocked | L12G-FOLLOWUP-MOONBEAM-SURFACE-LIFECYCLE | Original backlog task 91; Unit `moonbeam`. |
-| 14 | L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER - Moonbeam Shape-Shifting Rider Runtime | blocked | L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME, L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME | Original backlog task 92; Unit `moonbeam`. |
-| 15 | L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST - Prayer Of Healing Surface Rest Shape | ready-for-research | completed baseline | Original backlog task 93; Unit `prayer_of_healing`. |
-| 16 | L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST - Prayer Of Healing Character Sheet Rest Runtime | blocked | L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST | Original backlog task 94; Unit `prayer_of_healing`. |
-| 17 | L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE - Ray Of Enfeeblement D20 Lifecycle Runtime | ready-for-research | completed baseline | Original backlog task 95; Unit `ray_of_enfeeblement`. |
-| 18 | L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY - Ray Of Enfeeblement Damage Roll Penalty Runtime | blocked | L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE | Original backlog task 96; Unit `ray_of_enfeeblement`. |
-| 19 | L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT - See Invisibility Observer Sight Runtime Support | ready-for-research | completed baseline | Original backlog task 90; Unit `see_invisibility`. |
-| 20 | L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME - Spike Growth Movement Hazard Runtime | ready-for-research | completed baseline | Original backlog task 91; Unit `spike_growth`. |
-| 21 | L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION - Spike Growth Hazard Recognition Boundary | ready-for-research | completed baseline | Original backlog task 92; Unit `spike_growth`. |
-| 22 | L12G-FOLLOWUP-SPIRITUAL-WEAPON-SURFACE-PROXY-SHAPE - Spiritual Weapon Proxy Surface Shape | ready-for-research | completed baseline | Original backlog task 93; Unit `spiritual_weapon`. |
-| 23 | L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME - Spiritual Weapon Persistent Attack Runtime | blocked | L12G-FOLLOWUP-SPIRITUAL-WEAPON-SURFACE-PROXY-SHAPE | Original backlog task 94; Unit `spiritual_weapon`. |
-| 24 | L12G-FOLLOWUP-DRUID-WILD-SHAPE-RETAINED-STATISTICS - Druid Wild Shape Retained Statistics And Active Form Persistence | blocked | L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME | Split from Task 2; Unit `druid_wild_shape`; consumes the active Wild Shape form state and true-form facts from the battle execution owner. |
+| 3 | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS - Monk's Focus Character Facts And Resource Projection | deferred-to-loop-a | completed baseline | Original backlog task 79; Unit `monk_monks_focus`. |
+| 4 | L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS - Monk's Focus Battle Option Execution | deferred-to-loop-a | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS | Original backlog task 80; Unit `monk_monks_focus`. |
+| 5 | L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS - Monk Uncanny Metabolism Character Facts And Use State | deferred-to-loop-a | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS | Original backlog task 81; Unit `monk_uncanny_metabolism`. |
+| 6 | L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME - Monk Uncanny Metabolism Initiative Recovery Runtime | deferred-to-loop-a | L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS | Original backlog task 82; Unit `monk_uncanny_metabolism`. |
+| 7 | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS - Sorcerer Font Of Magic Sorcery Point Resource Facts | deferred-to-loop-a | completed baseline | Original backlog task 83; Unit `sorcerer_font_of_magic`. |
+| 8 | L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS - Sorcerer Font Of Magic Spell Slot To Sorcery Points | deferred-to-loop-a | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS | Original backlog task 84; Unit `sorcerer_font_of_magic`. |
+| 9 | L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS - Sorcerer Font Of Magic Sorcery Points To Spell Slot | deferred-to-loop-a | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS | Original backlog task 85; Unit `sorcerer_font_of_magic`. |
+| 10 | L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS - Sorcerer Metamagic Character Facts And Option Projection | deferred-to-loop-a | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS | Original backlog task 86; Unit `sorcerer_metamagic`. |
+| 11 | L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION - Sorcerer Metamagic Cast-Time Option Execution | deferred-to-loop-a | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS | Original backlog task 87; Unit `sorcerer_metamagic`. |
+| 12 | L12G-FOLLOWUP-MOONBEAM-SURFACE-LIFECYCLE - Moonbeam Surface Area Lifecycle | deferred-to-loop-a | completed baseline | Original backlog task 90; Unit `moonbeam`. |
+| 13 | L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME - Moonbeam Movable Zone Runtime | deferred-to-loop-a | L12G-FOLLOWUP-MOONBEAM-SURFACE-LIFECYCLE | Original backlog task 91; Unit `moonbeam`. |
+| 14 | L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER - Moonbeam Shape-Shifting Rider Runtime | deferred-to-loop-a | L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME, L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME | Original backlog task 92; Unit `moonbeam`. |
+| 15 | L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST - Prayer Of Healing Surface Rest Shape | deferred-to-loop-a | completed baseline | Original backlog task 93; Unit `prayer_of_healing`. |
+| 16 | L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST - Prayer Of Healing Character Sheet Rest Runtime | deferred-to-loop-a | L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST | Original backlog task 94; Unit `prayer_of_healing`. |
+| 17 | L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE - Ray Of Enfeeblement D20 Lifecycle Runtime | deferred-to-loop-a | completed baseline | Original backlog task 95; Unit `ray_of_enfeeblement`. |
+| 18 | L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY - Ray Of Enfeeblement Damage Roll Penalty Runtime | deferred-to-loop-a | L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE | Original backlog task 96; Unit `ray_of_enfeeblement`. |
+| 19 | L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT - See Invisibility Observer Sight Runtime Support | deferred-to-loop-a | completed baseline | Original backlog task 90; Unit `see_invisibility`. |
+| 20 | L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME - Spike Growth Movement Hazard Runtime | deferred-to-loop-a | completed baseline | Original backlog task 91; Unit `spike_growth`. |
+| 21 | L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION - Spike Growth Hazard Recognition Boundary | deferred-to-loop-a | completed baseline | Original backlog task 92; Unit `spike_growth`. |
+| 22 | L12G-FOLLOWUP-SPIRITUAL-WEAPON-SURFACE-PROXY-SHAPE - Spiritual Weapon Proxy Surface Shape | deferred-to-loop-a | completed baseline | Original backlog task 93; Unit `spiritual_weapon`. |
+| 23 | L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME - Spiritual Weapon Persistent Attack Runtime | deferred-to-loop-a | L12G-FOLLOWUP-SPIRITUAL-WEAPON-SURFACE-PROXY-SHAPE | Original backlog task 94; Unit `spiritual_weapon`. |
+| 24 | L12G-FOLLOWUP-DRUID-WILD-SHAPE-RETAINED-STATISTICS - Druid Wild Shape Retained Statistics And Active Form Persistence | deferred-to-loop-a | L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME | Split from Task 2; Unit `druid_wild_shape`; consumes the active Wild Shape form state and true-form facts from the battle execution owner. |
 
 ## Task Details
 
@@ -321,7 +321,7 @@ Acceptance:
 
 ### Task 3 - L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS - Monk's Focus Character Facts And Resource Projection
 
-Status: `ready-for-research`
+Status: `deferred-to-loop-a`
 
 Original backlog task: `Task 79 - L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS - Monk's Focus Character Facts And Resource Projection`.
 Unit: `monk_monks_focus`.
@@ -354,7 +354,7 @@ Acceptance:
 
 ### Task 4 - L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS - Monk's Focus Battle Option Execution
 
-Status: `blocked`
+Status: `deferred-to-loop-a`
 
 Original backlog task: `Task 80 - L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS - Monk's Focus Battle Option Execution`.
 Unit: `monk_monks_focus`.
@@ -389,7 +389,7 @@ Acceptance:
 
 ### Task 5 - L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS - Monk Uncanny Metabolism Character Facts And Use State
 
-Status: `blocked`
+Status: `deferred-to-loop-a`
 
 Original backlog task: `Task 81 - L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS - Monk Uncanny Metabolism Character Facts And Use State`.
 Unit: `monk_uncanny_metabolism`.
@@ -424,7 +424,7 @@ Acceptance:
 
 ### Task 6 - L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME - Monk Uncanny Metabolism Initiative Recovery Runtime
 
-Status: `blocked`
+Status: `deferred-to-loop-a`
 
 Original backlog task: `Task 82 - L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME - Monk Uncanny Metabolism Initiative Recovery Runtime`.
 Unit: `monk_uncanny_metabolism`.
@@ -459,7 +459,7 @@ Acceptance:
 
 ### Task 7 - L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS - Sorcerer Font Of Magic Sorcery Point Resource Facts
 
-Status: `ready-for-research`
+Status: `deferred-to-loop-a`
 
 Original backlog task: `Task 83 - L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS - Sorcerer Font Of Magic Sorcery Point Resource Facts`.
 Unit: `sorcerer_font_of_magic`.
@@ -492,7 +492,7 @@ Acceptance:
 
 ### Task 8 - L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS - Sorcerer Font Of Magic Spell Slot To Sorcery Points
 
-Status: `blocked`
+Status: `deferred-to-loop-a`
 
 Original backlog task: `Task 84 - L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS - Sorcerer Font Of Magic Spell Slot To Sorcery Points`.
 Unit: `sorcerer_font_of_magic`.
@@ -527,7 +527,7 @@ Acceptance:
 
 ### Task 9 - L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS - Sorcerer Font Of Magic Sorcery Points To Spell Slot
 
-Status: `blocked`
+Status: `deferred-to-loop-a`
 
 Original backlog task: `Task 85 - L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS - Sorcerer Font Of Magic Sorcery Points To Spell Slot`.
 Unit: `sorcerer_font_of_magic`.
@@ -562,7 +562,7 @@ Acceptance:
 
 ### Task 10 - L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS - Sorcerer Metamagic Character Facts And Option Projection
 
-Status: `blocked`
+Status: `deferred-to-loop-a`
 
 Original backlog task: `Task 86 - L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS - Sorcerer Metamagic Character Facts And Option Projection`.
 Unit: `sorcerer_metamagic`.
@@ -597,7 +597,7 @@ Acceptance:
 
 ### Task 11 - L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION - Sorcerer Metamagic Cast-Time Option Execution
 
-Status: `blocked`
+Status: `deferred-to-loop-a`
 
 Original backlog task: `Task 87 - L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION - Sorcerer Metamagic Cast-Time Option Execution`.
 Unit: `sorcerer_metamagic`.
@@ -632,7 +632,7 @@ Acceptance:
 
 ### Task 12 - L12G-FOLLOWUP-MOONBEAM-SURFACE-LIFECYCLE - Moonbeam Surface Area Lifecycle
 
-Status: `ready-for-research`
+Status: `deferred-to-loop-a`
 
 Original backlog task: `Task 90 - L12G-FOLLOWUP-MOONBEAM-SURFACE-LIFECYCLE - Moonbeam Surface Area Lifecycle`.
 Unit: `moonbeam`.
@@ -665,7 +665,7 @@ Acceptance:
 
 ### Task 13 - L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME - Moonbeam Movable Zone Runtime
 
-Status: `blocked`
+Status: `deferred-to-loop-a`
 
 Original backlog task: `Task 91 - L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME - Moonbeam Movable Zone Runtime`.
 Unit: `moonbeam`.
@@ -700,7 +700,7 @@ Acceptance:
 
 ### Task 14 - L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER - Moonbeam Shape-Shifting Rider Runtime
 
-Status: `blocked`
+Status: `deferred-to-loop-a`
 
 Original backlog task: `Task 92 - L12G-FOLLOWUP-MOONBEAM-SHAPESHIFT-RIDER - Moonbeam Shape-Shifting Rider Runtime`.
 Unit: `moonbeam`.
@@ -735,7 +735,7 @@ Acceptance:
 
 ### Task 15 - L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST - Prayer Of Healing Surface Rest Shape
 
-Status: `ready-for-research`
+Status: `deferred-to-loop-a`
 
 Original backlog task: `Task 93 - L12G-FOLLOWUP-PRAYER-OF-HEALING-SURFACE-REST - Prayer Of Healing Surface Rest Shape`.
 Unit: `prayer_of_healing`.
@@ -768,7 +768,7 @@ Acceptance:
 
 ### Task 16 - L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST - Prayer Of Healing Character Sheet Rest Runtime
 
-Status: `blocked`
+Status: `deferred-to-loop-a`
 
 Original backlog task: `Task 94 - L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST - Prayer Of Healing Character Sheet Rest Runtime`.
 Unit: `prayer_of_healing`.
@@ -803,7 +803,7 @@ Acceptance:
 
 ### Task 17 - L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE - Ray Of Enfeeblement D20 Lifecycle Runtime
 
-Status: `ready-for-research`
+Status: `deferred-to-loop-a`
 
 Original backlog task: `Task 95 - L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE - Ray Of Enfeeblement D20 Lifecycle Runtime`.
 Unit: `ray_of_enfeeblement`.
@@ -836,7 +836,7 @@ Acceptance:
 
 ### Task 18 - L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY - Ray Of Enfeeblement Damage Roll Penalty Runtime
 
-Status: `blocked`
+Status: `deferred-to-loop-a`
 
 Original backlog task: `Task 96 - L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-DAMAGE-PENALTY - Ray Of Enfeeblement Damage Roll Penalty Runtime`.
 Unit: `ray_of_enfeeblement`.
@@ -871,7 +871,7 @@ Acceptance:
 
 ### Task 19 - L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT - See Invisibility Observer Sight Runtime Support
 
-Status: `ready-for-research`
+Status: `deferred-to-loop-a`
 
 Original backlog task: `Task 90 - L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT - See Invisibility Observer Sight Runtime Support`.
 Unit: `see_invisibility`.
@@ -904,7 +904,7 @@ Acceptance:
 
 ### Task 20 - L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME - Spike Growth Movement Hazard Runtime
 
-Status: `ready-for-research`
+Status: `deferred-to-loop-a`
 
 Original backlog task: `Task 91 - L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME - Spike Growth Movement Hazard Runtime`.
 Unit: `spike_growth`.
@@ -937,7 +937,7 @@ Acceptance:
 
 ### Task 21 - L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION - Spike Growth Hazard Recognition Boundary
 
-Status: `ready-for-research`
+Status: `deferred-to-loop-a`
 
 Original backlog task: `Task 92 - L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION - Spike Growth Hazard Recognition Boundary`.
 Unit: `spike_growth`.
@@ -970,7 +970,7 @@ Acceptance:
 
 ### Task 22 - L12G-FOLLOWUP-SPIRITUAL-WEAPON-SURFACE-PROXY-SHAPE - Spiritual Weapon Proxy Surface Shape
 
-Status: `ready-for-research`
+Status: `deferred-to-loop-a`
 
 Original backlog task: `Task 93 - L12G-FOLLOWUP-SPIRITUAL-WEAPON-SURFACE-PROXY-SHAPE - Spiritual Weapon Proxy Surface Shape`.
 Unit: `spiritual_weapon`.
@@ -1003,7 +1003,7 @@ Acceptance:
 
 ### Task 23 - L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME - Spiritual Weapon Persistent Attack Runtime
 
-Status: `blocked`
+Status: `deferred-to-loop-a`
 
 Original backlog task: `Task 94 - L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME - Spiritual Weapon Persistent Attack Runtime`.
 Unit: `spiritual_weapon`.
@@ -1038,7 +1038,7 @@ Acceptance:
 
 ### Task 24 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-RETAINED-STATISTICS - Druid Wild Shape Retained Statistics And Active Form Persistence
 
-Status: `blocked`
+Status: `deferred-to-loop-a`
 
 Unit: `druid_wild_shape`.
 Source section: split from `Task 2 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME - Druid Wild Shape Shape-Shifting Runtime And Promoted Parity`.
