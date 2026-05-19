@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 382,
-      "numerator": 164,
-      "percent": "42.9%"
+      "numerator": 165,
+      "percent": "43.2%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 454,
-      "numerator": 196,
-      "percent": "43.2%"
+      "numerator": 197,
+      "percent": "43.4%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 197
+      "value": 198
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 124,
-      "numerator": 124,
+      "denominator": 125,
+      "numerator": 125,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 197,
-      "numerator": 197,
+      "denominator": 198,
+      "numerator": 198,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -92,9 +92,9 @@
       "percent": "26.4%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 124,
+      "denominator": 125,
       "numerator": 41,
-      "percent": "33.1%"
+      "percent": "32.8%"
     },
     "runtimeMappingCoverage": {
       "denominator": 69,
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 124,
-      "numerator": 104,
-      "percent": "83.9%"
+      "denominator": 125,
+      "numerator": 105,
+      "percent": "84%"
     },
     "supportedProfileCoverage": {
-      "denominator": 165,
-      "numerator": 124,
-      "percent": "75.2%"
+      "denominator": 166,
+      "numerator": 125,
+      "percent": "75.3%"
     }
   },
   "metricSemantics": [
@@ -3425,9 +3425,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 124,
+          "denominator": 125,
           "numerator": 41,
-          "percent": "33.1%"
+          "percent": "32.8%"
         }
       },
       "units": [
@@ -4416,6 +4416,18 @@
             }
           ],
           "unitId": "hideous_laughter"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-condition-save",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "hold_person"
         },
         {
           "joinStatus": "unmapped",
@@ -18794,6 +18806,78 @@
         "status": "installed"
       },
       "claim": {
+        "profileIds": [
+          "spell.invocation-condition-save"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action level-2 Spell Slot casting with Concentration up to 1 minute",
+          "Humanoid target filter at 60-foot range with one additional target per Spell Slot level above 2",
+          "Wisdom Spell Save DC gate",
+          "failed-save Paralyzed condition application",
+          "end-of-target-turn Wisdom repeat save ends the spell-owned condition on that target on success",
+          "Concentration cleanup and maximum-duration expiration remove the spell-owned Paralyzed condition without duplicating non-spell condition sources"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-SPELL-HOLD-PERSON"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
+          "tag": "selected-identity-mbt",
+          "taskId": "condition-saving-throw-lifecycle"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-condition-save",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "SRDINV29B",
+            "SRDINV91C"
+          ],
+          "title": "Spell invocation resolves supported save-gated condition effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/hold_person.json",
+      "unitId": "hold_person"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "reason": "Equipment AC data is authored but not represented as an executable Unit profile row.",
         "tag": "unsupported-profile"
       },
@@ -20845,24 +20929,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/hold_monster.json",
       "unitId": "hold_monster"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/hold_person.json",
-      "unitId": "hold_person"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

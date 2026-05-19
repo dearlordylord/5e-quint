@@ -41,6 +41,7 @@ module battleRuntimeConcentration {
         | SleepPendingRepeatSave(_) => false
         | SleepUnconscious(_) => false
         | HideousLaughterEffect(_) => false
+        | HoldPersonParalyzed(_) => false
         | DancingLightsEffect(_) => false
         | _ => true
       })
@@ -51,6 +52,37 @@ module battleRuntimeConcentration {
       | SleepUnconscious(_) => false
       | _ => true
     })
+
+  pure def activeEffectsWithoutHoldPersonFrom(
+    effects: Set[ActiveEffect],
+    source: Actor,
+  ): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | HoldPersonParalyzed(data) => data.source != source
+      | _ => true
+    })
+
+  pure def activeEffectsContainHoldPersonFrom(effects: Set[ActiveEffect], source: Actor): bool =
+    effects.exists(effect => match effect {
+      | HoldPersonParalyzed(data) => data.source == source
+      | _ => false
+    })
+
+  pure def holdPersonEffectHadIncapacitated(effects: Set[ActiveEffect], source: Actor): bool =
+    effects.exists(effect => match effect {
+      | HoldPersonParalyzed(data) => data.source == source and data.hadIncapacitated
+      | _ => false
+    })
+
+  pure def combatantWithoutHoldPersonFrom(target: Combatant, source: Actor): Combatant =
+    if (activeEffectsContainHoldPersonFrom(target.activeEffects, source))
+      {
+        ...target,
+        incapacitated: holdPersonEffectHadIncapacitated(target.activeEffects, source),
+        activeEffects: activeEffectsWithoutHoldPersonFrom(target.activeEffects, source),
+      }
+    else
+      target
 
   pure def combatantWithSleepEffectsRemoved(target: Combatant, activeEffects: Set[ActiveEffect]): Combatant = {
     val hadSleepPending = target.activeEffects.exists(effect => match effect {
@@ -85,8 +117,40 @@ module battleRuntimeConcentration {
     }
   }
 
-  pure def combatantWithoutSpellEffectConcentrationEffects(target: Combatant): Combatant =
-    combatantWithSleepEffectsRemoved(target, activeEffectsWithoutSpellEffectConcentration(target.activeEffects))
+  pure def combatantWithHoldPersonEffectsRemoved(target: Combatant, activeEffects: Set[ActiveEffect]): Combatant = {
+    val hadHoldPerson = target.activeEffects.exists(effect => match effect {
+      | HoldPersonParalyzed(_) => true
+      | _ => false
+    })
+    val remainingHoldPerson = activeEffects.exists(effect => match effect {
+      | HoldPersonParalyzed(_) => true
+      | _ => false
+    })
+    val holdPersonHadIncapacitated = target.activeEffects.exists(effect => match effect {
+      | HoldPersonParalyzed(data) => data.hadIncapacitated
+      | _ => false
+    })
+    {
+      ...target,
+      activeEffects: activeEffects,
+      incapacitated: if (hadHoldPerson and not(remainingHoldPerson)) holdPersonHadIncapacitated else target.incapacitated,
+    }
+  }
+
+  pure def combatantWithoutSpellEffectConcentrationEffects(target: Combatant): Combatant = {
+    val activeEffects = activeEffectsWithoutSpellEffectConcentration(target.activeEffects)
+    val withoutSleep = combatantWithSleepEffectsRemoved(target, activeEffects)
+    val withoutHoldPerson = combatantWithHoldPersonEffectsRemoved(target, activeEffects)
+    val hadHoldPerson = target.activeEffects.exists(effect => match effect {
+      | HoldPersonParalyzed(_) => true
+      | _ => false
+    })
+    {
+      ...withoutSleep,
+      incapacitated: if (hadHoldPerson) withoutHoldPerson.incapacitated else withoutSleep.incapacitated,
+      activeEffects: activeEffects,
+    }
+  }
 
   pure def breakConcentration(target: Combatant): Combatant = {
     val withoutSpellEffectConcentration = combatantWithoutSpellEffectConcentrationEffects(target)
@@ -104,6 +168,12 @@ module battleRuntimeConcentration {
       | _ => false
     }
 
+  pure def holdPersonEffectFromOtherSource(effect: ActiveEffect, targetActor: Actor): bool =
+    match effect {
+      | HoldPersonParalyzed(data) => data.source != targetActor
+      | _ => false
+    }
+
   pure def breakConcentrationFromSleepAppliedIncapacitated(target: Combatant, targetActor: Actor): Combatant =
     if (not(target.concentrating))
       target
@@ -112,6 +182,21 @@ module battleRuntimeConcentration {
       val effectsSubjectToBreak = target.activeEffects.filter(effect => not(sleepEffectFromOtherSource(effect, targetActor)))
       val broken = breakConcentration({ ...target, activeEffects: effectsSubjectToBreak })
       { ...broken, activeEffects: broken.activeEffects.union(sleepEffectsFromOtherSources) }
+    }
+
+  pure def breakConcentrationFromHoldPersonAppliedIncapacitated(target: Combatant, targetActor: Actor): Combatant =
+    if (not(target.concentrating))
+      target
+    else {
+      val holdPersonEffectsFromOtherSources = target.activeEffects.filter(effect => holdPersonEffectFromOtherSource(effect, targetActor))
+      val effectsSubjectToBreak = target.activeEffects.filter(effect => not(holdPersonEffectFromOtherSource(effect, targetActor)))
+      val broken = breakConcentration({ ...target, activeEffects: effectsSubjectToBreak })
+      val activeEffects = broken.activeEffects.union(holdPersonEffectsFromOtherSources)
+      val stillHeld = holdPersonEffectsFromOtherSources.exists(effect => match effect {
+        | HoldPersonParalyzed(_) => true
+        | _ => false
+      })
+      { ...broken, activeEffects: activeEffects, incapacitated: if (stillHeld) true else broken.incapacitated }
     }
 
   pure def stateWithFighterDamage(state: BattleState, damagedFighter: Combatant): BattleState =

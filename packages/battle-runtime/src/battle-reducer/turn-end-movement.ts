@@ -109,6 +109,7 @@ import {
 import { invalidResult } from "./result-helpers.ts";
 
 import {
+  combatantsAfterConcentrationSpellEffectsEndedIfNoEffects,
   combatantsAfterHideousLaughterSpellEndedIfNoEffects,
   conditionsAfterApplyingSpellConditionEffects,
   conditionsAfterExpiringSpellConditionEffects,
@@ -2767,7 +2768,10 @@ function removeSpellConditionEffectFromCombatants(
           ),
         }
       : { ...target, activeEffects };
-  return new Map(combatants).set(targetId, nextCombatant);
+  return combatantsAfterConcentrationSpellEffectsEndedIfNoEffects(
+    new Map(combatants).set(targetId, nextCombatant),
+    expiringEffect,
+  );
 }
 
 function removeHideousLaughterEffectFromCombatants(

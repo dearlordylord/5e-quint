@@ -1,7 +1,8 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt condition-saving-throw-lifecycle color_spray entangle hideous_laughter sleep
+// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt condition-saving-throw-lifecycle color_spray entangle hideous_laughter hold_person sleep
 // UNIT-IDENTITY-MBT-REPLAY: condition-saving-throw-lifecycle color_spray doResolveColorSprayFailedSavingThrow
 // UNIT-IDENTITY-MBT-REPLAY: condition-saving-throw-lifecycle entangle doResolveEntangleFailedSavingThrow
 // UNIT-IDENTITY-MBT-REPLAY: condition-saving-throw-lifecycle hideous_laughter doResolveHideousLaughterRepeatSavingThrowSuccess
+// UNIT-IDENTITY-MBT-REPLAY: condition-saving-throw-lifecycle hold_person doResolveHoldPersonFailedSavingThrow doResolveHoldPersonRepeatSavingThrowSuccess
 // UNIT-IDENTITY-MBT-REPLAY: condition-saving-throw-lifecycle sleep doResolveSleepRepeatSavingThrowFailure
 import * as path from "node:path";
 
@@ -49,6 +50,8 @@ const conditionSavingThrowSelectedIdentityDriverSchema = {
   init: {},
   doResolveColorSprayFailedSavingThrow: {},
   doResolveEntangleFailedSavingThrow: {},
+  doResolveHoldPersonFailedSavingThrow: {},
+  doResolveHoldPersonRepeatSavingThrowSuccess: {},
   doResolveHideousLaughterRepeatSavingThrowSuccess: {},
   doResolveSleepRepeatSavingThrowFailure: {},
   step: {},
@@ -61,12 +64,14 @@ type ConditionSavingThrowSelectedIdentityDriverAction = Exclude<
 type ConditionSavingThrowSelectedIdentityProjection = {
   readonly targetBlinded: boolean;
   readonly targetRestrained: boolean;
+  readonly targetParalyzed: boolean;
   readonly targetIncapacitated: boolean;
   readonly targetUnconscious: boolean;
   readonly targetProne: boolean;
   readonly casterConcentrating: boolean;
   readonly actionAvailable: boolean;
   readonly firstLevelSlotsExpended: number;
+  readonly secondLevelSlotsExpended: number;
   readonly lastResult: "init" | "resolved";
 };
 type SelectedUnitIdentityReplaySequence = {
@@ -84,6 +89,7 @@ type SelectedUnitIdentityReplay = {
 const conditionSavingThrowSpellUnitIds = [
   "color_spray",
   "entangle",
+  "hold_person",
   "hideous_laughter",
   "sleep",
 ] as const;
@@ -165,6 +171,37 @@ const selectedUnitIdentityReplays = [
         expected: expectedProjection({
           actionAvailable: true,
           firstLevelSlotsExpended: 1,
+          lastResult: "resolved",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "condition-saving-throw-lifecycle",
+    unitId: "hold_person",
+    actions: [
+      "doResolveHoldPersonFailedSavingThrow",
+      "doResolveHoldPersonRepeatSavingThrowSuccess",
+    ],
+    sequences: [
+      {
+        name: "failed-wisdom-saving-throw-applies-paralyzed-concentration",
+        actions: ["doResolveHoldPersonFailedSavingThrow"],
+        expected: expectedProjection({
+          targetParalyzed: true,
+          targetIncapacitated: true,
+          casterConcentrating: true,
+          actionAvailable: false,
+          secondLevelSlotsExpended: 1,
+          lastResult: "resolved",
+        }),
+      },
+      {
+        name: "repeat-wisdom-saving-throw-success-clears-paralyzed-concentration",
+        actions: ["doResolveHoldPersonRepeatSavingThrowSuccess"],
+        expected: expectedProjection({
+          actionAvailable: true,
+          secondLevelSlotsExpended: 1,
           lastResult: "resolved",
         }),
       },
@@ -275,6 +312,14 @@ function createConditionSavingThrowSelectedIdentityDriver() {
         state = conditionSpellBattle(srdSpellRecord("entangle"), "druid");
         recordResolvedResult(resolveAreaSavingThrowSpell("entangle"));
       },
+      doResolveHoldPersonFailedSavingThrow: () => {
+        state = conditionSpellBattle(srdSpellRecord("hold_person"), "wizard");
+        recordResolvedResult(resolveHoldPersonFailedSavingThrow());
+      },
+      doResolveHoldPersonRepeatSavingThrowSuccess: () => {
+        state = conditionSpellBattle(srdSpellRecord("hold_person"), "wizard");
+        recordResolvedResult(resolveHoldPersonRepeatSavingThrowSuccess());
+      },
       doResolveHideousLaughterRepeatSavingThrowSuccess: () => {
         state = conditionSpellBattle(
           srdSpellRecord("hideous_laughter"),
@@ -304,6 +349,54 @@ function createConditionSavingThrowSelectedIdentityDriver() {
         subject: act.subject,
         fills: [
           savingThrowOutcomeFill(savingThrow, [{ targetId, succeeded: false }]),
+        ],
+      });
+    }
+
+    function resolveHoldPersonFailedSavingThrow(): BattleResolutionResult {
+      const act = spellAct({ state, spellId: "hold_person", slotLevel: 2 });
+      const target = requireHole(act.initialHoles, "spellTargetList");
+      const targetFill = spellTargetListFill(target, "hold_person", [targetId]);
+      const initialSave = requireResultHole(
+        resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [targetFill],
+        }),
+        "savingThrowOutcome",
+      );
+      return resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          targetFill,
+          savingThrowOutcomeFill(initialSave, [{ targetId, succeeded: false }]),
+        ],
+      });
+    }
+
+    function resolveHoldPersonRepeatSavingThrowSuccess(): BattleResolutionResult {
+      const cast = resolveHoldPersonFailedSavingThrow();
+      if (cast.tag !== "resolved") {
+        throw new Error("Expected Hold Person cast to resolve.");
+      }
+      const targetTurn = endTurn({ state: cast.state, actorId: casterId });
+      if (targetTurn.tag !== "resolved") {
+        throw new Error("Expected caster End Turn to resolve.");
+      }
+      const subject = endTurnSubjectFor(targetId);
+      const repeat = resolveBattleSubject({
+        state: targetTurn.state,
+        subject,
+        fills: [],
+      });
+      const repeatResult = requireNeedsHolesResult(repeat);
+      const repeatSave = requireHole(repeatResult.holes, "savingThrowOutcome");
+      return resolveBattleSubject({
+        state: repeatResult.state,
+        subject,
+        fills: [
+          savingThrowOutcomeFill(repeatSave, [{ targetId, succeeded: true }]),
         ],
       });
     }
@@ -400,12 +493,14 @@ function expectedProjection(
   return {
     targetBlinded: false,
     targetRestrained: false,
+    targetParalyzed: false,
     targetIncapacitated: false,
     targetUnconscious: false,
     targetProne: false,
     casterConcentrating: false,
     actionAvailable: true,
     firstLevelSlotsExpended: 0,
+    secondLevelSlotsExpended: 0,
     lastResult: "init",
     ...overrides,
   };
@@ -442,7 +537,10 @@ function conditionSpellBattle(
           featurePreparedSpells: [],
           invocationSpellAccesses: [],
           spellbookRitualSpellAccesses: [],
-          spellSlots: [{ spellLevel: 1, count: 1 }],
+          spellSlots:
+            spell.id === "hold_person"
+              ? [{ spellLevel: 2, count: 1 }]
+              : [{ spellLevel: 1, count: 1 }],
         },
       }),
       conditionSpellCreature({
@@ -624,6 +722,7 @@ function projectConditionSavingThrowSelectedIdentityState(
   return {
     targetBlinded: snapshotHasCondition(target.conditions, "blinded"),
     targetRestrained: snapshotHasCondition(target.conditions, "restrained"),
+    targetParalyzed: snapshotHasCondition(target.conditions, "paralyzed"),
     targetIncapacitated: snapshotHasCondition(
       target.conditions,
       "incapacitated",
@@ -635,6 +734,7 @@ function projectConditionSavingThrowSelectedIdentityState(
       (resource) => resource.source === "turn",
     ),
     firstLevelSlotsExpended: expendedSlotsForSpellLevel(state, casterId, 1),
+    secondLevelSlotsExpended: expendedSlotsForSpellLevel(state, casterId, 2),
     lastResult,
   };
 }
@@ -669,6 +769,7 @@ function normalizeConditionSavingThrowSelectedIdentityQuintState(
   return {
     targetBlinded: booleanField(state, "qTargetBlinded"),
     targetRestrained: booleanField(state, "qTargetRestrained"),
+    targetParalyzed: booleanField(state, "qTargetParalyzed"),
     targetIncapacitated: booleanField(state, "qTargetIncapacitated"),
     targetUnconscious: booleanField(state, "qTargetUnconscious"),
     targetProne: booleanField(state, "qTargetProne"),
@@ -677,6 +778,10 @@ function normalizeConditionSavingThrowSelectedIdentityQuintState(
     firstLevelSlotsExpended: numberFromQuintInt(
       state["qFirstLevelSlotsExpended"],
       "qFirstLevelSlotsExpended",
+    ),
+    secondLevelSlotsExpended: numberFromQuintInt(
+      state["qSecondLevelSlotsExpended"],
+      "qSecondLevelSlotsExpended",
     ),
     lastResult: mbtLastResult(state["qLastResult"]),
   };

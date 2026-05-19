@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L12G-SPELL-HOLD-PERSON",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Hold Person Runtime Support"
     },
     {
@@ -221,7 +221,7 @@ Do not run battle-runtime MBT unless the task changes promoted battle-runtime be
 | # | Task | Status | Depends On | Notes |
 | ---: | --- | --- | --- | --- |
 | 1 | L12G-SPELL-HEAT-METAL - Heat Metal Runtime Support | done | completed baseline | Original backlog task 31; Unit `heat_metal`. |
-| 2 | L12G-SPELL-HOLD-PERSON - Hold Person Runtime Support | ready-for-research | completed baseline | Original backlog task 32; Unit `hold_person`. |
+| 2 | L12G-SPELL-HOLD-PERSON - Hold Person Runtime Support | done | completed baseline | Original backlog task 32; Unit `hold_person`. |
 | 3 | L12G-SPELL-INVISIBILITY - Invisibility Runtime Support | ready-for-research | completed baseline | Original backlog task 33; Unit `invisibility`. |
 | 4 | L12G-SPELL-LESSER-RESTORATION - Lesser Restoration Runtime Support | ready-for-research | completed baseline | Original backlog task 34; Unit `lesser_restoration`. |
 | 5 | L12G-SPELL-MAGIC-WEAPON - Magic Weapon Runtime Support Or Closure | ready-for-research | completed baseline | Original backlog task 35; Unit `magic_weapon`. |
@@ -283,7 +283,7 @@ Acceptance:
 
 ### Task 2 - L12G-SPELL-HOLD-PERSON - Hold Person Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Original backlog task: `Task 32 - L12G-SPELL-HOLD-PERSON - Hold Person Runtime Support`.
 Unit: `hold_person`.

@@ -1300,97 +1300,6 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
-      "sourceRecordPath": "packages/surface/content/hold_person.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Bard spell list Hold Person",
-          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_hold_person",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 199,
-            "lineStart": 199,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Cleric spell list Hold Person",
-          "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_hold_person",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 190,
-            "lineStart": 190,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Druid spell list Hold Person",
-          "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_hold_person",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 240,
-            "lineStart": 240,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Hold Person",
-          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_hold_person",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 282,
-            "lineStart": 282,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Warlock spell list Hold Person",
-          "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_hold_person",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 367,
-            "lineStart": 367,
-            "path": ".references/srd-5.2.1/Classes/Warlock.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Hold Person",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_hold_person",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 214,
-            "lineStart": 214,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
-      "unitId": "hold_person"
-    },
-    {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
       "claimTag": "unsupported-profile",
       "closureKinds": [
         "outside-runtime-presentation-exploration"
@@ -2525,7 +2434,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 101,
+      "count": 102,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2578,6 +2487,7 @@
         "heroism",
         "hex",
         "hideous_laughter",
+        "hold_person",
         "hunters_mark",
         "ice_knife",
         "inflict_wounds",
@@ -2683,12 +2593,11 @@
       ]
     },
     {
-      "count": 8,
+      "count": 7,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
         "find_steed",
-        "hold_person",
         "invisibility",
         "lesser_restoration",
         "magic_weapon",
@@ -2734,8 +2643,8 @@
       "numerator": 465,
       "percent": "83.6%",
       "rowsByStatus": {
-        "accepted": 332,
-        "accepted-no-battle-effect": 133,
+        "accepted": 338,
+        "accepted-no-battle-effect": 127,
         "battle-runtime-required": 82,
         "owner-evidence-required": 3,
         "partial-battle-runtime": 6
@@ -2752,29 +2661,28 @@
       "percent": "22.2%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 101,
+      "denominator": 102,
       "numerator": 30,
-      "percent": "29.7%"
+      "percent": "29.4%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 154,
-      "numerator": 101,
-      "percent": "65.6%"
+      "numerator": 102,
+      "percent": "66.2%"
     },
     "strictTargetClosure": {
       "denominator": 154,
-      "numerator": 146,
-      "percent": "94.8%"
+      "numerator": 147,
+      "percent": "95.5%"
     }
   },
   "openFrontier": [
     {
-      "count": 8,
+      "count": 7,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
         "find_steed",
-        "hold_person",
         "invisibility",
         "lesser_restoration",
         "magic_weapon",
@@ -5887,9 +5795,9 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 101,
+        "denominator": 102,
         "numerator": 30,
-        "percent": "29.7%"
+        "percent": "29.4%"
       }
     },
     "units": [
@@ -6729,6 +6637,18 @@
           }
         ],
         "unitId": "hideous_laughter"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-condition-save",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "hold_person"
       },
       {
         "joinStatus": "unmapped",
@@ -7771,9 +7691,9 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
-      "missing": 8,
+      "missing": 7,
       "profile-subset-supported": 12,
-      "supported-profile": 101,
+      "supported-profile": 102,
       "unsupported-profile": 33
     },
     "groupsByStatus": {
@@ -7782,10 +7702,10 @@
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 15,
-      "open-runtime-behavior": 8,
-      "supported-profile": 101
+      "open-runtime-behavior": 7,
+      "supported-profile": 102
     },
-    "nonSupportedFrontier": 53,
+    "nonSupportedFrontier": 52,
     "strictDenominator": 154
   }
 }

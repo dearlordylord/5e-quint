@@ -2,7 +2,9 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29C entangle
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV38A sleep
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-BLINDNESS-DEAFNESS blindness_deafness
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-HOLD-PERSON hold_person
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-condition-save spell.invocation-sleep-target-admission
+import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
@@ -10,14 +12,20 @@ import {
   blindnessDeafnessUnitId,
   colorSprayUnitId,
   entangleUnitId,
+  heroismUnitId,
+  holdPersonDurationTicks,
+  holdPersonUnitId,
   sleepUnitId,
   spellCasterId,
   spellTargetId,
 } from "./unit-profile-admission-catalog-support.ts";
 import {
+  requireCombatant,
   requireHole,
   requireResultHole,
+  statBlockWithCreatureType,
 } from "./unit-profile-admission-creature-fixture-support.ts";
+import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   savingThrowOutcomeFill,
@@ -30,6 +38,8 @@ import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   BattleFillSchema,
   BattleHoleSchema,
+  breakBattleConcentration,
+  combatantId,
   endTurn,
   resolveBattleSubject,
 } from "./index.ts";
@@ -42,6 +52,416 @@ import {
 } from "./unit-profile-admission-test-support.ts";
 
 describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
+  test("hold_person is admitted with Humanoid filtering, Paralyzed lifecycle, and Concentration cleanup", () => {
+    const spell = spellRecord(holdPersonUnitId);
+    const beastId = combatantId("unit-profile-hold-person-beast");
+    const secondHumanoidId = combatantId("unit-profile-hold-person-humanoid-2");
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+      extraTargetIds: [secondHumanoidId],
+      statBlockTargets: [
+        {
+          combatantId: beastId,
+          statBlock: statBlockWithCreatureType("beast"),
+          initiative: 8,
+        },
+      ],
+    });
+    const act = spellAct({
+      state,
+      spellId: holdPersonUnitId,
+      slotLevel: 3,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(
+        "hold_person",
+        3,
+        "saveGatedCondition",
+      ),
+      mode: { tag: "cast" },
+    });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    expect(targetHole).toEqual(
+      expect.objectContaining({
+        minTargets: 1,
+        maxTargets: 2,
+      }),
+    );
+    expect(targetHole.choices).toEqual(
+      expect.arrayContaining([spellTargetId, secondHumanoidId]),
+    );
+    expect(targetHole.choices).not.toContain(beastId);
+    expect(spellHoleInvocation([targetHole])).toEqual(
+      expect.objectContaining({
+        procedure: "saveGatedCondition",
+        spell,
+        resource: { tag: "spellSlot", slotLevel: 3 },
+        ability: "wis",
+        targeting: { kind: "targetList", minTargets: 1, maxTargets: 2 },
+        targetCreatureTypes: ["humanoid"],
+        effect: {
+          kind: "fixed",
+          condition: "paralyzed",
+          expiresAt: {
+            kind: "concentration",
+            durationTicks: holdPersonDurationTicks,
+          },
+          escape: null,
+          turnStartDamage: null,
+          repeatSave: {
+            ability: "wis",
+            dc: { kind: "caster_spell_save_dc" },
+          },
+        },
+        rangeFeet: 60,
+      }),
+    );
+
+    const targetFill = spellTargetListFill(
+      targetHole,
+      spellCasterId,
+      holdPersonUnitId,
+      [spellTargetId, secondHumanoidId],
+    );
+    const savingThrow = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill],
+      }),
+      "savingThrowOutcome",
+    );
+    expect(savingThrow).toEqual(
+      expect.objectContaining({
+        ability: "wis",
+        dc: { kind: "caster_spell_save_dc" },
+      }),
+    );
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        savingThrowOutcomeFill(savingThrow, [
+          { targetId: spellTargetId, succeeded: false },
+          { targetId: secondHumanoidId, succeeded: true },
+        ]),
+      ],
+    });
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Hold Person to resolve.");
+    }
+    expect(resolved.state.combatants.get(spellTargetId)).toMatchObject({
+      conditions: expect.objectContaining({ paralyzed: true }),
+      activeEffects: [
+        expect.objectContaining({
+          kind: "spellConditionEndTurnSave",
+          sourceSpellId: holdPersonUnitId,
+          sourceCombatantId: spellCasterId,
+          condition: "paralyzed",
+          save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
+          expiresAt: {
+            kind: "concentration",
+            combatantId: spellCasterId,
+            durationTicks: holdPersonDurationTicks,
+          },
+        }),
+      ],
+    });
+    expect(resolved.state.combatants.get(secondHumanoidId)).toMatchObject({
+      conditions: expect.not.objectContaining({ paralyzed: true }),
+      activeEffects: [],
+    });
+    expect(resolved.state.combatants.get(spellCasterId)?.concentration).toEqual(
+      { sourceSpellId: holdPersonUnitId, effectKind: "spellEffect" },
+    );
+
+    const concentrationBroken = breakBattleConcentration(
+      resolved.state,
+      spellCasterId,
+    );
+    expect(concentrationBroken.combatants.get(spellTargetId)).toMatchObject({
+      conditions: expect.not.objectContaining({ paralyzed: true }),
+      activeEffects: [],
+    });
+
+    const paralyzedTarget = requireCombatant(resolved.state, spellTargetId);
+    const nearlyExpiredCombatants = new Map(resolved.state.combatants).set(
+      spellTargetId,
+      {
+        ...paralyzedTarget,
+        activeEffects: paralyzedTarget.activeEffects.map((effect) =>
+          effect.kind === "spellConditionEndTurnSave" &&
+          effect.sourceSpellId === holdPersonUnitId &&
+          effect.expiresAt.kind === "concentration"
+            ? {
+                ...effect,
+                expiresAt: {
+                  ...effect.expiresAt,
+                  durationTicks: elapsedTimeTicks(1),
+                },
+              }
+            : effect,
+        ),
+      },
+    );
+    const expiredCombatants = tickDurationEffects(nearlyExpiredCombatants);
+    expect(
+      expiredCombatants.get(spellCasterId)?.concentration,
+    ).toBeNull();
+    expect(expiredCombatants.get(spellTargetId)).toMatchObject({
+      conditions: expect.not.objectContaining({ paralyzed: true }),
+      activeEffects: [],
+    });
+
+    const targetTurn = endTurn({
+      state: resolved.state,
+      actorId: spellCasterId,
+    });
+    expect(targetTurn).toMatchObject({ tag: "resolved" });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected caster End Turn to resolve.");
+    }
+    const repeatSave = requireResultHole(
+      endTurn({ state: targetTurn.state, actorId: spellTargetId }),
+      "savingThrowOutcome",
+    );
+    expect(repeatSave).toEqual(
+      expect.objectContaining({
+        spellConditionEndTurnSave: expect.objectContaining({
+          targetId: spellTargetId,
+          sourceSpellId: holdPersonUnitId,
+          condition: "paralyzed",
+        }),
+        ability: "wis",
+      }),
+    );
+    const ended = endTurn({
+      state: targetTurn.state,
+      actorId: spellTargetId,
+      fills: [
+        savingThrowOutcomeFill(repeatSave, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
+      ],
+    });
+    expect(ended).toMatchObject({ tag: "resolved" });
+    if (ended.tag !== "resolved") {
+      throw new Error("Expected successful Hold Person repeat save to resolve.");
+    }
+    expect(ended.state.combatants.get(spellTargetId)).toMatchObject({
+      conditions: expect.not.objectContaining({ paralyzed: true }),
+      activeEffects: [],
+    });
+    expect(ended.state.combatants.get(spellCasterId)?.concentration).toBeNull();
+  });
+
+  test("hold_person self-target failed save spends resources then immediately breaks Concentration", () => {
+    const spell = spellRecord(holdPersonUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = spellAct({
+      state,
+      spellId: holdPersonUnitId,
+      slotLevel: 2,
+    });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    expect(targetHole.choices).toContain(spellCasterId);
+    const targetFill = spellTargetListFill(
+      targetHole,
+      spellCasterId,
+      holdPersonUnitId,
+      [spellCasterId],
+    );
+    const savingThrow = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill],
+      }),
+      "savingThrowOutcome",
+    );
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        savingThrowOutcomeFill(savingThrow, [
+          { targetId: spellCasterId, succeeded: false },
+        ]),
+      ],
+    });
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected self-target Hold Person to resolve.");
+    }
+    const caster = requireCombatant(resolved.state, spellCasterId);
+    expect(caster).toMatchObject({
+      concentration: null,
+      conditions: expect.not.objectContaining({ paralyzed: true }),
+      activeEffects: [],
+    });
+    expect(caster.origin.kind).toBe("character");
+    if (caster.origin.kind !== "character") {
+      throw new Error("Expected Hold Person caster to be a character.");
+    }
+    expect(caster.origin.spellcasting?.spellSlots).toEqual([
+      { spellLevel: 2, count: 1, expended: 1 },
+    ]);
+    expect(resolved.state.currentTurnResources.actionResources).toEqual([]);
+  });
+
+  test("hold_person failed save breaks target Concentration while keeping Paralyzed", () => {
+    const spell = spellRecord(holdPersonUnitId);
+    const baseState = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const target = requireCombatant(baseState, spellTargetId);
+    const targetConcentration = {
+      sourceSpellId: heroismUnitId,
+      effectKind: "spellEffect" as const,
+    };
+    const state = {
+      ...baseState,
+      combatants: new Map(baseState.combatants).set(spellTargetId, {
+        ...target,
+        concentration: targetConcentration,
+        activeEffects: [
+          ...target.activeEffects,
+          {
+            kind: "turnStartTemporaryHitPoints" as const,
+            sourceSpellId: heroismUnitId,
+            sourceCombatantId: spellTargetId,
+            amount: 3,
+            expiresAt: {
+              kind: "concentration" as const,
+              combatantId: spellTargetId,
+            },
+          },
+        ],
+      }),
+    };
+    const act = spellAct({
+      state,
+      spellId: holdPersonUnitId,
+      slotLevel: 2,
+    });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    const targetFill = spellTargetListFill(
+      targetHole,
+      spellCasterId,
+      holdPersonUnitId,
+      [spellTargetId],
+    );
+    const savingThrow = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill],
+      }),
+      "savingThrowOutcome",
+    );
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        savingThrowOutcomeFill(savingThrow, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected target-concentrating Hold Person to resolve.");
+    }
+    expect(resolved.state.combatants.get(spellCasterId)?.concentration).toEqual(
+      { sourceSpellId: holdPersonUnitId, effectKind: "spellEffect" },
+    );
+    expect(resolved.state.combatants.get(spellTargetId)).toMatchObject({
+      concentration: null,
+      conditions: expect.objectContaining({ paralyzed: true }),
+      activeEffects: [
+        expect.objectContaining({
+          kind: "spellConditionEndTurnSave",
+          sourceSpellId: holdPersonUnitId,
+        }),
+      ],
+    });
+    expect(
+      resolved.state.combatants
+        .get(spellTargetId)
+        ?.activeEffects.some(
+          (effect) =>
+            "sourceSpellId" in effect && effect.sourceSpellId === heroismUnitId,
+        ),
+    ).toBe(false);
+  });
+
+  test("hold_person all-success initial save spends resources without stale Concentration", () => {
+    const spell = spellRecord(holdPersonUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = spellAct({
+      state,
+      spellId: holdPersonUnitId,
+      slotLevel: 2,
+    });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    const targetFill = spellTargetListFill(
+      targetHole,
+      spellCasterId,
+      holdPersonUnitId,
+      [spellTargetId],
+    );
+    const savingThrow = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill],
+      }),
+      "savingThrowOutcome",
+    );
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        savingThrowOutcomeFill(savingThrow, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
+      ],
+    });
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected all-success Hold Person to resolve.");
+    }
+    const caster = requireCombatant(resolved.state, spellCasterId);
+    expect(caster.concentration).toBeNull();
+    expect(caster.origin.kind).toBe("character");
+    if (caster.origin.kind !== "character") {
+      throw new Error("Expected Hold Person caster to be a character.");
+    }
+    expect(caster.origin.spellcasting?.spellSlots).toEqual([
+      { spellLevel: 2, count: 1, expended: 1 },
+    ]);
+    expect(resolved.state.currentTurnResources.actionResources).toEqual([]);
+    expect(resolved.state.combatants.get(spellTargetId)).toMatchObject({
+      conditions: expect.not.objectContaining({ paralyzed: true }),
+      activeEffects: [],
+    });
+  });
+
   test("blindness_deafness is admitted with condition choice and end-turn save lifecycle", () => {
     const spell = spellRecord(blindnessDeafnessUnitId);
     const state = spellBattle({

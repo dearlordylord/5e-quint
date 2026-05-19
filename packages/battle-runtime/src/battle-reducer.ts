@@ -2011,6 +2011,10 @@ export type SpellFailedSaveConditionExpiration =
   | "endOfCasterNextTurn"
   | "concentration"
   | {
+      readonly kind: "concentration";
+      readonly durationTicks: ElapsedTimeTicks;
+    }
+  | {
       readonly kind: "duration";
       readonly durationTicks: ElapsedTimeTicks;
     };

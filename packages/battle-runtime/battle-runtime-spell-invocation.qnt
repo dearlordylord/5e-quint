@@ -74,6 +74,7 @@ module battleRuntimeSpellInvocation {
       | AnimalFriendship => true
       | CharmPerson => true
       | BlindnessDeafness => true
+      | HoldPerson => true
       | ProtectionFromEvilAndGood => true
       | ProtectionFromPoison => true
       | IceKnife => true

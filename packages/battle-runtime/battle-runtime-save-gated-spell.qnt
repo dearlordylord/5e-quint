@@ -39,6 +39,7 @@ module battleRuntimeSaveGatedSpell {
       | AnimalFriendshipSaveGate => BattleRuntimeAnimalFriendshipSaveCondition
       | CharmPersonSaveGate => BattleRuntimeCharmPersonSaveCondition
       | BlindnessDeafnessSaveGate => BattleRuntimeBlindnessDeafnessSaveCondition
+      | HoldPersonSaveGate => BattleRuntimeHoldPersonSaveCondition
     }
 
   pure def battleRuntimeAttackBurstSaveDamageProfileForInvocation(
@@ -194,6 +195,7 @@ module battleRuntimeSaveGatedSpell {
       | AnimalFriendshipSaveGate => Set(AnimalFriendshipCharmed({ source: source, durationTicks: 24 * 60 }))
       | CharmPersonSaveGate => Set(CharmPersonCharmed({ source: source, durationTicks: charmPersonCharmedDurationTicks }))
       | BlindnessDeafnessSaveGate => Set()
+      | HoldPersonSaveGate => Set()
     }
 
   pure def activeEffectsWithoutColorSprayFrom(effects: Set[ActiveEffect], source: Actor): Set[ActiveEffect] =
@@ -204,6 +206,7 @@ module battleRuntimeSaveGatedSpell {
 
   pure def charmPersonCharmedDurationTicks: int = 60 * 10
   pure def blindnessDeafnessDurationTicks: int = 10
+  pure def holdPersonDurationTicks: int = 10
 
   pure def saveGatedConditionRequiresConditionChoice(invocation: SaveGatedConditionInvocation): bool =
     invocation == BlindnessDeafnessSaveGate
@@ -438,6 +441,7 @@ module battleRuntimeSaveGatedSpell {
     target: Combatant,
     savingThrowSucceeded: bool,
     source: Actor,
+    targetActor: Actor,
     sourceCreatureType: RuntimeCreatureType,
   ): Combatant =
     if (
@@ -448,11 +452,14 @@ module battleRuntimeSaveGatedSpell {
       target
     else
       {
-        val baseEffects = if (invocation == ColorSpraySaveGate)
+      val baseEffects = if (invocation == ColorSpraySaveGate)
           activeEffectsWithoutColorSprayFrom(target.activeEffects, source)
         else
           target.activeEffects
-        { ...target, activeEffects: baseEffects.union(saveGatedConditionFailedSaveActiveEffects(invocation, state, source)) }
+        if (invocation == HoldPersonSaveGate)
+          holdPersonTarget({ ...target, activeEffects: baseEffects }, false, source, targetActor)
+        else
+          { ...target, activeEffects: baseEffects.union(saveGatedConditionFailedSaveActiveEffects(invocation, state, source)) }
       }
 
   pure def selectedTargetCount(fighterTargeted: bool, goblinTargeted: bool): int =
@@ -493,7 +500,18 @@ module battleRuntimeSaveGatedSpell {
     goblinCreatureType: RuntimeCreatureType,
     goblinSavingThrowSucceeded: bool,
   ): BattleState =
-    if (
+    if (invocation == HoldPersonSaveGate)
+      resolveHoldPerson(
+        state,
+        slotLevel,
+        fighterTargeted,
+        fighterCreatureType,
+        fighterSavingThrowSucceeded,
+        goblinTargeted,
+        goblinCreatureType,
+        goblinSavingThrowSucceeded,
+      )
+    else if (
       not(state.actionAvailable) or
       currentActor(state) != Fighter or
       state.fighter.unconscious or
@@ -510,10 +528,102 @@ module battleRuntimeSaveGatedSpell {
     else
       commitActorSpellSlotUse({
         ...state,
-        fighter: if (fighterTargeted) saveGatedConditionTarget(invocation, state, state.fighter, fighterSavingThrowSucceeded, Fighter, HumanoidCreature) else state.fighter,
-        goblin: if (goblinTargeted) saveGatedConditionTarget(invocation, state, state.goblin, goblinSavingThrowSucceeded, Fighter, HumanoidCreature) else state.goblin,
+        fighter: if (fighterTargeted) saveGatedConditionTarget(invocation, state, state.fighter, fighterSavingThrowSucceeded, Fighter, Fighter, HumanoidCreature) else state.fighter,
+        goblin: if (goblinTargeted) saveGatedConditionTarget(invocation, state, state.goblin, goblinSavingThrowSucceeded, Fighter, Goblin, HumanoidCreature) else state.goblin,
         actionAvailable: false,
       }, Fighter)
+
+  pure def holdPersonTarget(
+    target: Combatant,
+    savingThrowSucceeded: bool,
+    source: Actor,
+    targetActor: Actor,
+  ): Combatant =
+    if (savingThrowSucceeded)
+      target
+    else {
+      val withoutPrior = combatantWithoutHoldPersonFrom(target, source)
+      val held = {
+        ...withoutPrior,
+        incapacitated: true,
+        activeEffects: withoutPrior.activeEffects.union(Set(HoldPersonParalyzed({
+          source: source,
+          hadIncapacitated: withoutPrior.incapacitated,
+          durationTicks: holdPersonDurationTicks,
+        }))),
+      }
+      breakConcentrationFromHoldPersonAppliedIncapacitated(held, targetActor)
+    }
+
+  pure def holdPersonStillActiveFrom(state: BattleState, source: Actor): bool =
+    activeEffectsContainHoldPersonFrom(state.fighter.activeEffects, source) or
+      activeEffectsContainHoldPersonFrom(state.goblin.activeEffects, source)
+
+  pure def stateWithHoldPersonConcentrationClearedIfNoEffects(state: BattleState, source: Actor): BattleState =
+    if (holdPersonStillActiveFrom(state, source))
+      state
+    else
+      match source {
+        | Fighter => { ...state, fighter: { ...state.fighter, concentrating: false } }
+        | Goblin => { ...state, goblin: { ...state.goblin, concentrating: false } }
+      }
+
+  pure def resolveHoldPerson(
+    state: BattleState,
+    slotLevel: int,
+    fighterTargeted: bool,
+    fighterCreatureType: RuntimeCreatureType,
+    fighterSavingThrowSucceeded: bool,
+    goblinTargeted: bool,
+    goblinCreatureType: RuntimeCreatureType,
+    goblinSavingThrowSucceeded: bool,
+  ): BattleState =
+    if (
+      not(state.actionAvailable) or
+      currentActor(state) != Fighter or
+      state.fighter.unconscious or
+      state.fighter.incapacitated or
+      fighterHasRage(state) or
+      not(canExpendSpellSlotThisTurn(state)) or
+      not(saveGatedConditionTargetCountIsLegal(HoldPersonSaveGate, slotLevel, fighterTargeted, goblinTargeted)) or
+      (fighterTargeted and not(saveGatedConditionTargetCreatureTypeIsLegal(HoldPersonSaveGate, fighterCreatureType))) or
+      (goblinTargeted and not(saveGatedConditionTargetCreatureTypeIsLegal(HoldPersonSaveGate, goblinCreatureType)))
+    )
+      state
+    else {
+      val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
+      val withTargets = {
+        ...withoutPrior,
+        fighter: if (fighterTargeted) holdPersonTarget(withoutPrior.fighter, fighterSavingThrowSucceeded, Fighter, Fighter) else withoutPrior.fighter,
+        goblin: if (goblinTargeted) holdPersonTarget(withoutPrior.goblin, goblinSavingThrowSucceeded, Fighter, Goblin) else withoutPrior.goblin,
+        actionAvailable: false,
+      }
+      val holdPersonHasEffect = holdPersonStillActiveFrom(withTargets, Fighter)
+      val withConcentration = if (holdPersonHasEffect and not(withTargets.fighter.incapacitated))
+        { ...withTargets, fighter: { ...withTargets.fighter, concentrating: true } }
+      else
+        breakConcentrationSpellEffects(withTargets, Fighter)
+      commitActorSpellSlotUse(withConcentration, Fighter)
+    }
+
+  pure def endTurnWithHoldPersonRepeatSave(
+    state: BattleState,
+    source: Actor,
+    savingThrowSucceeded: bool,
+  ): BattleState =
+    if (currentActor(state) == Fighter) {
+      val fighter = if (savingThrowSucceeded and activeEffectsContainHoldPersonFrom(state.fighter.activeEffects, source))
+        combatantWithoutHoldPersonFrom(state.fighter, source)
+      else
+        state.fighter
+      endTurn(stateWithHoldPersonConcentrationClearedIfNoEffects({ ...state, fighter: fighter }, source))
+    } else {
+      val goblin = if (savingThrowSucceeded and activeEffectsContainHoldPersonFrom(state.goblin.activeEffects, source))
+        combatantWithoutHoldPersonFrom(state.goblin, source)
+      else
+        state.goblin
+      endTurn(stateWithHoldPersonConcentrationClearedIfNoEffects({ ...state, goblin: goblin }, source))
+    }
 
   pure def blindnessDeafnessActiveEffect(choice: BlindnessDeafnessConditionChoice, source: Actor): ActiveEffect =
     match choice {
@@ -638,8 +748,8 @@ module battleRuntimeSaveGatedSpell {
     else
       commitActorSpellSlotUse({
         ...state,
-        fighter: saveGatedConditionTarget(ColorSpraySaveGate, state, state.fighter, fighterSavingThrowSucceeded, Fighter, HumanoidCreature),
-        goblin: saveGatedConditionTarget(ColorSpraySaveGate, state, state.goblin, goblinSavingThrowSucceeded, Fighter, HumanoidCreature),
+        fighter: saveGatedConditionTarget(ColorSpraySaveGate, state, state.fighter, fighterSavingThrowSucceeded, Fighter, Fighter, HumanoidCreature),
+        goblin: saveGatedConditionTarget(ColorSpraySaveGate, state, state.goblin, goblinSavingThrowSucceeded, Fighter, Goblin, HumanoidCreature),
         actionAvailable: false,
       }, Fighter)
 
@@ -702,7 +812,7 @@ module battleRuntimeSaveGatedSpell {
       commitActorSpellSlotUse({
         ...withoutPrior,
         fighter: { ...withoutPrior.fighter, concentrating: true },
-        goblin: saveGatedConditionTarget(EntangleSaveGate, withoutPrior, withoutPrior.goblin, goblinSavingThrowSucceeded, Fighter, HumanoidCreature),
+        goblin: saveGatedConditionTarget(EntangleSaveGate, withoutPrior, withoutPrior.goblin, goblinSavingThrowSucceeded, Fighter, Goblin, HumanoidCreature),
         actionAvailable: false,
       }, Fighter)
     }

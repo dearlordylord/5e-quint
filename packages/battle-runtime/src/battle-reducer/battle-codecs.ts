@@ -947,6 +947,10 @@ const SupportedHealingSpellInvocationSchema = Schema.Struct({
 const SpellFailedSaveConditionExpirationSchema = Schema.Union(
   Schema.Literal("endOfCasterNextTurn", "concentration"),
   Schema.Struct({
+    kind: Schema.Literal("concentration"),
+    durationTicks: Schema.Number,
+  }),
+  Schema.Struct({
     kind: Schema.Literal("duration"),
     durationTicks: Schema.Number,
   }),

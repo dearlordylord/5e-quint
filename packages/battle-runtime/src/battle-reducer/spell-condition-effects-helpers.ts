@@ -56,6 +56,10 @@ type HideousLaughterEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "hideousLaughter" }
 >;
+type SpellConcentrationEffectSource = {
+  readonly sourceCombatantId: CombatantId;
+  readonly sourceSpellId: string;
+};
 
 export type BattlePossessionAttemptInput = {
   readonly state: BattleState;
@@ -647,6 +651,32 @@ export function combatantsAfterHideousLaughterSpellEndedIfNoEffects(
   });
 }
 
+export function combatantsAfterConcentrationSpellEffectsEndedIfNoEffects(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  source: SpellConcentrationEffectSource,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  const spellStillActive = [...combatants.values()].some((combatant) =>
+    combatant.activeEffects.some((effect) =>
+      sameConcentrationSpellEffectSource(effect, source),
+    ),
+  );
+  if (spellStillActive) {
+    return combatants;
+  }
+  const sourceCombatant = combatants.get(source.sourceCombatantId);
+  if (
+    sourceCombatant === undefined ||
+    sourceCombatant.concentration?.effectKind !== "spellEffect" ||
+    sourceCombatant.concentration.sourceSpellId !== source.sourceSpellId
+  ) {
+    return combatants;
+  }
+  return new Map(combatants).set(source.sourceCombatantId, {
+    ...sourceCombatant,
+    concentration: null,
+  });
+}
+
 function isHideousLaughterEffect(
   effect: BattleActiveEffect,
 ): effect is Extract<BattleActiveEffect, { readonly kind: "hideousLaughter" }> {
@@ -661,6 +691,19 @@ function sameHideousLaughterSpellEffect(
     effect.kind === "hideousLaughter" &&
     effect.sourceSpellId === source.sourceSpellId &&
     effect.sourceCombatantId === source.sourceCombatantId
+  );
+}
+
+function sameConcentrationSpellEffectSource(
+  effect: BattleActiveEffect,
+  source: SpellConcentrationEffectSource,
+): boolean {
+  return (
+    effect.sourceCombatantId === source.sourceCombatantId &&
+    "sourceSpellId" in effect &&
+    effect.sourceSpellId === source.sourceSpellId &&
+    "expiresAt" in effect &&
+    effect.expiresAt.kind === "concentration"
   );
 }
 

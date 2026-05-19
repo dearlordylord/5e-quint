@@ -93,6 +93,7 @@ import hellishRebukeInput from "../../content/hellish_rebuke.json";
 import heroismInput from "../../content/heroism.json";
 import hexInput from "../../content/hex.json";
 import hideousLaughterInput from "../../content/hideous_laughter.json";
+import holdPersonInput from "../../content/hold_person.json";
 import huntersMarkInput from "../../content/hunters_mark.json";
 import iceKnifeInput from "../../content/ice_knife.json";
 import inflictWoundsInput from "../../content/inflict_wounds.json";
@@ -495,6 +496,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     charmPersonInput,
     hellishRebukeInput,
     hideousLaughterInput,
+    holdPersonInput,
     armorChainMailInput,
     equipmentShieldInput,
     weaponClubInput,

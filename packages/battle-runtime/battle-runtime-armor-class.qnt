@@ -75,6 +75,7 @@ module battleRuntimeArmorClass {
         | CharmPersonCharmed(_) => false
         | BlindnessDeafnessBlinded(_) => false
         | BlindnessDeafnessDeafened(_) => false
+        | HoldPersonParalyzed(_) => false
         | ProtectionRelevantCharmed(_) => false
         | ProtectionRelevantFrightened(_) => false
         | ProtectionRelevantPossession(_) => false
