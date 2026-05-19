@@ -1,4 +1,5 @@
 // Creature state init/snapshot/lifecycle helpers extracted from
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // battle-reducer.ts. Cluster G (creature_state). Mechanical extraction —
 // no behavior change. Pass 8 also absorbed:
 //   - `assertCurrentHpWithinMaxHp` (cycle #9)
@@ -96,6 +97,7 @@ import {
   type OngoingFeatureSourceKey,
 } from "../battle-reducer.ts";
 import { battleStateInitIssue } from "./domain-helpers.ts";
+import { WARDING_BOND_ARMOR_CLASS_BONUS } from "./domain-constants.ts";
 import {
   applyInitialZeroHpLifecycle,
   effectiveHitPointMaximum,
@@ -596,6 +598,14 @@ export function activeEffectArmorClass(
             sourceUnitId: effect.sourceSpellId,
           },
         ]
+      : effect.kind === "wardingBond"
+        ? [
+            {
+              kind: "flat" as const,
+              bonus: armorClassDelta(WARDING_BOND_ARMOR_CLASS_BONUS),
+              sourceUnitId: effect.sourceSpellId,
+            },
+          ]
       : [],
   );
   const withBonuses =

@@ -104,6 +104,7 @@ import {
   supportedPreparedScalarBuffSpellProfile,
   supportedPreparedSelfTeleportSpellProfile,
   supportedPreparedSlotSpellProfile,
+  supportedPreparedWardingBondSpellProfile,
   supportedPreparedWeaponDamageRiderSpellProfile,
   supportedCantripThaumaturgyBoomingVoiceSpellProfile,
 } from "./spells-profiles-support.ts";
@@ -282,6 +283,13 @@ export function supportedSpellActs(
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedRollModifierSpellProfile(
+        actor.combatantId,
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedWardingBondSpellProfile(
         actor.combatantId,
         spell,
         spellcasting.spellSlots,

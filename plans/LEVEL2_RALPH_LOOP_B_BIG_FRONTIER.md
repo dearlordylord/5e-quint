@@ -49,14 +49,26 @@
     {
       "number": 50,
       "id": "L12G-SPELL-WARDING-BOND",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Warding Bond Runtime Support"
+    },
+    {
+      "number": 95,
+      "id": "L12G-FOLLOWUP-WARDING-BOND-SURFACE-LIFECYCLE",
+      "status": "done",
+      "title": "Warding Bond Surface Linked Effect Lifecycle"
+    },
+    {
+      "number": 96,
+      "id": "L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME",
+      "status": "done",
+      "title": "Warding Bond Linked Effect Runtime"
     }
   ]
 }
 -->
 
-This is the second level-2 execution lane. Loop B owns Tasks 43-58 and Tasks 90-94. Loop D owns Tasks 59-75. Loop A owns Tasks 22-36 and 88-89; Loop C owns Tasks 37-42 and 76-87. Do not implement or re-open sibling-lane tasks from this lane.
+This is the second level-2 execution lane. Loop B owns Tasks 43-58 and Tasks 90-96. Loop D owns Tasks 59-75. Loop A owns Tasks 22-36 and 88-89; Loop C owns Tasks 37-42 and 76-87. Do not implement or re-open sibling-lane tasks from this lane.
 
 ## Worktree Safety Prefix
 
@@ -131,11 +143,12 @@ use the repository MBT scarcity protocol.
 
 ## Included Work
 
-Loop B contains 21 atomic tasks: Tasks 43-58, from Scorching Ray through
-Detect Thoughts, plus Tasks 90-94 for the See Invisibility, Spike Growth, and Spiritual Weapon follow-up splits. Tasks
-59-75 have moved to Loop D. The historical manifest rows for Tasks 59-75 remain
-below, but they stay `deferred` here so Loop B cannot pick them. It excludes all
-level-1, Loop D/L, companion/familiar boundary, and Counterspell work.
+Loop B contains 23 atomic tasks: Tasks 43-58, from Scorching Ray through
+Detect Thoughts, plus Tasks 90-96 for the See Invisibility, Spike Growth,
+Spiritual Weapon, and Warding Bond follow-up splits. Tasks 59-75 have moved to
+Loop D. The historical manifest rows for Tasks 59-75 remain below, but they stay
+`deferred` here so Loop B cannot pick them. It excludes all level-1, Loop D/L,
+companion/familiar boundary, and Counterspell work.
 
 | Lane | Gate | Task | Unit |
 | ---: | ---: | --- | --- |
@@ -160,6 +173,8 @@ level-1, Loop D/L, companion/familiar boundary, and Counterspell work.
 | 92 | 50 | `L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION` | `spike_growth` |
 | 93 | 51 | `L12G-FOLLOWUP-SPIRITUAL-WEAPON-SURFACE-PROXY-SHAPE` | `spiritual_weapon` |
 | 94 | 51 | `L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME` | `spiritual_weapon` |
+| 95 | 52 | `L12G-FOLLOWUP-WARDING-BOND-SURFACE-LIFECYCLE` | `warding_bond` |
+| 96 | 52 | `L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME` | `warding_bond` |
 | 59 | 61 | `L12G-MISSING-DRAGONS-BREATH` | `dragons_breath` |
 | 60 | 62 | `L12G-MISSING-ENHANCE-ABILITY` | `enhance_ability` |
 | 61 | 63 | `L12G-MISSING-ENLARGE-REDUCE` | `enlarge_reduce` |
@@ -182,9 +197,9 @@ level-1, Loop D/L, companion/familiar boundary, and Counterspell work.
 
 ## Wrap-Up Directive
 
-This lane is in organic shutdown mode. Complete only Task 50 - L12G-SPELL-WARDING-BOND - Warding Bond Runtime Support, run reviewer-loop convergence, merge the completed task through this integration branch, and then stop. Do not start another task from this file.
+This lane is in organic shutdown mode. Task 50 - L12G-SPELL-WARDING-BOND - Warding Bond Runtime Support is the final task for this shutdown run. Task 50 is closed by the Warding Bond follow-up split below; stop after merging it. Do not start Task 95, Task 96, or any other task from this file in this shutdown run.
 
-All other unfinished tasks from this lane were moved to `plans/LEVEL2_RALPH_WRAPUP_BACKLOG.md`. That backlog is storage for future orchestration, not active work for this lane.
+Earlier unfinished tasks from this lane were moved to `plans/LEVEL2_RALPH_WRAPUP_BACKLOG.md`. That backlog is storage for future orchestration, not active work for this lane. The new Warding Bond follow-up tasks below remain here because Task 50 closes by split; future orchestration can move them into a fresh active lane.
 
 ### Task 43 - L12G-SPELL-SCORCHING-RAY - Scorching Ray Runtime Support
 
@@ -418,9 +433,24 @@ Acceptance:
 
 ### Task 50 - L12G-SPELL-WARDING-BOND - Warding Bond Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `warding_bond`. Gate task: 52 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Result: Warding Bond remains an `unsupported-profile` Unit in Task 50.
+Runtime work is split into Task 95 for the linked-bond Surface lifecycle and
+Task 96 for the paired-creature runtime, rather than treating catalog admission,
+a target-only scalar buff, or duplicated inventory/position state as Warding
+Bond support. Local SRD 5.2.1 text requires Action casting as a Magic Action,
+Touch range, paired worn platinum rings, a willing creature target, a one-hour
+mystic connection, target-only +1 AC and Saving Throw bonuses plus Resistance
+to all damage while the pair remains within 60 feet, same-amount damage to the
+caster each time the target takes damage, and cleanup when the caster drops to
+0 Hit Points, the pair separates by more than 60 feet, or the spell is cast
+again on either connected creature.
+RAW trace: `.references/srd-5.2.1/Spells/Descriptions-S-Z.md:1219` through
+`:1230`, with spell-list entries at `.references/srd-5.2.1/Classes/Cleric.md:197`
+and `.references/srd-5.2.1/Classes/Paladin.md:203`.
 
 Inputs:
 
@@ -442,3 +472,81 @@ Acceptance:
 - the level 1-2 metric row for `warding_bond` is supported, accepted-closed, or precisely blocked by a smaller follow-up split;
 - no level-1 Loop D/L or companion boundary work is pulled into this lane;
 - focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 95 - L12G-FOLLOWUP-WARDING-BOND-SURFACE-LIFECYCLE - Warding Bond Surface Linked Effect Lifecycle
+
+Status: `done`
+
+Unit: `warding_bond`. Gate task: 52 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Inputs:
+
+- Task 50's `unsupported-profile` Unit claim and follow-up split;
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Warding Bond Dhall/JSON Surface content, schema/tracer support, Spell Effect authoring patterns, material/worn-item source facts, and Unit claims.
+
+Outputs:
+
+- replace the partial Warding Bond Surface shape with a lossless linked-bond Spell Effect source shape that represents the willing target, paired platinum rings worn by caster and target for the duration, 60-foot range-gated target benefits, same-amount damage sharing to the caster, early ending when the caster drops to 0 Hit Points or the pair separates by more than 60 feet, and recast ending on either connected creature;
+- Warding Bond Dhall and JSON content, plus schema/tracer support where required, make the coupled bond identity, range-gated projections, damage-sharing trigger, material/worn-ring witnesses, and early-end triggers executable source facts.
+
+Acceptance:
+
+- lifecycle facts are not encoded as prose-only comments or disconnected generic buff metadata;
+- paired-ring requirements remain material/worn-item source facts rather than duplicated inventory state;
+- the result leaves Task 96 unblocked with executable source facts for one paired-creature bond occurrence;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+### Task 96 - L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME - Warding Bond Linked Effect Runtime
+
+Status: `done`
+
+Unit: `warding_bond`. Gate task: 52 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Result: Warding Bond is promoted as a supported level-2 prepared Spell
+Invocation. Runtime consumes willing-target, paired worn platinum-ring, and
+connection-distance facts at cast time, records the caster-target bond as one
+linked active effect, projects the target Armor Class, Saving Throw, and
+all-damage Resistance benefits, shares final target damage to the caster
+through the existing damage lifecycle, and removes the bond on duration expiry,
+caster 0 Hit Points, separation beyond 60 feet, or recast on either connected
+creature. The level 1-2 coverage row is now supported with deterministic
+admission/projection, runtime-test, and package Quint proof evidence.
+
+Inputs:
+
+- Task 50's `unsupported-profile` Unit claim and follow-up split;
+- Task 95's executable Warding Bond linked-bond Surface shape;
+- the matching gate row in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Spell Invocation, Spell Effect, Armor Class, Saving Throw, Resistance, damage, Hit Points, active-effect cleanup, material witness, table/spatial witness, and recast-cleanup tests.
+
+Outputs:
+
+- promote Warding Bond as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, consumes caller-supplied willing-target, worn-ring/material, and 60-foot connection facts, records one paired-creature bond occurrence, projects +1 Armor Class, +1 Saving Throws, and all-damage Resistance only while the target is within 60 feet, applies the same amount to the caster after the target takes damage with the caster damage lifecycle handled by the runtime boundary, and cleans up on duration end, caster 0 Hit Points, separation beyond 60 feet, or recast on either connected creature;
+- supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for casting, Spell Slot spend, target projections, Resistance interaction, same-amount damage sharing, caster-0-HP cleanup, separation cleanup, recast cleanup, and duration cleanup.
+
+Acceptance:
+
+- same-amount damage sharing flows through the runtime damage lifecycle and does not create a second damage or Hit Points protocol;
+- range and material/worn-ring facts are consumed through explicit witness boundaries rather than duplicated generic position or inventory state;
+- the paired bond occurrence keeps caster and target identity coupled through projections, damage sharing, recast cleanup, and duration cleanup;
+- the level 1-2 metric row for `warding_bond` is supported or precisely narrowed to any remaining accepted closure;
+- no level-1 Loop D/L or companion boundary work is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+Verification completed:
+`pnpm --filter @dnd/battle-runtime typecheck`;
+`pnpm --filter @dnd/battle-runtime exec vitest run src/unit-profile-admission-warding-bond.test.ts src/battle-runtime-weapon-mastery.test.ts src/chromatic-orb-chained-spell.test.ts src/battle-runtime-uncanny-dodge-and-damage-reductions.test.ts`;
+`pnpm --filter @dnd/battle-runtime exec quint test battle-runtime.qnt --match 'test_warding_bond'`;
+`pnpm unit-profile-coverage:check --write`;
+`pnpm unit-profile-coverage:check`;
+`git diff --check`.

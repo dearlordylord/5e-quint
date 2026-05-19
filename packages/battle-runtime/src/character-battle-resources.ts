@@ -786,6 +786,8 @@ function isArmorOfShadowsMageArmorSpell(
 function isPactOfTheChainFindFamiliarSpell(
   spell: SpellRecord,
 ): spell is PactOfTheChainFindFamiliarSpellRecord {
+  const components = spell.mechanics.components;
+
   return (
     spell.id === FIND_FAMILIAR_SPELL_ID &&
     spell.name === FIND_FAMILIAR_SPELL_NAME &&
@@ -794,8 +796,10 @@ function isPactOfTheChainFindFamiliarSpell(
     spell.mechanics.family === "spawned_creature" &&
     spell.mechanics.level === 1 &&
     spell.mechanics.castingTime.kind === "action" &&
-    spell.mechanics.components.materialCostGp === 10 &&
-    spell.mechanics.components.materialConsumed === true
+    "materialCostGp" in components &&
+    "materialConsumed" in components &&
+    components.materialCostGp === 10 &&
+    components.materialConsumed === true
   );
 }
 

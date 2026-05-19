@@ -1,4 +1,5 @@
 // Runtime codecs for battle reducer public payloads.
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // Extracted from ../battle-reducer.ts; this module owns Effect Schema values,
 // while domain types remain exported by the reducer facade.
 
@@ -697,6 +698,19 @@ const BattleTargetSpatialFactSchema = Schema.Union(
     casterId: CombatantId,
     targetId: CombatantId,
     spellId: Schema.String,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("wardingBondPairedWornPlatinumRings"),
+    casterId: CombatantId,
+    targetId: CombatantId,
+    spellId: Schema.String,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("wardingBondCreaturesDistance"),
+    casterId: CombatantId,
+    targetId: CombatantId,
+    spellId: Schema.String,
+    distanceFeet: MovementFeet,
   }),
   Schema.Struct({
     kind: Schema.Literal("spellObjectTarget"),
@@ -1548,6 +1562,16 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("wardingBond"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      activeEffect: BattleRuntimeObjectSchema,
+      rangeFeet: MovementFeet,
+      connectionRangeFeet: MovementFeet,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("scalarBuff"),
       spell: BattleRuntimeObjectSchema,
       actionCost: Schema.Literal("magicAction", "bonusAction"),
@@ -1895,6 +1919,17 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
     SupportedHealingSpellInvocationSchema,
   ) as unknown as Schema.Schema<SupportedSpellInvocation>;
 
+const BattleSavingThrowRollModeProjectionSchema = Schema.Struct({
+  targetId: CombatantId,
+  rollMode: Schema.Literal(...ATTACK_ROLL_MODES),
+});
+
+const BattleSavingThrowFlatBonusProjectionSchema = Schema.Struct({
+  targetId: CombatantId,
+  sourceSpellId: Schema.String,
+  bonus: Schema.Number,
+});
+
 export const BattleHoleSchema = Schema.Union(
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -1903,6 +1938,17 @@ export const BattleHoleSchema = Schema.Union(
     requiresTableSpatialFact: Schema.optionalWith(Schema.Boolean, {
       exact: true,
     }),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("targetSpatialFacts"),
+    wardingBondSeparation: Schema.Struct({
+      sourceCombatantId: CombatantId,
+      targetId: CombatantId,
+      sourceSpellId: SpellId,
+      rangeFeet: MovementFeet,
+    }),
+    requiresTableSpatialFact: Schema.Literal(true),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2151,11 +2197,9 @@ export const BattleHoleSchema = Schema.Union(
     ability: AbilitySchema,
     dc: DcSourceSchema,
     areaChoices: Schema.Array(BattleRuntimeObjectSchema),
-    targetRollModes: Schema.Array(
-      Schema.Struct({
-        targetId: CombatantId,
-        rollMode: Schema.Literal(...ATTACK_ROLL_MODES),
-      }),
+    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+    targetFlatBonuses: Schema.Array(
+      BattleSavingThrowFlatBonusProjectionSchema,
     ),
   }),
   Schema.Struct({
@@ -2166,11 +2210,9 @@ export const BattleHoleSchema = Schema.Union(
     ability: Schema.Literal("wis"),
     dc: DcSourceSchema,
     areaChoices: Schema.Array(BattleRuntimeObjectSchema),
-    targetRollModes: Schema.Array(
-      Schema.Struct({
-        targetId: CombatantId,
-        rollMode: Schema.Literal(...ATTACK_ROLL_MODES),
-      }),
+    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+    targetFlatBonuses: Schema.Array(
+      BattleSavingThrowFlatBonusProjectionSchema,
     ),
   }),
   Schema.Struct({
@@ -2181,11 +2223,9 @@ export const BattleHoleSchema = Schema.Union(
     ability: Schema.Literal("wis"),
     dc: DcSourceSchema,
     areaChoices: Schema.Array(BattleRuntimeObjectSchema),
-    targetRollModes: Schema.Array(
-      Schema.Struct({
-        targetId: CombatantId,
-        rollMode: Schema.Literal(...ATTACK_ROLL_MODES),
-      }),
+    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+    targetFlatBonuses: Schema.Array(
+      BattleSavingThrowFlatBonusProjectionSchema,
     ),
   }),
   Schema.Struct({
@@ -2196,11 +2236,9 @@ export const BattleHoleSchema = Schema.Union(
     ability: Schema.Literal("dex"),
     dc: DcSourceSchema,
     areaChoices: Schema.Array(BattleRuntimeObjectSchema),
-    targetRollModes: Schema.Array(
-      Schema.Struct({
-        targetId: CombatantId,
-        rollMode: Schema.Literal(...ATTACK_ROLL_MODES),
-      }),
+    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+    targetFlatBonuses: Schema.Array(
+      BattleSavingThrowFlatBonusProjectionSchema,
     ),
   }),
   Schema.Struct({
@@ -2211,11 +2249,9 @@ export const BattleHoleSchema = Schema.Union(
     ability: AbilitySchema,
     dc: DcSourceSchema,
     areaChoices: Schema.Array(BattleRuntimeObjectSchema),
-    targetRollModes: Schema.Array(
-      Schema.Struct({
-        targetId: CombatantId,
-        rollMode: Schema.Literal(...ATTACK_ROLL_MODES),
-      }),
+    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+    targetFlatBonuses: Schema.Array(
+      BattleSavingThrowFlatBonusProjectionSchema,
     ),
   }),
   Schema.Struct({
@@ -2255,11 +2291,9 @@ export const BattleHoleSchema = Schema.Union(
     ability: AbilitySchema,
     dc: DcSourceSchema,
     areaChoices: Schema.Array(BattleRuntimeObjectSchema),
-    targetRollModes: Schema.Array(
-      Schema.Struct({
-        targetId: CombatantId,
-        rollMode: Schema.Literal(...ATTACK_ROLL_MODES),
-      }),
+    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+    targetFlatBonuses: Schema.Array(
+      BattleSavingThrowFlatBonusProjectionSchema,
     ),
   }),
   Schema.Struct({
@@ -2270,11 +2304,9 @@ export const BattleHoleSchema = Schema.Union(
     ability: Schema.String,
     dc: BattleRuntimeObjectSchema,
     areaChoices: Schema.Array(BattleSpellAreaChoiceSchema),
-    targetRollModes: Schema.Array(
-      Schema.Struct({
-        targetId: CombatantId,
-        rollMode: Schema.Literal(...ATTACK_ROLL_MODES),
-      }),
+    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+    targetFlatBonuses: Schema.Array(
+      BattleSavingThrowFlatBonusProjectionSchema,
     ),
   }),
   Schema.Struct({
@@ -2285,11 +2317,9 @@ export const BattleHoleSchema = Schema.Union(
     ability: AbilitySchema,
     dc: DcSourceSchema,
     targetIds: Schema.Array(CombatantId),
-    targetRollModes: Schema.Array(
-      Schema.Struct({
-        targetId: CombatantId,
-        rollMode: Schema.Literal(...ATTACK_ROLL_MODES),
-      }),
+    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+    targetFlatBonuses: Schema.Array(
+      BattleSavingThrowFlatBonusProjectionSchema,
     ),
   }),
   Schema.Struct({
@@ -2324,6 +2354,7 @@ export const BattleHoleSchema = Schema.Union(
     combatantId: CombatantId,
     dc: DifficultyClass,
     damageAmount: DamageAmount,
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
     rollMode: Schema.optionalWith(Schema.Literal(...ATTACK_ROLL_MODES), {
       exact: true,
     }),

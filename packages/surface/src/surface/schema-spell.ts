@@ -157,6 +157,9 @@ export const AbilityFilterSchema = Schema.Union(
 
 export const DamageTypeRefBaseSchema = Schema.Union(
   DamageTypeSchema,
+  Schema.Struct({
+    kind: Schema.Literal("all_damage_types"),
+  }),
   CastTimeChoiceDamageTypeSchema,
   Schema.Struct({
     kind: Schema.Literal("same_choice_as"),
@@ -576,7 +579,10 @@ type EffectAtom =
       readonly amount: DiceAmount;
       readonly damageType?: DamageTypeRef;
     }
-  | { readonly kind: "share_damage_to_caster"; readonly rangeFeet: number }
+  | {
+      readonly kind: "share_damage_to_caster";
+      readonly amount: "same_as_attached_damage_taken";
+    }
   | {
       readonly kind: "retaliatory_damage";
       readonly target: "triggering_attacker";
@@ -1317,13 +1323,33 @@ export const RangeSchema = Schema.Union(
   }),
 );
 
-export const ComponentsSchema = Schema.Struct({
+export const MaterialComponentSchema = strictStruct({
+  kind: Schema.Literal("paired_worn_items"),
+  itemKind: Schema.Literal("ring"),
+  material: Schema.Literal("platinum"),
+  minimumValueGpEach: PositiveIntegerSchema,
+  wornBy: Schema.Tuple(Schema.Literal("caster"), Schema.Literal("target")),
+  requiredFor: Schema.Literal("spell_duration"),
+});
+
+const GenericComponentsSchema = Schema.Struct({
   v: Schema.Boolean,
   s: Schema.Boolean,
   m: Schema.Union(Schema.Literal(false), Schema.String),
   materialCostGp: optionalExact(Schema.Number),
   materialConsumed: optionalExact(Schema.Literal(true)),
 });
+
+const StructuredMaterialComponentsSchema = strictStruct({
+  v: Schema.Boolean,
+  s: Schema.Boolean,
+  m: MaterialComponentSchema,
+});
+
+export const ComponentsSchema = Schema.Union(
+  GenericComponentsSchema,
+  StructuredMaterialComponentsSchema,
+);
 
 export const DurationEndTriggerSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("target_makes_attack_roll") }),
@@ -1333,6 +1359,11 @@ export const DurationEndTriggerSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("target_damaged_by_caster_or_ally") }),
   Schema.Struct({ kind: Schema.Literal("target_takes_damage") }),
   Schema.Struct({ kind: Schema.Literal("caster_recasts_spell") }),
+  Schema.Struct({ kind: Schema.Literal("caster_drops_to_0_hp") }),
+  Schema.Struct({ kind: Schema.Literal("attached_bond_exceeds_range") }),
+  Schema.Struct({
+    kind: Schema.Literal("spell_cast_again_on_connected_creature"),
+  }),
   Schema.Struct({ kind: Schema.Literal("area_dispersed_by_strong_wind") }),
   Schema.Struct({ kind: Schema.Literal("caster_lets_go_of_attached_weapon") }),
 );
@@ -1557,6 +1588,17 @@ export const AttachmentRangeOriginSchema = Schema.Literal(
   "spell_sensor",
 );
 
+export const BondRangeSchema = strictStruct({
+  kind: Schema.Literal("within_feet"),
+  feet: PositiveIntegerSchema,
+});
+
+export const TargetAttachmentBaseSchema = Schema.Struct({
+  kind: Schema.Literal("target"),
+  selection: TargetSelectionSchema,
+  rangeOrigin: optionalExact(AttachmentRangeOriginSchema),
+});
+
 export const SizeSchema = Schema.Literal(
   "tiny",
   "small",
@@ -1593,10 +1635,12 @@ export const AttachmentBaseSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("self"),
   }),
-  Schema.Struct({
-    kind: Schema.Literal("target"),
-    selection: TargetSelectionSchema,
-    rangeOrigin: optionalExact(AttachmentRangeOriginSchema),
+  TargetAttachmentBaseSchema,
+  strictStruct({
+    kind: Schema.Literal("caster_target_bond"),
+    bondId: Schema.NonEmptyTrimmedString,
+    target: makeHoleSchema(TargetAttachmentBaseSchema),
+    range: BondRangeSchema,
   }),
   AreaAttachmentBaseSchema,
   Schema.Struct({
@@ -1750,6 +1794,9 @@ export const OngoingTriggerSchema = Schema.Union(
 );
 
 export const OngoingPredicateSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("attached_bond_within_range"),
+  }),
   Schema.Struct({
     kind: Schema.Literal("at_hp_threshold"),
     threshold: Schema.Number,
@@ -2038,7 +2085,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       }),
       Schema.Struct({
         kind: Schema.Literal("share_damage_to_caster"),
-        rangeFeet: Schema.Number,
+        amount: Schema.Literal("same_as_attached_damage_taken"),
       }),
       Schema.Struct({
         kind: Schema.Literal("retaliatory_damage"),

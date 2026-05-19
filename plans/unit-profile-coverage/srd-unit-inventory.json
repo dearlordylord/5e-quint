@@ -183,8 +183,8 @@
       "numerator": 467,
       "percent": "84%",
       "rowsByStatus": {
-        "accepted": 332,
-        "accepted-no-battle-effect": 135,
+        "accepted": 334,
+        "accepted-no-battle-effect": 133,
         "battle-runtime-required": 80,
         "partial-battle-runtime": 6,
         "owner-evidence-required": 3
@@ -201,16 +201,16 @@
       "catalog-installed-owner-evidence-required": 5
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 343,
+      "catalog-installed-owner-evidence-present": 345,
       "non-runtime": 24,
-      "catalog-only/dead-for-now": 106,
+      "catalog-only/dead-for-now": 104,
       "missing-authored-record": 50,
       "catalog-installed-owner-evidence-required": 20,
       "catalog-authored-executable-follow-up": 13
     },
     "spellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 183,
-      "catalog-only/dead-for-now": 106,
+      "catalog-installed-owner-evidence-present": 185,
+      "catalog-only/dead-for-now": 104,
       "missing-authored-record": 50,
       "catalog-installed-owner-evidence-required": 15,
       "catalog-authored-executable-follow-up": 13
@@ -8985,13 +8985,31 @@
         "sourceRecordPath": "packages/surface/content/warding_bond.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "warding_bond"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/material/spatial witness provider",
+        "reason": "Inventory ownership, worn-ring tracking, ordinary map distance derivation, and automatic separation detection remain caller-supplied table facts; the battle runtime consumes typed witnesses and owns the linked effect lifecycle."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit warding_bond is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME at packages/battle-runtime/src/unit-profile-admission-warding-bond.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_zone_of_truth",
@@ -14938,13 +14956,31 @@
         "sourceRecordPath": "packages/surface/content/warding_bond.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "warding_bond"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/material/spatial witness provider",
+        "reason": "Inventory ownership, worn-ring tracking, ordinary map distance derivation, and automatic separation detection remain caller-supplied table facts; the battle runtime consumes typed witnesses and owns the linked effect lifecycle."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit warding_bond is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME at packages/battle-runtime/src/unit-profile-admission-warding-bond.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/paladin:spell-level-2:spell-unit-pressure:paladin_spell_list_zone_of_truth",

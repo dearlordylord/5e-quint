@@ -6,10 +6,12 @@ import type {
   BattleCreatureState,
   BattleFill,
   BattleHideousLaughterRepeatSavingThrowOutcomeHole,
+  BattleSavingThrowFlatBonusProjection,
   BattleSavingThrowOutcomeValue,
 } from "../battle-reducer.ts";
 import type { CombatantId } from "../identity.ts";
 import { HIDEOUS_LAUGHTER_REPEAT_SAVE_HOLE_KEY_PREFIX } from "./domain-constants.ts";
+import { wardingBondSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
 
 const DEFAULT_DAMAGE_REPEAT_SAVE_EVENT_KEY = "damage";
 
@@ -27,6 +29,7 @@ export function hideousLaughterRepeatSavingThrowOutcomeHole(
   effect: HideousLaughterEffect,
   trigger: "endTurn" | "damage",
   damageEventKey: string = DEFAULT_DAMAGE_REPEAT_SAVE_EVENT_KEY,
+  targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[] = [],
 ): BattleHideousLaughterRepeatSavingThrowOutcomeHole {
   const key = [
     HIDEOUS_LAUGHTER_REPEAT_SAVE_HOLE_KEY_PREFIX,
@@ -57,6 +60,7 @@ export function hideousLaughterRepeatSavingThrowOutcomeHole(
     areaChoices: [],
     targetRollModes:
       trigger === "damage" ? [{ targetId, rollMode: "advantage" }] : [],
+    targetFlatBonuses,
   };
 }
 
@@ -72,6 +76,7 @@ export function hideousLaughterDamageRepeatSaveHoles(
             effect,
             "damage",
             damageEventKey,
+            wardingBondSavingThrowFlatBonusProjectionsForTarget(target),
           ),
         ]
       : [],

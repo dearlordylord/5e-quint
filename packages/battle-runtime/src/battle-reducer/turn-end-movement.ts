@@ -71,7 +71,11 @@ import {
   applyTemporaryHitPoints,
   breakCombatantConcentration,
   concentrationSavingThrowHole,
+  damageLifecycleConcentrationSavingThrowHoles,
+  damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
+  damageLifecycleHideousLaughterDamageRepeatSaveHoles,
   deathSavingThrowHole,
+  fillsMatchingHoleIds,
   processStatBlockRechargeRolls,
   startTurnDeathSavingThrowRequired,
   statBlockRechargeRollHole,
@@ -79,11 +83,7 @@ import {
 
 import { maybeOpenReactionWindow, snapshotBattle } from "./dispatcher.ts";
 
-import {
-  hideousLaughterDamageRepeatSaveFillCheck,
-  hideousLaughterDamageRepeatSaveFillsForTarget,
-  hideousLaughterRepeatSavingThrowOutcomeHole,
-} from "./hideous-laughter-repeat-save.ts";
+import { hideousLaughterRepeatSavingThrowOutcomeHole } from "./hideous-laughter-repeat-save.ts";
 
 import { needsHolesResult } from "./hole-helpers.ts";
 export { resolveOpportunityAttackCommand } from "./opportunity-attacks.ts";
@@ -121,8 +121,10 @@ import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.t
 
 import {
   applyPreparedSlotSpellDamage,
+  savingThrowFlatBonusProjections,
   savingThrowRollModeProjections,
 } from "./spells-damage-fills.ts";
+import { wardingBondSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
 import {
   applyCommandGrovelProneToTarget,
   applyGreaseProneToTarget,
@@ -178,6 +180,7 @@ import type {
   BattleState,
   BattleTurnResources,
   BattleSavingThrowOutcomeValue,
+  BattleSavingThrowFlatBonusProjection,
   SpellTurnStartDamage,
 } from "../battle-reducer.ts";
 import {
@@ -604,6 +607,10 @@ function applySpellTurnStartDamage(
   concentrationSavingThrow:
     | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
     | undefined,
+  wardingBondDamageShareConcentrationSavingThrows: readonly Extract<
+    BattleFill,
+    { readonly kind: "concentrationSavingThrow" }
+  >[],
   damageDisposition: ReturnType<typeof damageDispositionForTarget>,
   hideousLaughterDamageRepeatSaves: readonly Extract<
     BattleFill,
@@ -620,6 +627,7 @@ function applySpellTurnStartDamage(
     spellTurnStartDamageAmount(target, effect, roll),
     {
       concentrationSavingThrow,
+      wardingBondDamageShareConcentrationSavingThrows,
       damageDisposition,
       hideousLaughterDamageRepeatSaves,
       damageSourceId: effect.sourceCombatantId,
@@ -633,6 +641,7 @@ function spellTurnStartSavingThrowOutcomeHole(
     BattleActiveEffect,
     { readonly kind: "spellTurnStartDamageAndSave" }
   >,
+  targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[] = [],
 ): BattleSpellTurnStartSavingThrowOutcomeHole {
   const key = `battle:spell-turn-start-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}`;
   return {
@@ -650,6 +659,7 @@ function spellTurnStartSavingThrowOutcomeHole(
     dc: effect.save.dc,
     areaChoices: [],
     targetRollModes: [],
+    targetFlatBonuses,
   };
 }
 
@@ -722,6 +732,7 @@ function sleepPendingRepeatSaveEffects(
 function sleepRepeatSavingThrowOutcomeHole(
   targetId: CombatantId,
   effect: SleepPendingRepeatSaveEffect,
+  targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[] = [],
 ): BattleSleepRepeatSavingThrowOutcomeHole {
   const key = `battle:sleep-repeat-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}`;
   return {
@@ -739,6 +750,7 @@ function sleepRepeatSavingThrowOutcomeHole(
     dc: effect.save.dc,
     areaChoices: [],
     targetRollModes: [],
+    targetFlatBonuses,
   };
 }
 
@@ -767,6 +779,7 @@ function spellConditionEndTurnSavingThrowOutcomeHole(
   targetId: CombatantId,
   effect: SpellConditionEndTurnSaveEffect,
   state?: BattleState,
+  targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[] = [],
 ): BattleSpellConditionEndTurnSavingThrowOutcomeHole {
   const key = [
     "battle:spell-condition-end-turn-save",
@@ -798,6 +811,7 @@ function spellConditionEndTurnSavingThrowOutcomeHole(
         : savingThrowRollModeProjections(state, effect.save.ability, {
             condition: effect.condition,
           }).filter((projection) => projection.targetId === targetId),
+    targetFlatBonuses,
   };
 }
 
@@ -1558,6 +1572,9 @@ export function greaseGroundHazardSavingThrowOutcomeHole(
       state,
       effect.save.ability,
     ).filter((projection) => projection.targetId === targetId),
+    targetFlatBonuses: savingThrowFlatBonusProjections(state).filter(
+      (projection) => projection.targetId === targetId,
+    ),
   };
 }
 
@@ -2871,6 +2888,26 @@ function applyStartTurnSpellDamageFills(
       target,
       damageAmount,
     );
+    const concentrationLifecycleHoles =
+      damageLifecycleConcentrationSavingThrowHoles({
+        state: nextState,
+        target,
+        damageAmount,
+      });
+    const concentrationLifecycleFills = fillsMatchingHoleIds(
+      concentrationSavingThrows,
+      concentrationLifecycleHoles,
+    );
+    const hideousLaughterLifecycleHoles =
+      damageLifecycleHideousLaughterDamageRepeatSaveHoles({
+        state: nextState,
+        target,
+        damageAmount,
+      });
+    const hideousLaughterLifecycleFills = fillsMatchingHoleIds(
+      hideousLaughterDamageRepeatSaves,
+      hideousLaughterLifecycleHoles,
+    );
     const damaged = applySpellTurnStartDamage(
       nextState,
       actorId,
@@ -2879,18 +2916,16 @@ function applyStartTurnSpellDamageFills(
       concentrationHole === null
         ? undefined
         : concentrationSavingThrowFillFor(
-            concentrationSavingThrows,
+            concentrationLifecycleFills,
             concentrationHole,
           ),
+      concentrationLifecycleFills,
       damageDispositionForTarget(
         startTurnDamageDispositionHoles(nextState, actorId, [{ effect, roll }]),
         damageDispositions,
         actorId,
       ),
-      hideousLaughterDamageRepeatSaveFillsForTarget(
-        target,
-        hideousLaughterDamageRepeatSaves,
-      ),
+      hideousLaughterLifecycleFills,
     );
     if (effect.kind !== "spellTurnStartDamageAndSave") {
       return damaged;
@@ -3238,7 +3273,13 @@ export function resolveEndTurnCommand(
     input.state.initiative.round,
   ).map((effect) => ({
     effect,
-    hole: sleepRepeatSavingThrowOutcomeHole(actorId, effect),
+    hole: sleepRepeatSavingThrowOutcomeHole(
+      actorId,
+      effect,
+      actor === undefined
+        ? []
+        : wardingBondSavingThrowFlatBonusProjectionsForTarget(actor),
+    ),
   }));
   const sleepRepeatSaveHoles = sleepRepeatSaveRequests.map(
     (request) => request.hole,
@@ -3250,6 +3291,10 @@ export function resolveEndTurnCommand(
         actorId,
         effect,
         "endTurn",
+        undefined,
+        actor === undefined
+          ? []
+          : wardingBondSavingThrowFlatBonusProjectionsForTarget(actor),
       ),
     }),
   );
@@ -3263,6 +3308,9 @@ export function resolveEndTurnCommand(
         actorId,
         effect,
         input.state,
+        actor === undefined
+          ? []
+          : wardingBondSavingThrowFlatBonusProjectionsForTarget(actor),
       ),
     }));
   const spellConditionEndTurnSaveHoles =
@@ -3282,7 +3330,15 @@ export function resolveEndTurnCommand(
       ? [
           {
             effect,
-            hole: spellTurnStartSavingThrowOutcomeHole(nextActorId, effect),
+            hole: spellTurnStartSavingThrowOutcomeHole(
+              nextActorId,
+              effect,
+              nextActor === undefined
+                ? []
+                : wardingBondSavingThrowFlatBonusProjectionsForTarget(
+                    nextActor,
+                  ),
+            ),
           },
         ]
       : [],
@@ -3481,22 +3537,27 @@ export function resolveEndTurnCommand(
     ]);
   }
   const startTurnHideousLaughterDamageRepeatSaveChecks =
-    startTurnDamageRollRequests.map((request) =>
-      nextActor === undefined
-        ? { tag: "ok" as const, holes: [] }
-        : hideousLaughterDamageRepeatSaveFillCheck({
-            target: nextActor,
-            damageAmount: spellTurnStartDamageAmount(
-              nextActor,
-              request.effect,
-              request.roll,
-            ),
-            fills: hideousLaughterDamageRepeatSaveFillsForTarget(
-              nextActor,
-              savingThrowOutcomeFills,
-            ),
-          }),
-    );
+    startTurnDamageRollRequests.map((request) => {
+      if (nextActor === undefined) {
+        return { tag: "ok" as const, holes: [] };
+      }
+      const damageAmount = spellTurnStartDamageAmount(
+        nextActor,
+        request.effect,
+        request.roll,
+      );
+      const holes = damageLifecycleHideousLaughterDamageRepeatSaveHoles({
+        state: input.state,
+        target: nextActor,
+        damageAmount,
+      });
+      return damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
+        state: input.state,
+        target: nextActor,
+        damageAmount,
+        fills: fillsMatchingHoleIds(savingThrowOutcomeFills, holes),
+      });
+    });
   const invalidStartTurnHideousLaughterDamageRepeatSaveCheck =
     startTurnHideousLaughterDamageRepeatSaveChecks.find(
       (check) => check.tag === "invalid",
@@ -3614,9 +3675,12 @@ export function resolveEndTurnCommand(
     }
   }
   for (const fill of startTurnHideousLaughterDamageRepeatSaves) {
+    const hole = startTurnHideousLaughterDamageRepeatSaveHoles.find(
+      (candidate) => candidate.holeId === fill.holeId,
+    );
     const validation = validateSleepRepeatSavingThrowOutcome(
       fill.value,
-      nextActorId,
+      hole?.hideousLaughterRepeatSave.targetId ?? nextActorId,
     );
     if (validation !== null) {
       return invalidResult(input.state, "invalidFill", validation);
@@ -3654,11 +3718,15 @@ export function resolveEndTurnCommand(
       if (target === undefined) {
         return [];
       }
-      const hole = concentrationSavingThrowHole(
+      return damageLifecycleConcentrationSavingThrowHoles({
+        state: input.state,
         target,
-        spellTurnStartDamageAmount(target, request.effect, request.roll),
-      );
-      return hole === null ? [] : [hole];
+        damageAmount: spellTurnStartDamageAmount(
+          target,
+          request.effect,
+          request.roll,
+        ),
+      });
     },
   );
   const missingConcentrationHoles = startTurnConcentrationHoles.filter(

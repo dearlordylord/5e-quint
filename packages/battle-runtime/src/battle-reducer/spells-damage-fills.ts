@@ -1,4 +1,5 @@
 // Spell hole construction, fill validation, and damage application extracted from spells-holes-fills.ts.
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.passive-saving-throw-roll-mode
 
 import { Match } from "effect";
@@ -57,6 +58,7 @@ import {
   type BattleHoleId,
   type BattleObjectDamageDisposition,
   type BattleObjectDamageOutcome,
+  type BattleSavingThrowFlatBonusProjection,
   type BattleSavingThrowRollModeProjection,
   type BattleSpellAttackRollHole,
   type BattleSpellAbilityChoiceHole,
@@ -85,6 +87,7 @@ import {
   THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
 } from "./domain-constants.ts";
 import { spellAttackSequencePartName } from "./spells-profile-shared.ts";
+import { wardingBondSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
 
 const OBJECT_DAMAGE_IMMUNITIES = [
   "poison",
@@ -810,6 +813,7 @@ export function spellSavingThrowOutcomeHole(
           }
         : undefined,
     ),
+    targetFlatBonuses: savingThrowFlatBonusProjections(state),
   };
 }
 
@@ -1012,6 +1016,14 @@ function conditionSavingThrowRollModeProjections(
           effect.condition === condition,
       )
       .map((effect) => ({ targetId, rollMode: effect.mode })),
+  );
+}
+
+export function savingThrowFlatBonusProjections(
+  state: BattleState,
+): readonly BattleSavingThrowFlatBonusProjection[] {
+  return [...state.combatants].flatMap(([, target]) =>
+    wardingBondSavingThrowFlatBonusProjectionsForTarget(target),
   );
 }
 
@@ -1338,6 +1350,12 @@ type SpellDamageContext = {
   readonly concentrationSavingThrow?:
     | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
     | undefined;
+  readonly wardingBondDamageShareConcentrationSavingThrows?:
+    | readonly Extract<
+        BattleFill,
+        { readonly kind: "concentrationSavingThrow" }
+      >[]
+    | undefined;
   readonly hideousLaughterDamageRepeatSaves?:
     | readonly Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>[]
     | undefined;
@@ -1370,6 +1388,7 @@ export function applySpellDamage(
   }
   const {
     concentrationSavingThrow,
+    wardingBondDamageShareConcentrationSavingThrows,
     hideousLaughterDamageRepeatSaves,
     hideousLaughterDamageRepeatSaveEventKey,
     saveDamageResult = "full",
@@ -1407,6 +1426,9 @@ export function applySpellDamage(
     damageDisposition,
     damageSourceId,
     concentrationSavingThrow,
+    ...(wardingBondDamageShareConcentrationSavingThrows === undefined
+      ? {}
+      : { wardingBondDamageShareConcentrationSavingThrows }),
     ...(hideousLaughterDamageRepeatSaves === undefined
       ? {}
       : { hideousLaughterDamageRepeatSaves }),
@@ -1419,6 +1441,12 @@ export function applySpellDamage(
 type PreparedSlotSpellDamageContext = {
   readonly concentrationSavingThrow?:
     | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
+    | undefined;
+  readonly wardingBondDamageShareConcentrationSavingThrows?:
+    | readonly Extract<
+        BattleFill,
+        { readonly kind: "concentrationSavingThrow" }
+      >[]
     | undefined;
   readonly hideousLaughterDamageRepeatSaves?:
     | readonly Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>[]
@@ -1440,6 +1468,7 @@ export function applyPreparedSlotSpellDamage(
   }
   const {
     concentrationSavingThrow,
+    wardingBondDamageShareConcentrationSavingThrows,
     hideousLaughterDamageRepeatSaves,
     hideousLaughterDamageRepeatSaveEventKey,
     damageDisposition = { kind: "ordinaryDamage" },
@@ -1453,6 +1482,9 @@ export function applyPreparedSlotSpellDamage(
     damageDisposition,
     damageSourceId,
     concentrationSavingThrow,
+    ...(wardingBondDamageShareConcentrationSavingThrows === undefined
+      ? {}
+      : { wardingBondDamageShareConcentrationSavingThrows }),
     ...(hideousLaughterDamageRepeatSaves === undefined
       ? {}
       : { hideousLaughterDamageRepeatSaves }),

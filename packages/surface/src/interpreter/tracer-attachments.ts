@@ -6,6 +6,7 @@ import {
   describeAreaShape,
   describeAttachmentHole,
   describeAttachmentRange,
+  describeCasterTargetBondAttachment,
   describeHeldWeaponAttachment,
   describeObjectFilter,
   describeRange,
@@ -38,6 +39,15 @@ export function traceAttachment(
         category: "attachment",
         atomKind: "target",
         label: `target\n${selectionLabel}\nrange ${describeAttachmentRange(range, a.rangeOrigin)}`,
+      });
+      return id;
+    }
+    case "caster_target_bond": {
+      nodes.push({
+        id,
+        category: "attachment",
+        atomKind: "caster_target_bond",
+        label: describeCasterTargetBondAttachment(a, range),
       });
       return id;
     }

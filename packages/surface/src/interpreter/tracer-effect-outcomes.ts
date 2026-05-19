@@ -434,7 +434,7 @@ export function traceOutcomeEffectAtom(
         id,
         category: "effect",
         atomKind: "share_damage_to_caster",
-        label: `share_damage_to_caster\nrange ${e.rangeFeet} ft`,
+        label: `share_damage_to_caster\n${e.amount}`,
       });
       return id;
     }

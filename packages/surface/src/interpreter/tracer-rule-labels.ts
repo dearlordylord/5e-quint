@@ -189,11 +189,29 @@ export function describeAttachmentHole(
       return `${labelPrefix}\n${describeHeldWeaponAttachment(a.value)}`;
     case "location":
       return `${labelPrefix}\nlocation\n${a.value.description}\nrange ${describeAttachmentRange(range, a.value.rangeOrigin)}`;
+    case "caster_target_bond":
+      return `${labelPrefix}\n${describeCasterTargetBondAttachment(a.value, range)}`;
     default: {
       const _: never = a.value;
       throw new Error(`unhandled attachment hole value: ${String(_)}`);
     }
   }
+}
+
+export function describeCasterTargetBondAttachment(
+  attachment:
+    | Extract<Attachment, { readonly kind: "caster_target_bond" }>
+    | Extract<
+        Extract<Attachment, { readonly kind: "hole" }>["value"],
+        { readonly kind: "caster_target_bond" }
+      >,
+  range: Range,
+): string {
+  return [
+    `caster_target_bond\n${attachment.bondId}`,
+    `bond range: caster-target within ${attachment.range.feet} ft`,
+    describeAttachmentHole(attachment.target, range),
+  ].join("\n");
 }
 
 export function describeHeldWeaponAttachment(
@@ -232,6 +250,7 @@ export function describeObjectFilter(f: ObjectFilter | undefined): string {
 
 export function describeDamageTypeRef(d: DamageTypeRef): string {
   if (typeof d === "string") return d;
+  if (d.kind === "all_damage_types") return "all damage types";
   if (d.kind === "hole") {
     return `${describeDamageTypeRef(d.value)}${d.label !== undefined ? ` [hole: ${d.label}]` : " [hole]"}`;
   }
@@ -711,6 +730,8 @@ export function describeOngoingPredicate(
   p: import("../surface/types.ts").OngoingPredicate,
 ): string {
   switch (p.kind) {
+    case "attached_bond_within_range":
+      return "attached bond within range";
     case "at_hp_threshold":
       switch (p.comparison) {
         case "lte":
@@ -737,8 +758,33 @@ export function describeEarlyEnd(
   triggers: ReadonlyArray<DurationEndTrigger> | undefined,
 ): string {
   if (triggers === undefined || triggers.length === 0) return "";
-  const names = triggers.map((t) => t.kind).join(", ");
+  const names = triggers.map(describeDurationEndTrigger).join(", ");
   return `\nor early on: ${names}`;
+}
+
+function describeDurationEndTrigger(trigger: DurationEndTrigger): string {
+  switch (trigger.kind) {
+    case "target_makes_attack_roll":
+    case "target_deals_damage":
+    case "target_casts_spell":
+    case "target_dons_armor":
+    case "target_damaged_by_caster_or_ally":
+    case "target_takes_damage":
+    case "caster_recasts_spell":
+    case "area_dispersed_by_strong_wind":
+    case "caster_lets_go_of_attached_weapon":
+      return trigger.kind;
+    case "caster_drops_to_0_hp":
+      return "caster drops to 0 HP";
+    case "attached_bond_exceeds_range":
+      return "attached bond exceeds range";
+    case "spell_cast_again_on_connected_creature":
+      return "spell cast again on connected creature";
+    default: {
+      const _: never = trigger;
+      throw new Error(`unhandled duration end trigger: ${String(_)}`);
+    }
+  }
 }
 
 export function describeSpellAccessMode(m: SpellAccessMode): string {

@@ -263,6 +263,39 @@ export function knownWillingSpellTargetFill(
   };
 }
 
+export function wardingBondSpellTargetFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  spellId: string,
+  casterId: CombatantId,
+  targetId: CombatantId,
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  const base = knownWillingSpellTargetFill(
+    hole,
+    spellId,
+    casterId,
+    targetId,
+  );
+  return {
+    ...base,
+    spatialFacts: [
+      ...(base.spatialFacts ?? []),
+      {
+        kind: "wardingBondPairedWornPlatinumRings",
+        casterId,
+        targetId,
+        spellId,
+      },
+      {
+        kind: "wardingBondCreaturesDistance",
+        casterId,
+        targetId,
+        spellId,
+        distanceFeet: movementFeet(60),
+      },
+    ],
+  };
+}
+
 export function teleportDestinationFill(input: {
   readonly hole: Extract<BattleHole, { readonly kind: "teleportDestination" }>;
   readonly destinationId?: string;

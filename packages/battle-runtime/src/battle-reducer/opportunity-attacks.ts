@@ -27,6 +27,8 @@ import { activeEffectArmorClass } from "./creature-state.ts";
 import {
   applyAttackDamageAmount,
   concentrationSavingThrowHole,
+  damageLifecycleConcentrationSavingThrowFillCheck,
+  damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
 } from "./damage-apply.ts";
 import {
   activeMarkedDamageRiders,
@@ -50,7 +52,6 @@ import {
   snapshotBattle,
 } from "./dispatcher.ts";
 import { needsHolesResult, revealHidden } from "./hole-helpers.ts";
-import { hideousLaughterDamageRepeatSaveFillCheck } from "./hideous-laughter-repeat-save.ts";
 import {
   attackHitTriggerKind,
   attackKindForDeflectRedirect,
@@ -66,6 +67,7 @@ import {
   selectedAttackDamageRiders,
   selectedWeaponDamageDiceRollChoice,
 } from "./statblock-attacks.ts";
+import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import type {
   BattleAttackDamageEvent,
   BattlePendingAttackDamageReduction,
@@ -368,6 +370,7 @@ export function resolveOpportunityAttackCommand(
           targetId: subject.targetId,
           damageEvent: reducedDamageEventAfterSpellReduction,
           fills: attackDamagePrefixFills(input.fills),
+          concentrationSavingThrows: fillSet.concentrationSavingThrows,
           deathFailuresAtZeroHp: critical ? 2 : 1,
           damageDisposition: fillSet.damageDisposition,
           attackDamageRiders: [],
@@ -382,35 +385,41 @@ export function resolveOpportunityAttackCommand(
       spellReduction.target,
       reducedFixedDamageAmount,
     );
-    if (concentrationSave !== null) {
-      if (fillSet.concentrationSavingThrow === undefined) {
-        return needsHolesResult(attackRolledState, input.subject, [
-          concentrationSave,
-        ]);
-      }
-      if (
-        fillSet.concentrationSavingThrow.holeId !== concentrationSave.holeId
-      ) {
-        return invalidResult(
-          input.state,
-          "invalidFill",
-          "Concentration Saving Throw fill does not match the damaged target.",
-        );
-      }
-    } else if (fillSet.concentrationSavingThrow !== undefined) {
+    const primaryConcentrationSavingThrow =
+      concentrationSave === null
+        ? undefined
+        : concentrationSavingThrowFillFor(
+            fillSet.concentrationSavingThrows,
+            concentrationSave,
+          );
+    const concentrationSaveCheck =
+      damageLifecycleConcentrationSavingThrowFillCheck({
+        state: spellReducedState,
+        target: spellReduction.target,
+        damageAmount: reducedFixedDamageAmount,
+        fills: fillSet.concentrationSavingThrows,
+      });
+    if (concentrationSaveCheck.tag === "needsHoles") {
+      return needsHolesResult(spellReducedState, input.subject, [
+        ...concentrationSaveCheck.holes,
+      ]);
+    }
+    if (concentrationSaveCheck.tag === "invalid") {
       return invalidResult(
         input.state,
         "invalidFill",
-        "Concentration Saving Throw fill is only valid for a concentrating damaged target.",
+        concentrationSaveCheck.message,
       );
     }
-    const hideousLaughterSaveCheck = hideousLaughterDamageRepeatSaveFillCheck({
-      target: spellReduction.target,
-      damageAmount: reducedFixedDamageAmount,
-      fills: fillSet.hideousLaughterDamageRepeatSaves,
-    });
+    const hideousLaughterSaveCheck =
+      damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
+        state: spellReducedState,
+        target: spellReduction.target,
+        damageAmount: reducedFixedDamageAmount,
+        fills: fillSet.hideousLaughterDamageRepeatSaves,
+      });
     if (hideousLaughterSaveCheck.tag === "needsHoles") {
-      return needsHolesResult(attackRolledState, input.subject, [
+      return needsHolesResult(spellReducedState, input.subject, [
         ...hideousLaughterSaveCheck.holes,
       ]);
     }
@@ -430,8 +439,9 @@ export function resolveOpportunityAttackCommand(
       fillSet.damageDisposition,
       [],
       undefined,
-      fillSet.concentrationSavingThrow,
+      primaryConcentrationSavingThrow,
       fillSet.hideousLaughterDamageRepeatSaves,
+      fillSet.concentrationSavingThrows,
     );
     const reactionWindow = maybeOpenReactionWindow(
       nextState,
@@ -587,6 +597,7 @@ export function resolveOpportunityAttackCommand(
         targetId: subject.targetId,
         damageEvent: reducedDamageEventAfterSpellReduction,
         fills: attackDamagePrefixFills(input.fills),
+        concentrationSavingThrows: fillSet.concentrationSavingThrows,
         deathFailuresAtZeroHp: critical ? 2 : 1,
         damageDisposition: fillSet.damageDisposition,
         attackDamageRiders: selectedDamageRiders,
@@ -604,27 +615,41 @@ export function resolveOpportunityAttackCommand(
     spellReduction.target,
     reducedDamageAmount,
   );
-  if (concentrationSave !== null) {
-    if (fillSet.concentrationSavingThrow === undefined) {
-      return needsHolesResult(attackRolledState, input.subject, [
-        concentrationSave,
-      ]);
-    }
-    if (fillSet.concentrationSavingThrow.holeId !== concentrationSave.holeId) {
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        "Concentration Saving Throw fill does not match the damaged target.",
-      );
-    }
+  const primaryConcentrationSavingThrow =
+    concentrationSave === null
+      ? undefined
+      : concentrationSavingThrowFillFor(
+          fillSet.concentrationSavingThrows,
+          concentrationSave,
+        );
+  const concentrationSaveCheck =
+    damageLifecycleConcentrationSavingThrowFillCheck({
+      state: spellReducedState,
+      target: spellReduction.target,
+      damageAmount: reducedDamageAmount,
+      fills: fillSet.concentrationSavingThrows,
+    });
+  if (concentrationSaveCheck.tag === "needsHoles") {
+    return needsHolesResult(spellReducedState, input.subject, [
+      ...concentrationSaveCheck.holes,
+    ]);
   }
-  const hideousLaughterSaveCheck = hideousLaughterDamageRepeatSaveFillCheck({
-    target: spellReduction.target,
-    damageAmount: reducedDamageAmount,
-    fills: fillSet.hideousLaughterDamageRepeatSaves,
-  });
+  if (concentrationSaveCheck.tag === "invalid") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      concentrationSaveCheck.message,
+    );
+  }
+  const hideousLaughterSaveCheck =
+    damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
+      state: spellReducedState,
+      target: spellReduction.target,
+      damageAmount: reducedDamageAmount,
+      fills: fillSet.hideousLaughterDamageRepeatSaves,
+    });
   if (hideousLaughterSaveCheck.tag === "needsHoles") {
-    return needsHolesResult(attackRolledState, input.subject, [
+    return needsHolesResult(spellReducedState, input.subject, [
       ...hideousLaughterSaveCheck.holes,
     ]);
   }
@@ -644,8 +669,9 @@ export function resolveOpportunityAttackCommand(
     fillSet.damageDisposition,
     selectedDamageRiders,
     selectedDamageDiceChoice ?? undefined,
-    fillSet.concentrationSavingThrow,
+    primaryConcentrationSavingThrow,
     fillSet.hideousLaughterDamageRepeatSaves,
+    fillSet.concentrationSavingThrows,
   );
   const reactionWindow = maybeOpenReactionWindow(
     nextState,

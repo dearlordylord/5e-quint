@@ -1,4 +1,5 @@
 // By-type damage math helpers extracted from battle-reducer.ts.
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // Cluster N (damage_helpers). Mechanical extraction — no behavior change.
 // Consumes only G (creature_state) and W (statblock_attacks).
 
@@ -37,6 +38,7 @@ import {
   activeOngoingFeatureOccurrencesForCombatant,
   ongoingFeatureProfileForSourceKey,
 } from "./creature-state.ts";
+import { combatantHasWardingBondResistance } from "./warding-bond.ts";
 import {
   attackDamageComponents,
   attackDamageModifier,
@@ -518,6 +520,7 @@ function targetHasRuntimeDamageResistance(
         effect.kind === "damageResistance" &&
         effect.damageType === damageType,
     ) ||
+    combatantHasWardingBondResistance(target) ||
     [...activeOngoingFeatureOccurrencesForCombatant(target)].some(
       ([key]) =>
         ongoingFeatureProfileForSourceKey(target, key)?.resistances.includes(

@@ -10,6 +10,7 @@ import {
   ActivationPhaseSchema,
   AudibleEffectSchema,
   ClassFeatureRecordSchema,
+  ComponentsSchema,
   decodeUnitRecordEither,
   decodeUnitRecordSync,
   EffectAtomSchema,
@@ -1254,6 +1255,126 @@ describe("SRD Unit catalog boundary", () => {
         },
       ]);
     }
+  });
+
+  test("decodes Warding Bond as a linked caster-target bond with range-gated benefits and damage sharing", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const wardingBond = result.catalog.requireUnit("warding_bond");
+      expect(wardingBond.kind).toBe("spell");
+      if (wardingBond.kind !== "spell") return;
+      expect(wardingBond.mechanics.family).toBe("ongoing_effect");
+      if (wardingBond.mechanics.family !== "ongoing_effect") return;
+
+      expect(wardingBond.mechanics.level).toBe(2);
+      expect(wardingBond.mechanics.castingTime).toEqual({
+        kind: "action",
+      });
+      expect(wardingBond.mechanics.range).toEqual({ kind: "touch" });
+      expect(wardingBond.mechanics.components.m).toEqual({
+        kind: "paired_worn_items",
+        itemKind: "ring",
+        material: "platinum",
+        minimumValueGpEach: 50,
+        wornBy: ["caster", "target"],
+        requiredFor: "spell_duration",
+      });
+      expect(wardingBond.mechanics.duration).toEqual({
+        kind: "timed",
+        value: { unit: "hour", amount: 1 },
+        earlyEnd: [
+          { kind: "caster_drops_to_0_hp" },
+          { kind: "attached_bond_exceeds_range" },
+          { kind: "spell_cast_again_on_connected_creature" },
+        ],
+      });
+      expect(wardingBond.mechanics.attachment).toEqual({
+        kind: "caster_target_bond",
+        bondId: "warding_bond_mystic_connection",
+        target: {
+          kind: "hole",
+          holeId: "warding_bond_target",
+          label: "willing creature",
+          value: {
+            kind: "target",
+            selection: {
+              mode: "one",
+              targetKinds: ["creature"],
+              disposition: "willing",
+            },
+          },
+        },
+        range: { kind: "within_feet", feet: 60 },
+      });
+      expect(wardingBond.mechanics.operations).toEqual([
+        {
+          trigger: { kind: "passive" },
+          predicate: { kind: "attached_bond_within_range" },
+          effect: {
+            kind: "modify_ac",
+            delta: { kind: "fixed_dice", dice: 1, dieSize: 1, sign: "+" },
+          },
+        },
+        {
+          trigger: { kind: "passive" },
+          predicate: { kind: "attached_bond_within_range" },
+          effect: {
+            kind: "modify_roll_numeric",
+            on: ["saving_throw"],
+            delta: { kind: "fixed_dice", dice: 1, dieSize: 1, sign: "+" },
+          },
+        },
+        {
+          trigger: { kind: "passive" },
+          predicate: { kind: "attached_bond_within_range" },
+          effect: {
+            kind: "grant_resistance",
+            damageType: { kind: "all_damage_types" },
+          },
+        },
+        {
+          trigger: { kind: "on_attached_damaged" },
+          effect: {
+            kind: "share_damage_to_caster",
+            amount: "same_as_attached_damage_taken",
+          },
+        },
+      ]);
+    }
+  });
+
+  test("rejects paired worn material components with duplicated generic material-cost metadata", () => {
+    const decode = Schema.decodeUnknownEither(ComponentsSchema);
+    const pairedWornRings = {
+      kind: "paired_worn_items",
+      itemKind: "ring",
+      material: "platinum",
+      minimumValueGpEach: 50,
+      wornBy: ["caster", "target"],
+      requiredFor: "spell_duration",
+    };
+
+    expect(
+      Either.isRight(
+        decode({
+          v: true,
+          s: true,
+          m: pairedWornRings,
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          v: true,
+          s: true,
+          m: pairedWornRings,
+          materialCostGp: 100,
+        }),
+      ),
+    ).toBe(true);
   });
 
   test("decodes Enthrall as save-gated Perception penalty over any-number creature targets", () => {

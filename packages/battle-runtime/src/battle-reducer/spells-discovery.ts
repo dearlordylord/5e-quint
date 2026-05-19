@@ -925,6 +925,7 @@ export function spellActivationInvocationCastSummary(
         | "attackBurstSaveDamage"
         | "spellAttackDamage"
         | "rollModifier"
+        | "wardingBond"
         | "thaumaturgyBoomingVoice"
         | "creatureTypeProtection"
         | "blurAttackRollDefense"
@@ -1053,6 +1054,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "makeStable" &&
     invocation.procedure !== "persistentArmorEffect" &&
     invocation.procedure !== "rollModifier" &&
+    invocation.procedure !== "wardingBond" &&
     invocation.procedure !== "creatureTypeProtection" &&
     invocation.procedure !== "blurAttackRollDefense" &&
     invocation.procedure !== "conditionRemovalProtection" &&

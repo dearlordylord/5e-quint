@@ -101,7 +101,10 @@ import {
   WEAPON_MASTERY_CLEAVE_TARGET_HOLE_INSTANCE,
 } from "./domain-constants.ts";
 import { combatantProficiencyBonus } from "./movement-speed.ts";
-import { savingThrowRollModeProjections } from "./spells-damage-fills.ts";
+import {
+  savingThrowFlatBonusProjections,
+  savingThrowRollModeProjections,
+} from "./spells-damage-fills.ts";
 import { weaponAttackDamageExpression } from "./statblock-attacks.ts";
 
 const WEAPON_MASTERY_SAP_UNIT_ID = "mastery_sap" satisfies UnitRecord["id"];
@@ -819,6 +822,7 @@ export function weaponMasteryToppleSavingThrowHole(
     },
     targetIds: [targetId],
     targetRollModes: savingThrowRollModeProjections(state, "con"),
+    targetFlatBonuses: savingThrowFlatBonusProjections(state),
   };
 }
 

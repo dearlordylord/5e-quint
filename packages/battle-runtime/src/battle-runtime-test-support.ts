@@ -404,6 +404,7 @@ export function subjectName(
   | "commandApproach"
   | "commandFlee"
   | "disperseFogCloud"
+  | "wardingBondSeparation"
   | "protectionRelevantEffectSave"
   | "creatureFalls" {
   if (subject.tag === "action") {

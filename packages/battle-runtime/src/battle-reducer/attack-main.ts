@@ -43,6 +43,8 @@ import {
   applyAttackDamage,
   applyAttackDamageAmount,
   concentrationSavingThrowHole,
+  damageLifecycleConcentrationSavingThrowFillCheck,
+  damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
 } from "./damage-apply.ts";
 
 import {
@@ -86,12 +88,12 @@ import {
 
 import { attackFillSet } from "./attack-fill-set.ts";
 import {
+  WEAPON_MASTERY_CLEAVE_DECISION_HOLE_ID,
   WEAPON_MASTERY_CLEAVE_DAMAGE_DISPOSITION_HOLE_ID,
   WEAPON_MASTERY_CLEAVE_DAMAGE_DISPOSITION_HOLE_INSTANCE,
 } from "./domain-constants.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
-import { hideousLaughterDamageRepeatSaveFillCheck } from "./hideous-laughter-repeat-save.ts";
 import {
   battleStateAfterSanctuaryEarlyEndForActor,
   sanctuaryTargetingInterdictionCheck,
@@ -667,6 +669,8 @@ export function resolveSelectedAttackProcedure(
         ]);
       }
     }
+    const primaryConcentrationSavingThrows =
+      primaryAttackConcentrationSavingThrows(input.fills);
     const attackDamageReactionWindow = maybeOpenReactionWindow(
       sapRedirectState,
       {
@@ -678,6 +682,7 @@ export function resolveSelectedAttackProcedure(
           targetId: target.combatantId,
           damageEvent: reducedDamageEventAfterSpellReduction,
           fills: attackDamagePrefixFills(input.fills),
+          concentrationSavingThrows: primaryConcentrationSavingThrows,
           deathFailuresAtZeroHp: critical ? 2 : 1,
           damageDisposition: primaryAttackDamageDisposition(fillSet),
           attackDamageRiders: [],
@@ -705,13 +710,21 @@ export function resolveSelectedAttackProcedure(
     );
     const primaryConcentrationSavingThrow =
       concentrationSave === null
-        ? undefined
-        : concentrationSavingThrowFillFor(
-            fillSet.concentrationSavingThrows,
-            concentrationSave,
-          );
-    if (concentrationSave !== null) {
-      if (primaryConcentrationSavingThrow === undefined) {
+      ? undefined
+      : concentrationSavingThrowFillFor(
+          primaryConcentrationSavingThrows,
+          concentrationSave,
+        );
+    const concentrationSaveCheck =
+      damageLifecycleConcentrationSavingThrowFillCheck({
+        state: sapRedirectState,
+        target: spellReduction.target,
+        damageAmount: reducedFixedDamageAmount,
+        fills: primaryConcentrationSavingThrows,
+      });
+    if (concentrationSaveCheck.tag === "needsHoles") {
+      const pendingConcentrationSave = concentrationSaveCheck.holes[0];
+      if (pendingConcentrationSave !== undefined) {
         return needsAttackDamageConcentrationResult({
           state: sapRedirectState,
           subject: input.subject,
@@ -723,28 +736,29 @@ export function resolveSelectedAttackProcedure(
             targetId: target.combatantId,
             damageEvent: reducedDamageEventAfterSpellReduction,
             fills: attackDamagePrefixFills(input.fills),
+            concentrationSavingThrows: primaryConcentrationSavingThrows,
             deathFailuresAtZeroHp: critical ? 2 : 1,
             damageDisposition: primaryAttackDamageDisposition(fillSet),
             attackDamageRiders: [],
           },
-          concentrationSave,
+          concentrationSave: pendingConcentrationSave,
         });
       }
-    } else if (
-      fillSet.concentrationSavingThrow !== undefined &&
-      fillSet.weaponMasteryCleaveDamageRoll === undefined
-    ) {
+    }
+    if (concentrationSaveCheck.tag === "invalid") {
       return invalidResult(
         input.state,
         "invalidFill",
-        "Concentration Saving Throw fill is only valid for a concentrating damaged target.",
+        concentrationSaveCheck.message,
       );
     }
-    const hideousLaughterSaveCheck = hideousLaughterDamageRepeatSaveFillCheck({
-      target: spellReduction.target,
-      damageAmount: reducedFixedDamageAmount,
-      fills: fillSet.hideousLaughterDamageRepeatSaves,
-    });
+    const hideousLaughterSaveCheck =
+      damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
+        state: sapRedirectState,
+        target: spellReduction.target,
+        damageAmount: reducedFixedDamageAmount,
+        fills: fillSet.hideousLaughterDamageRepeatSaves,
+      });
     if (hideousLaughterSaveCheck.tag === "needsHoles") {
       return needsHolesResult(sapRedirectState, input.subject, [
         ...hideousLaughterSaveCheck.holes,
@@ -769,6 +783,7 @@ export function resolveSelectedAttackProcedure(
         undefined,
         primaryConcentrationSavingThrow,
         fillSet.hideousLaughterDamageRepeatSaves,
+        primaryConcentrationSavingThrows,
       ),
       attackerId,
       attack,
@@ -798,7 +813,6 @@ export function resolveSelectedAttackProcedure(
           attack,
           fills: input.fills,
           fillSet,
-          primaryConcentrationSavingThrow,
         }),
       },
       input.suppressedReactionTrigger,
@@ -811,10 +825,7 @@ export function resolveSelectedAttackProcedure(
       subject: input.subject,
       firstTargetId: target.combatantId,
       attack,
-      fills: cleaveFillsAfterPrimaryDamage(
-        input.fills,
-        primaryConcentrationSavingThrow,
-      ),
+      fills: cleaveFillsAfterPrimaryDamage(input.fills),
       suppressedReactionTrigger: input.suppressedReactionTrigger,
     });
   }
@@ -963,6 +974,8 @@ export function resolveSelectedAttackProcedure(
         ]);
       }
     }
+    const primaryConcentrationSavingThrows =
+      primaryAttackConcentrationSavingThrows(input.fills);
     const attackDamageReactionWindow = maybeOpenReactionWindow(
       sapRedirectState,
       {
@@ -974,6 +987,7 @@ export function resolveSelectedAttackProcedure(
           targetId: target.combatantId,
           damageEvent: reducedDamageEventAfterSpellReduction,
           fills: attackDamagePrefixFills(input.fills),
+          concentrationSavingThrows: primaryConcentrationSavingThrows,
           deathFailuresAtZeroHp: critical ? 2 : 1,
           damageDisposition: primaryAttackDamageDisposition(fillSet),
           attackDamageRiders: selectedDamageRiders,
@@ -1004,13 +1018,21 @@ export function resolveSelectedAttackProcedure(
     );
     const primaryConcentrationSavingThrow =
       concentrationSave === null
-        ? undefined
-        : concentrationSavingThrowFillFor(
-            fillSet.concentrationSavingThrows,
-            concentrationSave,
-          );
-    if (concentrationSave !== null) {
-      if (primaryConcentrationSavingThrow === undefined) {
+      ? undefined
+      : concentrationSavingThrowFillFor(
+          primaryConcentrationSavingThrows,
+          concentrationSave,
+        );
+    const concentrationSaveCheck =
+      damageLifecycleConcentrationSavingThrowFillCheck({
+        state: sapRedirectState,
+        target: spellReduction.target,
+        damageAmount: reducedDamageAmount,
+        fills: primaryConcentrationSavingThrows,
+      });
+    if (concentrationSaveCheck.tag === "needsHoles") {
+      const pendingConcentrationSave = concentrationSaveCheck.holes[0];
+      if (pendingConcentrationSave !== undefined) {
         return needsAttackDamageConcentrationResult({
           state: sapRedirectState,
           subject: input.subject,
@@ -1022,6 +1044,7 @@ export function resolveSelectedAttackProcedure(
             targetId: target.combatantId,
             damageEvent: reducedDamageEventAfterSpellReduction,
             fills: attackDamagePrefixFills(input.fills),
+            concentrationSavingThrows: primaryConcentrationSavingThrows,
             deathFailuresAtZeroHp: critical ? 2 : 1,
             damageDisposition: primaryAttackDamageDisposition(fillSet),
             attackDamageRiders: selectedDamageRiders,
@@ -1029,24 +1052,24 @@ export function resolveSelectedAttackProcedure(
               ? {}
               : { weaponDamageDiceRollChoice: selectedDamageDiceChoice }),
           },
-          concentrationSave,
+          concentrationSave: pendingConcentrationSave,
         });
       }
-    } else if (
-      fillSet.concentrationSavingThrow !== undefined &&
-      fillSet.weaponMasteryCleaveDamageRoll === undefined
-    ) {
+    }
+    if (concentrationSaveCheck.tag === "invalid") {
       return invalidResult(
         input.state,
         "invalidFill",
-        "Concentration Saving Throw fill is only valid for a concentrating damaged target.",
+        concentrationSaveCheck.message,
       );
     }
-    const hideousLaughterSaveCheck = hideousLaughterDamageRepeatSaveFillCheck({
-      target: spellReduction.target,
-      damageAmount: reducedDamageAmount,
-      fills: fillSet.hideousLaughterDamageRepeatSaves,
-    });
+    const hideousLaughterSaveCheck =
+      damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
+        state: sapRedirectState,
+        target: spellReduction.target,
+        damageAmount: reducedDamageAmount,
+        fills: fillSet.hideousLaughterDamageRepeatSaves,
+      });
     if (hideousLaughterSaveCheck.tag === "needsHoles") {
       return needsHolesResult(sapRedirectState, input.subject, [
         ...hideousLaughterSaveCheck.holes,
@@ -1071,6 +1094,7 @@ export function resolveSelectedAttackProcedure(
         selectedDamageDiceChoice ?? undefined,
         primaryConcentrationSavingThrow,
         fillSet.hideousLaughterDamageRepeatSaves,
+        primaryConcentrationSavingThrows,
       ),
       attackerId,
       attack,
@@ -1100,7 +1124,6 @@ export function resolveSelectedAttackProcedure(
           attack,
           fills: input.fills,
           fillSet,
-          primaryConcentrationSavingThrow,
         }),
       },
       input.suppressedReactionTrigger,
@@ -1113,10 +1136,7 @@ export function resolveSelectedAttackProcedure(
       subject: input.subject,
       firstTargetId: target.combatantId,
       attack,
-      fills: cleaveFillsAfterPrimaryDamage(
-        input.fills,
-        primaryConcentrationSavingThrow,
-      ),
+      fills: cleaveFillsAfterPrimaryDamage(input.fills),
       suppressedReactionTrigger: input.suppressedReactionTrigger,
     });
   }
@@ -1177,9 +1197,6 @@ function weaponMasteryCleaveAfterPrimaryDamageContinuation(input: {
   readonly attack: SupportedAttackActionOption;
   readonly fills: readonly BattleFill[];
   readonly fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>;
-  readonly primaryConcentrationSavingThrow:
-    | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
-    | undefined;
 }): BattleInterruptedProcedure {
   const decisionHole = weaponMasteryCleaveDecisionHole(
     input.state,
@@ -1194,10 +1211,7 @@ function weaponMasteryCleaveAfterPrimaryDamageContinuation(input: {
         subject: input.subject,
         firstTargetId: input.firstTargetId,
         attack: input.attack,
-        fills: cleaveFillsAfterPrimaryDamage(
-          input.fills,
-          input.primaryConcentrationSavingThrow,
-        ),
+        fills: cleaveFillsAfterPrimaryDamage(input.fills),
       };
 }
 
@@ -1513,29 +1527,20 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     secondTarget,
     damageEvent,
   );
-  const cleaveConcentrationSave = concentrationSavingThrowHole(
-    secondTarget,
-    cleaveDamageAmount,
-  );
-  const cleaveConcentrationSavingThrow =
-    cleaveConcentrationSave === null
-      ? undefined
-      : concentrationSavingThrowFillFor(
-          input.fillSet.concentrationSavingThrows,
-          cleaveConcentrationSave,
-        );
-  const cleaveConcentrationValidation = cleaveConcentrationFillValidation({
-    concentrationSave: cleaveConcentrationSave,
-    concentrationSavingThrow: cleaveConcentrationSavingThrow,
-    concentrationSavingThrows: input.fillSet.concentrationSavingThrows,
-  });
-  if (cleaveConcentrationValidation !== null) {
+  const cleaveConcentrationSaveCheck =
+    damageLifecycleConcentrationSavingThrowFillCheck({
+      state: cleaveAttackRolledState,
+      target: secondTarget,
+      damageAmount: cleaveDamageAmount,
+      fills: input.fillSet.concentrationSavingThrows,
+    });
+  if (cleaveConcentrationSaveCheck.tag === "invalid") {
     return {
       tag: "result",
       result: invalidResult(
         input.state,
         "invalidFill",
-        cleaveConcentrationValidation,
+        cleaveConcentrationSaveCheck.message,
       ),
     };
   }
@@ -1587,6 +1592,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     targetId: secondTargetId,
     damageEvent,
     fills: cleaveDamagePrefixFills,
+    concentrationSavingThrows: input.fillSet.concentrationSavingThrows,
     deathFailuresAtZeroHp: cleaveCritical ? (2 as const) : (1 as const),
     damageDisposition: input.fillSet.weaponMasteryCleaveDamageDisposition,
     attackDamageRiders: [],
@@ -1606,12 +1612,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     tag: "result",
     result: resumeInterruptedProcedure(
       cleaveUsedState,
-      {
-        ...continuation,
-        ...(cleaveConcentrationSavingThrow === undefined
-          ? {}
-          : { concentrationSavingThrow: cleaveConcentrationSavingThrow }),
-      },
+      continuation,
       input.suppressedReactionTrigger ?? "attackDamage",
     ),
   };
@@ -1666,40 +1667,39 @@ function cleaveFillsThroughAttackRoll(
 
 function cleaveFillsAfterPrimaryDamage(
   fills: readonly BattleFill[],
-  primaryConcentrationSavingThrow:
-    | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
-    | undefined,
 ): readonly BattleFill[] {
-  return primaryConcentrationSavingThrow === undefined
+  const primaryConcentrationSavingThrows =
+    primaryAttackConcentrationSavingThrows(fills);
+  return primaryConcentrationSavingThrows.length === 0
     ? fills
-    : fills.filter((fill) => fill !== primaryConcentrationSavingThrow);
+    : fills.filter(
+        (fill) =>
+          fill.kind !== "concentrationSavingThrow" ||
+          !primaryConcentrationSavingThrows.includes(fill),
+      );
 }
 
-function cleaveConcentrationFillValidation(input: {
-  readonly concentrationSave: ReturnType<typeof concentrationSavingThrowHole>;
-  readonly concentrationSavingThrow:
-    | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
-    | undefined;
-  readonly concentrationSavingThrows: readonly Extract<
-    BattleFill,
-    { readonly kind: "concentrationSavingThrow" }
-  >[];
-}): string | null {
-  if (input.concentrationSave === null) {
-    return input.concentrationSavingThrows.length === 0
-      ? null
-      : "Concentration Saving Throw fill is only valid for a concentrating damaged target.";
-  }
-  if (input.concentrationSavingThrow === undefined) {
-    return input.concentrationSavingThrows.length === 0
-      ? null
-      : "Concentration Saving Throw fill does not match the damaged target.";
-  }
-  return input.concentrationSavingThrows.every(
-    (fill) => fill === input.concentrationSavingThrow,
-  )
-    ? null
-    : "Concentration Saving Throw fill does not match the damaged target.";
+function primaryAttackConcentrationSavingThrows(
+  fills: readonly BattleFill[],
+): readonly Extract<
+  BattleFill,
+  { readonly kind: "concentrationSavingThrow" }
+>[] {
+  const cleaveStartIndex = fills.findIndex(
+    (fill) =>
+      fill.kind === "unitFeatureDecision" &&
+      fill.holeId === WEAPON_MASTERY_CLEAVE_DECISION_HOLE_ID,
+  );
+  const primaryFills =
+    cleaveStartIndex === -1 ? fills : fills.slice(0, cleaveStartIndex);
+  return primaryFills.filter(
+    (
+      fill,
+    ): fill is Extract<
+      BattleFill,
+      { readonly kind: "concentrationSavingThrow" }
+    > => fill.kind === "concentrationSavingThrow",
+  );
 }
 
 function cleaveAttackFillIsAbsent(

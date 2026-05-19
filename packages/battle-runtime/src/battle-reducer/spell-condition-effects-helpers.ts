@@ -28,6 +28,7 @@ import type {
 } from "../battle-reducer.ts";
 import { KnockedOutConditionState as KnockedOutConditionStateBrand } from "../battle-reducer.ts";
 import { battleCreatureType } from "./domain-helpers.ts";
+import { wardingBondSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
 
 const HIDEOUS_LAUGHTER_CONDITIONS = [
   "prone",
@@ -228,6 +229,9 @@ export function protectionRelevantEffectSavingThrowOutcomeHole(
     )
       ? [{ targetId, rollMode: "advantage" }]
       : [],
+    targetFlatBonuses: [...state.combatants].flatMap(([, target]) =>
+      wardingBondSavingThrowFlatBonusProjectionsForTarget(target),
+    ),
   };
 }
 

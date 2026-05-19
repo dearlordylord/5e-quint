@@ -662,6 +662,8 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     critical,
     {
       concentrationSavingThrow: concentrationFill,
+      wardingBondDamageShareConcentrationSavingThrows:
+        input.fillSet.concentrationSavingThrows,
       damageDisposition: damageDispositionForTarget(
         damageDispositionHole === null ? [] : [damageDispositionHole],
         relevantDamageDispositionFills,
