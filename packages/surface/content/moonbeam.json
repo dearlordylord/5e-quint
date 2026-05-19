@@ -1,12 +1,12 @@
 {
-  "description": "A silvery beam of pale light shines down in a 5-foot-radius, 40-foot-high Cylinder centered on a point within range. Dim Light fills the Cylinder. When the Cylinder appears, each creature in it makes a Constitution saving throw, taking 2d10 Radiant damage on a failed save or half on success. A creature makes this save again when the spell's area moves into its space and when it enters the Cylinder or ends its turn there (once per turn).",
+  "description": "A silvery beam of pale light shines down in a 5-foot-radius, 40-foot-high Cylinder centered on a point within range. Until the spell ends, Dim Light fills the Cylinder, and you can take a Magic action on later turns to move the Cylinder up to 60 feet. When the Cylinder appears, each creature in it makes a Constitution saving throw. On a failed save, a creature takes 2d10 Radiant damage, and if the creature is shape-shifted (as a result of the Polymorph spell, for example), it reverts to its true form and can't shape-shift until it leaves the Cylinder. On a successful save, a creature takes half as much damage only. A creature also makes this save when the spell's area moves into its space and when it enters the spell's area or ends its turn there. A creature makes this save only once per turn. Using a Higher-Level Spell Slot. The damage increases by 1d10 for each spell slot level above 2.",
   "id": "moonbeam",
   "kind": "spell",
   "mechanics": {
     "attachment": {
-      "holeId": "moonbeam_point",
+      "holeId": "moonbeam_cylinder",
       "kind": "hole",
-      "label": "spell origin point",
+      "label": "Moonbeam cylinder",
       "value": {
         "kind": "area",
         "origin": {
@@ -38,9 +38,9 @@
     "initialPhase": {
       "ability": "con",
       "attachment": {
-        "holeId": "moonbeam_point",
+        "holeId": "moonbeam_cylinder",
         "kind": "hole",
-        "label": "spell origin point",
+        "label": "Moonbeam cylinder",
         "value": {
           "kind": "area",
           "origin": {
@@ -57,36 +57,13 @@
         "kind": "caster_spell_save_dc"
       },
       "kind": "save_gate",
-      "onFail": {
-        "amount": {
-          "axis": "slot",
-          "base": {
-            "dice": 2,
-            "dieSize": 10
-          },
-          "kind": "linear_per_level",
-          "perLevel": {
-            "dice": 1
-          },
-          "startingAtLevel": 2
-        },
-        "damageType": "radiant",
-        "kind": "damage"
+      "usageLimit": {
+        "kind": "once_per_turn",
+        "limitGroup": "moonbeam_save_per_turn"
       },
-      "onSuccess": {
-        "kind": "half_damage"
-      }
-    },
-    "level": 2,
-    "operations": [
-      {
-        "effect": {
-          "ability": "con",
-          "dc": {
-            "kind": "caster_spell_save_dc"
-          },
-          "kind": "save_gate",
-          "onFail": {
+      "onFail": {
+        "effects": [
+          {
             "amount": {
               "axis": "slot",
               "base": {
@@ -102,12 +79,187 @@
             "damageType": "radiant",
             "kind": "damage"
           },
+          {
+            "kind": "revert_shape_shift_to_true_form",
+            "onlyIfTargetIsShapeShifted": true
+          },
+          {
+            "kind": "suppress_shape_shifting_while_in_area",
+            "onlyIfTargetIsShapeShifted": true
+          }
+        ],
+        "kind": "composite"
+      },
+      "onSuccess": {
+        "kind": "half_damage"
+      }
+    },
+    "level": 2,
+    "operations": [
+      {
+        "effect": {
+          "kind": "area_emits_dim_light"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "kind": "reposition_attachment",
+          "maxMoveFeet": 60
+        },
+        "trigger": {
+          "cost": {
+            "action": "magic",
+            "kind": "standard_action"
+          },
+          "kind": "on_caster_spends_action",
+          "laterTurnsOnly": true
+        }
+      },
+      {
+        "effect": {
+          "ability": "con",
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "kind": "save_gate",
+          "onFail": {
+            "effects": [
+              {
+                "amount": {
+                  "axis": "slot",
+                  "base": {
+                    "dice": 2,
+                    "dieSize": 10
+                  },
+                  "kind": "linear_per_level",
+                  "perLevel": {
+                    "dice": 1
+                  },
+                  "startingAtLevel": 2
+                },
+                "damageType": "radiant",
+                "kind": "damage"
+              },
+              {
+                "kind": "revert_shape_shift_to_true_form",
+                "onlyIfTargetIsShapeShifted": true
+              },
+              {
+                "kind": "suppress_shape_shifting_while_in_area",
+                "onlyIfTargetIsShapeShifted": true
+              }
+            ],
+            "kind": "composite"
+          },
           "onSuccess": {
             "kind": "half_damage"
           }
         },
         "trigger": {
-          "kind": "on_attached_turn_start"
+          "kind": "on_creature_ends_turn_in_area"
+        },
+        "usageLimit": {
+          "kind": "once_per_turn",
+          "limitGroup": "moonbeam_save_per_turn"
+        }
+      },
+      {
+        "effect": {
+          "ability": "con",
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "kind": "save_gate",
+          "onFail": {
+            "effects": [
+              {
+                "amount": {
+                  "axis": "slot",
+                  "base": {
+                    "dice": 2,
+                    "dieSize": 10
+                  },
+                  "kind": "linear_per_level",
+                  "perLevel": {
+                    "dice": 1
+                  },
+                  "startingAtLevel": 2
+                },
+                "damageType": "radiant",
+                "kind": "damage"
+              },
+              {
+                "kind": "revert_shape_shift_to_true_form",
+                "onlyIfTargetIsShapeShifted": true
+              },
+              {
+                "kind": "suppress_shape_shifting_while_in_area",
+                "onlyIfTargetIsShapeShifted": true
+              }
+            ],
+            "kind": "composite"
+          },
+          "onSuccess": {
+            "kind": "half_damage"
+          }
+        },
+        "trigger": {
+          "kind": "on_creature_enters_area"
+        },
+        "usageLimit": {
+          "kind": "once_per_turn",
+          "limitGroup": "moonbeam_save_per_turn"
+        }
+      },
+      {
+        "effect": {
+          "ability": "con",
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "kind": "save_gate",
+          "onFail": {
+            "effects": [
+              {
+                "amount": {
+                  "axis": "slot",
+                  "base": {
+                    "dice": 2,
+                    "dieSize": 10
+                  },
+                  "kind": "linear_per_level",
+                  "perLevel": {
+                    "dice": 1
+                  },
+                  "startingAtLevel": 2
+                },
+                "damageType": "radiant",
+                "kind": "damage"
+              },
+              {
+                "kind": "revert_shape_shift_to_true_form",
+                "onlyIfTargetIsShapeShifted": true
+              },
+              {
+                "kind": "suppress_shape_shifting_while_in_area",
+                "onlyIfTargetIsShapeShifted": true
+              }
+            ],
+            "kind": "composite"
+          },
+          "onSuccess": {
+            "kind": "half_damage"
+          }
+        },
+        "trigger": {
+          "kind": "on_area_moves_into_creature_space"
+        },
+        "usageLimit": {
+          "kind": "once_per_turn",
+          "limitGroup": "moonbeam_save_per_turn"
         }
       }
     ],

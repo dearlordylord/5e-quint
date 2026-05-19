@@ -5,6 +5,7 @@ import dragonsBreathInput from "../../content/dragons_breath.json";
 import locateAnimalsOrPlantsInput from "../../content/locate_animals_or_plants.json";
 import locateObjectInput from "../../content/locate_object.json";
 import magicMouthInput from "../../content/magic_mouth.json";
+import moonbeamInput from "../../content/moonbeam.json";
 import ropeTrickInput from "../../content/rope_trick.json";
 import wardingBondInput from "../../content/warding_bond.json";
 import { decodeUnitRecordSync } from "../surface/schema.ts";
@@ -162,6 +163,27 @@ describe("Surface trace interpreter", () => {
         }),
       ]),
     );
+  });
+
+  test("renders Moonbeam shared per-turn fence as a single use_count node with four limits edges", () => {
+    const trace = traceUnit(decodeUnitRecordSync(moonbeamInput));
+
+    // RAW: "A creature makes this save only once per turn" spans all four triggers:
+    // initial appearance (initialPhase) + 3 recurring operations.
+    // The tracer must collapse these into a single use_count node (shared by limitGroup).
+    const fenceNodes = trace.nodes.filter((n) => n.atomKind === "use_count");
+    expect(fenceNodes).toHaveLength(1);
+    expect(fenceNodes[0]).toMatchObject({
+      id: "moonbeam_save_per_turn",
+      atomKind: "use_count",
+      label: "use_count\nonce per turn",
+    });
+
+    // Four "limits" edges must fan into the single fence node.
+    const limitsEdges = trace.edges.filter(
+      (e) => e.to === "moonbeam_save_per_turn" && e.relation === "limits",
+    );
+    expect(limitsEdges).toHaveLength(4);
   });
 
   test("renders Rope Trick as an extradimensional refuge", () => {

@@ -312,6 +312,7 @@ type Skill = Schema.Schema.Type<typeof SkillSchema>;
 type Condition = Schema.Schema.Type<typeof ConditionSchema>;
 type CreatureType = Schema.Schema.Type<typeof CreatureTypeSchema>;
 type Ability = Schema.Schema.Type<typeof AbilitySchema>;
+type UsageLimit = Schema.Schema.Type<typeof UsageLimitSchema>;
 type AbilityFilter = Schema.Schema.Type<typeof AbilityFilterSchema>;
 type SavingThrowSourceFilter = Schema.Schema.Type<
   typeof SavingThrowSourceFilterSchema
@@ -1159,6 +1160,7 @@ type EffectAtom =
     }
   | { readonly kind: "reposition_attachment"; readonly maxMoveFeet?: number }
   | { readonly kind: "area_is_difficult_terrain" }
+  | { readonly kind: "area_emits_dim_light" }
   | { readonly kind: "area_is_lightly_obscured" }
   | { readonly kind: "area_is_heavily_obscured" }
   | { readonly kind: "area_has_strong_wind" }
@@ -1203,6 +1205,14 @@ type EffectAtom =
       }>;
     }
   | { readonly kind: "allow_reaction_stand_up" }
+  | {
+      readonly kind: "revert_shape_shift_to_true_form";
+      readonly onlyIfTargetIsShapeShifted: true;
+    }
+  | {
+      readonly kind: "suppress_shape_shifting_while_in_area";
+      readonly onlyIfTargetIsShapeShifted: true;
+    }
   | { readonly kind: "none" };
 
 type SaveSuccessOutcome = { readonly kind: "half_damage" } | EffectAtom;
@@ -1252,6 +1262,7 @@ type ActivationPhase =
       readonly repeatSaves?: ReadonlyNonEmptyArray<RepeatSaveSpec>;
       readonly autoSuccessIfCasterSlotGte?: "triggering_spell_level";
       readonly saveAppliesIf?: "unwilling_target" | "unwilling_creature_target";
+      readonly usageLimit?: UsageLimit;
     }
   | {
       readonly kind: "ability_check_gate";
@@ -1897,6 +1908,7 @@ export const OngoingTriggerSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("on_caster_spends_action"),
     cost: OngoingActionCostSchema,
+    laterTurnsOnly: optionalExact(Schema.Literal(true)),
   }),
   Schema.Struct({
     kind: Schema.Literal("on_attached_spends_action"),
@@ -2920,6 +2932,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         maxMoveFeet: optionalExact(Schema.Number),
       }),
       Schema.Struct({ kind: Schema.Literal("area_is_difficult_terrain") }),
+      Schema.Struct({ kind: Schema.Literal("area_emits_dim_light") }),
       Schema.Struct({ kind: Schema.Literal("area_is_lightly_obscured") }),
       Schema.Struct({ kind: Schema.Literal("area_is_heavily_obscured") }),
       Schema.Struct({ kind: Schema.Literal("area_has_strong_wind") }),
@@ -2977,6 +2990,14 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         ),
       }),
       Schema.Struct({ kind: Schema.Literal("allow_reaction_stand_up") }),
+      Schema.Struct({
+        kind: Schema.Literal("revert_shape_shift_to_true_form"),
+        onlyIfTargetIsShapeShifted: Schema.Literal(true),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("suppress_shape_shifting_while_in_area"),
+        onlyIfTargetIsShapeShifted: Schema.Literal(true),
+      }),
       Schema.Struct({ kind: Schema.Literal("none") }),
     ),
   );
@@ -3066,6 +3087,7 @@ export const ActivationPhaseSchema: Schema.suspend<
       saveAppliesIf: optionalExact(
         Schema.Literal("unwilling_target", "unwilling_creature_target"),
       ),
+      usageLimit: optionalExact(UsageLimitSchema),
     }),
     Schema.Struct({
       kind: Schema.Literal("ability_check_gate"),

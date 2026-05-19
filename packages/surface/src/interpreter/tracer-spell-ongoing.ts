@@ -441,11 +441,12 @@ export function traceOngoingTrigger(
     case "on_caster_spends_action": {
       const winId = ids("win");
       const atomKind = ongoingActionWindowAtomKind(trigger.cost);
+      const laterSuffix = trigger.laterTurnsOnly === true ? ", later turns only" : "";
       nodes.push({
         id: winId,
         category: "window",
         atomKind,
-        label: `${atomKind}\n(caster spends ${describeOngoingActionCost(trigger.cost)})`,
+        label: `${atomKind}\n(caster spends ${describeOngoingActionCost(trigger.cost)}${laterSuffix})`,
       });
       edges.push({ from: procId, to: winId, relation: "opens_window" });
       return { hostId: winId, hostRelation: "grants" };

@@ -196,6 +196,7 @@ export function traceEffectAtomScaling(
     case "suppress_arcane_lock":
     case "reposition_attachment":
     case "area_is_difficult_terrain":
+    case "area_emits_dim_light":
     case "area_is_lightly_obscured":
     case "area_is_heavily_obscured":
     case "area_has_strong_wind":
@@ -211,6 +212,8 @@ export function traceEffectAtomScaling(
     case "suppress_magic_items":
     case "suppress_ongoing_magic_effects":
     case "allow_reaction_stand_up":
+    case "revert_shape_shift_to_true_form":
+    case "suppress_shape_shifting_while_in_area":
       return;
     case "ordered_barrier_layers":
       for (const layer of e.layers) {
@@ -313,13 +316,22 @@ export function traceUsageLimit(
   if (limit === undefined) {
     return null;
   }
-  const fenceId = ids("fence");
-  nodes.push({
-    id: fenceId,
-    category: "resource",
-    atomKind: "use_count",
-    label: `use_count\n${describeUsageLimit(limit)}`,
-  });
+  const fenceId = limit.limitGroup ?? ids("fence");
+  const expectedLabel = `use_count\n${describeUsageLimit(limit)}`;
+  const existingNode = nodes.find((n) => n.id === fenceId);
+  if (existingNode === undefined) {
+    nodes.push({
+      id: fenceId,
+      category: "resource",
+      atomKind: "use_count",
+      label: expectedLabel,
+    });
+  } else if (existingNode.label !== expectedLabel) {
+    throw new Error(
+      `Usage limit group "${limit.limitGroup}" has inconsistent kinds: ` +
+        `existing "${existingNode.label}", new "${expectedLabel}"`,
+    );
+  }
   edges.push({ from: hostId, to: fenceId, relation });
   return fenceId;
 }
