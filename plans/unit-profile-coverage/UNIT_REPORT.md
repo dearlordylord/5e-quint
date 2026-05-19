@@ -8,16 +8,16 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Metric | Value |
 | --- | ---: |
-| Installed collection inventory count | 201 Units |
+| Installed collection inventory count | 202 Units |
 
 ## Coverage Metrics
 
 | Metric | Covered | Percent |
 | --- | ---: | ---: |
-| Authored Surface Unit catalog admission | 200/458 | 43.7% |
-| Authored Surface executable catalog admission | 168/386 | 43.5% |
-| Installed Unit profile classification coverage | 201/201 | 100% |
-| Supported executable Unit coverage | 124/169 | 73.4% |
+| Authored Surface Unit catalog admission | 201/459 | 43.8% |
+| Authored Surface executable catalog admission | 169/387 | 43.7% |
+| Installed Unit profile classification coverage | 202/202 | 100% |
+| Supported executable Unit coverage | 124/170 | 72.9% |
 | QNT profile modeling coverage | 69/69 | 100% |
 | QNT proof coverage | 69/69 | 100% |
 | Runtime mapping coverage | 69/69 | 100% |
@@ -1259,6 +1259,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `detect_evil_and_good` | unsupported-profile | Detection/occlusion search semantics and Hallow discovery are not promoted as battle Unit profiles. |
 | `detect_magic` | unsupported-profile | Detection/concentration search semantics are not promoted as a battle Unit profile. |
 | `detect_poison_and_disease` | unsupported-profile | Detection/occlusion search semantics and poison/disease identification are not promoted as battle Unit profiles. |
+| `magic_mouth` | unsupported-profile | Magic Mouth is authored and installed as an SRD Surface Spell Definition with 1-minute or Ritual casting, consumed 10+ GP jade dust, an object anchor the caster can see that is not worn or carried by another creature, a caster-spoken message capped at 25 words and 10 minutes, a caster-defined visual-or-audible trigger within 30 feet of the object, caster-voice playback from a magical mouth, and the cast-time choice to end after delivery or repeat. Task 5 claims no promoted battle-runtime profile because durable object attachment, arbitrary visual/audible trigger adjudication, message playback, mouth placement, sound volume presentation, and repeat-or-end scheduling are runtime-detached object/presentation facts outside promoted battle Unit profiles. |
 | `minor_illusion` | unsupported-profile | Sound/image illusion creation, physical-interaction reveal, faint rendering after Study, and recast expiry are illusion/exploration state outside promoted runtime owners. |
 | `charm_person` | profile-subset-supported | supported subset: Humanoid creature-type target filter; Wisdom save-gated battle-visible Charmed condition application and cleanup; hostile-target Wisdom save Advantage; 1-hour spell-owned condition duration; spell ends if caster or one of the caster's allies deals damage to the target; slot-scaled target count; deferred: Friendly disposition, the Charmed condition's Social Advantage, social interaction adjudication, and target knowledge when the spell ends remain runtime-detached social/knowledge state (SRDINV41) |
 | `armor_chain_mail` | unsupported-profile | Equipment AC data is authored but not represented as an executable Unit profile row. |
@@ -1316,7 +1317,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 | Collection | Future owner | Disposition | Count | Units |
 | --- | --- | --- | ---: | --- |
-| srd-5.2.1 | unassigned | unsupported-profile | 72 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_dragonborn`, `species_dwarf`, `species_elf`, `species_goliath`, `species_orc`, `species_tiefling`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `druid_druidic`, `rogue_thieves_cant`, `feat_ability_score_improvement`, `orc_darkvision`, `elf_darkvision`, `species_dragonborn_breath_weapon`, `species_dragonborn_damage_resistance`, `species_dragonborn_darkvision`, `dwarf_darkvision`, `dwarf_dwarven_resilience`, `species_goliath_powerful_build`, `species_tiefling_darkvision`, `find_traps`, `knock`, `locate_animals_or_plants`, `locate_object`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `minor_illusion`, `alarm`, `arcane_lock`, `barbarian_ability_score_improvement_l4`, `barbarian_primal_champion`, `bard_ability_score_improvement_l4`, `bard_bonus_proficiencies`, `bard_epic_boon`, `bard_words_of_creation`, `cleric_ability_score_improvement_l4`, `cleric_epic_boon`, `comprehend_languages`, `druid_ability_score_improvement_l4`, `druid_epic_boon`, `druid_natures_ward`, `fighter_epic_boon`, `gentle_repose`, `identify`, `monk_ability_score_improvement_l4`, `monk_body_and_mind`, `monk_epic_boon`, `paladin_epic_boon`, `ranger_ability_score_improvement_l4`, `ranger_feral_senses`, `ranger_tireless`, `rogue_ability_score_improvement_l4`, `silent_image`, `sorcerer_ability_score_improvement_l4`, `speak_with_animals`, `warlock_contact_patron`, `warlock_fiend_spells`, `wizard_ability_score_improvement_l4` |
+| srd-5.2.1 | unassigned | unsupported-profile | 73 | `class_barbarian`, `class_bard`, `class_cleric`, `class_druid`, `class_fighter`, `class_monk`, `class_paladin`, `class_ranger`, `class_rogue`, `class_sorcerer`, `class_warlock`, `class_wizard`, `background_soldier`, `species_dragonborn`, `species_dwarf`, `species_elf`, `species_goliath`, `species_orc`, `species_tiefling`, `subclass_fighter_champion`, `subclass_wizard_evoker`, `druid_druidic`, `rogue_thieves_cant`, `feat_ability_score_improvement`, `orc_darkvision`, `elf_darkvision`, `species_dragonborn_breath_weapon`, `species_dragonborn_damage_resistance`, `species_dragonborn_darkvision`, `dwarf_darkvision`, `dwarf_dwarven_resilience`, `species_goliath_powerful_build`, `species_tiefling_darkvision`, `find_traps`, `knock`, `locate_animals_or_plants`, `locate_object`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `magic_mouth`, `minor_illusion`, `alarm`, `arcane_lock`, `barbarian_ability_score_improvement_l4`, `barbarian_primal_champion`, `bard_ability_score_improvement_l4`, `bard_bonus_proficiencies`, `bard_epic_boon`, `bard_words_of_creation`, `cleric_ability_score_improvement_l4`, `cleric_epic_boon`, `comprehend_languages`, `druid_ability_score_improvement_l4`, `druid_epic_boon`, `druid_natures_ward`, `fighter_epic_boon`, `gentle_repose`, `identify`, `monk_ability_score_improvement_l4`, `monk_body_and_mind`, `monk_epic_boon`, `paladin_epic_boon`, `ranger_ability_score_improvement_l4`, `ranger_feral_senses`, `ranger_tireless`, `rogue_ability_score_improvement_l4`, `silent_image`, `sorcerer_ability_score_improvement_l4`, `speak_with_animals`, `warlock_contact_patron`, `warlock_fiend_spells`, `wizard_ability_score_improvement_l4` |
 | srd-5.2.1 | unassigned | profile-subset-supported | 12 | `fighter_weapon_mastery`, `barbarian_weapon_mastery`, `bard_expertise`, `druid_wild_companion`, `ranger_favored_enemy`, `ranger_fighting_style`, `paladin_fighting_style`, `fireball`, `find_familiar`, `pass_without_trace`, `thaumaturgy`, `charm_person` |
 | srd-5.2.1 | no promoted runtime lane | non-runtime-authored-data | 11 | `armor_chain_mail`, `equipment_shield`, `weapon_club`, `weapon_dagger`, `weapon_greataxe`, `weapon_longsword`, `weapon_spear`, `weapon_flail`, `weapon_shortbow`, `weapon_shortsword`, `weapon_quarterstaff` |
 | srd-5.2.1 | battle-runtime generic dispel/suppression spell-effect lifecycle plus character inventory/equipment component legality plus runtime-detached object presentation owner | profile-subset-supported | 1 | `continual_flame` |

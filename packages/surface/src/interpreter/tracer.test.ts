@@ -4,6 +4,7 @@ import classFighterInput from "../../content/class_fighter.json";
 import dragonsBreathInput from "../../content/dragons_breath.json";
 import locateAnimalsOrPlantsInput from "../../content/locate_animals_or_plants.json";
 import locateObjectInput from "../../content/locate_object.json";
+import magicMouthInput from "../../content/magic_mouth.json";
 import { decodeUnitRecordSync } from "../surface/schema.ts";
 import { traceUnit } from "./tracer.ts";
 
@@ -90,6 +91,29 @@ describe("Surface trace interpreter", () => {
             "direction_to_location_and_movement",
             "blocked_by: any_thickness_of_lead_direct_path",
           ].join("\n"),
+        }),
+      ]),
+    );
+  });
+
+  test("renders Magic Mouth as object-anchored spoken-message release", () => {
+    const trace = traceUnit(decodeUnitRecordSync(magicMouthInput));
+
+    expect(trace.nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          atomKind: "object",
+          label: expect.stringContaining(
+            "not worn or carried by another creature",
+          ),
+        }),
+        expect.objectContaining({
+          atomKind: "post_action_window",
+          label: expect.stringContaining("visual/audible condition"),
+        }),
+        expect.objectContaining({
+          atomKind: "release",
+          label: expect.stringContaining("spoken message"),
         }),
       ]),
     );

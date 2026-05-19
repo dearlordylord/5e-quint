@@ -3099,6 +3099,13 @@ export const AnchorTargetSchema = Schema.Union(
     description: Schema.Literal("door_or_window"),
   }),
   Schema.Struct({
+    kind: Schema.Literal("object"),
+    visibility: Schema.Literal("caster_can_see"),
+    wornOrCarried: Schema.Literal(
+      "not_worn_or_carried_by_another_creature",
+    ),
+  }),
+  Schema.Struct({
     kind: Schema.Literal("area"),
     shape: Schema.Struct({
       kind: Schema.Literal("cube"),
@@ -3110,6 +3117,10 @@ export const AnchorTargetSchema = Schema.Union(
 export const AnchoredEventSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("physical_contact") }),
   Schema.Struct({ kind: Schema.Literal("enters_area") }),
+  Schema.Struct({
+    kind: Schema.Literal("caster_defined_visual_or_audible_condition"),
+    maxDistanceFeet: Schema.Literal(30),
+  }),
 );
 
 export const AnchoredFilterSchema = Schema.Struct({
@@ -3128,6 +3139,15 @@ export const AnchoredSignalSchema = Schema.Union(
     kind: Schema.Literal("mental"),
     rangeFeet: Schema.Number,
     awakensIfAsleep: Schema.Boolean,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("spoken_message"),
+    voice: Schema.Literal("caster_voice"),
+    volume: Schema.Literal("same_as_spoken"),
+    maxWords: Schema.Literal(25),
+    maxDeliveryMinutes: Schema.Literal(10),
+    mouthPlacement: Schema.Literal("object_mouth_if_present"),
+    repetition: Schema.Literal("caster_choice_once_or_repeating"),
   }),
 );
 

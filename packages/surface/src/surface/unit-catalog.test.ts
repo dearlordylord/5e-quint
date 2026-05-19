@@ -114,6 +114,7 @@ const requiredFirstVerticalUnitIds = [
   "detect_poison_and_disease",
   "mage_armor",
   "magic_missile",
+  "magic_mouth",
   "mass_cure_wounds",
   "healing_word",
   "prayer_of_healing",
@@ -1505,6 +1506,60 @@ describe("SRD Unit catalog boundary", () => {
     ]);
     expect(locate.description).toContain(
       "you know the direction of its movement",
+    );
+  });
+
+  test("decodes Magic Mouth as an object-anchored spoken-message trigger", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const magicMouth = result.catalog.requireUnit("magic_mouth");
+
+    expect(magicMouth.kind).toBe("spell");
+    if (magicMouth.kind !== "spell") return;
+    expect(magicMouth.mechanics.family).toBe("anchored_trigger");
+    if (magicMouth.mechanics.family !== "anchored_trigger") return;
+
+    expect(magicMouth.mechanics).toMatchObject({
+      level: 2,
+      school: "illusion",
+      castingTime: { kind: "minutes", amount: 1, ritual: true },
+      range: { kind: "point", feet: 30 },
+      components: {
+        v: true,
+        s: true,
+        m: "jade dust worth 10+ GP, which the spell consumes",
+        materialCostGp: 10,
+        materialConsumed: true,
+      },
+      duration: { kind: "permanent", endsOn: ["dispel"] },
+    });
+    expect(magicMouth.mechanics.anchor).toEqual({
+      kind: "object",
+      visibility: "caster_can_see",
+      wornOrCarried: "not_worn_or_carried_by_another_creature",
+    });
+    expect(magicMouth.mechanics.events).toEqual([
+      {
+        kind: "caster_defined_visual_or_audible_condition",
+        maxDistanceFeet: 30,
+      },
+    ]);
+    expect(magicMouth.mechanics.filters).toEqual([]);
+    expect(magicMouth.mechanics.signals).toEqual([
+      {
+        kind: "spoken_message",
+        voice: "caster_voice",
+        volume: "same_as_spoken",
+        maxWords: 25,
+        maxDeliveryMinutes: 10,
+        mouthPlacement: "object_mouth_if_present",
+        repetition: "caster_choice_once_or_repeating",
+      },
+    ]);
+    expect(magicMouth.description).toContain(
+      "visual or audible conditions within 30 feet",
     );
   });
 

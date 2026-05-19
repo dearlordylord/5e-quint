@@ -17,6 +17,34 @@ import type { SpellCtx } from "./tracer-spell-context.ts";
 
 import { tracePhase } from "./tracer-activation.ts";
 
+type ObjectAnchor = Extract<AnchorTarget, { kind: "object" }>;
+type SpokenMessageSignal = Extract<AnchoredSignal, { kind: "spoken_message" }>;
+
+const objectAnchorVisibilityLabels = {
+  caster_can_see: "caster can see",
+} as const satisfies Record<ObjectAnchor["visibility"], string>;
+
+const objectAnchorCarryStateLabels = {
+  not_worn_or_carried_by_another_creature:
+    "not worn or carried by another creature",
+} as const satisfies Record<ObjectAnchor["wornOrCarried"], string>;
+
+const spokenMessageVoiceLabels = {
+  caster_voice: "caster voice",
+} as const satisfies Record<SpokenMessageSignal["voice"], string>;
+
+const spokenMessageVolumeLabels = {
+  same_as_spoken: "same spoken volume",
+} as const satisfies Record<SpokenMessageSignal["volume"], string>;
+
+const spokenMessageMouthPlacementLabels = {
+  object_mouth_if_present: "object mouth if present",
+} as const satisfies Record<SpokenMessageSignal["mouthPlacement"], string>;
+
+const spokenMessageRepetitionLabels = {
+  caster_choice_once_or_repeating: "caster chooses one delivery or repeating",
+} as const satisfies Record<SpokenMessageSignal["repetition"], string>;
+
 export function traceTriggeredReaction(
   m: TriggeredReactionMechanics,
   ctx: SpellCtx,
@@ -115,11 +143,11 @@ export function traceTriggeredReaction(
 }
 
 // v4 Subgraph hunt §4.2 — anchored_trigger payload family. Pressure
-// case: Alarm. Graph shape:
-//   spell_root → store → anchor (location/area) + trigger_condition
+// cases: Alarm and Magic Mouth. Graph shape:
+//   spell_root → store → anchor target + trigger_condition
 //   trigger_condition → release (when matching event + filters fire)
-//   release → signal (audible/mental)
-//   duration: timed → persist → expire (wards the anchor until then)
+//   release → signal
+//   duration records the spell-owned persistence/expiry shape.
 export function traceAnchoredTrigger(
   m: AnchoredTriggerMechanics,
   ctx: SpellCtx,
@@ -127,7 +155,7 @@ export function traceAnchoredTrigger(
   edges: TraceEdge[],
   ids: IdGen,
 ): void {
-  // Anchor node — the `location` or `area` the spell is planted on.
+  // Anchor node — the target the spell is planted on.
   const anchorId = traceAnchorTarget(m.anchor, ctx.range, nodes, ids);
   edges.push({ from: ctx.procId, to: anchorId, relation: "attaches_to" });
 
@@ -159,7 +187,7 @@ export function traceAnchoredTrigger(
 
   // Events — each event kind becomes a `post_action_window` node that
   // the anchor `opens_window` on. We use post_action_window as the
-  // closest v4 window atom for "after a creature acts on the anchor".
+  // closest v4 window atom for later trigger observation around the anchor.
   for (const e of m.events) {
     const eId = ids("evt");
     nodes.push({
@@ -189,6 +217,19 @@ export function traceAnchorTarget(
         label: `location\n${a.description}\nrange ${describeRange(range)}`,
       });
       return id;
+    case "object":
+      nodes.push({
+        id,
+        category: "attachment",
+        atomKind: "object",
+        label: [
+          "object",
+          objectAnchorVisibilityLabels[a.visibility],
+          objectAnchorCarryStateLabels[a.wornOrCarried],
+          `range ${describeRange(range)}`,
+        ].join("\n"),
+      });
+      return id;
     case "area":
       nodes.push({
         id,
@@ -210,6 +251,8 @@ export function describeAnchoredEvent(e: AnchoredEvent): string {
       return "physical contact (touch)";
     case "enters_area":
       return "creature enters area";
+    case "caster_defined_visual_or_audible_condition":
+      return `caster-defined visual/audible condition\nwithin ${e.maxDistanceFeet} ft of anchor`;
     default: {
       const _: never = e;
       throw new Error(`unhandled anchored event: ${String(_)}`);
@@ -236,6 +279,17 @@ export function describeAnchoredSignal(s: AnchoredSignal): string {
       return `mental signal\nrange ${s.rangeFeet} ft${
         s.awakensIfAsleep ? "\nawakens if asleep" : ""
       }`;
+    case "spoken_message":
+      return [
+        "spoken message",
+        [
+          spokenMessageVoiceLabels[s.voice],
+          spokenMessageVolumeLabels[s.volume],
+        ].join(", "),
+        `${s.maxWords} words or fewer over ${s.maxDeliveryMinutes} min or less`,
+        spokenMessageMouthPlacementLabels[s.mouthPlacement],
+        spokenMessageRepetitionLabels[s.repetition],
+      ].join("\n");
     default: {
       const _: never = s;
       throw new Error(`unhandled anchored signal: ${String(_)}`);

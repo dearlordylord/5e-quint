@@ -1,0 +1,60 @@
+{
+  "description": "You implant a spoken message within an object in range. Choose an object that you can see and that isn't being worn or carried by another creature. The message must be 25 words or fewer and can be delivered over as long as 10 minutes. You determine the trigger, which must be based on visual or audible conditions within 30 feet of the object. When the trigger occurs, a magical mouth appears on the object and recites the message in your voice and at the same volume. If the object has a mouth or mouthlike feature, the magical mouth appears there. You choose when you cast the spell whether it ends after delivering the message or remains and repeats whenever the trigger occurs.",
+  "id": "magic_mouth",
+  "kind": "spell",
+  "mechanics": {
+    "anchor": {
+      "kind": "object",
+      "visibility": "caster_can_see",
+      "wornOrCarried": "not_worn_or_carried_by_another_creature"
+    },
+    "castingTime": {
+      "amount": 1,
+      "kind": "minutes",
+      "ritual": true
+    },
+    "components": {
+      "m": "jade dust worth 10+ GP, which the spell consumes",
+      "materialConsumed": true,
+      "materialCostGp": 10,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "endsOn": [
+        "dispel"
+      ],
+      "kind": "permanent"
+    },
+    "events": [
+      {
+        "kind": "caster_defined_visual_or_audible_condition",
+        "maxDistanceFeet": 30
+      }
+    ],
+    "family": "anchored_trigger",
+    "filters": [],
+    "level": 2,
+    "range": {
+      "feet": 30,
+      "kind": "point"
+    },
+    "school": "illusion",
+    "signals": [
+      {
+        "kind": "spoken_message",
+        "maxDeliveryMinutes": 10,
+        "maxWords": 25,
+        "mouthPlacement": "object_mouth_if_present",
+        "repetition": "caster_choice_once_or_repeating",
+        "voice": "caster_voice",
+        "volume": "same_as_spoken"
+      }
+    ]
+  },
+  "name": "Magic Mouth",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-M-P#Magic Mouth"
+  }
+}

@@ -1810,6 +1810,47 @@
       "unitId": "locate_object"
     },
     {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Durable object attachment, arbitrary visual/audible trigger adjudication, message playback, mouth placement, sound volume presentation, and repeat-or-end scheduling are object/presentation facts outside promoted battle runtime.",
+      "sourceRecordPath": "packages/surface/content/magic_mouth.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Magic Mouth",
+          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_magic_mouth",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 205,
+            "lineStart": 205,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Magic Mouth",
+          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_magic_mouth",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 219,
+            "lineStart": 219,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
+      "unitId": "magic_mouth"
+    },
+    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -2894,7 +2935,7 @@
       ]
     },
     {
-      "count": 18,
+      "count": 19,
       "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
@@ -2911,6 +2952,7 @@
         "knock",
         "locate_animals_or_plants",
         "locate_object",
+        "magic_mouth",
         "minor_illusion",
         "pass_without_trace",
         "silent_image",
@@ -2968,12 +3010,12 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 479,
-      "percent": "86.2%",
+      "numerator": 481,
+      "percent": "86.5%",
       "rowsByStatus": {
         "accepted": 332,
-        "accepted-no-battle-effect": 147,
-        "battle-runtime-required": 68,
+        "accepted-no-battle-effect": 149,
+        "battle-runtime-required": 66,
         "owner-evidence-required": 3,
         "partial-battle-runtime": 6
       }
@@ -2994,13 +3036,13 @@
       "percent": "29.7%"
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 158,
+      "denominator": 159,
       "numerator": 101,
-      "percent": "63.9%"
+      "percent": "63.5%"
     },
     "strictTargetClosure": {
-      "denominator": 158,
-      "numerator": 149,
+      "denominator": 159,
+      "numerator": 150,
       "percent": "94.3%"
     }
   },
@@ -3597,36 +3639,6 @@
           }
         ],
         "unitId": "mage_hand"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "spell Unit pressure",
-            "concept": "Bard spell list Magic Mouth",
-            "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_magic_mouth",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 205,
-              "lineStart": 205,
-              "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Wizard spell list Magic Mouth",
-            "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_magic_mouth",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 219,
-              "lineStart": 219,
-              "path": ".references/srd-5.2.1/Classes/Wizard.md"
-            }
-          }
-        ],
-        "unitId": "magic_mouth"
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/mending.md",
@@ -7820,18 +7832,18 @@
       "missing": 9,
       "profile-subset-supported": 12,
       "supported-profile": 101,
-      "unsupported-profile": 36
+      "unsupported-profile": 37
     },
     "groupsByStatus": {
       "blocked-follow-up-split": 21,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
-      "closed-runtime-detached-table-adjudication": 18,
+      "closed-runtime-detached-table-adjudication": 19,
       "open-runtime-behavior": 9,
       "supported-profile": 101
     },
-    "nonSupportedFrontier": 57,
-    "strictDenominator": 158
+    "nonSupportedFrontier": 58,
+    "strictDenominator": 159
   }
 }

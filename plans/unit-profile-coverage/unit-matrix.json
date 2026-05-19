@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 386,
-      "numerator": 168,
-      "percent": "43.5%"
+      "denominator": 387,
+      "numerator": 169,
+      "percent": "43.7%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 458,
-      "numerator": 200,
-      "percent": "43.7%"
+      "denominator": 459,
+      "numerator": 201,
+      "percent": "43.8%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 201
+      "value": 202
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 124,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 201,
-      "numerator": 201,
+      "denominator": 202,
+      "numerator": 202,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "83.9%"
     },
     "supportedProfileCoverage": {
-      "denominator": 169,
+      "denominator": 170,
       "numerator": 124,
-      "percent": "73.4%"
+      "percent": "72.9%"
     }
   },
   "metricSemantics": [
@@ -17659,6 +17659,29 @@
       ],
       "sourceRecordPath": "packages/surface/content/magic_missile.json",
       "unitId": "magic_missile"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached object/presentation owner",
+          "reason": "Durable object attachment, arbitrary visual/audible trigger adjudication, message playback, mouth placement, sound volume presentation, and repeat-or-end scheduling are object/presentation facts outside promoted battle runtime."
+        },
+        "reason": "Magic Mouth is authored and installed as an SRD Surface Spell Definition with 1-minute or Ritual casting, consumed 10+ GP jade dust, an object anchor the caster can see that is not worn or carried by another creature, a caster-spoken message capped at 25 words and 10 minutes, a caster-defined visual-or-audible trigger within 30 feet of the object, caster-voice playback from a magical mouth, and the cast-time choice to end after delivery or repeat. Task 5 claims no promoted battle-runtime profile because durable object attachment, arbitrary visual/audible trigger adjudication, message playback, mouth placement, sound volume presentation, and repeat-or-end scheduling are runtime-detached object/presentation facts outside promoted battle Unit profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/magic_mouth.json",
+      "unitId": "magic_mouth"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

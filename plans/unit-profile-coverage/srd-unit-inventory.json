@@ -180,12 +180,12 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 479,
-      "percent": "86.2%",
+      "numerator": 481,
+      "percent": "86.5%",
       "rowsByStatus": {
         "accepted": 332,
-        "accepted-no-battle-effect": 147,
-        "battle-runtime-required": 68,
+        "accepted-no-battle-effect": 149,
+        "battle-runtime-required": 66,
         "partial-battle-runtime": 6,
         "owner-evidence-required": 3
       }
@@ -203,15 +203,15 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 343,
       "non-runtime": 24,
-      "catalog-only/dead-for-now": 118,
-      "missing-authored-record": 36,
+      "catalog-only/dead-for-now": 120,
+      "missing-authored-record": 34,
       "catalog-installed-owner-evidence-required": 22,
       "catalog-authored-executable-follow-up": 13
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 183,
-      "catalog-only/dead-for-now": 118,
-      "missing-authored-record": 36,
+      "catalog-only/dead-for-now": 120,
+      "missing-authored-record": 34,
       "catalog-installed-owner-evidence-required": 17,
       "catalog-authored-executable-follow-up": 13
     },
@@ -6673,19 +6673,39 @@
       "detail": "Magic Mouth (Illusion; R, M)",
       "candidateUnitId": "magic_mouth",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "magic_mouth",
+        "sourceRecordPath": "packages/surface/content/magic_mouth.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "magic_mouth"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached object/presentation owner",
+        "reason": "Durable object attachment, arbitrary visual/audible trigger adjudication, message playback, mouth placement, sound volume presentation, and repeat-or-end scheduling are object/presentation facts outside promoted battle runtime."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit magic_mouth is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached object/presentation owner",
+          "evidence": "Durable object attachment, arbitrary visual/audible trigger adjudication, message playback, mouth placement, sound volume presentation, and repeat-or-end scheduling are object/presentation facts outside promoted battle runtime.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Durable object attachment, arbitrary visual/audible trigger adjudication, message playback, mouth placement, sound volume presentation, and repeat-or-end scheduling are object/presentation facts outside promoted battle runtime.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_mirror_image",
@@ -26081,19 +26101,39 @@
       "detail": "Magic Mouth (Illusion; R, M)",
       "candidateUnitId": "magic_mouth",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "magic_mouth",
+        "sourceRecordPath": "packages/surface/content/magic_mouth.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "magic_mouth"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached object/presentation owner",
+        "reason": "Durable object attachment, arbitrary visual/audible trigger adjudication, message playback, mouth placement, sound volume presentation, and repeat-or-end scheduling are object/presentation facts outside promoted battle runtime."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit magic_mouth is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached object/presentation owner",
+          "evidence": "Durable object attachment, arbitrary visual/audible trigger adjudication, message playback, mouth placement, sound volume presentation, and repeat-or-end scheduling are object/presentation facts outside promoted battle runtime.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Durable object attachment, arbitrary visual/audible trigger adjudication, message playback, mouth placement, sound volume presentation, and repeat-or-end scheduling are object/presentation facts outside promoted battle runtime.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_magic_weapon",
