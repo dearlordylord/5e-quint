@@ -213,6 +213,9 @@ export function describeObjectFilter(f: ObjectFilter | undefined): string {
   if (f.material !== undefined) parts.push(f.material);
   if (f.manufactured === true) parts.push("manufactured");
   if (f.maxSize !== undefined) parts.push(`${f.maxSize}_or_smaller`);
+  if (f.accessPreventionMeans !== undefined) {
+    parts.push(`${f.accessPreventionMeans}_access_prevention`);
+  }
   switch (f.heldOrWorn) {
     case "required":
       parts.push("held_or_worn");

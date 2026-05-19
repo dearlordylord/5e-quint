@@ -188,6 +188,8 @@ export function traceEffectAtomScaling(
     case "bury_in_rubble":
     case "bond_objects":
     case "lock_object":
+    case "release_object_access":
+    case "suppress_arcane_lock":
     case "reposition_attachment":
     case "area_is_difficult_terrain":
     case "area_is_lightly_obscured":

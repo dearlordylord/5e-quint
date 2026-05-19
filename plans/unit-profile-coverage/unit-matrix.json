@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 382,
-      "numerator": 164,
-      "percent": "42.9%"
+      "denominator": 383,
+      "numerator": 165,
+      "percent": "43.1%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 454,
-      "numerator": 196,
-      "percent": "43.2%"
+      "denominator": 455,
+      "numerator": 197,
+      "percent": "43.3%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 197
+      "value": 198
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 124,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 197,
-      "numerator": 197,
+      "denominator": 198,
+      "numerator": 198,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "83.9%"
     },
     "supportedProfileCoverage": {
-      "denominator": 165,
+      "denominator": 166,
       "numerator": 124,
-      "percent": "75.2%"
+      "percent": "74.7%"
     }
   },
   "metricSemantics": [
@@ -15407,6 +15407,29 @@
       ],
       "sourceRecordPath": "packages/surface/content/jump.json",
       "unitId": "jump"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached object/table owner",
+          "reason": "Object access-prevention state, Arcane Lock suppression on a target object, open/close adjudication, and audible sound propagation are table/object facts outside promoted battle runtime."
+        },
+        "reason": "Knock is authored and installed as an SRD Surface Spell Definition with Magic Action Spell Slot casting, a visible object target within 60 feet, one mundane access-prevention release, 10-minute Arcane Lock suppression that allows opening and closing the target, and a loud knock audible up to 300 feet from the target. Task 1 claims no promoted battle-runtime profile because object lock state, stuck or barred object state, Arcane Lock object attachment and suppression, object open/close state, and sound propagation are runtime-detached table/object facts outside promoted battle Unit profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/knock.json",
+      "unitId": "knock"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

@@ -1495,6 +1495,59 @@
       "unitId": "invisibility"
     },
     {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Object access-prevention state, Arcane Lock suppression on a target object, open/close adjudication, and audible sound propagation are table/object facts outside promoted battle runtime.",
+      "sourceRecordPath": "packages/surface/content/knock.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Knock",
+          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_knock",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 201,
+            "lineStart": 201,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Sorcerer spell list Knock",
+          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_knock",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 284,
+            "lineStart": 284,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Knock",
+          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_knock",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 216,
+            "lineStart": 216,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
+      "unitId": "knock"
+    },
+    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -2657,7 +2710,7 @@
       ]
     },
     {
-      "count": 15,
+      "count": 16,
       "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
@@ -2671,6 +2724,7 @@
         "find_traps",
         "gentle_repose",
         "identify",
+        "knock",
         "minor_illusion",
         "pass_without_trace",
         "silent_image",
@@ -2728,12 +2782,12 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 467,
-      "percent": "84%",
+      "numerator": 470,
+      "percent": "84.5%",
       "rowsByStatus": {
         "accepted": 332,
-        "accepted-no-battle-effect": 135,
-        "battle-runtime-required": 80,
+        "accepted-no-battle-effect": 138,
+        "battle-runtime-required": 77,
         "owner-evidence-required": 3,
         "partial-battle-runtime": 6
       }
@@ -2754,13 +2808,13 @@
       "percent": "29.7%"
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 154,
+      "denominator": 155,
       "numerator": 101,
-      "percent": "65.6%"
+      "percent": "65.2%"
     },
     "strictTargetClosure": {
-      "denominator": 154,
-      "numerator": 145,
+      "denominator": 155,
+      "numerator": 146,
       "percent": "94.2%"
     }
   },
@@ -3302,48 +3356,6 @@
           }
         ],
         "unitId": "illusory_script"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "spell Unit pressure",
-            "concept": "Bard spell list Knock",
-            "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_knock",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 201,
-              "lineStart": 201,
-              "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Sorcerer spell list Knock",
-            "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_knock",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 284,
-              "lineStart": 284,
-              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Wizard spell list Knock",
-            "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_knock",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 216,
-              "lineStart": 216,
-              "path": ".references/srd-5.2.1/Classes/Wizard.md"
-            }
-          }
-        ],
-        "unitId": "knock"
       },
       {
         "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
@@ -7772,18 +7784,18 @@
       "missing": 9,
       "profile-subset-supported": 12,
       "supported-profile": 101,
-      "unsupported-profile": 32
+      "unsupported-profile": 33
     },
     "groupsByStatus": {
       "blocked-follow-up-split": 20,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
-      "closed-runtime-detached-table-adjudication": 15,
+      "closed-runtime-detached-table-adjudication": 16,
       "open-runtime-behavior": 9,
       "supported-profile": 101
     },
-    "nonSupportedFrontier": 53,
-    "strictDenominator": 154
+    "nonSupportedFrontier": 54,
+    "strictDenominator": 155
   }
 }

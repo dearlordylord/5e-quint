@@ -139,6 +139,7 @@ const requiredFirstVerticalUnitIds = [
   "expeditious_retreat",
   "feather_fall",
   "jump",
+  "knock",
   "hellish_rebuke",
   "armor_chain_mail",
   "equipment_shield",
@@ -1349,6 +1350,93 @@ describe("SRD Unit catalog boundary", () => {
         "reveals that a trap is present but not its location",
       );
     }
+  });
+
+  test("decodes Knock as object access release plus Arcane Lock suppression", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const knock = result.catalog.requireUnit("knock");
+
+    expect(knock.kind).toBe("spell");
+    if (knock.kind !== "spell") return;
+    expect(knock.mechanics.family).toBe("activation");
+    if (knock.mechanics.family !== "activation") return;
+
+    expect(knock.mechanics).toMatchObject({
+      level: 2,
+      school: "transmutation",
+      castingTime: { kind: "action" },
+      range: { kind: "point", feet: 60 },
+      components: { v: true, s: false, m: false },
+      duration: { kind: "instantaneous" },
+    });
+
+    expect(knock.mechanics.phases).toEqual([
+      {
+        kind: "direct",
+        attachment: {
+          kind: "hole",
+          holeId: "knock_target_object",
+          label: "target object",
+          value: {
+            kind: "object",
+            count: 1,
+            filter: { accessPreventionMeans: "mundane_or_magical" },
+          },
+        },
+        effects: [
+          { kind: "release_object_access", mundaneLockLimit: 1 },
+          {
+            kind: "suppress_arcane_lock",
+            duration: { unit: "minute", amount: 10 },
+            allowsOpenClose: true,
+          },
+          {
+            kind: "audible",
+            sound: "loud knock",
+            audibleRadiusFeet: 300,
+          },
+        ],
+      },
+    ]);
+    expect(knock.description).toContain(
+      "a loud knock, audible up to 300 feet away",
+    );
+  });
+
+  test("rejects non-RAW Knock Arcane Lock suppression variants", () => {
+    const decode = Schema.decodeUnknownEither(EffectAtomSchema);
+
+    expect(
+      Either.isLeft(
+        decode({
+          kind: "suppress_arcane_lock",
+          duration: { unit: "minute", amount: 9 },
+          allowsOpenClose: true,
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          kind: "suppress_arcane_lock",
+          duration: { unit: "hour", amount: 10 },
+          allowsOpenClose: true,
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          kind: "suppress_object_access_spell",
+          spellId: "arcane_lock",
+          duration: { unit: "minute", amount: 10 },
+          allowsOpenClose: true,
+        }),
+      ),
+    ).toBe(true);
   });
 
   test("decodes Enlarge/Reduce as a creature-branch size and Strength-mode spell", () => {

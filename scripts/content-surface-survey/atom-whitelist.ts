@@ -258,6 +258,8 @@ export const STAGE_3_EXTENSIONS = [
   "natural_weapons", // §C4e Alter Self — replace default Unarmed Strike profile.
   "water_breathing", // §C4e Alter Self — breathe underwater while the mode persists.
   "container_storage", // Passive magic-item/container storage profile: capacity, fixed carried weight, shared air, extradimensional interior.
+  "release_object_access", // Knock: release object access prevention with the SRD mundane-lock count bound.
+  "suppress_arcane_lock", // Knock: temporarily suppress Arcane Lock on the target object.
   // Random roll-driven branch selection and traced table-result nodes
   // for percentile/d20 outcome tables authored as activation phases.
   "random_table",

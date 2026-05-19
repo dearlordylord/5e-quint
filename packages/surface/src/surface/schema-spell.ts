@@ -1087,6 +1087,12 @@ type EffectAtom =
     }
   | { readonly kind: "bond_objects" }
   | { readonly kind: "lock_object"; readonly password?: string }
+  | { readonly kind: "release_object_access"; readonly mundaneLockLimit: 1 }
+  | {
+      readonly kind: "suppress_arcane_lock";
+      readonly duration: { readonly unit: "minute"; readonly amount: 10 };
+      readonly allowsOpenClose: true;
+    }
   | { readonly kind: "reposition_attachment"; readonly maxMoveFeet?: number }
   | { readonly kind: "area_is_difficult_terrain" }
   | { readonly kind: "area_is_lightly_obscured" }
@@ -1568,11 +1574,16 @@ export const SizeSchema = Schema.Literal(
 
 export const ObjectMaterialSchema = Schema.Literal("metal", "flammable");
 
+export const ObjectAccessPreventionMeansSchema = Schema.Literal(
+  "mundane_or_magical",
+);
+
 export const ObjectFilterSchema = Schema.Struct({
   material: optionalExact(ObjectMaterialSchema),
   heldOrWorn: optionalExact(Schema.Literal("required", "forbidden")),
   manufactured: optionalExact(Schema.Boolean),
   maxSize: optionalExact(SizeSchema),
+  accessPreventionMeans: optionalExact(ObjectAccessPreventionMeansSchema),
 });
 
 export const AreaAttachmentBaseSchema = Schema.Struct({
@@ -2703,6 +2714,18 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       Schema.Struct({
         kind: Schema.Literal("lock_object"),
         password: optionalExact(Schema.String),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("release_object_access"),
+        mundaneLockLimit: Schema.Literal(1),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("suppress_arcane_lock"),
+        duration: Schema.Struct({
+          unit: Schema.Literal("minute"),
+          amount: Schema.Literal(10),
+        }),
+        allowsOpenClose: Schema.Literal(true),
       }),
       Schema.Struct({
         kind: Schema.Literal("reposition_attachment"),
