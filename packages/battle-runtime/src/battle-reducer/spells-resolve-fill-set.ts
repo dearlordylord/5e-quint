@@ -450,7 +450,8 @@ export function spellFillSet(
     if (fill.kind === "spellAreaChoice") {
       if (
         invocation.procedure !== "fogCloudObscurement" &&
-        invocation.procedure !== "flamingSphere"
+        invocation.procedure !== "flamingSphere" &&
+        invocation.procedure !== "moonbeam"
       ) {
         return {
           tag: "invalid",

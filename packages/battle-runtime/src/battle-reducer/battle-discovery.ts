@@ -106,6 +106,8 @@ import {
   flamingSphereRamMovementHole,
   flamingSphereRepositionMovementHole,
   flamingSphereSavingThrowOutcomeHole,
+  moonbeamSavingThrowOutcomeHole,
+  moonbeamRepositionMovementHole,
   canonicalHeldObjectIdsForActor,
   commandDropHeldObjectFactsHole,
   commandPendingEffectsForActor,
@@ -114,6 +116,7 @@ import {
   standFromProneCostFeet,
   type GreaseGroundHazardEffect,
   type FlamingSphereEffect,
+  type MoonbeamEffect,
 } from "./turn-end-movement.ts";
 
 import { supportedUnitFeatureActs } from "./unit-features.ts";
@@ -242,6 +245,7 @@ export function discoverBattleActs(
   if (state.currentTurnResources.commandHalt !== null) {
     acts.push(...greaseGroundHazardEndTurnActs(state, actorId));
     acts.push(...flamingSphereEndTurnSaveActs(state, actorId));
+    acts.push(...moonbeamEndTurnSaveActs(state, actorId));
     acts.push(...fogCloudStrongWindDispersalActs(state, actorId));
     acts.push(...wardingBondSeparationActs(state, actorId));
     acts.push(endTurnAct(actorId));
@@ -287,6 +291,7 @@ export function discoverBattleActs(
     acts.push(...movementActs(state, actorId));
     acts.push(...greaseGroundHazardEndTurnActs(state, actorId));
     acts.push(...flamingSphereEndTurnSaveActs(state, actorId));
+    acts.push(...moonbeamEndTurnSaveActs(state, actorId));
     acts.push({
       subject: { tag: "runtimeCommand", actorId, command: "endTurn" },
       label: "End Turn",
@@ -520,6 +525,7 @@ export function discoverBattleActs(
   }
   acts.push(...flamingSphereRepositionActs(state, actorId));
   acts.push(...flamingSphereRamActs(state, actorId));
+  acts.push(...moonbeamRepositionActs(state, actorId));
   acts.push(...movementActs(state, actorId));
   acts.push(...greaseGroundHazardEntrySaveActs(state, actorId));
   acts.push(...protectionRelevantEffectSaveActs(state, actorId));
@@ -533,6 +539,7 @@ export function discoverBattleActs(
   }
   acts.push(...greaseGroundHazardEndTurnActs(state, actorId));
   acts.push(...flamingSphereEndTurnSaveActs(state, actorId));
+  acts.push(...moonbeamEndTurnSaveActs(state, actorId));
   acts.push(...fogCloudStrongWindDispersalActs(state, actorId));
   acts.push(...wardingBondSeparationActs(state, actorId));
   acts.push(endTurnAct(actorId));
@@ -821,6 +828,71 @@ function flamingSphereRamAct(
       ),
     ],
   };
+}
+
+function activeMoonbeamEffects(
+  state: BattleState,
+): readonly MoonbeamEffect[] {
+  return [...state.combatants.values()].flatMap((combatant) =>
+    combatant.activeEffects.filter(
+      (effect): effect is MoonbeamEffect => effect.kind === "moonbeam",
+    ),
+  );
+}
+
+function moonbeamEndTurnSaveActs(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly AvailableBattleAct[] {
+  return activeMoonbeamEffects(state).map((effect) => ({
+    subject: {
+      tag: "runtimeCommand" as const,
+      actorId,
+      command: "moonbeamSave" as const,
+      sourceCombatantId: effect.sourceCombatantId,
+      sourceSpellId: spellId(effect.sourceSpellId),
+      areaId: effect.areaId,
+      trigger: "endsTurnInArea" as const,
+    },
+    label: `End Turn in Moonbeam`,
+    summary:
+      "Resolve the table-supplied Moonbeam end-turn CON Saving Throw and radiant damage.",
+    initialHoles: [
+      moonbeamSavingThrowOutcomeHole(state, actorId, effect, "endsTurnInArea"),
+    ],
+  }));
+}
+
+function moonbeamRepositionActs(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly AvailableBattleAct[] {
+  if (
+    !canSpendAction(state.currentTurnResources, "magic") ||
+    !combatantCanTakeActions(state.combatants.get(actorId))
+  ) {
+    return [];
+  }
+  return activeMoonbeamEffects(state).flatMap((effect) =>
+    effect.sourceCombatantId === actorId
+      ? [
+          {
+            subject: {
+              tag: "runtimeCommand" as const,
+              actorId,
+              command: "moonbeamReposition" as const,
+              sourceCombatantId: effect.sourceCombatantId,
+              sourceSpellId: spellId(effect.sourceSpellId),
+              areaId: effect.areaId,
+            },
+            label: "Move Moonbeam",
+            summary:
+              "Spend a Magic Action using table-supplied Moonbeam movement that does not enter a creature's space.",
+            initialHoles: [moonbeamRepositionMovementHole(effect)],
+          },
+        ]
+      : [],
+  );
 }
 
 function protectionRelevantEffectSaveActs(

@@ -255,6 +255,8 @@ import {
   resolveFlamingSphereRepositionCommand,
   resolveFlamingSphereRamCommand,
   resolveFlamingSphereSaveCommand,
+  resolveMoonbeamRepositionCommand,
+  resolveMoonbeamSaveCommand,
   resolveGreaseGroundHazardSaveCommand,
   resolveEscapeGrapple,
   resolveEscapeSpellRestraint,
@@ -907,6 +909,22 @@ export function resolveBattleSubjectInternal(
         suppressedReactionTrigger: options.suppressedReactionTrigger,
         pendingAttackDamageReductions: options.pendingAttackDamageReductions,
       });
+    }
+    if (
+      subject.tag === "runtimeCommand" &&
+      subject.command === "moonbeamSave"
+    ) {
+      return resolveMoonbeamSaveCommand({
+        ...input,
+        subject,
+        suppressedReactionTrigger: options.suppressedReactionTrigger,
+      });
+    }
+    if (
+      subject.tag === "runtimeCommand" &&
+      subject.command === "moonbeamReposition"
+    ) {
+      return resolveMoonbeamRepositionCommand({ ...input, subject });
     }
     if (
       subject.tag === "runtimeCommand" &&

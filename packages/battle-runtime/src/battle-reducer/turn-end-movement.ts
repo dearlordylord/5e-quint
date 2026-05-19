@@ -2,11 +2,17 @@
 // extracted from ../battle-reducer.ts. Mechanical move; no behavior change
 // intended.
 
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram spell.invocation-moonbeam-movable-zone
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
-import { resetTurnActionEconomy } from "@dnd/shared-algebras/action-economy-algebra";
+import { Either } from "effect";
+
+import {
+  canSpendAction,
+  resetTurnActionEconomy,
+  spendAction,
+} from "@dnd/shared-algebras/action-economy-algebra";
 
 import {
   rolledDiceTotal,
@@ -130,6 +136,8 @@ import {
   applyCommandGrovelProneToTarget,
   applyGreaseProneToTarget,
   expireBattleLightEmitters,
+  markMoonbeamSavedThisTurn,
+  resetAllMoonbeamSavedThisTurn,
   tickDurationBattleLightEmitters,
 } from "./spells-active-effects.ts";
 
@@ -159,6 +167,10 @@ import type {
   BattleFlamingSphereRepositionMovementHole,
   BattleFlamingSphereSavingThrowOutcomeHole,
   BattleFlamingSphereTrigger,
+  BattleMoonbeamDamageRollHole,
+  BattleMoonbeamRepositionMovementHole,
+  BattleMoonbeamSaveTrigger,
+  BattleMoonbeamSavingThrowOutcomeHole,
   BattleGreaseGroundDifficultTerrainMovementFact,
   BattleGrappleLink,
   BattleGreaseGroundHazardSavingThrowOutcomeHole,
@@ -318,8 +330,11 @@ export function resolveEndTurn(
     combatantsAfterStartOngoingFeatures,
     nextActorId,
   );
-  const combatantsAfterStartTurnEffects = applyStartOfTurnActiveEffects(
+  const combatantsAfterMoonbeamReset = resetAllMoonbeamSavedThisTurn(
     combatantsAfterStartEffects,
+  );
+  const combatantsAfterStartTurnEffects = applyStartOfTurnActiveEffects(
+    combatantsAfterMoonbeamReset,
     nextActorId,
   );
   const combatantsAfterSpellTurnStartDamage = applyStartTurnSpellDamageFills(
@@ -867,6 +882,10 @@ export type GreaseGroundHazardEffect = Extract<
 export type FlamingSphereEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "flamingSphere" }
+>;
+export type MoonbeamEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "moonbeam" }
 >;
 export type CommandPendingEffect = Extract<
   BattleActiveEffect,
@@ -1960,14 +1979,14 @@ function savingThrowOutcomeFillForHole(
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[],
-  hole: BattleFlamingSphereSavingThrowOutcomeHole,
+  hole: { readonly holeId: BattleHoleId },
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
   return fills.find((fill) => fill.holeId === hole.holeId);
 }
 
 function rolledDiceFillForHole(
   fills: readonly Extract<BattleFill, { readonly kind: "rolledDice" }>[],
-  hole: BattleFlamingSphereDamageRollHole,
+  hole: { readonly holeId: BattleHoleId },
 ): Extract<BattleFill, { readonly kind: "rolledDice" }> | undefined {
   return fills.find((fill) => fill.holeId === hole.holeId);
 }
@@ -2592,6 +2611,494 @@ export function resolveFlamingSphereRamCommand(
       ...damaged.currentTurnResources,
       currentHasBonusAction: false,
     },
+  };
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function moonbeamEffectFor(
+  state: BattleState,
+  subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "moonbeamSave" | "moonbeamReposition";
+    }
+  >,
+): MoonbeamEffect | undefined {
+  const source = state.combatants.get(subject.sourceCombatantId);
+  return source?.activeEffects.find(
+    (effect): effect is MoonbeamEffect =>
+      effect.kind === "moonbeam" &&
+      effect.sourceSpellId === subject.sourceSpellId &&
+      effect.sourceCombatantId === subject.sourceCombatantId &&
+      effect.areaId === subject.areaId,
+  );
+}
+
+export function moonbeamSavingThrowOutcomeHole(
+  state: BattleState,
+  targetId: CombatantId,
+  effect: MoonbeamEffect,
+  trigger: BattleMoonbeamSaveTrigger,
+): BattleMoonbeamSavingThrowOutcomeHole {
+  const key = `battle:moonbeam-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}:${trigger}`;
+  return {
+    kind: "savingThrowOutcome",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${effect.sourceSpellId} ${trigger} CON save`,
+    moonbeam: {
+      targetId,
+      sourceSpellId: effect.sourceSpellId,
+      sourceCombatantId: effect.sourceCombatantId,
+      areaId: effect.areaId,
+      trigger,
+      save: effect.save,
+    },
+    ability: effect.save.ability,
+    dc: effect.save.dc,
+    areaChoices: [],
+    targetRollModes: savingThrowRollModeProjections(
+      state,
+      effect.save.ability,
+    ).filter((projection) => projection.targetId === targetId),
+  };
+}
+
+function moonbeamDamageRollHole(
+  targetId: CombatantId,
+  effect: MoonbeamEffect,
+  trigger: BattleMoonbeamSaveTrigger,
+): BattleMoonbeamDamageRollHole {
+  const key = `battle:moonbeam-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}:${trigger}`;
+  return {
+    kind: "rolledDice",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${effect.sourceSpellId} ${trigger} damage`,
+    moonbeam: {
+      targetId,
+      sourceSpellId: effect.sourceSpellId,
+      sourceCombatantId: effect.sourceCombatantId,
+      areaId: effect.areaId,
+      trigger,
+      damage: effect.damage,
+    },
+    critical: false,
+  };
+}
+
+export function moonbeamRepositionMovementHole(
+  effect: MoonbeamEffect,
+): BattleMoonbeamRepositionMovementHole {
+  const key = `battle:moonbeam-reposition-movement:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}`;
+  return {
+    kind: "moonbeamRepositionMovement",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${effect.sourceSpellId} reposition movement`,
+    moonbeam: {
+      sourceSpellId: effect.sourceSpellId,
+      sourceCombatantId: effect.sourceCombatantId,
+      areaId: effect.areaId,
+      maxMoveFeet: effect.repositionMaxMoveFeet,
+    },
+    requiresTableSpatialFact: true,
+  };
+}
+
+function validateMoonbeamSavingThrowOutcome(
+  value: BattleSavingThrowOutcomeValue,
+  targetId: CombatantId,
+): string | null {
+  if ("area" in value) {
+    return "Moonbeam saving throw outcome must not include area facts.";
+  }
+  return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
+    ? null
+    : "Moonbeam saving throw outcome must match the triggering target.";
+}
+
+function validateMoonbeamDamageRoll(
+  fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+  hole: BattleMoonbeamDamageRollHole,
+): string | null {
+  if (fill.holeId !== hole.holeId) {
+    return "Moonbeam damage must use the selected moonbeam damage hole.";
+  }
+  const validation = validateRolledDiceForDiceExpr(fill.value, hole.moonbeam.damage.expr);
+  return validation === null ? null : validation.reason;
+}
+
+function validateMoonbeamRepositionMovement(
+  fill: Extract<BattleFill, { readonly kind: "moonbeamRepositionMovement" }>,
+  hole: BattleMoonbeamRepositionMovementHole,
+): string | null {
+  if (fill.holeId !== hole.holeId) {
+    return "Moonbeam reposition movement must use the selected moonbeam movement hole.";
+  }
+  if (Number(fill.value.moveFeet) <= 0 || !Number.isInteger(fill.value.moveFeet)) {
+    return "Moonbeam reposition movement distance must be a positive integer.";
+  }
+  return Number(fill.value.moveFeet) <= Number(hole.moonbeam.maxMoveFeet)
+    ? null
+    : "Moonbeam reposition movement distance exceeds the spell's maximum.";
+}
+
+function moonbeamAdjustedDamage(input: {
+  readonly target: BattleCreatureState;
+  readonly effect: MoonbeamEffect;
+  readonly damageFill: Extract<BattleFill, { readonly kind: "rolledDice" }>;
+  readonly saveSucceeded: boolean;
+}): number {
+  const rolledDamage =
+    rolledDiceTotal(input.damageFill.value) + (input.effect.damage.expr.flat ?? 0);
+  const saveAdjustedDamage = input.saveSucceeded
+    ? Math.floor(rolledDamage / 2)
+    : rolledDamage;
+  return damageAmountAfterTargetAdjustments(
+    input.target,
+    saveAdjustedDamage,
+    input.effect.damage.damageType,
+  );
+}
+
+function applyMoonbeamDamage(input: {
+  readonly state: BattleState;
+  readonly targetId: CombatantId;
+  readonly effect: MoonbeamEffect;
+  readonly damageFill: Extract<BattleFill, { readonly kind: "rolledDice" }>;
+  readonly saveSucceeded: boolean;
+  readonly concentrationSavingThrow?:
+    | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
+    | undefined;
+}): BattleState {
+  const target = input.state.combatants.get(input.targetId);
+  if (target === undefined) {
+    return input.state;
+  }
+  return applyPreparedSlotSpellDamage(
+    input.state,
+    input.targetId,
+    moonbeamAdjustedDamage({
+      target,
+      effect: input.effect,
+      damageFill: input.damageFill,
+      saveSucceeded: input.saveSucceeded,
+    }),
+    {
+      damageSourceId: input.effect.sourceCombatantId,
+      concentrationSavingThrow: input.concentrationSavingThrow,
+    },
+  );
+}
+
+export function resolveMoonbeamSaveCommand(
+  input: BattleResolutionInput & {
+    readonly subject: Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "moonbeamSave";
+      }
+    >;
+    readonly suppressedReactionTrigger?: BattleReactionTrigger | undefined;
+  },
+): BattleResolutionResult {
+  if (
+    input.fills.some(
+      (fill) =>
+        fill.kind !== "savingThrowOutcome" &&
+        fill.kind !== "rolledDice" &&
+        fill.kind !== "concentrationSavingThrow",
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Moonbeam save accepts only save, damage, and Concentration fills.",
+    );
+  }
+  const effect = moonbeamEffectFor(input.state, input.subject);
+  const target = input.state.combatants.get(input.subject.actorId);
+  if (effect === undefined || target === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Moonbeam save is no longer available.",
+    );
+  }
+  const isEndTurn = input.subject.trigger === "endsTurnInArea";
+  const endTurnSubject = {
+    tag: "runtimeCommand" as const,
+    actorId: input.subject.actorId,
+    command: "endTurn" as const,
+  };
+  // Once-per-turn: creature already saved this turn — skip damage but still advance turn if needed.
+  if (effect.savedThisTurn.includes(input.subject.actorId)) {
+    if (isEndTurn) {
+      const endTurnResult = resolveEndTurnCommand({
+        state: input.state,
+        subject: endTurnSubject,
+        fills: input.fills,
+      });
+      return endTurnResult.tag === "needsHoles"
+        ? { ...endTurnResult, subject: input.subject }
+        : endTurnResult;
+    }
+    return {
+      tag: "resolved",
+      state: input.state,
+      snapshot: snapshotBattle(input.state),
+    };
+  }
+  const saveHole = moonbeamSavingThrowOutcomeHole(
+    input.state,
+    input.subject.actorId,
+    effect,
+    input.subject.trigger,
+  );
+  const damageHole = moonbeamDamageRollHole(
+    input.subject.actorId,
+    effect,
+    input.subject.trigger,
+  );
+  const saveFills = input.fills.filter(
+    (fill): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+      fill.kind === "savingThrowOutcome" && fill.holeId === saveHole.holeId,
+  );
+  const damageFills = input.fills.filter(
+    (fill): fill is Extract<BattleFill, { readonly kind: "rolledDice" }> =>
+      fill.kind === "rolledDice" && fill.holeId === damageHole.holeId,
+  );
+  if (saveFills.length > 1 || damageFills.length > 1) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Moonbeam save received duplicate moonbeam fills.",
+    );
+  }
+  const concentrationHoleId = concentrationSavingThrowHole(target, 1)?.holeId;
+  const endTurnFills = isEndTurn
+    ? input.fills.filter(
+        (fill) =>
+          fill.holeId !== saveHole.holeId &&
+          fill.holeId !== damageHole.holeId &&
+          fill.holeId !== concentrationHoleId,
+      )
+    : [];
+  const endTurnProbe = isEndTurn
+    ? resolveEndTurnCommand({
+        state: input.state,
+        subject: endTurnSubject,
+        fills: endTurnFills,
+      })
+    : null;
+  const saveFill = savingThrowOutcomeFillForHole(saveFills, saveHole);
+  if (saveFill === undefined) {
+    if (endTurnProbe?.tag === "invalid") {
+      return endTurnProbe;
+    }
+    return needsHolesResult(input.state, input.subject, [
+      saveHole,
+      ...(endTurnProbe?.tag === "needsHoles" ? endTurnProbe.holes : []),
+    ]);
+  }
+  const saveValidation = validateMoonbeamSavingThrowOutcome(
+    saveFill.value,
+    input.subject.actorId,
+  );
+  if (saveValidation !== null) {
+    return invalidResult(input.state, "invalidFill", saveValidation);
+  }
+  const saveOutcome = saveFill.value.outcomes[0]!;
+  if (!saveOutcome.succeeded) {
+    const saveFailedReactionWindow = maybeOpenReactionWindow(
+      input.state,
+      {
+        trigger: "saveFailed",
+        targetId: input.subject.actorId,
+        sourceSpellId: effect.sourceSpellId,
+        continuation: {
+          kind: "replay",
+          subject: input.subject,
+          fills: input.fills,
+        },
+      },
+      input.suppressedReactionTrigger,
+    );
+    if (saveFailedReactionWindow !== null) {
+      return saveFailedReactionWindow;
+    }
+  }
+  const damageFill = rolledDiceFillForHole(damageFills, damageHole);
+  if (damageFill === undefined) {
+    if (endTurnProbe?.tag === "invalid") {
+      return endTurnProbe;
+    }
+    return needsHolesResult(input.state, input.subject, [
+      damageHole,
+      ...(endTurnProbe?.tag === "needsHoles" ? endTurnProbe.holes : []),
+    ]);
+  }
+  const damageValidation = validateMoonbeamDamageRoll(damageFill, damageHole);
+  if (damageValidation !== null) {
+    return invalidResult(input.state, "invalidFill", damageValidation);
+  }
+  const adjustedDamage = moonbeamAdjustedDamage({
+    target,
+    effect,
+    damageFill,
+    saveSucceeded: saveOutcome.succeeded,
+  });
+  const concentrationHole = concentrationSavingThrowHole(target, adjustedDamage);
+  const concentrationFills =
+    concentrationHole === null
+      ? []
+      : input.fills.filter(
+          (fill): fill is Extract<
+            BattleFill,
+            { readonly kind: "concentrationSavingThrow" }
+          > =>
+            fill.kind === "concentrationSavingThrow" &&
+            fill.holeId === concentrationHole.holeId,
+        );
+  if (concentrationFills.length > 1) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Moonbeam save received duplicate concentration save fills.",
+    );
+  }
+  const concentrationFill =
+    concentrationHole === null
+      ? undefined
+      : concentrationSavingThrowFillFor(concentrationFills, concentrationHole);
+  if (concentrationHole !== null && concentrationFill === undefined) {
+    if (endTurnProbe?.tag === "invalid") {
+      return endTurnProbe;
+    }
+    return needsHolesResult(input.state, input.subject, [
+      concentrationHole,
+      ...(endTurnProbe?.tag === "needsHoles" ? endTurnProbe.holes : []),
+    ]);
+  }
+  if (endTurnProbe?.tag === "needsHoles") {
+    return { ...endTurnProbe, subject: input.subject };
+  }
+  if (endTurnProbe?.tag === "invalid") {
+    return endTurnProbe;
+  }
+  const afterDamage = applyMoonbeamDamage({
+    state: input.state,
+    targetId: input.subject.actorId,
+    effect,
+    damageFill,
+    saveSucceeded: saveOutcome.succeeded,
+    concentrationSavingThrow: concentrationFill,
+  });
+  const afterMark = markMoonbeamSavedThisTurn(afterDamage, input.subject.actorId, effect);
+  if (isEndTurn) {
+    const endTurnResult = resolveEndTurnCommand({
+      state: afterMark,
+      subject: endTurnSubject,
+      fills: endTurnFills,
+    });
+    return endTurnResult.tag === "needsHoles"
+      ? { ...endTurnResult, subject: input.subject }
+      : endTurnResult;
+  }
+  return {
+    tag: "resolved",
+    state: afterMark,
+    snapshot: snapshotBattle(afterMark),
+  };
+}
+
+export function resolveMoonbeamRepositionCommand(
+  input: BattleResolutionInput & {
+    readonly subject: Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "moonbeamReposition";
+      }
+    >;
+  },
+): BattleResolutionResult {
+  if (input.fills.some((fill) => fill.kind !== "moonbeamRepositionMovement")) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Moonbeam reposition accepts only movement fills.",
+    );
+  }
+  const effect = moonbeamEffectFor(input.state, input.subject);
+  if (
+    effect === undefined ||
+    input.subject.actorId !== input.subject.sourceCombatantId ||
+    input.subject.actorId !== currentActorId(input.state)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Moonbeam reposition is no longer available.",
+    );
+  }
+  if (!canSpendAction(input.state.currentTurnResources, "magic")) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Moonbeam reposition requires an available Magic action.",
+    );
+  }
+  const movementHole = moonbeamRepositionMovementHole(effect);
+  const movementFills = input.fills.filter(
+    (fill): fill is Extract<
+      BattleFill,
+      { readonly kind: "moonbeamRepositionMovement" }
+    > => fill.kind === "moonbeamRepositionMovement",
+  );
+  if (!everyFillUsesHoleId(movementFills, movementHole.holeId)) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Moonbeam reposition received a fill for an unrelated hole.",
+    );
+  }
+  if (movementFills.length > 1) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Moonbeam reposition received duplicate moonbeam fills.",
+    );
+  }
+  const movementFill = movementFills[0];
+  if (movementFill === undefined) {
+    return needsHolesResult(input.state, input.subject, [movementHole]);
+  }
+  const movementValidation = validateMoonbeamRepositionMovement(
+    movementFill,
+    movementHole,
+  );
+  if (movementValidation !== null) {
+    return invalidResult(input.state, "invalidFill", movementValidation);
+  }
+  const spendResult = spendAction(input.state.currentTurnResources, "magic");
+  if (Either.isLeft(spendResult)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Moonbeam reposition requires an available Magic action.",
+    );
+  }
+  const nextState = {
+    ...input.state,
+    currentTurnResources: spendResult.right,
   };
   return {
     tag: "resolved",

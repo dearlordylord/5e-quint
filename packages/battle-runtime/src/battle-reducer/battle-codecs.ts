@@ -2159,6 +2159,12 @@ export const BattleHoleSchema = Schema.Union(
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("rolledDice"),
+    moonbeam: BattleRuntimeObjectSchema,
+    critical: Schema.Literal(false),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("rolledDice"),
     spell: SupportedSpellInvocationSchema,
   }),
   Schema.Struct({
@@ -2225,6 +2231,11 @@ export const BattleHoleSchema = Schema.Union(
       Schema.Struct({
         kind: Schema.Literal("pointOriginSphereDiameter"),
         diameterFeet: MovementFeet,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("pointOriginCylinder"),
+        radiusFeet: MovementFeet,
+        heightFeet: MovementFeet,
       }),
     ),
   }),
@@ -2319,6 +2330,21 @@ export const BattleHoleSchema = Schema.Union(
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
+    kind: Schema.Literal("savingThrowOutcome"),
+    label: Schema.String,
+    moonbeam: BattleRuntimeObjectSchema,
+    ability: Schema.Literal("con"),
+    dc: DcSourceSchema,
+    areaChoices: Schema.Array(BattleRuntimeObjectSchema),
+    targetRollModes: Schema.Array(
+      Schema.Struct({
+        targetId: CombatantId,
+        rollMode: Schema.Literal(...ATTACK_ROLL_MODES),
+      }),
+    ),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
     kind: Schema.Literal("flamingSphereRamMovement"),
     label: Schema.String,
     flamingSphere: BattleRuntimeObjectSchema,
@@ -2329,6 +2355,13 @@ export const BattleHoleSchema = Schema.Union(
     kind: Schema.Literal("flamingSphereRepositionMovement"),
     label: Schema.String,
     flamingSphere: BattleRuntimeObjectSchema,
+    requiresTableSpatialFact: Schema.Literal(true),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("moonbeamRepositionMovement"),
+    label: Schema.String,
+    moonbeam: BattleRuntimeObjectSchema,
     requiresTableSpatialFact: Schema.Literal(true),
   }),
   Schema.Struct({
@@ -2723,6 +2756,10 @@ type BattleFillEncoded =
         | {
             readonly kind: "flamingSphereArea";
             readonly areaId: string;
+          }
+        | {
+            readonly kind: "moonbeamCylinderArea";
+            readonly areaId: string;
           };
     }
   | {
@@ -2734,6 +2771,13 @@ type BattleFillEncoded =
     }
   | {
       readonly kind: "flamingSphereRepositionMovement";
+      readonly holeId: string;
+      readonly value: {
+        readonly moveFeet: number;
+      };
+    }
+  | {
+      readonly kind: "moonbeamRepositionMovement";
       readonly holeId: string;
       readonly value: {
         readonly moveFeet: number;
@@ -3296,6 +3340,10 @@ export const BattleFillSchema: Schema.Schema<
           kind: Schema.Literal("flamingSphereArea"),
           areaId: Schema.String,
         }),
+        Schema.Struct({
+          kind: Schema.Literal("moonbeamCylinderArea"),
+          areaId: Schema.String,
+        }),
       ),
     }),
     Schema.Struct({
@@ -3307,6 +3355,13 @@ export const BattleFillSchema: Schema.Schema<
     }),
     Schema.Struct({
       kind: Schema.Literal("flamingSphereRepositionMovement"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Struct({
+        moveFeet: MovementFeet,
+      }),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("moonbeamRepositionMovement"),
       holeId: BattleHoleIdSchema,
       value: Schema.Struct({
         moveFeet: MovementFeet,

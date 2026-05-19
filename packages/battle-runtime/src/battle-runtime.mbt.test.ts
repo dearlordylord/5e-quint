@@ -3570,6 +3570,11 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
       "Battle runtime MBT does not model Flaming Sphere reposition movement holes.",
     );
   }
+  if (hole.kind === "moonbeamRepositionMovement") {
+    throw new Error(
+      "Battle runtime MBT does not model Moonbeam reposition movement holes.",
+    );
+  }
   return [
     Match.value(hole).pipe(
     Match.when({ kind: "targetChoice" }, () => "TargetChoice" as const),

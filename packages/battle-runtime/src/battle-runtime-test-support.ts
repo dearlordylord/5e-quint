@@ -398,6 +398,8 @@ export function subjectName(
   | "flamingSphereSave"
   | "flamingSphereReposition"
   | "flamingSphereRam"
+  | "moonbeamSave"
+  | "moonbeamReposition"
   | "jumpMovementReplacement"
   | "commandGrovel"
   | "commandDrop"

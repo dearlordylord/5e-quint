@@ -124,11 +124,13 @@ import { resolveChainedSpellAttackDamageAct } from "./spells-resolve-chained.ts"
 import {
   resolveFlamingSphereSpellAct,
   resolveFogCloudObscurementSpellAct,
+  resolveMoonbeamSpellAct,
 } from "./spells-resolve-area-effects.ts";
 import { resolveSpellAttackSequenceAct } from "./spells-resolve-attack-sequence.ts";
 export {
   resolveFlamingSphereSpellAct,
   resolveFogCloudObscurementSpellAct,
+  resolveMoonbeamSpellAct,
 } from "./spells-resolve-area-effects.ts";
 export { resolveAttackBurstSaveDamageSpellAct } from "./spells-resolve-attack-burst.ts";
 export {
@@ -415,6 +417,7 @@ export function resolveSpellAct(
       invocation.procedure === "command" ||
       invocation.procedure === "fogCloudObscurement" ||
       invocation.procedure === "flamingSphere" ||
+      invocation.procedure === "moonbeam" ||
       invocation.procedure === "sanctuaryTargetingInterdiction" ||
       invocation.procedure === "directCondition" ||
       invocation.procedure === "spellAttackSequence")
@@ -594,6 +597,14 @@ export function resolveSpellAct(
   }
   if (invocation.procedure === "flamingSphere") {
     return resolveFlamingSphereSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "moonbeam") {
+    return resolveMoonbeamSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

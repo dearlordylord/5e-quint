@@ -275,6 +275,9 @@ export function supportedSpellActs(
       supportedPreparedFlamingSphereProfile(spell, spellcasting.spellSlots),
     ),
     ...preparedSpells.flatMap((spell) =>
+      supportedPreparedMoonbeamProfile(spell, spellcasting.spellSlots),
+    ),
+    ...preparedSpells.flatMap((spell) =>
       supportedPreparedCommandProfile(spell, spellcasting.spellSlots),
     ),
     ...preparedSpells.flatMap((spell) =>
@@ -1030,6 +1033,185 @@ function flamingSphereSpell(spell: SpellRecord) {
     ramMaxMoveFeet: repositionOperation.effect.maxMoveFeet,
     damageAmount: endTurnOperation.effect.onFail.amount,
   };
+}
+
+export function supportedPreparedMoonbeamProfile(
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  const moonbeam = moonbeamSpell(spell);
+  if (moonbeam === null) {
+    return [];
+  }
+
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    const damageExpr = supportedDamageAmountExpr({
+      amount: moonbeam.damageAmount,
+      spellLevel: spell.mechanics.level,
+      slotLevel: slot.spellLevel,
+    });
+    if (damageExpr === null) {
+      return [];
+    }
+    return [
+      {
+        access: { tag: "prepared" },
+        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+        procedure: "moonbeam",
+        spell,
+        ability: "con",
+        dc: { kind: "caster_spell_save_dc" },
+        targeting: {
+          kind: "pointOriginCylinder",
+          radiusFeet: movementFeet(moonbeam.radiusFeet),
+          heightFeet: movementFeet(moonbeam.heightFeet),
+        },
+        durationTicks: moonbeam.durationTicks,
+        rangeFeet: movementFeet(120),
+        repositionMaxMoveFeet: movementFeet(moonbeam.repositionMaxMoveFeet),
+        damage: { expr: damageExpr, damageType: "radiant" },
+      },
+    ];
+  });
+}
+
+function moonbeamSpell(spell: SpellRecord) {
+  if (spell.mechanics.family !== "ongoing_effect") {
+    return null;
+  }
+  const durationTicks =
+    spell.mechanics.duration.kind === "concentration"
+      ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.upTo)
+      : null;
+  const attachment = spell.mechanics.attachment;
+  const cylinderHole =
+    attachment.kind === "hole" && attachment.value.kind === "area"
+      ? attachment
+      : null;
+  const cylinderArea = cylinderHole?.value ?? null;
+  const initialPhase = spell.mechanics.initialPhase;
+  const endTurnOperation = spell.mechanics.operations.find(
+    (operation) => operation.trigger.kind === "on_creature_ends_turn_in_area",
+  );
+  const enterOperation = spell.mechanics.operations.find(
+    (operation) => operation.trigger.kind === "on_creature_enters_area",
+  );
+  const moveIntoOperation = spell.mechanics.operations.find(
+    (operation) =>
+      operation.trigger.kind === "on_area_moves_into_creature_space",
+  );
+  const repositionOperation = spell.mechanics.operations.find(
+    (operation) =>
+      operation.trigger.kind === "on_caster_spends_action" &&
+      operation.trigger.cost.kind === "standard_action" &&
+      operation.trigger.cost.action === "magic" &&
+      operation.trigger.laterTurnsOnly === true &&
+      operation.effect.kind === "reposition_attachment",
+  );
+  const dimLightOperation = spell.mechanics.operations.find(
+    (operation) =>
+      operation.trigger.kind === "passive" &&
+      operation.effect.kind === "area_emits_dim_light",
+  );
+
+  const initialDamage = isMoonbeamSaveGate(initialPhase);
+  if (
+    spell.name !== "Moonbeam" ||
+    spell.provenance.kind !== "srd-5.2.1" ||
+    spell.provenance.section !== "Spells/Descriptions-M-P#Moonbeam" ||
+    spell.mechanics.level !== 2 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "point" ||
+    spell.mechanics.range.feet !== 120 ||
+    spell.mechanics.duration.kind !== "concentration" ||
+    spell.mechanics.duration.upTo.unit !== "minute" ||
+    spell.mechanics.duration.upTo.amount !== 1 ||
+    spell.mechanics.operations.length !== 5 ||
+    durationTicks === null ||
+    Either.isLeft(durationTicks) ||
+    cylinderHole?.holeId !== "moonbeam_cylinder" ||
+    cylinderArea?.kind !== "area" ||
+    cylinderArea?.origin.kind !== "point_within_range" ||
+    cylinderArea.shape.kind !== "cylinder" ||
+    cylinderArea.shape.radiusFeet !== 5 ||
+    cylinderArea.shape.heightFeet !== 40 ||
+    initialDamage === null ||
+    isMoonbeamSaveGate(endTurnOperation?.effect) === null ||
+    isMoonbeamSaveGate(enterOperation?.effect) === null ||
+    isMoonbeamSaveGate(moveIntoOperation?.effect) === null ||
+    repositionOperation?.effect.kind !== "reposition_attachment" ||
+    repositionOperation.effect.maxMoveFeet !== 60 ||
+    dimLightOperation?.effect.kind !== "area_emits_dim_light"
+  ) {
+    return null;
+  }
+  return {
+    durationTicks: durationTicks.right,
+    radiusFeet: cylinderArea.shape.radiusFeet,
+    heightFeet: cylinderArea.shape.heightFeet,
+    repositionMaxMoveFeet: repositionOperation.effect.maxMoveFeet,
+    damageAmount: initialDamage.amount,
+  };
+}
+
+type MoonbeamSaveGateDamage = Extract<
+  Extract<
+    Extract<
+      SpellRecord["mechanics"],
+      { readonly family: "ongoing_effect" }
+    >["initialPhase"],
+    { readonly kind: "save_gate" }
+  >["onFail"],
+  { readonly kind: "composite" }
+>["effects"][number] & { readonly kind: "damage" };
+
+type MoonbeamInitialPhase = Extract<
+  SpellRecord["mechanics"],
+  { readonly family: "ongoing_effect" }
+>["initialPhase"];
+
+function isMoonbeamSaveGate(
+  effect: OngoingOperationEffect | MoonbeamInitialPhase | undefined,
+): MoonbeamSaveGateDamage | null {
+  if (effect?.kind !== "save_gate") {
+    return null;
+  }
+  if (effect.onFail.kind !== "composite") {
+    return null;
+  }
+  if (effect.onFail.effects.length !== 3) {
+    return null;
+  }
+  const damage = effect.onFail.effects[0];
+  if (
+    damage?.kind !== "damage" ||
+    damage.damageType !== "radiant" ||
+    damage.amount?.kind !== "linear_per_level" ||
+    damage.amount.axis !== "slot" ||
+    damage.amount.startingAtLevel !== 2 ||
+    damage.amount.base.dice !== 2 ||
+    damage.amount.base.dieSize !== 10 ||
+    damage.amount.perLevel.dice !== 1
+  ) {
+    return null;
+  }
+  if (
+    effect.onFail.effects[1]?.kind !== "revert_shape_shift_to_true_form" ||
+    effect.onFail.effects[2]?.kind !== "suppress_shape_shifting_while_in_area"
+  ) {
+    return null;
+  }
+  if (
+    effect.ability !== "con" ||
+    effect.dc.kind !== "caster_spell_save_dc" ||
+    effect.onSuccess.kind !== "half_damage"
+  ) {
+    return null;
+  }
+  return damage;
 }
 
 function isFlamingSphereSaveEffect(
