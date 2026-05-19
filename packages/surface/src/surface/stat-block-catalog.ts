@@ -6,6 +6,7 @@ import findFamiliarStatBlocksInput from "../../content/stat_block_find_familiar_
 import goblinWarriorInput from "../../content/stat_block_goblin_warrior.json";
 import skeletonInput from "../../content/stat_block_skeleton.json";
 import sphinxOfWonderInput from "../../content/stat_block_sphinx_of_wonder.json";
+import wildShapeRecommendedFormsInput from "../../content/stat_block_wild_shape_recommended_forms.json";
 import { decodeStatBlockRecordSync } from "./schema.ts";
 import type { Provenance, StatBlockRecord } from "./types.ts";
 
@@ -107,6 +108,9 @@ export function defineSrdStatBlockCollection(input: {
 export const srdStatBlockCollection = defineSrdStatBlockCollection({
   statBlocks: [
     ...findFamiliarStatBlocksInput.map((input) =>
+      assertSrd521StatBlock(decodeStatBlockRecordSync(input)),
+    ),
+    ...wildShapeRecommendedFormsInput.map((input) =>
       assertSrd521StatBlock(decodeStatBlockRecordSync(input)),
     ),
     assertSrd521StatBlock(decodeStatBlockRecordSync(goblinWarriorInput)),

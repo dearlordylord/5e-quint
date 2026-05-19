@@ -191,6 +191,21 @@ export {
   type WeaponMasteryChoiceProfile,
 } from "./weapon-mastery.ts";
 export {
+  DRUID_WILD_SHAPE_UNIT_ID,
+  characterBuildDruidWildShapeFacts,
+  replaceDruidWildShapeKnownForm,
+  validateDruidWildShapeKnownForms,
+  type CharacterBuildDruidWildShapeFacts,
+  type CharacterBuildDruidWildShapeFactsIssue,
+  type CharacterBuildDruidWildShapeKnownFormReplacement,
+} from "./druid-wild-shape.ts";
+export {
+  classLevelChoiceCountAtLevel,
+  isClassLevelThresholdTiers,
+  thresholdTierValueAtClassLevel,
+  type ClassLevelThresholdTiers,
+} from "./class-level-scaling.ts";
+export {
   classNameFromClassUnit,
   classUnitIdFromClassUnit,
   classUnitIdFromUnitId,

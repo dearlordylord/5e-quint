@@ -743,14 +743,14 @@
     },
     {
       "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
+      "claimTag": "profile-subset-supported",
       "closureKinds": [
         "follow-up-split"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS: Project Wild Shape use count, partial Short Rest/full Long Rest reset, rounded-down duration, learned Beast forms, and one known-form replacement on Long Rest from the retained feature without duplicating class progression state. Owner: character-creation-runtime plus character-sheet-runtime. Required output: Owner evidence for CharacterBuild or Character Sheet Wild Shape resource, rounded-down duration, known-form roster, and Long Rest known-form replacement facts.; L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME: Execute Beast form choice, game-statistic replacement and retained facts, Temporary Hit Points, no spellcasting, equipment choice/effects, and reversion triggers. Owner: stat-block-control shape-shifting runtime. Required output: Supported runtime profile and owner evidence for Wild Shape shape-shifting execution.",
+      "reason": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME: Execute the chosen known Beast form in play, including game-statistic replacement and retained facts, Temporary Hit Points, no spellcasting, equipment choice and effects, and reversion triggers. Owner: stat-block-control shape-shifting runtime. Required output: Supported runtime profile and owner evidence for Wild Shape shape-shifting execution over Character Sheet known-form identities.",
       "sourceRecordPath": "packages/surface/content/druid_wild_shape.json",
       "sourceRows": [
         {
@@ -2733,9 +2733,9 @@
       "rowsByStatus": {
         "accepted": 332,
         "accepted-no-battle-effect": 135,
-        "battle-runtime-required": 80,
+        "battle-runtime-required": 79,
         "owner-evidence-required": 3,
-        "partial-battle-runtime": 6
+        "partial-battle-runtime": 7
       }
     },
     "rulesKernelCoveredProfileJoin": {
@@ -7770,9 +7770,9 @@
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
       "missing": 9,
-      "profile-subset-supported": 12,
+      "profile-subset-supported": 13,
       "supported-profile": 101,
-      "unsupported-profile": 32
+      "unsupported-profile": 31
     },
     "groupsByStatus": {
       "blocked-follow-up-split": 20,

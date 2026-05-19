@@ -10,6 +10,7 @@ import {
   type DraftRevision,
 } from "@dnd/character-creation-runtime";
 import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
+import type { StatBlockId } from "@dnd/surface/surface/stat-block-catalog";
 import { Either, Match, Schema } from "effect";
 
 import { errorContent } from "./tool-content.ts";
@@ -30,6 +31,19 @@ const DraftIdArgsSchema = Schema.Struct({
   draftId: Schema.String.annotations({
     description: "Character Draft id returned by create_character_draft.",
   }),
+});
+
+const FinalizeCharacterArgsSchema = Schema.Struct({
+  draftId: Schema.String.annotations({
+    description: "Character Draft id returned by create_character_draft.",
+  }),
+  druidWildShapeKnownFormStatBlockIds: Schema.optionalWith(
+    Schema.Array(Schema.String).annotations({
+      description:
+        "Selected Beast Stat Block ids for a Druid Wild Shape character. Required when the finalized draft has Wild Shape.",
+    }),
+    { exact: true },
+  ),
 });
 
 const CreateCharacterDraftArgsSchema = Schema.Struct({
@@ -142,6 +156,10 @@ type CreateCharacterDraftToolInput = {
 type DraftIdToolInput = {
   readonly draftId: CharacterDraftId;
 };
+type FinalizeCharacterToolInput = {
+  readonly draftId: CharacterDraftId;
+  readonly druidWildShapeKnownFormStatBlockIds?: readonly StatBlockId[];
+};
 type FillCreationHolesToolInput = {
   readonly draftId: CharacterDraftId;
   readonly expectedRevision: DraftRevision;
@@ -164,7 +182,7 @@ export type CharacterToolCall =
     }
   | {
       readonly name: typeof characterToolNames.finalizeCharacter;
-      readonly args: DraftIdToolInput;
+      readonly args: FinalizeCharacterToolInput;
     }
   | {
       readonly name: typeof characterToolNames.listCharacters;
@@ -172,6 +190,9 @@ export type CharacterToolCall =
     };
 
 export const draftIdInputSchema = mcpObjectJsonSchema(DraftIdArgsSchema);
+export const finalizeCharacterInputSchema = mcpObjectJsonSchema(
+  FinalizeCharacterArgsSchema,
+);
 export const createCharacterDraftInputSchema = mcpObjectJsonSchema(
   CreateCharacterDraftArgsSchema,
 );
@@ -207,13 +228,10 @@ export function decodeCharacterToolCall(input: {
       })),
     ),
     Match.when(characterToolNames.finalizeCharacter, () =>
-      Either.map(
-        decodeDraftIdArg(input.args, characterToolNames.finalizeCharacter),
-        (draftId) => ({
-          name: characterToolNames.finalizeCharacter,
-          args: { draftId },
-        }),
-      ),
+      Either.map(decodeFinalizeCharacterArgs(input.args), (args) => ({
+        name: characterToolNames.finalizeCharacter,
+        args,
+      })),
     ),
     Match.when(characterToolNames.listCharacters, () =>
       Either.map(decodeEmptyArgs(input.args), (args) => ({
@@ -240,9 +258,7 @@ function decodeCreateCharacterDraftArgs(
   );
 }
 
-type DraftIdToolName =
-  | typeof characterToolNames.discoverCreationHoles
-  | typeof characterToolNames.finalizeCharacter;
+type DraftIdToolName = typeof characterToolNames.discoverCreationHoles;
 
 function decodeDraftIdArg(
   args: unknown,
@@ -250,6 +266,25 @@ function decodeDraftIdArg(
 ): ToolInputResult<CharacterDraftId> {
   const record = decodeToolArgs(DraftIdArgsSchema, args, toolName);
   return Either.map(record, (value) => characterDraftId(value.draftId));
+}
+
+function decodeFinalizeCharacterArgs(
+  args: unknown,
+): ToolInputResult<FinalizeCharacterToolInput> {
+  const record = decodeToolArgs(
+    FinalizeCharacterArgsSchema,
+    args,
+    characterToolNames.finalizeCharacter,
+  );
+  return Either.map(record, (value) => ({
+    draftId: characterDraftId(value.draftId),
+    ...(value.druidWildShapeKnownFormStatBlockIds === undefined
+      ? {}
+      : {
+          druidWildShapeKnownFormStatBlockIds:
+            value.druidWildShapeKnownFormStatBlockIds,
+        }),
+  }));
 }
 
 function decodeFillCreationHolesArgs(

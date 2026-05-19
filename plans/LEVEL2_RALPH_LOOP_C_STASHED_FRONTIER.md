@@ -7,13 +7,13 @@
     {
       "number": 1,
       "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Druid Wild Shape Character Facts And Resource Projection"
     },
     {
       "number": 2,
       "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Druid Wild Shape Shape-Shifting Runtime"
     },
     {
@@ -208,8 +208,8 @@ Do not run battle-runtime MBT unless the task changes promoted battle-runtime be
 
 | # | Task | Status | Depends On | Notes |
 | ---: | --- | --- | --- | --- |
-| 1 | L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS - Druid Wild Shape Character Facts And Resource Projection | ready-for-research | completed baseline | Original backlog task 77; Unit `druid_wild_shape`. |
-| 2 | L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME - Druid Wild Shape Shape-Shifting Runtime | blocked | L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS | Original backlog task 78; Unit `druid_wild_shape`. |
+| 1 | L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS - Druid Wild Shape Character Facts And Resource Projection | done | completed baseline | Original backlog task 77; Unit `druid_wild_shape`. |
+| 2 | L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME - Druid Wild Shape Shape-Shifting Runtime | ready-for-research | L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS | Original backlog task 78; Unit `druid_wild_shape`; consume Character Sheet known-form identities from Task 1. |
 | 3 | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS - Monk's Focus Character Facts And Resource Projection | ready-for-research | completed baseline | Original backlog task 79; Unit `monk_monks_focus`. |
 | 4 | L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS - Monk's Focus Battle Option Execution | blocked | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS | Original backlog task 80; Unit `monk_monks_focus`. |
 | 5 | L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS - Monk Uncanny Metabolism Character Facts And Use State | blocked | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS | Original backlog task 81; Unit `monk_uncanny_metabolism`. |
@@ -236,7 +236,9 @@ Do not run battle-runtime MBT unless the task changes promoted battle-runtime be
 
 ### Task 1 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS - Druid Wild Shape Character Facts And Resource Projection
 
-Status: `ready-for-research`
+Status: `done`
+
+Result: `druid_wild_shape` is `profile-subset-supported` for character-fact and Character Sheet resource ownership. Character Creation projects use-count thresholds, partial Short Rest/full Long Rest reset facts, rounded-down duration, known-form roster thresholds, Beast form eligibility, maximum Challenge Rating and Fly Speed thresholds, and one eligible Long Rest known-form replacement from the retained Surface feature without duplicating class progression state. Character Sheet stores selected known Beast form Stat Block identities and expended use-count state, recovers one use on Short Rest, clears expended uses on Long Rest, and preserves known-form state through app/MCP sheet creation and battle handoff boundaries. Shape-shifting execution remains Task 2.
 
 Original backlog task: `Task 77 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS - Druid Wild Shape Character Facts And Resource Projection`.
 Unit: `druid_wild_shape`.
@@ -269,13 +271,13 @@ Acceptance:
 
 ### Task 2 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME - Druid Wild Shape Shape-Shifting Runtime
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Original backlog task: `Task 78 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME - Druid Wild Shape Shape-Shifting Runtime`.
 Unit: `druid_wild_shape`.
 Source section: `plans/LEVEL2_RALPH_WRAPUP_BACKLOG.md`, heading `Task 78 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME - Druid Wild Shape Shape-Shifting Runtime`.
 
-Local dependency: `L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS` must be `done` before this task starts.
+Local dependency: `L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS` is complete; this task should consume the Character Sheet known-form identities and use-count state from that owner instead of reselecting, defaulting, or duplicating learned Beast forms.
 
 Inputs:
 
@@ -290,6 +292,7 @@ Inputs:
 Outputs:
 
 - satisfy the exact output contract from the original backlog section;
+- execute the chosen known Beast form over Character Sheet known-form identities from Task 1;
 - leave `druid_wild_shape` supported, accepted-closed, or precisely blocked by a smaller follow-up split;
 - update only the owner files required by the task;
 - regenerate coverage artifacts.

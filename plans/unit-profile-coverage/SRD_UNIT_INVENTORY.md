@@ -33,9 +33,9 @@ This is the default `%` for level-1 plus level-2 readiness questions. It uses th
 
 - accepted: 332
 - accepted-no-battle-effect: 135
-- battle-runtime-required: 80
+- battle-runtime-required: 79
 - owner-evidence-required: 3
-- partial-battle-runtime: 6
+- partial-battle-runtime: 7
 
 ### Level-1 Rows by Disposition
 
@@ -44,8 +44,8 @@ This is the default `%` for level-1 plus level-2 readiness questions. It uses th
 
 ### Level-2 Rows by Disposition
 
-- catalog-installed-owner-evidence-present: 16
-- catalog-installed-owner-evidence-required: 5
+- catalog-installed-owner-evidence-present: 17
+- catalog-installed-owner-evidence-required: 4
 - non-runtime: 12
 
 ### Level-1 Rows by Category
@@ -329,7 +329,7 @@ These batches are generated planning recommendations for a separate SRD inventor
 |Cleric Channel Divinity|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Cleric.md:88|
 |Cleric level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Cleric.md:36|
 |Druid Wild Companion|class feature||current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|accepted|profile-subset-remaining-mechanics-closed: SRDINV86 companion review boundary plus Druid Wild Shape follow-up owners|Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Druid.md:124|
-|Druid Wild Shape|class feature||current-surface-can-express-source-facts|authored-record-present|installed|unsupported-profile|catalog-installed-owner-evidence-required|battle-runtime-required||Unit catalog/admission: catalog evidence; character-creation-runtime plus character-sheet-runtime; stat-block-control shape-shifting runtime: owner evidence required|Promote follow-up split L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS, L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME: L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS owns Project Wild Shape use count, partial Short Rest/full Long Rest reset, rounded-down duration, learned Beast forms, and one known-form replacement on Long Rest from the retained feature without duplicating class progression state. Required output: Owner evidence for CharacterBuild or Character Sheet Wild Shape resource, rounded-down duration, known-form roster, and Long Rest known-form replacement facts.; L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME owns Execute Beast form choice, game-statistic replacement and retained facts, Temporary Hit Points, no spellcasting, equipment choice/effects, and reversion triggers. Required output: Supported runtime profile and owner evidence for Wild Shape shape-shifting execution.|.references/srd-5.2.1/Classes/Druid.md:95|
+|Druid Wild Shape|class feature||current-surface-can-express-source-facts|authored-record-present|installed|profile-subset-supported|catalog-installed-owner-evidence-present|partial-battle-runtime||Unit catalog/admission: catalog evidence; character-creation-runtime: owner evidence present; character-sheet-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Druid.md:95|
 |Druid level 2 feature table row|character-creation or progression mechanic|non-runtime-table-summary|outside-surface-runtime-mechanics|authored-record-present|installed|unsupported-profile|non-runtime|accepted-no-battle-effect|||No runtime work; keep classification as explicit closure.|.references/srd-5.2.1/Classes/Druid.md:33|
 |Fighter Action Surge|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Fighter.md:76|
 |Fighter Tactical Mind|class feature||current-surface-can-express-source-facts|authored-record-present|installed|supported-profile|catalog-installed-owner-evidence-present|accepted||Unit catalog/admission: catalog evidence; battle-runtime: owner evidence present|Owner-specific operational evidence is classified and present.|.references/srd-5.2.1/Classes/Fighter.md:82|

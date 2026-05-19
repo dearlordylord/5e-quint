@@ -82,14 +82,14 @@
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 91,
+      "denominator": 92,
       "numerator": 19,
-      "percent": "20.9%"
+      "percent": "20.7%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 91,
+      "denominator": 92,
       "numerator": 24,
-      "percent": "26.4%"
+      "percent": "26.1%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 124,
@@ -2504,9 +2504,10 @@
       "runtimeOwners": [
         "packages/character-creation-runtime/src/index.ts"
       ],
-      "sourceBoundary": "Surface class-feature resource container records projected from class progression into CharacterBuild resource facts; selected option execution remains owned by selected option Unit profiles.",
+      "sourceBoundary": "Surface class-feature resource container and known-form roster records projected from class progression into CharacterBuild resource and character facts; selected option execution and shape-shifted form execution remain owned by selected option or shape-shifting runtime profiles.",
       "taskRefs": [
-        "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY"
+        "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY",
+        "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS"
       ],
       "title": "Character Creation projects class-feature resources into CharacterBuild resource facts",
       "verificationOwners": [
@@ -2576,6 +2577,41 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "character-sheet.class-feature-use-count-resource",
+      "profileKind": "character-sheet",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts",
+        "packages/app/src/components/character-creation/characterCreationRuntime.ts",
+        "packages/mcp/src/session-store.ts",
+        "packages/mcp/src/character-tools.ts",
+        "packages/character-battle-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "CharacterBuild class-feature resources plus installed Surface reset cadence and known-form roster facts; Character Sheet requires explicit selected known-form identities for Wild Shape builds, stores expended use-count state and current known-form identities, then derives capacity, Short Rest or Long Rest recovery, and Druid Wild Shape known-form replacement eligibility from the feature, class progression, and SRD Stat Block catalog. App, MCP, and Character Sheet battle handoff boundaries must pass through or preserve that selected known-form state rather than defaulting from recommendations.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS"
+      ],
+      "title": "Character Sheet tracks rest-reset class-feature use-count resources",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/app/src/components/character-creation/characterCreationRuntime.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/mcp/src/session-store.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
         }
       ]
     },
@@ -2659,14 +2695,14 @@
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 91,
+        "denominator": 92,
         "numerator": 19,
-        "percent": "20.9%"
+        "percent": "20.7%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 91,
+        "denominator": 92,
         "numerator": 24,
-        "percent": "26.4%"
+        "percent": "26.1%"
       }
     },
     "profileKinds": [
@@ -3396,6 +3432,12 @@
         "joinStatus": "unmapped",
         "obligations": [],
         "profileId": "character-sheet.pact-slot-recovery",
+        "profileKind": "character-sheet"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "character-sheet.class-feature-use-count-resource",
         "profileKind": "character-sheet"
       },
       {
@@ -7345,6 +7387,15 @@
     },
     {
       "claimKind": "completed-runtime-parity",
+      "note": "Focused Character Creation, Character Sheet, app, MCP session, and Character Sheet battle handoff tests cover Druid level 2 and level 4 Wild Shape resource and character-fact projection from the installed Surface feature, Druid-class threshold tiers, partial Short Rest/full Long Rest reset facts, rounded-down duration, known-form count thresholds, Beast-form eligibility, explicit selected known Beast form identities, sheet expended-use and known-form tracking, typed rejection of omitted known-form identities, one-use Short Rest recovery, Long Rest reset, one eligible known-form replacement on Long Rest, and preservation of known-form state across battle handoff. Shape-shifting execution remains split to follow-up runtime work.",
+      "profileIds": [
+        "character-creation.class-feature-resource-projection",
+        "character-sheet.class-feature-use-count-resource"
+      ],
+      "taskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
       "note": "Focused Surface, Character Creation, and Character Sheet runtime tests cover Warlock level 2 Magical Cunning unit admission, class feature grant ownership, existing Pact Magic slot-pool reuse, half-maximum-rounded-up Pact Slot recovery, once-per-Long-Rest use tracking, and Long Rest reset.",
       "profileIds": [
         "character-sheet.pact-slot-recovery"
@@ -8983,9 +9034,10 @@
           "runtimeOwners": [
             "packages/character-creation-runtime/src/index.ts"
           ],
-          "sourceBoundary": "Surface class-feature resource container records projected from class progression into CharacterBuild resource facts; selected option execution remains owned by selected option Unit profiles.",
+          "sourceBoundary": "Surface class-feature resource container and known-form roster records projected from class progression into CharacterBuild resource and character facts; selected option execution and shape-shifted form execution remain owned by selected option or shape-shifting runtime profiles.",
           "taskRefs": [
-            "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY"
+            "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY",
+            "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS"
           ],
           "title": "Character Creation projects class-feature resources into CharacterBuild resource facts",
           "verificationOwners": [
@@ -9143,31 +9195,105 @@
         "status": "installed"
       },
       "claim": {
+        "deferredMechanics": [
+          {
+            "followUpTaskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME",
+            "mechanic": "Beast form choice, game-statistic replacement and retained facts, Temporary Hit Points, no spellcasting, equipment choice/effects, and reversion triggers remain owned by follow-up shape-shifting runtime work."
+          }
+        ],
         "followUpTasks": [
           {
-            "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
-            "mechanic": "Project Wild Shape use count, partial Short Rest/full Long Rest reset, rounded-down duration, learned Beast forms, and one known-form replacement on Long Rest from the retained feature without duplicating class progression state.",
-            "owner": "character-creation-runtime plus character-sheet-runtime",
-            "requiredOutput": "Owner evidence for CharacterBuild or Character Sheet Wild Shape resource, rounded-down duration, known-form roster, and Long Rest known-form replacement facts.",
-            "title": "Druid Wild Shape Character Facts And Resource Projection"
-          },
-          {
             "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME",
-            "mechanic": "Execute Beast form choice, game-statistic replacement and retained facts, Temporary Hit Points, no spellcasting, equipment choice/effects, and reversion triggers.",
+            "mechanic": "Execute the chosen known Beast form in play, including game-statistic replacement and retained facts, Temporary Hit Points, no spellcasting, equipment choice and effects, and reversion triggers.",
             "owner": "stat-block-control shape-shifting runtime",
-            "requiredOutput": "Supported runtime profile and owner evidence for Wild Shape shape-shifting execution.",
+            "requiredOutput": "Supported runtime profile and owner evidence for Wild Shape shape-shifting execution over Character Sheet known-form identities.",
             "title": "Druid Wild Shape Shape-Shifting Runtime"
           }
         ],
-        "futureProfileOwner": "character-creation-runtime plus stat-block-control shape-shifting runtime",
-        "reason": "Druid Wild Shape is authored and installed as an SRD Surface class-feature record with catalog-level activation, resource, and shape-shifting metadata only. Wild Companion now has its own authored boundary and level-2 progression admission; Wild Shape remains blocked by the concrete follow-up split listed on this claim.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "character-creation.class-feature-resource-projection",
+          "character-sheet.class-feature-use-count-resource"
+        ],
+        "supportedMechanics": [
+          "Character Creation admits same-class Druid level-2 progression, retains the Wild Shape feature ref from the Surface class record, and projects the Wild Shape use-count resource into CharacterBuild resources without duplicating class progression state",
+          "Character Creation projects Wild Shape character facts from the retained Surface feature, Druid class level, and SRD Stat Block catalog: use-count thresholds, one use regained on Short Rest, all uses regained on Long Rest, rounded-down hour duration, known-form count thresholds, Beast-form eligibility, maximum Challenge Rating thresholds, Fly Speed eligibility, and one eligible known-form replacement on Long Rest; the RAW recommended Stat Blocks remain Surface recommendations rather than default known-form state",
+          "Character Sheet requires explicit selected known Beast form Stat Block identities for Wild Shape builds, validates and stores them as current known-form state, tracks expended Wild Shape uses, derives capacity and reset cadence from CharacterBuild resources and Surface feature facts, regains one expended use on Short Rest, clears expended uses on Long Rest, and applies one eligible known-form replacement on Long Rest",
+          "App and MCP sheet-creation boundaries accept explicit Wild Shape known-form Stat Block ids or return a typed missing-known-forms workflow issue, and Character Sheet battle handoff preserves current Wild Shape known-form identities when rebuilding a sheet from battle state"
+        ],
+        "tag": "profile-subset-supported"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS"
+        },
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS"
+        }
+      ],
       "executableMechanics": true,
       "kind": "class_feature",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "character-creation.class-feature-resource-projection",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Surface class-feature resource container and known-form roster records projected from class progression into CharacterBuild resource and character facts; selected option execution and shape-shifted form execution remain owned by selected option or shape-shifting runtime profiles.",
+          "taskRefs": [
+            "L12G-AUTHOR-CLERIC-CHANNEL-DIVINITY",
+            "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS"
+          ],
+          "title": "Character Creation projects class-feature resources into CharacterBuild resource facts",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-sheet.class-feature-use-count-resource",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/index.ts",
+            "packages/app/src/components/character-creation/characterCreationRuntime.ts",
+            "packages/mcp/src/session-store.ts",
+            "packages/mcp/src/character-tools.ts",
+            "packages/character-battle-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "CharacterBuild class-feature resources plus installed Surface reset cadence and known-form roster facts; Character Sheet requires explicit selected known-form identities for Wild Shape builds, stores expended use-count state and current known-form identities, then derives capacity, Short Rest or Long Rest recovery, and Druid Wild Shape known-form replacement eligibility from the feature, class progression, and SRD Stat Block catalog. App, MCP, and Character Sheet battle handoff boundaries must pass through or preserve that selected known-form state rather than defaulting from recommendations.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS"
+          ],
+          "title": "Character Sheet tracks rest-reset class-feature use-count resources",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/app/src/components/character-creation/characterCreationRuntime.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/mcp/src/session-store.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/druid_wild_shape.json",
       "unitId": "druid_wild_shape"
     },
@@ -9194,7 +9320,7 @@
         ],
         "supportedMechanics": [
           "Wild Companion is authored as a Druid level-2 Surface class-feature record that requires a Magic action, links to the existing Find Familiar Spell Definition, names the SRD spend choices as a Spell Slot or one use of the existing Wild Shape feature resource, removes Material components, fixes the familiar mode to Fey, and adds the caster-finished-Long-Rest disappearance boundary.",
-          "Character Creation admits same-class Druid level-2 progression and finalizes retained sibling feature refs for Wild Shape and Wild Companion without projecting a CharacterBuild resource for Wild Shape or treating Wild Companion as Wild Shape shape-shifting execution."
+          "Character Creation admits same-class Druid level-2 progression and finalizes retained sibling feature refs for Wild Shape and Wild Companion while Wild Shape's use-count resource is projected by the Druid Wild Shape character-facts owner and Wild Companion is not treated as Wild Shape shape-shifting execution."
         ],
         "tag": "profile-subset-supported"
       },

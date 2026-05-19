@@ -2412,7 +2412,7 @@
     "srd521:classes/druid:level-2:class-feature-grant:druid_wild_companion": {
       "taskId": "L12G-AUTHOR-DRUID-WILD-COMPANION",
       "profile": "character-creation.class-feature-advancement-replacement support profile",
-      "summary": "Druid Wild Companion is retained from the level-2 Druid class feature grant alongside Wild Shape; Character Creation admits same-class Druid level 2, projects level-2 Druid prepared-spell and Spell Slot table facts from the class record, and retains both sibling feature Unit refs without projecting a Wild Shape CharacterBuild resource or claiming companion lifecycle or Wild Shape shape-shifting execution.",
+      "summary": "Druid Wild Companion is retained from the level-2 Druid class feature grant alongside Wild Shape; Character Creation admits same-class Druid level 2, projects level-2 Druid prepared-spell and Spell Slot table facts from the class record, and retains both sibling feature Unit refs without claiming companion lifecycle or Wild Shape shape-shifting execution.",
       "discovery": [
         "packages/character-creation-runtime/src/discovery.ts:discoverInitialDraftHoles"
       ],
@@ -2428,7 +2428,33 @@
         "packages/character-creation-runtime/src/finalization.ts:finalizedBuildSpellcastingSource"
       ],
       "tests": [
-        "packages/character-creation-runtime/src/index.test.ts:accepts Druid 2 Wild Shape and Wild Companion as sibling feature refs"
+        "packages/character-creation-runtime/src/index.test.ts:accepts Druid 2 Wild Shape and projects character facts"
+      ]
+    },
+    "srd521:classes/druid:level-2:class-feature-grant:druid_wild_shape": {
+      "taskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS",
+      "profile": "character-creation.class-feature-resource-projection support profile",
+      "summary": "Druid Wild Shape is retained from the level-2 Druid class feature grant and projected into CharacterBuild resource and character facts from the authored Surface activation record. The projection derives use count, partial Short Rest/full Long Rest reset, rounded-down duration, known-form roster count thresholds, Beast form eligibility rules, maximum Challenge Rating and Fly Speed thresholds, and a one-form Long Rest replacement operation from the retained feature, Druid class level, and SRD Stat Block catalog without duplicating class progression state. Selected known Beast form identities are validated against the Stat Block catalog rather than defaulted from the RAW recommended forms.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverInitialDraftHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.characterBuildResourceUnitIds"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds",
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildResources",
+        "packages/character-creation-runtime/src/druid-wild-shape.ts:characterBuildDruidWildShapeFacts",
+        "packages/character-creation-runtime/src/druid-wild-shape.ts:validateDruidWildShapeKnownForms",
+        "packages/character-creation-runtime/src/druid-wild-shape.ts:replaceDruidWildShapeKnownForm"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:accepts Druid 2 Wild Shape and projects character facts",
+        "packages/character-creation-runtime/src/index.test.ts:projects Druid 4 Wild Shape roster thresholds without known-form defaults"
       ]
     },
     "srd521:classes/druid:level-1:class-feature-grant:druid_druidic": {

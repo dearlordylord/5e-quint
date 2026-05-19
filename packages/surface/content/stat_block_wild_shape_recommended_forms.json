@@ -1,0 +1,167 @@
+[
+  {
+    "challengeRating": 0.25,
+    "id": "stat_block_riding_horse",
+    "kind": "statBlock",
+    "name": "Riding Horse",
+    "provenance": {
+      "kind": "srd-5.2.1",
+      "section": "Animals.md:2089-2128"
+    },
+    "statBlock": {
+      "abilityScores": {
+        "cha": 7,
+        "con": 12,
+        "dex": 13,
+        "int": 2,
+        "str": 16,
+        "wis": 11
+      },
+      "ac": {
+        "kind": "literal",
+        "value": 11
+      },
+      "actions": {
+        "attacks": [
+          {
+            "attackBonus": {
+              "kind": "literal",
+              "value": 5
+            },
+            "attackType": "melee",
+            "name": "Hooves",
+            "onHit": [
+              {
+                "amount": {
+                  "expr": {
+                    "dice": 1,
+                    "dieSize": 8,
+                    "flat": 3
+                  },
+                  "kind": "fixed"
+                },
+                "damageType": "bludgeoning",
+                "kind": "damage"
+              }
+            ],
+            "reachFeet": 5
+          }
+        ]
+      },
+      "creatureType": "beast",
+      "displayName": "Riding Horse",
+      "hp": {
+        "kind": "literal",
+        "value": 13
+      },
+      "initiativeModifier": 1,
+      "languages": [
+        "None"
+      ],
+      "size": "large",
+      "speeds": [
+        {
+          "feet": {
+            "kind": "literal",
+            "value": 60
+          },
+          "kind": "walk"
+        }
+      ]
+    }
+  },
+  {
+    "challengeRating": 0.25,
+    "id": "stat_block_wolf",
+    "kind": "statBlock",
+    "name": "Wolf",
+    "provenance": {
+      "kind": "srd-5.2.1",
+      "section": "Animals.md:2587-2632"
+    },
+    "statBlock": {
+      "abilityScores": {
+        "cha": 6,
+        "con": 12,
+        "dex": 15,
+        "int": 3,
+        "str": 14,
+        "wis": 12
+      },
+      "ac": {
+        "kind": "literal",
+        "value": 12
+      },
+      "actions": {
+        "attacks": [
+          {
+            "attackBonus": {
+              "kind": "literal",
+              "value": 4
+            },
+            "attackType": "melee",
+            "description": "If the target is a Medium or smaller creature, it has the Prone condition.",
+            "name": "Bite",
+            "onHit": [
+              {
+                "amount": {
+                  "expr": {
+                    "dice": 1,
+                    "dieSize": 6,
+                    "flat": 2
+                  },
+                  "kind": "fixed"
+                },
+                "damageType": "piercing",
+                "kind": "damage"
+              }
+            ],
+            "reachFeet": 5
+          }
+        ]
+      },
+      "creatureType": "beast",
+      "displayName": "Wolf",
+      "hp": {
+        "kind": "literal",
+        "value": 11
+      },
+      "initiativeModifier": 2,
+      "languages": [
+        "None"
+      ],
+      "senses": [
+        {
+          "kind": "darkvision",
+          "rangeFeet": 60
+        }
+      ],
+      "size": "medium",
+      "skillModifiers": [
+        {
+          "modifier": 5,
+          "skill": "perception"
+        },
+        {
+          "modifier": 4,
+          "skill": "stealth"
+        }
+      ],
+      "speeds": [
+        {
+          "feet": {
+            "kind": "literal",
+            "value": 40
+          },
+          "kind": "walk"
+        }
+      ],
+      "traits": [
+        {
+          "description": "The wolf has Advantage on attack rolls against a creature if at least one of the wolf's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+          "name": "Pack Tactics"
+        }
+      ]
+    }
+  }
+]

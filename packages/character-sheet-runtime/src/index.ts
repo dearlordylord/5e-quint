@@ -14,6 +14,8 @@ import {
   classUnitIdToClassName,
   CHARACTER_CLASS_LEVELS,
   computeTotalLevel,
+  DRUID_WILD_SHAPE_UNIT_ID,
+  characterBuildDruidWildShapeFacts,
   characterEquipmentItemSourceFromId,
   eldritchInvocationOptionForInvocationId,
   eldritchInvocationRepeatableChoiceSatisfiesRule,
@@ -22,6 +24,10 @@ import {
   parseCharacterEquipmentItemId,
   progressionClassUnitIds,
   STANDARD_LANGUAGES,
+  isClassLevelThresholdTiers,
+  replaceDruidWildShapeKnownForm,
+  thresholdTierValueAtClassLevel,
+  validateDruidWildShapeKnownForms,
   weaponMasteryChoiceProfileForFeature,
   type CharacterBuild,
   type CharacterBuildBookOfShadowsSpellAccess,
@@ -29,6 +35,7 @@ import {
   type CharacterBuildEldritchInvocationRepeatableChoice,
   type CharacterBuildFeature,
   type CharacterBuildHitDiePool,
+  type CharacterBuildDruidWildShapeKnownFormReplacement,
   type CharacterBuildPactMagicSlotPool,
   type CharacterBuildProficiencyChoiceSubject,
   type CharacterBuildResource,
@@ -99,14 +106,22 @@ import type {
   ChargePoolResource,
   ClassFeatureComponentMechanics,
   EquipmentPredicate,
+  RestResetCadence,
   SpellRecord,
   UnitRecord,
+  UseCountResource,
 } from "@dnd/surface/surface/types";
 import {
   allCantripsFromAnyClassSpellList,
   allCantripsFromClassSpellList,
   allLeveledSpellsFromAnyClassSpellList,
 } from "@dnd/surface/surface/schema";
+import {
+  buildStatBlockCatalog,
+  srdStatBlockCollection,
+  type StatBlockCatalog,
+  type StatBlockId,
+} from "@dnd/surface/surface/stat-block-catalog";
 import { readClassCreationFacts } from "@dnd/surface/surface/character-creation-readers";
 import {
   isSupportedClassFeatureSpellFreeCastResourceTag,
@@ -122,6 +137,7 @@ import { Brand, Either, Match, Option } from "effect";
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.weapon-mastery-reselection
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.ability-check-proficiency-bonus
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.pact-slot-recovery
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
 
 const WEAPON_PROFICIENCY_CATEGORY_VALUES = ["simple", "martial"] as const;
 const ARMOR_TRAINING_CATEGORY_VALUES = [
@@ -130,6 +146,15 @@ const ARMOR_TRAINING_CATEGORY_VALUES = [
   "heavy",
   "shield",
 ] as const;
+const CHARACTER_SHEET_USE_COUNT_RESOURCE_UNIT_IDS = [
+  DRUID_WILD_SHAPE_UNIT_ID,
+] as const satisfies ReadonlyArray<UnitRecord["id"]>;
+type CharacterSheetUseCountResourceUnitId =
+  (typeof CHARACTER_SHEET_USE_COUNT_RESOURCE_UNIT_IDS)[number];
+const DEFAULT_SRD_STAT_BLOCK_CATALOG_RESULT = buildStatBlockCatalog({
+  collections: [srdStatBlockCollection],
+});
+const byKind = Match.discriminator("kind");
 export const BARD_JACK_OF_ALL_TRADES_UNIT_ID =
   "bard_jack_of_all_trades" as const satisfies UnitRecord["id"];
 const WARLOCK_MAGICAL_CUNNING_UNIT_ID =
@@ -189,6 +214,7 @@ export type CharacterSheet =
       readonly bookOfShadowsPresence:
         | CharacterSheetBookOfShadowsPresence
         | undefined;
+      readonly druidWildShapeKnownForms?: CharacterSheetDruidWildShapeKnownForms;
       readonly spellSlotExpenditures: readonly CharacterSpellSlotExpenditure[];
       readonly pactSlotExpenditure: CharacterPactSlotExpenditure | undefined;
     }
@@ -203,6 +229,7 @@ export type CharacterSheet =
       readonly restFeatureUses: readonly CharacterSheetRestFeatureUse[];
       readonly resourceExpenditures: readonly CharacterSheetResourceExpenditure[];
       readonly bookOfShadowsPresence?: never;
+      readonly druidWildShapeKnownForms?: CharacterSheetDruidWildShapeKnownForms;
       readonly spellSlotExpenditures?: never;
       readonly pactSlotExpenditure?: never;
     };
@@ -223,6 +250,14 @@ export type CharacterPactSlotExpenditure = {
 export type CharacterSheetBookOfShadowsPresence =
   | { readonly tag: "onPerson" }
   | { readonly tag: "notOnPerson" };
+
+export type CharacterSheetDruidWildShapeKnownForms = {
+  readonly unitId: typeof DRUID_WILD_SHAPE_UNIT_ID;
+  readonly statBlockIds: readonly StatBlockId[];
+};
+
+export type CharacterSheetDruidWildShapeKnownFormReplacement =
+  CharacterBuildDruidWildShapeKnownFormReplacement;
 
 export type CharacterSheetSpellSlotState = {
   readonly spellLevel: SpellSlotLevel;
@@ -256,12 +291,22 @@ export type CharacterSheetRestFeatureUse =
       readonly usedSinceLongRest: true;
     };
 
-export type CharacterSheetResourceExpenditure = {
+type CharacterSheetTaggedResourceExpenditure = {
   readonly tag:
     | "layOnHandsHealingPool"
     | SupportedClassFeatureSpellFreeCastResourceTag;
   readonly expended: ResourceCount;
 };
+
+type CharacterSheetUseCountResourceExpenditure = {
+  readonly tag: "useCountResource";
+  readonly unitId: CharacterSheetUseCountResourceUnitId;
+  readonly expended: ResourceCount;
+};
+
+export type CharacterSheetResourceExpenditure =
+  | CharacterSheetTaggedResourceExpenditure
+  | CharacterSheetUseCountResourceExpenditure;
 
 type CharacterSheetLayOnHandsResource = CharacterBuildResource & {
   readonly unitId: UnitRecord["id"];
@@ -274,6 +319,12 @@ type CharacterSheetClassFeatureSpellFreeCastResource = {
   readonly count: ResourceCount;
 };
 
+type CharacterSheetUseCountResource = CharacterBuildResource & {
+  readonly unitId: CharacterSheetUseCountResourceUnitId;
+  readonly resource: UseCountResource;
+  readonly resetCadence: RestResetCadence;
+};
+
 export type CharacterSheetResourceState =
   | (CharacterSheetLayOnHandsResource & {
       readonly tag: "layOnHandsHealingPool";
@@ -281,6 +332,11 @@ export type CharacterSheetResourceState =
       readonly expended: ResourceCount;
     })
   | (CharacterSheetClassFeatureSpellFreeCastResource & {
+      readonly expended: ResourceCount;
+    })
+  | (CharacterSheetUseCountResource & {
+      readonly tag: "useCountResource";
+      readonly count: ResourceCount;
       readonly expended: ResourceCount;
     });
 
@@ -313,11 +369,15 @@ export type CharacterSheetLongRestInput =
       readonly sheet: CharacterSheet;
       readonly unitLibrary?: never;
       readonly weaponMasteryReselections?: never;
+      readonly druidWildShapeKnownFormReplacement?: never;
+      readonly statBlockCatalog?: never;
     }
   | {
       readonly sheet: CharacterSheet;
       readonly unitLibrary: UnitCatalog;
-      readonly weaponMasteryReselections: ReadonlyNonEmptyArray<CharacterSheetWeaponMasteryReselection>;
+      readonly weaponMasteryReselections?: ReadonlyNonEmptyArray<CharacterSheetWeaponMasteryReselection>;
+      readonly druidWildShapeKnownFormReplacement?: CharacterSheetDruidWildShapeKnownFormReplacement;
+      readonly statBlockCatalog?: StatBlockCatalog;
     };
 
 export type CharacterSheetLayOnHandsInput = {
@@ -349,6 +409,8 @@ export type CharacterSheetInput = {
   readonly bookOfShadowsPresence?: CharacterSheetBookOfShadowsPresence;
   readonly restFeatureUses?: readonly CharacterSheetRestFeatureUse[];
   readonly resourceExpenditures?: readonly CharacterSheetResourceExpenditure[];
+  readonly druidWildShapeKnownFormStatBlockIds?: readonly StatBlockId[];
+  readonly statBlockCatalog?: StatBlockCatalog;
 };
 
 export type CharacterSheetPositiveHpUnconscious = {
@@ -678,6 +740,10 @@ export function createFreshCharacterSheet(
   if (Either.isLeft(bookOfShadowsPresence)) {
     return Either.left(bookOfShadowsPresence.left);
   }
+  const druidWildShapeKnownForms = druidWildShapeKnownFormsFromInput(input);
+  if (Either.isLeft(druidWildShapeKnownForms)) {
+    return Either.left(druidWildShapeKnownForms.left);
+  }
 
   if (isNonSpellcastingBuild(input.build)) {
     if (input.spellSlots !== undefined) {
@@ -702,6 +768,9 @@ export function createFreshCharacterSheet(
       spentHitDice: spentHitDice.right,
       restFeatureUses: restFeatureUses.right,
       resourceExpenditures: resourceExpenditures.right,
+      ...(druidWildShapeKnownForms.right === undefined
+        ? {}
+        : { druidWildShapeKnownForms: druidWildShapeKnownForms.right }),
     });
   }
 
@@ -739,9 +808,77 @@ export function createFreshCharacterSheet(
     restFeatureUses: restFeatureUses.right,
     resourceExpenditures: resourceExpenditures.right,
     bookOfShadowsPresence: bookOfShadowsPresence.right,
+    ...(druidWildShapeKnownForms.right === undefined
+      ? {}
+      : { druidWildShapeKnownForms: druidWildShapeKnownForms.right }),
     spellSlotExpenditures: spellSlotExpenditures.right,
     pactSlotExpenditure: pactSlotExpenditure.right,
   });
+}
+
+export function characterSheetDruidWildShapeKnownForms(
+  sheet: CharacterSheet,
+): CharacterSheetDruidWildShapeKnownForms | undefined {
+  return sheet.druidWildShapeKnownForms;
+}
+
+function druidWildShapeKnownFormsFromInput(
+  input: Pick<
+    CharacterSheetInput,
+    | "build"
+    | "unitLibrary"
+    | "druidWildShapeKnownFormStatBlockIds"
+    | "statBlockCatalog"
+  >,
+): Either.Either<
+  CharacterSheetDruidWildShapeKnownForms | undefined,
+  CharacterSheetIssue
+> {
+  const facts = characterBuildDruidWildShapeFacts({
+    build: input.build,
+    unitLibrary: input.unitLibrary,
+  });
+  if (Either.isLeft(facts)) return characterSheetIssue(facts.left.message);
+  if (facts.right === undefined) {
+    return input.druidWildShapeKnownFormStatBlockIds === undefined
+      ? Either.right(undefined)
+      : characterSheetIssue(
+          "Wild Shape known forms require the Druid Wild Shape feature.",
+        );
+  }
+  const statBlockCatalog = druidWildShapeStatBlockCatalogFromInput(
+    input.statBlockCatalog,
+  );
+  if (Either.isLeft(statBlockCatalog))
+    return Either.left(statBlockCatalog.left);
+  if (input.druidWildShapeKnownFormStatBlockIds === undefined) {
+    return characterSheetIssue(
+      "Wild Shape known forms require selected Beast Stat Block identities.",
+    );
+  }
+  const knownForms = validateDruidWildShapeKnownForms({
+    facts: facts.right,
+    knownFormStatBlockIds: input.druidWildShapeKnownFormStatBlockIds,
+    statBlockCatalog: statBlockCatalog.right,
+  });
+  if (Either.isLeft(knownForms))
+    return characterSheetIssue(knownForms.left.message);
+  return Either.right({
+    unitId: DRUID_WILD_SHAPE_UNIT_ID,
+    statBlockIds: knownForms.right,
+  });
+}
+
+function druidWildShapeStatBlockCatalogFromInput(
+  statBlockCatalog: StatBlockCatalog | undefined,
+): Either.Either<StatBlockCatalog, CharacterSheetIssue> {
+  if (statBlockCatalog !== undefined) return Either.right(statBlockCatalog);
+  if (DEFAULT_SRD_STAT_BLOCK_CATALOG_RESULT.tag === "invalid") {
+    return characterSheetIssue(
+      "Wild Shape known forms require a valid SRD Stat Block catalog.",
+    );
+  }
+  return Either.right(DEFAULT_SRD_STAT_BLOCK_CATALOG_RESULT.catalog);
 }
 
 function bookOfShadowsPresenceFromInput(
@@ -812,6 +949,12 @@ export function parseCharacterSheet(
     value.restFeatureUses,
   );
   if (Either.isLeft(restFeatureUses)) return Either.left(restFeatureUses.left);
+  const druidWildShapeKnownForms = parseStoredDruidWildShapeKnownForms(
+    value.druidWildShapeKnownForms,
+  );
+  if (Either.isLeft(druidWildShapeKnownForms)) {
+    return Either.left(druidWildShapeKnownForms.left);
+  }
 
   return createFreshCharacterSheet({
     characterId: characterSheetId(value.characterId),
@@ -835,6 +978,12 @@ export function parseCharacterSheet(
     spentHitDice: spentHitDice.right,
     restFeatureUses: restFeatureUses.right,
     resourceExpenditures: resourceExpenditures.right,
+    ...(druidWildShapeKnownForms.right === undefined
+      ? {}
+      : {
+          druidWildShapeKnownFormStatBlockIds:
+            druidWildShapeKnownForms.right.statBlockIds,
+        }),
   });
 }
 
@@ -984,6 +1133,33 @@ export function characterSheetResources(
     });
   }
 
+  const useCountResources = classFeatureUseCountResourcesForBuild(
+    sheet.build,
+    unitLibrary,
+  );
+  if (Either.isLeft(useCountResources)) {
+    return Either.left(useCountResources.left);
+  }
+  for (const useCountResource of useCountResources.right) {
+    const count = characterSheetResourceCapacity({
+      build: sheet.build,
+      unitLibrary,
+      resource: useCountResource,
+    });
+    if (Either.isLeft(count)) return Either.left(count.left);
+    resources.push({
+      ...useCountResource,
+      tag: "useCountResource",
+      count: count.right,
+      expended:
+        sheet.resourceExpenditures.find(
+          (expenditure) =>
+            expenditure.tag === "useCountResource" &&
+            expenditure.unitId === useCountResource.unitId,
+        )?.expended ?? resourceCount(0),
+    });
+  }
+
   return Either.right(resources);
 }
 
@@ -1076,8 +1252,15 @@ export function completeShortRest(
     );
   }
   const pactRecovered = recoverPactSlots(input.sheet);
-  const hitDiceSpent = spendHitDice({
+  const useCountRecovered = recoverShortRestUseCountResources({
     sheet: pactRecovered,
+    unitLibrary: input.unitLibrary,
+  });
+  if (Either.isLeft(useCountRecovered)) {
+    return Either.left(useCountRecovered.left);
+  }
+  const hitDiceSpent = spendHitDice({
+    sheet: useCountRecovered.right,
     unitLibrary: input.unitLibrary,
     spendHitDice: input.spendHitDice,
   });
@@ -1107,6 +1290,13 @@ export function completeLongRest(
   if (isCharacterSheetWithSpellSlots(input.sheet)) {
     const build = characterSheetLongRestBuild(input, input.sheet.build);
     if (Either.isLeft(build)) return Either.left(build.left);
+    const druidWildShapeKnownForms = druidWildShapeKnownFormsAfterLongRest({
+      input,
+      build: build.right,
+    });
+    if (Either.isLeft(druidWildShapeKnownForms)) {
+      return Either.left(druidWildShapeKnownForms.left);
+    }
     return Either.right({
       ...input.sheet,
       build: build.right,
@@ -1114,6 +1304,9 @@ export function completeLongRest(
       spentHitDice: [],
       restFeatureUses: [],
       resourceExpenditures: [],
+      ...(druidWildShapeKnownForms.right === undefined
+        ? {}
+        : { druidWildShapeKnownForms: druidWildShapeKnownForms.right }),
       spellSlotExpenditures: input.sheet.spellSlotExpenditures.map(
         (expenditure) => ({
           ...expenditure,
@@ -1128,6 +1321,13 @@ export function completeLongRest(
   }
   const build = characterSheetLongRestBuild(input, input.sheet.build);
   if (Either.isLeft(build)) return Either.left(build.left);
+  const druidWildShapeKnownForms = druidWildShapeKnownFormsAfterLongRest({
+    input,
+    build: build.right,
+  });
+  if (Either.isLeft(druidWildShapeKnownForms)) {
+    return Either.left(druidWildShapeKnownForms.left);
+  }
   return Either.right({
     ...input.sheet,
     build: build.right,
@@ -1135,6 +1335,9 @@ export function completeLongRest(
     spentHitDice: [],
     restFeatureUses: [],
     resourceExpenditures: [],
+    ...(druidWildShapeKnownForms.right === undefined
+      ? {}
+      : { druidWildShapeKnownForms: druidWildShapeKnownForms.right }),
   });
 }
 
@@ -1198,6 +1401,56 @@ function characterSheetLongRestBuild<TBuild extends CharacterBuild>(
     build,
     unitLibrary: input.unitLibrary,
     reselections: input.weaponMasteryReselections,
+  });
+}
+
+function druidWildShapeKnownFormsAfterLongRest(input: {
+  readonly input: CharacterSheetLongRestInput;
+  readonly build: CharacterBuild;
+}): Either.Either<
+  CharacterSheetDruidWildShapeKnownForms | undefined,
+  CharacterSheetIssue
+> {
+  if (input.input.druidWildShapeKnownFormReplacement === undefined) {
+    return Either.right(input.input.sheet.druidWildShapeKnownForms);
+  }
+  if (input.input.unitLibrary === undefined) {
+    return characterSheetIssue(
+      "Wild Shape known-form replacement requires the Unit library.",
+    );
+  }
+  if (input.input.sheet.druidWildShapeKnownForms === undefined) {
+    return characterSheetIssue(
+      "Wild Shape known-form replacement requires current known forms.",
+    );
+  }
+  const facts = characterBuildDruidWildShapeFacts({
+    build: input.build,
+    unitLibrary: input.input.unitLibrary,
+  });
+  if (Either.isLeft(facts)) return characterSheetIssue(facts.left.message);
+  if (facts.right === undefined) {
+    return characterSheetIssue(
+      "Wild Shape known-form replacement requires the Druid Wild Shape feature.",
+    );
+  }
+  const statBlockCatalog = druidWildShapeStatBlockCatalogFromInput(
+    input.input.statBlockCatalog,
+  );
+  if (Either.isLeft(statBlockCatalog))
+    return Either.left(statBlockCatalog.left);
+  const replaced = replaceDruidWildShapeKnownForm({
+    facts: facts.right,
+    currentKnownFormStatBlockIds:
+      input.input.sheet.druidWildShapeKnownForms.statBlockIds,
+    replacement: input.input.druidWildShapeKnownFormReplacement,
+    statBlockCatalog: statBlockCatalog.right,
+  });
+  if (Either.isLeft(replaced))
+    return characterSheetIssue(replaced.left.message);
+  return Either.right({
+    unitId: DRUID_WILD_SHAPE_UNIT_ID,
+    statBlockIds: replaced.right,
   });
 }
 
@@ -2216,21 +2469,33 @@ function resourceExpendituresFromInput(
   if (Either.isLeft(freeCastResources)) {
     return Either.left(freeCastResources.left);
   }
-  const seen = new Set<CharacterSheetResourceExpenditure["tag"]>();
+  const useCountResources = classFeatureUseCountResourcesForBuild(
+    input.build,
+    input.unitLibrary,
+  );
+  if (Either.isLeft(useCountResources)) {
+    return Either.left(useCountResources.left);
+  }
+  const seen: CharacterSheetResourceExpenditure[] = [];
   const result: CharacterSheetResourceExpenditure[] = [];
   for (const expenditure of expenditures) {
-    if (seen.has(expenditure.tag)) {
+    if (
+      seen.some((existing) =>
+        characterSheetResourceExpendituresMatch(existing, expenditure),
+      )
+    ) {
       return characterSheetIssue(
         "Character Sheet resource expenditure state must not duplicate.",
       );
     }
-    seen.add(expenditure.tag);
+    seen.push(expenditure);
     const count = characterSheetResourceExpenditureCapacity({
       build: input.build,
       unitLibrary: input.unitLibrary,
       layOnHandsResource: layOnHandsResource.right,
       freeCastResources: freeCastResources.right,
-      expenditureTag: expenditure.tag,
+      useCountResources: useCountResources.right,
+      expenditure,
     });
     if (Either.isLeft(count)) return Either.left(count.left);
     if (
@@ -2243,10 +2508,12 @@ function resourceExpendituresFromInput(
       );
     }
     if (expenditure.expended > 0) {
-      result.push({
-        tag: expenditure.tag,
-        expended: resourceCount(expenditure.expended),
-      });
+      result.push(
+        characterSheetResourceExpenditureWithExpended(
+          expenditure,
+          resourceCount(expenditure.expended),
+        ),
+      );
     }
   }
   return Either.right(result);
@@ -2257,9 +2524,10 @@ function characterSheetResourceExpenditureCapacity(input: {
   readonly unitLibrary: UnitCatalog;
   readonly layOnHandsResource: CharacterSheetLayOnHandsResource | null;
   readonly freeCastResources: readonly CharacterSheetClassFeatureSpellFreeCastResource[];
-  readonly expenditureTag: CharacterSheetResourceExpenditure["tag"];
+  readonly useCountResources: readonly CharacterSheetUseCountResource[];
+  readonly expenditure: CharacterSheetResourceExpenditure;
 }): Either.Either<ResourceCount, CharacterSheetIssue> {
-  if (input.expenditureTag === "layOnHandsHealingPool") {
+  if (input.expenditure.tag === "layOnHandsHealingPool") {
     if (input.layOnHandsResource === null) {
       return characterSheetIssue(
         "Lay On Hands healing pool expenditure requires the Paladin Lay On Hands feature.",
@@ -2271,8 +2539,24 @@ function characterSheetResourceExpenditureCapacity(input: {
       resource: input.layOnHandsResource,
     });
   }
+  if (input.expenditure.tag === "useCountResource") {
+    const unitId = input.expenditure.unitId;
+    const useCountResource = input.useCountResources.find(
+      (resource) => resource.unitId === unitId,
+    );
+    if (useCountResource === undefined) {
+      return characterSheetIssue(
+        "Class feature use-count expenditure requires the matching class feature.",
+      );
+    }
+    return characterSheetResourceCapacity({
+      build: input.build,
+      unitLibrary: input.unitLibrary,
+      resource: useCountResource,
+    });
+  }
   const freeCastResource = input.freeCastResources.find(
-    (resource) => resource.tag === input.expenditureTag,
+    (resource) => resource.tag === input.expenditure.tag,
   );
   if (freeCastResource === undefined) {
     return characterSheetIssue(
@@ -2280,6 +2564,26 @@ function characterSheetResourceExpenditureCapacity(input: {
     );
   }
   return Either.right(freeCastResource.count);
+}
+
+function characterSheetResourceExpenditureWithExpended(
+  expenditure: CharacterSheetResourceExpenditure,
+  expended: ResourceCount,
+): CharacterSheetResourceExpenditure {
+  return expenditure.tag === "useCountResource"
+    ? { tag: expenditure.tag, unitId: expenditure.unitId, expended }
+    : { tag: expenditure.tag, expended };
+}
+
+function characterSheetResourceExpendituresMatch(
+  first: CharacterSheetResourceExpenditure,
+  second: CharacterSheetResourceExpenditure,
+): boolean {
+  if (first.tag !== second.tag) return false;
+  if (first.tag === "useCountResource" && second.tag === "useCountResource") {
+    return first.unitId === second.unitId;
+  }
+  return true;
 }
 
 function layOnHandsResourceForBuild(
@@ -2372,6 +2676,65 @@ function classFeatureSpellFreeCastResourceForUnit(
   };
 }
 
+function classFeatureUseCountResourcesForBuild(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): Either.Either<
+  readonly CharacterSheetUseCountResource[],
+  CharacterSheetIssue
+> {
+  const resources: CharacterSheetUseCountResource[] = [];
+  for (const resource of characterBuildResources(build, unitLibrary)) {
+    if (!isCharacterSheetUseCountResourceUnitId(resource.unitId)) continue;
+    const unit = getRequiredUnit(unitLibrary, resource.unitId);
+    if (Either.isLeft(unit)) return Either.left(unit.left);
+    const resetCadence = restResetCadenceForUseCountResourceUnit(unit.right);
+    if (resource.resource.kind !== "use_count" || resetCadence === undefined) {
+      return characterSheetIssue(
+        "Class feature use-count resource requires an installed rest-reset class feature.",
+      );
+    }
+    resources.push({
+      unitId: resource.unitId,
+      resource: resource.resource,
+      resetCadence,
+    });
+  }
+  return Either.right(resources);
+}
+
+function restResetCadenceForUseCountResourceUnit(
+  unit: UnitRecord,
+): RestResetCadence | undefined {
+  if (unit.kind !== "class_feature") return undefined;
+  const mechanics = unit.mechanics;
+  if (!("resetCadence" in mechanics) || mechanics.resetCadence === undefined) {
+    return undefined;
+  }
+  return isRestResetCadence(mechanics.resetCadence)
+    ? mechanics.resetCadence
+    : undefined;
+}
+
+function isRestResetCadence(
+  resetCadence: RestResetCadence | { readonly kind: string },
+): resetCadence is RestResetCadence {
+  return (
+    resetCadence.kind === "short_or_long_rest" ||
+    resetCadence.kind === "long_rest" ||
+    resetCadence.kind === "short_rest" ||
+    resetCadence.kind === "partial_short_full_long"
+  );
+}
+
+function isCharacterSheetUseCountResourceUnitId(
+  unitId: UnitRecord["id"],
+): unitId is CharacterSheetUseCountResourceUnitId {
+  return CHARACTER_SHEET_USE_COUNT_RESOURCE_UNIT_IDS.some(
+    (supportedUnitId) => supportedUnitId === unitId,
+  );
+}
+
 type CharacterSheetResourceCapacityInput = {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
@@ -2403,6 +2766,23 @@ function characterSheetResourceCapacity(
         cap.base +
           Math.max(0, level.right - cap.startingAtLevel) * cap.perLevel,
       ),
+    );
+  }
+  if (cap.kind === "threshold_tiers") {
+    if (!isClassLevelThresholdTiers(cap)) {
+      return characterSheetIssue(
+        "Character Sheet resource threshold scaling must use class level.",
+      );
+    }
+    if (unit.right.kind !== "class_feature") {
+      return characterSheetIssue(
+        "Class-level resource threshold scaling requires a class feature Unit.",
+      );
+    }
+    const level = classFeatureOwnerLevel(input, unit.right);
+    if (Either.isLeft(level)) return Either.left(level.left);
+    return Either.right(
+      resourceCount(thresholdTierValueAtClassLevel(cap, level.right)),
     );
   }
   if (cap.kind === "proficiency_bonus") {
@@ -2474,6 +2854,62 @@ function recoverPactSlots(sheet: CharacterSheet): CharacterSheet {
       expended: resourceCount(0),
     },
   };
+}
+
+function recoverShortRestUseCountResources(input: {
+  readonly sheet: CharacterSheet;
+  readonly unitLibrary: UnitCatalog;
+}): Either.Either<CharacterSheet, CharacterSheetIssue> {
+  const resources = characterSheetResources(input.sheet, input.unitLibrary);
+  if (Either.isLeft(resources)) return Either.left(resources.left);
+  let resourceExpenditures = [...input.sheet.resourceExpenditures];
+  for (const resource of resources.right) {
+    if (resource.tag !== "useCountResource") continue;
+    const expended = shortRestUseCountExpendedAfterRecovery(resource);
+    resourceExpenditures = replaceUseCountResourceExpenditure({
+      expenditures: resourceExpenditures,
+      unitId: resource.unitId,
+      expended,
+    });
+  }
+  return Either.right({ ...input.sheet, resourceExpenditures });
+}
+
+function shortRestUseCountExpendedAfterRecovery(
+  resource: Extract<
+    CharacterSheetResourceState,
+    { readonly tag: "useCountResource" }
+  >,
+): ResourceCount {
+  return Match.value(resource.resetCadence).pipe(
+    byKind("short_or_long_rest", () => resourceCount(0)),
+    byKind("short_rest", () => resourceCount(0)),
+    byKind("long_rest", () => resource.expended),
+    byKind("partial_short_full_long", (cadence) =>
+      resourceCount(Math.max(0, resource.expended - cadence.shortRestRefill)),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function replaceUseCountResourceExpenditure(input: {
+  readonly expenditures: readonly CharacterSheetResourceExpenditure[];
+  readonly unitId: CharacterSheetUseCountResourceUnitId;
+  readonly expended: ResourceCount;
+}): CharacterSheetResourceExpenditure[] {
+  const next = input.expenditures.filter(
+    (expenditure) =>
+      expenditure.tag !== "useCountResource" ||
+      expenditure.unitId !== input.unitId,
+  );
+  if (input.expended > resourceCount(0)) {
+    next.push({
+      tag: "useCountResource",
+      unitId: input.unitId,
+      expended: input.expended,
+    });
+  }
+  return next;
 }
 
 function spendHitDice(input: {
@@ -3210,6 +3646,7 @@ function parseStoredResourceExpenditures(
     if (
       !isRecord(expenditure) ||
       (expenditure.tag !== "layOnHandsHealingPool" &&
+        expenditure.tag !== "useCountResource" &&
         !isSupportedClassFeatureSpellFreeCastResourceTag(expenditure.tag))
     ) {
       return characterSheetIssue(
@@ -3218,12 +3655,54 @@ function parseStoredResourceExpenditures(
     }
     const expended = parseResourceCount(expenditure.expended);
     if (Either.isLeft(expended)) return Either.left(expended.left);
-    expenditures.push({
-      tag: expenditure.tag,
-      expended: expended.right,
-    });
+    if (expenditure.tag === "useCountResource") {
+      const unitId = parseUseCountResourceExpenditureUnitId(expenditure);
+      if (Either.isLeft(unitId)) return Either.left(unitId.left);
+      expenditures.push({
+        tag: expenditure.tag,
+        unitId: unitId.right,
+        expended: expended.right,
+      });
+      continue;
+    }
+    expenditures.push({ tag: expenditure.tag, expended: expended.right });
   }
   return Either.right(expenditures);
+}
+
+function parseStoredDruidWildShapeKnownForms(
+  value: unknown,
+): Either.Either<
+  CharacterSheetDruidWildShapeKnownForms | undefined,
+  CharacterSheetIssue
+> {
+  if (value === undefined) return Either.right(undefined);
+  if (
+    !isRecord(value) ||
+    value.unitId !== DRUID_WILD_SHAPE_UNIT_ID ||
+    !Array.isArray(value.statBlockIds) ||
+    value.statBlockIds.some((statBlockId) => typeof statBlockId !== "string")
+  ) {
+    return characterSheetIssue("Expected Wild Shape known-form state.");
+  }
+  return Either.right({
+    unitId: DRUID_WILD_SHAPE_UNIT_ID,
+    statBlockIds: value.statBlockIds,
+  });
+}
+
+function parseUseCountResourceExpenditureUnitId(
+  expenditure: Record<string, unknown>,
+): Either.Either<CharacterSheetUseCountResourceUnitId, CharacterSheetIssue> {
+  if (
+    typeof expenditure.unitId !== "string" ||
+    !isCharacterSheetUseCountResourceUnitId(expenditure.unitId)
+  ) {
+    return characterSheetIssue(
+      "Character Sheet use-count expenditure requires a supported class feature Unit id.",
+    );
+  }
+  return Either.right(expenditure.unitId);
 }
 
 function parseStoredRestFeatureUses(

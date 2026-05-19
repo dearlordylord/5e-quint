@@ -467,6 +467,12 @@ describe("SRD Unit catalog boundary", () => {
                     { atLevel: 8, total: 8 },
                   ],
                 },
+                recommendedFormStatBlockIds: [
+                  "stat_block_rat",
+                  "stat_block_riding_horse",
+                  "stat_block_spider",
+                  "stat_block_wolf",
+                ],
                 knownFormChange: { kind: "long_rest", replacementCount: 1 },
                 maxChallengeRating: {
                   kind: "threshold_tiers",
