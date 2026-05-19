@@ -33,10 +33,16 @@ Options:
   --keep-worktrees        Leave temporary worktrees in place.
   --codex-model <model>   Model passed to codex exec --model. Overrides
                           RALPH_CODEX_MODEL.
-  --implementation-runner <codex|opencode>
+  --implementation-runner <codex|opencode|claude>
                           Runner for the implementer.
                           Reviews, optional model chooser, and decider use Codex.
                           Default: codex
+  --claude-model <model>  Model passed to claude --model when
+                          --implementation-runner claude is used. Overrides
+                          RALPH_CLAUDE_MODEL.
+  --claude-effort <level> Effort passed to claude --effort when
+                          --implementation-runner claude is used. Overrides
+                          RALPH_CLAUDE_EFFORT. Default: max
   --opencode-model <model>
                           Model passed to opencode run --model when
                           --implementation-runner opencode is used. Overrides
@@ -66,7 +72,9 @@ Options:
 Environment:
   RALPH_CODEX_MODEL       Optional model passed to codex exec --model.
   RALPH_IMPLEMENTATION_RUNNER
-                          codex or opencode for the implementer.
+                          codex, opencode, or claude for the implementer.
+  RALPH_CLAUDE_MODEL      Optional model passed to claude --model.
+  RALPH_CLAUDE_EFFORT     Effort passed to claude --effort. Default: max.
   RALPH_OPENCODE_MODEL    Optional model passed to opencode run --model.
   RALPH_OPENCODE_OLLAMA_BASE_URL
                           Ollama base URL pinged before OpenCode runs when
@@ -195,6 +203,8 @@ keep_worktrees=false
 skip_decider=false
 codex_model="${RALPH_CODEX_MODEL:-}"
 implementation_runner="${RALPH_IMPLEMENTATION_RUNNER:-codex}"
+claude_model="${RALPH_CLAUDE_MODEL:-}"
+claude_effort="${RALPH_CLAUDE_EFFORT:-max}"
 opencode_model="${RALPH_OPENCODE_MODEL:-ollama/qwen3.6:35b-a3b-64k}"
 opencode_ollama_base_url="${RALPH_OPENCODE_OLLAMA_BASE_URL:-http://host.docker.internal:11434/v1}"
 opencode_agent="${RALPH_OPENCODE_AGENT:-ralph-implementer}"
@@ -255,6 +265,16 @@ while [[ $# -gt 0 ]]; do
     --implementation-runner)
       [[ $# -ge 2 ]] || die "--implementation-runner requires a value"
       implementation_runner="$2"
+      shift 2
+      ;;
+    --claude-model)
+      [[ $# -ge 2 ]] || die "--claude-model requires a value"
+      claude_model="$2"
+      shift 2
+      ;;
+    --claude-effort)
+      [[ $# -ge 2 ]] || die "--claude-effort requires a value"
+      claude_effort="$2"
       shift 2
       ;;
     --opencode-model)
@@ -320,12 +340,16 @@ require_cmd rg
 load_openrouter_key_from_dotenv
 
 case "$implementation_runner" in
-  codex|opencode)
+  codex|opencode|claude)
     ;;
   *)
-    die "--implementation-runner must be codex or opencode"
+    die "--implementation-runner must be codex, opencode, or claude"
     ;;
 esac
+
+if [[ "$implementation_runner" == "claude" ]]; then
+  require_cmd claude
+fi
 
 if [[ "$implementation_runner" == "opencode" ]]; then
   require_cmd opencode
@@ -400,6 +424,8 @@ write_state() {
     printf 'IMPLEMENTATION_ROUND_LIMIT=%q\n' "$implementation_round_limit"
     printf 'HEARTBEAT_SECONDS=%q\n' "$heartbeat_seconds"
     printf 'IMPLEMENTATION_RUNNER=%q\n' "$implementation_runner"
+    printf 'CLAUDE_MODEL=%q\n' "$claude_model"
+    printf 'CLAUDE_EFFORT=%q\n' "$claude_effort"
     printf 'OPENCODE_MODEL=%q\n' "$opencode_model"
     printf 'OPENCODE_AGENT=%q\n' "$opencode_agent"
   } >"$state_file"
@@ -1151,6 +1177,23 @@ Task $task_no body:
 $(cat "$task_file")
 EOF
   fi
+  if [[ "$runner" == "claude" ]]; then
+    cat >>"$output_file" <<EOF
+
+Claude Code guardrails:
+- The task body below is the primary scope. Use the full plan only for dependency/context checks.
+- Do not switch to another plan task, support-profile cleanup, phase-manifest cleanup, or broad architecture work unless the task body below explicitly requires it.
+- Use the Workspace path above as the repository root for all reads, greps, and edits. When reading local RAW, use $workspace/.references/srd-5.2.1/ and $workspace/UBIQUITOUS_LANGUAGE.md explicitly; do not walk out through parent directories.
+- Do not spawn background agents, subagents, or delegated agents. Do the repository reads and edits directly in this process.
+- Do not ask the user what to do. Ralph already gave you the task. Implement it, leave a correct partial diff, or report Plan Impact: update-required with concrete narrowing guidance.
+- Start by making the smallest task-relevant product diff, then iterate with verification. Do not spend the whole run planning.
+- If the task is too large to complete, leave a focused partial diff only when it is correct and useful; otherwise report Plan Impact: update-required with concrete narrowing guidance.
+
+Task $task_no body:
+
+$(cat "$task_file")
+EOF
+  fi
   if [[ -n "$feedback_file" && -f "$feedback_file" ]]; then
     cat >>"$output_file" <<EOF
 
@@ -1297,6 +1340,8 @@ run_implementation_pipeline() {
   local session_file="$attempt_root/$slug-implementer.session"
   if [[ "$runner" == "opencode" ]]; then
     implementer_role="Implementer (running on OpenCode)"
+  elif [[ "$runner" == "claude" ]]; then
+    implementer_role="Implementer (running on Claude Code)"
   fi
 
   while (( round_limit == 0 || round <= round_limit )); do
@@ -1320,6 +1365,8 @@ run_implementation_pipeline() {
     local implementer_status=0
     if [[ "$runner" == "opencode" ]]; then
       run_opencode "$workspace" "$implementer_prompt" "$implementer_log" "$implementer_final" || implementer_status=$?
+    elif [[ "$runner" == "claude" ]]; then
+      run_claude "$workspace" "$implementer_prompt" "$implementer_log" "$implementer_final" || implementer_status=$?
     else
       run_codex_implementer "$workspace" "$implementer_prompt" "$implementer_log" "$implementer_final" "$session_file" || implementer_status=$?
     fi
@@ -1541,6 +1588,38 @@ run_codex_implementer() {
     log "codex implementer exited $status; full log: $log_file"
   else
     log "codex implementer completed; final: $output_file log: $log_file session: ${session_file}"
+  fi
+  return "$status"
+}
+
+run_claude() {
+  local workspace="$1"
+  local prompt="$2"
+  local log_file="$3"
+  local output_file="$4"
+  local status=0
+  local -a args=(-p --dangerously-skip-permissions --effort "$claude_effort" --output-format text)
+
+  if [[ -n "$claude_model" ]]; then
+    args+=("--model" "$claude_model")
+  fi
+
+  log "claude: $(quote_cmd claude "${args[@]}") < $prompt"
+  set +e
+  if [[ "${RALPH_STREAM_LOGS:-0}" == "1" ]]; then
+    (cd "$workspace" && claude "${args[@]}" <"$prompt" 2>&1 | tee "$log_file" "$output_file" >&2)
+    status=${PIPESTATUS[0]}
+  else
+    (cd "$workspace" && claude "${args[@]}" <"$prompt" >"$output_file" 2>"$log_file") &
+    wait_with_heartbeat "$!" "claude-implementer" "$log_file" "$output_file"
+    status=$?
+  fi
+  set -e
+
+  if [[ "$status" -ne 0 ]]; then
+    log "claude exited $status; full log: $log_file"
+  else
+    log "claude completed; final: $output_file log: $log_file"
   fi
   return "$status"
 }

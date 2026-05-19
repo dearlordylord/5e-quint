@@ -8,7 +8,7 @@
 4. Selects the next runnable task from the refreshed plan. By default this is deterministic first-runnable selection; set `RALPH_MODEL_CHOOSER=1` or pass `--model-chooser` to ask Codex to choose among multiple runnable tasks.
 5. For the chosen task, creates disposable worktree(s) from the current integration branch `HEAD`.
 6. Links the main workspace install into each task worktree so `pnpm` and package-local test commands resolve the same dependency graph as the main repo.
-7. Runs one implementation pipeline with Codex by default, or OpenCode when `--implementation-runner opencode` is set.
+7. Runs one implementation pipeline with Codex by default, OpenCode when `--implementation-runner opencode` is set, or Claude Code when `--implementation-runner claude` is set.
 8. Reviews the implementation as soon as it finishes.
 9. A rejecting or `accept-with-fixes` review is handed back to the same implementer for another round in the same worktree before the decider phase. The loop continues until the reviewer returns `accept`; operators can set a numeric safety cap when they want one.
 10. Runs a Codex decider from the main worktree to apply, verify, and either land the task or reject it while updating the plan for the next rerun.
@@ -228,6 +228,8 @@ scripts/ralph-run.sh plans/some-plan.md \
 
 `--implementation-runner opencode` swaps the implementer onto OpenCode. Review, optional model chooser, and final decider still run through Codex. For `ollama/*` OpenCode models, the harness pings the configured Ollama OpenAI-compatible `/models` endpoint before starting; the default is `http://host.docker.internal:11434/v1`. Implement/review handback rounds continue until review accepts, unless a positive safety cap is configured. Each OpenCode implementer round has a wall-clock timeout, defaulting to 600 seconds, so a stalled local model produces an artifacted timeout and Ralph continues to review the current worktree diff instead of blocking forever.
 
+`--implementation-runner claude` swaps the implementer onto Claude Code with `claude -p --dangerously-skip-permissions --effort max --output-format text` by default. Review, optional model chooser, and final decider still run through Codex. Set `RALPH_CLAUDE_MODEL` or pass `--claude-model` to choose a Claude model; set `RALPH_CLAUDE_EFFORT` or pass `--claude-effort` to override the default `max` effort. Claude implementer prompts inline the selected task body and add guardrails equivalent to the OpenCode path.
+
 OpenCode implementer prompts inline the selected task body and add local-model guardrails to keep the implementation focused on that task, use absolute workspace-root paths for repo/RAW reads, avoid todo-tool schema churn, avoid spawned explore/subagents, avoid clarification questions, and prefer a small task-relevant product diff over long planning. The default OpenCode agent is `ralph-implementer`; configure it with `permission.task: deny` and `permission.question: deny` so OpenCode removes subagent delegation and user-question exits from the implementation tool surface.
 
 For Qwen-family OpenCode models, Ralph prefixes implementation prompts with `/no_think` to keep local runs from spending the whole attempt in hidden reasoning before making a product diff.
@@ -306,6 +308,15 @@ RALPH_OPENCODE_MODEL=ollama/qwen3.6:35b-a3b-64k \
 RALPH_OPENCODE_AGENT=ralph-implementer \
 RALPH_OPENCODE_TIMEOUT_SECONDS=600 \
 RALPH_OPENCODE_OLLAMA_BASE_URL=http://host.docker.internal:11434/v1 \
+scripts/ralph-run.sh plans/some-plan.md
+```
+
+For Claude-backed implementation:
+
+```bash
+RALPH_IMPLEMENTATION_RUNNER=claude \
+RALPH_CLAUDE_MODEL=sonnet \
+RALPH_CLAUDE_EFFORT=max \
 scripts/ralph-run.sh plans/some-plan.md
 ```
 
