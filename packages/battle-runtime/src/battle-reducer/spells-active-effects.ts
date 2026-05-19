@@ -158,6 +158,11 @@ export type BlurAttackRollDefenseInvocation = Extract<
   { readonly procedure: "blurAttackRollDefense" }
 >;
 
+export type MirrorImageHitInterceptionInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "mirrorImageHitInterception" }
+>;
+
 export function isThaumaturgyBoomingVoiceEffectForInvocation(
   effect: BattleActiveEffect,
   actorId: CombatantId,
@@ -2307,6 +2312,39 @@ export function applyBlurAttackRollDefenseSpellEffect(
       (effect) =>
         !(
           effect.kind === "blurred" &&
+          effect.sourceSpellId === invocation.spell.id &&
+          effect.sourceCombatantId === actorId
+        ),
+    ),
+    nextEffect,
+  ];
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(
+      actorId,
+      battleCreatureWithSpellActiveEffects(actor, activeEffects),
+    ),
+  };
+}
+
+export function applyMirrorImageHitInterceptionSpellEffect(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: MirrorImageHitInterceptionInvocation,
+): BattleState {
+  const actor = state.combatants.get(actorId);
+  if (actor === undefined) {
+    return state;
+  }
+  const nextEffect = {
+    ...invocation.activeEffect,
+    sourceCombatantId: actorId,
+  };
+  const activeEffects = [
+    ...actor.activeEffects.filter(
+      (effect) =>
+        !(
+          effect.kind === "mirrorImageDuplicates" &&
           effect.sourceSpellId === invocation.spell.id &&
           effect.sourceCombatantId === actorId
         ),

@@ -12,6 +12,7 @@ module battleRuntimeSpellAttack {
   import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
   import battleRuntimeAttackFacts.* from "./battle-runtime-attack-facts"
   import battleRuntimeHidden.* from "./battle-runtime-hidden"
+  import battleRuntimeMirrorImage.* from "./battle-runtime-mirror-image"
 
   pure def battleRuntimeSpellAttackDamageProfileForInvocation(
     invocation: FixedSpellAttackDamageInvocation
@@ -382,6 +383,36 @@ module battleRuntimeSpellAttack {
   ): bool =
     hit and currentActor != caster
 
+  pure def fighterSpellAttackMirrorImageRedirects(
+    state: BattleState,
+    mirrorImageDuplicateHighestRoll: int,
+    attackerPerceivesTargetWithBlindsightOrTruesight: bool,
+  ): bool =
+    mirrorImageRedirectsAttackRollHit(
+      state.fighter.activeEffects,
+      state.goblin.activeEffects,
+      attackerPerceivesTargetWithBlindsightOrTruesight,
+      mirrorImageDuplicateHighestRoll,
+    )
+
+  pure def recordFighterSpellAttackMirrorImageDuplicateHit(
+    state: BattleState,
+    mirrorImageDuplicateHighestRoll: int,
+    attackerPerceivesTargetWithBlindsightOrTruesight: bool,
+  ): BattleState = {
+    val rolled = recordFighterAttackRoll(revealFighterHidden(state))
+    {
+      ...rolled,
+      goblin: combatantAfterMirrorImageAttackRollHit(
+        rolled.fighter.activeEffects,
+        rolled.goblin,
+        attackerPerceivesTargetWithBlindsightOrTruesight,
+        mirrorImageDuplicateHighestRoll,
+      ),
+      actionAvailable: false,
+    }
+  }
+
   pure def resolveRayOfFrost(
     state: BattleState,
     attackTotal: int,
@@ -389,7 +420,26 @@ module battleRuntimeSpellAttack {
     damageRoll: int,
     concentrationSaveSucceeded: bool,
   ): BattleState =
-    resolveRayOfFrostWithDamageRoll(state, attackTotal, naturalD20, fighterSpellAttackDamageRoll(damageRoll), concentrationSaveSucceeded)
+    resolveRayOfFrostWithMirrorImageDuplicateRoll(state, attackTotal, naturalD20, damageRoll, concentrationSaveSucceeded, 0, false)
+
+  pure def resolveRayOfFrostWithMirrorImageDuplicateRoll(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+    mirrorImageDuplicateHighestRoll: int,
+    attackerPerceivesTargetWithBlindsightOrTruesight: bool,
+  ): BattleState =
+    resolveRayOfFrostWithDamageRollAndMirrorImageDuplicateRoll(
+      state,
+      attackTotal,
+      naturalD20,
+      fighterSpellAttackDamageRoll(damageRoll),
+      concentrationSaveSucceeded,
+      mirrorImageDuplicateHighestRoll,
+      attackerPerceivesTargetWithBlindsightOrTruesight,
+    )
 
   pure def resolveRayOfFrostWithDamageRoll(
     state: BattleState,
@@ -398,12 +448,33 @@ module battleRuntimeSpellAttack {
     damageRoll: FighterSpellAttackDamageRoll,
     concentrationSaveSucceeded: bool,
   ): BattleState =
+    resolveRayOfFrostWithDamageRollAndMirrorImageDuplicateRoll(
+      state,
+      attackTotal,
+      naturalD20,
+      damageRoll,
+      concentrationSaveSucceeded,
+      0,
+      false,
+    )
+
+  pure def resolveRayOfFrostWithDamageRollAndMirrorImageDuplicateRoll(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageRoll: FighterSpellAttackDamageRoll,
+    concentrationSaveSucceeded: bool,
+    mirrorImageDuplicateHighestRoll: int,
+    attackerPerceivesTargetWithBlindsightOrTruesight: bool,
+  ): BattleState =
     if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state))
       state
     else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), 20))) {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
       { ...rolled, actionAvailable: false }
     }
+    else if (fighterSpellAttackMirrorImageRedirects(state, mirrorImageDuplicateHighestRoll, attackerPerceivesTargetWithBlindsightOrTruesight))
+      recordFighterSpellAttackMirrorImageDuplicateHit(state, mirrorImageDuplicateHighestRoll, attackerPerceivesTargetWithBlindsightOrTruesight)
     else if (state.goblin.reactionAvailable and not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
       openReactionWindow(recordFighterAttackRoll(revealFighterHidden(state)), {
         trigger: AttackHit,
@@ -427,12 +498,33 @@ module battleRuntimeSpellAttack {
     damageRoll: int,
     concentrationSaveSucceeded: bool,
   ): BattleState =
+    resolvePoisonSprayWithMirrorImageDuplicateRoll(
+      state,
+      attackTotal,
+      naturalD20,
+      damageRoll,
+      concentrationSaveSucceeded,
+      0,
+      false,
+    )
+
+  pure def resolvePoisonSprayWithMirrorImageDuplicateRoll(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+    mirrorImageDuplicateHighestRoll: int,
+    attackerPerceivesTargetWithBlindsightOrTruesight: bool,
+  ): BattleState =
     if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state))
       state
     else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), 20))) {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
       { ...rolled, actionAvailable: false }
     }
+    else if (fighterSpellAttackMirrorImageRedirects(state, mirrorImageDuplicateHighestRoll, attackerPerceivesTargetWithBlindsightOrTruesight))
+      recordFighterSpellAttackMirrorImageDuplicateHit(state, mirrorImageDuplicateHighestRoll, attackerPerceivesTargetWithBlindsightOrTruesight)
     else if (state.goblin.reactionAvailable and not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
       openReactionWindow(recordFighterAttackRoll(revealFighterHidden(state)), {
         trigger: AttackHit,
@@ -456,12 +548,33 @@ module battleRuntimeSpellAttack {
     damageRoll: int,
     concentrationSaveSucceeded: bool,
   ): BattleState =
+    resolveChillTouchWithMirrorImageDuplicateRoll(
+      state,
+      attackTotal,
+      naturalD20,
+      damageRoll,
+      concentrationSaveSucceeded,
+      0,
+      false,
+    )
+
+  pure def resolveChillTouchWithMirrorImageDuplicateRoll(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+    mirrorImageDuplicateHighestRoll: int,
+    attackerPerceivesTargetWithBlindsightOrTruesight: bool,
+  ): BattleState =
     if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state))
       state
     else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), 20))) {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
       { ...rolled, actionAvailable: false }
     }
+    else if (fighterSpellAttackMirrorImageRedirects(state, mirrorImageDuplicateHighestRoll, attackerPerceivesTargetWithBlindsightOrTruesight))
+      recordFighterSpellAttackMirrorImageDuplicateHit(state, mirrorImageDuplicateHighestRoll, attackerPerceivesTargetWithBlindsightOrTruesight)
     else if (state.goblin.reactionAvailable and not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
       openReactionWindow(recordFighterAttackRoll(revealFighterHidden(state)), {
         trigger: AttackHit,
@@ -572,8 +685,44 @@ module battleRuntimeSpellAttack {
     damageRoll: int,
     concentrationSaveSucceeded: bool,
   ): BattleState =
+    resolveEldritchBlastBeamAgainstGoblinWithMirrorImageDuplicateRoll(
+      state,
+      attackTotal,
+      naturalD20,
+      damageRoll,
+      concentrationSaveSucceeded,
+      0,
+      false,
+    )
+
+  pure def resolveEldritchBlastBeamAgainstGoblinWithMirrorImageDuplicateRoll(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+    mirrorImageDuplicateHighestRoll: int,
+    attackerPerceivesTargetWithBlindsightOrTruesight: bool,
+  ): BattleState =
     if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), 20)))
       recordFighterAttackRoll(state)
+    else if (
+      mirrorImageRedirectsAttackRollHit(
+        state.fighter.activeEffects,
+        state.goblin.activeEffects,
+        attackerPerceivesTargetWithBlindsightOrTruesight,
+        mirrorImageDuplicateHighestRoll,
+      )
+    )
+      {
+        ...recordFighterAttackRoll(state),
+        goblin: combatantAfterMirrorImageAttackRollHit(
+          state.fighter.activeEffects,
+          state.goblin,
+          attackerPerceivesTargetWithBlindsightOrTruesight,
+          mirrorImageDuplicateHighestRoll,
+        ),
+      }
     else {
       val adjustedDamage = damageAfterAdjustments(damageRoll, Force, Set(), Set(), Set())
       val damaged = applyDamageFromSource(state.goblin, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter)
@@ -591,11 +740,58 @@ module battleRuntimeSpellAttack {
     secondDamageRoll: int,
     secondConcentrationSaveSucceeded: bool,
   ): BattleState =
+    resolveEldritchBlastTwoBeamsWithMirrorImageDuplicateRolls(
+      state,
+      firstAttackTotal,
+      firstNaturalD20,
+      firstDamageRoll,
+      firstConcentrationSaveSucceeded,
+      0,
+      false,
+      secondAttackTotal,
+      secondNaturalD20,
+      secondDamageRoll,
+      secondConcentrationSaveSucceeded,
+      0,
+      false,
+    )
+
+  pure def resolveEldritchBlastTwoBeamsWithMirrorImageDuplicateRolls(
+    state: BattleState,
+    firstAttackTotal: int,
+    firstNaturalD20: int,
+    firstDamageRoll: int,
+    firstConcentrationSaveSucceeded: bool,
+    firstMirrorImageDuplicateHighestRoll: int,
+    firstAttackerPerceivesTargetWithBlindsightOrTruesight: bool,
+    secondAttackTotal: int,
+    secondNaturalD20: int,
+    secondDamageRoll: int,
+    secondConcentrationSaveSucceeded: bool,
+    secondMirrorImageDuplicateHighestRoll: int,
+    secondAttackerPerceivesTargetWithBlindsightOrTruesight: bool,
+  ): BattleState =
     if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state))
       state
     else {
-      val firstResolved = resolveEldritchBlastBeamAgainstGoblin(revealFighterHidden(state), firstAttackTotal, firstNaturalD20, firstDamageRoll, firstConcentrationSaveSucceeded)
-      val secondResolved = resolveEldritchBlastBeamAgainstGoblin(firstResolved, secondAttackTotal, secondNaturalD20, secondDamageRoll, secondConcentrationSaveSucceeded)
+      val firstResolved = resolveEldritchBlastBeamAgainstGoblinWithMirrorImageDuplicateRoll(
+        revealFighterHidden(state),
+        firstAttackTotal,
+        firstNaturalD20,
+        firstDamageRoll,
+        firstConcentrationSaveSucceeded,
+        firstMirrorImageDuplicateHighestRoll,
+        firstAttackerPerceivesTargetWithBlindsightOrTruesight,
+      )
+      val secondResolved = resolveEldritchBlastBeamAgainstGoblinWithMirrorImageDuplicateRoll(
+        firstResolved,
+        secondAttackTotal,
+        secondNaturalD20,
+        secondDamageRoll,
+        secondConcentrationSaveSucceeded,
+        secondMirrorImageDuplicateHighestRoll,
+        secondAttackerPerceivesTargetWithBlindsightOrTruesight,
+      )
       { ...secondResolved, actionAvailable: false }
     }
 

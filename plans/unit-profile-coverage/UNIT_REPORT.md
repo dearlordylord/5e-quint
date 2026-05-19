@@ -8,25 +8,25 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 
 | Metric | Value |
 | --- | ---: |
-| Installed collection inventory count | 202 Units |
+| Installed collection inventory count | 203 Units |
 
 ## Coverage Metrics
 
 | Metric | Covered | Percent |
 | --- | ---: | ---: |
-| Authored Surface Unit catalog admission | 201/459 | 43.8% |
-| Authored Surface executable catalog admission | 169/387 | 43.7% |
-| Installed Unit profile classification coverage | 202/202 | 100% |
-| Supported executable Unit coverage | 124/170 | 72.9% |
-| QNT profile modeling coverage | 69/69 | 100% |
-| QNT proof coverage | 69/69 | 100% |
-| Runtime mapping coverage | 69/69 | 100% |
-| Runtime parity coverage | 69/69 | 100% |
-| Rules-kernel profile join coverage | 24/91 | 26.4% |
-| Rules-kernel covered profile coverage | 19/91 | 20.9% |
-| Supported Unit rules-kernel chain coverage | 41/124 | 33.1% |
-| Deterministic admission/projection coverage | 124/124 | 100% |
-| Selected identity replay coverage | 104/124 | 83.9% |
+| Authored Surface Unit catalog admission | 202/460 | 43.9% |
+| Authored Surface executable catalog admission | 170/388 | 43.8% |
+| Installed Unit profile classification coverage | 203/203 | 100% |
+| Supported executable Unit coverage | 125/171 | 73.1% |
+| QNT profile modeling coverage | 70/70 | 100% |
+| QNT proof coverage | 70/70 | 100% |
+| Runtime mapping coverage | 70/70 | 100% |
+| Runtime parity coverage | 70/70 | 100% |
+| Rules-kernel profile join coverage | 24/92 | 26.1% |
+| Rules-kernel covered profile coverage | 19/92 | 20.7% |
+| Supported Unit rules-kernel chain coverage | 41/125 | 32.8% |
+| Deterministic admission/projection coverage | 125/125 | 100% |
+| Selected identity replay coverage | 104/125 | 83.2% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -57,13 +57,13 @@ The Unit matrix owns authored-content breadth. `plans/rules-kernel-coverage/prof
 | --- | ---: | --- |
 | covered | 19 | `unit-feature.alternate-action-cost`, `unit-feature.action-surge-resource`, `unit-feature.attack-damage-rider`, `unit-feature.bonus-action-ongoing-rage`, `unit-feature.first-attack-roll-reckless-advantage`, `unit-feature.passive-armor-class-bonus`, `unit-feature.passive-ranged-attack-roll-bonus`, `unit-feature.weapon-damage-dice-roll-choice`, `unit-feature.zero-hit-point-replacement`, `unit-feature.reaction-roll-or-damage-reduction`, `unit-feature.save-damage-replacement`, `unit-feature.self-bonus-action-healing`, `unit-feature.weapon-critical-range-19`, `spell.invocation-damage-save-or-attack`, `spell.hit-point-restoration`, `spell.reaction-shield`, `spell.readied-action-time-spell`, `stat-block.attack-control`, `character-sheet.armor-class-base-formula` |
 | mapped-open | 5 | `character-creation.class-feature-feat-choice`, `character-creation.class-feature-advancement-replacement`, `character-creation.warlock-pact-magic-advancement`, `character-creation.weapon-mastery-choice`, `character-creation.eldritch-invocation-choice` |
-| unmapped | 67 | `unit-feature.attack-action-attack-count-scaling`, `unit-feature.martial-arts-attack-projection`, `unit-feature.attack-damage-reduction-zero-damage-redirect`, `unit-feature.bardic-inspiration-grant`, `unit-feature.bardic-inspiration-failed-d20-test`, `unit-feature.bonus-action-dash-temporary-hit-points`, `unit-feature.innate-sorcery-activation`, `unit-feature.failed-ability-check-resource-boost`, `unit-feature.passive-saving-throw-roll-mode`, `unit-feature.attack-roll-miss-to-hit-replacement`, `unit-feature.passive-speed-bonus`, `unit-feature.passive-speed-kind-grants`, `unit-feature.weapon-mastery-sap`, `unit-feature.weapon-mastery-topple`, `unit-feature.weapon-mastery-cleave`, `character-sheet.healing-resource-action`, `character-sheet.short-rest-spell-slot-recovery`, `character-sheet.spellbook-ritual-invocation`, `character-sheet.weapon-mastery-reselection`, `spell.invocation-after-hit-damage-illumination`, `spell.invocation-chained-attack-damage`, `spell.invocation-condition-save`, `spell.invocation-sleep-target-admission`, `spell.invocation-sleep-repeat-save-lifecycle`, `spell.invocation-grease-ground-hazard`, `spell.invocation-fog-cloud-obscurement`, `spell.invocation-object-light`, `spell.invocation-flaming-sphere-hazard-ram`, `spell.invocation-held-light-emitter`, `spell.invocation-dancing-lights-movable-dim-light`, `spell.invocation-command-halt-grovel`, `spell.invocation-command-drop-held-object`, `spell.invocation-command-approach-route`, `spell.invocation-command-flee-route`, `spell.invocation-expeditious-retreat-dash`, `spell.invocation-feather-fall-mitigation`, `spell.reaction-hellish-rebuke`, `spell.reaction-counterspell`, `spell.invocation-jump-movement-replacement`, `spell.invocation-forced-reaction-movement`, `spell.invocation-damage-reduction`, `spell.invocation-make-stable`, `spell.invocation-weapon-damage-rider`, `spell.invocation-after-hit-damage`, `spell.invocation-after-hit-restraint-turn-start-damage`, `spell.invocation-after-hit-timed-damage-save`, `spell.invocation-spell-hosted-weapon-attack`, `spell.invocation-weapon-attack-override`, `spell.invocation-independent-attack-sequence`, `spell.invocation-marked-damage-rider`, `spell.invocation-roll-modifier`, `spell.creature-type-protection-and-charm`, `spell.invocation-attack-roll-advantage-save`, `spell.invocation-condition-immunity-turn-start-temporary-hit-points`, `spell.scalar-buff`, `spell.invocation-hideous-laughter-repeat-save-lifecycle`, `spell.invocation-sanctuary-targeting-interdiction`, `spell.find-familiar-lifecycle`, `character-creation.class-feature-option-projection`, `character-creation.skill-expertise-choice`, `character-creation.class-feature-resource-projection`, `spell.invocation-self-ability-check-advantage`, `character-sheet.ability-check-proficiency-bonus`, `character-sheet.pact-slot-recovery`, `spell.invocation-self-teleport`, `spell.invocation-blur-attack-roll-defense`, `spell.invocation-condition-removal-protection` |
+| unmapped | 68 | `unit-feature.attack-action-attack-count-scaling`, `unit-feature.martial-arts-attack-projection`, `unit-feature.attack-damage-reduction-zero-damage-redirect`, `unit-feature.bardic-inspiration-grant`, `unit-feature.bardic-inspiration-failed-d20-test`, `unit-feature.bonus-action-dash-temporary-hit-points`, `unit-feature.innate-sorcery-activation`, `unit-feature.failed-ability-check-resource-boost`, `unit-feature.passive-saving-throw-roll-mode`, `unit-feature.attack-roll-miss-to-hit-replacement`, `unit-feature.passive-speed-bonus`, `unit-feature.passive-speed-kind-grants`, `unit-feature.weapon-mastery-sap`, `unit-feature.weapon-mastery-topple`, `unit-feature.weapon-mastery-cleave`, `character-sheet.healing-resource-action`, `character-sheet.short-rest-spell-slot-recovery`, `character-sheet.spellbook-ritual-invocation`, `character-sheet.weapon-mastery-reselection`, `spell.invocation-after-hit-damage-illumination`, `spell.invocation-chained-attack-damage`, `spell.invocation-condition-save`, `spell.invocation-sleep-target-admission`, `spell.invocation-sleep-repeat-save-lifecycle`, `spell.invocation-grease-ground-hazard`, `spell.invocation-fog-cloud-obscurement`, `spell.invocation-object-light`, `spell.invocation-flaming-sphere-hazard-ram`, `spell.invocation-held-light-emitter`, `spell.invocation-dancing-lights-movable-dim-light`, `spell.invocation-command-halt-grovel`, `spell.invocation-command-drop-held-object`, `spell.invocation-command-approach-route`, `spell.invocation-command-flee-route`, `spell.invocation-expeditious-retreat-dash`, `spell.invocation-feather-fall-mitigation`, `spell.reaction-hellish-rebuke`, `spell.reaction-counterspell`, `spell.invocation-jump-movement-replacement`, `spell.invocation-forced-reaction-movement`, `spell.invocation-damage-reduction`, `spell.invocation-make-stable`, `spell.invocation-weapon-damage-rider`, `spell.invocation-after-hit-damage`, `spell.invocation-after-hit-restraint-turn-start-damage`, `spell.invocation-after-hit-timed-damage-save`, `spell.invocation-spell-hosted-weapon-attack`, `spell.invocation-weapon-attack-override`, `spell.invocation-independent-attack-sequence`, `spell.invocation-marked-damage-rider`, `spell.invocation-roll-modifier`, `spell.creature-type-protection-and-charm`, `spell.invocation-attack-roll-advantage-save`, `spell.invocation-condition-immunity-turn-start-temporary-hit-points`, `spell.scalar-buff`, `spell.invocation-hideous-laughter-repeat-save-lifecycle`, `spell.invocation-sanctuary-targeting-interdiction`, `spell.find-familiar-lifecycle`, `character-creation.class-feature-option-projection`, `character-creation.skill-expertise-choice`, `character-creation.class-feature-resource-projection`, `spell.invocation-self-ability-check-advantage`, `character-sheet.ability-check-proficiency-bonus`, `character-sheet.pact-slot-recovery`, `spell.invocation-self-teleport`, `spell.invocation-blur-attack-roll-defense`, `spell.invocation-mirror-image-hit-interception`, `spell.invocation-condition-removal-protection` |
 
 | Supported Unit join status | Unit count | Units |
 | --- | ---: | --- |
 | covered | 41 | `acid_splash`, `barbarian_rage`, `barbarian_reckless_attack`, `barbarian_unarmored_defense`, `bard_cutting_words`, `burning_hands`, `chill_touch`, `cure_wounds`, `defense`, `feat_archery`, `feat_savage_attacker`, `fighter_action_surge`, `fighter_improved_critical`, `fighter_second_wind`, `fire_bolt`, `guiding_bolt`, `healing_word`, `ice_knife`, `inflict_wounds`, `mage_armor`, `magic_missile`, `mass_cure_wounds`, `mass_healing_word`, `monk_unarmored_defense`, `mycelium_step`, `orc_relentless_endurance`, `poison_spray`, `ray_of_frost`, `ray_of_sickness`, `rogue_cunning_action`, `rogue_evasion`, `rogue_sneak_attack`, `rogue_uncanny_dodge`, `sacred_flame`, `shatter`, `shield`, `shocking_grasp`, `sorcerous_burst`, `starry_wisp`, `thunderwave`, `vicious_mockery` |
 | mapped-open | 2 | `fighter_fighting_style`, `warlock_eldritch_invocations` |
-| unmapped | 81 | `aid`, `animal_friendship`, `bane`, `barbarian_danger_sense`, `barbarian_fast_movement`, `bard_bardic_inspiration`, `bard_jack_of_all_trades`, `barkskin`, `bless`, `blindness_deafness`, `blur`, `chromatic_orb`, `cleric_channel_divinity`, `cleric_divine_order`, `color_spray`, `command`, `counterspell`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `druid_primal_order`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feat_boon_of_combat_prowess`, `feather_fall`, `fighter_extra_attack`, `fighter_tactical_mind`, `flaming_sphere`, `fog_cloud`, `grease`, `guidance`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hunters_mark`, `jump`, `light`, `longstrider`, `mastery_cleave`, `mastery_sap`, `mastery_topple`, `misty_step`, `monk_deflect_attacks`, `monk_martial_arts`, `monk_unarmored_movement`, `orc_adrenaline_rush`, `paladin_extra_attack`, `paladin_lay_on_hands`, `paladin_paladins_smite`, `paladin_weapon_mastery`, `produce_flame`, `protection_from_evil_and_good`, `protection_from_poison`, `ranger_deft_explorer`, `ranger_extra_attack`, `ranger_roving`, `ranger_weapon_mastery`, `resistance`, `rogue_expertise`, `rogue_weapon_mastery`, `sanctuary`, `scorching_ray`, `searing_smite`, `shield_of_faith`, `shillelagh`, `shining_smite`, `sleep`, `sorcerer_innate_sorcery`, `spare_the_dying`, `spider_climb`, `true_strike`, `warlock_magical_cunning`, `wizard_arcane_recovery`, `wizard_ritual_adept`, `wizard_scholar` |
+| unmapped | 82 | `aid`, `animal_friendship`, `bane`, `barbarian_danger_sense`, `barbarian_fast_movement`, `bard_bardic_inspiration`, `bard_jack_of_all_trades`, `barkskin`, `bless`, `blindness_deafness`, `blur`, `chromatic_orb`, `cleric_channel_divinity`, `cleric_divine_order`, `color_spray`, `command`, `counterspell`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `druid_primal_order`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feat_boon_of_combat_prowess`, `feather_fall`, `fighter_extra_attack`, `fighter_tactical_mind`, `flaming_sphere`, `fog_cloud`, `grease`, `guidance`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hunters_mark`, `jump`, `light`, `longstrider`, `mastery_cleave`, `mastery_sap`, `mastery_topple`, `mirror_image`, `misty_step`, `monk_deflect_attacks`, `monk_martial_arts`, `monk_unarmored_movement`, `orc_adrenaline_rush`, `paladin_extra_attack`, `paladin_lay_on_hands`, `paladin_paladins_smite`, `paladin_weapon_mastery`, `produce_flame`, `protection_from_evil_and_good`, `protection_from_poison`, `ranger_deft_explorer`, `ranger_extra_attack`, `ranger_roving`, `ranger_weapon_mastery`, `resistance`, `rogue_expertise`, `rogue_weapon_mastery`, `sanctuary`, `scorching_ray`, `searing_smite`, `shield_of_faith`, `shillelagh`, `shining_smite`, `sleep`, `sorcerer_innate_sorcery`, `spare_the_dying`, `spider_climb`, `true_strike`, `warlock_magical_cunning`, `wizard_arcane_recovery`, `wizard_ritual_adept`, `wizard_scholar` |
 
 ### Rules-Kernel Profile Join Gaps
 
@@ -140,6 +140,7 @@ The Unit matrix owns authored-content breadth. `plans/rules-kernel-coverage/prof
 | `character-sheet.pact-slot-recovery` | character-sheet | unmapped | no obligation mapping |
 | `spell.invocation-self-teleport` | spell-invocation | unmapped | no obligation mapping |
 | `spell.invocation-blur-attack-roll-defense` | spell-invocation | unmapped | no obligation mapping |
+| `spell.invocation-mirror-image-hit-interception` | spell-invocation | unmapped | no obligation mapping |
 | `spell.invocation-condition-removal-protection` | spell-invocation | unmapped | no obligation mapping |
 
 ### Supported Unit Rules-Kernel Chain Gaps
@@ -194,6 +195,7 @@ The Unit matrix owns authored-content breadth. `plans/rules-kernel-coverage/prof
 | `mastery_cleave` | unmapped | `unit-feature.weapon-mastery-cleave` (unmapped) |
 | `mastery_sap` | unmapped | `unit-feature.weapon-mastery-sap` (unmapped) |
 | `mastery_topple` | unmapped | `unit-feature.weapon-mastery-topple` (unmapped) |
+| `mirror_image` | unmapped | `spell.invocation-mirror-image-hit-interception` (unmapped) |
 | `misty_step` | unmapped | `spell.invocation-self-teleport` (unmapped) |
 | `monk_deflect_attacks` | unmapped | `unit-feature.attack-damage-reduction-zero-damage-redirect` (unmapped) |
 | `monk_martial_arts` | unmapped | `unit-feature.martial-arts-attack-projection` (unmapped) |
@@ -342,6 +344,7 @@ The Unit matrix owns authored-content breadth. `plans/rules-kernel-coverage/prof
 | `vicious_mockery` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
 | `mage_armor` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
 | `magic_missile` | srd-5.2.1 | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
+| `mirror_image` | srd-5.2.1 | `spell.invocation-mirror-image-hit-interception` |
 | `mass_cure_wounds` | srd-5.2.1 | `spell.hit-point-restoration` |
 | `mass_healing_word` | srd-5.2.1 | `spell.hit-point-restoration` |
 | `healing_word` | srd-5.2.1 | `spell.hit-point-restoration` |
@@ -1043,6 +1046,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `vicious_mockery` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | SRDINV28D | `packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts` |
 | `mage_armor` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission-chained-attack-and-mage-armor-spells.test.ts` |
 | `magic_missile` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | QMBT14 | `packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts` |
+| `mirror_image` | `spell.invocation-mirror-image-hit-interception` | L12G-MISSING-MIRROR-IMAGE | `packages/battle-runtime/src/unit-profile-admission-mirror-image.test.ts` |
 | `mass_cure_wounds` | `spell.hit-point-restoration` | QMBT34 | `packages/battle-runtime/src/unit-profile-admission-healing-spells.test.ts` |
 | `mass_healing_word` | `spell.hit-point-restoration` | QMBT32 | `packages/battle-runtime/src/unit-profile-admission-healing-spells.test.ts` |
 | `healing_word` | `spell.hit-point-restoration` | QMBT25 | `packages/battle-runtime/src/unit-profile-admission-healing-spells.test.ts` |
@@ -1558,6 +1562,8 @@ This raw inventory lists authored Surface records that are absent from the insta
 | L12G-SPELL-SHINING-SMITE | completed-runtime-parity | `spell.invocation-after-hit-damage-illumination` |
 | L12G-SPELL-BLUR | qnt-proof | `spell.invocation-blur-attack-roll-defense` |
 | L12G-SPELL-BLUR | completed-runtime-parity | `spell.invocation-blur-attack-roll-defense` |
+| L12G-MISSING-MIRROR-IMAGE | qnt-proof | `spell.invocation-mirror-image-hit-interception` |
+| L12G-MISSING-MIRROR-IMAGE | completed-runtime-parity | `spell.invocation-mirror-image-hit-interception` |
 | L12G-SPELL-PROTECTION-FROM-POISON | qnt-proof | `spell.invocation-condition-removal-protection` |
 | L12G-SPELL-PROTECTION-FROM-POISON | completed-runtime-parity | `spell.invocation-condition-removal-protection` |
 

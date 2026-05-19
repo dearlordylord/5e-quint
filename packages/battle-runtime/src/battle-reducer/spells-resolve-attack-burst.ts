@@ -8,6 +8,7 @@ import {
 } from "@dnd/shared-algebras/attack-roll-algebra";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import {
+  ATTACK_ROLL_HOLE_ID,
   ATTACK_TARGET_HOLE_ID,
   attackRollIsCriticalHit,
   maybeOpenReactionWindow,
@@ -42,6 +43,7 @@ import {
   hideousLaughterDamageRepeatSaveFillsForTarget,
 } from "./hideous-laughter-repeat-save.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
+import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import { sanctuaryTargetingInterdictionCheck } from "./sanctuary-targeting-interdiction.ts";
@@ -285,16 +287,62 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
       attackRoll: input.fillSet.attackRoll,
     },
   );
-  const spellMarkedDamageRiders = hit
+
+  if (!hit && input.fillSet.mirrorImageDuplicateRoll !== undefined) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Mirror Image duplicate roll is only valid after a hit.",
+    );
+  }
+  const mirrorImageAttacker = hit
+    ? attackRolledState.combatants.get(input.actorId)
+    : undefined;
+  const mirrorImageCheck =
+    hit && mirrorImageAttacker !== undefined
+      ? mirrorImageHitInterceptionCheck({
+          state: attackRolledState,
+          attacker: mirrorImageAttacker,
+          target,
+          targetSpatialFacts: input.fillSet.targetSpatialFacts,
+          triggeringAttackRollHoleId: ATTACK_ROLL_HOLE_ID,
+          fill: input.fillSet.mirrorImageDuplicateRoll,
+        })
+      : { tag: "notAvailable" as const };
+  if (hit && mirrorImageAttacker === undefined) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Mirror Image attacker is no longer present.",
+    );
+  }
+  if (mirrorImageCheck.tag === "needsHoles") {
+    return needsHolesResult(attackRolledState, input.input.subject, [
+      mirrorImageCheck.hole,
+    ]);
+  }
+  if (mirrorImageCheck.tag === "invalid") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      mirrorImageCheck.message,
+    );
+  }
+  const hitTarget = hit && mirrorImageCheck.tag !== "hitDuplicate";
+  const attackResolvedState =
+    mirrorImageCheck.tag === "hitDuplicate"
+      ? mirrorImageCheck.state
+      : attackRolledState;
+  const spellMarkedDamageRiders = hitTarget
     ? activeMarkedDamageRiders(
-        attackRolledState.combatants.get(input.actorId),
+        attackResolvedState.combatants.get(input.actorId),
         target.combatantId,
       )
     : [];
 
-  if (hit && input.input.suppressedReactionTrigger !== "attackHit") {
+  if (hitTarget && input.input.suppressedReactionTrigger !== "attackHit") {
     const reactionWindow = maybeOpenReactionWindow(
-      attackRolledState,
+      attackResolvedState,
       {
         trigger: "attackHit",
         attackerId: input.actorId,
@@ -321,19 +369,19 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
     }
   }
 
-  if (hit && input.fillSet.attackBurstDamageRoll === undefined) {
-    return needsHolesResult(attackRolledState, input.input.subject, [
+  if (hitTarget && input.fillSet.attackBurstDamageRoll === undefined) {
+    return needsHolesResult(attackResolvedState, input.input.subject, [
       spellDamageHole(input.invocation, critical, spellMarkedDamageRiders),
     ]);
   }
-  if (!hit && input.fillSet.attackBurstDamageRoll !== undefined) {
+  if (!hitTarget && input.fillSet.attackBurstDamageRoll !== undefined) {
     return invalidResult(
       input.input.state,
       "invalidFill",
       "Ice Knife attack damage can only be filled after a hit.",
     );
   }
-  if (hit && input.fillSet.attackBurstDamageRoll !== undefined) {
+  if (hitTarget && input.fillSet.attackBurstDamageRoll !== undefined) {
     const attackDamageValidation = validateSpellDamageFill(
       input.fillSet.attackBurstDamageRoll,
       input.invocation,
@@ -350,7 +398,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
   }
 
   const attackDamageAmount =
-    hit && input.fillSet.attackBurstDamageRoll !== undefined
+    hitTarget && input.fillSet.attackBurstDamageRoll !== undefined
       ? spellDamageAmountForTarget(
           target,
           input.invocation,
@@ -402,7 +450,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
     );
   if (missingAttackDamageDispositionHoles.length > 0) {
     return needsHolesResult(
-      attackRolledState,
+      attackResolvedState,
       input.input.subject,
       missingAttackDamageDispositionHoles,
     );
@@ -419,7 +467,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
       damageEventKey: attackDamageEventKey,
     });
   if (attackHideousLaughterSaveCheck.tag === "needsHoles") {
-    return needsHolesResult(attackRolledState, input.input.subject, [
+    return needsHolesResult(attackResolvedState, input.input.subject, [
       ...attackHideousLaughterSaveCheck.holes,
     ]);
   }
@@ -432,9 +480,9 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
   }
 
   const damagedByAttack =
-    hit && input.fillSet.attackBurstDamageRoll !== undefined
+    hitTarget && input.fillSet.attackBurstDamageRoll !== undefined
       ? applySpellDamage(
-          attackRolledState,
+          attackResolvedState,
           target.combatantId,
           input.invocation,
           input.fillSet.attackBurstDamageRoll,
@@ -456,7 +504,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
             damageSourceId: input.actorId,
           },
         )
-      : attackRolledState;
+      : attackResolvedState;
 
   const savingThrowHole = spellSavingThrowOutcomeHole(
     damagedByAttack,
@@ -687,9 +735,9 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
   }
 
   const damagedByAttackWithConcentration =
-    hit && input.fillSet.attackBurstDamageRoll !== undefined
+    hitTarget && input.fillSet.attackBurstDamageRoll !== undefined
       ? applySpellDamage(
-          attackRolledState,
+          attackResolvedState,
           target.combatantId,
           input.invocation,
           input.fillSet.attackBurstDamageRoll,
@@ -714,7 +762,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
             damageSourceId: input.actorId,
           },
         )
-      : attackRolledState;
+      : attackResolvedState;
   const damagedByBurst =
     input.fillSet.damageRoll === undefined
       ? damagedByAttackWithConcentration

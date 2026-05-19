@@ -81,6 +81,10 @@ import {
   BLUR_ATTACK_ROLL_BYPASS_SENSES,
   COMMAND_OPTIONS,
   ELDRITCH_BLAST_BEAM_COUNTS,
+  MIRROR_IMAGE_DUPLICATE_COUNTS,
+  MIRROR_IMAGE_DUPLICATE_DIE_SIZE,
+  MIRROR_IMAGE_DUPLICATE_SUCCESS_AT_LEAST,
+  MIRROR_IMAGE_UNAFFECTED_SENSES,
   SCORCHING_RAY_RAY_COUNTS,
   SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS,
   THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
@@ -685,6 +689,12 @@ const BattleTargetSpatialFactSchema = Schema.Union(
     attackerId: CombatantId,
     targetId: CombatantId,
     sense: Schema.Literal(...BLUR_ATTACK_ROLL_BYPASS_SENSES),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("attackAttackerUnaffectedByMirrorImageWithSense"),
+    attackerId: CombatantId,
+    targetId: CombatantId,
+    sense: Schema.Literal(...MIRROR_IMAGE_UNAFFECTED_SENSES),
   }),
   Schema.Struct({
     kind: Schema.Literal("spellTarget"),
@@ -1671,6 +1681,14 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("mirrorImageHitInterception"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      activeEffect: BattleRuntimeObjectSchema,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("conditionRemovalProtection"),
       spell: BattleRuntimeObjectSchema,
       actionCost: Schema.Literal("magicAction"),
@@ -2049,6 +2067,18 @@ export const BattleHoleSchema = Schema.Union(
         dice: Schema.Literal(1),
         dieSize: Schema.Literal(4),
       }),
+    }),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("rolledDice"),
+    mirrorImageDuplicateRoll: Schema.Struct({
+      targetId: CombatantId,
+      sourceSpellId: Schema.String,
+      sourceCombatantId: CombatantId,
+      remainingDuplicates: Schema.Literal(...MIRROR_IMAGE_DUPLICATE_COUNTS),
+      dieSize: Schema.Literal(MIRROR_IMAGE_DUPLICATE_DIE_SIZE),
+      successAtLeast: Schema.Literal(MIRROR_IMAGE_DUPLICATE_SUCCESS_AT_LEAST),
     }),
   }),
   Schema.Struct({

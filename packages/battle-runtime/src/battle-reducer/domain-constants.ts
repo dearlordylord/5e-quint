@@ -48,6 +48,23 @@ export const BLUR_ATTACK_ROLL_BYPASS_SENSES = [
 ] as const satisfies ReadonlyArray<CreatureSense["kind"]>;
 export type BlurAttackRollBypassSense =
   (typeof BLUR_ATTACK_ROLL_BYPASS_SENSES)[number];
+export const MIRROR_IMAGE_UNIT_ID = "mirror_image" satisfies SpellRecord["id"];
+export const MIRROR_IMAGE_UNAFFECTED_SENSES = BLUR_ATTACK_ROLL_BYPASS_SENSES;
+export type MirrorImageUnaffectedSense =
+  (typeof MIRROR_IMAGE_UNAFFECTED_SENSES)[number];
+export const MIRROR_IMAGE_UNAFFECTED_BY = [
+  "blinded",
+  ...MIRROR_IMAGE_UNAFFECTED_SENSES,
+] as const satisfies ReadonlyArray<Condition | CreatureSense["kind"]>;
+export const MIRROR_IMAGE_DUPLICATE_COUNTS = [1, 2, 3] as const;
+export type MirrorImageDuplicateCount =
+  (typeof MIRROR_IMAGE_DUPLICATE_COUNTS)[number];
+export const MIRROR_IMAGE_INITIAL_DUPLICATES =
+  3 satisfies MirrorImageDuplicateCount;
+export const MIRROR_IMAGE_DUPLICATE_DIE_SIZE = 6;
+export const MIRROR_IMAGE_DUPLICATE_SUCCESS_AT_LEAST = 3;
+export const MIRROR_IMAGE_DUPLICATE_ROLL_HOLE_KEY_PREFIX =
+  "battle:mirror-image:duplicate-roll:";
 export const CHROMATIC_ORB_DAMAGE_TYPES = [
   "acid",
   "cold",
@@ -95,19 +112,12 @@ export const ELDRITCH_BLAST_BEAM_COUNTS = [
 ] as const;
 export type EldritchBlastBeamCount =
   (typeof ELDRITCH_BLAST_BEAM_COUNTS)[number];
-export const SCORCHING_RAY_RAY_COUNTS = [
-  3,
-  4,
-  5,
-  6,
-  7,
-  8,
-  9,
-  10,
-] as const;
+export const SCORCHING_RAY_RAY_COUNTS = [3, 4, 5, 6, 7, 8, 9, 10] as const;
 export type ScorchingRayRayCount = (typeof SCORCHING_RAY_RAY_COUNTS)[number];
 
-export function scorchingRayRayCount(value: number): ScorchingRayRayCount | null {
+export function scorchingRayRayCount(
+  value: number,
+): ScorchingRayRayCount | null {
   return SCORCHING_RAY_RAY_COUNTS.find((count) => count === value) ?? null;
 }
 export const ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_TARGET_HOLE_ID =

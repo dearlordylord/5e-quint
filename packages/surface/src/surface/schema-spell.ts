@@ -3093,6 +3093,31 @@ export const TriggeredReactionMechanicsSchema = Schema.extend(
   }),
 );
 
+export const PassiveHitInterceptMechanicsSchema = Schema.extend(
+  SpellMechanicsHeaderSchema,
+  Schema.Struct({
+    family: Schema.Literal("passive_hit_intercept"),
+    attachment: Schema.Struct({
+      kind: Schema.Literal("self"),
+    }),
+    duplicatePool: Schema.Struct({
+      count: Schema.Literal(3),
+      dicePerRemainingDuplicate: Schema.Literal(1),
+      dieSize: Schema.Literal(6),
+      successAtLeast: Schema.Literal(3),
+      onHit: Schema.Literal("duplicate_hit_instead_and_destroyed"),
+      onFailure: Schema.Literal("caster_hit_normally"),
+      ignoresOtherDamageAndEffects: Schema.Literal(true),
+      endsWhen: Schema.Literal("all_duplicates_destroyed"),
+      unaffectedBy: Schema.Tuple(
+        Schema.Literal("blinded"),
+        Schema.Literal("blindsight"),
+        Schema.Literal("truesight"),
+      ),
+    }),
+  }),
+);
+
 export const AnchorTargetSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("location"),
@@ -3101,9 +3126,7 @@ export const AnchorTargetSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("object"),
     visibility: Schema.Literal("caster_can_see"),
-    wornOrCarried: Schema.Literal(
-      "not_worn_or_carried_by_another_creature",
-    ),
+    wornOrCarried: Schema.Literal("not_worn_or_carried_by_another_creature"),
   }),
   Schema.Struct({
     kind: Schema.Literal("area"),
@@ -3548,6 +3571,7 @@ export const SpellMechanicsSchema = Schema.Union(
   OngoingEffectMechanicsSchema,
   ActivationMechanicsSchema,
   TriggeredReactionMechanicsSchema,
+  PassiveHitInterceptMechanicsSchema,
   AnchoredTriggerMechanicsSchema,
   SpawnedCreatureMechanicsSchema,
   ReanimatedCreatureMechanicsSchema,

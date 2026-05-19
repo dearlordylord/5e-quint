@@ -96,6 +96,7 @@ import {
   battleStateAfterSanctuaryEarlyEndForActor,
   sanctuaryTargetingInterdictionCheck,
 } from "./sanctuary-targeting-interdiction.ts";
+import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
 
 import {
   attackCanCarryKnockOutChoice,
@@ -108,7 +109,10 @@ import {
   selectedWeaponDamageDiceRollChoice,
 } from "./statblock-attacks.ts";
 
-import { ATTACK_TARGET_HOLE_ID } from "../battle-reducer.ts";
+import {
+  ATTACK_ROLL_HOLE_ID,
+  ATTACK_TARGET_HOLE_ID,
+} from "../battle-reducer.ts";
 import type {
   AttackBattleResolutionInput,
   BattleAttackHostSubject,
@@ -438,6 +442,53 @@ export function resolveSelectedAttackProcedure(
     fillSet.attackRoll,
     criticalThreshold,
   );
+  if (!hit && fillSet.mirrorImageDuplicateRoll !== undefined) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Mirror Image duplicate roll is only valid after an attack-roll hit.",
+    );
+  }
+  if (hit) {
+    const mirrorImageAttacker = attackRolledState.combatants.get(attackerId);
+    if (mirrorImageAttacker === undefined) {
+      return invalidResult(
+        input.state,
+        "missingCombatant",
+        "Attack actor is no longer in this battle.",
+      );
+    }
+    const mirrorImageCheck = mirrorImageHitInterceptionCheck({
+      state: attackRolledState,
+      attacker: mirrorImageAttacker,
+      target: attackRolledState.combatants.get(target.combatantId) ?? target,
+      targetSpatialFacts: fillSet.targetSpatialFacts,
+      triggeringAttackRollHoleId: ATTACK_ROLL_HOLE_ID,
+      fill: fillSet.mirrorImageDuplicateRoll,
+    });
+    if (mirrorImageCheck.tag === "needsHoles") {
+      return needsHolesResult(attackRolledState, input.subject, [
+        mirrorImageCheck.hole,
+      ]);
+    }
+    if (mirrorImageCheck.tag === "invalid") {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        mirrorImageCheck.message,
+      );
+    }
+    if (mirrorImageCheck.tag === "hitDuplicate") {
+      if (attackPostMirrorImageFillsArePresent(fillSet)) {
+        return invalidResult(
+          input.state,
+          "invalidFill",
+          "Attack damage and after-hit fills are not valid when Mirror Image redirects the hit to a duplicate.",
+        );
+      }
+      return spendAttackProcedure(mirrorImageCheck.state, attackerId, attack);
+    }
+  }
   const eligibleDamageRiders = hit
     ? eligibleAttackDamageRiders(
         attackRolledState,
@@ -1137,6 +1188,27 @@ export function resolveSelectedAttackProcedure(
       : attackRolledState,
     attackerId,
     attack,
+  );
+}
+
+function attackPostMirrorImageFillsArePresent(
+  fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>,
+): boolean {
+  return (
+    fillSet.damageRoll !== undefined ||
+    fillSet.damageDispositionFilled ||
+    fillSet.spellDamageReductionRoll !== undefined ||
+    fillSet.attackDamageReductionRedirectTarget !== undefined ||
+    fillSet.attackDamageReductionRedirectSave !== undefined ||
+    fillSet.attackDamageReductionRedirectDamage !== undefined ||
+    fillSet.weaponMasteryToppleSavingThrow !== undefined ||
+    fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
+    fillSet.concentrationSavingThrows.length > 0 ||
+    fillSet.weaponMasteryCleaveDecision !== undefined ||
+    fillSet.weaponMasteryCleaveTarget !== undefined ||
+    fillSet.weaponMasteryCleaveAttackRoll !== undefined ||
+    fillSet.weaponMasteryCleaveDamageRoll !== undefined ||
+    fillSet.weaponMasteryCleaveDamageDispositionFilled
   );
 }
 

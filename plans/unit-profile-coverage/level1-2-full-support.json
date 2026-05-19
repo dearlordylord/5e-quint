@@ -2799,7 +2799,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 101,
+      "count": 102,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2860,6 +2860,7 @@
         "longstrider",
         "mage_armor",
         "magic_missile",
+        "mirror_image",
         "misty_step",
         "monk_martial_arts",
         "monk_unarmored_defense",
@@ -3010,40 +3011,40 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 481,
-      "percent": "86.5%",
+      "numerator": 485,
+      "percent": "87.2%",
       "rowsByStatus": {
-        "accepted": 332,
+        "accepted": 336,
         "accepted-no-battle-effect": 149,
-        "battle-runtime-required": 66,
+        "battle-runtime-required": 62,
         "owner-evidence-required": 3,
         "partial-battle-runtime": 6
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 72,
+      "denominator": 73,
       "numerator": 11,
-      "percent": "15.3%"
+      "percent": "15.1%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 72,
+      "denominator": 73,
       "numerator": 16,
-      "percent": "22.2%"
+      "percent": "21.9%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 101,
+      "denominator": 102,
       "numerator": 30,
-      "percent": "29.7%"
+      "percent": "29.4%"
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 159,
-      "numerator": 101,
-      "percent": "63.5%"
+      "denominator": 160,
+      "numerator": 102,
+      "percent": "63.8%"
     },
     "strictTargetClosure": {
-      "denominator": 159,
-      "numerator": 150,
-      "percent": "94.3%"
+      "denominator": 160,
+      "numerator": 151,
+      "percent": "94.4%"
     }
   },
   "openFrontier": [
@@ -3761,60 +3762,6 @@
           }
         ],
         "unitId": "message"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "spell Unit pressure",
-            "concept": "Bard spell list Mirror Image",
-            "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_mirror_image",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 206,
-              "lineStart": 206,
-              "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Sorcerer spell list Mirror Image",
-            "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_mirror_image",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 287,
-              "lineStart": 287,
-              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Warlock spell list Mirror Image",
-            "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_mirror_image",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 370,
-              "lineStart": 370,
-              "path": ".references/srd-5.2.1/Classes/Warlock.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Wizard spell list Mirror Image",
-            "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_mirror_image",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 222,
-              "lineStart": 222,
-              "path": ".references/srd-5.2.1/Classes/Wizard.md"
-            }
-          }
-        ],
-        "unitId": "mirror_image"
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/prestidigitation.md",
@@ -5945,9 +5892,9 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 101,
+        "denominator": 102,
         "numerator": 30,
-        "percent": "29.7%"
+        "percent": "29.4%"
       }
     },
     "units": [
@@ -6975,6 +6922,18 @@
           {
             "joinStatus": "unmapped",
             "obligations": [],
+            "profileId": "spell.invocation-mirror-image-hit-interception",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "mirror_image"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
             "profileId": "spell.invocation-self-teleport",
             "profileKind": "spell-invocation"
           }
@@ -7831,7 +7790,7 @@
     "groupsByClaimTag": {
       "missing": 9,
       "profile-subset-supported": 12,
-      "supported-profile": 101,
+      "supported-profile": 102,
       "unsupported-profile": 37
     },
     "groupsByStatus": {
@@ -7841,9 +7800,9 @@
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 19,
       "open-runtime-behavior": 9,
-      "supported-profile": 101
+      "supported-profile": 102
     },
     "nonSupportedFrontier": 58,
-    "strictDenominator": 159
+    "strictDenominator": 160
   }
 }

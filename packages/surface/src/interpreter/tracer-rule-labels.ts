@@ -59,6 +59,7 @@ export function procedureForFamily(
       return "store";
     case "ongoing_effect":
     case "activation":
+    case "passive_hit_intercept":
     case "spawned_creature":
     case "reanimated_creature":
     case "templated_multi_spawn":

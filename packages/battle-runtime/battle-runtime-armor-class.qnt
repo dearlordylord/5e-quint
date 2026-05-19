@@ -65,6 +65,7 @@ module battleRuntimeArmorClass {
         | ViciousMockeryNextAttackDisadvantage => false
         | WeaponMasterySapNextAttackDisadvantage(_) => false
         | Blurred => false
+        | MirrorImageDuplicates(_) => false
         | ColorSprayBlinded(_) => false
         | EntangleRestrained => false
         | EnsnaringStrikeRestrained(_) => false

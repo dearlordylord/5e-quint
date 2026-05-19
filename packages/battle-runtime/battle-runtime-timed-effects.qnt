@@ -228,6 +228,10 @@ module battleRuntimeTimedEffects {
             source: data.source,
             durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
           })
+        | MirrorImageDuplicates(data) => MirrorImageDuplicates({
+            durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(data.durationTicks),
+            remainingDuplicates: data.remainingDuplicates,
+          })
         | HideousLaughterEffect(data) => HideousLaughterEffect({
             source: data.source,
             target: data.target,
@@ -280,6 +284,7 @@ module battleRuntimeTimedEffects {
         | JumpMovementReplacement(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | FeatherFallMitigation(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | SanctuaryWard(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
+        | MirrorImageDuplicates(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | HideousLaughterEffect(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | GreaseGroundHazard(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)
         | FogCloudObscurement(data) => battleRuntimeTimedSpellEffectRemainsActive(data.durationTicks)

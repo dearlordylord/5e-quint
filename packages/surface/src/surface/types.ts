@@ -406,6 +406,9 @@ export type AlternateActionCostMechanics = Schema.Schema.Type<
 export type TriggeredReactionMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.TriggeredReactionMechanicsSchema
 >;
+export type PassiveHitInterceptMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.PassiveHitInterceptMechanicsSchema
+>;
 export type AnchorTarget = Schema.Schema.Type<
   typeof SurfaceSchema.AnchorTargetSchema
 >;

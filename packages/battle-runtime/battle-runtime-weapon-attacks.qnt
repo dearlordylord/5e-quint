@@ -18,6 +18,7 @@ module battleRuntimeWeaponAttacks {
   import battleRuntimeAttackFacts.* from "./battle-runtime-attack-facts"
   import battleRuntimeHidden.* from "./battle-runtime-hidden"
   import battleRuntimeMovement.* from "./battle-runtime-movement"
+  import battleRuntimeMirrorImage.* from "./battle-runtime-mirror-image"
 
   pure def spendFighterAttackActionOrExtraAttackSlot(state: BattleState): BattleState =
     if (state.fighterExtraAttackSlotsRemaining > 0)
@@ -144,6 +145,33 @@ module battleRuntimeWeaponAttacks {
     forceToppleSave: bool,
     toppleSaveSucceeded: bool,
   ): BattleState =
+    resolveAttackAtBarbarianLevelWithToppleChoiceAndMirrorImageDuplicateRoll(
+      state,
+      attackTotal,
+      naturalD20,
+      damageRoll,
+      concentrationSaveSucceeded,
+      barbarianLevel,
+      damageDisposition,
+      forceToppleSave,
+      toppleSaveSucceeded,
+      0,
+      false,
+    )
+
+  pure def resolveAttackAtBarbarianLevelWithToppleChoiceAndMirrorImageDuplicateRoll(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageRoll: FighterWeaponAttackDamageRoll,
+    concentrationSaveSucceeded: bool,
+    barbarianLevel: int,
+    damageDisposition: DamageDisposition,
+    forceToppleSave: bool,
+    toppleSaveSucceeded: bool,
+    mirrorImageDuplicateHighestRoll: int,
+    attackerPerceivesTargetWithBlindsightOrTruesight: bool,
+  ): BattleState =
     if (not(currentActorCanAttack(state)) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated)
       state
     else {
@@ -155,6 +183,24 @@ module battleRuntimeWeaponAttacks {
       val huntersMarkDamage = fighterHuntersMarkDamage(damageRoll.huntersMarkDamageRoll, revealed.fighter.activeEffects, Goblin)
       if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), fighterCriticalThreshold(state))))
         { ...spent, lightWeaponAttackMade: true }
+      else if (
+        mirrorImageRedirectsAttackRollHit(
+          spent.fighter.activeEffects,
+          spent.goblin.activeEffects,
+          attackerPerceivesTargetWithBlindsightOrTruesight,
+          mirrorImageDuplicateHighestRoll,
+        )
+      )
+        {
+          ...spent,
+          goblin: combatantAfterMirrorImageAttackRollHit(
+            spent.fighter.activeEffects,
+            spent.goblin,
+            attackerPerceivesTargetWithBlindsightOrTruesight,
+            mirrorImageDuplicateHighestRoll,
+          ),
+          lightWeaponAttackMade: true,
+        }
       else {
         val damaged = applyDamageFromSource(state.goblin, damageRoll.weaponDamageRoll + 3 + rageDamage + divineFavorDamage + divineSmiteDamage + huntersMarkDamage, if (attackIsCritical(naturalD20, fighterCriticalThreshold(state))) 2 else 1, concentrationSaveSucceeded, damageDisposition, Fighter)
         val sapEffects = if (state.fighterLongswordSapMastery) Set(WeaponMasterySapNextAttackDisadvantage({ source: Fighter })) else Set()
@@ -258,10 +304,47 @@ module battleRuntimeWeaponAttacks {
     damageRoll: int,
     concentrationSaveSucceeded: bool,
   ): BattleState =
+    resolveGoblinAttackWithMirrorImageDuplicateRoll(
+      state,
+      attackTotal,
+      naturalD20,
+      damageRoll,
+      concentrationSaveSucceeded,
+      0,
+      false,
+    )
+
+  pure def resolveGoblinAttackWithMirrorImageDuplicateRoll(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+    mirrorImageDuplicateHighestRoll: int,
+    attackerPerceivesTargetWithBlindsightOrTruesight: bool,
+  ): BattleState =
     if (not(state.actionAvailable) or currentActor(state) != Goblin or state.goblin.hp == 0)
       state
     else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.fighter), 20)))
       { ...state, actionAvailable: false }
+    else if (
+      mirrorImageRedirectsAttackRollHit(
+        state.goblin.activeEffects,
+        state.fighter.activeEffects,
+        attackerPerceivesTargetWithBlindsightOrTruesight,
+        mirrorImageDuplicateHighestRoll,
+      )
+    )
+      {
+        ...state,
+        fighter: combatantAfterMirrorImageAttackRollHit(
+          state.goblin.activeEffects,
+          state.fighter,
+          attackerPerceivesTargetWithBlindsightOrTruesight,
+          mirrorImageDuplicateHighestRoll,
+        ),
+        actionAvailable: false,
+      }
     else {
       val adjustedDamage = damageAfterAdjustments(damageRoll + 2, Slashing, fighterRageResistances(state), Set(), Set())
       {
@@ -286,10 +369,47 @@ module battleRuntimeWeaponAttacks {
     damageRoll: int,
     concentrationSaveSucceeded: bool,
   ): BattleState =
+    resolveGoblinMultiattackDispatchWithMirrorImageDuplicateRoll(
+      state,
+      attackTotal,
+      naturalD20,
+      damageRoll,
+      concentrationSaveSucceeded,
+      0,
+      false,
+    )
+
+  pure def resolveGoblinMultiattackDispatchWithMirrorImageDuplicateRoll(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+    mirrorImageDuplicateHighestRoll: int,
+    attackerPerceivesTargetWithBlindsightOrTruesight: bool,
+  ): BattleState =
     if (state.goblinMultiattackDispatchesRemaining <= 0 or currentActor(state) != Goblin or state.goblin.hp == 0)
       state
     else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.fighter), 20)))
       { ...state, goblinMultiattackDispatchesRemaining: battleRuntimeGoblinMultiattackDispatchesAfterDispatch(state.goblinMultiattackDispatchesRemaining) }
+    else if (
+      mirrorImageRedirectsAttackRollHit(
+        state.goblin.activeEffects,
+        state.fighter.activeEffects,
+        attackerPerceivesTargetWithBlindsightOrTruesight,
+        mirrorImageDuplicateHighestRoll,
+      )
+    )
+      {
+        ...state,
+        fighter: combatantAfterMirrorImageAttackRollHit(
+          state.goblin.activeEffects,
+          state.fighter,
+          attackerPerceivesTargetWithBlindsightOrTruesight,
+          mirrorImageDuplicateHighestRoll,
+        ),
+        goblinMultiattackDispatchesRemaining: battleRuntimeGoblinMultiattackDispatchesAfterDispatch(state.goblinMultiattackDispatchesRemaining),
+      }
     else {
       val adjustedDamage = damageAfterAdjustments(damageRoll + 2, Slashing, fighterRageResistances(state), Set(), Set())
       {
@@ -315,10 +435,48 @@ module battleRuntimeWeaponAttacks {
     concentrationSaveSucceeded: bool,
     damageDisposition: DamageDisposition,
   ): BattleState =
+    resolveGoblinOpportunityAttackWithDispositionAndMirrorImageDuplicateRoll(
+      state,
+      attackTotal,
+      naturalD20,
+      damageRoll,
+      concentrationSaveSucceeded,
+      damageDisposition,
+      0,
+      false,
+    )
+
+  pure def resolveGoblinOpportunityAttackWithDispositionAndMirrorImageDuplicateRoll(
+    state: BattleState,
+    attackTotal: int,
+    naturalD20: int,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+    damageDisposition: DamageDisposition,
+    mirrorImageDuplicateHighestRoll: int,
+    attackerPerceivesTargetWithBlindsightOrTruesight: bool,
+  ): BattleState =
     if (state.goblin.hp == 0)
       state
     else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.fighter), 20)))
       state
+    else if (
+      mirrorImageRedirectsAttackRollHit(
+        state.goblin.activeEffects,
+        state.fighter.activeEffects,
+        attackerPerceivesTargetWithBlindsightOrTruesight,
+        mirrorImageDuplicateHighestRoll,
+      )
+    )
+      {
+        ...state,
+        fighter: combatantAfterMirrorImageAttackRollHit(
+          state.goblin.activeEffects,
+          state.fighter,
+          attackerPerceivesTargetWithBlindsightOrTruesight,
+          mirrorImageDuplicateHighestRoll,
+        ),
+      }
     else {
       val adjustedDamage = damageAfterAdjustments(damageRoll + 2, Slashing, fighterRageResistances(state), Set(), Set())
       stateWithFighterDamage(state, applyDamageFromSource(state.fighter, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, damageDisposition, Goblin))

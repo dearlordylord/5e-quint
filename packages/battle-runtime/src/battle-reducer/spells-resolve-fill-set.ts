@@ -29,6 +29,10 @@ import { isSpellDamageReductionRollFill } from "./damage-helpers.ts";
 import { validateUniqueAttackSightFacts } from "./attack-fill-set.ts";
 import { isHideousLaughterDamageRepeatSaveFill } from "./hideous-laughter-repeat-save.ts";
 import {
+  isMirrorImageDuplicateRollFill,
+  mirrorImageDuplicateRollHoleId,
+} from "./mirror-image-hit-interception.ts";
+import {
   spellBurstDamageHole,
   spellAttackSequencePartAttackRollHoleId,
   spellAttackSequencePartDamageHoleId,
@@ -69,6 +73,9 @@ export type SpellAttackSequencePartTargetFill =
 export type SpellAttackSequencePartFillSet = {
   readonly target: SpellAttackSequencePartTargetFill | undefined;
   readonly attackRoll: BattleAttackRollResult | undefined;
+  readonly mirrorImageDuplicateRoll:
+    | Extract<BattleFill, { readonly kind: "rolledDice" }>
+    | undefined;
   readonly damageRoll:
     | Extract<BattleFill, { readonly kind: "rolledDice" }>
     | undefined;
@@ -131,7 +138,7 @@ export type SpellFillSet =
         | Extract<
             BattleFill,
             { readonly kind: "thaumaturgyActiveOneMinuteEffectCount" }
-      >
+          >
         | undefined;
       readonly commandOptionChoice: BattleCommandOption | undefined;
       readonly conditionChoice: Condition | undefined;
@@ -158,6 +165,9 @@ export type SpellFillSet =
         { readonly kind: "attackDamageDisposition" }
       >[];
       readonly damageRoll:
+        | Extract<BattleFill, { readonly kind: "rolledDice" }>
+        | undefined;
+      readonly mirrorImageDuplicateRoll:
         | Extract<BattleFill, { readonly kind: "rolledDice" }>
         | undefined;
       readonly movement:
@@ -218,6 +228,7 @@ export function spellFillSet(
       ? Array.from({ length: invocation.targeting.attackCount }, () => ({
           target: undefined,
           attackRoll: undefined,
+          mirrorImageDuplicateRoll: undefined,
           damageRoll: undefined,
         }))
       : [];
@@ -255,6 +266,9 @@ export function spellFillSet(
     { readonly kind: "attackDamageDisposition" }
   >[] = [];
   let damageRoll:
+    | Extract<BattleFill, { readonly kind: "rolledDice" }>
+    | undefined;
+  let mirrorImageDuplicateRoll:
     | Extract<BattleFill, { readonly kind: "rolledDice" }>
     | undefined;
   let movement: Extract<BattleFill, { readonly kind: "movement" }> | undefined;
@@ -360,7 +374,8 @@ export function spellFillSet(
           if (attackSequencePartFill === undefined) {
             return {
               tag: "invalid",
-              message: "Spell attack sequence object target is outside this spell act.",
+              message:
+                "Spell attack sequence object target is outside this spell act.",
             };
           }
           if (attackSequencePartFill.target !== undefined) {
@@ -613,7 +628,8 @@ export function spellFillSet(
         if (attackSequencePartFill === undefined) {
           return {
             tag: "invalid",
-            message: "Spell attack sequence attack roll is outside this spell act.",
+            message:
+              "Spell attack sequence attack roll is outside this spell act.",
           };
         }
         if (attackSequencePartFill.attackRoll !== undefined) {
@@ -622,7 +638,10 @@ export function spellFillSet(
             message: "Spell attack sequence attack roll was filled twice.",
           };
         }
-        attackSequencePartFills[partIndex] = { ...attackSequencePartFill, attackRoll: fill.value };
+        attackSequencePartFills[partIndex] = {
+          ...attackSequencePartFill,
+          attackRoll: fill.value,
+        };
         continue;
       }
     }
@@ -908,6 +927,60 @@ export function spellFillSet(
     }
 
     if (fill.kind === "rolledDice") {
+      if (isMirrorImageDuplicateRollFill(fill)) {
+        if (
+          invocation.procedure !== "spellAttackSequence" &&
+          invocation.procedure !== "spellAttackDamage" &&
+          invocation.procedure !== "heldLightHurl" &&
+          invocation.procedure !== "attackBurstSaveDamage"
+        ) {
+          return {
+            tag: "invalid",
+            message:
+              "Mirror Image duplicate roll does not match this spell act.",
+          };
+        }
+        if (invocation.procedure === "spellAttackSequence") {
+          const partIndex = spellAttackSequencePartIndexForMirrorImageRoll(
+            invocation,
+            fill.holeId,
+          );
+          if (partIndex === null) {
+            return {
+              tag: "invalid",
+              message:
+                "Mirror Image duplicate roll does not match this spell attack sequence.",
+            };
+          }
+          const attackSequencePartFill = attackSequencePartFills[partIndex];
+          if (attackSequencePartFill === undefined) {
+            return {
+              tag: "invalid",
+              message: "Mirror Image duplicate roll is outside this spell act.",
+            };
+          }
+          if (attackSequencePartFill.mirrorImageDuplicateRoll !== undefined) {
+            return {
+              tag: "invalid",
+              message:
+                "Spell attack sequence Mirror Image duplicate roll was filled twice.",
+            };
+          }
+          attackSequencePartFills[partIndex] = {
+            ...attackSequencePartFill,
+            mirrorImageDuplicateRoll: fill,
+          };
+          continue;
+        }
+        if (mirrorImageDuplicateRoll !== undefined) {
+          return {
+            tag: "invalid",
+            message: "Mirror Image duplicate roll was filled twice.",
+          };
+        }
+        mirrorImageDuplicateRoll = fill;
+        continue;
+      }
       if (invocation.procedure === "spellAttackSequence") {
         const partIndex = spellAttackSequencePartIndexForHole(
           invocation,
@@ -919,7 +992,8 @@ export function spellFillSet(
           if (attackSequencePartFill === undefined) {
             return {
               tag: "invalid",
-              message: "Spell attack sequence damage is outside this spell act.",
+              message:
+                "Spell attack sequence damage is outside this spell act.",
             };
           }
           if (attackSequencePartFill.damageRoll !== undefined) {
@@ -928,7 +1002,10 @@ export function spellFillSet(
               message: "Spell attack sequence damage was filled twice.",
             };
           }
-          attackSequencePartFills[partIndex] = { ...attackSequencePartFill, damageRoll: fill };
+          attackSequencePartFills[partIndex] = {
+            ...attackSequencePartFill,
+            damageRoll: fill,
+          };
           continue;
         }
       }
@@ -1079,6 +1156,7 @@ export function spellFillSet(
     hideousLaughterDamageRepeatSaves,
     damageDispositions,
     damageRoll,
+    mirrorImageDuplicateRoll,
     movement,
     spellDamageReductionRolls,
     attackBurstDamageRoll,
@@ -1100,6 +1178,7 @@ export function spellFillSetContainsOnlySpellCastReactionFacts(
       (attackSequencePartFill) =>
         attackSequencePartFill.target === undefined &&
         attackSequencePartFill.attackRoll === undefined &&
+        attackSequencePartFill.mirrorImageDuplicateRoll === undefined &&
         attackSequencePartFill.damageRoll === undefined,
     ) &&
     fillSet.attackRoll === undefined &&
@@ -1118,11 +1197,35 @@ export function spellFillSetContainsOnlySpellCastReactionFacts(
     fillSet.hideousLaughterDamageRepeatSaves.length === 0 &&
     fillSet.damageDispositions.length === 0 &&
     fillSet.damageRoll === undefined &&
+    fillSet.mirrorImageDuplicateRoll === undefined &&
     fillSet.movement === undefined &&
     fillSet.spellDamageReductionRolls.length === 0 &&
     fillSet.attackBurstDamageRoll === undefined &&
     fillSet.healingRoll === undefined
   );
+}
+
+function spellAttackSequencePartIndexForMirrorImageRoll(
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spellAttackSequence" }
+  >,
+  holeId: BattleHoleId,
+): number | null {
+  for (
+    let partIndex = 0;
+    partIndex < invocation.targeting.attackCount;
+    partIndex += 1
+  ) {
+    if (
+      mirrorImageDuplicateRollHoleId(
+        spellAttackSequencePartAttackRollHoleId(invocation, partIndex),
+      ) === holeId
+    ) {
+      return partIndex;
+    }
+  }
+  return null;
 }
 
 export function parseSpellCastReactionFactsFill(
@@ -1192,15 +1295,20 @@ function spellAttackSequencePartIndexForHole(
   ) {
     if (
       (kind === "target" &&
-        spellAttackSequencePartTargetHoleId(invocation, partIndex) === holeId) ||
+        spellAttackSequencePartTargetHoleId(invocation, partIndex) ===
+          holeId) ||
       (kind === "object" &&
         invocation.targeting.kind === "spellAttackSequenceCreatureOrObject" &&
-        spellAttackSequencePartObjectTargetHoleId(invocation, partIndex) === holeId) ||
+        spellAttackSequencePartObjectTargetHoleId(invocation, partIndex) ===
+          holeId) ||
       (kind === "attackRoll" &&
-        spellAttackSequencePartAttackRollHoleId(invocation, partIndex) === holeId) ||
+        spellAttackSequencePartAttackRollHoleId(invocation, partIndex) ===
+          holeId) ||
       (kind === "damage" &&
-        (spellAttackSequencePartDamageHoleId(invocation, partIndex, false) === holeId ||
-          spellAttackSequencePartDamageHoleId(invocation, partIndex, true) === holeId))
+        (spellAttackSequencePartDamageHoleId(invocation, partIndex, false) ===
+          holeId ||
+          spellAttackSequencePartDamageHoleId(invocation, partIndex, true) ===
+            holeId))
     ) {
       return partIndex;
     }

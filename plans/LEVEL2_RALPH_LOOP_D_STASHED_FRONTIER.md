@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "L12G-MISSING-MIRROR-IMAGE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Mirror Image Definition And Runtime Support"
     },
     {
@@ -183,7 +183,7 @@ Do not run battle-runtime MBT unless the task changes promoted battle-runtime be
 | 3 | L12G-MISSING-LOCATE-ANIMALS-OR-PLANTS - Locate Animals Or Plants Definition And Closure | done | completed baseline | Original backlog task 68; Unit `locate_animals_or_plants`. |
 | 4 | L12G-MISSING-LOCATE-OBJECT - Locate Object Definition And Closure | done | completed baseline | Original backlog task 69; Unit `locate_object`. |
 | 5 | L12G-MISSING-MAGIC-MOUTH - Magic Mouth Definition And Closure | done | completed baseline | Original backlog task 70; Unit `magic_mouth`. |
-| 6 | L12G-MISSING-MIRROR-IMAGE - Mirror Image Definition And Runtime Support | ready-for-research | completed baseline | Original backlog task 71; Unit `mirror_image`. |
+| 6 | L12G-MISSING-MIRROR-IMAGE - Mirror Image Definition And Runtime Support | done | completed baseline | Original backlog task 71; Unit `mirror_image`. |
 | 7 | L12G-MISSING-ROPE-TRICK - Rope Trick Definition And Closure | ready-for-research | completed baseline | Original backlog task 72; Unit `rope_trick`. |
 | 8 | L12G-MISSING-SILENCE - Silence Definition And Support Or Closure | ready-for-research | completed baseline | Original backlog task 73; Unit `silence`. |
 | 9 | L12G-MISSING-SUGGESTION - Suggestion Definition And Closure | ready-for-research | completed baseline | Original backlog task 74; Unit `suggestion`. |
@@ -366,7 +366,7 @@ Acceptance:
 
 ### Task 6 - L12G-MISSING-MIRROR-IMAGE - Mirror Image Definition And Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Original backlog task: `Task 71 - L12G-MISSING-MIRROR-IMAGE - Mirror Image Definition And Runtime Support`.
 Unit: `mirror_image`.

@@ -44,6 +44,7 @@ module battleRuntimeSpellAttackTests {
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
   import battleRuntimeGroundCommand.* from "./battle-runtime-ground-command"
   import battleRuntimeWeaponAttacks.* from "./battle-runtime-weapon-attacks"
+  import battleRuntimeMirrorImage.* from "./battle-runtime-mirror-image"
 
   run test_poison_spray_applies_poison_spell_attack_damage = {
     val noReaction = { ...initialState, goblin: { ...initialState.goblin, reactionAvailable: false } }
@@ -52,6 +53,59 @@ module battleRuntimeSpellAttackTests {
       assert(result.actionAvailable == false),
       assert(result.goblin.hp == 3),
       assert(not(battleActorHasSpellSlotUse(result, Fighter))),
+    }
+  }
+
+  run test_mirror_image_intercepts_spell_attack_damage = {
+    val mirroredGoblin = {
+      ...initialState,
+      goblin: {
+        ...initialState.goblin,
+        activeEffects: Set(mirrorImageActiveEffect),
+        reactionAvailable: false,
+      },
+    }
+    val redirected = resolveRayOfFrostWithMirrorImageDuplicateRoll(mirroredGoblin, 15, 10, 4, true, 3, false)
+    val failedRoll = resolveRayOfFrostWithMirrorImageDuplicateRoll(mirroredGoblin, 15, 10, 4, true, 2, false)
+    all {
+      assert(redirected.goblin.hp == 10),
+      assert(activeEffectsMirrorImageRemainingDuplicates(redirected.goblin.activeEffects) == 2),
+      assert(not(redirected.goblin.activeEffects.contains(RayOfFrostSpeedDelta))),
+      assert(redirected.actionAvailable == false),
+      assert(failedRoll.goblin.hp == 6),
+      assert(activeEffectsMirrorImageRemainingDuplicates(failedRoll.goblin.activeEffects) == 3),
+      assert(failedRoll.goblin.activeEffects.contains(RayOfFrostSpeedDelta)),
+    }
+  }
+
+  run test_mirror_image_intercepts_each_spell_attack_sequence_hit = {
+    val mirroredGoblin = {
+      ...initialState,
+      goblin: {
+        ...initialState.goblin,
+        activeEffects: Set(mirrorImageActiveEffect),
+        reactionAvailable: false,
+      },
+    }
+    val result = resolveEldritchBlastTwoBeamsWithMirrorImageDuplicateRolls(
+      mirroredGoblin,
+      15,
+      10,
+      4,
+      true,
+      3,
+      false,
+      16,
+      11,
+      6,
+      true,
+      3,
+      false,
+    )
+    all {
+      assert(result.goblin.hp == 10),
+      assert(activeEffectsMirrorImageRemainingDuplicates(result.goblin.activeEffects) == 1),
+      assert(result.actionAvailable == false),
     }
   }
 

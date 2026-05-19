@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 387,
-      "numerator": 169,
-      "percent": "43.7%"
+      "denominator": 388,
+      "numerator": 170,
+      "percent": "43.8%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 459,
-      "numerator": 201,
-      "percent": "43.8%"
+      "denominator": 460,
+      "numerator": 202,
+      "percent": "43.9%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,62 +59,62 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 202
+      "value": 203
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 124,
-      "numerator": 124,
+      "denominator": 125,
+      "numerator": 125,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 202,
-      "numerator": 202,
+      "denominator": 203,
+      "numerator": 203,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 69,
-      "numerator": 69,
+      "denominator": 70,
+      "numerator": 70,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 69,
-      "numerator": 69,
+      "denominator": 70,
+      "numerator": 70,
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 91,
+      "denominator": 92,
       "numerator": 19,
-      "percent": "20.9%"
+      "percent": "20.7%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 91,
+      "denominator": 92,
       "numerator": 24,
-      "percent": "26.4%"
+      "percent": "26.1%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 124,
+      "denominator": 125,
       "numerator": 41,
-      "percent": "33.1%"
+      "percent": "32.8%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 69,
-      "numerator": 69,
+      "denominator": 70,
+      "numerator": 70,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 69,
-      "numerator": 69,
+      "denominator": 70,
+      "numerator": 70,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 124,
+      "denominator": 125,
       "numerator": 104,
-      "percent": "83.9%"
+      "percent": "83.2%"
     },
     "supportedProfileCoverage": {
-      "denominator": 170,
-      "numerator": 124,
-      "percent": "72.9%"
+      "denominator": 171,
+      "numerator": 125,
+      "percent": "73.1%"
     }
   },
   "metricSemantics": [
@@ -2630,6 +2630,31 @@
       ]
     },
     {
+      "id": "spell.invocation-mirror-image-hit-interception",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "sourceBoundary": "The runtime consumes the authored Mirror Image spell, the attacker's Blinded condition, and caller-supplied attack-target spatial facts for Blindsight or Truesight perception. It owns Magic Action and Spell Slot spend, the self timed duplicate pool, d6-per-remaining-duplicate hit interception, duplicate destruction, final-duplicate cleanup, and normal continuation when the duplicate roll fails.",
+      "taskRefs": [
+        "L12G-MISSING-MIRROR-IMAGE"
+      ],
+      "title": "Spell invocation creates timed Mirror Image duplicates that can intercept attack-roll hits",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-mirror-image.test.ts"
+        }
+      ]
+    },
+    {
       "id": "spell.invocation-condition-removal-protection",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -2659,14 +2684,14 @@
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 91,
+        "denominator": 92,
         "numerator": 19,
-        "percent": "20.9%"
+        "percent": "20.7%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 91,
+        "denominator": 92,
         "numerator": 24,
-        "percent": "26.4%"
+        "percent": "26.1%"
       }
     },
     "profileKinds": [
@@ -3413,6 +3438,12 @@
       {
         "joinStatus": "unmapped",
         "obligations": [],
+        "profileId": "spell.invocation-mirror-image-hit-interception",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
         "profileId": "spell.invocation-condition-removal-protection",
         "profileKind": "spell-invocation"
       }
@@ -3425,9 +3456,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 124,
+          "denominator": 125,
           "numerator": 41,
-          "percent": "33.1%"
+          "percent": "32.8%"
         }
       },
       "units": [
@@ -4671,6 +4702,18 @@
             }
           ],
           "unitId": "mastery_topple"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-mirror-image-hit-interception",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "mirror_image"
         },
         {
           "joinStatus": "unmapped",
@@ -7398,6 +7441,22 @@
         "spell.invocation-blur-attack-roll-defense"
       ],
       "taskId": "L12G-SPELL-BLUR"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Mirror Image Spell Slot spending, timed duplicate-pool state, 3+ duplicate-roll interception, duplicate destruction, final-duplicate cleanup, and timed duration cleanup.",
+      "profileIds": [
+        "spell.invocation-mirror-image-hit-interception"
+      ],
+      "taskId": "L12G-MISSING-MIRROR-IMAGE"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission tests cover Mirror Image Magic Action level-2 Spell Slot casting, self timed active-effect projection without Concentration, attack-hit duplicate roll holes, successful hit redirection and duplicate destruction, failed-roll continuation to damage, final duplicate cleanup, Blindsight and Truesight witness bypass, and Blinded-attacker bypass.",
+      "profileIds": [
+        "spell.invocation-mirror-image-hit-interception"
+      ],
+      "taskId": "L12G-MISSING-MIRROR-IMAGE"
     },
     {
       "claimKind": "qnt-proof",
@@ -17682,6 +17741,76 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/magic_mouth.json",
       "unitId": "magic_mouth"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "table/sight owner",
+          "reason": "Automatic Blindsight and Truesight perception derivation remains caller-supplied table/sight state; battle runtime consumes an explicit attack-target witness fact and owns the Mirror Image duplicate-pool mechanics."
+        },
+        "profileIds": [
+          "spell.invocation-mirror-image-hit-interception"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action level-2 Spell Slot casting",
+          "self timed Spell Effect for 1 minute without Concentration",
+          "three spell-owned duplicates tracked as a single duplicate pool",
+          "each attack-roll hit against the caster opens a 1d6-per-remaining-duplicate roll before attack damage",
+          "any duplicate roll of 3 or higher makes a duplicate take the hit instead of the caster and destroys one duplicate",
+          "the final destroyed duplicate removes the active effect",
+          "failed duplicate rolls leave the caster as the normal hit target and continue the attack damage workflow",
+          "the attacker's Blinded condition and caller-supplied Blindsight or Truesight perception facts bypass Mirror Image"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-mirror-image.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-MISSING-MIRROR-IMAGE"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-mirror-image-hit-interception",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the authored Mirror Image spell, the attacker's Blinded condition, and caller-supplied attack-target spatial facts for Blindsight or Truesight perception. It owns Magic Action and Spell Slot spend, the self timed duplicate pool, d6-per-remaining-duplicate hit interception, duplicate destruction, final-duplicate cleanup, and normal continuation when the duplicate roll fails.",
+          "taskRefs": [
+            "L12G-MISSING-MIRROR-IMAGE"
+          ],
+          "title": "Spell invocation creates timed Mirror Image duplicates that can intercept attack-roll hits",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-mirror-image.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/mirror_image.json",
+      "unitId": "mirror_image"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
