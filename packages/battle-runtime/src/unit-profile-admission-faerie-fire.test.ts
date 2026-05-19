@@ -399,7 +399,7 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
     expect(snapshotBattle(concentrationBroken).lightEmitters).toEqual([]);
   });
 
-  test("faerie_fire object area facts require the Faerie Fire spell identity", () => {
+  test("faerie_fire object area facts require outline mechanics, not spell identity", () => {
     const spell = spellRecord(faerieFireUnitId);
     const objectId = battleObjectId("faerie-fire-rejected-object");
     const state = spellBattle({ preparedSpells: [spell] });
@@ -433,7 +433,7 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
         spellCasterId,
         undefined,
       ),
-    ).toBe("Faerie Fire object area facts are only valid for Faerie Fire.");
+    ).toBeNull();
   });
 
   test("faerie_fire object outline grants object-target attack Advantage from supplied sight facts", () => {

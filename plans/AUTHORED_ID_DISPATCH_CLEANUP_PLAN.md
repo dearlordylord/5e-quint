@@ -31,9 +31,28 @@ Commits already landed in this worktree:
   Warding Bond `bondId`, character feature gates, and Thaumaturgy hole protocol
   ids.
 - `8a8ad32f` removes Thaumaturgy's remaining name/provenance gate.
+- This cleanup completes the indexed authored-name and provenance-section
+  dispatch removal.
 
-`pnpm check:authored-id-dispatch` now passes. The remaining work is the broader
-authored-name/provenance dispatch cleanup indexed below.
+`pnpm check:authored-id-dispatch` now checks authored identity, not just ids, and
+passes. The indexed production `SpellRecord.name` / `SpellRecord.provenance.section`
+runtime dispatch sites are complete. The only remaining filtered
+name/provenance-section comparisons are the documented spell-access boundary
+exceptions in `character-battle-resources.ts`.
+
+Verification completed after the cleanup:
+
+- `pnpm check:authored-id-dispatch`
+- exact filtered `rg` scan for `spell.name`, `unit.name`, and
+  `provenance.section` dispatch
+- `pnpm --filter @dnd/battle-runtime typecheck`
+- `pnpm exec vitest run $(find src -maxdepth 1 -name '*.test.ts' ! -name '*.mbt.test.ts' ! -name 'battle-runtime-qnt-self-test.test.ts' | sort)` from
+  `packages/battle-runtime`
+
+`battle-runtime-qnt-self-test.test.ts` was not counted in the deterministic TS
+verification lane because it currently fails before execution on an unrelated
+Quint parse error: `HoldPersonSaveGate` is missing in
+`battle-runtime-save-gated-spell.qnt`.
 
 ## Research Method
 
@@ -50,9 +69,9 @@ Scope notes:
 - Tests, fixtures, Surface catalog/schema/content, and classic non-SRD fixtures
   are excluded by rule.
 - No production `unit.name` dispatch sites remain in the filtered scan.
-- The remaining direct production sites are all `SpellRecord.name` and
+- At research time, the direct production sites were all `SpellRecord.name` and
   `SpellRecord.provenance.section` support gates, except the spell-access
-  boundary exceptions below.
+  boundary exceptions below. The battle-reducer sites are now fixed.
 
 ## Valid Exceptions
 
@@ -64,8 +83,8 @@ These are not fix targets unless the boundary policy changes.
 | `packages/battle-runtime/src/character-battle-resources.ts:786` | Pact of the Chain explicitly references Find Familiar. Same spell-access boundary exception. |
 | `packages/battle-runtime/src/battle-reducer/domain-constants.ts` `SHIELD_MAGIC_MISSILE_SPELL_ID` | Shield explicitly references Magic Missile. This is the cross-record reference exception documented in code. |
 
-If the name/provenance guard is automated, it should allow these narrowly by
-file plus exact helper/constant, not by broad package path.
+The automated name/provenance guard allows these narrowly through the existing
+boundary allowlist. Do not broaden the allowlist beyond explicit boundary files.
 
 ## Completed Authored-ID Violations
 
@@ -85,13 +104,12 @@ listed above.
 | `packages/character-creation-runtime/src/druid-wild-shape.ts` | Wild Shape feature parser gated on `druid_wild_shape` outside the documented support boundary. | Boundary placement or parser mistake | Done |
 | `packages/character-sheet-runtime/src/index.ts` | Magical Cunning parser gated on `warlock_magical_cunning`. | Support-profile parser mistake | Done |
 
-## Remaining Violations: Full Index
+## Completed Authored-Name/Provenance Violations: Full Index
 
-All rows below are production support or execution gates that still use authored
-spell names and/or source-section strings as dispatch facts. The fix direction is
-the same throughout: replace the name/provenance clause with shape parsing and
-typed projection facts. If a row has multiple line sites, fix them together so
-one profile cannot be half shape-based and half name-based.
+All rows below were production support or execution gates that used authored
+spell names and/or source-section strings as dispatch facts. They are now fixed:
+runtime admission and reaction behavior use shape parsing and typed projection
+facts. The index is retained as a historical checklist for the cleanup.
 
 The profile tables list fix units. Within a table, `.../file.ts` abbreviates the
 same `packages/battle-runtime/src/battle-reducer/file.ts` path used by the
@@ -160,8 +178,8 @@ production comparison line from the filtered scan.
 
 | Item | Sites | Fix direction |
 | --- | --- | --- |
-| Shillelagh | `packages/battle-runtime/src/battle-reducer/spells-profiles-attack-damage.ts:379` | Replace `isCanonicalSrdShillelaghSpellDefinition` with shape parser over ongoing weapon attack override facts. |
-| True Strike | `.../spells-profiles-attack-damage.ts:387` | Replace `isCanonicalSrdTrueStrike` with hosted-weapon attack shape parser. |
+| Shillelagh | `packages/battle-runtime/src/battle-reducer/spells-profiles-attack-damage.ts:379` | Replace canonical name/provenance helper with shape parser over ongoing weapon attack override facts. |
+| True Strike | `.../spells-profiles-attack-damage.ts:387` | Replace canonical name/provenance helper with hosted-weapon attack shape parser. |
 | Chromatic Orb | `.../spells-profiles-attack-damage.ts:626` | Replace canonical name/provenance helper with chained spell-attack shape: damage choices, same attack kind, leap continuation limits. |
 | Ice Knife | `.../spells-profiles-attack-damage.ts:690` | Parse attack-burst-save shape: single target attack, Cold/Piercing hit damage as represented, primary-target-origin emanation burst save. |
 | Sorcerous Burst | `.../spells-profiles-attack-damage.ts:939` | Replace canonical helper with damage-type-choice exploding cantrip shape. |
@@ -178,7 +196,8 @@ production comparison line from the filtered scan.
 
 This is the full direct `name` / `provenance.section` production comparison
 index from the filtered scan. The two `character-battle-resources.ts` pairs are
-valid exceptions listed above; every `battle-reducer` pair is a cleanup target.
+valid exceptions listed above; every `battle-reducer` pair was a cleanup target
+and is now fixed.
 
 ```text
 packages/battle-runtime/src/character-battle-resources.ts:780: spell.name === ARMOR_OF_SHADOWS_SPELL_NAME
@@ -312,49 +331,44 @@ packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts:2853: spel
 packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts:2855: spell.provenance.section !== "Spells/Descriptions-Q-R#Resistance"
 ```
 
-## Implementation Phases
+## Completed Implementation Phases
 
-1. Add an automated name/provenance dispatch guard.
-   - Extend `scripts/check-authored-id-dispatch-boundary.cjs` or add a sibling
-     check that flags production comparisons against `SpellRecord.name`,
-     `UnitRecord.name`, and `provenance.section`.
-   - Add narrow allowlist entries only for the spell-access and cross-record
-     exceptions above.
-   - Verification target: the new guard fails before fixes and passes after all
-     rows in this plan are complete.
-2. Save-gate batch.
-   - Start with low-coupling rows where complete shape checks already exist:
+1. Added an automated name/provenance dispatch guard.
+   - `scripts/check-authored-id-dispatch-boundary.cjs` now flags production
+     comparisons against `SpellRecord.name`, `UnitRecord.name`, and
+     `provenance.section`.
+   - The existing narrow allowlists cover only the documented boundary files.
+2. Completed the save-gate batch.
+   - Started with low-coupling rows where complete shape checks already existed:
      Command, Grease, Sleep, Hideous Laughter, Faerie Fire, Blindness/Deafness,
      Hold Person, Animal Friendship, Charm Person.
-   - Then fix multi-site rider/post-save rows: Fireball, Shatter, Thunderwave,
+   - Then fixed multi-site rider/post-save rows: Fireball, Shatter, Thunderwave,
      Dissonant Whispers, Vicious Mockery, Starry Wisp, Chill Touch, Ray of
      Sickness, Shocking Grasp, Guiding Bolt.
-3. Support/profile batch.
-   - Remove direct name/provenance gates where complete shape checks already
+3. Completed the support/profile batch.
+   - Removed direct name/provenance gates where complete shape checks already
      exist.
-   - Handle Hunter's Mark and Hex carefully because current branching uses
-     authored identity to choose two nearby marked-damage variants; split on
+   - Handled Hunter's Mark and Hex by replacing authored-identity branching with
      operation shape instead.
-4. General profile and attack-damage batch.
-   - Remove canonical helper names and replace them with shape parser names.
-   - Rename constants such as `FIREBALL_SPELL_NAME` to domain-invariant names or
-     remove them once no authored name is used.
-5. Reaction/discovery batch.
-   - Counterspell, Hellish Rebuke, and Feather Fall reaction matching should
-     trust typed procedure plus casting-time trigger facts, not spell name or
-     source section.
-6. Final convergence.
-   - Run the new guard, existing authored-id guard, affected typechecks, focused
-     deterministic tests, and reviewer-loop passes until no reasonable finding
-     remains.
+4. Completed the general profile and attack-damage batch.
+   - Removed canonical helper names and replaced them with shape parser names
+     where helpers remained useful.
+   - Removed authored-name constants such as `FIREBALL_SPELL_NAME`.
+5. Completed the reaction/discovery batch.
+   - Counterspell, Hellish Rebuke, and Feather Fall reaction matching now trusts
+     typed procedure plus casting-time trigger facts, not spell name or source
+     section.
+6. Completed final convergence for the deterministic TS lane.
+   - The new guard, battle-runtime typecheck, and focused deterministic tests
+     pass. The full non-MBT battle-runtime deterministic suite also passes when
+     excluding the unrelated QNT self-test failure documented above.
 
 ## Verification
 
 1. Run `pnpm check:authored-id-dispatch` after every authored-id or
    authored-reference cleanup.
-2. Run the new name/provenance dispatch guard after it exists. Until then,
-   re-run the exact `rg` scans from this plan and update this index if any line
-   moves or a new site appears.
+2. Re-run the exact `rg` scans from this plan when changing authored-identity
+   boundaries; only the documented boundary exceptions should remain.
 3. Run package-local typechecks for touched packages.
 4. Run focused deterministic tests for affected profiles. Use MBT only after
    completed behavior changes that need promoted end-to-end validation.

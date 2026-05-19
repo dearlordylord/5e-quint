@@ -110,7 +110,7 @@ export function supportedCantripSpellHostedWeaponAttackProfile(
   proficiencyBonus: ProficiencyBonusType,
   characterLevel: number,
 ): readonly SupportedSpellInvocation[] {
-  if (actor.origin.kind !== "character" || !isCanonicalSrdTrueStrike(spell)) {
+  if (actor.origin.kind !== "character") {
     return [];
   }
   const origin = actor.origin;
@@ -213,7 +213,6 @@ export function supportedCantripWeaponAttackOverrideProfile(
 ): readonly SupportedSpellInvocation[] {
   if (
     actor.origin.kind !== "character" ||
-    !isCanonicalSrdShillelaghSpellDefinition(spell) ||
     spell.mechanics.family !== "ongoing_effect" ||
     spell.mechanics.level !== 0 ||
     spell.mechanics.castingTime.kind !== "bonus_action" ||
@@ -372,24 +371,6 @@ function isDamageDieSize(value: number): value is DamageDieSize {
   return DAMAGE_DIE_SIZES.some((dieSize) => dieSize === value);
 }
 
-export function isCanonicalSrdShillelaghSpellDefinition(
-  spell: SpellRecord,
-): boolean {
-  return (
-    spell.name === "Shillelagh" &&
-    spell.provenance.kind === "srd-5.2.1" &&
-    spell.provenance.section === "Spells/Descriptions-S-Z#Shillelagh"
-  );
-}
-
-export function isCanonicalSrdTrueStrike(spell: SpellRecord): boolean {
-  return (
-    spell.name === "True Strike" &&
-    spell.provenance.kind === "srd-5.2.1" &&
-    spell.provenance.section === "Spells/Descriptions-S-Z#True Strike"
-  );
-}
-
 const byKind = Match.discriminator("kind");
 
 function weaponMatchesProficiency(
@@ -510,9 +491,6 @@ export function supportedPreparedChainedSpellAttackDamageProfile(
   spellcastingAbilityModifier: AbilityModifier,
   proficiencyBonus: ProficiencyBonusType,
 ): readonly SupportedSpellInvocation[] {
-  if (!isCanonicalSrdChromaticOrbSpellDefinition(spell)) {
-    return [];
-  }
   const range = spell.mechanics.range;
   if (
     spell.mechanics.family !== "activation" ||
@@ -561,7 +539,7 @@ export function supportedPreparedChainedSpellAttackDamageProfile(
     continuation.when.kind !== "damage_roll_has_duplicate_faces" ||
     continuation.when.minimumMultiplicity !== 2 ||
     continuation.next.length !== 1 ||
-    !isCanonicalChromaticOrbContinuationLimitSet(continuation.limits) ||
+    !isChromaticOrbContinuationLimitSetShape(continuation.limits) ||
     hitDamage?.kind !== "damage" ||
     leapHitDamage?.kind !== "damage" ||
     typeof hitDamage.damageType !== "object" ||
@@ -619,17 +597,7 @@ export function supportedPreparedChainedSpellAttackDamageProfile(
   });
 }
 
-export function isCanonicalSrdChromaticOrbSpellDefinition(
-  spell: SpellRecord,
-): boolean {
-  return (
-    spell.name === "Chromatic Orb" &&
-    spell.provenance.kind === "srd-5.2.1" &&
-    spell.provenance.section === "Spells/Descriptions-A-D#Chromatic Orb"
-  );
-}
-
-export function isCanonicalChromaticOrbContinuationLimitSet(
+export function isChromaticOrbContinuationLimitSetShape(
   limits: readonly { readonly kind: string }[],
 ): boolean {
   return (
@@ -687,9 +655,6 @@ export function supportedAttackBurstSaveDamageProfile(
       ? singleTargetSpellRangeFeet(spell.mechanics.range)
       : null;
   if (
-    spell.name !== "Ice Knife" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-E-L#Ice Knife" ||
     spell.mechanics.level !== 1 ||
     spell.mechanics.castingTime.kind !== "action" ||
     spell.mechanics.duration.kind !== "instantaneous" ||
@@ -910,7 +875,8 @@ function supportedSorcerousBurstProjection(
 } | null {
   if (
     damageEffect.kind !== "damage" ||
-    !isCanonicalSrdSorcerousBurstSpellDefinition(spell) ||
+    spell.mechanics.level !== 0 ||
+    spell.mechanics.duration.kind !== "instantaneous" ||
     typeof damageEffect.damageType !== "object" ||
     damageEffect.damageType.kind !== "hole" ||
     typeof damageEffect.damageType.value !== "object" ||
@@ -930,16 +896,6 @@ function supportedSorcerousBurstProjection(
     damageTypes: SORCEROUS_BURST_DAMAGE_TYPES,
     maxAdditionalDice: Math.max(0, Number(spellcastingAbilityModifier)),
   };
-}
-
-export function isCanonicalSrdSorcerousBurstSpellDefinition(
-  spell: SpellRecord,
-): boolean {
-  return (
-    spell.name === "Sorcerous Burst" &&
-    spell.provenance.kind === "srd-5.2.1" &&
-    spell.provenance.section === "Spells/Descriptions-S-Z#Sorcerous Burst"
-  );
 }
 
 export function supportedCantripSpellAttackSequenceProfile(
@@ -1153,7 +1109,7 @@ function supportedSpellObjectHitEffect(input: {
 } | null {
   if (
     input.targeting.kind === "singleCreatureOrObject" &&
-    isCanonicalSrdFireBoltObjectIgnition(input)
+    isFireDamageObjectIgnitionShape(input)
   ) {
     return {
       objectHitEffect: { kind: "igniteFlammableUnattended" },
@@ -1166,7 +1122,7 @@ function supportedSpellObjectHitEffect(input: {
   };
 }
 
-function isCanonicalSrdFireBoltObjectIgnition(input: {
+function isFireDamageObjectIgnitionShape(input: {
   readonly spell: SpellRecord;
   readonly phase: Extract<
     SpellActivationPhase,
@@ -1176,9 +1132,6 @@ function isCanonicalSrdFireBoltObjectIgnition(input: {
   readonly postDamageEffects: readonly SpellAttackHitEffect[];
 }): boolean {
   return (
-    input.spell.name === "Fire Bolt" &&
-    input.spell.provenance.kind === "srd-5.2.1" &&
-    input.spell.provenance.section === "Spells/Descriptions-E-L#Fire Bolt" &&
     input.spell.mechanics.level === 0 &&
     input.spell.mechanics.duration.kind === "instantaneous" &&
     input.phase.attackKind === "ranged_spell_attack" &&

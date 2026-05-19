@@ -183,10 +183,6 @@ export function saveGatedAttackRollAdvantageInvocationIsFaerieFire(
   invocation: SaveGatedAttackRollAdvantageInvocation,
 ): boolean {
   return (
-    invocation.spell.name === "Faerie Fire" &&
-    invocation.spell.provenance.kind === "srd-5.2.1" &&
-    invocation.spell.provenance.section ===
-      "Spells/Descriptions-E-L#Faerie Fire" &&
     invocation.effect.kind === "faerieFireOutline" &&
     invocation.effect.sourceSpellId === invocation.spell.id
   );

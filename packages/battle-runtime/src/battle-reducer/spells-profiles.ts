@@ -563,9 +563,6 @@ export function supportedCantripDancingLightsSpellProfile(
   spell: SpellRecord,
 ): readonly SupportedSpellInvocation[] {
   if (
-    spell.name !== "Dancing Lights" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-A-D#Dancing Lights" ||
     spell.mechanics.family !== "ongoing_effect" ||
     spell.mechanics.level !== 0 ||
     spell.mechanics.castingTime.kind !== "action" ||
@@ -787,9 +784,6 @@ export function supportedCantripMakeStableSpellProfile(
   characterLevel: number,
 ): readonly SupportedSpellInvocation[] {
   if (
-    spell.name !== "Spare the Dying" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-S-Z#Spare the Dying" ||
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 0 ||
     spell.mechanics.castingTime.kind !== "action" ||
@@ -867,9 +861,6 @@ export function supportedPreparedFogCloudObscurementProfile(
       : null;
   const radius = area?.shape.kind === "sphere" ? area.shape.radiusFeet : null;
   if (
-    spell.name !== "Fog Cloud" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-E-L#Fog Cloud" ||
     spell.mechanics.level !== 1 ||
     spell.mechanics.castingTime.kind !== "action" ||
     rangeFeet !== 120 ||
@@ -1005,9 +996,6 @@ function flamingSphereSpell(spell: SpellRecord) {
   );
 
   if (
-    spell.name !== "Flaming Sphere" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-E-L#Flaming Sphere" ||
     spell.mechanics.level !== 2 ||
     spell.mechanics.castingTime.kind !== "action" ||
     spell.mechanics.range.kind !== "point" ||
@@ -1169,9 +1157,6 @@ export function isLightObjectSpell(spell: SpellRecord): spell is SpellRecord & {
       ? (spell.mechanics.duration.earlyEnd ?? [])
       : [];
   return (
-    spell.name === "Light" &&
-    spell.provenance.kind === "srd-5.2.1" &&
-    spell.provenance.section === "Spells/Descriptions-E-L#Light" &&
     spell.mechanics.family === "activation" &&
     spell.mechanics.level === 0 &&
     spell.mechanics.castingTime.kind === "action" &&
@@ -1198,9 +1183,6 @@ export function isContinualFlameObjectSpell(
       ? (spell.mechanics.duration.endsOn ?? [])
       : [];
   return (
-    spell.name === "Continual Flame" &&
-    spell.provenance.kind === "srd-5.2.1" &&
-    spell.provenance.section === "Spells/Descriptions-A-D#Continual Flame" &&
     spell.mechanics.family === "activation" &&
     spell.mechanics.level === 2 &&
     spell.mechanics.castingTime.kind === "action" &&
@@ -1231,9 +1213,6 @@ export function isProduceFlameOngoingEffectSpell(
       ? (spell.mechanics.duration.earlyEnd ?? [])
       : [];
   return (
-    spell.name === "Produce Flame" &&
-    spell.provenance.kind === "srd-5.2.1" &&
-    spell.provenance.section === "Spells/Descriptions-M-P#Produce Flame" &&
     spell.mechanics.family === "ongoing_effect" &&
     spell.mechanics.level === 0 &&
     spell.mechanics.castingTime.kind === "bonus_action" &&
@@ -1314,9 +1293,6 @@ export function supportedPreparedHellishRebukeReactionSpellProfile(
   spellSlots: CharacterBattleSpellcastingState["spellSlots"],
 ): readonly SupportedSpellInvocation[] {
   if (
-    spell.name !== "Hellish Rebuke" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-E-L#Hellish Rebuke" ||
     spell.mechanics.family !== "triggered_reaction" ||
     spell.mechanics.level !== 1 ||
     spell.mechanics.castingTime.kind !== "reaction" ||
@@ -1387,9 +1363,6 @@ export function supportedPreparedCounterspellReactionSpellProfile(
   spellSlots: CharacterBattleSpellcastingState["spellSlots"],
 ): readonly SupportedSpellInvocation[] {
   if (
-    spell.name !== "Counterspell" ||
-    spell.provenance.kind !== "srd-5.2.1" ||
-    spell.provenance.section !== "Spells/Descriptions-A-D#Counterspell" ||
     spell.mechanics.family !== "triggered_reaction" ||
     spell.mechanics.level !== 3 ||
     spell.mechanics.castingTime.kind !== "reaction" ||
