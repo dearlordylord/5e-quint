@@ -49,67 +49,67 @@
     {
       "number": 8,
       "id": "L12G-MISSING-SILENCE",
-      "status": "ready-for-research",
+      "status": "deferred-to-loop-a",
       "title": "Silence Definition And Support Or Closure"
     },
     {
       "number": 9,
       "id": "L12G-MISSING-SUGGESTION",
-      "status": "ready-for-research",
+      "status": "deferred-to-loop-a",
       "title": "Suggestion Definition And Closure"
     },
     {
       "number": 10,
       "id": "L12G-MISSING-ZONE-OF-TRUTH",
-      "status": "ready-for-research",
+      "status": "deferred-to-loop-a",
       "title": "Zone Of Truth Definition And Closure"
     },
     {
       "number": 11,
       "id": "L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST",
-      "status": "ready-for-research",
+      "status": "deferred-to-loop-a",
       "title": "Dragon's Breath Initial Cast And Effect State"
     },
     {
       "number": 12,
       "id": "L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION",
-      "status": "blocked",
+      "status": "deferred-to-loop-a",
       "title": "Dragon's Breath Granted Magic Action"
     },
     {
       "number": 13,
       "id": "L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES",
-      "status": "ready-for-research",
+      "status": "deferred-to-loop-a",
       "title": "Enhance Ability Upcast Per-Target Ability Choices"
     },
     {
       "number": 14,
       "id": "L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME",
-      "status": "ready-for-research",
+      "status": "deferred-to-loop-a",
       "title": "Enlarge Reduce Creature Runtime Support"
     },
     {
       "number": 15,
       "id": "L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH",
-      "status": "blocked",
+      "status": "deferred-to-loop-a",
       "title": "Enlarge Reduce Object Branch"
     },
     {
       "number": 16,
       "id": "L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME",
-      "status": "ready-for-research",
+      "status": "deferred-to-loop-a",
       "title": "Enthrall Perception Penalty Runtime Support"
     },
     {
       "number": 17,
       "id": "L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME",
-      "status": "ready-for-research",
+      "status": "deferred-to-loop-a",
       "title": "Levitate Creature Runtime Support"
     },
     {
       "number": 18,
       "id": "L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH",
-      "status": "ready-for-research",
+      "status": "deferred-to-loop-a",
       "title": "Levitate Loose Object Branch"
     }
   ]
@@ -185,17 +185,17 @@ Do not run battle-runtime MBT unless the task changes promoted battle-runtime be
 | 5 | L12G-MISSING-MAGIC-MOUTH - Magic Mouth Definition And Closure | done | completed baseline | Original backlog task 70; Unit `magic_mouth`. |
 | 6 | L12G-MISSING-MIRROR-IMAGE - Mirror Image Definition And Runtime Support | done | completed baseline | Original backlog task 71; Unit `mirror_image`. |
 | 7 | L12G-MISSING-ROPE-TRICK - Rope Trick Definition And Closure | ready-for-research | completed baseline | Original backlog task 72; Unit `rope_trick`. |
-| 8 | L12G-MISSING-SILENCE - Silence Definition And Support Or Closure | ready-for-research | completed baseline | Original backlog task 73; Unit `silence`. |
-| 9 | L12G-MISSING-SUGGESTION - Suggestion Definition And Closure | ready-for-research | completed baseline | Original backlog task 74; Unit `suggestion`. |
-| 10 | L12G-MISSING-ZONE-OF-TRUTH - Zone Of Truth Definition And Closure | ready-for-research | completed baseline | Original backlog task 75; Unit `zone_of_truth`. |
-| 11 | L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST - Dragon's Breath Initial Cast And Effect State | ready-for-research | completed baseline | Original backlog task 90; Unit `dragons_breath`. |
-| 12 | L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION - Dragon's Breath Granted Magic Action | blocked | L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST | Original backlog task 91; Unit `dragons_breath`. |
-| 13 | L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES - Enhance Ability Upcast Per-Target Ability Choices | ready-for-research | completed baseline | Original backlog task 92; Unit `enhance_ability`. |
-| 14 | L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME - Enlarge Reduce Creature Runtime Support | ready-for-research | completed baseline | Original backlog task 93; Unit `enlarge_reduce`. |
-| 15 | L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH - Enlarge Reduce Object Branch | blocked | L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME | Original backlog task 94; Unit `enlarge_reduce`. |
-| 16 | L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME - Enthrall Perception Penalty Runtime Support | ready-for-research | completed baseline | Original backlog task 95; Unit `enthrall`. |
-| 17 | L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME - Levitate Creature Runtime Support | ready-for-research | L12G-MISSING-LEVITATE | Task 2 follow-up split; Unit `levitate`; creature branch without loose-object behavior. |
-| 18 | L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH - Levitate Loose Object Branch | ready-for-research | L12G-MISSING-LEVITATE | Task 2 follow-up split; Unit `levitate`; loose-object branch support or closure. |
+| 8 | L12G-MISSING-SILENCE - Silence Definition And Support Or Closure | deferred-to-loop-a | completed baseline | Original backlog task 73; Unit `silence`. |
+| 9 | L12G-MISSING-SUGGESTION - Suggestion Definition And Closure | deferred-to-loop-a | completed baseline | Original backlog task 74; Unit `suggestion`. |
+| 10 | L12G-MISSING-ZONE-OF-TRUTH - Zone Of Truth Definition And Closure | deferred-to-loop-a | completed baseline | Original backlog task 75; Unit `zone_of_truth`. |
+| 11 | L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST - Dragon's Breath Initial Cast And Effect State | deferred-to-loop-a | completed baseline | Original backlog task 90; Unit `dragons_breath`. |
+| 12 | L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION - Dragon's Breath Granted Magic Action | deferred-to-loop-a | L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST | Original backlog task 91; Unit `dragons_breath`. |
+| 13 | L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES - Enhance Ability Upcast Per-Target Ability Choices | deferred-to-loop-a | completed baseline | Original backlog task 92; Unit `enhance_ability`. |
+| 14 | L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME - Enlarge Reduce Creature Runtime Support | deferred-to-loop-a | completed baseline | Original backlog task 93; Unit `enlarge_reduce`. |
+| 15 | L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH - Enlarge Reduce Object Branch | deferred-to-loop-a | L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME | Original backlog task 94; Unit `enlarge_reduce`. |
+| 16 | L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME - Enthrall Perception Penalty Runtime Support | deferred-to-loop-a | completed baseline | Original backlog task 95; Unit `enthrall`. |
+| 17 | L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME - Levitate Creature Runtime Support | deferred-to-loop-a | L12G-MISSING-LEVITATE | Task 2 follow-up split; Unit `levitate`; creature branch without loose-object behavior. |
+| 18 | L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH - Levitate Loose Object Branch | deferred-to-loop-a | L12G-MISSING-LEVITATE | Task 2 follow-up split; Unit `levitate`; loose-object branch support or closure. |
 
 ## Task Details
 
@@ -432,7 +432,7 @@ Acceptance:
 
 ### Task 8 - L12G-MISSING-SILENCE - Silence Definition And Support Or Closure
 
-Status: `ready-for-research`
+Status: `deferred-to-loop-a`
 
 Original backlog task: `Task 73 - L12G-MISSING-SILENCE - Silence Definition And Support Or Closure`.
 Unit: `silence`.
@@ -465,7 +465,7 @@ Acceptance:
 
 ### Task 9 - L12G-MISSING-SUGGESTION - Suggestion Definition And Closure
 
-Status: `ready-for-research`
+Status: `deferred-to-loop-a`
 
 Original backlog task: `Task 74 - L12G-MISSING-SUGGESTION - Suggestion Definition And Closure`.
 Unit: `suggestion`.
@@ -498,7 +498,7 @@ Acceptance:
 
 ### Task 10 - L12G-MISSING-ZONE-OF-TRUTH - Zone Of Truth Definition And Closure
 
-Status: `ready-for-research`
+Status: `deferred-to-loop-a`
 
 Original backlog task: `Task 75 - L12G-MISSING-ZONE-OF-TRUTH - Zone Of Truth Definition And Closure`.
 Unit: `zone_of_truth`.
@@ -531,7 +531,7 @@ Acceptance:
 
 ### Task 11 - L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST - Dragon's Breath Initial Cast And Effect State
 
-Status: `ready-for-research`
+Status: `deferred-to-loop-a`
 
 Original backlog task: `Task 90 - L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST - Dragon's Breath Initial Cast And Effect State`.
 Unit: `dragons_breath`.
@@ -564,7 +564,7 @@ Acceptance:
 
 ### Task 12 - L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION - Dragon's Breath Granted Magic Action
 
-Status: `blocked`
+Status: `deferred-to-loop-a`
 
 Original backlog task: `Task 91 - L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION - Dragon's Breath Granted Magic Action`.
 Unit: `dragons_breath`.
@@ -599,7 +599,7 @@ Acceptance:
 
 ### Task 13 - L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES - Enhance Ability Upcast Per-Target Ability Choices
 
-Status: `ready-for-research`
+Status: `deferred-to-loop-a`
 
 Original backlog task: `Task 92 - L12G-FOLLOWUP-ENHANCE-ABILITY-UPCAST-PER-TARGET-ABILITIES - Enhance Ability Upcast Per-Target Ability Choices`.
 Unit: `enhance_ability`.
@@ -632,7 +632,7 @@ Acceptance:
 
 ### Task 14 - L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME - Enlarge Reduce Creature Runtime Support
 
-Status: `ready-for-research`
+Status: `deferred-to-loop-a`
 
 Original backlog task: `Task 93 - L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME - Enlarge Reduce Creature Runtime Support`.
 Unit: `enlarge_reduce`.
@@ -665,7 +665,7 @@ Acceptance:
 
 ### Task 15 - L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH - Enlarge Reduce Object Branch
 
-Status: `blocked`
+Status: `deferred-to-loop-a`
 
 Original backlog task: `Task 94 - L12G-FOLLOWUP-ENLARGE-REDUCE-OBJECT-BRANCH - Enlarge Reduce Object Branch`.
 Unit: `enlarge_reduce`.
@@ -700,7 +700,7 @@ Acceptance:
 
 ### Task 16 - L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME - Enthrall Perception Penalty Runtime Support
 
-Status: `ready-for-research`
+Status: `deferred-to-loop-a`
 
 Original backlog task: `Task 95 - L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME - Enthrall Perception Penalty Runtime Support`.
 Unit: `enthrall`.
@@ -733,7 +733,7 @@ Acceptance:
 
 ### Task 17 - L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME - Levitate Creature Runtime Support
 
-Status: `ready-for-research`
+Status: `deferred-to-loop-a`
 
 Origin: Task 2 follow-up split from `L12G-MISSING-LEVITATE`.
 Unit: `levitate`.
@@ -765,7 +765,7 @@ Acceptance:
 
 ### Task 18 - L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH - Levitate Loose Object Branch
 
-Status: `ready-for-research`
+Status: `deferred-to-loop-a`
 
 Origin: Task 2 follow-up split from `L12G-MISSING-LEVITATE`.
 Unit: `levitate`.
