@@ -238,7 +238,7 @@ rationale. Manifest constants are implementation fixtures for admitted SRD
 Units and option ids. When a fixture no longer owns a support boundary, remove it
 rather than preserving migration labels as domain policy.
 
-### Authored-Id Dispatch Enforcement
+### Authored-Identity Dispatch Enforcement
 
 Task PBA13E adds a repo-local guard:
 
@@ -246,14 +246,14 @@ Task PBA13E adds a repo-local guard:
 
 The guard derives forbidden authored ids from `packages/surface/content/*.json` by collecting top-level record `id` values and nested authored reference fields ending in `Id` (excluding protocol-only `holeId`), then fails when those ids appear as semantic dispatch in production source outside explicit boundary allowlists. This package keeps a narrow allowlist for `src/phase1-manifest.ts` and `src/support-gates.ts` because those files own the current support-profile boundary for admitted Unit ids and option ids.
 
-Do not add authored-id semantic branches to `discovery.ts`, `fill-reducer.ts`, or `finalization.ts`. Those modules must derive runtime behavior from Surface reader shapes and support-profile entries, then pass narrowed values forward.
+Do not add authored-identity semantic branches to `discovery.ts`, `fill-reducer.ts`, or `finalization.ts`. Authored identity includes ids, names, slugs, source/provenance sections, and recognizable catalog labels. These modules must derive runtime behavior from Surface reader shapes and support-profile entries, then pass narrowed values forward.
 
 When widening support:
 
 1. Add support-profile entries in `support-gates.ts` (and manifest constants only when needed).
 2. Keep discovery/finalization logic shape-driven over choice-hole families.
 3. Add focused tests proving the added support-profile path.
-4. Keep authored ids as retained identity facts only, never as downstream semantic dispatch switches.
+4. Keep authored identity as retained identity facts only, never as downstream semantic dispatch switches.
 
 Temporary Hit Points are in-play Character Sheet/adventuring state, not creation
 or build state. SRD 5.2.1 says they last until depleted or Long Rest, so a future

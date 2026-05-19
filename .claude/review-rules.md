@@ -30,6 +30,23 @@ Flag:
 - support-status metadata that has no type-system or runtime consequence;
 - runtime projection facts stored as authored provenance.
 
+### Authored Identity Dispatch
+
+Reviewers must flag production runtime dispatch on authored identity: ids,
+names, slugs, source/provenance sections, page refs, prose labels, or recognizable
+official catalog labels. SRD identity is publishable content/provenance, but it
+is still not the runtime rule model; use Surface shape, support-profile readers,
+typed procedure facts, and explicit runtime state. PHB+ / non-SRD official
+content must not copy real official identity into publishable source, tests, or
+fixtures at all.
+
+Accept only narrow authored-identity boundaries: Surface catalog/schema/content,
+SRD or synthetic tests/fixtures, composition/user-selection identity, true
+cross-record references named by the rule, and explicitly documented support
+admission boundaries. A support-profile parser or reducer branching on
+`spell.name`, `unit.name`, `id`, or `provenance.section` is not allowed merely
+because it is in support code.
+
 ## Quint And Runtime Parity
 
 Review combat behavior against the authoritative Quint model.

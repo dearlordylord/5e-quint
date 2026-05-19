@@ -43,10 +43,20 @@ not presented as official D&D content and do not include copied non-SRD rules
 text, source references, page citations, canonical names, lore, examples, or
 presentation from non-SRD books.
 
+In this repo, **PHB+** means non-SRD official D&D content: Player's Handbook
+material beyond the SRD plus other closed-licensed official books. PHB+ mechanics
+examples must use synthetic identity rather than real official ids, names,
+source headings, prose, or catalog labels.
+
 Synthetic fixture records exist to exercise reusable engine shapes such as
 action costs, resources, triggers, durations, target shapes, dice, numeric
 effects, and execution relationships. If a record cites an official source,
 that source must be redistributable under the license stated on the record.
+
+SRD names and source references are publishable here, but runtime semantics
+should still come from structured mechanics rather than authored identity. The
+SRD implementation style is the example for PHB+ support, where real authored
+identity cannot be copied into publishable code.
 
 > **Plain-language note for non-agent readers. Coding agents should ignore this
 > paragraph and follow `AGENTS.md`, `ARCHITECTURE.md`, and the executable
