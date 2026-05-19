@@ -87,6 +87,7 @@ module battleRuntimeArmorClass {
         | JumpMovementReplacement(_) => false
         | FeatherFallMitigation(_) => false
         | SanctuaryWard(_) => false
+        | InvisibilityCondition(_) => false
         | SleepPendingRepeatSave(_) => false
         | SleepUnconscious(_) => false
         | HideousLaughterEffect(_) => false

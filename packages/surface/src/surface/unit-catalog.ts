@@ -97,6 +97,7 @@ import holdPersonInput from "../../content/hold_person.json";
 import huntersMarkInput from "../../content/hunters_mark.json";
 import iceKnifeInput from "../../content/ice_knife.json";
 import inflictWoundsInput from "../../content/inflict_wounds.json";
+import invisibilityInput from "../../content/invisibility.json";
 import jumpInput from "../../content/jump.json";
 import lightInput from "../../content/light.json";
 import longstriderInput from "../../content/longstrider.json";
@@ -450,6 +451,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     huntersMarkInput,
     iceKnifeInput,
     inflictWoundsInput,
+    invisibilityInput,
     jumpInput,
     lightInput,
     longstriderInput,

@@ -201,7 +201,7 @@ module battleRuntimeFighterOngoingFeatures {
       state
 
   pure def recordFighterAttackRoll(state: BattleState): BattleState =
-    { ...battleStateAfterSanctuaryEarlyEndForActor(extendRageWithAttackRoll(state, Goblin), Fighter), attackRollMadeThisTurn: true }
+    { ...battleStateAfterTargetActionEarlyEndForActor(extendRageWithAttackRoll(state, Goblin), Fighter), attackRollMadeThisTurn: true }
 
   pure def extendRageWithEnemySavingThrow(state: BattleState, target: Actor): BattleState =
     if (currentActor(state) == Fighter and actorsAreEnemies(Fighter, target) and fighterHasRoundExtendedRage(state))

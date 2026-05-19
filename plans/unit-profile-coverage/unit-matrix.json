@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 382,
-      "numerator": 165,
-      "percent": "43.2%"
+      "numerator": 166,
+      "percent": "43.5%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 454,
-      "numerator": 197,
-      "percent": "43.4%"
+      "numerator": 198,
+      "percent": "43.6%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,62 +59,62 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 198
+      "value": 199
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 125,
-      "numerator": 125,
+      "denominator": 126,
+      "numerator": 126,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 198,
-      "numerator": 198,
+      "denominator": 199,
+      "numerator": 199,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 69,
-      "numerator": 69,
+      "denominator": 70,
+      "numerator": 70,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 69,
-      "numerator": 69,
+      "denominator": 70,
+      "numerator": 70,
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 91,
-      "numerator": 19,
-      "percent": "20.9%"
+      "denominator": 92,
+      "numerator": 20,
+      "percent": "21.7%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 91,
-      "numerator": 24,
-      "percent": "26.4%"
+      "denominator": 92,
+      "numerator": 25,
+      "percent": "27.2%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 125,
-      "numerator": 41,
-      "percent": "32.8%"
+      "denominator": 126,
+      "numerator": 42,
+      "percent": "33.3%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 69,
-      "numerator": 69,
+      "denominator": 70,
+      "numerator": 70,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 69,
-      "numerator": 69,
+      "denominator": 70,
+      "numerator": 70,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 125,
+      "denominator": 126,
       "numerator": 105,
-      "percent": "84%"
+      "percent": "83.3%"
     },
     "supportedProfileCoverage": {
-      "denominator": 166,
-      "numerator": 125,
-      "percent": "75.3%"
+      "denominator": 167,
+      "numerator": 126,
+      "percent": "75.4%"
     }
   },
   "metricSemantics": [
@@ -2653,20 +2653,45 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
         }
       ]
+    },
+    {
+      "id": "spell.invocation-direct-condition",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "sourceBoundary": "The runtime consumes authored direct apply_condition effects, slot-scaled touched creature targets, and spell-level target-action early-end triggers. It owns Magic Action and Spell Slot spending, Concentration setup and cleanup, maximum-duration cleanup, Invisible condition application, preservation of independent non-spell condition sources, and source-wide spell expiration after an affected target makes an attack roll, deals damage, or casts a spell.",
+      "taskRefs": [
+        "L12G-SPELL-INVISIBILITY"
+      ],
+      "title": "Spell invocation applies direct spell-owned conditions with target-action early end",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-invisibility.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 91,
-        "numerator": 19,
-        "percent": "20.9%"
+        "denominator": 92,
+        "numerator": 20,
+        "percent": "21.7%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 91,
-        "numerator": 24,
-        "percent": "26.4%"
+        "denominator": 92,
+        "numerator": 25,
+        "percent": "27.2%"
       }
     },
     "profileKinds": [
@@ -3415,6 +3440,19 @@
         "obligations": [],
         "profileId": "spell.invocation-condition-removal-protection",
         "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+          }
+        ],
+        "profileId": "spell.invocation-direct-condition",
+        "profileKind": "spell-invocation"
       }
     ],
     "sourceArtifacts": {
@@ -3425,9 +3463,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 125,
-          "numerator": 41,
-          "percent": "32.8%"
+          "denominator": 126,
+          "numerator": 42,
+          "percent": "33.3%"
         }
       },
       "units": [
@@ -4497,6 +4535,25 @@
             }
           ],
           "unitId": "inflict_wounds"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+                }
+              ],
+              "profileId": "spell.invocation-direct-condition",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "invisibility"
         },
         {
           "joinStatus": "unmapped",
@@ -7426,6 +7483,22 @@
         "spell.invocation-condition-removal-protection"
       ],
       "taskId": "L12G-SPELL-PROTECTION-FROM-POISON"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Invisibility's Magic Action and level-2-or-higher Spell Slot spend, touched-creature target scaling, caster-owned Concentration up to 1 hour, Invisible condition effect, duration and Concentration cleanup, and source-wide early end after an affected target makes an attack roll, deals damage, or casts a spell.",
+      "profileIds": [
+        "spell.invocation-direct-condition"
+      ],
+      "taskId": "L12G-SPELL-INVISIBILITY"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission tests cover Invisibility catalog admission, target-list fill validation, slot-scaled target count, active Invisible condition projection, Spell Slot and Magic Action spending, caster Concentration ownership, source-wide cleanup on affected target attack roll, damage dealt, or spell cast, and reuse of caller-supplied sight facts for Invisible attack-roll benefits.",
+      "profileIds": [
+        "spell.invocation-direct-condition"
+      ],
+      "taskId": "L12G-SPELL-INVISIBILITY"
     }
   ],
   "units": [
@@ -15354,6 +15427,70 @@
       },
       "claim": {
         "profileIds": [
+          "spell.invocation-direct-condition"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action level-2-or-higher Spell Slot casting",
+          "touched creature target-list admission with one target at level 2 and one additional target per Spell Slot level above 2",
+          "caster-owned Concentration up to 1 hour",
+          "Invisible condition application to selected targets",
+          "source-wide spell cleanup immediately after an affected target makes an attack roll, deals damage, or casts a spell",
+          "maximum-duration and Concentration cleanup remove the spell-owned Invisible condition without duplicating independent non-spell condition sources",
+          "Invisible attack-roll mode benefits and visibility caveats continue through the existing Invisible condition and sight/benefit-denial boundaries"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-invisibility.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-SPELL-INVISIBILITY"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-direct-condition",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "The runtime consumes authored direct apply_condition effects, slot-scaled touched creature targets, and spell-level target-action early-end triggers. It owns Magic Action and Spell Slot spending, Concentration setup and cleanup, maximum-duration cleanup, Invisible condition application, preservation of independent non-spell condition sources, and source-wide spell expiration after an affected target makes an attack roll, deals damage, or casts a spell.",
+          "taskRefs": [
+            "L12G-SPELL-INVISIBILITY"
+          ],
+          "title": "Spell invocation applies direct spell-owned conditions with target-action early end",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-invisibility.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/invisibility.json",
+      "unitId": "invisibility"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
           "spell.invocation-jump-movement-replacement"
         ],
         "rawRequirementIds": [
@@ -21047,24 +21184,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/insect_plague.json",
       "unitId": "insect_plague"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/invisibility.json",
-      "unitId": "invisibility"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

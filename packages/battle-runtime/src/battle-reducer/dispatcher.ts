@@ -103,6 +103,7 @@ import {
   triggeredReactionSpellTurnResourceAvailable,
 } from "./reaction-triggered-spells.ts";
 import { invalidResult } from "./result-helpers.ts";
+import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
 import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
 export {
   attackDamageEventAfterPendingReduction,
@@ -218,6 +219,7 @@ import type {
   BattleTurnResources,
   BattleTurnSnapshot,
   SpellSlotInvocationResource,
+  SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import {
   REACTION_DECISION_HOLE_ID,
@@ -1392,27 +1394,46 @@ function stateForOpeningReactionFrame(
   state: BattleState,
   frame: BattleReactionFrameInput,
 ): BattleState | null {
+  const castingState =
+    frame.trigger === "spellCast" &&
+    frame.castingResource.kind !== "alreadySpent"
+      ? battleStateAfterTargetActionEarlyEndForActor(state, frame.casterId)
+      : state;
   if (
     frame.trigger !== "spellCast" ||
     frame.spellSlotCommitment.kind === "none"
   ) {
-    return state;
+    return castingState;
   }
   const combatantId = frame.casterId;
   if (
-    state.currentTurnResources.spellSlotUsesThisTurn.some(
+    castingState.currentTurnResources.spellSlotUsesThisTurn.some(
       (use) => use.kind === "pending" && use.combatantId === combatantId,
     )
   ) {
-    return state;
+    return castingState;
   }
   const claimed = claimPendingSpellSlotUseThisTurn(
-    state.currentTurnResources,
+    castingState.currentTurnResources,
     combatantId,
   );
   return Either.isLeft(claimed)
     ? null
-    : { ...state, currentTurnResources: claimed.right };
+    : { ...castingState, currentTurnResources: claimed.right };
+}
+
+function stateAfterSpellCastDeclared(input: {
+  readonly state: BattleState;
+  readonly casterId: CombatantId;
+  readonly invocation: SupportedSpellInvocation;
+}): BattleState {
+  const earlyEnded = battleStateAfterTargetActionEarlyEndForActor(
+    input.state,
+    input.casterId,
+  );
+  return spellRequiresVerbal(input.invocation.spell)
+    ? revealHidden(earlyEnded, input.casterId)
+    : earlyEnded;
 }
 
 function stateForContinuingReactionFrame(
@@ -1743,9 +1764,11 @@ export function resolveCastTriggeredReactionSpellCommand(
       "Triggered Reaction Shield spell accepts only spell-cast Reaction trigger facts.",
     );
   }
-  const castingState = spellRequiresVerbal(invocation.spell)
-    ? revealHidden(input.state, input.subject.reactorId)
-    : input.state;
+  const castingState = stateAfterSpellCastDeclared({
+    state: input.state,
+    casterId: input.subject.reactorId,
+    invocation,
+  });
   const effected = applyShieldReactionSpellActiveEffect(
     castingState,
     input.subject.reactorId,
@@ -1982,9 +2005,11 @@ function resolveCounterspellReactionSpellCommand(
     triggeringCasterSaveSucceeded = outcome.succeeded;
   }
 
-  const castingState = spellRequiresVerbal(input.invocation.spell)
-    ? revealHidden(input.state, input.subject.reactorId)
-    : input.state;
+  const castingState = stateAfterSpellCastDeclared({
+    state: input.state,
+    casterId: input.subject.reactorId,
+    invocation: input.invocation,
+  });
   const slotted = expendSpellSlot(
     castingState,
     input.subject.reactorId,
@@ -2092,9 +2117,11 @@ function resolveFeatherFallReactionSpellCommand(
   if (targetValidation !== null) {
     return invalidResult(input.state, "invalidFill", targetValidation);
   }
-  const castingState = spellRequiresVerbal(input.invocation.spell)
-    ? revealHidden(input.state, input.subject.reactorId)
-    : input.state;
+  const castingState = stateAfterSpellCastDeclared({
+    state: input.state,
+    casterId: input.subject.reactorId,
+    invocation: input.invocation,
+  });
   const effected: BattleState = fillSet.targetList.targetIds.reduce(
     (state, targetId) => {
       const target = state.combatants.get(targetId);
@@ -2311,9 +2338,11 @@ function resolveHellishRebukeReactionSpellCommand(
       hideousLaughterSaveCheck.message,
     );
   }
-  const castingState = spellRequiresVerbal(input.invocation.spell)
-    ? revealHidden(input.state, input.subject.reactorId)
-    : input.state;
+  const castingState = stateAfterSpellCastDeclared({
+    state: input.state,
+    casterId: input.subject.reactorId,
+    invocation: input.invocation,
+  });
   const damaged = applySpellDamage(
     castingState,
     input.frame.damageSourceId,

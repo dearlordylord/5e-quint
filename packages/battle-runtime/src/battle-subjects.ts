@@ -121,6 +121,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "jumpMovementReplacement",
   "selfTeleport",
   "sanctuaryTargetingInterdiction",
+  "directCondition",
   "persistentArmorEffect",
   "shieldReaction",
   "counterspell",

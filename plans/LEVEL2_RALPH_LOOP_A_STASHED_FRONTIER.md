@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L12G-SPELL-INVISIBILITY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Invisibility Runtime Support"
     },
     {
@@ -420,7 +420,7 @@ Do not run battle-runtime MBT unless the task changes promoted battle-runtime be
 | ---: | --- | --- | --- | --- |
 | 1 | L12G-SPELL-HEAT-METAL - Heat Metal Runtime Support | done | completed baseline | Original backlog task 31; Unit `heat_metal`. |
 | 2 | L12G-SPELL-HOLD-PERSON - Hold Person Runtime Support | done | completed baseline | Original backlog task 32; Unit `hold_person`. |
-| 3 | L12G-SPELL-INVISIBILITY - Invisibility Runtime Support | ready-for-research | completed baseline | Original backlog task 33; Unit `invisibility`. |
+| 3 | L12G-SPELL-INVISIBILITY - Invisibility Runtime Support | done | completed baseline | Original backlog task 33; Unit `invisibility`. |
 | 4 | L12G-SPELL-LESSER-RESTORATION - Lesser Restoration Runtime Support | ready-for-research | completed baseline | Original backlog task 34; Unit `lesser_restoration`. |
 | 5 | L12G-SPELL-MAGIC-WEAPON - Magic Weapon Runtime Support Or Closure | ready-for-research | completed baseline | Original backlog task 35; Unit `magic_weapon`. |
 | 6 | L12G-SPELL-MIND-SPIKE - Mind Spike Runtime Support And Knowledge Closure | ready-for-research | completed baseline | Original backlog task 36; Unit `mind_spike`. |
@@ -547,7 +547,7 @@ Acceptance:
 
 ### Task 3 - L12G-SPELL-INVISIBILITY - Invisibility Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Original backlog task: `Task 33 - L12G-SPELL-INVISIBILITY - Invisibility Runtime Support`.
 Unit: `invisibility`.

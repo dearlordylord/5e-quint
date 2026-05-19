@@ -1351,73 +1351,6 @@
       "executableMechanics": true,
       "kind": "spell",
       "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
-      "sourceRecordPath": "packages/surface/content/invisibility.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Bard spell list Invisibility",
-          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_invisibility",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 200,
-            "lineStart": 200,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Sorcerer spell list Invisibility",
-          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_invisibility",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 283,
-            "lineStart": 283,
-            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Warlock spell list Invisibility",
-          "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_invisibility",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 368,
-            "lineStart": 368,
-            "path": ".references/srd-5.2.1/Classes/Warlock.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Wizard spell list Invisibility",
-          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_invisibility",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 215,
-            "lineStart": 215,
-            "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
-        }
-      ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
-      "unitId": "invisibility"
-    },
-    {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
       "sourceRecordPath": "packages/surface/content/lesser_restoration.json",
       "sourceRows": [
         {
@@ -2434,7 +2367,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 102,
+      "count": 103,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2491,6 +2424,7 @@
         "hunters_mark",
         "ice_knife",
         "inflict_wounds",
+        "invisibility",
         "jump",
         "light",
         "longstrider",
@@ -2593,20 +2527,6 @@
       ]
     },
     {
-      "count": 7,
-      "description": "No Unit profile claim records runtime support or an accepted strict closure.",
-      "status": "open-runtime-behavior",
-      "unitIds": [
-        "find_steed",
-        "invisibility",
-        "lesser_restoration",
-        "magic_weapon",
-        "mind_spike",
-        "warding_bond",
-        "web"
-      ]
-    },
-    {
       "count": 6,
       "description": "The in-scope behavior is complete and every remaining residual is outside this strict accounting scope.",
       "status": "closed-later-level-only",
@@ -2617,6 +2537,19 @@
         "paladin_fighting_style",
         "ranger_favored_enemy",
         "ranger_fighting_style"
+      ]
+    },
+    {
+      "count": 6,
+      "description": "No Unit profile claim records runtime support or an accepted strict closure.",
+      "status": "open-runtime-behavior",
+      "unitIds": [
+        "find_steed",
+        "lesser_restoration",
+        "magic_weapon",
+        "mind_spike",
+        "warding_bond",
+        "web"
       ]
     },
     {
@@ -2643,47 +2576,46 @@
       "numerator": 465,
       "percent": "83.6%",
       "rowsByStatus": {
-        "accepted": 338,
-        "accepted-no-battle-effect": 127,
+        "accepted": 342,
+        "accepted-no-battle-effect": 123,
         "battle-runtime-required": 82,
         "owner-evidence-required": 3,
         "partial-battle-runtime": 6
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 72,
-      "numerator": 11,
-      "percent": "15.3%"
+      "denominator": 73,
+      "numerator": 12,
+      "percent": "16.4%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 72,
-      "numerator": 16,
-      "percent": "22.2%"
+      "denominator": 73,
+      "numerator": 17,
+      "percent": "23.3%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 102,
-      "numerator": 30,
-      "percent": "29.4%"
+      "denominator": 103,
+      "numerator": 31,
+      "percent": "30.1%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 154,
-      "numerator": 102,
-      "percent": "66.2%"
+      "numerator": 103,
+      "percent": "66.9%"
     },
     "strictTargetClosure": {
       "denominator": 154,
-      "numerator": 147,
-      "percent": "95.5%"
+      "numerator": 148,
+      "percent": "96.1%"
     }
   },
   "openFrontier": [
     {
-      "count": 7,
+      "count": 6,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
         "find_steed",
-        "invisibility",
         "lesser_restoration",
         "magic_weapon",
         "mind_spike",
@@ -5795,9 +5727,9 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 102,
-        "numerator": 30,
-        "percent": "29.4%"
+        "denominator": 103,
+        "numerator": 31,
+        "percent": "30.1%"
       }
     },
     "units": [
@@ -6718,6 +6650,25 @@
           }
         ],
         "unitId": "inflict_wounds"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle spell invocation, slot spend, healing, reaction spell, and readied spell procedure profiles"
+              }
+            ],
+            "profileId": "spell.invocation-direct-condition",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "invisibility"
       },
       {
         "joinStatus": "unmapped",
@@ -7691,9 +7642,9 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
-      "missing": 7,
+      "missing": 6,
       "profile-subset-supported": 12,
-      "supported-profile": 102,
+      "supported-profile": 103,
       "unsupported-profile": 33
     },
     "groupsByStatus": {
@@ -7702,10 +7653,10 @@
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 15,
-      "open-runtime-behavior": 7,
-      "supported-profile": 102
+      "open-runtime-behavior": 6,
+      "supported-profile": 103
     },
-    "nonSupportedFrontier": 52,
+    "nonSupportedFrontier": 51,
     "strictDenominator": 154
   }
 }

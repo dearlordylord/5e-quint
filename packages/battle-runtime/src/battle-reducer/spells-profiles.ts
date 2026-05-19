@@ -109,6 +109,8 @@ import {
 } from "./spells-profiles-support.ts";
 export * from "./spells-profiles-support.ts";
 import { supportedPreparedSanctuaryTargetingInterdictionSpellProfile } from "./sanctuary-targeting-interdiction.ts";
+import { supportedPreparedDirectConditionSpellProfile } from "./spells-profiles-direct-condition.ts";
+export * from "./spells-profiles-direct-condition.ts";
 export {
   animalFriendshipSaveGateConditionSpell,
   areaSaveGateSpellRangeFeet,
@@ -383,6 +385,13 @@ export function supportedSpellActs(
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedSanctuaryTargetingInterdictionSpellProfile(
+        actor.combatantId,
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedDirectConditionSpellProfile(
         actor.combatantId,
         spell,
         spellcasting.spellSlots,

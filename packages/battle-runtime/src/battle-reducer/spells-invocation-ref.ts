@@ -180,6 +180,14 @@ export function supportedSpellInvocationRef(
       procedure: "sanctuaryTargetingInterdiction",
     };
   }
+  if (invocation.procedure === "directCondition") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "directCondition",
+    };
+  }
   if (invocation.procedure === "objectLight") {
     if (invocation.resource.tag === "spellSlot") {
       return {

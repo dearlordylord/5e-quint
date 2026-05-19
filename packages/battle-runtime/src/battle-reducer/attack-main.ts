@@ -93,7 +93,7 @@ import { invalidResult } from "./result-helpers.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import { hideousLaughterDamageRepeatSaveFillCheck } from "./hideous-laughter-repeat-save.ts";
 import {
-  battleStateAfterSanctuaryEarlyEndForActor,
+  battleStateAfterTargetActionEarlyEndForActor,
   sanctuaryTargetingInterdictionCheck,
 } from "./sanctuary-targeting-interdiction.ts";
 
@@ -411,14 +411,14 @@ export function resolveSelectedAttackProcedure(
     );
   }
   const hit = ordinaryHit || missToHitReplacement !== null;
-  const sanctuaryAttackRollState = battleStateAfterSanctuaryEarlyEndForActor(
+  const attackRollState = battleStateAfterTargetActionEarlyEndForActor(
     input.state,
     attackerId,
   );
   const attackRolledState = recordAttackRollMissToHitReplacementUsed(
     consumeHelpAttackForAttackRoll(
       recordAttackRollOngoingFeatures(
-        revealHidden(sanctuaryAttackRollState, attackerId),
+        revealHidden(attackRollState, attackerId),
         attackerId,
         target.combatantId,
         activatedOngoingFeatureProfile,

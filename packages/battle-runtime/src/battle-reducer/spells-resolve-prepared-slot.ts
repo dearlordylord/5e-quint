@@ -33,7 +33,7 @@ import { invalidResult } from "./result-helpers.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
 import {
-  battleStateAfterSanctuaryEarlyEndForActor,
+  battleStateAfterTargetActionEarlyEndForActor,
   sanctuaryTargetingInterdictionCheck,
 } from "./sanctuary-targeting-interdiction.ts";
 import { expendSpellSlot } from "./spell-effects.ts";
@@ -419,7 +419,7 @@ export function resolvePreparedSlotSpellAct(input: {
   const spellEffectState =
     input.spendsCastResources === false
       ? input.input.state
-      : battleStateAfterSanctuaryEarlyEndForActor(
+      : battleStateAfterTargetActionEarlyEndForActor(
           input.input.state,
           input.actorId,
         );

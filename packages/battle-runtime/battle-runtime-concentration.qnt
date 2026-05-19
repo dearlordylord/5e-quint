@@ -43,6 +43,7 @@ module battleRuntimeConcentration {
         | HideousLaughterEffect(_) => false
         | HoldPersonParalyzed(_) => false
         | DancingLightsEffect(_) => false
+        | InvisibilityCondition(_) => false
         | _ => true
       })
 

@@ -979,6 +979,48 @@ export function battleCreatureWithSpellActiveEffects(
     : { ...combatant, activeEffects };
 }
 
+export function applyDirectConditionSpellEffects(
+  state: BattleState,
+  actorId: CombatantId,
+  targetIds: readonly CombatantId[],
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "directCondition" }
+  >,
+): BattleState {
+  return targetIds.reduce((nextState, targetId) => {
+    const target = nextState.combatants.get(targetId);
+    if (target === undefined) {
+      return nextState;
+    }
+    const replacing = target.activeEffects.filter(
+      (effect) =>
+        effect.kind === "targetActionEndedSpellCondition" &&
+        effect.sourceSpellId === invocation.spell.id &&
+        effect.sourceCombatantId === actorId &&
+        effect.condition === invocation.activeEffect.condition,
+    );
+    const activeEffects = [
+      ...target.activeEffects.filter((effect) => !replacing.includes(effect)),
+      {
+        ...invocation.activeEffect,
+        conditionHadNonSpellSource:
+          conditionHadNonSpellSourceBeforeSpellEffect(
+            target,
+            invocation.activeEffect.condition,
+          ),
+      },
+    ];
+    return {
+      ...nextState,
+      combatants: new Map(nextState.combatants).set(
+        targetId,
+        battleCreatureWithSpellActiveEffects(target, activeEffects),
+      ),
+    };
+  }, state);
+}
+
 export function applyFailedSaveSpellActiveEffects(
   state: BattleState,
   actorId: CombatantId,

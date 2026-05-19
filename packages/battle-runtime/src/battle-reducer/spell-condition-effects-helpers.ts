@@ -41,6 +41,10 @@ type ProtectionRelevantEffectKind = ProtectionRelevantCondition | "possession";
 
 type ConditionApplyingActiveEffect =
   | Extract<BattleActiveEffect, { readonly kind: "spellCondition" }>
+  | Extract<
+      BattleActiveEffect,
+      { readonly kind: "targetActionEndedSpellCondition" }
+    >
   | Extract<BattleActiveEffect, { readonly kind: "spellConditionRepeatSave" }>
   | Extract<BattleActiveEffect, { readonly kind: "spellConditionEndTurnSave" }>
   | Extract<BattleActiveEffect, { readonly kind: "sleepPendingRepeatSave" }>
@@ -395,6 +399,8 @@ function activeEffectSourcesCondition(
     (effect.kind === "spellCondition" &&
       (effect.condition === condition ||
         (condition === "prone" && effect.condition === "unconscious"))) ||
+    (effect.kind === "targetActionEndedSpellCondition" &&
+      effect.condition === condition) ||
     (effect.kind === "spellConditionRepeatSave" &&
       effect.condition === condition) ||
     (effect.kind === "spellConditionEndTurnSave" &&
@@ -411,6 +417,8 @@ function activeEffectDirectlyAppliesCondition(
 ): boolean {
   return (
     (effect.kind === "spellCondition" && effect.condition === condition) ||
+    (effect.kind === "targetActionEndedSpellCondition" &&
+      effect.condition === condition) ||
     (effect.kind === "spellConditionRepeatSave" &&
       effect.condition === condition) ||
     (effect.kind === "spellConditionEndTurnSave" &&
@@ -769,6 +777,7 @@ function isConditionApplyingActiveEffect(
 ): effect is ConditionApplyingActiveEffect {
   return (
     effect.kind === "spellCondition" ||
+    effect.kind === "targetActionEndedSpellCondition" ||
     effect.kind === "spellConditionRepeatSave" ||
     effect.kind === "spellConditionEndTurnSave" ||
     effect.kind === "sleepPendingRepeatSave" ||
@@ -790,6 +799,7 @@ function activeEffectCondition(
 ): Condition {
   if (
     effect.kind === "spellCondition" ||
+    effect.kind === "targetActionEndedSpellCondition" ||
     effect.kind === "spellConditionRepeatSave" ||
     effect.kind === "spellConditionEndTurnSave"
   )

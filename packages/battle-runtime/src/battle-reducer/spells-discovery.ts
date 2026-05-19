@@ -537,6 +537,24 @@ export function discoverSupportedSpellInvocations(
               },
             ];
       }
+      if (invocation.procedure === "directCondition") {
+        const targetHole = spellTargetListHole(state, actorId, invocation);
+        return targetHole.choices.length === 0
+          ? []
+          : [
+              {
+                subject: {
+                  tag: "actionSpell" as const,
+                  actorId,
+                  invocation: supportedSpellInvocationRef(invocation),
+                  mode: { tag: "cast" as const },
+                },
+                label: invocation.spell.name,
+                summary: spellInvocationCastSummary(invocation),
+                initialHoles: [targetHole],
+              },
+            ];
+      }
       if (invocation.procedure === "chainedSpellAttackDamage") {
         const castActs = [
           {
@@ -883,6 +901,9 @@ export function spellInvocationCastSummary(
   if (invocation.procedure === "sanctuaryTargetingInterdiction") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
+  if (invocation.procedure === "directCondition") {
+    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+  }
   if (invocation.procedure === "selfTeleport") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot and teleport to a caller-supplied unoccupied visible destination within ${invocation.maxDistanceFeet} feet.`;
   }
@@ -942,6 +963,7 @@ export function spellActivationInvocationCastSummary(
         | "jumpMovementReplacement"
         | "selfTeleport"
         | "sanctuaryTargetingInterdiction"
+        | "directCondition"
         | "featherFallMitigation";
     }
   >,
@@ -1067,6 +1089,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "jumpMovementReplacement" &&
     invocation.procedure !== "selfTeleport" &&
     invocation.procedure !== "sanctuaryTargetingInterdiction" &&
+    invocation.procedure !== "directCondition" &&
     invocation.procedure !== "saveGatedCondition" &&
     invocation.procedure !== "saveGatedAttackRollAdvantage" &&
     invocation.procedure !== "sleepTargetAdmission" &&
@@ -1099,6 +1122,7 @@ export function readiedSpellAct(
     invocation.procedure === "jumpMovementReplacement" ||
     invocation.procedure === "selfTeleport" ||
     invocation.procedure === "sanctuaryTargetingInterdiction" ||
+    invocation.procedure === "directCondition" ||
     invocation.procedure === "afterHitDamage" ||
     invocation.procedure === "spellAttackSequence" ||
     invocation.procedure === "afterHitSaveGatedCondition" ||

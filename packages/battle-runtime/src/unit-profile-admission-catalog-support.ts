@@ -135,6 +135,10 @@ export const holdPersonUnitId = "hold_person";
 
 export const holdPersonDurationTicks = elapsedTimeTicks(10);
 
+export const invisibilityUnitId = "invisibility";
+
+export const invisibilityDurationTicks = elapsedTimeTicks(600);
+
 export const thunderwaveUnitId = "thunderwave";
 
 export const dissonantWhispersUnitId = "dissonant_whispers";

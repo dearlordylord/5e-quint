@@ -92,7 +92,7 @@ import {
   hideousLaughterRepeatSavingThrowOutcomeHole,
   validateHideousLaughterRepeatSavingThrowOutcome,
 } from "./hideous-laughter-repeat-save.ts";
-import { battleStateAfterSanctuaryEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
+import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
 import {
   conditionsAfterExpiringSpellConditionEffects,
   removeHideousLaughterEffectFromTarget,
@@ -361,17 +361,17 @@ export function applyBattleHitPointDamage(input: {
           targetId,
         )
       : afterConcentration;
-  const afterSanctuaryEarlyEnd =
+  const afterTargetActionEarlyEnd =
     input.damageAmount > 0 && input.damageSourceId !== undefined
-      ? battleStateAfterSanctuaryEarlyEndForActor(
+      ? battleStateAfterTargetActionEarlyEndForActor(
           afterCasterOrAllyDamageEscapes,
           input.damageSourceId,
         )
       : afterCasterOrAllyDamageEscapes;
   const afterSleep =
     input.damageAmount > 0
-      ? removeSleepEffectsFromTarget(afterSanctuaryEarlyEnd, targetId)
-      : afterSanctuaryEarlyEnd;
+      ? removeSleepEffectsFromTarget(afterTargetActionEarlyEnd, targetId)
+      : afterTargetActionEarlyEnd;
   const afterHideousLaughter =
     input.damageAmount > 0
       ? applyHideousLaughterDamageRepeatSaves(

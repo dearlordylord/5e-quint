@@ -1850,6 +1850,20 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("directCondition"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("magicAction"),
+      targeting: Schema.Struct({
+        kind: Schema.Literal("targetList"),
+        minTargets: Schema.Literal(1),
+        maxTargets: Schema.Number,
+      }),
+      activeEffect: BattleRuntimeObjectSchema,
+      rangeFeet: MovementFeet,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("featherFallMitigation"),
       spell: BattleRuntimeObjectSchema,
       targeting: Schema.Struct({

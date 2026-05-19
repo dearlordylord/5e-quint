@@ -141,6 +141,7 @@ const requiredFirstVerticalUnitIds = [
   "jump",
   "hellish_rebuke",
   "hold_person",
+  "invisibility",
   "armor_chain_mail",
   "equipment_shield",
   "weapon_dagger",

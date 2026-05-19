@@ -183,8 +183,8 @@
       "numerator": 465,
       "percent": "83.6%",
       "rowsByStatus": {
-        "accepted": 338,
-        "accepted-no-battle-effect": 127,
+        "accepted": 342,
+        "accepted-no-battle-effect": 123,
         "battle-runtime-required": 82,
         "partial-battle-runtime": 6,
         "owner-evidence-required": 3
@@ -201,16 +201,16 @@
       "catalog-installed-owner-evidence-required": 5
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 349,
+      "catalog-installed-owner-evidence-present": 353,
       "non-runtime": 24,
-      "catalog-only/dead-for-now": 98,
+      "catalog-only/dead-for-now": 94,
       "missing-authored-record": 50,
       "catalog-installed-owner-evidence-required": 20,
       "catalog-authored-executable-follow-up": 15
     },
     "spellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 189,
-      "catalog-only/dead-for-now": 98,
+      "catalog-installed-owner-evidence-present": 193,
+      "catalog-only/dead-for-now": 94,
       "missing-authored-record": 50,
       "catalog-installed-owner-evidence-required": 15,
       "catalog-authored-executable-follow-up": 15
@@ -6485,13 +6485,25 @@
         "sourceRecordPath": "packages/surface/content/invisibility.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "invisibility"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit invisibility is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-SPELL-INVISIBILITY at packages/battle-runtime/src/unit-profile-admission-invisibility.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_knock",
@@ -20372,13 +20384,25 @@
         "sourceRecordPath": "packages/surface/content/invisibility.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "invisibility"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit invisibility is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-SPELL-INVISIBILITY at packages/battle-runtime/src/unit-profile-admission-invisibility.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_knock",
@@ -22342,13 +22366,25 @@
         "sourceRecordPath": "packages/surface/content/invisibility.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "invisibility"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit invisibility is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-SPELL-INVISIBILITY at packages/battle-runtime/src/unit-profile-admission-invisibility.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_mind_spike",
@@ -25777,13 +25813,25 @@
         "sourceRecordPath": "packages/surface/content/invisibility.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "invisibility"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit invisibility is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-SPELL-INVISIBILITY at packages/battle-runtime/src/unit-profile-admission-invisibility.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_knock",

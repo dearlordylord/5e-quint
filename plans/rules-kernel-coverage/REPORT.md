@@ -33,7 +33,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `profile-obligat
 | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` | battle | covered | _direct reducer entrypoint_ |
 | `BATTLE.REACTION.OFFER_DECLINE_RESUME` | battle | covered | `spell.reaction-shield`, `spell.readied-action-time-spell`, `unit-feature.reaction-roll-or-damage-reduction` |
 | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` | battle | covered | `unit-feature.action-surge-resource`, `unit-feature.alternate-action-cost`, `unit-feature.attack-damage-rider`, `unit-feature.bonus-action-ongoing-rage`, `unit-feature.first-attack-roll-reckless-advantage`, `unit-feature.passive-armor-class-bonus`, `unit-feature.passive-ranged-attack-roll-bonus`, `unit-feature.reaction-roll-or-damage-reduction`, `unit-feature.save-damage-replacement`, `unit-feature.self-bonus-action-healing`, `unit-feature.weapon-critical-range-19`, `unit-feature.weapon-damage-dice-roll-choice`, `unit-feature.zero-hit-point-replacement` |
-| `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | battle | covered | `spell.hit-point-restoration`, `spell.invocation-damage-save-or-attack`, `spell.reaction-shield`, `spell.readied-action-time-spell` |
+| `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | battle | covered | `spell.hit-point-restoration`, `spell.invocation-damage-save-or-attack`, `spell.invocation-direct-condition`, `spell.reaction-shield`, `spell.readied-action-time-spell` |
 | `BATTLE.STAT_BLOCK.ATTACK_CONTROL` | battle | covered | `stat-block.attack-control` |
 | `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` | character-creation | covered | _direct reducer entrypoint_ |
 | `SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE` | character-sheet | covered | `character-sheet.armor-class-base-formula` |
