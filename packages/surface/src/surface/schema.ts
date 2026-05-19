@@ -55,6 +55,7 @@ export {
   DurationEndTriggerSchema,
   DurationSchema,
   EffectAtomSchema,
+  ExtradimensionalSpaceEffectSchema,
   FeatherFallMitigationSchema,
   ForceMoveAnyDirectionEffectSchema,
   ForceMoveEffectSchema,

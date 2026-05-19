@@ -180,12 +180,12 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 485,
-      "percent": "87.2%",
+      "numerator": 486,
+      "percent": "87.4%",
       "rowsByStatus": {
         "accepted": 336,
-        "accepted-no-battle-effect": 149,
-        "battle-runtime-required": 62,
+        "accepted-no-battle-effect": 150,
+        "battle-runtime-required": 61,
         "partial-battle-runtime": 6,
         "owner-evidence-required": 3
       }
@@ -203,15 +203,15 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 347,
       "non-runtime": 24,
-      "catalog-only/dead-for-now": 120,
-      "missing-authored-record": 30,
+      "catalog-only/dead-for-now": 121,
+      "missing-authored-record": 29,
       "catalog-installed-owner-evidence-required": 22,
       "catalog-authored-executable-follow-up": 13
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 187,
-      "catalog-only/dead-for-now": 120,
-      "missing-authored-record": 30,
+      "catalog-only/dead-for-now": 121,
+      "missing-authored-record": 29,
       "catalog-installed-owner-evidence-required": 17,
       "catalog-authored-executable-follow-up": 13
     },
@@ -26402,19 +26402,39 @@
       "detail": "Rope Trick (Transmutation; —)",
       "candidateUnitId": "rope_trick",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "rope_trick",
+        "sourceRecordPath": "packages/surface/content/rope_trick.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "rope_trick"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached table/spatial/object presentation owner",
+        "reason": "Rope object attachment, extradimensional-space occupancy, entry/exit climbing, line of sight through the portal, attack/spell/effect boundary blocking, and drop-out placement are table/spatial/object presentation facts outside promoted battle runtime."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit rope_trick is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached table/spatial/object presentation owner",
+          "evidence": "Rope object attachment, extradimensional-space occupancy, entry/exit climbing, line of sight through the portal, attack/spell/effect boundary blocking, and drop-out placement are table/spatial/object presentation facts outside promoted battle runtime.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Rope object attachment, extradimensional-space occupancy, entry/exit climbing, line of sight through the portal, attack/spell/effect boundary blocking, and drop-out placement are table/spatial/object presentation facts outside promoted battle runtime.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_scorching_ray",

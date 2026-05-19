@@ -145,6 +145,7 @@ const requiredFirstVerticalUnitIds = [
   "locate_animals_or_plants",
   "locate_object",
   "hellish_rebuke",
+  "rope_trick",
   "armor_chain_mail",
   "equipment_shield",
   "weapon_dagger",
@@ -1560,6 +1561,80 @@ describe("SRD Unit catalog boundary", () => {
     ]);
     expect(magicMouth.description).toContain(
       "visual or audible conditions within 30 feet",
+    );
+  });
+
+  test("decodes Rope Trick as a spell-created extradimensional refuge", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const ropeTrick = result.catalog.requireUnit("rope_trick");
+
+    expect(ropeTrick.kind).toBe("spell");
+    if (ropeTrick.kind !== "spell") return;
+    expect(ropeTrick.mechanics.family).toBe("activation");
+    if (ropeTrick.mechanics.family !== "activation") return;
+
+    expect(ropeTrick.mechanics).toMatchObject({
+      level: 2,
+      school: "transmutation",
+      castingTime: { kind: "action" },
+      range: { kind: "touch" },
+      components: {
+        v: true,
+        s: true,
+        m: "a segment of rope",
+      },
+      duration: {
+        kind: "timed",
+        value: { amount: 1, unit: "hour" },
+      },
+    });
+    expect(ropeTrick.mechanics.phases).toEqual([
+      {
+        kind: "direct",
+        attachment: {
+          kind: "hole",
+          holeId: "rope_trick_rope",
+          label: "touched rope",
+          value: {
+            kind: "object",
+            count: 1,
+          },
+        },
+        effects: [
+          {
+            kind: "create_extradimensional_space",
+            anchor: {
+              kind: "touched_rope",
+              topEndMotion: "hovers_until_perpendicular_or_ceiling",
+            },
+            entry: {
+              visibility: "invisible",
+              widthFeet: 3,
+              heightFeet: 5,
+              location: "anchor_upper_end",
+            },
+            access: {
+              kind: "climb_anchor",
+              anchorMovement: "can_be_pulled_into_or_dropped_out",
+            },
+            capacity: {
+              creatureCount: 8,
+              maxCreatureSize: "medium",
+            },
+            boundary: {
+              attacksSpellsAndEffects: "blocked_bidirectionally",
+              occupantPerception: "can_see_out_through_portal",
+            },
+            onEnd: { kind: "drop_contents_out" },
+          },
+        ],
+      },
+    ]);
+    expect(ropeTrick.description).toContain(
+      "Attacks, spells, and other effects can't pass into or out of the space",
     );
   });
 

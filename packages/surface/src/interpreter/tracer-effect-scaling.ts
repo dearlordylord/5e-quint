@@ -159,6 +159,7 @@ export function traceEffectAtomScaling(
     case "teleport":
     case "transport_exile":
     case "container_storage":
+    case "create_extradimensional_space":
     case "create_sensor":
     case "remote_perception":
     case "grant_speed":
