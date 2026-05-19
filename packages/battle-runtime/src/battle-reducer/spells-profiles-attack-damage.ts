@@ -1220,7 +1220,7 @@ function isCanonicalSrdFireBoltObjectIgnition(input: {
     input.postDamageEffects.length === 1 &&
     input.postDamageEffects[0]?.kind === "ignite_objects" &&
     input.postDamageEffects[0].filter.material === "flammable" &&
-    input.postDamageEffects[0].filter.heldOrWorn === "forbidden"
+    input.postDamageEffects[0].filter.targetRelation === "not_worn_or_carried"
   );
 }
 

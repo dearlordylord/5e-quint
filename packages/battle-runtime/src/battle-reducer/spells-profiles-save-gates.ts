@@ -1930,7 +1930,7 @@ function fireballPostSaveAreaEffect(
     directPhase.effects?.length !== 1 ||
     ignite?.kind !== "ignite_objects" ||
     ignite.filter.material !== "flammable" ||
-    ignite.filter.heldOrWorn !== "forbidden"
+    ignite.filter.targetRelation !== "not_worn_or_carried"
   ) {
     return null;
   }

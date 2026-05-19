@@ -163,7 +163,7 @@ type LightCantripObjectLightDirectPhase = Extract<
       readonly kind: "object";
       readonly count: 1;
       readonly filter: {
-        readonly heldOrWorn: "forbidden";
+        readonly targetRelation: "not_worn_or_carried";
         readonly maxSize: typeof LIGHT_OBJECT_MAX_SIZE;
       };
     };
@@ -711,7 +711,7 @@ function isObjectLightDirectPhase(
     phase.attachment.kind === "hole" &&
     phase.attachment.value.kind === "object" &&
     phase.attachment.value.count === 1 &&
-    phase.attachment.value.filter?.heldOrWorn === "forbidden" &&
+    phase.attachment.value.filter?.targetRelation === "not_worn_or_carried" &&
     phase.attachment.value.filter?.maxSize === LIGHT_OBJECT_MAX_SIZE &&
     phase.effects?.some((effect) => effect.kind === "emit_light") === true
   );
@@ -1029,7 +1029,7 @@ function flamingSphereSpell(spell: SpellRecord) {
     repositionOperation.effect.maxMoveFeet !== 30 ||
     igniteOperation?.effect.kind !== "ignite_objects" ||
     igniteOperation.effect.filter.material !== "flammable" ||
-    igniteOperation.effect.filter.heldOrWorn !== "forbidden" ||
+    igniteOperation.effect.filter.targetRelation !== "not_worn_or_carried" ||
     lightOperation?.effect.kind !== "emit_light" ||
     lightOperation.effect.brightRadiusFeet !== 20 ||
     lightOperation.effect.dimAdditionalFeet !== 20
@@ -1192,6 +1192,7 @@ export function isContinualFlameObjectSpell(
     { family: "activation" }
   >;
 } {
+  const components = spell.mechanics.components;
   const endsOn =
     spell.mechanics.duration.kind === "permanent"
       ? (spell.mechanics.duration.endsOn ?? [])
@@ -1207,11 +1208,13 @@ export function isContinualFlameObjectSpell(
     spell.mechanics.duration.kind === "permanent" &&
     endsOn.length === 1 &&
     endsOn[0] === "dispel" &&
-    spell.mechanics.components.v === true &&
-    spell.mechanics.components.s === true &&
-    spell.mechanics.components.m !== false &&
-    spell.mechanics.components.materialConsumed === true &&
-    spell.mechanics.components.materialCostGp === 50
+    components.v === true &&
+    components.s === true &&
+    components.m !== false &&
+    "materialConsumed" in components &&
+    components.materialConsumed === true &&
+    "materialCostGp" in components &&
+    components.materialCostGp === 50
   );
 }
 
