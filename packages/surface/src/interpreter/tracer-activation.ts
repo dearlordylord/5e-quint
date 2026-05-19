@@ -15,7 +15,7 @@ import type { SpellCtx } from "./tracer-spell-context.ts";
 
 import { traceEffectAtom } from "./tracer-effect-atom.ts";
 
-import { traceEffectAtomScaling } from "./tracer-effect-scaling.ts";
+import { traceEffectAtomScaling, traceUsageLimit } from "./tracer-effect-scaling.ts";
 
 import { traceAttachment } from "./tracer-attachments.ts";
 
@@ -131,6 +131,7 @@ export function tracePhase(
       });
       edges.push({ from: ctx.procId, to: resId, relation: "grants" });
       edges.push({ from: resId, to: attId, relation: "attaches_to" });
+      traceUsageLimit(phase.usageLimit, resId, "limits", nodes, edges, ids);
 
       traceSaveBranch(
         phase.onFail,

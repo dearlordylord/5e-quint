@@ -45,6 +45,7 @@ export type AttachmentAndAreaEffectAtom = Extract<
       | "suppress_arcane_lock"
       | "reposition_attachment"
       | "area_is_difficult_terrain"
+      | "area_emits_dim_light"
       | "area_is_lightly_obscured"
       | "area_is_heavily_obscured"
       | "area_has_strong_wind"
@@ -60,7 +61,9 @@ export type AttachmentAndAreaEffectAtom = Extract<
       | "suppress_magic_items"
       | "suppress_ongoing_magic_effects"
       | "ordered_barrier_layers"
-      | "allow_reaction_stand_up";
+      | "allow_reaction_stand_up"
+      | "revert_shape_shift_to_true_form"
+      | "suppress_shape_shifting_while_in_area";
   }
 >;
 
@@ -398,6 +401,16 @@ export function traceAttachmentAndAreaEffectAtom(
       });
       return id;
     }
+    case "area_emits_dim_light": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "area_emits_dim_light",
+        label: "area_emits_dim_light",
+      });
+      return id;
+    }
     case "area_is_lightly_obscured": {
       const id = ids("eff");
       nodes.push({
@@ -630,6 +643,26 @@ export function traceAttachmentAndAreaEffectAtom(
         category: "effect",
         atomKind: "allow_reaction_stand_up",
         label: "allow_reaction_stand_up",
+      });
+      return id;
+    }
+    case "revert_shape_shift_to_true_form": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "revert_shape_shift_to_true_form",
+        label: "revert_shape_shift_to_true_form",
+      });
+      return id;
+    }
+    case "suppress_shape_shifting_while_in_area": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "suppress_shape_shifting_while_in_area",
+        label: "suppress_shape_shifting_while_in_area",
       });
       return id;
     }

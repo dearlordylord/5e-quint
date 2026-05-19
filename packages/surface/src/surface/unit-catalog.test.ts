@@ -4,6 +4,7 @@ import { Either, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import findFamiliarInput from "../../content/find_familiar.json";
+import moonbeamInput from "../../content/moonbeam.json";
 import sorcererFontOfMagicInput from "../../content/sorcerer_font_of_magic.json";
 import sorcererMetamagicInput from "../../content/sorcerer_metamagic.json";
 import {
@@ -760,6 +761,75 @@ describe("SRD Unit catalog boundary", () => {
           effect: { kind: "area_is_heavily_obscured" },
         },
       ]);
+    }
+  });
+
+  test("decodes Moonbeam with lossless Dim Light source fact, shared per-turn save limiter, and conditional shape-shift rider", () => {
+    const moonbeam = decodeUnitRecordSync(moonbeamInput);
+    expect(moonbeam.kind).toBe("spell");
+    if (moonbeam.kind !== "spell") return;
+    expect(moonbeam.mechanics.family).toBe("ongoing_effect");
+    if (moonbeam.mechanics.family !== "ongoing_effect") return;
+
+    // Dim Light is the source-level illumination fact (not derived area_is_lightly_obscured).
+    // Consumers derive Lightly Obscured from it per UBIQUITOUS_LANGUAGE.
+    expect(moonbeam.mechanics.operations[0]).toEqual({
+      trigger: { kind: "passive" },
+      effect: { kind: "area_emits_dim_light" },
+    });
+
+    // Movement is only available on later turns.
+    // RAW: "you can take a Magic action on later turns to move the Cylinder up to 60 feet."
+    expect(moonbeam.mechanics.operations[1]).toMatchObject({
+      trigger: {
+        kind: "on_caster_spends_action",
+        laterTurnsOnly: true,
+      },
+      effect: { kind: "reposition_attachment", maxMoveFeet: 60 },
+    });
+
+    // All four save triggers (appearance + 3 recurring) share one per-turn window per creature.
+    // RAW: "A creature makes this save only once per turn" spans all four triggers.
+    const saveOps = moonbeam.mechanics.operations.filter(
+      (op) => op.usageLimit !== undefined,
+    );
+    expect(saveOps).toHaveLength(3);
+    for (const op of saveOps) {
+      expect(op.usageLimit).toEqual({
+        kind: "once_per_turn",
+        limitGroup: "moonbeam_save_per_turn",
+      });
+    }
+
+    // Shape-shift rider is gated on the target being shape-shifted.
+    // RAW: "if the creature is shape-shifted … it reverts to its true form
+    //  and can't shape-shift until it leaves the Cylinder."
+    const shapeShiftOnFail = {
+      kind: "composite",
+      effects: expect.arrayContaining([
+        { kind: "revert_shape_shift_to_true_form", onlyIfTargetIsShapeShifted: true },
+        { kind: "suppress_shape_shifting_while_in_area", onlyIfTargetIsShapeShifted: true },
+      ]),
+    };
+
+    // Initial save (when the Cylinder appears) participates in the same once-per-turn
+    // limiter group so a creature already in the area on cast turn cannot save again
+    // via a recurring trigger on the same turn.
+    // RAW: "When the Cylinder appears, each creature in it makes a Constitution saving throw"
+    // and "A creature makes this save only once per turn."
+    expect(moonbeam.mechanics.initialPhase).toMatchObject({
+      kind: "save_gate",
+      onFail: shapeShiftOnFail,
+      usageLimit: { kind: "once_per_turn", limitGroup: "moonbeam_save_per_turn" },
+    });
+
+    // All three recurring save triggers (creature-ends-turn-in-area, creature-entry,
+    // area-moves-into-creature-space) also carry the shape-shift rider.
+    for (const op of saveOps) {
+      expect(op.effect).toMatchObject({
+        kind: "save_gate",
+        onFail: shapeShiftOnFail,
+      });
     }
   });
 

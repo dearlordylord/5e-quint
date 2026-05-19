@@ -167,6 +167,7 @@ export function traceEffectAtom(
     case "suppress_arcane_lock":
     case "reposition_attachment":
     case "area_is_difficult_terrain":
+    case "area_emits_dim_light":
     case "area_is_lightly_obscured":
     case "area_is_heavily_obscured":
     case "area_has_strong_wind":
@@ -183,6 +184,8 @@ export function traceEffectAtom(
     case "suppress_ongoing_magic_effects":
     case "ordered_barrier_layers":
     case "allow_reaction_stand_up":
+    case "revert_shape_shift_to_true_form":
+    case "suppress_shape_shifting_while_in_area":
       return traceAttachmentAndAreaEffectAtom(
         e,
         nodes,
