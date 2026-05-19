@@ -14,7 +14,7 @@
       "number": 2,
       "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME",
       "status": "ready-for-research",
-      "title": "Druid Wild Shape Shape-Shifting Runtime"
+      "title": "Druid Wild Shape Shape-Shifting Runtime And Promoted Parity"
     },
     {
       "number": 3,
@@ -141,6 +141,12 @@
       "id": "L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME",
       "status": "blocked",
       "title": "Spiritual Weapon Persistent Attack Runtime"
+    },
+    {
+      "number": 24,
+      "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-RETAINED-STATISTICS",
+      "status": "blocked",
+      "title": "Druid Wild Shape Retained Statistics And Active Form Persistence"
     }
   ]
 }
@@ -209,7 +215,7 @@ Do not run battle-runtime MBT unless the task changes promoted battle-runtime be
 | # | Task | Status | Depends On | Notes |
 | ---: | --- | --- | --- | --- |
 | 1 | L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS - Druid Wild Shape Character Facts And Resource Projection | done | completed baseline | Original backlog task 77; Unit `druid_wild_shape`. |
-| 2 | L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME - Druid Wild Shape Shape-Shifting Runtime | ready-for-research | L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS | Original backlog task 78; Unit `druid_wild_shape`; consume Character Sheet known-form identities from Task 1. |
+| 2 | L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME - Druid Wild Shape Shape-Shifting Runtime And Promoted Parity | ready-for-research | L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS | Original backlog task 78 narrowed to battle-visible execution; Unit `druid_wild_shape`; consume Character Sheet known-form identities from Task 1 and land package-local promoted Quint/MBT parity with runtime support. |
 | 3 | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS - Monk's Focus Character Facts And Resource Projection | ready-for-research | completed baseline | Original backlog task 79; Unit `monk_monks_focus`. |
 | 4 | L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS - Monk's Focus Battle Option Execution | blocked | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS | Original backlog task 80; Unit `monk_monks_focus`. |
 | 5 | L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS - Monk Uncanny Metabolism Character Facts And Use State | blocked | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS | Original backlog task 81; Unit `monk_uncanny_metabolism`. |
@@ -231,6 +237,7 @@ Do not run battle-runtime MBT unless the task changes promoted battle-runtime be
 | 21 | L12G-FOLLOWUP-SPIKE-GROWTH-HAZARD-RECOGNITION - Spike Growth Hazard Recognition Boundary | ready-for-research | completed baseline | Original backlog task 92; Unit `spike_growth`. |
 | 22 | L12G-FOLLOWUP-SPIRITUAL-WEAPON-SURFACE-PROXY-SHAPE - Spiritual Weapon Proxy Surface Shape | ready-for-research | completed baseline | Original backlog task 93; Unit `spiritual_weapon`. |
 | 23 | L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME - Spiritual Weapon Persistent Attack Runtime | blocked | L12G-FOLLOWUP-SPIRITUAL-WEAPON-SURFACE-PROXY-SHAPE | Original backlog task 94; Unit `spiritual_weapon`. |
+| 24 | L12G-FOLLOWUP-DRUID-WILD-SHAPE-RETAINED-STATISTICS - Druid Wild Shape Retained Statistics And Active Form Persistence | blocked | L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME | Split from Task 2; Unit `druid_wild_shape`; consumes the active Wild Shape form state and true-form facts from the battle execution owner. |
 
 ## Task Details
 
@@ -269,7 +276,7 @@ Acceptance:
 - package typechecks are run for touched packages when dependencies are available;
 - MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
 
-### Task 2 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME - Druid Wild Shape Shape-Shifting Runtime
+### Task 2 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME - Druid Wild Shape Shape-Shifting Runtime And Promoted Parity
 
 Status: `ready-for-research`
 
@@ -291,11 +298,18 @@ Inputs:
 
 Outputs:
 
-- satisfy the exact output contract from the original backlog section;
-- execute the chosen known Beast form over Character Sheet known-form identities from Task 1;
+- satisfy the battle-execution slice of the original backlog contract and keep the broader retained-statistics matrix visible as Task 24;
+- promote Wild Shape battle execution from Character Sheet known-form identities from Task 1, including Bonus Action/use spending, caller-selected known Beast form, equipment disposition with a fallen-equipment boundary, form Armor Class, Size, Speed, Stat Block attacks and form resources, Druid-level Temporary Hit Points, no-spellcasting projection, reversion on dismiss, reuse, Incapacitated, death, terminal zero Hit Points, or duration expiry, and active-form handoff persistence or a typed block;
+- land package-local `packages/battle-runtime/battle-runtime.qnt` parity, MBT bridge coverage, focused runtime tests, and generated owner evidence with the runtime implementation;
 - leave `druid_wild_shape` supported, accepted-closed, or precisely blocked by a smaller follow-up split;
 - update only the owner files required by the task;
 - regenerate coverage artifacts.
+
+Retry Guidance:
+
+- Start with `.references/srd-5.2.1/Classes/Druid.md` Wild Shape and `UBIQUITOUS_LANGUAGE.md` Creature, Stat Block, Character Sheet, and Temporary Hit Points terminology.
+- Do not claim runtime support from TS reducers alone. Model the package-local promoted Quint behavior, update the MBT bridge, and run the package-local promoted MBT lane under the repository scarcity protocol after focused tests pass.
+- Keep full generic ability-score, Skill, Saving Throw, sense, language, speech, anatomy, and non-battle active-form persistence projection out of this task unless it is implemented end to end; that work is Task 24.
 
 Acceptance:
 
@@ -1018,6 +1032,40 @@ Acceptance:
 
 - RAW and ubiquitous-language checks are performed before modeling;
 - no Warding Bond task, active B-lane task, companion-control behavior, or sibling-lane task is pulled into this lane;
+- focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence complete;
+- package typechecks are run for touched packages when dependencies are available;
+- MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
+
+### Task 24 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-RETAINED-STATISTICS - Druid Wild Shape Retained Statistics And Active Form Persistence
+
+Status: `blocked`
+
+Unit: `druid_wild_shape`.
+Source section: split from `Task 2 - L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME - Druid Wild Shape Shape-Shifting Runtime And Promoted Parity`.
+
+Local dependency: `L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME` must be `done` before this task starts.
+
+Inputs:
+
+- `.references/srd-5.2.1/Classes/Druid.md` Wild Shape;
+- `UBIQUITOUS_LANGUAGE.md`;
+- `packages/surface/content/druid_wild_shape.json`;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- the active Wild Shape form state, true-form Character Sheet facts, chosen Beast Stat Block facts, Unit claims, owner evidence, and focused tests produced by Task 2.
+
+Outputs:
+
+- supported runtime profile and focused tests for the full SRD game-statistic replacement and retention matrix beyond Task 2's battle execution slice;
+- generic Strength, Dexterity, Constitution, Skill, Saving Throw, sense, language, speech, anatomy, active-form duration across non-battle time, and other Beast Stat Block versus retained Character Sheet projections derive from the true-form Character Sheet and chosen Beast Stat Block without duplicated true-form or Stat Block facts;
+- active-form persistence and handoff behavior is either implemented by the shared transformation owner or precisely blocked by a typed boundary;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- RAW and ubiquitous-language checks are performed before modeling;
+- no Warding Bond task, active B-lane task, companion-control behavior, or sibling-lane task is pulled into this lane;
+- retained and replaced Wild Shape statistics trace to SRD Wild Shape without homebrew extensions, and invalid true-form/Beast-form combinations are unrepresentable at the relevant boundary;
 - focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence complete;
 - package typechecks are run for touched packages when dependencies are available;
 - MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.

@@ -7387,7 +7387,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused Character Creation, Character Sheet, app, MCP session, and Character Sheet battle handoff tests cover Druid level 2 and level 4 Wild Shape resource and character-fact projection from the installed Surface feature, Druid-class threshold tiers, partial Short Rest/full Long Rest reset facts, rounded-down duration, known-form count thresholds, Beast-form eligibility, explicit selected known Beast form identities, sheet expended-use and known-form tracking, typed rejection of omitted known-form identities, one-use Short Rest recovery, Long Rest reset, one eligible known-form replacement on Long Rest, and preservation of known-form state across battle handoff. Shape-shifting execution remains split to follow-up runtime work.",
+      "note": "Focused Character Creation, Character Sheet, app, MCP session, and Character Sheet battle handoff tests cover Druid level 2 and level 4 Wild Shape resource and character-fact projection from the installed Surface feature, Druid-class threshold tiers, partial Short Rest/full Long Rest reset facts, rounded-down duration, known-form count thresholds, Beast-form eligibility, explicit selected known Beast form identities, sheet expended-use and known-form tracking, typed rejection of omitted known-form identities, one-use Short Rest recovery, Long Rest reset, one eligible known-form replacement on Long Rest, and preservation of known-form state across battle handoff. Shape-shifting execution remains split to follow-up runtime and promoted parity work.",
       "profileIds": [
         "character-creation.class-feature-resource-projection",
         "character-sheet.class-feature-use-count-resource"
@@ -9198,16 +9198,27 @@
         "deferredMechanics": [
           {
             "followUpTaskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME",
-            "mechanic": "Beast form choice, game-statistic replacement and retained facts, Temporary Hit Points, no spellcasting, equipment choice/effects, and reversion triggers remain owned by follow-up shape-shifting runtime work."
+            "mechanic": "Wild Shape shape-shifting battle execution remains blocked until the package-local promoted parity lane models activation, current known Beast form choice, equipment disposition including fallen-equipment state, no-spellcasting projection, form attack and resource projection, Druid-level Temporary Hit Points, duration cleanup, reversion triggers, and active-form Character Sheet handoff or a typed persistence boundary."
+          },
+          {
+            "followUpTaskId": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-RETAINED-STATISTICS",
+            "mechanic": "Full SRD game-statistic replacement beyond the Character Sheet facts remains split: generic Strength, Dexterity, Constitution, Skill, Saving Throw, sense, language, speech, anatomy, active-form duration across non-battle time, and other Stat Block-vs-Character Sheet projections need a shared transformation owner before they are claimed."
           }
         ],
         "followUpTasks": [
           {
             "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-SHAPE-SHIFTING-RUNTIME",
-            "mechanic": "Execute the chosen known Beast form in play, including game-statistic replacement and retained facts, Temporary Hit Points, no spellcasting, equipment choice and effects, and reversion triggers.",
-            "owner": "stat-block-control shape-shifting runtime",
-            "requiredOutput": "Supported runtime profile and owner evidence for Wild Shape shape-shifting execution over Character Sheet known-form identities.",
-            "title": "Druid Wild Shape Shape-Shifting Runtime"
+            "mechanic": "Promote Wild Shape battle execution from Character Sheet known-form identities, including Bonus Action/use spending, caller-selected known Beast form and equipment disposition, fallen-equipment boundary, form Armor Class, Size, Speed, Stat Block attacks and form resources, Druid-level Temporary Hit Points, no-spellcasting projection, same-result reversion on dismiss, reuse, Incapacitated, death, terminal zero Hit Points, or duration expiry, and active-form handoff persistence or a typed block.",
+            "owner": "battle-runtime, character-battle-runtime, and package-local battle-runtime.qnt parity",
+            "requiredOutput": "Supported Unit profile with focused runtime tests, generated owner evidence, and package-local promoted Quint/MBT parity; otherwise leave the runtime path unpromoted with a precise blocked disposition.",
+            "title": "Druid Wild Shape Shape-Shifting Runtime And Promoted Parity"
+          },
+          {
+            "id": "L12G-FOLLOWUP-DRUID-WILD-SHAPE-RETAINED-STATISTICS",
+            "mechanic": "Project the full SRD replacement and retention matrix for Wild Shape beyond Character Sheet resource and known-form facts, including generic ability-score use, Skill and Saving Throw proficiency reconciliation, senses, communication/anatomy restrictions, active-form duration across non-battle time, and other rules that depend on the Beast Stat Block versus retained Character Sheet facts.",
+            "owner": "shared shape-shifting statistics projection and session persistence",
+            "requiredOutput": "Supported runtime profile and focused tests for shared shape-shifted statistics and active-form persistence without duplicating true-form or Stat Block facts.",
+            "title": "Druid Wild Shape Retained Statistics And Active Form Persistence"
           }
         ],
         "profileIds": [
