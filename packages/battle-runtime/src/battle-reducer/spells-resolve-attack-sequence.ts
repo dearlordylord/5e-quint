@@ -245,7 +245,7 @@ function resolveSpellAttackSequencePart(input: {
 }): ResolvedSpellAttackSequencePart | BattleResolutionResult {
   const target = input.partFill.target;
   if (target === undefined) {
-    const partName = spellAttackSequencePartName(input.invocation.spell);
+    const partName = spellAttackSequencePartName();
     return invalidResult(
       input.input.state,
       "invalidFill",
@@ -285,7 +285,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       input.target.spatialFacts,
     )
   ) {
-    const partName = spellAttackSequencePartName(input.invocation.spell);
+    const partName = spellAttackSequencePartName();
     return invalidResult(
       input.input.state,
       "invalidFill",
@@ -346,7 +346,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
         sanctuaryCheck.spatialFacts,
       )
     ) {
-      const partName = spellAttackSequencePartName(input.invocation.spell);
+      const partName = spellAttackSequencePartName();
       return invalidResult(
         input.input.state,
         "invalidFill",
@@ -359,7 +359,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
         fill.holeId === originalTargetHole.holeId,
     );
     if (originalTargetFill === undefined) {
-      const partName = spellAttackSequencePartName(input.invocation.spell);
+      const partName = spellAttackSequencePartName();
       return invalidResult(
         input.input.state,
         "invalidFill",
@@ -451,7 +451,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     },
   );
   if (!hit && input.partFill.mirrorImageDuplicateRoll !== undefined) {
-    const partName = spellAttackSequencePartName(input.invocation.spell);
+    const partName = spellAttackSequencePartName();
     return invalidResult(
       input.input.state,
       "invalidFill",
@@ -542,7 +542,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     }
   }
   if (!hit && input.partFill.damageRoll !== undefined) {
-    const partName = spellAttackSequencePartName(input.invocation.spell);
+    const partName = spellAttackSequencePartName();
     return invalidResult(
       input.input.state,
       "invalidFill",
@@ -826,7 +826,7 @@ function resolveSpellAttackSequenceObjectPart(input: {
     input.invocation,
   );
   if (objectFact === null) {
-    const partName = spellAttackSequencePartName(input.invocation.spell);
+    const partName = spellAttackSequencePartName();
     return invalidResult(
       input.input.state,
       "invalidFill",
@@ -850,7 +850,7 @@ function resolveSpellAttackSequenceObjectPart(input: {
     sightFact === null &&
     objectTargetAttackNeedsSightFact(input.state, input.target.objectId)
   ) {
-    const partName = spellAttackSequencePartName(input.invocation.spell);
+    const partName = spellAttackSequencePartName();
     return invalidResult(
       input.input.state,
       "invalidFill",
@@ -984,7 +984,7 @@ function spellAttackSequencePartDamageReductionRollHole(
     reduction.targetId,
     reduction.damageType,
   ].join(":");
-  const partName = spellAttackSequencePartName(invocation.spell);
+  const partName = spellAttackSequencePartName();
   return {
     ...base,
     holeId: holeId(protocolId),
@@ -1007,7 +1007,7 @@ function spellAttackSequencePartConcentrationSavingThrowHole(
     partIndex,
     base.combatantId,
   ].join(":");
-  const partName = spellAttackSequencePartName(invocation.spell);
+  const partName = spellAttackSequencePartName();
   return {
     ...base,
     holeId: holeId(protocolId),
@@ -1030,7 +1030,7 @@ function spellAttackSequencePartDamageDispositionHoleKey(
     partIndex,
     targetId,
   ].join(":");
-  const partName = spellAttackSequencePartName(invocation.spell);
+  const partName = spellAttackSequencePartName();
   return {
     holeId: holeId(protocolId),
     holeInstanceKey: holeInstanceKey(protocolId),

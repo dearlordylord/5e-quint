@@ -143,7 +143,7 @@ export function spellAttackSequencePartAttackRollHole(
   rollMode?: AttackRollMode,
 ): BattleSpellAttackRollHole {
   const protocolId = spellAttackSequencePartAttackRollProtocolId(invocation, partIndex);
-  const partName = spellAttackSequencePartName(invocation.spell);
+  const partName = spellAttackSequencePartName();
   return {
     kind: "attackRoll",
     holeId: holeId(protocolId),
@@ -528,7 +528,7 @@ export function spellAttackSequencePartDamageHole(
     spellMarkedDamageRiders,
   );
   const protocolId = spellAttackSequencePartDamageProtocolId(invocation, partIndex, critical);
-  const partName = spellAttackSequencePartName(invocation.spell);
+  const partName = spellAttackSequencePartName();
   return {
     kind: "rolledDice",
     holeId: holeId(protocolId),

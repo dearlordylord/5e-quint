@@ -69,19 +69,19 @@ describe("L12G-SPELL-SCORCHING-RAY deterministic Scorching Ray admission", () =>
       "objectTargetChoice",
     ]);
     expect(act.initialHoles).toEqual([
-      expect.objectContaining({ label: "Scorching Ray ray 1 target" }),
+      expect.objectContaining({ label: "Scorching Ray attack 1 target" }),
       expect.objectContaining({
-        label: "Scorching Ray ray 1 object target",
+        label: "Scorching Ray attack 1 object target",
         requiresTableSpatialFact: true,
       }),
-      expect.objectContaining({ label: "Scorching Ray ray 2 target" }),
+      expect.objectContaining({ label: "Scorching Ray attack 2 target" }),
       expect.objectContaining({
-        label: "Scorching Ray ray 2 object target",
+        label: "Scorching Ray attack 2 object target",
         requiresTableSpatialFact: true,
       }),
-      expect.objectContaining({ label: "Scorching Ray ray 3 target" }),
+      expect.objectContaining({ label: "Scorching Ray attack 3 target" }),
       expect.objectContaining({
-        label: "Scorching Ray ray 3 object target",
+        label: "Scorching Ray attack 3 object target",
         requiresTableSpatialFact: true,
       }),
     ]);

@@ -83,13 +83,13 @@ describe("battle runtime: Eldritch Blast", () => {
     expect(objectTargetHoles).toHaveLength(2);
     expect(act.initialHoles).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ label: "Eldritch Blast beam 1 target" }),
+        expect.objectContaining({ label: "Eldritch Blast attack 1 target" }),
         expect.objectContaining({
-          label: "Eldritch Blast beam 1 object target",
+          label: "Eldritch Blast attack 1 object target",
         }),
-        expect.objectContaining({ label: "Eldritch Blast beam 2 target" }),
+        expect.objectContaining({ label: "Eldritch Blast attack 2 target" }),
         expect.objectContaining({
-          label: "Eldritch Blast beam 2 object target",
+          label: "Eldritch Blast attack 2 object target",
         }),
       ]),
     );
@@ -112,7 +112,7 @@ describe("battle runtime: Eldritch Blast", () => {
       "attackRoll",
     );
     expect(firstAttackRoll).toMatchObject({
-      label: "Eldritch Blast beam 1 spell attack roll",
+      label: "Eldritch Blast attack 1 spell attack roll",
       spell: expect.objectContaining({
         targeting: {
           kind: "spellAttackSequenceCreatureOrObject",
@@ -140,7 +140,7 @@ describe("battle runtime: Eldritch Blast", () => {
       "rolledDice",
     );
     expect(firstDamage).toMatchObject({
-      label: "Eldritch Blast beam 1 damage (1d10-force)",
+      label: "Eldritch Blast attack 1 damage (1d10-force)",
     });
     const secondAttackRoll = requireHole(
       resolveBattleSubject({
@@ -156,7 +156,7 @@ describe("battle runtime: Eldritch Blast", () => {
       "attackRoll",
     );
     expect(secondAttackRoll).toMatchObject({
-      label: "Eldritch Blast beam 2 spell attack roll",
+      label: "Eldritch Blast attack 2 spell attack roll",
     });
     const secondDamage = requireHole(
       resolveBattleSubject({
@@ -173,7 +173,7 @@ describe("battle runtime: Eldritch Blast", () => {
       "rolledDice",
     );
     expect(secondDamage).toMatchObject({
-      label: "Eldritch Blast beam 2 damage (1d10-force)",
+      label: "Eldritch Blast attack 2 damage (1d10-force)",
     });
 
     const result = resolveBattleSubject({
@@ -388,7 +388,7 @@ describe("battle runtime: Eldritch Blast", () => {
       "rolledDice",
     );
     expect(firstReduction).toMatchObject({
-      label: "Eldritch Blast beam 1 damage reduction",
+      label: "Eldritch Blast attack 1 damage reduction",
     });
     const firstConcentration = requireHole(
       resolveBattleSubject({
@@ -646,7 +646,7 @@ describe("battle runtime: Eldritch Blast", () => {
       "rolledDice",
     );
     expect(reduction).toMatchObject({
-      label: "Eldritch Blast beam 1 damage reduction",
+      label: "Eldritch Blast attack 1 damage reduction",
     });
     const reduced = requireResolved(
       resolveBattleSubject({

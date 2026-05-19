@@ -120,7 +120,7 @@ export function spellAttackSequencePartTargetHole(
   partIndex: number,
 ): BattleTargetChoiceHole {
   const holeKey = spellAttackSequencePartTargetHoleKey(invocation, partIndex);
-  const partName = spellAttackSequencePartName(invocation.spell);
+  const partName = spellAttackSequencePartName();
   return {
     kind: "targetChoice",
     holeId: holeId(holeKey),
@@ -171,7 +171,7 @@ export function spellAttackSequencePartObjectTargetHole(
   partIndex: number,
 ): BattleObjectTargetChoiceHole {
   const holeKey = spellAttackSequencePartObjectTargetHoleKey(invocation, partIndex);
-  const partName = spellAttackSequencePartName(invocation.spell);
+  const partName = spellAttackSequencePartName();
   return {
     kind: "objectTargetChoice",
     holeId: holeId(holeKey),
