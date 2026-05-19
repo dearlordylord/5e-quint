@@ -180,12 +180,12 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 473,
-      "percent": "85.1%",
+      "numerator": 479,
+      "percent": "86.2%",
       "rowsByStatus": {
         "accepted": 332,
-        "accepted-no-battle-effect": 141,
-        "battle-runtime-required": 74,
+        "accepted-no-battle-effect": 147,
+        "battle-runtime-required": 68,
         "partial-battle-runtime": 6,
         "owner-evidence-required": 3
       }
@@ -203,15 +203,15 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 343,
       "non-runtime": 24,
-      "catalog-only/dead-for-now": 112,
-      "missing-authored-record": 42,
+      "catalog-only/dead-for-now": 118,
+      "missing-authored-record": 36,
       "catalog-installed-owner-evidence-required": 22,
       "catalog-authored-executable-follow-up": 13
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 183,
-      "catalog-only/dead-for-now": 112,
-      "missing-authored-record": 42,
+      "catalog-only/dead-for-now": 118,
+      "missing-authored-record": 36,
       "catalog-installed-owner-evidence-required": 17,
       "catalog-authored-executable-follow-up": 13
     },
@@ -6624,19 +6624,39 @@
       "detail": "Locate Object (Divination; C)",
       "candidateUnitId": "locate_object",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "locate_object",
+        "sourceRecordPath": "packages/surface/content/locate_object.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "locate_object"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "exploration/detection owner",
+        "reason": "Object presence, object-kind matching, direct-path lead blocking, and location/motion direction disclosure are exploration/table facts outside promoted battle runtime."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit locate_object is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "exploration/detection owner",
+          "evidence": "Object presence, object-kind matching, direct-path lead blocking, and location/motion direction disclosure are exploration/table facts outside promoted battle runtime.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Object presence, object-kind matching, direct-path lead blocking, and location/motion direction disclosure are exploration/table facts outside promoted battle runtime.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_magic_mouth",
@@ -8841,19 +8861,39 @@
       "detail": "Locate Object (Divination; C)",
       "candidateUnitId": "locate_object",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "locate_object",
+        "sourceRecordPath": "packages/surface/content/locate_object.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "locate_object"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "exploration/detection owner",
+        "reason": "Object presence, object-kind matching, direct-path lead blocking, and location/motion direction disclosure are exploration/table facts outside promoted battle runtime."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit locate_object is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "exploration/detection owner",
+          "evidence": "Object presence, object-kind matching, direct-path lead blocking, and location/motion direction disclosure are exploration/table facts outside promoted battle runtime.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Object presence, object-kind matching, direct-path lead blocking, and location/motion direction disclosure are exploration/table facts outside promoted battle runtime.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_prayer_of_healing",
@@ -11659,19 +11699,39 @@
       "detail": "Locate Object (Divination; C)",
       "candidateUnitId": "locate_object",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "locate_object",
+        "sourceRecordPath": "packages/surface/content/locate_object.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "locate_object"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "exploration/detection owner",
+        "reason": "Object presence, object-kind matching, direct-path lead blocking, and location/motion direction disclosure are exploration/table facts outside promoted battle runtime."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit locate_object is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "exploration/detection owner",
+          "evidence": "Object presence, object-kind matching, direct-path lead blocking, and location/motion direction disclosure are exploration/table facts outside promoted battle runtime.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Object presence, object-kind matching, direct-path lead blocking, and location/motion direction disclosure are exploration/table facts outside promoted battle runtime.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_moonbeam",
@@ -14795,19 +14855,39 @@
       "detail": "Locate Object (Divination; C)",
       "candidateUnitId": "locate_object",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "locate_object",
+        "sourceRecordPath": "packages/surface/content/locate_object.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "locate_object"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "exploration/detection owner",
+        "reason": "Object presence, object-kind matching, direct-path lead blocking, and location/motion direction disclosure are exploration/table facts outside promoted battle runtime."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit locate_object is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "exploration/detection owner",
+          "evidence": "Object presence, object-kind matching, direct-path lead blocking, and location/motion direction disclosure are exploration/table facts outside promoted battle runtime.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Object presence, object-kind matching, direct-path lead blocking, and location/motion direction disclosure are exploration/table facts outside promoted battle runtime.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/paladin:spell-level-2:spell-unit-pressure:paladin_spell_list_magic_weapon",
@@ -16704,19 +16784,39 @@
       "detail": "Locate Object (Divination; C)",
       "candidateUnitId": "locate_object",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "locate_object",
+        "sourceRecordPath": "packages/surface/content/locate_object.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "locate_object"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "exploration/detection owner",
+        "reason": "Object presence, object-kind matching, direct-path lead blocking, and location/motion direction disclosure are exploration/table facts outside promoted battle runtime."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit locate_object is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "exploration/detection owner",
+          "evidence": "Object presence, object-kind matching, direct-path lead blocking, and location/motion direction disclosure are exploration/table facts outside promoted battle runtime.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Object presence, object-kind matching, direct-path lead blocking, and location/motion direction disclosure are exploration/table facts outside promoted battle runtime.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_magic_weapon",
@@ -25932,19 +26032,39 @@
       "detail": "Locate Object (Divination; C)",
       "candidateUnitId": "locate_object",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "locate_object",
+        "sourceRecordPath": "packages/surface/content/locate_object.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "locate_object"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "exploration/detection owner",
+        "reason": "Object presence, object-kind matching, direct-path lead blocking, and location/motion direction disclosure are exploration/table facts outside promoted battle runtime."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit locate_object is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "exploration/detection owner",
+          "evidence": "Object presence, object-kind matching, direct-path lead blocking, and location/motion direction disclosure are exploration/table facts outside promoted battle runtime.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Object presence, object-kind matching, direct-path lead blocking, and location/motion direction disclosure are exploration/table facts outside promoted battle runtime.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_magic_mouth",

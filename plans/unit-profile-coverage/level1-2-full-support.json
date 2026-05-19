@@ -1721,6 +1721,95 @@
       "unitId": "locate_animals_or_plants"
     },
     {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Object presence, object-kind matching, direct-path lead blocking, and location/motion direction disclosure are exploration/table facts outside promoted battle runtime.",
+      "sourceRecordPath": "packages/surface/content/locate_object.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Locate Object",
+          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_locate_object",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 204,
+            "lineStart": 204,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Cleric spell list Locate Object",
+          "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_locate_object",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 192,
+            "lineStart": 192,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Druid spell list Locate Object",
+          "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_locate_object",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 243,
+            "lineStart": 243,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Paladin spell list Locate Object",
+          "id": "srd521:classes/paladin:spell-level-2:spell-unit-pressure:paladin_spell_list_locate_object",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 198,
+            "lineStart": 198,
+            "path": ".references/srd-5.2.1/Classes/Paladin.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Ranger spell list Locate Object",
+          "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_locate_object",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 191,
+            "lineStart": 191,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Locate Object",
+          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_locate_object",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 218,
+            "lineStart": 218,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
+      "unitId": "locate_object"
+    },
+    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -2805,7 +2894,7 @@
       ]
     },
     {
-      "count": 17,
+      "count": 18,
       "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
@@ -2821,6 +2910,7 @@
         "identify",
         "knock",
         "locate_animals_or_plants",
+        "locate_object",
         "minor_illusion",
         "pass_without_trace",
         "silent_image",
@@ -2878,12 +2968,12 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 473,
-      "percent": "85.1%",
+      "numerator": 479,
+      "percent": "86.2%",
       "rowsByStatus": {
         "accepted": 332,
-        "accepted-no-battle-effect": 141,
-        "battle-runtime-required": 74,
+        "accepted-no-battle-effect": 147,
+        "battle-runtime-required": 68,
         "owner-evidence-required": 3,
         "partial-battle-runtime": 6
       }
@@ -2904,13 +2994,13 @@
       "percent": "29.7%"
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 157,
+      "denominator": 158,
       "numerator": 101,
-      "percent": "64.3%"
+      "percent": "63.9%"
     },
     "strictTargetClosure": {
-      "denominator": 157,
-      "numerator": 148,
+      "denominator": 158,
+      "numerator": 149,
       "percent": "94.3%"
     }
   },
@@ -3452,84 +3542,6 @@
           }
         ],
         "unitId": "illusory_script"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "spell Unit pressure",
-            "concept": "Bard spell list Locate Object",
-            "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_locate_object",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 204,
-              "lineStart": 204,
-              "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Cleric spell list Locate Object",
-            "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_locate_object",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 192,
-              "lineStart": 192,
-              "path": ".references/srd-5.2.1/Classes/Cleric.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Druid spell list Locate Object",
-            "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_locate_object",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 243,
-              "lineStart": 243,
-              "path": ".references/srd-5.2.1/Classes/Druid.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Paladin spell list Locate Object",
-            "id": "srd521:classes/paladin:spell-level-2:spell-unit-pressure:paladin_spell_list_locate_object",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 198,
-              "lineStart": 198,
-              "path": ".references/srd-5.2.1/Classes/Paladin.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Ranger spell list Locate Object",
-            "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_locate_object",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 191,
-              "lineStart": 191,
-              "path": ".references/srd-5.2.1/Classes/Ranger.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Wizard spell list Locate Object",
-            "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_locate_object",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 218,
-              "lineStart": 218,
-              "path": ".references/srd-5.2.1/Classes/Wizard.md"
-            }
-          }
-        ],
-        "unitId": "locate_object"
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/mage_hand.md",
@@ -7808,18 +7820,18 @@
       "missing": 9,
       "profile-subset-supported": 12,
       "supported-profile": 101,
-      "unsupported-profile": 35
+      "unsupported-profile": 36
     },
     "groupsByStatus": {
       "blocked-follow-up-split": 21,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
-      "closed-runtime-detached-table-adjudication": 17,
+      "closed-runtime-detached-table-adjudication": 18,
       "open-runtime-behavior": 9,
       "supported-profile": 101
     },
-    "nonSupportedFrontier": 56,
-    "strictDenominator": 157
+    "nonSupportedFrontier": 57,
+    "strictDenominator": 158
   }
 }

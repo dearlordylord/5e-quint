@@ -8,9 +8,9 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 
 | Metric | Covered |
 | --- | ---: |
-| Strict runtime/profile support | 101/157 (64.3%) |
-| Strict target closure | 148/157 (94.3%) |
-| Product readiness | 473/556 (85.1%) |
+| Strict runtime/profile support | 101/158 (63.9%) |
+| Strict target closure | 149/158 (94.3%) |
+| Product readiness | 479/556 (86.2%) |
 | Rules-kernel profile join | 16/72 (22.2%) |
 | Rules-kernel covered profile join | 11/72 (15.3%) |
 | Supported Unit rules-kernel chain | 30/101 (29.7%) |
@@ -21,10 +21,10 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | --- | ---: |
 | Candidate Unit ids before exclusions | 197 |
 | Companion-worktree exclusions | 1 |
-| SRD pressure with no Unit matrix row | 27 |
+| SRD pressure with no Unit matrix row | 26 |
 | Non-executable class containers | 12 |
-| Strict executable denominator | 157 |
-| Non-supported frontier | 56 |
+| Strict executable denominator | 158 |
+| Non-supported frontier | 57 |
 
 ## Status Groups
 
@@ -32,7 +32,7 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | --- | ---: | --- |
 | supported-profile | 101 | `acid_splash`, `aid`, `animal_friendship`, `bane`, `barbarian_danger_sense`, `barbarian_rage`, `barbarian_reckless_attack`, `barbarian_unarmored_defense`, `bard_bardic_inspiration`, `bard_jack_of_all_trades`, `barkskin`, `bless`, `blindness_deafness`, `blur`, `burning_hands`, `chill_touch`, `chromatic_orb`, `cleric_channel_divinity`, `cleric_divine_order`, `color_spray`, `command`, `cure_wounds`, `dancing_lights`, `dissonant_whispers`, `divine_favor`, `divine_smite`, `druid_primal_order`, `eldritch_blast`, `ensnaring_strike`, `entangle`, `expeditious_retreat`, `faerie_fire`, `false_life`, `feather_fall`, `fighter_action_surge`, `fighter_fighting_style`, `fighter_second_wind`, `fighter_tactical_mind`, `fire_bolt`, `flaming_sphere`, `fog_cloud`, `grease`, `guidance`, `guiding_bolt`, `healing_word`, `hellish_rebuke`, `heroism`, `hex`, `hideous_laughter`, `hunters_mark`, `ice_knife`, `inflict_wounds`, `jump`, `light`, `longstrider`, `mage_armor`, `magic_missile`, `misty_step`, `monk_martial_arts`, `monk_unarmored_defense`, `monk_unarmored_movement`, `paladin_lay_on_hands`, `paladin_paladins_smite`, `paladin_weapon_mastery`, `poison_spray`, `produce_flame`, `protection_from_evil_and_good`, `protection_from_poison`, `ranger_deft_explorer`, `ranger_weapon_mastery`, `ray_of_frost`, `ray_of_sickness`, `resistance`, `rogue_cunning_action`, `rogue_expertise`, `rogue_sneak_attack`, `rogue_weapon_mastery`, `sacred_flame`, `sanctuary`, `scorching_ray`, `searing_smite`, `shatter`, `shield`, `shield_of_faith`, `shillelagh`, `shining_smite`, `shocking_grasp`, `sleep`, `sorcerer_innate_sorcery`, `sorcerous_burst`, `spare_the_dying`, `spider_climb`, `starry_wisp`, `thunderwave`, `true_strike`, `vicious_mockery`, `warlock_eldritch_invocations`, `warlock_magical_cunning`, `wizard_arcane_recovery`, `wizard_ritual_adept`, `wizard_scholar` |
 | blocked-follow-up-split | 21 | `acid_arrow`, `alter_self`, `continual_flame`, `dragons_breath`, `druid_wild_shape`, `enhance_ability`, `enlarge_reduce`, `enthrall`, `flame_blade`, `gust_of_wind`, `levitate`, `monk_monks_focus`, `monk_uncanny_metabolism`, `moonbeam`, `prayer_of_healing`, `ray_of_enfeeblement`, `see_invisibility`, `sorcerer_font_of_magic`, `sorcerer_metamagic`, `spike_growth`, `spiritual_weapon` |
-| closed-runtime-detached-table-adjudication | 17 | `alarm`, `arcane_lock`, `charm_person`, `comprehend_languages`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `find_traps`, `gentle_repose`, `identify`, `knock`, `locate_animals_or_plants`, `minor_illusion`, `pass_without_trace`, `silent_image`, `speak_with_animals`, `thaumaturgy` |
+| closed-runtime-detached-table-adjudication | 18 | `alarm`, `arcane_lock`, `charm_person`, `comprehend_languages`, `detect_evil_and_good`, `detect_magic`, `detect_poison_and_disease`, `find_traps`, `gentle_repose`, `identify`, `knock`, `locate_animals_or_plants`, `locate_object`, `minor_illusion`, `pass_without_trace`, `silent_image`, `speak_with_animals`, `thaumaturgy` |
 | open-runtime-behavior | 9 | `find_steed`, `heat_metal`, `hold_person`, `invisibility`, `lesser_restoration`, `magic_weapon`, `mind_spike`, `warding_bond`, `web` |
 | closed-later-level-only | 6 | `barbarian_weapon_mastery`, `bard_expertise`, `fighter_weapon_mastery`, `paladin_fighting_style`, `ranger_favored_enemy`, `ranger_fighting_style` |
 | closed-character-fact-and-runtime-detached-split | 2 | `druid_druidic`, `rogue_thieves_cant` |
@@ -159,6 +159,7 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `lesser_restoration` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
 | `levitate` | blocked-follow-up-split | unsupported-profile | installed | follow-up-split | L12G-FOLLOWUP-LEVITATE-CREATURE-RUNTIME: Promote Levitate's creature branch: Magic Action and level-2+ Spell Slot spend, one visible creature target within 60 feet, caster-owned Concentration up to 10 minutes, unwilling-creature Constitution save gate, active levitated-target state with initial rise up to 20 feet, suspended/aloft projection, target movement only through caller-supplied fixed-object or surface-within-reach witnesses as if climbing, caster Magic Action altitude changes up to 20 feet while the target remains within range, self-target altitude changes as part of the target's move, and gentle-grounding cleanup when Concentration or duration ends. Owner: battle-runtime spell invocation/effect lifecycle plus table/spatial vertical movement witness boundary. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for the creature branch without loose-object target behavior or automatic elevation/pathfinding derivation.; L12G-FOLLOWUP-LEVITATE-OBJECT-BRANCH: Represent and promote or close Levitate's loose object branch: one visible loose object target within 60 feet weighing up to 500 pounds, no creature saving throw, spell-owned suspension and altitude changes, fixed-object or surface movement restrictions where relevant, range-gated caster movement, and gentle grounding when the spell ends without inventing spell-specific object position state. Owner: surface Spell Definition authoring plus battle-runtime object lifecycle owner decision. Required output: Focused Surface/runtime owner decision with tests or accepted runtime-detached closure for loose-object suspension, altitude control, range, and gentle-grounding facts, reusing any future object lifecycle owner rather than duplicating object state inside Levitate. |
 | `locate_animals_or_plants` | closed-runtime-detached-table-adjudication | unsupported-profile | installed | outside-runtime-presentation-exploration | Kind matching, target presence, closest-target selection, and direction/distance disclosure for Beasts, Plant creatures, or nonmagical plants are exploration/table facts outside promoted battle runtime. |
+| `locate_object` | closed-runtime-detached-table-adjudication | unsupported-profile | installed | outside-runtime-presentation-exploration | Object presence, object-kind matching, direct-path lead blocking, and location/motion direction disclosure are exploration/table facts outside promoted battle runtime. |
 | `magic_weapon` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
 | `mind_spike` | open-runtime-behavior | missing | not-in-unit-catalog | _none_ | No Unit profile claim currently records runtime support or an accepted closure. |
 | `minor_illusion` | closed-runtime-detached-table-adjudication | unsupported-profile | installed | outside-runtime-presentation-exploration | Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are illusion/exploration state outside promoted battle runtime. |
@@ -226,7 +227,6 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `floating_disk` | 1 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/floating_disk.md` | Wizard spell list Floating Disk |
 | `goodberry` | 2 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/goodberry.md` | Druid spell list Goodberry; Ranger spell list Goodberry |
 | `illusory_script` | 3 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/illusory_script.md` | Bard spell list Illusory Script; Warlock spell list Illusory Script; Wizard spell list Illusory Script |
-| `locate_object` | 6 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Bard spell list Locate Object; Cleric spell list Locate Object; Druid spell list Locate Object; Paladin spell list Locate Object; Ranger spell list Locate Object; Wizard spell list Locate Object |
 | `mage_hand` | 4 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/mage_hand.md` | Bard spell list Mage Hand; Sorcerer spell list Mage Hand; Warlock spell list Mage Hand; Wizard spell list Mage Hand |
 | `magic_mouth` | 2 | The SRD row has level-1 spell pressure, but no Unit matrix row exists yet. | _none_ | Bard spell list Magic Mouth; Wizard spell list Magic Mouth |
 | `mending` | 5 | The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | `plans/unit-profile-coverage/frontier-decisions/mending.md` | Bard spell list Mending; Cleric spell list Mending; Druid spell list Mending; Sorcerer spell list Mending; Wizard spell list Mending |

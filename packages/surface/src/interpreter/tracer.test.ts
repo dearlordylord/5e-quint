@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import classFighterInput from "../../content/class_fighter.json";
 import dragonsBreathInput from "../../content/dragons_breath.json";
 import locateAnimalsOrPlantsInput from "../../content/locate_animals_or_plants.json";
+import locateObjectInput from "../../content/locate_object.json";
 import { decodeUnitRecordSync } from "../surface/schema.ts";
 import { traceUnit } from "./tracer.ts";
 
@@ -69,6 +70,25 @@ describe("Surface trace interpreter", () => {
             "subjects: beast, plant_creature, nonmagical_plant",
             "closest within 26400 ft",
             "direction_and_distance",
+          ].join("\n"),
+        }),
+      ]),
+    );
+  });
+
+  test("renders Locate Object as object location and motion disclosure", () => {
+    const trace = traceUnit(decodeUnitRecordSync(locateObjectInput));
+
+    expect(trace.nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          atomKind: "object_location_sense",
+          label: [
+            "object_location_sense",
+            "specific known object seen within 30 ft",
+            "nearest particular_kind within 1000 ft",
+            "direction_to_location_and_movement",
+            "blocked_by: any_thickness_of_lead_direct_path",
           ].join("\n"),
         }),
       ]),

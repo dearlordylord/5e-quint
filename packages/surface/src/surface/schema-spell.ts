@@ -77,6 +77,16 @@ const LOCATE_KIND_SUBJECTS = [
 const LocateKindSubjectSchema = Schema.Literal(...LOCATE_KIND_SUBJECTS);
 type LocateKindSubject = Schema.Schema.Type<typeof LocateKindSubjectSchema>;
 
+const ObjectLocationSenseSearchModesSchema = strictStruct({
+  specificKnownObject: strictStruct({
+    seenUpCloseWithinFeet: Schema.Literal(30),
+  }),
+  nearestObjectKind: Schema.Literal("particular_kind"),
+});
+type ObjectLocationSenseSearchModes = Schema.Schema.Type<
+  typeof ObjectLocationSenseSearchModesSchema
+>;
+
 export const LinearPerLevelNumberSchema = Schema.Struct({
   kind: Schema.Literal("linear_per_level"),
   axis: LevelAxisSchema,
@@ -898,6 +908,13 @@ type EffectAtom =
       readonly match: "closest";
       readonly query: "described_or_named_specific_kind";
       readonly result: "direction_and_distance";
+    }
+  | {
+      readonly kind: "object_location_sense";
+      readonly searchModes: ObjectLocationSenseSearchModes;
+      readonly maxDistanceFeet: number;
+      readonly result: "direction_to_location_and_movement";
+      readonly blockedBy: "any_thickness_of_lead_direct_path";
     }
   | {
       readonly kind: "grant_speed";
@@ -2623,6 +2640,13 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         match: Schema.Literal("closest"),
         query: Schema.Literal("described_or_named_specific_kind"),
         result: Schema.Literal("direction_and_distance"),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("object_location_sense"),
+        searchModes: ObjectLocationSenseSearchModesSchema,
+        maxDistanceFeet: PositiveIntegerSchema,
+        result: Schema.Literal("direction_to_location_and_movement"),
+        blockedBy: Schema.Literal("any_thickness_of_lead_direct_path"),
       }),
       Schema.Struct({
         kind: Schema.Literal("grant_speed"),

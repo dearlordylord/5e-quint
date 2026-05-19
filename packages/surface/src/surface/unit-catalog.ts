@@ -101,6 +101,7 @@ import knockInput from "../../content/knock.json";
 import levitateInput from "../../content/levitate.json";
 import lightInput from "../../content/light.json";
 import locateAnimalsOrPlantsInput from "../../content/locate_animals_or_plants.json";
+import locateObjectInput from "../../content/locate_object.json";
 import longstriderInput from "../../content/longstrider.json";
 import mageArmorInput from "../../content/mage_armor.json";
 import magicMissileInput from "../../content/magic_missile.json";
@@ -456,6 +457,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     knockInput,
     levitateInput,
     locateAnimalsOrPlantsInput,
+    locateObjectInput,
     lightInput,
     longstriderInput,
     mistyStepInput,

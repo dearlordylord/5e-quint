@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 385,
-      "numerator": 167,
-      "percent": "43.4%"
+      "denominator": 386,
+      "numerator": 168,
+      "percent": "43.5%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 457,
-      "numerator": 199,
-      "percent": "43.5%"
+      "denominator": 458,
+      "numerator": 200,
+      "percent": "43.7%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 200
+      "value": 201
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 124,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 200,
-      "numerator": 200,
+      "denominator": 201,
+      "numerator": 201,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "83.9%"
     },
     "supportedProfileCoverage": {
-      "denominator": 168,
+      "denominator": 169,
       "numerator": 124,
-      "percent": "73.8%"
+      "percent": "73.4%"
     }
   },
   "metricSemantics": [
@@ -15488,6 +15488,29 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/locate_animals_or_plants.json",
       "unitId": "locate_animals_or_plants"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "exploration/detection owner",
+          "reason": "Object presence, object-kind matching, direct-path lead blocking, and location/motion direction disclosure are exploration/table facts outside promoted battle runtime."
+        },
+        "reason": "Locate Object is authored and installed as an SRD Surface Spell Definition with Magic Action Spell Slot casting, Self range, Concentration up to 10 minutes, a familiar object or nearest particular object-kind query, 1,000-foot direction disclosure, moving-object direction disclosure, seen-up-close within 30 feet requirement for specific known objects, and direct-path lead blocking. Task 4 claims no promoted battle-runtime profile because object presence, object-kind matching, familiarity and seen-distance adjudication, direct-path lead blocking, location and motion direction calculation, and world object state are runtime-detached exploration/table knowledge facts outside promoted battle Unit profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/locate_object.json",
+      "unitId": "locate_object"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

@@ -142,6 +142,7 @@ const requiredFirstVerticalUnitIds = [
   "knock",
   "levitate",
   "locate_animals_or_plants",
+  "locate_object",
   "hellish_rebuke",
   "armor_chain_mail",
   "equipment_shield",
@@ -1455,6 +1456,117 @@ describe("SRD Unit catalog boundary", () => {
     expect(locate.description).toContain(
       "direction and distance to the closest creature or plant",
     );
+  });
+
+  test("decodes Locate Object as object location and motion disclosure", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const locate = result.catalog.requireUnit("locate_object");
+
+    expect(locate.kind).toBe("spell");
+    if (locate.kind !== "spell") return;
+    expect(locate.mechanics.family).toBe("activation");
+    if (locate.mechanics.family !== "activation") return;
+
+    expect(locate.mechanics).toMatchObject({
+      level: 2,
+      school: "divination",
+      castingTime: { kind: "action" },
+      range: { kind: "self" },
+      components: {
+        v: true,
+        s: true,
+        m: "a forked twig",
+      },
+      duration: {
+        kind: "concentration",
+        upTo: { unit: "minute", amount: 10 },
+      },
+    });
+    expect(locate.mechanics.phases).toEqual([
+      {
+        kind: "direct",
+        attachment: { kind: "self" },
+        effects: [
+          {
+            kind: "object_location_sense",
+            searchModes: {
+              specificKnownObject: { seenUpCloseWithinFeet: 30 },
+              nearestObjectKind: "particular_kind",
+            },
+            maxDistanceFeet: 1000,
+            result: "direction_to_location_and_movement",
+            blockedBy: "any_thickness_of_lead_direct_path",
+          },
+        ],
+      },
+    ]);
+    expect(locate.description).toContain(
+      "you know the direction of its movement",
+    );
+  });
+
+  test("rejects non-RAW Locate Object subject variants", () => {
+    const decode = Schema.decodeUnknownEither(EffectAtomSchema);
+
+    expect(
+      Either.isLeft(
+        decode({
+          kind: "object_location_sense",
+          searchModes: {
+            specificKnownObject: { seenUpCloseWithinFeet: 31 },
+            nearestObjectKind: "particular_kind",
+          },
+          maxDistanceFeet: 1000,
+          result: "direction_to_location_and_movement",
+          blockedBy: "any_thickness_of_lead_direct_path",
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          kind: "object_location_sense",
+          searchModes: {
+            specificKnownObject: { seenUpCloseWithinFeet: 30 },
+            nearestObjectKind: "any_kind",
+          },
+          maxDistanceFeet: 1000,
+          result: "direction_to_location_and_movement",
+          blockedBy: "any_thickness_of_lead_direct_path",
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          kind: "object_location_sense",
+          searchModes: {
+            specificKnownObject: { seenUpCloseWithinFeet: 30 },
+            nearestObjectKind: "particular_kind",
+          },
+          maxDistanceFeet: 1000,
+          result: "direction_to_location",
+          blockedBy: "any_thickness_of_lead_direct_path",
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          kind: "object_location_sense",
+          searchModes: {
+            specificKnownObject: { seenUpCloseWithinFeet: 30 },
+            nearestObjectKind: "particular_kind",
+          },
+          maxDistanceFeet: 1000,
+          result: "direction_to_location_and_movement",
+          blockedBy: "lead",
+        }),
+      ),
+    ).toBe(true);
   });
 
   test("decodes Knock as object access release plus Arcane Lock suppression", () => {
