@@ -1,4 +1,5 @@
 // Spell target holes and target legality validation extracted from spells-holes-fills.ts.
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 
 import {
   holeId,
@@ -575,6 +576,7 @@ export function spellTargetHasNonSpatialPrerequisites(
   const target = state.combatants.get(targetId);
   if (
     spellInvocationRequiresKnownWillingTarget(invocation) &&
+    invocation.procedure !== "wardingBond" &&
     invocation.procedure !== "creatureTypeProtection" &&
     !spellTargetIsKnownWilling(actorId, targetId, invocation, facts)
   ) {
@@ -591,6 +593,9 @@ export function spellTargetHasNonSpatialPrerequisites(
     invocation.action === "transfer" &&
     targetId === invocation.activeEffect.targetCombatantId
   ) {
+    return false;
+  }
+  if (invocation.procedure === "wardingBond" && targetId === actorId) {
     return false;
   }
   if (invocation.procedure === "makeStable") {
@@ -787,6 +792,7 @@ export function spellInvocationRequiresKnownWillingTarget(
     invocation.procedure === "creatureTypeProtection" ||
     invocation.procedure ===
       "conditionImmunityAndTurnStartTemporaryHitPoints" ||
+    invocation.procedure === "wardingBond" ||
     (invocation.procedure === "scalarBuff" &&
       invocation.targeting.kind === "targetList" &&
       invocation.targeting.requiredTargetDisposition === "willing") ||

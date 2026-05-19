@@ -38,6 +38,8 @@ import { activeEffectArmorClass } from "./creature-state.ts";
 import {
   applyAttackDamageAmount,
   concentrationSavingThrowHole,
+  damageLifecycleConcentrationSavingThrowFillCheck,
+  damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
 } from "./damage-apply.ts";
 
 import {
@@ -66,7 +68,6 @@ import {
   needsHolesResult,
   revealHidden,
 } from "./hole-helpers.ts";
-import { hideousLaughterDamageRepeatSaveFillCheck } from "./hideous-laughter-repeat-save.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 
 import {
@@ -95,6 +96,7 @@ import type {
   OffHandAttackBattleResolutionInput,
 } from "../battle-reducer.ts";
 import type { SupportedAttackActionOption } from "../battle-action-options.ts";
+import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import {
   attackRollHitsWithCriticalThreshold,
   attackRollIsCriticalHit,
@@ -519,6 +521,7 @@ function resolveBonusActionAttack(
           targetId: target.combatantId,
           damageEvent: reducedDamageEventAfterSpellReduction,
           fills: attackDamagePrefixFills(input.fills),
+          concentrationSavingThrows: fillSet.concentrationSavingThrows,
           deathFailuresAtZeroHp: critical ? 2 : 1,
           damageDisposition: fillSet.damageDisposition,
           attackDamageRiders: selectedDamageRiders,
@@ -543,35 +546,41 @@ function resolveBonusActionAttack(
       spellReduction.target,
       damageAmount,
     );
-    if (concentrationSave !== null) {
-      if (fillSet.concentrationSavingThrow === undefined) {
-        return needsHolesResult(attackRolledState, input.subject, [
-          concentrationSave,
-        ]);
-      }
-      if (
-        fillSet.concentrationSavingThrow.holeId !== concentrationSave.holeId
-      ) {
-        return invalidResult(
-          input.state,
-          "invalidFill",
-          "Concentration Saving Throw fill does not match the damaged target.",
-        );
-      }
-    } else if (fillSet.concentrationSavingThrow !== undefined) {
+    const primaryConcentrationSavingThrow =
+      concentrationSave === null
+        ? undefined
+        : concentrationSavingThrowFillFor(
+            fillSet.concentrationSavingThrows,
+            concentrationSave,
+          );
+    const concentrationSaveCheck =
+      damageLifecycleConcentrationSavingThrowFillCheck({
+        state: spellReducedState,
+        target: spellReduction.target,
+        damageAmount,
+        fills: fillSet.concentrationSavingThrows,
+      });
+    if (concentrationSaveCheck.tag === "needsHoles") {
+      return needsHolesResult(spellReducedState, input.subject, [
+        ...concentrationSaveCheck.holes,
+      ]);
+    }
+    if (concentrationSaveCheck.tag === "invalid") {
       return invalidResult(
         input.state,
         "invalidFill",
-        "Concentration Saving Throw fill is only valid for a concentrating damaged target.",
+        concentrationSaveCheck.message,
       );
     }
-    const hideousLaughterSaveCheck = hideousLaughterDamageRepeatSaveFillCheck({
-      target: spellReduction.target,
-      damageAmount,
-      fills: fillSet.hideousLaughterDamageRepeatSaves,
-    });
+    const hideousLaughterSaveCheck =
+      damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
+        state: spellReducedState,
+        target: spellReduction.target,
+        damageAmount,
+        fills: fillSet.hideousLaughterDamageRepeatSaves,
+      });
     if (hideousLaughterSaveCheck.tag === "needsHoles") {
-      return needsHolesResult(attackRolledState, input.subject, [
+      return needsHolesResult(spellReducedState, input.subject, [
         ...hideousLaughterSaveCheck.holes,
       ]);
     }
@@ -591,8 +600,9 @@ function resolveBonusActionAttack(
       fillSet.damageDisposition,
       selectedDamageRiders,
       selectedDamageDiceChoice ?? undefined,
-      fillSet.concentrationSavingThrow,
+      primaryConcentrationSavingThrow,
       fillSet.hideousLaughterDamageRepeatSaves,
+      fillSet.concentrationSavingThrows,
     );
     const spent = spendOffHandBonusAction(damaged);
     if (spent.tag === "invalid") {

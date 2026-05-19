@@ -61,7 +61,7 @@
     {
       "number": 96,
       "id": "L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Warding Bond Linked Effect Runtime"
     }
   ]
@@ -504,9 +504,19 @@ Acceptance:
 
 ### Task 96 - L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME - Warding Bond Linked Effect Runtime
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `warding_bond`. Gate task: 52 in `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md`.
+
+Result: Warding Bond is promoted as a supported level-2 prepared Spell
+Invocation. Runtime consumes willing-target, paired worn platinum-ring, and
+connection-distance facts at cast time, records the caster-target bond as one
+linked active effect, projects the target Armor Class, Saving Throw, and
+all-damage Resistance benefits, shares final target damage to the caster
+through the existing damage lifecycle, and removes the bond on duration expiry,
+caster 0 Hit Points, separation beyond 60 feet, or recast on either connected
+creature. The level 1-2 coverage row is now supported with deterministic
+admission/projection, runtime-test, and package Quint proof evidence.
 
 Inputs:
 
@@ -532,3 +542,11 @@ Acceptance:
 - the level 1-2 metric row for `warding_bond` is supported or precisely narrowed to any remaining accepted closure;
 - no level-1 Loop D/L or companion boundary work is pulled into this lane;
 - focused verification, `pnpm unit-profile-coverage:check --write`, `pnpm unit-profile-coverage:check`, `git diff --check`, and reviewer-loop convergence are complete.
+
+Verification completed:
+`pnpm --filter @dnd/battle-runtime typecheck`;
+`pnpm --filter @dnd/battle-runtime exec vitest run src/unit-profile-admission-warding-bond.test.ts src/battle-runtime-weapon-mastery.test.ts src/chromatic-orb-chained-spell.test.ts src/battle-runtime-uncanny-dodge-and-damage-reductions.test.ts`;
+`pnpm --filter @dnd/battle-runtime exec quint test battle-runtime.qnt --match 'test_warding_bond'`;
+`pnpm unit-profile-coverage:check --write`;
+`pnpm unit-profile-coverage:check`;
+`git diff --check`.

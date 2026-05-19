@@ -197,9 +197,6 @@ export type AttackFillSet =
       readonly targetId: CombatantId | undefined;
       readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
       readonly attackRoll: BattleAttackRollResult | undefined;
-      readonly concentrationSavingThrow:
-        | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
-        | undefined;
       readonly concentrationSavingThrows: readonly Extract<
         BattleFill,
         { readonly kind: "concentrationSavingThrow" }

@@ -76,6 +76,18 @@ export const THAUMATURGY_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_INSTANCE =
   holeInstanceKey(
     "battle:spell:thaumaturgy:booming-voice:influence-ability-check",
   );
+export const WARDING_BOND_SPELL_ID =
+  "warding_bond" satisfies SpellRecord["id"];
+export const WARDING_BOND_ARMOR_CLASS_BONUS = 1;
+export const WARDING_BOND_SAVING_THROW_BONUS = 1;
+export const WARDING_BOND_CAST_RANGE_FEET = movementFeet(5);
+export const WARDING_BOND_CONNECTION_RANGE_FEET = movementFeet(60);
+export const WARDING_BOND_SEPARATION_FACTS_HOLE_ID = holeId(
+  "battle:spell:warding-bond:separation-facts",
+);
+export const WARDING_BOND_SEPARATION_FACTS_HOLE_INSTANCE = holeInstanceKey(
+  "battle:spell:warding-bond:separation-facts",
+);
 export const ELDRITCH_BLAST_BEAM_COUNT_TIERS = [
   { atLevel: 5, value: 2 },
   { atLevel: 11, value: 3 },

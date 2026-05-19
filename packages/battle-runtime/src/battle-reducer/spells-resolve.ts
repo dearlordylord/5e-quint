@@ -61,6 +61,8 @@ import { activeEffectArmorClass } from "./creature-state.ts";
 import {
   breakBattleConcentration,
   concentrationSavingThrowHole,
+  damageLifecycleConcentrationSavingThrowFillCheck,
+  damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
 } from "./damage-apply.ts";
 import {
   activeMarkedDamageRiders,
@@ -68,7 +70,6 @@ import {
   damageAmountByTypeAfterTargetAdjustments,
   spellDamageReductionRollForTarget,
 } from "./damage-helpers.ts";
-import { hideousLaughterDamageRepeatSaveFillCheck } from "./hideous-laughter-repeat-save.ts";
 import { needsHolesResult, revealHidden } from "./hole-helpers.ts";
 import { applyDashToActor } from "./attack-resolution.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -170,6 +171,7 @@ export {
   resolveScalarBuffSpellAct,
   resolveSelfTeleportSpellAct,
   resolveThaumaturgyBoomingVoiceSpellAct,
+  resolveWardingBondSpellAct,
 } from "./spells-resolve-support-effects.ts";
 export {
   conditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection,
@@ -199,6 +201,7 @@ import {
   resolveScalarBuffSpellAct,
   resolveSelfTeleportSpellAct,
   resolveThaumaturgyBoomingVoiceSpellAct,
+  resolveWardingBondSpellAct,
 } from "./spells-resolve-support-effects.ts";
 
 import { resolvePreparedSlotSpellAct } from "./spells-resolve-prepared-slot.ts";
@@ -364,6 +367,7 @@ export function resolveSpellAct(
       invocation.procedure === "damageReduction" ||
       invocation.procedure === "scalarBuff" ||
       invocation.procedure === "rollModifier" ||
+      invocation.procedure === "wardingBond" ||
       invocation.procedure === "thaumaturgyBoomingVoice" ||
       invocation.procedure === "creatureTypeProtection" ||
       invocation.procedure ===
@@ -587,6 +591,14 @@ export function resolveSpellAct(
   }
   if (invocation.procedure === "rollModifier") {
     return resolveRollModifierSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "wardingBond") {
+    return resolveWardingBondSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,
@@ -1128,24 +1140,24 @@ export function resolveSpellAct(
           fillSet.concentrationSavingThrows,
           concentrationSave,
         );
-  if (concentrationSave !== null) {
-    if (concentrationFill === undefined) {
-      return needsHolesResult(spellResolutionState, input.subject, [
-        concentrationSave,
-      ]);
-    }
-    if (fillSet.concentrationSavingThrows.length > 1) {
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        "Spell damage accepts one Concentration Saving Throw fill for the damaged target.",
-      );
-    }
-  } else if (fillSet.concentrationSavingThrows.length > 0) {
+  const concentrationSaveCheck = damageLifecycleConcentrationSavingThrowFillCheck(
+    {
+      state: spellResolutionState,
+      target: spellReduction.target,
+      damageAmount: spellDamageAmount,
+      fills: fillSet.concentrationSavingThrows,
+    },
+  );
+  if (concentrationSaveCheck.tag === "needsHoles") {
+    return needsHolesResult(spellResolutionState, input.subject, [
+      ...concentrationSaveCheck.holes,
+    ]);
+  }
+  if (concentrationSaveCheck.tag === "invalid") {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Concentration Saving Throw fill is only valid for a concentrating damaged target.",
+      concentrationSaveCheck.message,
     );
   }
   const damageDispositionHole = zeroHitPointReplacementDispositionHole({
@@ -1175,11 +1187,13 @@ export function resolveSpellAct(
       damageDispositionHole,
     ]);
   }
-  const hideousLaughterSaveCheck = hideousLaughterDamageRepeatSaveFillCheck({
-    target: spellReduction.target,
-    damageAmount: spellDamageAmount,
-    fills: fillSet.hideousLaughterDamageRepeatSaves,
-  });
+  const hideousLaughterSaveCheck =
+    damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
+      state: spellResolutionState,
+      target: spellReduction.target,
+      damageAmount: spellDamageAmount,
+      fills: fillSet.hideousLaughterDamageRepeatSaves,
+    });
   if (hideousLaughterSaveCheck.tag === "needsHoles") {
     return needsHolesResult(spellResolutionState, input.subject, [
       ...hideousLaughterSaveCheck.holes,
@@ -1200,6 +1214,8 @@ export function resolveSpellAct(
     critical,
     {
       concentrationSavingThrow: concentrationFill,
+      wardingBondDamageShareConcentrationSavingThrows:
+        fillSet.concentrationSavingThrows,
       damageDisposition: damageDispositionForTarget(
         damageDispositionHole === null ? [] : [damageDispositionHole],
         fillSet.damageDispositions,

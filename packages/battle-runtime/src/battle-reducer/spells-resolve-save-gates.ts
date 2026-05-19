@@ -37,11 +37,12 @@ import {
 } from "./attack-damage-apply.ts";
 import { extendSavingThrowOngoingFeatures } from "./attack-roll.ts";
 import { combatantCanTakeReactions } from "./creature-state.ts";
-import { concentrationSavingThrowHole } from "./damage-apply.ts";
 import {
-  hideousLaughterDamageRepeatSaveFillCheck,
-  hideousLaughterDamageRepeatSaveFillsForTarget,
-} from "./hideous-laughter-repeat-save.ts";
+  damageLifecycleConcentrationSavingThrowHoles,
+  damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
+  damageLifecycleHideousLaughterDamageRepeatSaveHoles,
+  fillsMatchingHoleIds,
+} from "./damage-apply.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { applyBattleMovement } from "./readied-release.ts";
@@ -766,8 +767,11 @@ export function resolveSaveGateDamageSpellAct(input: {
       damageRoll,
       saveDamageResultForTarget(targetId),
     );
-    const hole = concentrationSavingThrowHole(target, damageAmount);
-    return hole === null ? [] : [hole];
+    return damageLifecycleConcentrationSavingThrowHoles({
+      state: input.input.state,
+      target,
+      damageAmount,
+    });
   });
   const missingConcentrationSaves = concentrationSaves.filter(
     (concentrationSave) =>
@@ -850,17 +854,24 @@ export function resolveSaveGateDamageSpellAct(input: {
     if (target === undefined) {
       return { tag: "ok" as const, holes: [] };
     }
-    return hideousLaughterDamageRepeatSaveFillCheck({
+    const damageAmount = spellDamageAmountForTarget(
       target,
-      damageAmount: spellDamageAmountForTarget(
-        target,
-        input.invocation,
-        damageRoll,
-        saveDamageResultForTarget(targetId),
-      ),
-      fills: hideousLaughterDamageRepeatSaveFillsForTarget(
-        target,
+      input.invocation,
+      damageRoll,
+      saveDamageResultForTarget(targetId),
+    );
+    const holes = damageLifecycleHideousLaughterDamageRepeatSaveHoles({
+      state: input.input.state,
+      target,
+      damageAmount,
+    });
+    return damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
+      state: input.input.state,
+      target,
+      damageAmount,
+      fills: fillsMatchingHoleIds(
         input.fillSet.hideousLaughterDamageRepeatSaves,
+        holes,
       ),
     });
   });
@@ -882,12 +893,59 @@ export function resolveSaveGateDamageSpellAct(input: {
       ...missingHideousLaughterSaveHoles,
     ]);
   }
+  const hideousLaughterSaveHoleIds = new Set<BattleHoleId>(
+    hideousLaughterSaveChecks.flatMap((check) =>
+      check.tag === "invalid" ? [] : check.holes.map((hole) => hole.holeId),
+    ),
+  );
+  if (
+    input.fillSet.hideousLaughterDamageRepeatSaves.some(
+      (fill) => !hideousLaughterSaveHoleIds.has(fill.holeId),
+    )
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Hideous Laughter damage repeat save fill must match a requested damaged target.",
+    );
+  }
   const damaged = damageTargets.reduce(
-    (state, targetId) =>
-      applySpellDamage(state, targetId, input.invocation, damageRoll, false, {
+    (state, targetId) => {
+      const target = state.combatants.get(targetId);
+      if (target === undefined) {
+        return state;
+      }
+      const damageAmount = spellDamageAmountForTarget(
+        target,
+        input.invocation,
+        damageRoll,
+        saveDamageResultForTarget(targetId),
+      );
+      const concentrationLifecycleHoles =
+        damageLifecycleConcentrationSavingThrowHoles({
+          state,
+          target,
+          damageAmount,
+        });
+      const concentrationLifecycleFills = fillsMatchingHoleIds(
+        input.fillSet.concentrationSavingThrows,
+        concentrationLifecycleHoles,
+      );
+      const hideousLaughterLifecycleHoles =
+        damageLifecycleHideousLaughterDamageRepeatSaveHoles({
+          state,
+          target,
+          damageAmount,
+        });
+      const hideousLaughterLifecycleFills = fillsMatchingHoleIds(
+        input.fillSet.hideousLaughterDamageRepeatSaves,
+        hideousLaughterLifecycleHoles,
+      );
+      return applySpellDamage(state, targetId, input.invocation, damageRoll, false, {
         concentrationSavingThrow: concentrationSaveByTargetId.get(targetId),
-        hideousLaughterDamageRepeatSaves:
-          input.fillSet.hideousLaughterDamageRepeatSaves,
+        wardingBondDamageShareConcentrationSavingThrows:
+          concentrationLifecycleFills,
+        hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
         saveDamageResult: saveDamageResultForTarget(targetId),
         damageDisposition: damageDispositionForTarget(
           damageDispositionHoles,
@@ -895,7 +953,8 @@ export function resolveSaveGateDamageSpellAct(input: {
           targetId,
         ),
         damageSourceId: input.actorId,
-      }),
+      });
+    },
     input.input.state,
   );
   const effected = applyFailedSaveSpellActiveEffects(

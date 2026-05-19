@@ -2444,47 +2444,6 @@
       "unitId": "thaumaturgy"
     },
     {
-      "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
-      "closureKinds": [
-        "follow-up-split"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME: Promote Warding Bond as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, consumes caller-supplied willing-target, worn-ring/material, and 60-foot connection facts, records one paired-creature bond occurrence, projects +1 Armor Class, +1 Saving Throws, and all-damage Resistance only while the target is within 60 feet, applies the same amount to the caster after the target takes damage with the caster damage lifecycle handled by the runtime boundary, and cleans up on duration end, caster 0 Hit Points, separation beyond 60 feet, or recast on either connected creature. Owner: battle-runtime spell invocation/effect lifecycle plus material and table/spatial witness boundary. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for casting, Spell Slot spend, target projections, Resistance interaction, same-amount damage sharing, caster-0-HP cleanup, separation cleanup, recast cleanup, and duration cleanup without duplicating inventory or generic position state.",
-      "sourceRecordPath": "packages/surface/content/warding_bond.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Cleric spell list Warding Bond",
-          "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_warding_bond",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 197,
-            "lineStart": 197,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Paladin spell list Warding Bond",
-          "id": "srd521:classes/paladin:spell-level-2:spell-unit-pressure:paladin_spell_list_warding_bond",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 203,
-            "lineStart": 203,
-            "path": ".references/srd-5.2.1/Classes/Paladin.md"
-          }
-        }
-      ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
-      "unitId": "warding_bond"
-    },
-    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -2531,7 +2490,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 98,
+      "count": 99,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2628,6 +2587,7 @@
         "thunderwave",
         "true_strike",
         "vicious_mockery",
+        "warding_bond",
         "warlock_eldritch_invocations",
         "warlock_magical_cunning",
         "wizard_arcane_recovery",
@@ -2636,7 +2596,7 @@
       ]
     },
     {
-      "count": 16,
+      "count": 15,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
@@ -2654,8 +2614,7 @@
         "sorcerer_font_of_magic",
         "sorcerer_metamagic",
         "spike_growth",
-        "spiritual_weapon",
-        "warding_bond"
+        "spiritual_weapon"
       ]
     },
     {
@@ -2727,35 +2686,35 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 467,
-      "percent": "84%",
+      "numerator": 469,
+      "percent": "84.4%",
       "rowsByStatus": {
-        "accepted": 319,
+        "accepted": 321,
         "accepted-no-battle-effect": 148,
-        "battle-runtime-required": 79,
+        "battle-runtime-required": 77,
         "owner-evidence-required": 4,
         "partial-battle-runtime": 6
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 69,
+      "denominator": 70,
       "numerator": 11,
-      "percent": "15.9%"
+      "percent": "15.7%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 69,
+      "denominator": 70,
       "numerator": 16,
-      "percent": "23.2%"
+      "percent": "22.9%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 98,
+      "denominator": 99,
       "numerator": 30,
-      "percent": "30.6%"
+      "percent": "30.3%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 151,
-      "numerator": 98,
-      "percent": "64.9%"
+      "numerator": 99,
+      "percent": "65.6%"
     },
     "strictTargetClosure": {
       "denominator": 151,
@@ -6004,9 +5963,9 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 98,
+        "denominator": 99,
         "numerator": 30,
-        "percent": "30.6%"
+        "percent": "30.3%"
       }
     },
     "units": [
@@ -7737,6 +7696,18 @@
         "unitId": "vicious_mockery"
       },
       {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-warding-bond-linked-effect",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "warding_bond"
+      },
+      {
         "joinStatus": "mapped-open",
         "profiles": [
           {
@@ -7854,18 +7825,18 @@
     "groupsByClaimTag": {
       "missing": 15,
       "profile-subset-supported": 10,
-      "supported-profile": 98,
-      "unsupported-profile": 28
+      "supported-profile": 99,
+      "unsupported-profile": 27
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 16,
+      "blocked-follow-up-split": 15,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 14,
       "open-runtime-behavior": 15,
-      "supported-profile": 98
+      "supported-profile": 99
     },
-    "nonSupportedFrontier": 53,
+    "nonSupportedFrontier": 52,
     "strictDenominator": 151
   }
 }

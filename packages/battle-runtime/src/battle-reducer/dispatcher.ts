@@ -1,4 +1,5 @@
 // Battle dispatcher/orchestration extracted from ../battle-reducer.ts.
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // Owns subject resolution, reaction windows, interrupted-procedure replay,
 // turn snapshots, and reaction-choice orchestration.
 
@@ -62,6 +63,10 @@ import {
   applyAttackDamageAmount,
   breakBattleConcentration,
   concentrationSavingThrowHole,
+  damageLifecycleConcentrationSavingThrowFillCheck,
+  damageLifecycleConcentrationSavingThrowHoles,
+  damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
+  fillsMatchingHoleIds,
 } from "./damage-apply.ts";
 
 import {
@@ -81,7 +86,6 @@ import {
   damageAmountByTypeEntriesAfterScalarReduction,
 } from "./attack-damage-events.ts";
 import { battleCreatureType } from "./domain-helpers.ts";
-import { hideousLaughterDamageRepeatSaveFillCheck } from "./hideous-laughter-repeat-save.ts";
 import {
   applyProtectionRelevantEffectSaveOutcome,
   protectionRelevantEffectFor,
@@ -103,6 +107,11 @@ import {
 } from "./reaction-triggered-spells.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { spellCastReactionFrame } from "./spell-cast-reaction-frame.ts";
+import {
+  battleStateAfterWardingBondSeparation,
+  wardingBondSeparationFactsAreSatisfied,
+  wardingBondSeparationFactsHole,
+} from "./warding-bond.ts";
 export {
   attackDamageEventAfterPendingReduction,
   attackDamageEventAfterPendingReductions,
@@ -183,7 +192,6 @@ import type {
   BattleAttackDamageContinuationConcentrationFrame,
   BattleAttackDamageContinuationWithoutConcentration,
   BattleAttackDamageEvent,
-  BattleAttackDamagePrefixFill,
   BattleAttackHitTriggerKind,
   BattleConcentrationSavingThrowHole,
   BattleCreatureState,
@@ -807,6 +815,12 @@ export function resolveBattleSubjectInternal(
     }
     if (
       subject.tag === "runtimeCommand" &&
+      subject.command === "wardingBondSeparation"
+    ) {
+      return resolveWardingBondSeparationCommand({ ...input, subject });
+    }
+    if (
+      subject.tag === "runtimeCommand" &&
       subject.command === "standFromProne"
     ) {
       return resolveStandFromProneCommand(input);
@@ -915,6 +929,76 @@ function resolveDisperseFogCloudCommand(
     input.state,
     input.subject.sourceCombatantId,
   );
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function resolveWardingBondSeparationCommand(
+  input: BattleResolutionInput & {
+    readonly subject: Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "wardingBondSeparation";
+      }
+    >;
+  },
+): BattleResolutionResult {
+  if (input.fills.length > 1) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Warding Bond separation uses one table spatial fact fill.",
+    );
+  }
+  const target = input.state.combatants.get(input.subject.targetId);
+  const effect = target?.activeEffects.find(
+    (candidate) =>
+      candidate.kind === "wardingBond" &&
+      candidate.sourceCombatantId === input.subject.sourceCombatantId &&
+      candidate.sourceSpellId === input.subject.sourceSpellId,
+  );
+  if (effect === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Warding Bond is no longer active for this connected target.",
+    );
+  }
+  const hole = wardingBondSeparationFactsHole({
+    sourceCombatantId: input.subject.sourceCombatantId,
+    sourceSpellId: input.subject.sourceSpellId,
+    targetId: input.subject.targetId,
+  });
+  const fill = input.fills[0];
+  if (fill === undefined) {
+    return needsHolesResult(input.state, input.subject, [hole]);
+  }
+  if (
+    fill.kind !== "targetSpatialFacts" ||
+    fill.holeId !== hole.holeId ||
+    !wardingBondSeparationFactsAreSatisfied({
+      sourceCombatantId: input.subject.sourceCombatantId,
+      sourceSpellId: input.subject.sourceSpellId,
+      targetId: input.subject.targetId,
+      facts: fill.spatialFacts,
+    })
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Warding Bond separation requires a table fact that the connected creatures are beyond 60 feet.",
+    );
+  }
+  const nextState = battleStateAfterWardingBondSeparation({
+    state: input.state,
+    sourceCombatantId: input.subject.sourceCombatantId,
+    sourceSpellId: input.subject.sourceSpellId,
+    targetId: input.subject.targetId,
+  });
   return {
     tag: "resolved",
     state: nextState,
@@ -2216,23 +2300,40 @@ function resolveHellishRebukeReactionSpellCommand(
     saveDamageResult,
   );
   const concentrationSave = concentrationSavingThrowHole(target, damageAmount);
+  const concentrationLifecycleHoles =
+    damageLifecycleConcentrationSavingThrowHoles({
+      state: input.state,
+      target,
+      damageAmount,
+    });
+  const concentrationLifecycleFills = fillsMatchingHoleIds(
+    fillSet.concentrationSavingThrows,
+    concentrationLifecycleHoles,
+  );
   const concentrationFill =
     concentrationSave === null
       ? undefined
-      : fillSet.concentrationSavingThrows.find(
+      : concentrationLifecycleFills.find(
           (fill) => fill.holeId === concentrationSave.holeId,
         );
-  if (concentrationSave !== null && concentrationFill === undefined) {
-    return needsHolesResult(input.state, input.subject, [concentrationSave]);
+  const concentrationSaveCheck = damageLifecycleConcentrationSavingThrowFillCheck(
+    {
+      state: input.state,
+      target,
+      damageAmount,
+      fills: fillSet.concentrationSavingThrows,
+    },
+  );
+  if (concentrationSaveCheck.tag === "needsHoles") {
+    return needsHolesResult(input.state, input.subject, [
+      ...concentrationSaveCheck.holes,
+    ]);
   }
-  if (
-    concentrationSave === null &&
-    fillSet.concentrationSavingThrows.length > 0
-  ) {
+  if (concentrationSaveCheck.tag === "invalid") {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Concentration Saving Throw fill is only valid for the damaged Hellish Rebuke target.",
+      concentrationSaveCheck.message,
     );
   }
   const damageDispositionHole = zeroHitPointReplacementDispositionHole({
@@ -2264,11 +2365,13 @@ function resolveHellishRebukeReactionSpellCommand(
       damageDispositionHole,
     ]);
   }
-  const hideousLaughterSaveCheck = hideousLaughterDamageRepeatSaveFillCheck({
-    target,
-    damageAmount,
-    fills: fillSet.hideousLaughterDamageRepeatSaves,
-  });
+  const hideousLaughterSaveCheck =
+    damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
+      state: input.state,
+      target,
+      damageAmount,
+      fills: fillSet.hideousLaughterDamageRepeatSaves,
+    });
   if (hideousLaughterSaveCheck.tag === "needsHoles") {
     return needsHolesResult(input.state, input.subject, [
       ...hideousLaughterSaveCheck.holes,
@@ -2281,6 +2384,10 @@ function resolveHellishRebukeReactionSpellCommand(
       hideousLaughterSaveCheck.message,
     );
   }
+  const hideousLaughterLifecycleFills = fillsMatchingHoleIds(
+    fillSet.hideousLaughterDamageRepeatSaves,
+    hideousLaughterSaveCheck.holes,
+  );
   const castingState = spellRequiresVerbal(input.invocation.spell)
     ? revealHidden(input.state, input.subject.reactorId)
     : input.state;
@@ -2292,6 +2399,8 @@ function resolveHellishRebukeReactionSpellCommand(
     false,
     {
       concentrationSavingThrow: concentrationFill,
+      wardingBondDamageShareConcentrationSavingThrows:
+        concentrationLifecycleFills,
       saveDamageResult,
       damageDisposition: damageDispositionForTarget(
         damageDispositionHoles,
@@ -2299,7 +2408,7 @@ function resolveHellishRebukeReactionSpellCommand(
         input.frame.damageSourceId,
       ),
       hideousLaughterDamageRepeatSaves:
-        fillSet.hideousLaughterDamageRepeatSaves,
+        hideousLaughterLifecycleFills,
       damageSourceId: input.subject.reactorId,
     },
   );
@@ -3271,20 +3380,13 @@ export function resumeInterruptedProcedure(
       state,
       continuation,
     );
-    if (
-      concentrationPending !== null &&
-      continuation.concentrationSavingThrow === undefined
-    ) {
-      const {
-        concentrationSavingThrow: _pendingConcentrationSavingThrow,
-        ...continuationWithoutConcentration
-      } = continuation;
+    if (concentrationPending !== null) {
       const pendingState = {
         ...state,
         interruptStack: [
           ...state.interruptStack,
           attackDamageContinuationConcentrationFrame(
-            continuationWithoutConcentration,
+            continuation,
             suppressedReactionTrigger,
           ),
         ],
@@ -3293,6 +3395,8 @@ export function resumeInterruptedProcedure(
         concentrationPending,
       ]);
     }
+    const continuationConcentrationSavingThrows =
+      attackDamageContinuationConcentrationFills(continuation);
     const damagedState = applyAttackDamageAmount(
       state,
       continuation.attackerId,
@@ -3302,7 +3406,9 @@ export function resumeInterruptedProcedure(
       continuation.damageDisposition,
       continuation.attackDamageRiders,
       continuation.weaponDamageDiceRollChoice,
-      continuation.concentrationSavingThrow,
+      attackDamageContinuationTargetConcentrationFill(state, continuation),
+      [],
+      continuationConcentrationSavingThrows,
     );
     return openAfterDamageSequenceReactionWindow({
       state: damagedState,
@@ -3569,14 +3675,57 @@ export function attackDamageContinuationConcentrationHole(
   >,
 ): BattleConcentrationSavingThrowHole | null {
   const target = state.combatants.get(continuation.targetId);
-  return target === undefined
-    ? null
-    : concentrationSavingThrowHole(
-        target,
-        Number(
-          attackDamageEventAmountForTarget(target, continuation.damageEvent),
-        ),
+  if (target === undefined) {
+    return null;
+  }
+  const damageAmount = Number(
+    attackDamageEventAmountForTarget(target, continuation.damageEvent),
+  );
+  const fills = attackDamageContinuationConcentrationFills(continuation);
+  return (
+    damageLifecycleConcentrationSavingThrowHoles({
+      state,
+      target,
+      damageAmount,
+    }).find((hole) => !fills.some((fill) => fill.holeId === hole.holeId)) ??
+    null
+  );
+}
+
+function attackDamageContinuationTargetConcentrationFill(
+  state: BattleState,
+  continuation: Extract<
+    BattleInterruptedProcedure,
+    { readonly kind: "attackDamage" }
+  >,
+):
+  | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
+  | undefined {
+  const target = state.combatants.get(continuation.targetId);
+  if (target === undefined) {
+    return undefined;
+  }
+  const hole = concentrationSavingThrowHole(
+    target,
+    Number(attackDamageEventAmountForTarget(target, continuation.damageEvent)),
+  );
+  return hole === null
+    ? undefined
+    : attackDamageContinuationConcentrationFills(continuation).find(
+        (fill) => fill.holeId === hole.holeId,
       );
+}
+
+function attackDamageContinuationConcentrationFills(
+  continuation: Extract<
+    BattleInterruptedProcedure,
+    { readonly kind: "attackDamage" }
+  >,
+): readonly Extract<
+  BattleFill,
+  { readonly kind: "concentrationSavingThrow" }
+>[] {
+  return continuation.concentrationSavingThrows;
 }
 
 export function resolveAttackDamageContinuationConcentration(input: {
@@ -3621,7 +3770,12 @@ export function resolveAttackDamageContinuationConcentration(input: {
     stateWithoutFrame,
     {
       ...input.frame.continuation,
-      concentrationSavingThrow: concentrationFill.value,
+      concentrationSavingThrows: [
+        ...attackDamageContinuationConcentrationFills(
+          input.frame.continuation,
+        ),
+        concentrationFill.value,
+      ],
     },
     input.frame.suppressedReactionTrigger,
   );
@@ -3638,7 +3792,10 @@ export function attackDamageContinuationConcentrationFill(
         | undefined;
     }
   | { readonly tag: "invalid"; readonly message: string } {
-  const prefix = continuation.fills;
+  const prefix = [
+    ...continuation.fills,
+    ...attackDamageContinuationConcentrationFills(continuation),
+  ];
   const accumulated =
     fills.length >= prefix.length &&
     prefix.every((fill, index) => battleFillEquals(fill, fills[index]!));
@@ -3660,7 +3817,7 @@ export function attackDamageContinuationConcentrationFill(
 }
 
 export function battleFillEquals(
-  a: BattleAttackDamagePrefixFill,
+  a: BattleFill,
   b: BattleFill,
 ): boolean {
   if (a.kind !== b.kind || a.holeId !== b.holeId) {
@@ -3692,6 +3849,12 @@ export function battleFillEquals(
     b.kind === "attackDamageDisposition"
   ) {
     return a.value.kind === b.value.kind;
+  }
+  if (
+    a.kind === "concentrationSavingThrow" &&
+    b.kind === "concentrationSavingThrow"
+  ) {
+    return a.value.succeeded === b.value.succeeded;
   }
   return false;
 }

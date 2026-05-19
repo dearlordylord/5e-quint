@@ -179,12 +179,12 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 467,
-      "percent": "84%",
+      "numerator": 469,
+      "percent": "84.4%",
       "rowsByStatus": {
-        "accepted": 319,
+        "accepted": 321,
         "accepted-no-battle-effect": 148,
-        "battle-runtime-required": 79,
+        "battle-runtime-required": 77,
         "partial-battle-runtime": 6,
         "owner-evidence-required": 4
       }
@@ -201,18 +201,18 @@
       "catalog-installed-owner-evidence-required": 5
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 330,
+      "catalog-installed-owner-evidence-present": 332,
       "non-runtime": 24,
       "catalog-only/dead-for-now": 119,
       "missing-authored-record": 58,
-      "catalog-installed-owner-evidence-required": 16,
+      "catalog-installed-owner-evidence-required": 14,
       "catalog-authored-executable-follow-up": 9
     },
     "spellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 171,
+      "catalog-installed-owner-evidence-present": 173,
       "catalog-only/dead-for-now": 119,
       "missing-authored-record": 57,
-      "catalog-installed-owner-evidence-required": 11,
+      "catalog-installed-owner-evidence-required": 9,
       "catalog-authored-executable-follow-up": 9
     },
     "levelOneRowsByCategory": {
@@ -8939,8 +8939,14 @@
         "state": "installed",
         "unitId": "warding_bond"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/material/spatial witness provider",
+        "reason": "Inventory ownership, worn-ring tracking, ordinary map distance derivation, and automatic separation detection remain caller-supplied table facts; the battle runtime consumes typed witnesses and owns the linked effect lifecycle."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -8948,13 +8954,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/effect lifecycle plus material and table/spatial witness boundary",
-          "evidence": "Promote follow-up split L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME: L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME owns Promote Warding Bond as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, consumes caller-supplied willing-target, worn-ring/material, and 60-foot connection facts, records one paired-creature bond occurrence, projects +1 Armor Class, +1 Saving Throws, and all-damage Resistance only while the target is within 60 feet, applies the same amount to the caster after the target takes damage with the caster damage lifecycle handled by the runtime boundary, and cleans up on duration end, caster 0 Hit Points, separation beyond 60 feet, or recast on either connected creature. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for casting, Spell Slot spend, target projections, Resistance interaction, same-amount damage sharing, caster-0-HP cleanup, separation cleanup, recast cleanup, and duration cleanup without duplicating inventory or generic position state.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME at packages/battle-runtime/src/unit-profile-admission-warding-bond.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME: L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME owns Promote Warding Bond as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, consumes caller-supplied willing-target, worn-ring/material, and 60-foot connection facts, records one paired-creature bond occurrence, projects +1 Armor Class, +1 Saving Throws, and all-damage Resistance only while the target is within 60 feet, applies the same amount to the caster after the target takes damage with the caster damage lifecycle handled by the runtime boundary, and cleans up on duration end, caster 0 Hit Points, separation beyond 60 feet, or recast on either connected creature. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for casting, Spell Slot spend, target projections, Resistance interaction, same-amount damage sharing, caster-0-HP cleanup, separation cleanup, recast cleanup, and duration cleanup without duplicating inventory or generic position state.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_zone_of_truth",
@@ -14788,8 +14794,14 @@
         "state": "installed",
         "unitId": "warding_bond"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "table/material/spatial witness provider",
+        "reason": "Inventory ownership, worn-ring tracking, ordinary map distance derivation, and automatic separation detection remain caller-supplied table facts; the battle runtime consumes typed witnesses and owns the linked effect lifecycle."
+      },
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -14797,13 +14809,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "battle-runtime spell invocation/effect lifecycle plus material and table/spatial witness boundary",
-          "evidence": "Promote follow-up split L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME: L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME owns Promote Warding Bond as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, consumes caller-supplied willing-target, worn-ring/material, and 60-foot connection facts, records one paired-creature bond occurrence, projects +1 Armor Class, +1 Saving Throws, and all-damage Resistance only while the target is within 60 feet, applies the same amount to the caster after the target takes damage with the caster damage lifecycle handled by the runtime boundary, and cleans up on duration end, caster 0 Hit Points, separation beyond 60 feet, or recast on either connected creature. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for casting, Spell Slot spend, target projections, Resistance interaction, same-amount damage sharing, caster-0-HP cleanup, separation cleanup, recast cleanup, and duration cleanup without duplicating inventory or generic position state.",
-          "status": "owner evidence required"
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME at packages/battle-runtime/src/unit-profile-admission-warding-bond.test.ts",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME: L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME owns Promote Warding Bond as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, consumes caller-supplied willing-target, worn-ring/material, and 60-foot connection facts, records one paired-creature bond occurrence, projects +1 Armor Class, +1 Saving Throws, and all-damage Resistance only while the target is within 60 feet, applies the same amount to the caster after the target takes damage with the caster damage lifecycle handled by the runtime boundary, and cleans up on duration end, caster 0 Hit Points, separation beyond 60 feet, or recast on either connected creature. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for casting, Spell Slot spend, target projections, Resistance interaction, same-amount damage sharing, caster-0-HP cleanup, separation cleanup, recast cleanup, and duration cleanup without duplicating inventory or generic position state.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/paladin:spell-level-2:spell-unit-pressure:paladin_spell_list_zone_of_truth",

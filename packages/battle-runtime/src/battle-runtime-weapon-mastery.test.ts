@@ -47,6 +47,7 @@ import {
   cantripSpellInvocationRef,
   concentrationSavingThrowDc,
   difficultyClass,
+  elapsedTimeTicks,
   endTurn,
   hasCondition,
   holeId,
@@ -57,8 +58,48 @@ import {
 import type {
   BattleState,
   BattleSubject,
+  CombatantId,
 } from "./battle-runtime-test-support.ts";
+import { wardingBondUnitId } from "./unit-profile-admission-catalog-support.ts";
 import { describe, expect, test } from "vitest";
+
+function withWardingBondTargetAndConcentratingCaster(
+  state: BattleState,
+  targetId: CombatantId,
+  casterId: CombatantId,
+): BattleState {
+  const target = state.combatants.get(targetId);
+  const caster = state.combatants.get(casterId);
+  if (target === undefined || caster === undefined) {
+    throw new Error("Expected Warding Bond fixture combatants.");
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants)
+      .set(targetId, {
+        ...target,
+        activeEffects: [
+          ...target.activeEffects,
+          {
+            kind: "wardingBond" as const,
+            sourceSpellId: wardingBondUnitId,
+            sourceCombatantId: casterId,
+            expiresAt: {
+              kind: "duration" as const,
+              durationTicks: elapsedTimeTicks(600),
+            },
+          },
+        ],
+      })
+      .set(casterId, {
+        ...caster,
+        concentration: {
+          sourceSpellId: wardingBondUnitId,
+          effectKind: "spellEffect" as const,
+        },
+      }),
+  };
+}
 
 describe("battle runtime: Weapon Mastery", () => {
   test("attack resolution rejects an Unconscious current character at 0 HP", () => {
@@ -975,6 +1016,162 @@ describe("battle runtime: Weapon Mastery", () => {
     }
     const resolved = requireResolved(resolvedResult);
     expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(Hp(6));
+  });
+
+  test("Weapon Mastery Cleave keeps Warding Bond primary shared-damage Concentration separate from the extra attack", () => {
+    const state = withWardingBondTargetAndConcentratingCaster(
+      startBattleRight({
+        battleId: battleId("battle-weapon-mastery-cleave-warding-bond"),
+        combatants: [
+          characterSeed({
+            initiative: 20,
+            characterUnitRefs: masteryCleaveUnitRefs(),
+            weaponMasteries: greataxeWeaponMasterySelections(),
+            attack: testGreataxeAttack(),
+          }),
+          statBlockCreatureInit({ combatantId: goblinId, initiative: 10 }),
+          statBlockCreatureInit({
+            combatantId: skeletonId,
+            displayName: "Warding Bond Caster",
+            initiative: 9,
+          }),
+        ],
+      }),
+      goblinId,
+      skeletonId,
+    );
+    const subject = fighterAttackSubject("Greataxe");
+    const primaryTarget = attackInitialTargetHole(state, subject);
+    const primaryRoll = attackRollHoleAfterTarget(
+      state,
+      primaryTarget,
+      subject,
+      goblinId,
+    );
+    const primaryDamage = attackDamageHoleAfterHit(
+      state,
+      primaryTarget,
+      primaryRoll,
+      { total: 20, naturalD20: 15 },
+      subject,
+      goblinId,
+    );
+    const primaryFills = [
+      attackTargetFill(primaryTarget, fighterId, goblinId, "Greataxe"),
+      attackRollFill(primaryRoll, { total: 20, naturalD20: 15 }),
+      damageRollFill(primaryDamage, 8),
+    ];
+    const primarySharedSave = requireHole(
+      resolveBattleSubject({ state, subject, fills: primaryFills }),
+      "concentrationSavingThrow",
+    );
+    expect(primarySharedSave).toMatchObject({
+      combatantId: skeletonId,
+      damageAmount: 5,
+      dc: concentrationSavingThrowDc(5),
+    });
+    const primaryFillsWithSharedSave = [
+      ...primaryFills,
+      concentrationSavingThrowFill(primarySharedSave, true),
+    ];
+    const decision = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: primaryFillsWithSharedSave,
+      }),
+      "unitFeatureDecision",
+    );
+    const target = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          ...primaryFillsWithSharedSave,
+          unitFeatureDecisionFill(decision, "use"),
+        ],
+      }),
+      "targetChoice",
+    );
+    const targetFillValue = targetFill(target, skeletonId, [
+      attackTargetSpatialFact(fighterId, skeletonId, "Greataxe"),
+      {
+        kind: "cleaveSecondTargetWithin5FeetOfFirstTarget" as const,
+        attackerId: fighterId,
+        firstTargetId: goblinId,
+        secondTargetId: skeletonId,
+      },
+    ]);
+    const cleaveRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          ...primaryFillsWithSharedSave,
+          unitFeatureDecisionFill(decision, "use"),
+          targetFillValue,
+        ],
+      }),
+      "attackRoll",
+    );
+    const cleaveDamage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          ...primaryFillsWithSharedSave,
+          unitFeatureDecisionFill(decision, "use"),
+          targetFillValue,
+          attackRollFill(cleaveRoll, { total: 15, naturalD20: 10 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    const cleaveNeedsConcentration = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        ...primaryFillsWithSharedSave,
+        unitFeatureDecisionFill(decision, "use"),
+        targetFillValue,
+        attackRollFill(cleaveRoll, { total: 15, naturalD20: 10 }),
+        damageRollFill(cleaveDamage, 4),
+      ],
+    });
+    if (cleaveNeedsConcentration.tag === "invalid") {
+      throw new Error(cleaveNeedsConcentration.message);
+    }
+    expect(cleaveNeedsConcentration).toMatchObject({ tag: "needsHoles" });
+    const cleaveConcentration = requireHole(
+      cleaveNeedsConcentration,
+      "concentrationSavingThrow",
+    );
+    expect(cleaveConcentration).toMatchObject({
+      combatantId: skeletonId,
+      damageAmount: 4,
+      dc: concentrationSavingThrowDc(4),
+    });
+
+    const resolvedResult = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        ...primaryFillsWithSharedSave,
+        unitFeatureDecisionFill(decision, "use"),
+        targetFillValue,
+        attackRollFill(cleaveRoll, { total: 15, naturalD20: 10 }),
+        damageRollFill(cleaveDamage, 4),
+        concentrationSavingThrowFill(cleaveConcentration, true),
+      ],
+    });
+    if (resolvedResult.tag === "invalid") {
+      throw new Error(resolvedResult.message);
+    }
+    const resolved = requireResolved(resolvedResult);
+    expect(resolved.state.combatants.get(skeletonId)?.concentration).toEqual({
+      sourceSpellId: wardingBondUnitId,
+      effectKind: "spellEffect",
+    });
   });
 
   test("Weapon Mastery Cleave rejects unused Concentration fills during extra-attack damage replay", () => {

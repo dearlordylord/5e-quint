@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-chained-attack-damage
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-chained-attack-damage spell.invocation-warding-bond-linked-effect
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
@@ -11,6 +11,7 @@ import {
   initiativeScore,
   resolveBattleSubject,
   startBattle,
+  type BattleActiveEffect,
   type AvailableBattleAct,
   type BattleCreatureInit,
   type BattleFill,
@@ -21,6 +22,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
+import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   DieRollResult,
   Hp,
@@ -340,6 +342,70 @@ describe("Chromatic Orb chained spell attack", () => {
     ).toBeNull();
   });
 
+  test("Warding Bond shared damage from chained spells uses the caster damage lifecycle", () => {
+    const state = withWardingBondSharedCasterLifecycle(
+      chromaticOrbBattle({ spellLevel: 1 }),
+    );
+    const damage = chromaticOrbDamageFills(state, {
+      damageType: "acid",
+      targetId: firstTargetId,
+      attackTotal: 18,
+      naturalD20: 12,
+      damageFaces: [1, 2, 3],
+    });
+    const awaitingConcentration = resolveNeedsHoles(
+      state,
+      damage.subject,
+      damage.fills,
+    );
+    const concentrationHole = requireHole(
+      awaitingConcentration.holes,
+      "concentrationSavingThrow",
+    );
+
+    expect(concentrationHole).toMatchObject({
+      combatantId: spellCasterId,
+      damageAmount: 3,
+    });
+
+    const concentrationFill = concentrationSavingThrowFill(
+      concentrationHole,
+      true,
+    );
+    const awaitingHideousLaughter = resolveNeedsHoles(
+      state,
+      damage.subject,
+      [...damage.fills, concentrationFill],
+    );
+    const hideousLaughterHole = requireHideousLaughterRepeatSaveHole(
+      requireHole(awaitingHideousLaughter.holes, "savingThrowOutcome"),
+    );
+
+    expect(hideousLaughterHole.hideousLaughterRepeatSave).toMatchObject({
+      targetId: spellCasterId,
+      trigger: "damage",
+    });
+
+    const resolved = resolveResolved(state, damage.subject, [
+      ...damage.fills,
+      concentrationFill,
+      savingThrowOutcomeFill(hideousLaughterHole, [
+        { targetId: spellCasterId, succeeded: true },
+      ]),
+    ]);
+    const caster = resolved.state.combatants.get(spellCasterId);
+
+    expect(resolved.state.combatants.get(firstTargetId)?.hp).toBe(9);
+    expect(caster?.hp).toBe(9);
+    expect(caster?.concentration).toEqual({
+      sourceSpellId: "test_concentration_spell",
+      effectKind: "spellEffect",
+    });
+    expect(
+      caster?.activeEffects.some((effect) => effect.kind === "hideousLaughter"),
+    ).toBe(false);
+  });
+
   test("damage that drops a character to 0 HP uses the zero-HP disposition", () => {
     const state = chromaticOrbBattle({ spellLevel: 1, firstTargetHp: 4 });
     const damage = chromaticOrbDamageFills(state, {
@@ -645,6 +711,67 @@ function withTargetConcentration(state: BattleState): BattleState {
   };
 }
 
+function withWardingBondSharedCasterLifecycle(state: BattleState): BattleState {
+  const caster = state.combatants.get(spellCasterId);
+  const target = state.combatants.get(firstTargetId);
+  const hideousLaughterSource = state.combatants.get(secondTargetId);
+  if (
+    caster === undefined ||
+    target === undefined ||
+    hideousLaughterSource === undefined
+  ) {
+    throw new Error("Expected Warding Bond caster, target, and effect source.");
+  }
+  const wardingBondEffect = {
+    kind: "wardingBond",
+    sourceSpellId: "warding_bond",
+    sourceCombatantId: spellCasterId,
+    expiresAt: {
+      kind: "duration",
+      durationTicks: elapsedTimeTicks(3_600),
+    },
+  } satisfies Extract<BattleActiveEffect, { readonly kind: "wardingBond" }>;
+  const hideousLaughterEffect = {
+    kind: "hideousLaughter",
+    sourceSpellId: "test_hideous_laughter",
+    sourceCombatantId: secondTargetId,
+    conditionHadNonSpellProneSource: false,
+    conditionHadNonSpellIncapacitatedSource: false,
+    save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
+    expiresAt: {
+      kind: "concentration",
+      combatantId: secondTargetId,
+      durationTicks: elapsedTimeTicks(600),
+    },
+  } satisfies Extract<
+    BattleActiveEffect,
+    { readonly kind: "hideousLaughter" }
+  >;
+  return {
+    ...state,
+    combatants: new Map(state.combatants)
+      .set(spellCasterId, {
+        ...caster,
+        concentration: {
+          sourceSpellId: "test_concentration_spell",
+          effectKind: "spellEffect",
+        },
+        activeEffects: [...caster.activeEffects, hideousLaughterEffect],
+      })
+      .set(firstTargetId, {
+        ...target,
+        activeEffects: [...target.activeEffects, wardingBondEffect],
+      })
+      .set(secondTargetId, {
+        ...hideousLaughterSource,
+        concentration: {
+          sourceSpellId: "test_hideous_laughter",
+          effectKind: "spellEffect",
+        },
+      }),
+  };
+}
+
 function requireHole<K extends BattleHole["kind"]>(
   holes: readonly BattleHole[],
   kind: K,
@@ -655,6 +782,15 @@ function requireHole<K extends BattleHole["kind"]>(
   );
   if (hole === undefined) {
     throw new Error(`Expected ${kind} hole.`);
+  }
+  return hole;
+}
+
+function requireHideousLaughterRepeatSaveHole(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+): Extract<BattleHole, { readonly hideousLaughterRepeatSave: unknown }> {
+  if (!("hideousLaughterRepeatSave" in hole)) {
+    throw new Error("Expected Hideous Laughter repeat save hole.");
   }
   return hole;
 }
@@ -748,6 +884,20 @@ function concentrationSavingThrowFill(
     kind: "concentrationSavingThrow",
     holeId: hole.holeId,
     value: { succeeded },
+  };
+}
+
+function savingThrowOutcomeFill(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+  outcomes: readonly {
+    readonly targetId: CombatantId;
+    readonly succeeded: boolean;
+  }[],
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    value: { outcomes },
   };
 }
 

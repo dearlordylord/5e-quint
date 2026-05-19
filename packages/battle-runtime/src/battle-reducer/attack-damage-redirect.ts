@@ -103,6 +103,7 @@ damageAmountByTypeEntriesAfterScalarReduction
 
 
 import {
+savingThrowFlatBonusProjections,
 savingThrowRollModeProjections
 } from "./spells-holes-fills.ts";
 
@@ -402,6 +403,7 @@ export function attackDamageReductionZeroDamageRedirectHoles(
         state,
         offer.redirect.saveAbility,
       ),
+      targetFlatBonuses: savingThrowFlatBonusProjections(state),
     },
     {
       kind: "rolledDice",

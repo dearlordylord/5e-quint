@@ -1,4 +1,5 @@
 // By-type damage math helpers extracted from battle-reducer.ts.
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // Cluster N (damage_helpers). Mechanical extraction — no behavior change.
 // Consumes only G (creature_state) and W (statblock_attacks).
 
@@ -37,6 +38,7 @@ import {
   activeOngoingFeatureOccurrencesForCombatant,
   ongoingFeatureProfileForSourceKey,
 } from "./creature-state.ts";
+import { combatantHasWardingBondResistance } from "./warding-bond.ts";
 import {
   attackDamageComponents,
   attackDamageModifier,
@@ -486,12 +488,7 @@ export function damageAmountAfterTargetAdjustments(
   damageType: DamageType,
 ): number {
   if (target.origin.kind !== "statBlock") {
-    return [...activeOngoingFeatureOccurrencesForCombatant(target)].some(
-      ([key]) =>
-        ongoingFeatureProfileForSourceKey(target, key)?.resistances.includes(
-          damageType,
-        ) === true,
-    )
+    return combatantHasDamageResistance(target, damageType)
       ? Math.floor(amount / 2)
       : amount;
   }
@@ -501,13 +498,29 @@ export function damageAmountAfterTargetAdjustments(
     return 0;
   }
 
-  const afterResiongoingFeature =
-    statBlock.resistances?.kind === "fixed" &&
-    statBlock.resistances.damageTypes.includes(damageType)
+  const afterResistance =
+    combatantHasDamageResistance(target, damageType) ||
+    (statBlock.resistances?.kind === "fixed" &&
+      statBlock.resistances.damageTypes.includes(damageType))
       ? Math.floor(amount / 2)
       : amount;
 
   return statBlock.vulnerabilities?.damageTypes.includes(damageType) === true
-    ? afterResiongoingFeature * 2
-    : afterResiongoingFeature;
+    ? afterResistance * 2
+    : afterResistance;
+}
+
+function combatantHasDamageResistance(
+  target: BattleCreatureState,
+  damageType: DamageType,
+): boolean {
+  return (
+    combatantHasWardingBondResistance(target) ||
+    [...activeOngoingFeatureOccurrencesForCombatant(target)].some(
+      ([key]) =>
+        ongoingFeatureProfileForSourceKey(target, key)?.resistances.includes(
+          damageType,
+        ) === true,
+    )
+  );
 }

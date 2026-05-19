@@ -32,13 +32,12 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
   let targetSpatialFacts: readonly BattleTargetSpatialFact[] = [];
   let targetSpatialFactsFilled = false;
   let attackRoll: BattleAttackRollResult | undefined;
-  let concentrationSavingThrow:
-    | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
-    | undefined;
   const concentrationSavingThrows: Extract<
     BattleFill,
     { readonly kind: "concentrationSavingThrow" }
   >[] = [];
+  const concentrationSavingThrowHoleIdsBeforeCleave = new Set<string>();
+  const concentrationSavingThrowHoleIdsAfterCleave = new Set<string>();
   let damageDisposition: BattleAttackDamageDisposition = {
     kind: "ordinaryDamage",
   };
@@ -289,18 +288,19 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     }
 
     if (fill.kind === "concentrationSavingThrow") {
-      if (
-        concentrationSavingThrows.some(
-          (concentrationFill) => concentrationFill.holeId === fill.holeId,
-        )
-      ) {
+      const concentrationSavingThrowHoleIds =
+        weaponMasteryCleaveDecision === undefined
+          ? concentrationSavingThrowHoleIdsBeforeCleave
+          : concentrationSavingThrowHoleIdsAfterCleave;
+      const concentrationSavingThrowHoleId = String(fill.holeId);
+      if (concentrationSavingThrowHoleIds.has(concentrationSavingThrowHoleId)) {
         return {
           tag: "invalid",
           message: "Concentration Saving Throw hole was filled twice.",
         };
       }
+      concentrationSavingThrowHoleIds.add(concentrationSavingThrowHoleId);
       concentrationSavingThrows.push(fill);
-      concentrationSavingThrow ??= fill;
       continue;
     }
 
@@ -350,7 +350,6 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     targetId,
     targetSpatialFacts,
     attackRoll,
-    concentrationSavingThrow,
     concentrationSavingThrows,
     hideousLaughterDamageRepeatSaves,
     damageDisposition,

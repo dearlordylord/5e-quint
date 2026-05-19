@@ -62,8 +62,8 @@
       "value": 191
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 121,
-      "numerator": 121,
+      "denominator": 122,
+      "numerator": 122,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -72,49 +72,49 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 67,
-      "numerator": 67,
+      "denominator": 68,
+      "numerator": 68,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 67,
-      "numerator": 67,
+      "denominator": 68,
+      "numerator": 68,
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 88,
+      "denominator": 89,
       "numerator": 19,
-      "percent": "21.6%"
+      "percent": "21.3%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 88,
+      "denominator": 89,
       "numerator": 24,
-      "percent": "27.3%"
+      "percent": "27%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 121,
+      "denominator": 122,
       "numerator": 41,
-      "percent": "33.9%"
+      "percent": "33.6%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 67,
-      "numerator": 67,
+      "denominator": 68,
+      "numerator": 68,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 67,
-      "numerator": 67,
+      "denominator": 68,
+      "numerator": 68,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 121,
+      "denominator": 122,
       "numerator": 104,
-      "percent": "86%"
+      "percent": "85.2%"
     },
     "supportedProfileCoverage": {
       "denominator": 159,
-      "numerator": 121,
-      "percent": "76.1%"
+      "numerator": 122,
+      "percent": "76.7%"
     }
   },
   "metricSemantics": [
@@ -2571,20 +2571,55 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-misty-step.test.ts"
         }
       ]
+    },
+    {
+      "id": "spell.invocation-warding-bond-linked-effect",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/warding-bond.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
+        "packages/battle-runtime/src/battle-reducer/creature-state.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts"
+      ],
+      "sourceBoundary": "The runtime consumes the authored Warding Bond linked-bond Surface shape plus caller-supplied willing-target, paired worn platinum-ring, and 60-foot connection/separation facts. It owns Magic Action and level-2-or-higher Spell Slot spending, a paired bond occurrence, target +1 Armor Class and Saving Throw projections, all-damage Resistance while connected, same-amount post-target-damage sharing to the caster, and cleanup on duration expiry, caster 0 Hit Points, separation, or recast on either connected creature without duplicating inventory or generic position state.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME"
+      ],
+      "title": "Spell invocation creates a paired Warding Bond effect with range-gated defenses and damage sharing",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-warding-bond.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 88,
+        "denominator": 89,
         "numerator": 19,
-        "percent": "21.6%"
+        "percent": "21.3%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 88,
+        "denominator": 89,
         "numerator": 24,
-        "percent": "27.3%"
+        "percent": "27%"
       }
     },
     "profileKinds": [
@@ -3315,6 +3350,12 @@
         "obligations": [],
         "profileId": "spell.invocation-self-teleport",
         "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-warding-bond-linked-effect",
+        "profileKind": "spell-invocation"
       }
     ],
     "sourceArtifacts": {
@@ -3325,9 +3366,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 121,
+          "denominator": 122,
           "numerator": 41,
-          "percent": "33.9%"
+          "percent": "33.6%"
         }
       },
       "units": [
@@ -5423,6 +5464,18 @@
           "unitId": "vicious_mockery"
         },
         {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-warding-bond-linked-effect",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "warding_bond"
+        },
+        {
           "joinStatus": "mapped-open",
           "profiles": [
             {
@@ -7214,6 +7267,22 @@
         "spell.invocation-after-hit-damage-illumination"
       ],
       "taskId": "L12G-SPELL-SHINING-SMITE"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted package-local Warding Bond Quint facts cover Magic Action and Spell Slot spend, willing-target/paired-ring/60-foot cast witnesses, a paired bond occurrence, target Armor Class and Saving Throw bonuses, all-damage Resistance, same-amount damage sharing to the caster, caster-0-HP cleanup, separation cleanup, recast cleanup, and duration cleanup.",
+      "profileIds": [
+        "spell.invocation-warding-bond-linked-effect"
+      ],
+      "taskId": "L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission and reducer tests cover Warding Bond cast admission, missing material/range witness rejection, Magic Action and Spell Slot spend, paired effect recording, Armor Class and Saving Throw projections, all-damage Resistance, same-amount damage sharing, caster-0-HP cleanup, separation cleanup, recast cleanup, and duration cleanup.",
+      "profileIds": [
+        "spell.invocation-warding-bond-linked-effect"
+      ],
+      "taskId": "L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME"
     }
   ],
   "units": [
@@ -18167,24 +18236,76 @@
         "status": "installed"
       },
       "claim": {
-        "followUpTasks": [
-          {
-            "id": "L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME",
-            "mechanic": "Promote Warding Bond as a level-2 prepared Spell Invocation that spends the Magic Action and Spell Slot, consumes caller-supplied willing-target, worn-ring/material, and 60-foot connection facts, records one paired-creature bond occurrence, projects +1 Armor Class, +1 Saving Throws, and all-damage Resistance only while the target is within 60 feet, applies the same amount to the caster after the target takes damage with the caster damage lifecycle handled by the runtime boundary, and cleans up on duration end, caster 0 Hit Points, separation beyond 60 feet, or recast on either connected creature.",
-            "owner": "battle-runtime spell invocation/effect lifecycle plus material and table/spatial witness boundary",
-            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for casting, Spell Slot spend, target projections, Resistance interaction, same-amount damage sharing, caster-0-HP cleanup, separation cleanup, recast cleanup, and duration cleanup without duplicating inventory or generic position state.",
-            "title": "Warding Bond Linked Effect Runtime"
-          }
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "table/material/spatial witness provider",
+          "reason": "Inventory ownership, worn-ring tracking, ordinary map distance derivation, and automatic separation detection remain caller-supplied table facts; the battle runtime consumes typed witnesses and owns the linked effect lifecycle."
+        },
+        "profileIds": [
+          "spell.invocation-warding-bond-linked-effect"
         ],
-        "futureProfileOwner": "battle-runtime spell invocation/effect lifecycle plus material and table/spatial witness boundary",
-        "reason": "The local SRD 5.2.1 Warding Bond passage defines Magic Action level-2-or-higher Spell Slot casting, Touch range, a willing creature target, paired platinum rings worn by caster and target for the duration, a one-hour mystic connection, target-only +1 Armor Class and Saving Throw bonuses plus Resistance to all damage while the target remains within 60 feet of the caster, same-amount damage to the caster each time the target takes damage, and early ending when the caster drops to 0 Hit Points, the creatures separate by more than 60 feet, or the spell is cast again on either connected creature. RAW trace: .references/srd-5.2.1/Spells/Descriptions-S-Z.md:1219-1230; .references/srd-5.2.1/Classes/Cleric.md:197; .references/srd-5.2.1/Classes/Paladin.md:203. Task 95 now records those linked-bond lifecycle facts in Surface as executable source shape: a single caster-target bond identity, willing target hole, paired worn platinum-ring material witness, 60-foot range gate for Armor Class, Saving Throw, and all-damage Resistance projections, same-amount post-target-damage sharing to the caster, and all RAW early-end triggers. No promoted battle-runtime profile is claimed yet because runtime still lacks a paired-creature bond occurrence that consumes willing-target, worn-ring/material, and range witnesses, projects target benefits only while connected, shares damage, and cleans up on duration, caster 0 Hit Points, separation, or recast without duplicating inventory or active-effect state.",
-        "tag": "unsupported-profile"
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action level-2-or-higher Spell Slot casting from the authored SRD Warding Bond Unit",
+          "one non-self willing creature target from caller-supplied spell-target and known-willing facts",
+          "paired worn platinum-ring material witness consumed as a table-supplied cast fact",
+          "60-foot connection witness required at cast time and table-supplied separation witness for early cleanup",
+          "one paired bond occurrence hosted on the target with caster source identity",
+          "target +1 Armor Class, +1 Saving Throw flat bonus projection, and all-damage Resistance while the bond remains connected",
+          "same final damage amount shared to the caster after the target takes damage using the runtime hit-point lifecycle",
+          "cleanup on one-hour duration expiry, caster 0 Hit Points, separation beyond 60 feet, and recast on a connected creature"
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
-      "evidence": [],
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-warding-bond.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME"
+        }
+      ],
       "executableMechanics": true,
       "kind": "spell",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "spell.invocation-warding-bond-linked-effect",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts",
+            "packages/battle-runtime/src/battle-reducer/warding-bond.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+            "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+            "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
+            "packages/battle-runtime/src/battle-reducer/creature-state.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
+            "packages/battle-runtime/src/battle-reducer/battle-codecs.ts"
+          ],
+          "sourceBoundary": "The runtime consumes the authored Warding Bond linked-bond Surface shape plus caller-supplied willing-target, paired worn platinum-ring, and 60-foot connection/separation facts. It owns Magic Action and level-2-or-higher Spell Slot spending, a paired bond occurrence, target +1 Armor Class and Saving Throw projections, all-damage Resistance while connected, same-amount post-target-damage sharing to the caster, and cleanup on duration expiry, caster 0 Hit Points, separation, or recast on either connected creature without duplicating inventory or generic position state.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME"
+          ],
+          "title": "Spell invocation creates a paired Warding Bond effect with range-gated defenses and damage sharing",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-warding-bond.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/warding_bond.json",
       "unitId": "warding_bond"
     },

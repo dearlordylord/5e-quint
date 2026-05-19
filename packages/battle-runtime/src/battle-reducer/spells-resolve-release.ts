@@ -42,12 +42,15 @@ import { currentActorId } from "./creature-state-leaves.ts";
 import {
   breakBattleConcentration,
   concentrationSavingThrowHole,
+  damageLifecycleConcentrationSavingThrowFillCheck,
+  damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
+  fillsMatchingHoleIds,
+  damageLifecycleConcentrationSavingThrowHoles,
 } from "./damage-apply.ts";
 import {
   activeMarkedDamageRiderEffect,
   activeMarkedDamageRiders,
 } from "./damage-helpers.ts";
-import { hideousLaughterDamageRepeatSaveFillCheck } from "./hideous-laughter-repeat-save.ts";
 import { needsHolesResult, revealHidden } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { expendSpellSlot } from "./spell-effects.ts";
@@ -1335,29 +1338,41 @@ export function resolveSpellRelease(
     target,
     spellDamageAmount,
   );
+  const concentrationLifecycleHoles =
+    damageLifecycleConcentrationSavingThrowHoles({
+      state: input.state,
+      target,
+      damageAmount: spellDamageAmount,
+    });
+  const concentrationLifecycleFills = fillsMatchingHoleIds(
+    fillSet.concentrationSavingThrows,
+    concentrationLifecycleHoles,
+  );
   const concentrationFill =
     concentrationSave === null
       ? undefined
       : concentrationSavingThrowFillFor(
-          fillSet.concentrationSavingThrows,
+          concentrationLifecycleFills,
           concentrationSave,
         );
-  if (concentrationSave !== null) {
-    if (concentrationFill === undefined) {
-      return needsHolesResult(input.state, input.subject, [concentrationSave]);
-    }
-    if (fillSet.concentrationSavingThrows.length > 1) {
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        "Readied spell damage accepts one Concentration Saving Throw fill for the damaged target.",
-      );
-    }
-  } else if (fillSet.concentrationSavingThrows.length > 0) {
+  const concentrationSaveCheck = damageLifecycleConcentrationSavingThrowFillCheck(
+    {
+      state: input.state,
+      target,
+      damageAmount: spellDamageAmount,
+      fills: fillSet.concentrationSavingThrows,
+    },
+  );
+  if (concentrationSaveCheck.tag === "needsHoles") {
+    return needsHolesResult(input.state, input.subject, [
+      ...concentrationSaveCheck.holes,
+    ]);
+  }
+  if (concentrationSaveCheck.tag === "invalid") {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Concentration Saving Throw fill is only valid for a concentrating damaged target.",
+      concentrationSaveCheck.message,
     );
   }
   const damageDispositionHole = zeroHitPointReplacementDispositionHole({
@@ -1387,11 +1402,13 @@ export function resolveSpellRelease(
       damageDispositionHole,
     ]);
   }
-  const hideousLaughterSaveCheck = hideousLaughterDamageRepeatSaveFillCheck({
-    target,
-    damageAmount: spellDamageAmount,
-    fills: fillSet.hideousLaughterDamageRepeatSaves,
-  });
+  const hideousLaughterSaveCheck =
+    damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
+      state: input.state,
+      target,
+      damageAmount: spellDamageAmount,
+      fills: fillSet.hideousLaughterDamageRepeatSaves,
+    });
   if (hideousLaughterSaveCheck.tag === "needsHoles") {
     return needsHolesResult(input.state, input.subject, [
       ...hideousLaughterSaveCheck.holes,
@@ -1404,6 +1421,10 @@ export function resolveSpellRelease(
       hideousLaughterSaveCheck.message,
     );
   }
+  const hideousLaughterLifecycleFills = fillsMatchingHoleIds(
+    fillSet.hideousLaughterDamageRepeatSaves,
+    hideousLaughterSaveCheck.holes,
+  );
   const releaseResolutionState =
     invocation.procedure === "spellAttackDamage" && fillSet.attackRoll != null
       ? recordAttackRollMissToHitReplacementUsed(
@@ -1444,14 +1465,15 @@ export function resolveSpellRelease(
     critical,
     {
       concentrationSavingThrow: concentrationFill,
+      wardingBondDamageShareConcentrationSavingThrows:
+        concentrationLifecycleFills,
       damageDisposition: damageDispositionForTarget(
         damageDispositionHole === null ? [] : [damageDispositionHole],
         fillSet.damageDispositions,
         target.combatantId,
       ),
       spellMarkedDamageRiders,
-      hideousLaughterDamageRepeatSaves:
-        fillSet.hideousLaughterDamageRepeatSaves,
+      hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
       damageSourceId: input.subject.actorId,
     },
   );

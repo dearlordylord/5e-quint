@@ -1,4 +1,5 @@
 // Battle act discovery extracted from ../battle-reducer.ts.
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // Owns top-level act discovery and subject/action-resource discovery helpers.
 // Mechanical move; no behavior change intended.
 
@@ -112,6 +113,10 @@ import {
 } from "./turn-end-movement.ts";
 
 import { supportedUnitFeatureActs } from "./unit-features.ts";
+import {
+  isWardingBondEffect,
+  wardingBondSeparationFactsHole,
+} from "./warding-bond.ts";
 
 import type {
   AvailableBattleAct,
@@ -233,6 +238,7 @@ export function discoverBattleActs(
   if (state.currentTurnResources.commandHalt !== null) {
     acts.push(...greaseGroundHazardEndTurnActs(state, actorId));
     acts.push(...fogCloudStrongWindDispersalActs(state, actorId));
+    acts.push(...wardingBondSeparationActs(state, actorId));
     acts.push(endTurnAct(actorId));
     acts.push(...readiedSpellReleaseActs(state, actorId));
     acts.push(...discoverLegendaryActionActs(state));
@@ -519,6 +525,7 @@ export function discoverBattleActs(
   }
   acts.push(...greaseGroundHazardEndTurnActs(state, actorId));
   acts.push(...fogCloudStrongWindDispersalActs(state, actorId));
+  acts.push(...wardingBondSeparationActs(state, actorId));
   acts.push(endTurnAct(actorId));
   acts.push(...readiedSpellReleaseActs(state, actorId));
   acts.push(...discoverLegendaryActionActs(state));
@@ -727,6 +734,46 @@ function fogCloudStrongWindDispersalAct(
     label: "Disperse Fog Cloud",
     summary: "End the table-supplied Fog Cloud area because of strong wind.",
     initialHoles: [],
+  };
+}
+
+function wardingBondSeparationActs(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly AvailableBattleAct[] {
+  return [...state.combatants].flatMap(([targetId, combatant]) =>
+    combatant.activeEffects.flatMap((effect): readonly AvailableBattleAct[] =>
+      isWardingBondEffect(effect)
+        ? [wardingBondSeparationAct(actorId, targetId, effect)]
+        : [],
+    ),
+  );
+}
+
+function wardingBondSeparationAct(
+  actorId: CombatantId,
+  targetId: CombatantId,
+  effect: Extract<BattleActiveEffect, { readonly kind: "wardingBond" }>,
+): AvailableBattleAct {
+  return {
+    subject: {
+      tag: "runtimeCommand",
+      actorId,
+      command: "wardingBondSeparation",
+      sourceCombatantId: effect.sourceCombatantId,
+      sourceSpellId: spellId(effect.sourceSpellId),
+      targetId,
+    },
+    label: "End Warding Bond",
+    summary:
+      "End the Warding Bond because the connected creatures are more than 60 feet apart.",
+    initialHoles: [
+      wardingBondSeparationFactsHole({
+        sourceCombatantId: effect.sourceCombatantId,
+        sourceSpellId: effect.sourceSpellId,
+        targetId,
+      }),
+    ],
   };
 }
 

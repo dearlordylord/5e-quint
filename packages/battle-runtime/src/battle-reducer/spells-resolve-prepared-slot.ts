@@ -23,11 +23,13 @@ import {
   damageDispositionForTarget,
   zeroHitPointReplacementDispositionHole,
 } from "./attack-damage-apply.ts";
-import { concentrationSavingThrowHole } from "./damage-apply.ts";
 import {
-  hideousLaughterDamageRepeatSaveFillCheck,
-  hideousLaughterDamageRepeatSaveFillsForTarget,
-} from "./hideous-laughter-repeat-save.ts";
+  concentrationSavingThrowHole,
+  damageLifecycleConcentrationSavingThrowHoles,
+  damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
+  damageLifecycleHideousLaughterDamageRepeatSaveHoles,
+  fillsMatchingHoleIds,
+} from "./damage-apply.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
@@ -301,8 +303,11 @@ export function resolvePreparedSlotSpellAct(input: {
         allocationIndex,
         allocation.count,
       );
-      const hole = concentrationSavingThrowHole(target, damageAmount);
-      return hole === null ? [] : [hole];
+      return damageLifecycleConcentrationSavingThrowHoles({
+        state: input.input.state,
+        target,
+        damageAmount,
+      });
     },
   );
   const missingConcentrationSaves = concentrationSaves.filter(
@@ -381,18 +386,25 @@ export function resolvePreparedSlotSpellAct(input: {
       if (target === undefined) {
         return { tag: "ok" as const, holes: [] };
       }
-      return hideousLaughterDamageRepeatSaveFillCheck({
+      const damageAmount = repeatedDamageAllocationSpellDamageAmount(
         target,
-        damageAmount: repeatedDamageAllocationSpellDamageAmount(
-          target,
-          input.invocation,
-          input.fillSet.damageRoll!,
-          allocationIndex,
-          allocation.count,
-        ),
-        fills: hideousLaughterDamageRepeatSaveFillsForTarget(
-          target,
+        input.invocation,
+        input.fillSet.damageRoll!,
+        allocationIndex,
+        allocation.count,
+      );
+      const holes = damageLifecycleHideousLaughterDamageRepeatSaveHoles({
+        state: input.input.state,
+        target,
+        damageAmount,
+      });
+      return damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
+        state: input.input.state,
+        target,
+        damageAmount,
+        fills: fillsMatchingHoleIds(
           input.fillSet.hideousLaughterDamageRepeatSaves,
+          holes,
         ),
       });
     },
@@ -414,6 +426,22 @@ export function resolvePreparedSlotSpellAct(input: {
     return needsHolesResult(input.input.state, input.input.subject, [
       ...missingHideousLaughterSaveHoles,
     ]);
+  }
+  const hideousLaughterSaveHoleIds = new Set<BattleHoleId>(
+    hideousLaughterSaveChecks.flatMap((check) =>
+      check.tag === "invalid" ? [] : check.holes.map((hole) => hole.holeId),
+    ),
+  );
+  if (
+    input.fillSet.hideousLaughterDamageRepeatSaves.some(
+      (fill) => !hideousLaughterSaveHoleIds.has(fill.holeId),
+    )
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Hideous Laughter damage repeat save fill must match a requested damaged target.",
+    );
   }
 
   const spellEffectState =
@@ -440,6 +468,26 @@ export function resolvePreparedSlotSpellAct(input: {
         target,
         damageAmount,
       );
+      const concentrationLifecycleHoles =
+        damageLifecycleConcentrationSavingThrowHoles({
+          state,
+          target,
+          damageAmount,
+        });
+      const concentrationLifecycleFills = fillsMatchingHoleIds(
+        input.fillSet.concentrationSavingThrows,
+        concentrationLifecycleHoles,
+      );
+      const hideousLaughterLifecycleHoles =
+        damageLifecycleHideousLaughterDamageRepeatSaveHoles({
+          state,
+          target,
+          damageAmount,
+        });
+      const hideousLaughterLifecycleFills = fillsMatchingHoleIds(
+        input.fillSet.hideousLaughterDamageRepeatSaves,
+        hideousLaughterLifecycleHoles,
+      );
       return applyPreparedSlotSpellDamage(
         state,
         allocation.targetId,
@@ -449,19 +497,17 @@ export function resolvePreparedSlotSpellAct(input: {
             concentrationSave === null
               ? undefined
               : concentrationSavingThrowFillFor(
-                  input.fillSet.concentrationSavingThrows,
+                  concentrationLifecycleFills,
                   concentrationSave,
                 ),
+          wardingBondDamageShareConcentrationSavingThrows:
+            concentrationLifecycleFills,
           damageDisposition: damageDispositionForTarget(
             damageDispositionHoles,
             input.fillSet.damageDispositions,
             allocation.targetId,
           ),
-          hideousLaughterDamageRepeatSaves:
-            hideousLaughterDamageRepeatSaveFillsForTarget(
-              target,
-              input.fillSet.hideousLaughterDamageRepeatSaves,
-            ),
+          hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
           damageSourceId: input.actorId,
         },
       );

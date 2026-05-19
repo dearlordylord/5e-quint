@@ -69,6 +69,14 @@ export function supportedSpellInvocationRef(
       procedure: "weaponAttackOverride",
     };
   }
+  if (invocation.procedure === "wardingBond") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "wardingBond",
+    };
+  }
   if (invocation.procedure === "sleepTargetAdmission") {
     return {
       tag: "spellSlot",

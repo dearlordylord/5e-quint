@@ -54,6 +54,7 @@ import {
   type SelfTeleportSpellInvocation,
   type SupportedSpellInvocation,
   type ThaumaturgyBoomingVoiceSpellInvocation,
+  type WardingBondSpellInvocation,
 } from "../battle-reducer.ts";
 import {
   characterResourceIsClassFeatureFreeCastForSpell,
@@ -71,6 +72,11 @@ import {
   PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS,
   THAUMATURGY_BOOMING_VOICE_DURATION_TICKS,
   THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL,
+  WARDING_BOND_ARMOR_CLASS_BONUS,
+  WARDING_BOND_CAST_RANGE_FEET,
+  WARDING_BOND_CONNECTION_RANGE_FEET,
+  WARDING_BOND_SAVING_THROW_BONUS,
+  WARDING_BOND_SPELL_ID,
 } from "./domain-constants.ts";
 import { supportedDamageAmountExpr } from "./spells-profiles-save-gates.ts";
 import {
@@ -170,6 +176,31 @@ export function supportedPreparedJumpMovementReplacementSpellProfile(
           },
         ];
   });
+}
+
+export function supportedPreparedWardingBondSpellProfile(
+  actorId: CombatantId,
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  const projection = wardingBondSpellProjection(actorId, spell);
+  if (projection === null) {
+    return [];
+  }
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] =>
+    Number(slot.spellLevel) < spell.mechanics.level
+      ? []
+      : [
+          {
+            access: { tag: "prepared" },
+            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+            procedure: "wardingBond",
+            spell,
+            actionCost: "magicAction",
+            ...projection,
+          },
+        ],
+  );
 }
 
 export function supportedPreparedSelfTeleportSpellProfile(
@@ -299,6 +330,188 @@ function featherFallMitigationSpellProjection(
           expiresAt: { kind: "duration", durationTicks: durationTicks.right },
         },
       };
+}
+
+function wardingBondSpellProjection(
+  actorId: CombatantId,
+  spell: SpellRecord,
+): Pick<
+  WardingBondSpellInvocation,
+  "activeEffect" | "rangeFeet" | "connectionRangeFeet"
+> | null {
+  if (
+    spell.id !== WARDING_BOND_SPELL_ID ||
+    spell.name !== "Warding Bond" ||
+    spell.provenance.kind !== "srd-5.2.1" ||
+    spell.provenance.section !== "Spells/Descriptions-S-Z#Warding Bond" ||
+    spell.mechanics.family !== "ongoing_effect" ||
+    spell.mechanics.level !== 2 ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "touch" ||
+    spell.mechanics.duration.kind !== "timed" ||
+    spell.mechanics.duration.value.unit !== "hour" ||
+    spell.mechanics.duration.value.amount !== 1 ||
+    spell.mechanics.attachment.kind !== "caster_target_bond" ||
+    spell.mechanics.attachment.bondId !==
+      "warding_bond_mystic_connection" ||
+    spell.mechanics.attachment.range.kind !== "within_feet" ||
+    spell.mechanics.attachment.range.feet !==
+      Number(WARDING_BOND_CONNECTION_RANGE_FEET) ||
+    spell.mechanics.attachment.target.kind !== "hole" ||
+    spell.mechanics.attachment.target.value.kind !== "target" ||
+    spell.mechanics.attachment.target.value.selection.mode !== "one" ||
+    !("disposition" in spell.mechanics.attachment.target.value.selection) ||
+    spell.mechanics.attachment.target.value.selection.disposition !==
+      "willing" ||
+    !sameStringSet(
+      spell.mechanics.attachment.target.value.selection.targetKinds ?? [],
+      ["creature"],
+    ) ||
+    !wardingBondMaterialComponentIsSupported(spell) ||
+    !wardingBondEarlyEndsAreSupported(spell.mechanics.duration.earlyEnd) ||
+    !wardingBondOperationsAreSupported(spell.mechanics.operations)
+  ) {
+    return null;
+  }
+  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
+    spell.mechanics.duration.value,
+  );
+  return Either.isLeft(durationTicks)
+    ? null
+    : {
+        rangeFeet: WARDING_BOND_CAST_RANGE_FEET,
+        connectionRangeFeet: WARDING_BOND_CONNECTION_RANGE_FEET,
+        activeEffect: {
+          kind: "wardingBond",
+          sourceSpellId: spell.id,
+          sourceCombatantId: actorId,
+          expiresAt: { kind: "duration", durationTicks: durationTicks.right },
+        },
+      };
+}
+
+function wardingBondMaterialComponentIsSupported(spell: SpellRecord): boolean {
+  if (!("components" in spell.mechanics)) {
+    return false;
+  }
+  const material = spell.mechanics.components.m;
+  return (
+    typeof material === "object" &&
+    material !== null &&
+    material.kind === "paired_worn_items" &&
+    material.itemKind === "ring" &&
+    material.material === "platinum" &&
+    material.minimumValueGpEach === 50 &&
+    material.requiredFor === "spell_duration" &&
+    sameStringSet(material.wornBy, ["caster", "target"])
+  );
+}
+
+function wardingBondEarlyEndsAreSupported(
+  earlyEnds:
+    | readonly { readonly kind: string }[]
+    | undefined,
+): boolean {
+  return (
+    Array.isArray(earlyEnds) &&
+    earlyEnds.length === 3 &&
+    earlyEnds.some((earlyEnd) => earlyEnd.kind === "caster_drops_to_0_hp") &&
+    earlyEnds.some((earlyEnd) => earlyEnd.kind === "attached_bond_exceeds_range") &&
+    earlyEnds.some(
+      (earlyEnd) => earlyEnd.kind === "spell_cast_again_on_connected_creature",
+    )
+  );
+}
+
+function wardingBondOperationsAreSupported(
+  operations: Extract<
+    SpellRecord["mechanics"],
+    { readonly family: "ongoing_effect" }
+  >["operations"],
+): boolean {
+  return (
+    operations.length === 4 &&
+    operations.some(wardingBondArmorClassOperationIsSupported) &&
+    operations.some(wardingBondSavingThrowOperationIsSupported) &&
+    operations.some(wardingBondResistanceOperationIsSupported) &&
+    operations.some(wardingBondDamageShareOperationIsSupported)
+  );
+}
+
+function wardingBondOperationHasAttachedBondWithinRangePredicate(
+  operation: Extract<
+    SpellRecord["mechanics"],
+    { readonly family: "ongoing_effect" }
+  >["operations"][number],
+): boolean {
+  return operation.predicate?.kind === "attached_bond_within_range";
+}
+
+function wardingBondArmorClassOperationIsSupported(
+  operation: Extract<
+    SpellRecord["mechanics"],
+    { readonly family: "ongoing_effect" }
+  >["operations"][number],
+): boolean {
+  const effect = operation.effect;
+  return (
+    operation.trigger.kind === "passive" &&
+    wardingBondOperationHasAttachedBondWithinRangePredicate(operation) &&
+    effect.kind === "modify_ac" &&
+    effect.delta.kind === "fixed_dice" &&
+    effect.delta.sign === "+" &&
+    effect.delta.dice === WARDING_BOND_ARMOR_CLASS_BONUS &&
+    effect.delta.dieSize === 1
+  );
+}
+
+function wardingBondSavingThrowOperationIsSupported(
+  operation: Extract<
+    SpellRecord["mechanics"],
+    { readonly family: "ongoing_effect" }
+  >["operations"][number],
+): boolean {
+  const effect = operation.effect;
+  return (
+    operation.trigger.kind === "passive" &&
+    wardingBondOperationHasAttachedBondWithinRangePredicate(operation) &&
+    effect.kind === "modify_roll_numeric" &&
+    sameStringSet(effect.on, ["saving_throw"]) &&
+    effect.delta.kind === "fixed_dice" &&
+    effect.delta.sign === "+" &&
+    effect.delta.dice === WARDING_BOND_SAVING_THROW_BONUS &&
+    effect.delta.dieSize === 1
+  );
+}
+
+function wardingBondResistanceOperationIsSupported(
+  operation: Extract<
+    SpellRecord["mechanics"],
+    { readonly family: "ongoing_effect" }
+  >["operations"][number],
+): boolean {
+  const effect = operation.effect;
+  return (
+    operation.trigger.kind === "passive" &&
+    wardingBondOperationHasAttachedBondWithinRangePredicate(operation) &&
+    effect.kind === "grant_resistance" &&
+    typeof effect.damageType === "object" &&
+    effect.damageType !== null &&
+    effect.damageType.kind === "all_damage_types"
+  );
+}
+
+function wardingBondDamageShareOperationIsSupported(
+  operation: Extract<
+    SpellRecord["mechanics"],
+    { readonly family: "ongoing_effect" }
+  >["operations"][number],
+): boolean {
+  return (
+    operation.trigger.kind === "on_attached_damaged" &&
+    operation.effect.kind === "share_damage_to_caster" &&
+    operation.effect.amount === "same_as_attached_damage_taken"
+  );
 }
 
 function jumpMovementReplacementSpellProjection(
