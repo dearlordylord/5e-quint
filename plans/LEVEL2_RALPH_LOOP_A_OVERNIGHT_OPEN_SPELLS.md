@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "L12G-SPELL-MIND-SPIKE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Mind Spike Runtime Support And Knowledge Closure"
     },
     {
@@ -180,7 +180,7 @@ The final task is intentionally blocked on every real task in this plan and plac
 | ---: | --- | --- | --- | --- |
 | 1 | L12G-SPELL-LESSER-RESTORATION - Lesser Restoration Runtime Support | done | completed baseline | A lane; Unit `lesser_restoration`. |
 | 2 | L12G-SPELL-MAGIC-WEAPON - Magic Weapon Runtime Support Or Closure | done | completed baseline | A lane; Unit `magic_weapon`. |
-| 3 | L12G-SPELL-MIND-SPIKE - Mind Spike Runtime Support And Knowledge Closure | ready-for-research | completed baseline | A lane; Unit `mind_spike`. |
+| 3 | L12G-SPELL-MIND-SPIKE - Mind Spike Runtime Support And Knowledge Closure | done | completed baseline | A lane; Unit `mind_spike`. |
 | 4 | L12G-SPELL-WEB - Web Runtime Support Or Closure | ready-for-research | completed baseline | A lane; Unit `web`. |
 | 5 | L12G-MISSING-ANIMAL-MESSENGER - Animal Messenger Definition And Closure | ready-for-research | completed baseline | A lane; Unit `animal_messenger`. |
 | 6 | L12G-MISSING-ARCANISTS-MAGIC-AURA - Arcanists Magic Aura Definition And Closure | ready-for-research | completed baseline | A lane; Unit `arcanists_magic_aura`. |
@@ -281,7 +281,7 @@ Acceptance:
 
 ### Task 3 - L12G-SPELL-MIND-SPIKE - Mind Spike Runtime Support And Knowledge Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `mind_spike`.
 Origin: Original backlog task 36.

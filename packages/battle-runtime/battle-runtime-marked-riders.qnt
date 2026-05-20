@@ -44,6 +44,7 @@ module battleRuntimeMarkedRiders {
       | FogCloudObscurement(_) => true
       | DancingLightsEffect(_) => true
       | InvisibilityCondition(_) => true
+      | MindSpikeConcentrationDuration(_) => true
       | _ => false
     })
 

@@ -1687,17 +1687,15 @@
       "unitId": "magic_weapon"
     },
     {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "The promoted battle runtime owns Spell Invocation, target admission, save-damage resolution, Spell Slot spend, failed-save Concentration lock, and the one-hour maximum duration cleanup. Same-plane location knowledge, Hidden prevention, and observer-scoped Invisible benefit denial are table/perception knowledge facts not consumed by promoted battle procedures, so they remain runtime-detached rather than stored as parallel state.",
       "sourceRecordPath": "packages/surface/content/mind_spike.json",
       "sourceRows": [
         {
@@ -1725,8 +1723,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
       "unitId": "mind_spike"
     },
     {
@@ -2697,7 +2695,7 @@
       ]
     },
     {
-      "count": 20,
+      "count": 21,
       "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
@@ -2715,6 +2713,7 @@
         "locate_animals_or_plants",
         "locate_object",
         "magic_mouth",
+        "mind_spike",
         "minor_illusion",
         "pass_without_trace",
         "rope_trick",
@@ -2737,22 +2736,21 @@
       ]
     },
     {
-      "count": 3,
-      "description": "No Unit profile claim records runtime support or an accepted strict closure.",
-      "status": "open-runtime-behavior",
-      "unitIds": [
-        "find_steed",
-        "mind_spike",
-        "web"
-      ]
-    },
-    {
       "count": 2,
       "description": "Character facts are owned while only runtime-detached adjudication remains.",
       "status": "closed-character-fact-and-runtime-detached-split",
       "unitIds": [
         "druid_druidic",
         "rogue_thieves_cant"
+      ]
+    },
+    {
+      "count": 2,
+      "description": "No Unit profile claim records runtime support or an accepted strict closure.",
+      "status": "open-runtime-behavior",
+      "unitIds": [
+        "find_steed",
+        "web"
       ]
     },
     {
@@ -2770,8 +2768,8 @@
       "numerator": 480,
       "percent": "86.3%",
       "rowsByStatus": {
-        "accepted": 353,
-        "accepted-no-battle-effect": 127,
+        "accepted": 355,
+        "accepted-no-battle-effect": 125,
         "battle-runtime-required": 66,
         "owner-evidence-required": 3,
         "partial-battle-runtime": 7
@@ -2799,18 +2797,17 @@
     },
     "strictTargetClosure": {
       "denominator": 161,
-      "numerator": 158,
-      "percent": "98.1%"
+      "numerator": 159,
+      "percent": "98.8%"
     }
   },
   "openFrontier": [
     {
-      "count": 3,
+      "count": 2,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
         "find_steed",
-        "mind_spike",
         "web"
       ]
     }
@@ -7575,8 +7572,8 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
-      "missing": 3,
-      "profile-subset-supported": 13,
+      "missing": 2,
+      "profile-subset-supported": 14,
       "supported-profile": 106,
       "unsupported-profile": 39
     },
@@ -7585,8 +7582,8 @@
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
-      "closed-runtime-detached-table-adjudication": 20,
-      "open-runtime-behavior": 3,
+      "closed-runtime-detached-table-adjudication": 21,
+      "open-runtime-behavior": 2,
       "supported-profile": 106
     },
     "nonSupportedFrontier": 55,

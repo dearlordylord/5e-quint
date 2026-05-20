@@ -185,8 +185,8 @@
       "numerator": 480,
       "percent": "86.3%",
       "rowsByStatus": {
-        "accepted": 353,
-        "accepted-no-battle-effect": 127,
+        "accepted": 355,
+        "accepted-no-battle-effect": 125,
         "battle-runtime-required": 66,
         "partial-battle-runtime": 7,
         "owner-evidence-required": 3
@@ -203,16 +203,16 @@
       "catalog-installed-owner-evidence-required": 4
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 365,
+      "catalog-installed-owner-evidence-present": 367,
       "non-runtime": 24,
-      "catalog-only/dead-for-now": 98,
+      "catalog-only/dead-for-now": 96,
       "missing-authored-record": 29,
       "catalog-installed-owner-evidence-required": 21,
       "catalog-authored-executable-follow-up": 19
     },
     "spellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 204,
-      "catalog-only/dead-for-now": 98,
+      "catalog-installed-owner-evidence-present": 206,
+      "catalog-only/dead-for-now": 96,
       "missing-authored-record": 29,
       "catalog-installed-owner-evidence-required": 17,
       "catalog-authored-executable-follow-up": 19
@@ -22789,13 +22789,31 @@
         "sourceRecordPath": "packages/surface/content/mind_spike.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "mind_spike"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "runtime-detached table/perception/knowledge owner",
+        "reason": "The promoted battle runtime owns Spell Invocation, target admission, save-damage resolution, Spell Slot spend, failed-save Concentration lock, and the one-hour maximum duration cleanup. Same-plane location knowledge, Hidden prevention, and observer-scoped Invisible benefit denial are table/perception knowledge facts not consumed by promoted battle procedures, so they remain runtime-detached rather than stored as parallel state."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit mind_spike is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-SPELL-MIND-SPIKE at packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_mirror_image",
@@ -26478,13 +26496,31 @@
         "sourceRecordPath": "packages/surface/content/mind_spike.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "mind_spike"
       },
-      "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Decide whether to admit/support, or keep catalog-only closure counted.",
-      "battleReadinessStatus": "accepted-no-battle-effect"
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "runtime-detached table/perception/knowledge owner",
+        "reason": "The promoted battle runtime owns Spell Invocation, target admission, save-damage resolution, Spell Slot spend, failed-save Concentration lock, and the one-hour maximum duration cleanup. Same-plane location knowledge, Hidden prevention, and observer-scoped Invisible benefit denial are table/perception knowledge facts not consumed by promoted battle procedures, so they remain runtime-detached rather than stored as parallel state."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit mind_spike is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-SPELL-MIND-SPIKE at packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_mirror_image",

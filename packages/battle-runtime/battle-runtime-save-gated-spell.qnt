@@ -29,6 +29,7 @@ module battleRuntimeSaveGatedSpell {
       | ViciousMockerySaveGate => BattleRuntimeViciousMockerySaveDamage
       | DissonantWhispersSaveGate => BattleRuntimeDissonantWhispersSaveDamage
       | HellishRebukeSaveGate => BattleRuntimeHellishRebukeSaveDamage
+      | MindSpikeSaveGate => BattleRuntimeMindSpikeSaveDamage
     }
 
   pure def battleRuntimeSaveGatedConditionProfileForInvocation(
@@ -74,6 +75,7 @@ module battleRuntimeSaveGatedSpell {
       | FireballSaveGate => Set()
       | DissonantWhispersSaveGate => Set()
       | HellishRebukeSaveGate => Set()
+      | MindSpikeSaveGate => Set()
       | ViciousMockerySaveGate => Set(ViciousMockeryNextAttackDisadvantage)
     }
 
@@ -110,6 +112,28 @@ module battleRuntimeSaveGatedSpell {
     battleRuntimeSaveGatedDamageRequiresSlot(
       battleRuntimeSaveGatedDamageProfileForInvocation(invocation)
     )
+
+  pure def saveGatedDamageRequiresConcentration(invocation: SaveGatedDamageInvocation): bool =
+    battleRuntimeSaveGatedDamageRequiresConcentration(
+      battleRuntimeSaveGatedDamageProfileForInvocation(invocation)
+    )
+
+  pure def mindSpikeDurationTicks: int = 60 * 10
+
+  pure def saveGatedDamageConcentrationDurationEffects(
+    invocation: SaveGatedDamageInvocation,
+  ): Set[ActiveEffect] =
+    match invocation {
+      | AcidSplashSaveGate => Set()
+      | SacredFlameSaveGate => Set()
+      | InflictWoundsSaveGate => Set()
+      | BurningHandsSaveGate => Set()
+      | FireballSaveGate => Set()
+      | ViciousMockerySaveGate => Set()
+      | DissonantWhispersSaveGate => Set()
+      | HellishRebukeSaveGate => Set()
+      | MindSpikeSaveGate => Set(MindSpikeConcentrationDuration({ durationTicks: mindSpikeDurationTicks }))
+    }
 
   pure def attackBurstSaveDamageSpendsLevelOneSlot(invocation: AttackBurstSaveDamageInvocation): bool =
     battleRuntimeAttackBurstSaveDamageRequiresSlot(
@@ -815,6 +839,34 @@ module battleRuntimeSaveGatedSpell {
         actionAvailable: false,
       }
 
+  pure def saveGatedDamageStateAfterCastConcentrationBreak(
+    state: BattleState,
+    invocation: SaveGatedDamageInvocation,
+  ): BattleState =
+    if (saveGatedDamageRequiresConcentration(invocation))
+      breakConcentrationSpellEffects(state, Fighter)
+    else
+      state
+
+  pure def saveGatedDamageStateAfterFailedSaveConcentrationStart(
+    state: BattleState,
+    invocation: SaveGatedDamageInvocation,
+    savingThrowSucceeded: bool,
+  ): BattleState =
+    if (saveGatedDamageRequiresConcentration(invocation) and not(savingThrowSucceeded))
+      {
+        ...state,
+        fighter: {
+          ...state.fighter,
+          concentrating: true,
+          activeEffects: state.fighter.activeEffects.union(
+            saveGatedDamageConcentrationDurationEffects(invocation)
+          ),
+        },
+      }
+    else
+      state
+
   pure def resolveSingleTargetSaveGatedDamage(
     state: BattleState,
     invocation: SaveGatedDamageInvocation,
@@ -833,17 +885,69 @@ module battleRuntimeSaveGatedSpell {
     )
       state
     else {
-      val damaged = saveGatedDamageTarget(invocation, state.goblin, savingThrowSucceeded, damageRoll, concentrationSaveSucceeded, Fighter)
+      val afterConcentrationBreak = saveGatedDamageStateAfterCastConcentrationBreak(state, invocation)
+      val damaged = saveGatedDamageTarget(invocation, afterConcentrationBreak.goblin, savingThrowSucceeded, damageRoll, concentrationSaveSucceeded, Fighter)
       val resolved = {
-        ...state,
+        ...afterConcentrationBreak,
         goblin: damaged,
         actionAvailable: false,
       }
+      val afterConcentrationStart = saveGatedDamageStateAfterFailedSaveConcentrationStart(resolved, invocation, savingThrowSucceeded)
       if (saveGatedDamageSpendsLevelOneSlot(invocation))
-        commitActorSpellSlotUse(resolved, Fighter)
+        commitActorSpellSlotUse(afterConcentrationStart, Fighter)
       else
-        resolved
+        afterConcentrationStart
     }
+
+  pure def resolveSelfTargetSaveGatedDamage(
+    state: BattleState,
+    invocation: SaveGatedDamageInvocation,
+    savingThrowSucceeded: bool,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+  ): BattleState =
+    if (
+      not(state.actionAvailable) or
+      currentActor(state) != Fighter or
+      state.fighter.unconscious or
+      state.fighter.incapacitated or
+      fighterHasRage(state) or
+      saveGatedTargeting(invocation) != SingleSaveTarget or
+      (saveGatedDamageSpendsLevelOneSlot(invocation) and not(canExpendSpellSlotThisTurn(state)))
+    )
+      state
+    else {
+      val afterConcentrationBreak = saveGatedDamageStateAfterCastConcentrationBreak(state, invocation)
+      val damaged = saveGatedDamageTarget(invocation, afterConcentrationBreak.fighter, savingThrowSucceeded, damageRoll, concentrationSaveSucceeded, Fighter)
+      val resolved = {
+        ...afterConcentrationBreak,
+        fighter: damaged,
+        actionAvailable: false,
+      }
+      val afterConcentrationStart = saveGatedDamageStateAfterFailedSaveConcentrationStart(resolved, invocation, savingThrowSucceeded)
+      if (saveGatedDamageSpendsLevelOneSlot(invocation))
+        commitActorSpellSlotUse(afterConcentrationStart, Fighter)
+      else
+        afterConcentrationStart
+    }
+
+  pure def saveGatedSelfTargetDamageRequiresConcentrationSaveAfterCastBreak(
+    state: BattleState,
+    invocation: SaveGatedDamageInvocation,
+    savingThrowSucceeded: bool,
+    damageRoll: int,
+  ): bool = {
+    val afterConcentrationBreak = saveGatedDamageStateAfterCastConcentrationBreak(state, invocation)
+    val adjustedDamage =
+      damageAfterAdjustments(
+        saveGatedDamageAmount(invocation, damageRoll, savingThrowSucceeded),
+        saveGatedDamageType(invocation),
+        Set(),
+        Set(),
+        Set()
+      )
+    afterConcentrationBreak.fighter.concentrating and adjustedDamage > 0
+  }
 
   pure def resolveSacredFlame(
     state: BattleState,
@@ -860,6 +964,22 @@ module battleRuntimeSaveGatedSpell {
     concentrationSaveSucceeded: bool,
   ): BattleState =
     resolveSingleTargetSaveGatedDamage(state, InflictWoundsSaveGate, savingThrowSucceeded, damageRoll, concentrationSaveSucceeded)
+
+  pure def resolveMindSpike(
+    state: BattleState,
+    savingThrowSucceeded: bool,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+  ): BattleState =
+    resolveSingleTargetSaveGatedDamage(state, MindSpikeSaveGate, savingThrowSucceeded, damageRoll, concentrationSaveSucceeded)
+
+  pure def resolveSelfMindSpike(
+    state: BattleState,
+    savingThrowSucceeded: bool,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+  ): BattleState =
+    resolveSelfTargetSaveGatedDamage(state, MindSpikeSaveGate, savingThrowSucceeded, damageRoll, concentrationSaveSucceeded)
 
   pure def adjustedAttackBurstSaveDamage(
     damage: int,

@@ -109,6 +109,7 @@ import longstriderInput from "../../content/longstrider.json";
 import mageArmorInput from "../../content/mage_armor.json";
 import magicMissileInput from "../../content/magic_missile.json";
 import magicMouthInput from "../../content/magic_mouth.json";
+import mindSpikeInput from "../../content/mind_spike.json";
 import massCureWoundsInput from "../../content/mass_cure_wounds.json";
 import massHealingWordInput from "../../content/mass_healing_word.json";
 import masteryCleaveInput from "../../content/mastery_cleave.json";
@@ -497,6 +498,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     mageArmorInput,
     magicMissileInput,
     magicMouthInput,
+    mindSpikeInput,
     mirrorImageInput,
     massCureWoundsInput,
     massHealingWordInput,

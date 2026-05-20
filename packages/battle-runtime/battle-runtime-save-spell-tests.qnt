@@ -368,6 +368,8 @@ module battleRuntimeSaveSpellTests {
       assert(saveGatedDamageReplayHoles(SacredFlameSaveGate, true, true, true, true) == Set(DamageRoll)),
       assert(saveGatedDamageReplayHoles(SacredFlameSaveGate, true, true, true, false) == Set()),
       assert(saveGatedDamageReplayHoles(InflictWoundsSaveGate, true, true, true, true) == Set(DamageRoll)),
+      assert(saveGatedDamageReplayHoles(MindSpikeSaveGate, true, false, false, false) == Set(TargetChoice)),
+      assert(saveGatedDamageReplayHoles(MindSpikeSaveGate, true, true, true, true) == Set(DamageRoll)),
       assert(saveGatedDamageReplayHoles(BurningHandsSaveGate, true, true, false, false) == Set(SavingThrowOutcome)),
       assert(saveGatedDamageReplayHoles(BurningHandsSaveGate, true, true, true, true) == Set(DamageRoll)),
       assert(saveGatedDamageReplayHoles(FireballSaveGate, true, true, false, false) == Set(SavingThrowOutcome)),
@@ -401,6 +403,56 @@ module battleRuntimeSaveSpellTests {
       assert(attackBurstSaveDamageReplayHoles(IceKnifeAttackBurstSaveDamage, true, true, true, true, true, false, false) == Set(SavingThrowOutcome)),
       assert(attackBurstSaveDamageReplayHoles(IceKnifeAttackBurstSaveDamage, true, true, true, false, false, true, true) == Set(SpellDamageRoll)),
       assert(attackBurstSaveDamageReplayHoles(IceKnifeAttackBurstSaveDamage, false, false, false, false, false, false, false) == Set()),
+    }
+  }
+
+  run test_mind_spike_failed_save_starts_duration_bearing_concentration = {
+    val spiked = resolveMindSpike(initialState, false, 8, true)
+    all {
+      assert(spiked.goblin.hp == initialState.goblin.hp - 8),
+      assert(spiked.fighter.concentrating),
+      assert(spiked.fighter.activeEffects.contains(MindSpikeConcentrationDuration({ durationTicks: mindSpikeDurationTicks }))),
+      assert(spiked.goblin.activeEffects == initialState.goblin.activeEffects),
+      assert(battleActorHasCommittedSpellSlotUse(spiked, Fighter)),
+    }
+  }
+
+  run test_mind_spike_failed_save_concentration_expires_after_one_hour_duration = {
+    val spiked = resolveMindSpike(initialState, false, 12, true)
+    val expiring = {
+      ...spiked,
+      fighter: {
+        ...spiked.fighter,
+        activeEffects: Set(MindSpikeConcentrationDuration({ durationTicks: 1 })),
+      },
+    }
+    val expired = tickRoundDurationSpellEffects(expiring)
+    all {
+      assert(not(expired.fighter.concentrating)),
+      assert(expired.fighter.activeEffects == Set()),
+    }
+  }
+
+  run test_mind_spike_successful_save_breaks_prior_concentration_without_starting_new_effect = {
+    val concentrating = { ...initialState, fighter: { ...initialState.fighter, concentrating: true, activeEffects: Set(GuidanceAbilityCheckBonus) } }
+    val spiked = resolveMindSpike(concentrating, true, 12, true)
+    all {
+      assert(spiked.goblin.hp == initialState.goblin.hp - 6),
+      assert(not(spiked.fighter.concentrating)),
+      assert(spiked.fighter.activeEffects == Set()),
+      assert(battleActorHasCommittedSpellSlotUse(spiked, Fighter)),
+    }
+  }
+
+  run test_mind_spike_self_target_breaks_prior_concentration_before_damage_lifecycle = {
+    val concentrating = { ...initialState, fighter: { ...initialState.fighter, concentrating: true, activeEffects: Set(GuidanceAbilityCheckBonus) } }
+    val spiked = resolveSelfMindSpike(concentrating, false, 4, false)
+    all {
+      assert(not(saveGatedSelfTargetDamageRequiresConcentrationSaveAfterCastBreak(concentrating, MindSpikeSaveGate, false, 4))),
+      assert(spiked.fighter.hp == initialState.fighter.hp - 4),
+      assert(spiked.fighter.concentrating),
+      assert(spiked.fighter.activeEffects == Set(MindSpikeConcentrationDuration({ durationTicks: mindSpikeDurationTicks }))),
+      assert(battleActorHasCommittedSpellSlotUse(spiked, Fighter)),
     }
   }
 

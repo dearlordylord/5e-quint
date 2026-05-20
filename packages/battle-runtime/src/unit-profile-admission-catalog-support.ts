@@ -211,6 +211,10 @@ export const mageArmorUnitId = "mage_armor";
 
 export const magicMissileUnitId = "magic_missile";
 
+export const mindSpikeUnitId = "mind_spike";
+
+export const mindSpikeDurationTicks = elapsedTimeTicks(600);
+
 export const passWithoutTraceUnitId = "pass_without_trace";
 
 export const poisonSprayUnitId = "poison_spray";

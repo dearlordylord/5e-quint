@@ -5,7 +5,9 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29A burning_hands
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV54 fireball
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV55 shatter
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-MIND-SPIKE mind_spike
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-damage-save-or-attack
+import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { describe, expect, test } from "vitest";
 import {
   acidSplashUnitId,
@@ -15,6 +17,8 @@ import {
   guidingBoltUnitId,
   inflictWoundsUnitId,
   magicMissileUnitId,
+  mindSpikeDurationTicks,
+  mindSpikeUnitId,
   poisonSprayUnitId,
   rayOfFrostUnitId,
   rayOfSicknessUnitId,
@@ -61,6 +65,7 @@ import type {
   CombatantId,
   EffectAtom,
 } from "./unit-profile-admission-test-support.ts";
+import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
 
 const fireballObjectId = battleObjectId("unit-profile-fireball-object");
 
@@ -690,6 +695,376 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
         choices: [spellCasterId, spellTargetId],
       }),
     ]);
+  });
+  test("mind_spike is admitted as single-target Wisdom save Psychic slot damage", () => {
+    const spell = spellRecord(mindSpikeUnitId);
+    const act = spellAct({
+      state: spellBattle({
+        preparedSpells: [spell],
+        spellSlots: [{ spellLevel: 3, count: 1 }],
+      }),
+      spellId: mindSpikeUnitId,
+      slotLevel: 3,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(mindSpikeUnitId, 3, "saveGatedDamage"),
+      mode: { tag: "cast" },
+    });
+    const savingThrow = requireResultHole(
+      resolveBattleSubject({
+        state: spellBattle({
+          preparedSpells: [spell],
+          spellSlots: [{ spellLevel: 3, count: 1 }],
+        }),
+        subject: act.subject,
+        fills: [
+          spellTargetFill(
+            requireHole(act.initialHoles, "targetChoice"),
+            mindSpikeUnitId,
+            spellCasterId,
+            spellTargetId,
+          ),
+        ],
+      }),
+      "savingThrowOutcome",
+    );
+    expect(spellHoleInvocation([savingThrow])).toEqual(
+      expect.objectContaining({
+        procedure: "saveGatedDamage",
+        spell,
+        resource: { tag: "spellSlot", slotLevel: 3 },
+        ability: "wis",
+        targeting: { kind: "singleCombatant" },
+        damage: {
+          expr: { dice: 4, dieSize: 8 },
+          damageType: "psychic",
+        },
+        successDamage: "half",
+        rangeFeet: 120,
+        failedSavePostDamageRiders: [],
+      }),
+    );
+    expect(act.initialHoles).toEqual([
+      expect.objectContaining({
+        kind: "targetChoice",
+        choices: [spellCasterId, spellTargetId],
+      }),
+    ]);
+  });
+  test("mind_spike failed save applies Psychic damage and owns Concentration without duplicate location state", () => {
+    const spell = spellRecord(mindSpikeUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      targetHp: 30,
+      targetMaxHp: 30,
+    });
+    const act = spellAct({ state, spellId: mindSpikeUnitId, slotLevel: 2 });
+    const targetFill = spellTargetFill(
+      requireHole(act.initialHoles, "targetChoice"),
+      mindSpikeUnitId,
+      spellCasterId,
+      spellTargetId,
+    );
+    const savingThrow = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill],
+      }),
+      "savingThrowOutcome",
+    );
+    const saveFill = savingThrowOutcomeFill(savingThrow, [
+      { targetId: spellTargetId, succeeded: false },
+    ]);
+    const damageRoll = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill, saveFill],
+      }),
+      "rolledDice",
+    );
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        saveFill,
+        damageRollFillWithGroups(damageRoll, [[4, 4, 4]]),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Mind Spike to resolve.");
+    }
+    expect(Number(requireCombatant(resolved.state, spellTargetId).hp)).toBe(18);
+    expect(
+      requireCombatant(resolved.state, spellTargetId).activeEffects,
+    ).toEqual([]);
+    expect(
+      requireCombatant(resolved.state, spellCasterId).concentration,
+    ).toEqual({ sourceSpellId: mindSpikeUnitId, effectKind: "spellEffect" });
+    expect(
+      requireCombatant(resolved.state, spellCasterId).activeEffects,
+    ).toEqual([
+      {
+        kind: "spellConcentrationDuration",
+        sourceCombatantId: spellCasterId,
+        sourceSpellId: mindSpikeUnitId,
+        expiresAt: {
+          kind: "concentration",
+          combatantId: spellCasterId,
+          durationTicks: mindSpikeDurationTicks,
+        },
+      },
+    ]);
+    expect(
+      snapshotBattle(resolved.state).combatants.find(
+        (combatant) => combatant.combatantId === spellCasterId,
+      )?.origin,
+    ).toEqual(
+      expect.objectContaining({
+        spellcasting: expect.objectContaining({
+          spellSlots: expect.arrayContaining([
+            expect.objectContaining({ spellLevel: 2, expended: 1 }),
+          ]),
+        }),
+      }),
+    );
+  });
+  test("mind_spike failed-save Concentration expires after its one-hour maximum", () => {
+    const spell = spellRecord(mindSpikeUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      targetHp: 30,
+      targetMaxHp: 30,
+    });
+    const act = spellAct({ state, spellId: mindSpikeUnitId, slotLevel: 2 });
+    const targetFill = spellTargetFill(
+      requireHole(act.initialHoles, "targetChoice"),
+      mindSpikeUnitId,
+      spellCasterId,
+      spellTargetId,
+    );
+    const savingThrow = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill],
+      }),
+      "savingThrowOutcome",
+    );
+    const saveFill = savingThrowOutcomeFill(savingThrow, [
+      { targetId: spellTargetId, succeeded: false },
+    ]);
+    const damageRoll = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill, saveFill],
+      }),
+      "rolledDice",
+    );
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        saveFill,
+        damageRollFillWithGroups(damageRoll, [[4, 4, 4]]),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Mind Spike to resolve.");
+    }
+
+    const caster = requireCombatant(resolved.state, spellCasterId);
+    const nearlyExpiredCombatants = new Map(resolved.state.combatants).set(
+      spellCasterId,
+      {
+        ...caster,
+        activeEffects: caster.activeEffects.map((effect) =>
+          effect.kind === "spellConcentrationDuration" &&
+          effect.sourceSpellId === mindSpikeUnitId &&
+          effect.expiresAt.kind === "concentration"
+            ? {
+                ...effect,
+                expiresAt: {
+                  ...effect.expiresAt,
+                  durationTicks: elapsedTimeTicks(1),
+                },
+              }
+            : effect,
+        ),
+      },
+    );
+    const expiredCombatants = tickDurationEffects(nearlyExpiredCombatants);
+
+    expect(expiredCombatants.get(spellCasterId)?.concentration).toBeNull();
+    expect(expiredCombatants.get(spellCasterId)?.activeEffects).toEqual([]);
+    expect(expiredCombatants.get(spellTargetId)?.activeEffects).toEqual([]);
+  });
+  test("mind_spike self-target breaks prior Concentration before damage can request a save", () => {
+    const spell = spellRecord(mindSpikeUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const caster = requireCombatant(state, spellCasterId);
+    const concentratingState = {
+      ...state,
+      combatants: new Map(state.combatants).set(spellCasterId, {
+        ...caster,
+        concentration: {
+          sourceSpellId: spellId("synthetic_prior_concentration"),
+          effectKind: "spellEffect",
+        },
+      }),
+    };
+    const act = spellAct({
+      state: concentratingState,
+      spellId: mindSpikeUnitId,
+      slotLevel: 2,
+    });
+    const targetFill = spellTargetFill(
+      requireHole(act.initialHoles, "targetChoice"),
+      mindSpikeUnitId,
+      spellCasterId,
+      spellCasterId,
+    );
+    const savingThrow = requireResultHole(
+      resolveBattleSubject({
+        state: concentratingState,
+        subject: act.subject,
+        fills: [targetFill],
+      }),
+      "savingThrowOutcome",
+    );
+    const saveFill = savingThrowOutcomeFill(savingThrow, [
+      { targetId: spellCasterId, succeeded: false },
+    ]);
+    const damageRoll = requireResultHole(
+      resolveBattleSubject({
+        state: concentratingState,
+        subject: act.subject,
+        fills: [targetFill, saveFill],
+      }),
+      "rolledDice",
+    );
+
+    const resolved = resolveBattleSubject({
+      state: concentratingState,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        saveFill,
+        damageRollFillWithGroups(damageRoll, [[1, 1, 1]]),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected self-targeted Mind Spike to resolve.");
+    }
+    expect(
+      requireCombatant(resolved.state, spellCasterId).concentration,
+    ).toEqual({ sourceSpellId: mindSpikeUnitId, effectKind: "spellEffect" });
+    expect(
+      requireCombatant(resolved.state, spellCasterId).activeEffects,
+    ).toEqual([
+      {
+        kind: "spellConcentrationDuration",
+        sourceCombatantId: spellCasterId,
+        sourceSpellId: mindSpikeUnitId,
+        expiresAt: {
+          kind: "concentration",
+          combatantId: spellCasterId,
+          durationTicks: mindSpikeDurationTicks,
+        },
+      },
+    ]);
+  });
+  test("mind_spike successful save applies half damage and breaks prior Concentration without starting Mind Spike", () => {
+    const spell = spellRecord(mindSpikeUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      targetHp: 30,
+      targetMaxHp: 30,
+    });
+    const caster = requireCombatant(state, spellCasterId);
+    const concentratingState = {
+      ...state,
+      combatants: new Map(state.combatants).set(spellCasterId, {
+        ...caster,
+        concentration: {
+          sourceSpellId: spellId("synthetic_prior_concentration"),
+          effectKind: "spellEffect",
+        },
+      }),
+    };
+    const act = spellAct({
+      state: concentratingState,
+      spellId: mindSpikeUnitId,
+      slotLevel: 2,
+    });
+    const targetFill = spellTargetFill(
+      requireHole(act.initialHoles, "targetChoice"),
+      mindSpikeUnitId,
+      spellCasterId,
+      spellTargetId,
+    );
+    const savingThrow = requireResultHole(
+      resolveBattleSubject({
+        state: concentratingState,
+        subject: act.subject,
+        fills: [targetFill],
+      }),
+      "savingThrowOutcome",
+    );
+    const saveFill = savingThrowOutcomeFill(savingThrow, [
+      { targetId: spellTargetId, succeeded: true },
+    ]);
+    const damageRoll = requireResultHole(
+      resolveBattleSubject({
+        state: concentratingState,
+        subject: act.subject,
+        fills: [targetFill, saveFill],
+      }),
+      "rolledDice",
+    );
+
+    const resolved = resolveBattleSubject({
+      state: concentratingState,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        saveFill,
+        damageRollFillWithGroups(damageRoll, [[4, 4, 4]]),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Mind Spike to resolve.");
+    }
+    expect(Number(requireCombatant(resolved.state, spellTargetId).hp)).toBe(24);
+    expect(
+      requireCombatant(resolved.state, spellCasterId).concentration,
+    ).toBeNull();
+    expect(
+      requireCombatant(resolved.state, spellCasterId).activeEffects,
+    ).toEqual([]);
   });
   test("burning_hands is admitted as a self-origin Cone save-gated slot damage spell", () => {
     const spell = spellRecord(burningHandsUnitId);

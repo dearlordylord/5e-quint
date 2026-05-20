@@ -13,16 +13,22 @@
 --   "Using a Higher-Level Spell Slot. The damage increases by 1d8 for
 --    each spell slot level above 2."
 --
--- PARTIAL AUTHOR. save_gate Wis → psychic damage, half on success.
--- Damage scales 1d8 per slot above 2. Concentration, up to 1 hour.
+-- PARTIAL AUTHOR. save_gate Wis -> psychic damage, half on success.
+-- Damage scales 1d8 per slot above 2. The runtime owns the
+-- failed-save Concentration lock and its one-hour maximum through a
+-- duration-only concentration anchor; successful saves spend the slot
+-- and deal half damage without starting the location-knowledge spell
+-- effect. The table/perception owner owns same-plane location
+-- knowledge, Hidden prevention, and Invisible benefit denial while the
+-- spell remains active.
 --
--- DEFERRED.
+-- RUNTIME-DETACHED CLOSURE.
 --   1. "you also always know the target's location until the spell
---      ends" — remote-location sensing / target-tracking is §B
---      DM-agenda (sibling to Locate Object, Scrying).
+--      ends" -- remote-location sensing / target-tracking is table
+--      knowledge outside promoted battle execution.
 --   2. "the target can't become hidden from you" and "Invisible gains
---      no benefit against you" — perception / visibility overrides are
---      §B DM-agenda (visibility class).
+--      no benefit against you" -- perception / visibility overrides are
+--      table/perception facts outside promoted battle execution.
 
 let mindSpike =
       { kind = "spell"

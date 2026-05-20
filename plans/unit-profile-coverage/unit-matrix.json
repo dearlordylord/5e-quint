@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 389,
-      "numerator": 175,
-      "percent": "45%"
+      "numerator": 176,
+      "percent": "45.2%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 461,
-      "numerator": 207,
-      "percent": "44.9%"
+      "numerator": 208,
+      "percent": "45.1%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 208
+      "value": 209
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 129,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 208,
-      "numerator": 208,
+      "denominator": 209,
+      "numerator": 209,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "81.4%"
     },
     "supportedProfileCoverage": {
-      "denominator": 176,
+      "denominator": 177,
       "numerator": 129,
-      "percent": "73.3%"
+      "percent": "72.9%"
     }
   },
   "metricSemantics": [
@@ -18249,6 +18249,106 @@
         "status": "installed"
       },
       "claim": {
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "runtime-detached table/perception/knowledge owner",
+              "reason": "The promoted battle runtime owns Spell Invocation, target admission, save-damage resolution, Spell Slot spend, failed-save Concentration lock, and the one-hour maximum duration cleanup. Same-plane location knowledge, Hidden prevention, and observer-scoped Invisible benefit denial are table/perception knowledge facts not consumed by promoted battle procedures, so they remain runtime-detached rather than stored as parallel state."
+            },
+            "mechanic": "failed-save same-plane location knowledge while the spell remains active, target cannot become hidden from the caster while known, and Invisible condition grants no benefit against the caster while the caster has this knowledge"
+          }
+        ],
+        "profileIds": [
+          "spell.invocation-damage-save-or-attack"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action level-2-or-higher Spell Slot casting",
+          "one visible creature target within 120 feet supplied by caller-owned target facts",
+          "Wisdom Saving Throw against the caster Spell Save DC",
+          "Psychic damage of 3d8 plus 1d8 per Spell Slot level above 2 on a failed save",
+          "half Psychic damage on a successful save",
+          "failed-save caster Concentration ownership with one-hour maximum duration cleanup, without storing duplicate location state",
+          "successful save spends the Spell Slot and deals half damage without starting the Mind Spike Concentration effect"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-SPELL-MIND-SPIKE"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-damage-save-or-attack",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE10",
+            "QMBT5",
+            "SRDINV29E",
+            "SRDINV32B",
+            "SRDINV34",
+            "SRDINV59A",
+            "SRDINV59B",
+            "SRDINV79",
+            "SRDINV51",
+            "SRDINV52",
+            "SRDINV64",
+            "SRDINV67",
+            "SRDINV69B",
+            "SRDINV84A",
+            "SRDINV84B",
+            "SRDINV89A"
+          ],
+          "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/mind_spike.json",
+      "unitId": "mind_spike"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "battleReadinessClosure": {
           "kind": "table-spatial-derivation",
           "owner": "table/sight owner",
@@ -23423,24 +23523,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/mind_blank.json",
       "unitId": "mind_blank"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/mind_spike.json",
-      "unitId": "mind_spike"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

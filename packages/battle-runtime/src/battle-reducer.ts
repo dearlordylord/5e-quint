@@ -783,6 +783,13 @@ export type BattleActiveEffect =
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {
+      readonly kind: "spellConcentrationDuration";
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "concentration" }
+      > & { readonly durationTicks: ElapsedTimeTicks };
+    })
+  | (BattleSpellEffectBase & {
       readonly kind: "d20RollModifier";
       readonly on: readonly BattleD20RollModifierKind[];
       readonly delta: BattleD20RollModifierDelta;

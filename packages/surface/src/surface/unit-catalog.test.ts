@@ -117,6 +117,7 @@ const requiredFirstVerticalUnitIds = [
   "mage_armor",
   "magic_missile",
   "magic_mouth",
+  "mind_spike",
   "mass_cure_wounds",
   "healing_word",
   "prayer_of_healing",

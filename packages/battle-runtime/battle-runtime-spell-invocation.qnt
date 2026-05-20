@@ -122,6 +122,7 @@ module battleRuntimeSpellInvocation {
       | MistyStep => true
       | Blur => true
       | MirrorImage => true
+      | MindSpike => true
     }
 
   pure def canExpendSpellSlotThisTurn(state: BattleState): bool =
