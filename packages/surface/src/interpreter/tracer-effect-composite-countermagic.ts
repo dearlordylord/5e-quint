@@ -22,6 +22,7 @@ export type CompositeAndCountermagicEffectAtom = Extract<
       | "natural_weapons"
       | "water_breathing"
       | "detect"
+      | "magical_identity_mask"
       | "locate_kind"
       | "object_location_sense"
       | "assign_courier_task"
@@ -369,6 +370,22 @@ export function traceCompositeAndCountermagicEffectAtom(
         category: "effect",
         atomKind: "detect",
         label: `detect\nproperty: ${e.property}\nradius ${e.radiusFeet} ft`,
+      });
+      return id;
+    }
+    case "magical_identity_mask": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "magical_identity_mask",
+        label: [
+          "magical_identity_mask",
+          `creature: ${e.creatureBranch.chosenCreatureType}`,
+          `treated by: ${e.creatureBranch.treatedAsBy}`,
+          `object aura: ${e.objectBranch.auraAppearance}`,
+          `observed by: ${e.objectBranch.observedBy}`,
+        ].join("\n"),
       });
       return id;
     }

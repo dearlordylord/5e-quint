@@ -215,6 +215,35 @@
     },
     {
       "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "social-knowledge-effect"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Magic Aura changes how spells and magical effects interpret a target's magical identity; promoted battle runtime has no generic owner for magical-aura deception or spell/effect effective Creature Type override state, so detection and identification consequences remain table/knowledge adjudication.",
+      "sourceRecordPath": "packages/surface/content/arcanists_magic_aura.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Arcanist's Magic Aura",
+          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_arcanists_magic_aura",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 200,
+            "lineStart": 200,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
+      "unitId": "arcanists_magic_aura"
+    },
+    {
+      "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
         "later-level-only"
@@ -2752,13 +2781,14 @@
       ]
     },
     {
-      "count": 22,
+      "count": 23,
       "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
         "alarm",
         "animal_messenger",
         "arcane_lock",
+        "arcanists_magic_aura",
         "charm_person",
         "comprehend_languages",
         "detect_evil_and_good",
@@ -2822,12 +2852,12 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 481,
-      "percent": "86.5%",
+      "numerator": 482,
+      "percent": "86.7%",
       "rowsByStatus": {
         "accepted": 355,
-        "accepted-no-battle-effect": 126,
-        "battle-runtime-required": 65,
+        "accepted-no-battle-effect": 127,
+        "battle-runtime-required": 64,
         "owner-evidence-required": 3,
         "partial-battle-runtime": 7
       }
@@ -2848,13 +2878,13 @@
       "percent": "29.2%"
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 162,
+      "denominator": 163,
       "numerator": 106,
-      "percent": "65.4%"
+      "percent": "65%"
     },
     "strictTargetClosure": {
-      "denominator": 162,
-      "numerator": 161,
+      "denominator": 163,
+      "numerator": 162,
       "percent": "99.4%"
     }
   },
@@ -2890,24 +2920,6 @@
       }
     ],
     "noMatrixSrdPressure": [
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "spell Unit pressure",
-            "concept": "Wizard spell list Arcanist's Magic Aura",
-            "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_arcanists_magic_aura",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 200,
-              "lineStart": 200,
-              "path": ".references/srd-5.2.1/Classes/Wizard.md"
-            }
-          }
-        ],
-        "unitId": "arcanists_magic_aura"
-      },
       {
         "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
@@ -7589,18 +7601,18 @@
       "missing": 1,
       "profile-subset-supported": 14,
       "supported-profile": 106,
-      "unsupported-profile": 41
+      "unsupported-profile": 42
     },
     "groupsByStatus": {
       "blocked-follow-up-split": 24,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
-      "closed-runtime-detached-table-adjudication": 22,
+      "closed-runtime-detached-table-adjudication": 23,
       "open-runtime-behavior": 1,
       "supported-profile": 106
     },
-    "nonSupportedFrontier": 56,
-    "strictDenominator": 162
+    "nonSupportedFrontier": 57,
+    "strictDenominator": 163
   }
 }

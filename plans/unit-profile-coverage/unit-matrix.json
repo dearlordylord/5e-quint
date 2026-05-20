@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 390,
-      "numerator": 177,
-      "percent": "45.4%"
+      "denominator": 391,
+      "numerator": 178,
+      "percent": "45.5%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 462,
-      "numerator": 209,
-      "percent": "45.2%"
+      "denominator": 463,
+      "numerator": 210,
+      "percent": "45.4%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 210
+      "value": 211
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 129,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 210,
-      "numerator": 210,
+      "denominator": 211,
+      "numerator": 211,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "81.4%"
     },
     "supportedProfileCoverage": {
-      "denominator": 178,
+      "denominator": 179,
       "numerator": 129,
-      "percent": "72.5%"
+      "percent": "72.1%"
     }
   },
   "metricSemantics": [
@@ -12694,6 +12694,29 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/animal_messenger.json",
       "unitId": "animal_messenger"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "social-knowledge-effect",
+          "owner": "runtime-detached table/knowledge magical identity adjudication owner",
+          "reason": "Magic Aura changes how spells and magical effects interpret a target's magical identity; promoted battle runtime has no generic owner for magical-aura deception or spell/effect effective Creature Type override state, so detection and identification consequences remain table/knowledge adjudication."
+        },
+        "reason": "Arcanist's Magic Aura is authored and installed as an SRD Surface Spell Definition with Magic Action Spell Slot casting, Touch range, V/S/M silk component, 24-hour duration with same-target 30 daily casts lasting until dispelled, a willing-creature or not-worn/not-carried object target gate, Mask creature branch for a caster-chosen Creature Type other than the target's actual type, and False Aura object branch for magical-aura detection appearances. Task 6 claims no promoted battle-runtime profile because magical-aura appearance, magic-item/nonmagical provenance presentation, and generic spell-or-magical-effect effective Creature Type interpretation are table/knowledge facts with no promoted runtime owner for Magic Aura's deception state.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/arcanists_magic_aura.json",
+      "unitId": "arcanists_magic_aura"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

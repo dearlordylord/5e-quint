@@ -302,6 +302,9 @@ export type Components = Schema.Schema.Type<
 export type DurationEndTrigger = Schema.Schema.Type<
   typeof SurfaceSchema.DurationEndTriggerSchema
 >;
+export type TimedPermanentAfter = Schema.Schema.Type<
+  typeof SurfaceSchema.TimedPermanentAfterSchema
+>;
 export type Duration = Schema.Schema.Type<typeof SurfaceSchema.DurationSchema>;
 export type RepeatSaveSpec = Schema.Schema.Type<
   typeof SurfaceSchema.RepeatSaveSpecSchema

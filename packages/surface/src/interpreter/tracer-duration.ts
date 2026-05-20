@@ -3,6 +3,7 @@ import type { TraceEdge, TraceNode } from "./tracer-model.ts";
 import {
   describeDurationValue,
   describeEarlyEnd,
+  describeTimedPermanentAfter,
 } from "./tracer-rule-labels.ts";
 import type { IdGen } from "./tracer-rule-labels.ts";
 
@@ -50,6 +51,8 @@ export function traceDuration(
       return;
     }
     case "timed": {
+      const permanentAfter =
+        "permanentAfter" in d ? d.permanentAfter : undefined;
       const persistId = ids("per");
       nodes.push({
         id: persistId,
@@ -64,7 +67,7 @@ export function traceDuration(
         id: expId,
         category: "lifecycle",
         atomKind: "expire",
-        label: `expire\n${describeDurationValue(d.value)}${describeEarlyEnd(d.earlyEnd)}`,
+        label: `expire\n${describeDurationValue(d.value)}${describeEarlyEnd(d.earlyEnd)}${describeTimedPermanentAfter(permanentAfter)}`,
       });
       edges.push({ from: persistId, to: expId, relation: "persists_until" });
       return;

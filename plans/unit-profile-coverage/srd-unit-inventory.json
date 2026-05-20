@@ -182,12 +182,12 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 481,
-      "percent": "86.5%",
+      "numerator": 482,
+      "percent": "86.7%",
       "rowsByStatus": {
         "accepted": 355,
-        "accepted-no-battle-effect": 126,
-        "battle-runtime-required": 65,
+        "accepted-no-battle-effect": 127,
+        "battle-runtime-required": 64,
         "partial-battle-runtime": 7,
         "owner-evidence-required": 3
       }
@@ -205,15 +205,15 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 367,
       "non-runtime": 24,
-      "catalog-only/dead-for-now": 97,
-      "missing-authored-record": 26,
+      "catalog-only/dead-for-now": 98,
+      "missing-authored-record": 25,
       "catalog-installed-owner-evidence-required": 21,
       "catalog-authored-executable-follow-up": 21
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 206,
-      "catalog-only/dead-for-now": 97,
-      "missing-authored-record": 26,
+      "catalog-only/dead-for-now": 98,
+      "missing-authored-record": 25,
       "catalog-installed-owner-evidence-required": 17,
       "catalog-authored-executable-follow-up": 21
     },
@@ -25713,19 +25713,39 @@
       "detail": "Arcanist's Magic Aura (Illusion; —)",
       "candidateUnitId": "arcanists_magic_aura",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "arcanists_magic_aura",
+        "sourceRecordPath": "packages/surface/content/arcanists_magic_aura.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "arcanists_magic_aura"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "social-knowledge-effect",
+        "owner": "runtime-detached table/knowledge magical identity adjudication owner",
+        "reason": "Magic Aura changes how spells and magical effects interpret a target's magical identity; promoted battle runtime has no generic owner for magical-aura deception or spell/effect effective Creature Type override state, so detection and identification consequences remain table/knowledge adjudication."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit arcanists_magic_aura is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached table/knowledge magical identity adjudication owner",
+          "evidence": "Magic Aura changes how spells and magical effects interpret a target's magical identity; promoted battle runtime has no generic owner for magical-aura deception or spell/effect effective Creature Type override state, so detection and identification consequences remain table/knowledge adjudication.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Magic Aura changes how spells and magical effects interpret a target's magical identity; promoted battle runtime has no generic owner for magical-aura deception or spell/effect effective Creature Type override state, so detection and identification consequences remain table/knowledge adjudication.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_augury",

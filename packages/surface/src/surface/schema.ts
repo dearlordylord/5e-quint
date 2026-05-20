@@ -117,6 +117,7 @@ export {
   TargetSelectionSchema,
   TargetStateFilterSchema,
   TargetTypeFilterSchema,
+  TimedPermanentAfterSchema,
   TriggeredReactionMechanicsSchema,
 } from "./schema-spell.ts";
 export {

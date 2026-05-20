@@ -915,6 +915,17 @@ type EffectAtom =
       readonly radiusFeet: number;
     }
   | {
+      readonly kind: "magical_identity_mask";
+      readonly creatureBranch: {
+        readonly chosenCreatureType: "other_than_actual_type";
+        readonly treatedAsBy: "spells_and_magical_effects";
+      };
+      readonly objectBranch: {
+        readonly auraAppearance: "nonmagical_magical_or_chosen_school";
+        readonly observedBy: "spells_and_magical_effects_detecting_magical_auras";
+      };
+    }
+  | {
       readonly kind: "locate_kind";
       readonly subjectKinds: ReadonlyNonEmptyArray<LocateKindSubject>;
       readonly maxDistanceFeet: number;
@@ -1466,6 +1477,14 @@ export const DurationEndTriggerSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("caster_lets_go_of_attached_weapon") }),
 );
 
+export const TimedPermanentAfterSchema = Schema.Struct({
+  kind: Schema.Literal("repeated_casts"),
+  cadence: Schema.Literal("daily"),
+  count: PositiveIntegerSchema,
+  target: Schema.Literal("same_target"),
+  endsOn: nonEmpty(Schema.Literal("dispel")),
+});
+
 export const DurationSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("instantaneous"),
@@ -1480,6 +1499,7 @@ export const DurationSchema = Schema.Union(
     kind: Schema.Literal("timed"),
     value: DurationValueSchema,
     earlyEnd: optionalExact(nonEmpty(DurationEndTriggerSchema)),
+    permanentAfter: optionalExact(TimedPermanentAfterSchema),
   }),
   Schema.Struct({
     kind: Schema.Literal("permanent"),
@@ -1535,6 +1555,7 @@ export const TargetSelectionSchema = Schema.Union(
     mode: Schema.Literal("one"),
     targetKinds: CreatureOrObjectTargetKindsSchema,
     objectFilter: Schema.suspend(() => ObjectFilterSchema),
+    creatureDisposition: optionalExact(TargetDispositionSchema),
   }),
   CreatureTargetSelectionSchema,
   strictStruct({
@@ -2803,6 +2824,19 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         kind: Schema.Literal("detect"),
         property: DetectionPropertySchema,
         radiusFeet: Schema.Number,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("magical_identity_mask"),
+        creatureBranch: Schema.Struct({
+          chosenCreatureType: Schema.Literal("other_than_actual_type"),
+          treatedAsBy: Schema.Literal("spells_and_magical_effects"),
+        }),
+        objectBranch: Schema.Struct({
+          auraAppearance: Schema.Literal("nonmagical_magical_or_chosen_school"),
+          observedBy: Schema.Literal(
+            "spells_and_magical_effects_detecting_magical_auras",
+          ),
+        }),
       }),
       Schema.Struct({
         kind: Schema.Literal("locate_kind"),

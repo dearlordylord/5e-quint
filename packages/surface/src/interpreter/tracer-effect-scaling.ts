@@ -169,6 +169,7 @@ export function traceEffectAtomScaling(
     case "locate_kind":
     case "object_location_sense":
     case "assign_courier_task":
+    case "magical_identity_mask":
     case "set_speed":
     case "negate_triggering_spell":
     case "reflect_triggering_spell":

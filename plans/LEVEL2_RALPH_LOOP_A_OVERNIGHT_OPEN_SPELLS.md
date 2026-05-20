@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "L12G-MISSING-ARCANISTS-MAGIC-AURA",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Arcanists Magic Aura Definition And Closure"
     },
     {
@@ -201,7 +201,7 @@ The final task is intentionally blocked on every real task in this plan and plac
 | 3 | L12G-SPELL-MIND-SPIKE - Mind Spike Runtime Support And Knowledge Closure | done | completed baseline | A lane; Unit `mind_spike`. |
 | 4 | L12G-SPELL-WEB - Web Runtime Support Or Closure | done | completed baseline | A lane; Unit `web`. |
 | 5 | L12G-MISSING-ANIMAL-MESSENGER - Animal Messenger Definition And Closure | done | completed baseline | A lane; Unit `animal_messenger`. |
-| 6 | L12G-MISSING-ARCANISTS-MAGIC-AURA - Arcanists Magic Aura Definition And Closure | ready-for-research | completed baseline | A lane; Unit `arcanists_magic_aura`. |
+| 6 | L12G-MISSING-ARCANISTS-MAGIC-AURA - Arcanists Magic Aura Definition And Closure | done | completed baseline | A lane; Unit `arcanists_magic_aura`. |
 | 7 | L12G-MISSING-AUGURY - Augury Definition And Closure | ready-for-research | completed baseline | A lane; Unit `augury`. |
 | 8 | L12G-MISSING-CALM-EMOTIONS - Calm Emotions Definition And Support | ready-for-research | completed baseline | A lane; Unit `calm_emotions`. |
 | 9 | L12G-MISSING-DARKNESS - Darkness Definition And Support Or Closure | ready-for-research | completed baseline | A lane; Unit `darkness`. |
@@ -425,7 +425,7 @@ Acceptance:
 
 ### Task 6 - L12G-MISSING-ARCANISTS-MAGIC-AURA - Arcanists Magic Aura Definition And Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `arcanists_magic_aura`.
 Origin: Original backlog task 53.

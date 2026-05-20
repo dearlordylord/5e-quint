@@ -111,6 +111,7 @@ const requiredFirstVerticalUnitIds = [
   "fireball",
   "light",
   "animal_messenger",
+  "arcanists_magic_aura",
   "ray_of_frost",
   "detect_evil_and_good",
   "detect_magic",
@@ -1712,6 +1713,79 @@ describe("SRD Unit catalog boundary", () => {
     ]);
     expect(animalMessenger.description).toContain(
       "message is lost, and the Beast returns to where you cast the spell",
+    );
+  });
+
+  test("decodes Arcanist's Magic Aura as a magical identity mask", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const magicAura = result.catalog.requireUnit("arcanists_magic_aura");
+
+    expect(magicAura.kind).toBe("spell");
+    if (magicAura.kind !== "spell") return;
+    expect(magicAura.mechanics.family).toBe("activation");
+    if (magicAura.mechanics.family !== "activation") return;
+
+    expect(magicAura.mechanics).toMatchObject({
+      level: 2,
+      school: "illusion",
+      castingTime: { kind: "action" },
+      range: { kind: "touch" },
+      components: {
+        v: true,
+        s: true,
+        m: "a small square of silk",
+      },
+      duration: {
+        kind: "timed",
+        value: { unit: "hour", amount: 24 },
+        permanentAfter: {
+          kind: "repeated_casts",
+          cadence: "daily",
+          count: 30,
+          target: "same_target",
+          endsOn: ["dispel"],
+        },
+      },
+    });
+    expect(magicAura.mechanics.phases).toEqual([
+      {
+        kind: "direct",
+        attachment: {
+          kind: "hole",
+          holeId: "arcanists_magic_aura_target",
+          label: "willing creature or object",
+          value: {
+            kind: "target",
+            selection: {
+              mode: "one",
+              targetKinds: ["creature", "object"],
+              creatureDisposition: "willing",
+              objectFilter: {
+                targetRelation: "not_worn_or_carried",
+              },
+            },
+          },
+        },
+        effects: [
+          {
+            kind: "magical_identity_mask",
+            creatureBranch: {
+              chosenCreatureType: "other_than_actual_type",
+              treatedAsBy: "spells_and_magical_effects",
+            },
+            objectBranch: {
+              auraAppearance: "nonmagical_magical_or_chosen_school",
+              observedBy: "spells_and_magical_effects_detecting_magical_auras",
+            },
+          },
+        ],
+      },
+    ]);
+    expect(magicAura.description).toContain(
+      "spells and other magical effects treat the target",
     );
   });
 

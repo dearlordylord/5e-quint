@@ -201,6 +201,7 @@ export function traceEffectAtom(
     case "natural_weapons":
     case "water_breathing":
     case "detect":
+    case "magical_identity_mask":
     case "locate_kind":
     case "object_location_sense":
     case "assign_courier_task":

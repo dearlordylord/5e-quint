@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import animalMessengerInput from "../../content/animal_messenger.json";
+import arcanistsMagicAuraInput from "../../content/arcanists_magic_aura.json";
 import classFighterInput from "../../content/class_fighter.json";
 import dragonsBreathInput from "../../content/dragons_breath.json";
 import locateAnimalsOrPlantsInput from "../../content/locate_animals_or_plants.json";
@@ -172,6 +173,39 @@ describe("Surface trace interpreter", () => {
             "on arrival: deliver_to_described_creature",
             "on expiry: message_lost_and_beast_returns_to_casting_location",
           ].join("\n"),
+        }),
+      ]),
+    );
+  });
+
+  test("renders Arcanist's Magic Aura as target-gated magical identity masking", () => {
+    const trace = traceUnit(decodeUnitRecordSync(arcanistsMagicAuraInput));
+
+    expect(trace.nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          atomKind: "hole",
+          label: expect.stringContaining("creature disposition: willing"),
+        }),
+        expect.objectContaining({
+          atomKind: "hole",
+          label: expect.stringContaining("not_worn_or_carried"),
+        }),
+        expect.objectContaining({
+          atomKind: "magical_identity_mask",
+          label: [
+            "magical_identity_mask",
+            "creature: other_than_actual_type",
+            "treated by: spells_and_magical_effects",
+            "object aura: nonmagical_magical_or_chosen_school",
+            "observed by: spells_and_magical_effects_detecting_magical_auras",
+          ].join("\n"),
+        }),
+        expect.objectContaining({
+          atomKind: "expire",
+          label: expect.stringContaining(
+            "permanent after 30 daily casts on same_target",
+          ),
         }),
       ]),
     );
