@@ -120,7 +120,7 @@ export function resolveFlamingSphereSpellAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Flaming Sphere uses one table-supplied sphere area fill.",
+      "Movable sphere uses one table-supplied sphere area fill.",
     );
   }
   if (input.fillSet.areaChoice === undefined) {
@@ -135,7 +135,7 @@ export function resolveFlamingSphereSpellAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Flaming Sphere area id must be a non-empty Flaming Sphere area.",
+      "Movable sphere area id must be a non-empty sphere area.",
     );
   }
 
@@ -192,7 +192,7 @@ export function resolveMoonbeamSpellAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Moonbeam uses one table-supplied cylinder area fill.",
+      "Movable cylinder uses one table-supplied cylinder area fill.",
     );
   }
   if (input.fillSet.areaChoice === undefined) {
@@ -207,7 +207,7 @@ export function resolveMoonbeamSpellAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Moonbeam area id must be a non-empty Moonbeam cylinder area.",
+      "Movable cylinder area id must be a non-empty cylinder area.",
     );
   }
 

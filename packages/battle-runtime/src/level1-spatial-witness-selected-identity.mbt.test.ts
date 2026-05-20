@@ -53,6 +53,7 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
   activeFeatherFallDescentRateCapFeetPerRound,
+  battleAreaId,
   battleCombatantSide,
   battleId,
   battleIlluminationFromLightEmitters,
@@ -79,6 +80,7 @@ import {
   type BattleHole,
   type BattleIllumination,
   type BattleLightEmitter,
+  type BattleAreaId,
   type BattleLightEmitterProjectionFact,
   type BattleObscurementZone,
   type BattleObjectId,
@@ -478,11 +480,11 @@ const faerieFireObjectId = battleObjectId("level1-faerie-fire-object");
 const faerieFireObjectArmorClass = armorClass(13);
 const starryWispObjectTargetRangeFeet = movementFeet(60);
 const darkvisionWitnessRangeFeet = movementFeet(60);
-const fogCloudAreaId = "level1-fog-cloud-area";
+const fogCloudAreaId = battleAreaId("level1-fog-cloud-area");
 const fogCloudLevelOneRadiusFeet = movementFeet(20);
 const fogCloudOneHourDurationTicks = requireElapsedHours(1);
-const greaseAreaId = "level1-grease-ground-area";
-const staleGreaseAreaId = "level1-stale-grease-ground-area";
+const greaseAreaId = battleAreaId("level1-grease-ground-area");
+const staleGreaseAreaId = battleAreaId("level1-stale-grease-ground-area");
 const greaseOneMinuteDurationTicks = requireElapsedMinutes(1);
 const jumpOneMinuteDurationTicks = requireElapsedMinutes(1);
 const lightOneHourDurationTicks = requireElapsedHours(1);
@@ -2805,7 +2807,7 @@ function thunderwaveBlockedDisposition(
 function greaseMovementFill(
   hole: Extract<BattleHole, { readonly kind: "movement" }>,
   input: {
-    readonly areaId: string;
+    readonly areaId: BattleAreaId;
     readonly movementCostFeet: MovementFeet;
   },
 ): Extract<BattleFill, { readonly kind: "movement" }> {

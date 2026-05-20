@@ -42,6 +42,7 @@ import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
+  battleAreaId,
   battleCombatantSide,
   battleId,
   cantripSpellInvocationRef,
@@ -1793,7 +1794,7 @@ function spellTargetListFill(
           kind: "spellTargetsInPointOriginSphere",
           casterId,
           spellId,
-          areaId: `mbt:${spellId}:point-origin-sphere`,
+          areaId: battleAreaId(`mbt:${spellId}:point-origin-sphere`),
           radiusFeet: hole.spell.targeting.area.radiusFeet,
           targetIds,
         },

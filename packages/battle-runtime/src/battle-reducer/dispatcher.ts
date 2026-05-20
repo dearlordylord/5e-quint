@@ -808,9 +808,16 @@ export function resolveBattleSubjectInternal(
     }
     if (
       subject.tag === "runtimeCommand" &&
-      subject.command === "flamingSphereSave"
+      subject.command === "movableZoneSave"
     ) {
-      return resolveFlamingSphereSaveCommand({
+      if (subject.trigger === "endsTurnWithinFiveFeetOfSphere") {
+        return resolveFlamingSphereSaveCommand({
+          ...input,
+          subject,
+          suppressedReactionTrigger: options.suppressedReactionTrigger,
+        });
+      }
+      return resolveMoonbeamSaveCommand({
         ...input,
         subject,
         suppressedReactionTrigger: options.suppressedReactionTrigger,
@@ -818,13 +825,24 @@ export function resolveBattleSubjectInternal(
     }
     if (
       subject.tag === "runtimeCommand" &&
-      subject.command === "flamingSphereReposition"
+      subject.command === "movableZoneReposition"
     ) {
-      return resolveFlamingSphereRepositionCommand({ ...input, subject });
+      const actor = input.state.combatants.get(subject.sourceCombatantId);
+      const hasFlamingSphere = actor?.activeEffects.some(
+        (e) =>
+          e.kind === "flamingSphere" &&
+          e.sourceSpellId === subject.sourceSpellId &&
+          e.sourceCombatantId === subject.sourceCombatantId &&
+          e.areaId === subject.areaId,
+      );
+      if (hasFlamingSphere) {
+        return resolveFlamingSphereRepositionCommand({ ...input, subject });
+      }
+      return resolveMoonbeamRepositionCommand({ ...input, subject });
     }
     if (
       subject.tag === "runtimeCommand" &&
-      subject.command === "flamingSphereRam"
+      subject.command === "movableZoneRam"
     ) {
       return resolveFlamingSphereRamCommand({
         ...input,
@@ -909,22 +927,6 @@ export function resolveBattleSubjectInternal(
         suppressedReactionTrigger: options.suppressedReactionTrigger,
         pendingAttackDamageReductions: options.pendingAttackDamageReductions,
       });
-    }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "moonbeamSave"
-    ) {
-      return resolveMoonbeamSaveCommand({
-        ...input,
-        subject,
-        suppressedReactionTrigger: options.suppressedReactionTrigger,
-      });
-    }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "moonbeamReposition"
-    ) {
-      return resolveMoonbeamRepositionCommand({ ...input, subject });
     }
     if (
       subject.tag === "runtimeCommand" &&

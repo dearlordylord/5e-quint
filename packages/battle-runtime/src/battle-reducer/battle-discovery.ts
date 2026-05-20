@@ -758,7 +758,7 @@ function flamingSphereSaveAct(
     subject: {
       tag: "runtimeCommand",
       actorId,
-      command: "flamingSphereSave",
+      command: "movableZoneSave",
       sourceCombatantId: effect.sourceCombatantId,
       sourceSpellId: spellId(effect.sourceSpellId),
       areaId: effect.areaId,
@@ -786,7 +786,7 @@ function flamingSphereRepositionAct(
     subject: {
       tag: "runtimeCommand",
       actorId,
-      command: "flamingSphereReposition",
+      command: "movableZoneReposition",
       sourceCombatantId: effect.sourceCombatantId,
       sourceSpellId: spellId(effect.sourceSpellId),
       areaId: effect.areaId,
@@ -808,7 +808,7 @@ function flamingSphereRamAct(
     subject: {
       tag: "runtimeCommand",
       actorId,
-      command: "flamingSphereRam",
+      command: "movableZoneRam",
       targetId,
       sourceCombatantId: effect.sourceCombatantId,
       sourceSpellId: spellId(effect.sourceSpellId),
@@ -848,13 +848,13 @@ function moonbeamEndTurnSaveActs(
     subject: {
       tag: "runtimeCommand" as const,
       actorId,
-      command: "moonbeamSave" as const,
+      command: "movableZoneSave" as const,
       sourceCombatantId: effect.sourceCombatantId,
       sourceSpellId: spellId(effect.sourceSpellId),
       areaId: effect.areaId,
       trigger: "endsTurnInArea" as const,
     },
-    label: `End Turn in Moonbeam`,
+    label: `End Turn in Movable Zone`,
     summary:
       "Resolve the table-supplied Moonbeam end-turn CON Saving Throw and radiant damage.",
     initialHoles: [
@@ -880,12 +880,12 @@ function moonbeamRepositionActs(
             subject: {
               tag: "runtimeCommand" as const,
               actorId,
-              command: "moonbeamReposition" as const,
+              command: "movableZoneReposition" as const,
               sourceCombatantId: effect.sourceCombatantId,
               sourceSpellId: spellId(effect.sourceSpellId),
               areaId: effect.areaId,
             },
-            label: "Move Moonbeam",
+            label: "Move Movable Zone",
             summary:
               "Spend a Magic Action using table-supplied Moonbeam movement that does not enter a creature's space.",
             initialHoles: [moonbeamRepositionMovementHole(effect)],

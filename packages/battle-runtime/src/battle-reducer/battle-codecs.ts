@@ -60,6 +60,7 @@ import {
   type SpellInvocationRefEncoded,
 } from "../battle-subjects.ts";
 import {
+  BattleAreaId,
   BattleCombatantSide,
   BattleDancingLightId,
   BattleId,
@@ -431,7 +432,7 @@ const BattleSpellAreaChoiceSchema = Schema.Union(
   Schema.Struct({
     ...BattleSpellAreaChoiceBaseSchema,
     kind: Schema.Literal("greaseGroundArea"),
-    areaId: Schema.String,
+    areaId: BattleAreaId,
     sleepNonSleeperFacts: Schema.optionalWith(Schema.Never, { exact: true }),
   }),
   Schema.Struct({
@@ -784,7 +785,7 @@ const BattleTargetSpatialFactSchema = Schema.Union(
     kind: Schema.Literal("spellTargetsInPointOriginSphere"),
     casterId: CombatantId,
     spellId: Schema.String,
-    areaId: Schema.String,
+    areaId: BattleAreaId,
     radiusFeet: MovementFeet,
     targetIds: Schema.Array(CombatantId),
   }),
@@ -2153,13 +2154,7 @@ export const BattleHoleSchema = Schema.Union(
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("rolledDice"),
-    flamingSphere: BattleRuntimeObjectSchema,
-    critical: Schema.Literal(false),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("rolledDice"),
-    moonbeam: BattleRuntimeObjectSchema,
+    movableZone: BattleRuntimeObjectSchema,
     critical: Schema.Literal(false),
   }),
   Schema.Struct({
@@ -2317,7 +2312,7 @@ export const BattleHoleSchema = Schema.Union(
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("savingThrowOutcome"),
     label: Schema.String,
-    flamingSphere: BattleRuntimeObjectSchema,
+    movableZone: BattleRuntimeObjectSchema,
     ability: Schema.Literal("dex"),
     dc: DcSourceSchema,
     areaChoices: Schema.Array(BattleRuntimeObjectSchema),
@@ -2327,12 +2322,13 @@ export const BattleHoleSchema = Schema.Union(
         rollMode: Schema.Literal(...ATTACK_ROLL_MODES),
       }),
     ),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("savingThrowOutcome"),
     label: Schema.String,
-    moonbeam: BattleRuntimeObjectSchema,
+    movableZone: BattleRuntimeObjectSchema,
     ability: Schema.Literal("con"),
     dc: DcSourceSchema,
     areaChoices: Schema.Array(BattleRuntimeObjectSchema),
@@ -2342,26 +2338,20 @@ export const BattleHoleSchema = Schema.Union(
         rollMode: Schema.Literal(...ATTACK_ROLL_MODES),
       }),
     ),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
-    kind: Schema.Literal("flamingSphereRamMovement"),
+    kind: Schema.Literal("movableZoneRamMovement"),
     label: Schema.String,
-    flamingSphere: BattleRuntimeObjectSchema,
+    movableZone: BattleRuntimeObjectSchema,
     requiresTableSpatialFact: Schema.Literal(true),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
-    kind: Schema.Literal("flamingSphereRepositionMovement"),
+    kind: Schema.Literal("movableZoneRepositionMovement"),
     label: Schema.String,
-    flamingSphere: BattleRuntimeObjectSchema,
-    requiresTableSpatialFact: Schema.Literal(true),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("moonbeamRepositionMovement"),
-    label: Schema.String,
-    moonbeam: BattleRuntimeObjectSchema,
+    movableZone: BattleRuntimeObjectSchema,
     requiresTableSpatialFact: Schema.Literal(true),
   }),
   Schema.Struct({
@@ -2763,21 +2753,14 @@ type BattleFillEncoded =
           };
     }
   | {
-      readonly kind: "flamingSphereRamMovement";
+      readonly kind: "movableZoneRamMovement";
       readonly holeId: string;
       readonly value: {
         readonly moveFeet: number;
       };
     }
   | {
-      readonly kind: "flamingSphereRepositionMovement";
-      readonly holeId: string;
-      readonly value: {
-        readonly moveFeet: number;
-      };
-    }
-  | {
-      readonly kind: "moonbeamRepositionMovement";
+      readonly kind: "movableZoneRepositionMovement";
       readonly holeId: string;
       readonly value: {
         readonly moveFeet: number;
@@ -3299,7 +3282,7 @@ export const BattleFillSchema: Schema.Schema<
             kind: Schema.Literal("spellTargetsInPointOriginSphere"),
             casterId: CombatantId,
             spellId: Schema.String,
-            areaId: Schema.String,
+            areaId: BattleAreaId,
             radiusFeet: MovementFeet,
             targetIds: Schema.Array(CombatantId),
           }),
@@ -3334,34 +3317,27 @@ export const BattleFillSchema: Schema.Schema<
       value: Schema.Union(
         Schema.Struct({
           kind: Schema.Literal("fogCloudArea"),
-          areaId: Schema.String,
+          areaId: BattleAreaId,
         }),
         Schema.Struct({
           kind: Schema.Literal("flamingSphereArea"),
-          areaId: Schema.String,
+          areaId: BattleAreaId,
         }),
         Schema.Struct({
           kind: Schema.Literal("moonbeamCylinderArea"),
-          areaId: Schema.String,
+          areaId: BattleAreaId,
         }),
       ),
     }),
     Schema.Struct({
-      kind: Schema.Literal("flamingSphereRamMovement"),
+      kind: Schema.Literal("movableZoneRamMovement"),
       holeId: BattleHoleIdSchema,
       value: Schema.Struct({
         moveFeet: MovementFeet,
       }),
     }),
     Schema.Struct({
-      kind: Schema.Literal("flamingSphereRepositionMovement"),
-      holeId: BattleHoleIdSchema,
-      value: Schema.Struct({
-        moveFeet: MovementFeet,
-      }),
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("moonbeamRepositionMovement"),
+      kind: Schema.Literal("movableZoneRepositionMovement"),
       holeId: BattleHoleIdSchema,
       value: Schema.Struct({
         moveFeet: MovementFeet,
@@ -3575,7 +3551,7 @@ export const BattleFillSchema: Schema.Schema<
             kind: Schema.Literal("greaseGroundDifficultTerrain"),
             sourceCombatantId: CombatantId,
             sourceSpellId: Schema.String,
-            areaId: Schema.String,
+            areaId: BattleAreaId,
             totalDistanceFeet: MovementFeet,
             greaseDistanceFeet: MovementFeet,
           }),
@@ -4092,7 +4068,7 @@ const BattleObscurementZoneSchema = Schema.Struct({
   obscurement: Schema.Literal("heavilyObscured"),
   area: Schema.Struct({
     kind: Schema.Literal("pointOriginSphere"),
-    areaId: Schema.String,
+    areaId: BattleAreaId,
     radiusFeet: MovementFeet,
   }),
   expiresAt: Schema.Struct({

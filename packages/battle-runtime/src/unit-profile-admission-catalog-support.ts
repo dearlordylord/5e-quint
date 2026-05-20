@@ -11,6 +11,7 @@ import {
 import {
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
   ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
+  battleAreaId,
   battleCombatantSide,
   battleObjectId,
   combatantId,
@@ -298,11 +299,11 @@ export const ensnaringStrikeHelperId = combatantId(
   "unit-profile-ensnaring-helper",
 );
 
-export const greaseAreaId = "unit-profile-grease-ground-area";
+export const greaseAreaId = battleAreaId("unit-profile-grease-ground-area");
 
-export const flamingSphereAreaId = "unit-profile-flaming-sphere-area";
+export const flamingSphereAreaId = battleAreaId("unit-profile-flaming-sphere-area");
 
-export const moonbeamAreaId = "unit-profile-moonbeam-area";
+export const moonbeamAreaId = battleAreaId("unit-profile-moonbeam-area");
 
 export const thunderwaveObjectId = battleObjectId(
   "unit-profile-thunderwave-object",

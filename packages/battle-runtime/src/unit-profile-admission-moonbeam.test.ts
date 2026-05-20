@@ -274,12 +274,12 @@ describe("L12G deterministic Moonbeam admission", () => {
 
     const repositionAct = moonbeamRepositionAct(casterTurn.state);
     expect(repositionAct.subject).toMatchObject({
-      command: "moonbeamReposition",
+      command: "movableZoneReposition",
       areaId: moonbeamAreaId,
     });
     const movementHole = requireHole(
       repositionAct.initialHoles,
-      "moonbeamRepositionMovement",
+      "movableZoneRepositionMovement",
     );
     const moveFill = moonbeamRepositionMovementFill(movementHole, 30);
     const resolved = resolveBattleSubject({

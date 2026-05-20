@@ -13,7 +13,7 @@ import type {
   SpellRecord,
 } from "@dnd/surface/surface/types";
 import { battleDancingLightId } from "../identity.ts";
-import type { CombatantId } from "../identity.ts";
+import type { BattleAreaId, CombatantId } from "../identity.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state.ts";
 import {
@@ -1376,7 +1376,7 @@ export function applyGreaseGroundHazardCastEffects(input: {
 export function applyFogCloudObscurementCastEffect(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
-  readonly areaId: string;
+  readonly areaId: BattleAreaId;
   readonly invocation: Extract<
     SupportedSpellInvocation,
     { readonly procedure: "fogCloudObscurement" }
@@ -1416,7 +1416,7 @@ export function applyFogCloudObscurementCastEffect(input: {
 export function applyFlamingSphereCastEffect(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
-  readonly areaId: string;
+  readonly areaId: BattleAreaId;
   readonly invocation: Extract<
     SupportedSpellInvocation,
     { readonly procedure: "flamingSphere" }
@@ -1461,7 +1461,7 @@ export function applyFlamingSphereCastEffect(input: {
 export function applyMoonbeamCastEffect(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
-  readonly areaId: string;
+  readonly areaId: BattleAreaId;
   readonly invocation: Extract<
     SupportedSpellInvocation,
     { readonly procedure: "moonbeam" }
@@ -1509,15 +1509,12 @@ export function resetAllMoonbeamSavedThisTurn(
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
   const next = new Map(combatants);
   for (const [id, combatant] of next) {
-    let changed = false;
-    const activeEffects = combatant.activeEffects.map((effect) => {
-      if (effect.kind === "moonbeam" && effect.savedThisTurn.length > 0) {
-        changed = true;
-        return { ...effect, savedThisTurn: [] as readonly CombatantId[] };
-      }
-      return effect;
-    });
-    if (changed) {
+    const activeEffects = combatant.activeEffects.map((effect) =>
+      effect.kind === "moonbeam" && effect.savedThisTurn.length > 0
+        ? { ...effect, savedThisTurn: [] as readonly CombatantId[] }
+        : effect,
+    );
+    if (activeEffects.some((e, i) => e !== combatant.activeEffects[i])) {
       next.set(id, { ...combatant, activeEffects });
     }
   }
