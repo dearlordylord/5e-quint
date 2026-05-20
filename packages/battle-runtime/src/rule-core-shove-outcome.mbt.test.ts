@@ -52,6 +52,7 @@ type ShoveOutcomeProjection = {
   readonly pushBlockedReason: ShovePushBlockedReason;
   readonly pushDistanceFeet: number;
   readonly pushProvokesOpportunityAttacks: boolean;
+  readonly actionAvailable: boolean;
   readonly replayIndex: number;
 };
 
@@ -69,6 +70,7 @@ const initialProjection: ShoveOutcomeProjection = {
   pushBlockedReason: "none",
   pushDistanceFeet: 0,
   pushProvokesOpportunityAttacks: false,
+  actionAvailable: true,
   replayIndex: 0,
 };
 
@@ -236,6 +238,7 @@ function applyScenario(
       lastScenario: scenario,
       accepted: false,
       targetProne: targetAfter.conditions.includes("prone"),
+      actionAvailable: result.snapshot.turn.actionResources.length > 0,
       replayIndex: replayIndexForScenario(scenario),
     };
   }
@@ -261,6 +264,7 @@ function applyScenario(
       pushed === undefined ? 0 : Number(pushed.disposition.distanceFeet),
     pushProvokesOpportunityAttacks:
       pushed?.disposition.provokesOpportunityAttacks ?? false,
+    actionAvailable: result.snapshot.turn.actionResources.length > 0,
     replayIndex: replayIndexForScenario(scenario),
   };
 }
@@ -288,6 +292,10 @@ function normalizeShoveOutcomeQuintState(raw: unknown): ShoveOutcomeProjection {
     pushProvokesOpportunityAttacks: booleanField(
       state["qPushProvokesOpportunityAttacks"],
       "qPushProvokesOpportunityAttacks",
+    ),
+    actionAvailable: booleanField(
+      state["qActionAvailable"],
+      "qActionAvailable",
     ),
     replayIndex: numberFromQuintInt(state["qReplayIndex"], "qReplayIndex"),
   };

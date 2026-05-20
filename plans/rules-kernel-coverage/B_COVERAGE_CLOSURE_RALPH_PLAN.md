@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Battle Damage Disposition And Type Choice Obligations"
     },
     {
@@ -318,7 +318,7 @@ Reviewers should reject:
 | 1 | RKBC-BATTLE-HOLE-INVENTORY - Battle Hole And Fill Inventory | done | baseline | Inventory every current `BattleHole` and fill kind; classify semantic frontier, deterministic projection, unsupported, or dead branch. |
 | 2 | RKBC-BATTLE-HOLE-TARGETS-AREAS - Battle Target And Area Hole Obligations | done | RKBC-BATTLE-HOLE-INVENTORY | Sanctuary targeting interdiction is covered; spell target-list/allocation rows are joined to spell procedure coverage; object/area choice rows remain table-caller boundary evidence. |
 | 3 | RKBC-BATTLE-HOLE-MOVEMENT-ROUTE - Battle Movement Route And Spatial Fact Obligations | done | RKBC-BATTLE-HOLE-INVENTORY | Shove outcome/push disposition is covered; movement-route and spatial derivation holes are classified as reducer semantics or boundary/table-caller evidence. |
-| 4 | RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION - Battle Damage Disposition And Type Choice Obligations | ready-for-research | RKBC-BATTLE-HOLE-INVENTORY | Covered obligations for damage disposition and damage-type choice holes. |
+| 4 | RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION - Battle Damage Disposition And Type Choice Obligations | done | RKBC-BATTLE-HOLE-INVENTORY | Covered obligations for damage disposition and damage-type choice holes. |
 | 5 | RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND - Battle Ability Skill And Command Hole Obligations | ready-for-research | RKBC-BATTLE-HOLE-INVENTORY | Covered/boundary obligations for ability choice, skill choice, and Command option holes. |
 | 6 | RKBC-BATTLE-HOLE-REACTION-CONCENTRATION - Battle Reaction And Concentration Hole Obligations | ready-for-research | RKBC-BATTLE-HOLE-INVENTORY | Covered obligations for reaction decisions, continuation resumption, and Concentration Saving Throw holes not already owned. |
 | 7 | RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE - Feature Passive Resource And Persistent Profile Join | ready-for-research | baseline | Map feature passive/resource/persistent profiles to covered obligations or create missing obligations. |
@@ -410,7 +410,7 @@ Acceptance:
 
 ### Task 4 - RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION - Battle Damage Disposition And Type Choice Obligations
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: `RKBC-BATTLE-HOLE-INVENTORY`.
 
@@ -418,6 +418,16 @@ Scope: cover damage disposition, damage-type choice, resistance/reduction
 choice, attack replacement/legality target-choice residuals, and save/attack
 damage branch holes not already owned by existing spell, feature, or shared HP
 obligations.
+
+Result: damage/disposition holes are split across
+`BATTLE.DAMAGE.ATTACK_BRANCHES`,
+`BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES`,
+`BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION`,
+`BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP`, and
+`BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE`. Shared positive-HP damage remains
+owned by `SHARED.HIT_POINTS.POSITIVE_DAMAGE`; spell-condition lifecycle,
+after-hit spell reactions, ability/Command choices, and table-caller hazard
+facts remain visible in Tasks 5, 9, 10, and 11.
 
 Acceptance:
 

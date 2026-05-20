@@ -1,6 +1,9 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeRollModifierBuffSelectedIdentityMbt {
+  import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
+  import battleRuntimeModel.* from "./battle-runtime-model"
+
   var qCasterConcentrating: bool
   var qCasterHp: int
   var qCasterEffectCount: int
@@ -83,12 +86,19 @@ module battleRuntimeRollModifierBuffSelectedIdentityMbt {
     ),
   }
 
-  action doResistanceReducesMatchingDamage = all {
-    qLastResult == "init",
-    recordProjection(
-      true, 12, 1, 0, 0, 10, 12, "none", false, false, false,
-      "none", false, "bludgeoning", true, "resistance",
-    ),
+  action doResistanceReducesMatchingDamage = {
+    val effects = Set(ResistanceDamageReduction({ damageType: Bludgeoning, usedThisTurn: false }))
+    val reducedDamage = damageAfterResistanceSpellReduction(2, Bludgeoning, effects, 1)
+    val usedEffects = activeEffectsAfterResistanceSpellReduction(effects, Bludgeoning)
+    all {
+      qLastResult == "init",
+      recordProjection(
+        true, 12, 1, 0, 0, 10, 12, "none", false, false, false,
+        "none", false, if (reducedDamage == 1) "bludgeoning" else "none",
+        usedEffects.contains(ResistanceDamageReduction({ damageType: Bludgeoning, usedThisTurn: true })),
+        "resistance",
+      ),
+    }
   }
 
   action doShieldOfFaithArmorClassBonus = all {

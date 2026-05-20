@@ -12,6 +12,7 @@
 {"profileId":"unit-feature.weapon-damage-dice-roll-choice","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.zero-hit-point-replacement","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"spell.invocation-damage-save-or-attack","obligationIds":["BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"]}
+{"profileId":"spell.invocation-damage-reduction","obligationIds":["BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION"]}
 {"profileId":"spell.hit-point-restoration","obligationIds":["BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"spell.reaction-shield","obligationIds":["BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS","BATTLE.REACTION.OFFER_DECLINE_RESUME"]}
 {"profileId":"spell.readied-action-time-spell","obligationIds":["BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS","BATTLE.REACTION.OFFER_DECLINE_RESUME"]}

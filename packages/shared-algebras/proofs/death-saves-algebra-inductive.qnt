@@ -1,5 +1,7 @@
 // -*- mode: Bluespec; -*-
 
+// KERNEL-COVERAGE: qnt-owner BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE
+
 module deathSavesAlgebraMbt {
   var qSuccesses: int
   var qFailures: int

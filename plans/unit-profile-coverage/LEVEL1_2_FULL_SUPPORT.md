@@ -11,9 +11,9 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | Strict runtime/profile support | 105/161 (65.2%) |
 | Strict target closure | 156/161 (96.9%) |
 | Product readiness | 484/556 (87.1%) |
-| Rules-kernel profile join | 18/75 (24%) |
-| Rules-kernel covered profile join | 13/75 (17.3%) |
-| Supported Unit rules-kernel chain | 32/105 (30.5%) |
+| Rules-kernel profile join | 19/75 (25.3%) |
+| Rules-kernel covered profile join | 14/75 (18.7%) |
+| Supported Unit rules-kernel chain | 33/105 (31.4%) |
 
 ## Scope
 
@@ -104,7 +104,6 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `protection_from_poison` | unmapped | `spell.invocation-condition-removal-protection` (unmapped: no obligation mapping) |
 | `ranger_deft_explorer` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
 | `ranger_weapon_mastery` | unmapped | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner)); `character-sheet.weapon-mastery-reselection` (unmapped: no obligation mapping) |
-| `resistance` | unmapped | `spell.invocation-damage-reduction` (unmapped: no obligation mapping) |
 | `rogue_expertise` | unmapped | `character-creation.skill-expertise-choice` (unmapped: no obligation mapping) |
 | `rogue_weapon_mastery` | unmapped | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner)); `character-sheet.weapon-mastery-reselection` (unmapped: no obligation mapping) |
 | `scorching_ray` | unmapped | `spell.invocation-independent-attack-sequence` (unmapped: no obligation mapping) |

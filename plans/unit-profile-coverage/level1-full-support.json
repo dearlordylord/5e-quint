@@ -963,18 +963,18 @@
     },
     "rulesKernelCoveredProfileJoin": {
       "denominator": 58,
-      "numerator": 9,
-      "percent": "15.5%"
+      "numerator": 10,
+      "percent": "17.2%"
     },
     "rulesKernelProfileJoin": {
       "denominator": 58,
-      "numerator": 14,
-      "percent": "24.1%"
+      "numerator": 15,
+      "percent": "25.9%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 78,
-      "numerator": 27,
-      "percent": "34.6%"
+      "numerator": 28,
+      "percent": "35.9%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 94,
@@ -3246,8 +3246,8 @@
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
         "denominator": 78,
-        "numerator": 27,
-        "percent": "34.6%"
+        "numerator": 28,
+        "percent": "35.9%"
       }
     },
     "units": [
@@ -4368,11 +4368,18 @@
         "unitId": "ray_of_sickness"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle damage type choice and Resistance spell damage-reduction rolls feed by-type damage math and once-per-turn use state"
+              }
+            ],
             "profileId": "spell.invocation-damage-reduction",
             "profileKind": "spell-invocation"
           }

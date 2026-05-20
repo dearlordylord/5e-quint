@@ -1,5 +1,7 @@
 import * as path from "node:path";
 
+// KERNEL-COVERAGE: parity-witness BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE
+
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { Either, Option, Schema } from "effect";
 import { describe, expect, it } from "vitest";

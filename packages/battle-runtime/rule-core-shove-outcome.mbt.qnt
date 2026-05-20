@@ -11,6 +11,7 @@ module ruleCoreShoveOutcomeMbt {
   var qPushBlockedReason: str
   var qPushDistanceFeet: int
   var qPushProvokesOpportunityAttacks: bool
+  var qActionAvailable: bool
   var qReplayIndex: int
 
   pure def saveSucceeds: str = "save-succeeds"
@@ -31,6 +32,7 @@ module ruleCoreShoveOutcomeMbt {
       qPushBlockedReason' = projection.pushBlockedReason,
       qPushDistanceFeet' = projection.pushDistanceFeet,
       qPushProvokesOpportunityAttacks' = projection.pushProvokesOpportunityAttacks,
+      qActionAvailable' = projection.actionAvailable,
       qReplayIndex' = nextReplayIndex,
     }
   }
@@ -44,6 +46,7 @@ module ruleCoreShoveOutcomeMbt {
     qPushBlockedReason' = "none",
     qPushDistanceFeet' = 0,
     qPushProvokesOpportunityAttacks' = false,
+    qActionAvailable' = true,
     qReplayIndex' = 0,
   }
 

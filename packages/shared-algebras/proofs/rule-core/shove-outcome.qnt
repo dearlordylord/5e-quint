@@ -4,9 +4,8 @@
 // "Shove": Shove replaces one attack, and a failed Strength or Dexterity
 // Saving Throw either pushes the target 5 feet away or gives it the Prone
 // condition. Playing-the-Game.md "Opportunity Attacks" excludes movement
-// caused without the target's movement/action resources. Attack-opportunity
-// resource accounting is a separate follow-up; this owner covers the outcome
-// fill and table push-disposition boundary.
+// caused without the target's movement/action resources. The accepted Shove
+// outcome spends the attack resource; rejected table facts leave it available.
 // KERNEL-COVERAGE: qnt-owner BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY
 
 module shoveOutcome {
@@ -42,6 +41,7 @@ module shoveOutcome {
     pushBlockedReason: str,
     pushDistanceFeet: int,
     pushProvokesOpportunityAttacks: bool,
+    actionAvailable: bool,
   }
 
   pure def noShovePush(targetProne: bool): ShoveOutcomeResult =
@@ -101,6 +101,7 @@ module shoveOutcome {
         pushBlockedReason: "none",
         pushDistanceFeet: 0,
         pushProvokesOpportunityAttacks: false,
+        actionAvailable: true,
       }
       | ShoveOutcomeAcceptedNoPush(data) => {
         accepted: true,
@@ -110,6 +111,7 @@ module shoveOutcome {
         pushBlockedReason: "none",
         pushDistanceFeet: 0,
         pushProvokesOpportunityAttacks: false,
+        actionAvailable: false,
       }
       | ShoveOutcomeAcceptedPush(data) => {
         accepted: true,
@@ -119,6 +121,7 @@ module shoveOutcome {
         pushBlockedReason: shovePushBlockedReason(data.disposition),
         pushDistanceFeet: shovePushDistanceFeet(data.disposition),
         pushProvokesOpportunityAttacks: false,
+        actionAvailable: false,
       }
     }
 
@@ -128,6 +131,7 @@ module shoveOutcome {
       assert(result.accepted),
       assert(not(result.targetProne)),
       assert(not(result.pushEmitted)),
+      assert(not(result.actionAvailable)),
     }
   }
 
@@ -137,6 +141,7 @@ module shoveOutcome {
       assert(result.accepted),
       assert(result.targetProne),
       assert(not(result.pushEmitted)),
+      assert(not(result.actionAvailable)),
     }
   }
 
@@ -152,6 +157,7 @@ module shoveOutcome {
       assert(result.pushBlockedReason == "none"),
       assert(result.pushDistanceFeet == 5),
       assert(not(result.pushProvokesOpportunityAttacks)),
+      assert(not(result.actionAvailable)),
     }
   }
 
@@ -181,6 +187,7 @@ module shoveOutcome {
     all {
       assert(not(wrongDistance.accepted)),
       assert(not(wrongDistance.pushEmitted)),
+      assert(wrongDistance.actionAvailable),
     }
   }
 }
