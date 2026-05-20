@@ -25,13 +25,13 @@ Stat Block, and not in-play Character Sheet state.
 
 ## Boundary
 
-| Source outside runtime                    | Runtime operation               | Runtime output                 |
-| ----------------------------------------- | ------------------------------- | ------------------------------ |
-| Unit catalog                              | `discoverCreationHoles`         | fillable `CreationHole[]`      |
-| caller-submitted batch of `CreationFill`s | `fillCreationHoles`             | accepted/rejected draft update |
-| complete legal draft plus Unit facts      | `finalizeCharacterDraft`        | finalized `CharacterBuild`     |
+| Source outside runtime                     | Runtime operation                 | Runtime output                 |
+| ------------------------------------------ | --------------------------------- | ------------------------------ |
+| Unit catalog                               | `discoverCreationHoles`           | fillable `CreationHole[]`      |
+| caller-submitted batch of `CreationFill`s  | `fillCreationHoles`               | accepted/rejected draft update |
+| complete legal draft plus Unit facts       | `finalizeCharacterDraft`          | finalized `CharacterBuild`     |
 | finalized `CharacterBuild` plus level gain | `advanceCharacterBuildClassLevel` | advanced `CharacterBuild`      |
-| finalized `CharacterBuild`                | application composition outside | battle creature initialization |
+| finalized `CharacterBuild`                 | application composition outside   | battle creature initialization |
 
 `@dnd/character-creation-runtime` must not import `@dnd/battle-runtime` or the
 legacy Core package. Battle initialization from a `CharacterBuild` belongs to
@@ -76,6 +76,21 @@ Creation fill issue codes are deliberately local to this package. They validate
 the current draft frontier and the submitted batch as one optimistic-concurrency
 mutation: hole ids are creation semantic addresses, choice cardinality comes from
 the current `CreationHole`, and `staleRevision` only applies to draft updates.
+
+`CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY` remains the semantic owner for the
+current supported fill slice rather than being split by issue code. The reducer
+semantics are one invariant: a typed fill batch is checked against the current
+draft frontier, rejected batches leave the draft unchanged, accepted batches
+increment the revision and rediscover holes, and finalization status is reported
+from the pre-fill or post-fill draft as appropriate. The focused
+`character-creation-runtime.mbt.qnt` witness replays both accepted and rejected
+QNT batches against production `fillCreationHoles`.
+
+Malformed public payloads that cannot be parsed into a typed `CreationFill`,
+`CreationHoleId`, or ability-score assignment are boundary/parser failures, not
+reducer semantics. MCP input codecs and protocol tests own those failures under
+the boundary-only `CREATION.PROTOCOL.MALFORMED_FILL_REJECTION` obligation; they
+do not enter `fillCreationHoles` and do not need QNT ownership.
 
 Runtime and battle holes are analogous, not the same protocol. The shared
 runtime hole algebra supplies transient action hole shapes, while battle errors

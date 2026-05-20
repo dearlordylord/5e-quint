@@ -79,25 +79,25 @@
     {
       "number": 13,
       "id": "RKBC-CREATION-FILL-VALIDATION-BATCH",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Character Creation Fill Validation And Atomic Batch"
     },
     {
       "number": 14,
       "id": "RKBC-CREATION-ADVANCEMENT-REPLACEMENT",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Character Creation Advancement And Replacement"
     },
     {
       "number": 15,
       "id": "RKBC-CREATION-SPELLCASTING-PROGRESSION",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Character Creation Spell Access Progression And Eldritch Invocation Choices"
     },
     {
       "number": 16,
       "id": "RKBC-CREATION-WEAPON-MASTERY-FEAT",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Character Creation Weapon Mastery And Feat Choice"
     },
     {
@@ -407,10 +407,10 @@ Reviewers should reject:
 | 10 | RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION - Spell After Hit Reaction And Marked Effect Profile Join | done | baseline | After-hit, reaction-casting-time, weapon-hosted, marked, attack-sequence, Mirror Image, and linked-effect spell profiles are mapped to precise covered or mapped-open obligations. |
 | 11 | RKBC-PROFILE-JOIN-TABLE-CALLER - Table Caller Profile Join And Boundary Classification | done | RKBC-BATTLE-HOLE-INVENTORY, RKBC-BATTLE-HOLE-TARGETS-AREAS, RKBC-BATTLE-HOLE-MOVEMENT-ROUTE | Table-caller and spatial spell profiles are mapped to covered reducer obligations, boundary-only table facts, or precise mapped-open parity obligations without expanding MBT state space. |
 | 12 | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY - Character Creation Choice Discovery And Cardinality | done | baseline | Choice-hole availability, cardinality, and option legality are split into covered `CREATION.CHOICE_DISCOVERY_CARDINALITY`; remaining creation profile families stay visible in Tasks 13-16. |
-| 13 | RKBC-CREATION-FILL-VALIDATION-BATCH - Character Creation Fill Validation And Atomic Batch | ready-for-research | baseline | Cover fill validation, batch atomicity, rediscovery, and finalization deltas beyond the existing slice. |
-| 14 | RKBC-CREATION-ADVANCEMENT-REPLACEMENT - Character Creation Advancement And Replacement | blocked | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH | Cover advancement replacement semantics and class-feature replacement profiles. |
-| 15 | RKBC-CREATION-SPELLCASTING-PROGRESSION - Character Creation Spell Access Progression And Eldritch Invocation Choices | blocked | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH | Cover Pact Magic progression, Spell Access/progression facts, and Eldritch Invocation choices. |
-| 16 | RKBC-CREATION-WEAPON-MASTERY-FEAT - Character Creation Weapon Mastery And Feat Choice | blocked | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH | Cover Weapon Mastery and feat-choice profiles without duplicating selected Unit behavior. |
+| 13 | RKBC-CREATION-FILL-VALIDATION-BATCH - Character Creation Fill Validation And Atomic Batch | done | baseline | Typed fill validation, batch atomicity, rediscovery, and finalization status remain covered by `CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY`; malformed fill payloads are split into boundary-only `CREATION.PROTOCOL.MALFORMED_FILL_REJECTION`. |
+| 14 | RKBC-CREATION-ADVANCEMENT-REPLACEMENT - Character Creation Advancement And Replacement | ready-for-research | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH | Cover advancement replacement semantics and class-feature replacement profiles. |
+| 15 | RKBC-CREATION-SPELLCASTING-PROGRESSION - Character Creation Spell Access Progression And Eldritch Invocation Choices | ready-for-research | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH | Cover Pact Magic progression, Spell Access/progression facts, and Eldritch Invocation choices. |
+| 16 | RKBC-CREATION-WEAPON-MASTERY-FEAT - Character Creation Weapon Mastery And Feat Choice | ready-for-research | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH | Cover Weapon Mastery and feat-choice profiles without duplicating selected Unit behavior. |
 | 17 | RKBC-SHEET-HP-REST-HIT-DICE - Character Sheet HP Rest And Hit Dice Transitions | ready-for-research | baseline | Split HP, healing, Short Rest, Long Rest, and Hit Dice semantics into covered obligations. |
 | 18 | RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS - Character Sheet Spell Slot And Pact Slot Transitions | blocked | RKBC-SHEET-HP-REST-HIT-DICE | Cover spell-slot and pact-slot spend/recovery transitions while reusing `RKBC-SHEET-HP-REST-HIT-DICE` rest timing/benefit semantics. |
 | 19 | RKBC-SHEET-FEATURE-RESOURCES - Character Sheet Feature Resource Transitions | blocked | RKBC-SHEET-HP-REST-HIT-DICE | Cover Lay On Hands, Arcane Recovery, class feature use counts, and similar sheet-owned resources while reusing `RKBC-SHEET-HP-REST-HIT-DICE` HP/rest algebra. |
@@ -713,7 +713,7 @@ Acceptance:
 
 ### Task 13 - RKBC-CREATION-FILL-VALIDATION-BATCH - Character Creation Fill Validation And Atomic Batch
 
-Status: `ready-for-research`
+Status: `done`
 
 Scope: cover fill validation, atomic batch behavior, rediscovery after fills,
 and finalization status for current TS-supported creation flows.
@@ -728,7 +728,7 @@ Acceptance:
 
 ### Task 14 - RKBC-CREATION-ADVANCEMENT-REPLACEMENT - Character Creation Advancement And Replacement
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY` and `RKBC-CREATION-FILL-VALIDATION-BATCH`.
 
@@ -743,7 +743,7 @@ Acceptance:
 
 ### Task 15 - RKBC-CREATION-SPELLCASTING-PROGRESSION - Character Creation Spell Access Progression And Eldritch Invocation Choices
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY` and `RKBC-CREATION-FILL-VALIDATION-BATCH`.
 
@@ -759,7 +759,7 @@ Acceptance:
 
 ### Task 16 - RKBC-CREATION-WEAPON-MASTERY-FEAT - Character Creation Weapon Mastery And Feat Choice
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY` and `RKBC-CREATION-FILL-VALIDATION-BATCH`.
 

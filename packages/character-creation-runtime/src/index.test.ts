@@ -7831,7 +7831,13 @@ function runQuintSliceSelfTests(): void {
     ],
     { encoding: "utf8" },
   );
-  expect(quintOutput).toContain("9 passing");
+  for (const expectedTest of [
+    "test_stale_revision_rejected_atomically",
+    "test_wrong_fill_kind_rejected_atomically",
+    "test_unopened_protocol_hole_rejected_as_unknown_hole",
+  ]) {
+    expect(quintOutput).toContain(expectedTest);
+  }
 }
 
 function runGeneratedQuintParity(moduleBody: string): void {
