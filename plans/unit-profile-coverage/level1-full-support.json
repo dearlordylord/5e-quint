@@ -3274,7 +3274,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
@@ -3404,7 +3404,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
@@ -3442,7 +3442,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
@@ -3473,7 +3473,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
@@ -3875,7 +3875,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
@@ -4024,7 +4024,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
@@ -4098,7 +4098,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
@@ -4136,7 +4136,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
@@ -4242,7 +4242,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
@@ -4342,7 +4342,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
@@ -4380,7 +4380,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
@@ -4493,7 +4493,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
@@ -4549,7 +4549,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
@@ -4611,7 +4611,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
@@ -4760,7 +4760,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
                 "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",

@@ -208,12 +208,12 @@
 
 - SRD span classification: 23966 / 23966 = 100.00%
 - Non-fluff span closure: 22730 / 22730 = 100.00%
-- Executable requirements: 8
-- QNT modeled: 8 / 8 = 100.00%
-- QNT proved: 8 / 8 = 100.00%
-- Runtime mapped: 7 / 8 = 87.50%
-- Runtime parity covered: 7 / 8 = 87.50%
-- Out of promoted scope spans: 1734
+- Executable requirements: 9
+- QNT modeled: 9 / 9 = 100.00%
+- QNT proved: 9 / 9 = 100.00%
+- Runtime mapped: 8 / 9 = 88.89%
+- Runtime parity covered: 8 / 9 = 88.89%
+- Out of promoted scope spans: 1731
 - Ambiguous spans: 0
 - RAW-reviewed sections: 2920 / 2920 = 100.00%
 
@@ -3147,13 +3147,13 @@
 | Task | Status | Requirements |
 | --- | --- | --- |
 | QCORE7 | done | RAW-QCORE7-MOVEMENT-GRAPPLE-001 |
-| QCORE8 | done | RAW-PTG-REACTIONS-002, RAW-PTG-REACTIONS-004, RAW-PTG-REACTIONS-005, RAW-PTG-REACTIONS-006 |
+| QCORE8 | done | RAW-PTG-REACTIONS-002, RAW-PTG-REACTIONS-004, RAW-PTG-REACTIONS-005, RAW-PTG-REACTIONS-006, RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001 |
 | QCORE9 | done | RAW-QCORE9-UNIT-FEATURE-PROFILES-001 |
 | QCORE10 | done | RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001 |
 | QCORE11 | done | RAW-QCORE11-STAT-BLOCK-CONTROLS-001 |
-| QMBT1 | done | RAW-QCORE7-MOVEMENT-GRAPPLE-001, RAW-PTG-REACTIONS-002, RAW-PTG-REACTIONS-004, RAW-PTG-REACTIONS-005, RAW-PTG-REACTIONS-006, RAW-QCORE9-UNIT-FEATURE-PROFILES-001 |
+| QMBT1 | done | RAW-QCORE7-MOVEMENT-GRAPPLE-001, RAW-PTG-REACTIONS-002, RAW-PTG-REACTIONS-004, RAW-PTG-REACTIONS-005, RAW-PTG-REACTIONS-006, RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001, RAW-QCORE9-UNIT-FEATURE-PROFILES-001 |
 | QMBT2 | done | RAW-QCORE7-MOVEMENT-GRAPPLE-001 |
-| QMBT3 | done | RAW-PTG-REACTIONS-002, RAW-PTG-REACTIONS-004, RAW-PTG-REACTIONS-005, RAW-PTG-REACTIONS-006 |
+| QMBT3 | done | RAW-PTG-REACTIONS-002, RAW-PTG-REACTIONS-004, RAW-PTG-REACTIONS-005, RAW-PTG-REACTIONS-006, RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001 |
 | QMBT4 | done | RAW-QCORE9-UNIT-FEATURE-PROFILES-001 |
 | QMBT5 | done | RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001 |
 | QMBT6 | done | RAW-QCORE11-STAT-BLOCK-CONTROLS-001 |
@@ -3168,6 +3168,7 @@
 | RAW-PTG-REACTIONS-004 | executable | yes | yes | yes | yes | QCORE8, QMBT1, QMBT3 |
 | RAW-PTG-REACTIONS-005 | executable | yes | yes | yes | yes | QCORE8, QMBT1, QMBT3 |
 | RAW-PTG-REACTIONS-006 | executable | yes | yes | yes | yes | QCORE8, QMBT1, QMBT3 |
+| RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001 | executable | yes | yes | yes | yes | QCORE8, QMBT1, QMBT3 |
 | RAW-DATA-ANIMALS | authored-data | no | no | no | no |  |
 | RAW-DATA-CHARACTER-CREATION | authored-data | no | no | no | no |  |
 | RAW-DATA-CHARACTER-ORIGINS | authored-data | no | no | no | no |  |
@@ -3413,7 +3414,7 @@
 - SRD521-CHARACTER-CREATION-0360-003 (.references/srd-5.2.1/Character-Creation.md > Tiers of Play > Tier 3 (Levels 11–16)): Full-corpus matrix closure: this SRD span is not yet claimed by a promoted proof/runtime owner. Future implementation must split and reclassify it before claiming behavior.
 - SRD521-CHARACTER-CREATION-0360-004 (.references/srd-5.2.1/Character-Creation.md > Tiers of Play > Tier 3 (Levels 11–16)): Full-corpus matrix closure: this SRD span is not yet claimed by a promoted proof/runtime owner. Future implementation must split and reclassify it before claiming behavior.
 - SRD521-CHARACTER-CREATION-0360-005 (.references/srd-5.2.1/Character-Creation.md > Tiers of Play > Tier 3 (Levels 11–16)): Full-corpus matrix closure: this SRD span is not yet claimed by a promoted proof/runtime owner. Future implementation must split and reclassify it before claiming behavior.
-- ... 1534 additional out-of-scope spans omitted from the Markdown report; see matrix.json.
+- ... 1531 additional out-of-scope spans omitted from the Markdown report; see matrix.json.
 
 ## Ambiguous
 

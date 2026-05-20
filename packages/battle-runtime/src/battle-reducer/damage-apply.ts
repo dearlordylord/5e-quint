@@ -1,4 +1,5 @@
 // Damage application + HP lifecycle + concentration helpers extracted from
+// RAW-COVERAGE: runtime-owner RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // battle-reducer.ts. Cluster M (damage_apply). Mechanical extraction — no
 // behavior change. Pass 9 also absorbs:

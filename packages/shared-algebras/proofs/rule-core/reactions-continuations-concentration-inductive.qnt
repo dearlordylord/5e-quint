@@ -1,5 +1,5 @@
 // -*- mode: Bluespec; -*-
-// RAW-COVERAGE: verification-owner:qnt-proof RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006
+// RAW-COVERAGE: verification-owner:qnt-proof RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001
 
 module reactionsContinuationsConcentrationInductive {
   import attackDamageComposition.* from "./attack-damage-composition"

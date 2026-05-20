@@ -109,7 +109,7 @@
       ],
       "status": "covered",
       "surfaceEvidence": [],
-      "title": "Battle Reaction offer, decline, spend, continuation resume, and Concentration interruption protocol"
+      "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
     },
     {
       "id": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
@@ -657,14 +657,13 @@
     {
       "classification": "table-owned-fact",
       "coveredByObligationIds": [
-        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
+        "BATTLE.REACTION.OFFER_DECLINE_RESUME"
       ],
-      "followUpTaskIds": [
-        "RKBC-BATTLE-HOLE-REACTION-CONCENTRATION"
-      ],
+      "followUpTaskIds": [],
       "holeKind": "targetSpatialFacts",
       "id": "BattleSpellCastReactionFactsHole",
-      "reason": "Counterspell-style cast visibility, range, and component facts are caller/table facts; reaction offer and resume semantics remain reducer-owned elsewhere.",
+      "reason": "Spell-cast visibility, range, and component witnesses are caller/table facts covered by the boundary obligation. If those facts admit a Reaction window, offer, decline, spend, and continuation resume are the existing reducer semantics covered by BATTLE.REACTION.OFFER_DECLINE_RESUME; spell-specific reaction procedures remain profile-join work, not a new targetSpatialFacts obligation.",
       "subject": "battle-hole-family"
     },
     {
@@ -1153,12 +1152,10 @@
       "coveredByObligationIds": [
         "BATTLE.REACTION.OFFER_DECLINE_RESUME"
       ],
-      "followUpTaskIds": [
-        "RKBC-BATTLE-HOLE-REACTION-CONCENTRATION"
-      ],
+      "followUpTaskIds": [],
       "holeKind": "concentrationSavingThrow",
       "id": "BattleConcentrationSavingThrowHole",
-      "reason": "Concentration Saving Throw outcomes can end active effects after damage; existing reaction coverage owns the core protocol, while attack/damage lifecycle sites need explicit reuse or split.",
+      "reason": "Damage-triggered Concentration Saving Throw outcomes decide whether the damaged combatant keeps Concentration, including the DC projection from damage taken and cleanup on failure. RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001 traces those spans to the same QNT/proof/runtime/MBT owner set as BATTLE.REACTION.OFFER_DECLINE_RESUME, so attack and spell damage sites reuse that covered obligation instead of creating a parallel Concentration lifecycle row.",
       "subject": "battle-hole-family"
     },
     {
@@ -1166,12 +1163,10 @@
       "coveredByObligationIds": [
         "BATTLE.REACTION.OFFER_DECLINE_RESUME"
       ],
-      "followUpTaskIds": [
-        "RKBC-BATTLE-HOLE-REACTION-CONCENTRATION"
-      ],
+      "followUpTaskIds": [],
       "holeKind": "reactionDecision",
       "id": "BattleReactionDecisionHole",
-      "reason": "Reaction decline, resolution, nested fills, resource spend, and interrupted-procedure resume are reducer-owned sequencing semantics.",
+      "reason": "Reaction decisions decide decline or resolve, spend the reactor's Reaction when a procedure is taken, carry nested fills for the chosen procedure, and resume the interrupted procedure afterward. BATTLE.REACTION.OFFER_DECLINE_RESUME owns this shared sequencing contract; later feature or spell tasks may join additional procedure profiles, but the generic reactionDecision hole has no remaining Task 6 work.",
       "subject": "battle-hole-family"
     },
     {
@@ -1433,11 +1428,10 @@
       ],
       "fillKind": "targetSpatialFacts",
       "followUpTaskIds": [
-        "RKBC-BATTLE-HOLE-REACTION-CONCENTRATION",
         "RKBC-PROFILE-JOIN-TABLE-CALLER"
       ],
       "id": "targetSpatialFacts",
-      "reason": "Spatial, visibility, range, and separation witnesses are table facts.",
+      "reason": "Spatial, visibility, range, and separation witnesses are table facts. Spell-cast Reaction admission facts use this same fill kind, but their offer/decision/resume semantics are covered by the reactionDecision hole and BATTLE.REACTION.OFFER_DECLINE_RESUME rather than by the generic spatial-fact fill.",
       "subject": "battle-fill-kind"
     },
     {
@@ -1555,11 +1549,9 @@
         "BATTLE.REACTION.OFFER_DECLINE_RESUME"
       ],
       "fillKind": "concentrationSavingThrow",
-      "followUpTaskIds": [
-        "RKBC-BATTLE-HOLE-REACTION-CONCENTRATION"
-      ],
+      "followUpTaskIds": [],
       "id": "concentrationSavingThrow",
-      "reason": "Concentration Saving Throw fills decide whether concentration survives damage.",
+      "reason": "Concentration Saving Throw fills decide whether damage breaks Concentration. RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001 supplies the damage-save, DC, and failed-save cleanup RAW trace; the fills are consumed by the covered Reaction/continuation/Concentration protocol at damage lifecycle sites, including attack-damage continuations that request the save after original attack fills.",
       "subject": "battle-fill-kind"
     },
     {
@@ -1591,11 +1583,9 @@
         "BATTLE.REACTION.OFFER_DECLINE_RESUME"
       ],
       "fillKind": "reactionDecision",
-      "followUpTaskIds": [
-        "RKBC-BATTLE-HOLE-REACTION-CONCENTRATION"
-      ],
+      "followUpTaskIds": [],
       "id": "reactionDecision",
-      "reason": "Reaction fills decide decline or resolve and may carry nested fills for interrupted procedure continuation.",
+      "reason": "Reaction fills decide decline or resolve and may carry nested fills for the chosen Reaction procedure. The existing Reaction obligation covers quota spend, bounded continuation resume, and restoring the interrupted procedure; unsupported or not-yet-joined spell/feature reaction profiles remain separate profile tasks.",
       "subject": "battle-fill-kind"
     },
     {
