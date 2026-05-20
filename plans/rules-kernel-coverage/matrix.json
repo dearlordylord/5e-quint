@@ -24,13 +24,13 @@
     "obligations[].profiles": "Derived from profileObligations by obligation id; authored obligations.jsonl rows must not contain profiles."
   },
   "battleHoleFrontierSummary": {
-    "total": 79,
+    "total": 83,
     "bySubject": {
-      "battle-hole-family": 48,
-      "battle-fill-kind": 31
+      "battle-hole-family": 51,
+      "battle-fill-kind": 32
     },
     "byClassification": {
-      "semantic-frontier": 60,
+      "semantic-frontier": 64,
       "deterministic-boundary-projection": 0,
       "table-owned-fact": 19,
       "unsupported-dead-branch": 0
@@ -125,16 +125,26 @@
       "profiles": [
         "unit-feature.action-surge-resource",
         "unit-feature.alternate-action-cost",
+        "unit-feature.attack-action-attack-count-scaling",
         "unit-feature.attack-damage-rider",
+        "unit-feature.attack-roll-miss-to-hit-replacement",
         "unit-feature.bonus-action-ongoing-rage",
         "unit-feature.first-attack-roll-reckless-advantage",
+        "unit-feature.innate-sorcery-activation",
+        "unit-feature.martial-arts-attack-projection",
         "unit-feature.passive-armor-class-bonus",
         "unit-feature.passive-ranged-attack-roll-bonus",
+        "unit-feature.passive-saving-throw-roll-mode",
+        "unit-feature.passive-speed-bonus",
+        "unit-feature.passive-speed-kind-grants",
         "unit-feature.reaction-roll-or-damage-reduction",
         "unit-feature.save-damage-replacement",
         "unit-feature.self-bonus-action-healing",
         "unit-feature.weapon-critical-range-19",
         "unit-feature.weapon-damage-dice-roll-choice",
+        "unit-feature.weapon-mastery-cleave",
+        "unit-feature.weapon-mastery-sap",
+        "unit-feature.weapon-mastery-topple",
         "unit-feature.zero-hit-point-replacement"
       ],
       "qntOwners": [
@@ -640,18 +650,18 @@
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
         "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.DAMAGE.ATTACK_BRANCHES",
         "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES"
       ],
       "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE",
         "RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS",
         "RKBC-PROFILE-JOIN-TABLE-CALLER"
       ],
       "holeKind": "targetChoice",
       "id": "BattleTargetChoiceHole",
-      "reason": "Target identity is a table decision, but accepted targets change reducer legality and downstream effects. Movement, spell target procedures, attack target legality/resource branches, and Search target resolution are covered; feature target holes and table target-admission facts remain explicit downstream follow-ups.",
+      "reason": "Target identity is a table decision, but accepted targets change reducer legality and downstream effects. Movement, mastery and attack-projection feature target procedures, spell target procedures, attack target legality/resource branches, and Search target resolution are covered; reaction/bonus feature joins and table target-admission facts remain explicit downstream follow-ups.",
       "subject": "battle-hole-family"
     },
     {
@@ -1043,9 +1053,9 @@
       "followUpTaskIds": [
         "RKBC-PROFILE-JOIN-TABLE-CALLER"
       ],
-      "holeKind": "flamingSphereRamMovement",
+      "holeKind": "movableZoneRamMovement",
       "id": "BattleFlamingSphereRamMovementHole",
-      "reason": "Sphere movement distance and contact are caller/table spatial facts. Route, obstacle, unoccupied-space, and contact derivation stay outside reducer state; damage/save consequences are separate semantic rows.",
+      "reason": "Movable-zone ram distance and contact are caller/table spatial facts. Route, obstacle, unoccupied-space, and contact derivation stay outside reducer state; damage/save consequences are separate semantic rows.",
       "subject": "battle-hole-family"
     },
     {
@@ -1056,9 +1066,9 @@
       "followUpTaskIds": [
         "RKBC-PROFILE-JOIN-TABLE-CALLER"
       ],
-      "holeKind": "flamingSphereRepositionMovement",
-      "id": "BattleFlamingSphereRepositionMovementHole",
-      "reason": "Repositioning the sphere is table spatial placement. Pathfinding, obstacles, unoccupied-space checks, and sphere coordinates stay out of rules-kernel state.",
+      "holeKind": "movableZoneRepositionMovement",
+      "id": "BattleMovableZoneRepositionMovementHole",
+      "reason": "Repositioning a spell-owned movable zone is table spatial placement. Pathfinding, obstacles, unoccupied-space checks, and zone coordinates stay out of rules-kernel state.",
       "subject": "battle-hole-family"
     },
     {
@@ -1091,11 +1101,11 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE"
+        "RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS"
       ],
       "holeKind": "savingThrowOutcome",
       "id": "BattleUnitFeatureSavingThrowOutcomeHole",
-      "reason": "Feature Saving Throw outcomes drive feature-owned conditions or damage replacements; covered profile semantics do not yet cover every supported feature family.",
+      "reason": "Feature Saving Throw outcomes drive feature-owned conditions or damage replacements. Passive, persistent-effect, and mastery feature joins map to the feature procedure obligation; reaction, bonus-action, and failed-roll resource feature saves remain a reaction/bonus profile follow-up.",
       "subject": "battle-hole-family"
     },
     {
@@ -1117,12 +1127,11 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE",
         "RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS"
       ],
       "holeKind": "unitFeatureDecision",
       "id": "BattleUnitFeatureDecisionHole",
-      "reason": "Feature use-or-decline decisions can spend resources or open continuations such as Cleave; some supported feature profiles still need rules-kernel joins.",
+      "reason": "Feature use-or-decline decisions can spend resources or open continuations such as Cleave. Passive, persistent-effect, attack-scaling, mastery, and activation feature joins map to the feature procedure obligation; reaction, bonus-action, and failed-roll resource profiles remain follow-up work.",
       "subject": "battle-hole-family"
     },
     {
@@ -1383,11 +1392,10 @@
       ],
       "fillKind": "unitFeatureDecision",
       "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE",
         "RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS"
       ],
       "id": "unitFeatureDecision",
-      "reason": "Use/decline fills decide whether feature continuations or resources proceed.",
+      "reason": "Use/decline fills decide whether feature continuations or resources proceed. Passive, persistent-effect, attack-scaling, mastery, and activation feature joins are covered; reaction, bonus-action, and failed-roll resource profiles remain follow-up work.",
       "subject": "battle-fill-kind"
     },
     {
@@ -1407,18 +1415,18 @@
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
         "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.DAMAGE.ATTACK_BRANCHES",
         "BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES"
       ],
       "fillKind": "targetChoice",
       "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE",
         "RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS",
         "RKBC-PROFILE-JOIN-TABLE-CALLER"
       ],
       "id": "targetChoice",
-      "reason": "Target identity is a table decision, but accepted targets change reducer legality and downstream effects. Movement, spell target procedures, attack target legality/resource branches, and Search target resolution are covered; feature target holes and table target-admission facts remain explicit downstream follow-ups.",
+      "reason": "Target identity is a table decision, but accepted targets change reducer legality and downstream effects. Movement, mastery and attack-projection feature target procedures, spell target procedures, attack target legality/resource branches, and Search target resolution are covered; reaction/bonus feature joins and table target-admission facts remain explicit downstream follow-ups.",
       "subject": "battle-fill-kind"
     },
     {
@@ -1465,12 +1473,12 @@
       "coveredByObligationIds": [
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
       ],
-      "fillKind": "flamingSphereRamMovement",
+      "fillKind": "movableZoneRamMovement",
       "followUpTaskIds": [
         "RKBC-PROFILE-JOIN-TABLE-CALLER"
       ],
-      "id": "flamingSphereRamMovement",
-      "reason": "Flaming Sphere ram distance/contact is table spatial evidence that precedes separate damage/save semantics; route and placement derivation stay outside reducer state.",
+      "id": "movableZoneRamMovement",
+      "reason": "Movable-zone ram distance/contact is table spatial evidence that precedes separate damage/save semantics; route and placement derivation stay outside reducer state.",
       "subject": "battle-fill-kind"
     },
     {
@@ -1478,12 +1486,12 @@
       "coveredByObligationIds": [
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
       ],
-      "fillKind": "flamingSphereRepositionMovement",
+      "fillKind": "movableZoneRepositionMovement",
       "followUpTaskIds": [
         "RKBC-PROFILE-JOIN-TABLE-CALLER"
       ],
-      "id": "flamingSphereRepositionMovement",
-      "reason": "Flaming Sphere repositioning is table placement, not pathfinding, obstacle, or coordinate state.",
+      "id": "movableZoneRepositionMovement",
+      "reason": "Movable-zone repositioning is table placement, not pathfinding, obstacle, or coordinate state.",
       "subject": "battle-fill-kind"
     },
     {
@@ -1637,6 +1645,59 @@
       "id": "shoveOutcome",
       "reason": "The dedicated Shove obligation covers save success, failed Prone, rejected invalid push distance, accepted non-OA 5-foot pushed/blocked disposition variants, and accepted-outcome Attack resource spend. Destination identity, blocked/no-legal-destination derivation, route choice, and final placement remain caller/table facts covered by the boundary obligation.",
       "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "followUpTaskIds": [
+        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+      ],
+      "holeKind": "selfTransformationModeChoice",
+      "id": "BattleSelfTransformationModeChoiceHole",
+      "reason": "Self-transformation mode choice selects the reducer-visible Alter Self mode and changes later spell effect projections; the spell procedure profile owns the executable branch while broader spell profile joins remain split follow-up work.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES"
+      ],
+      "followUpTaskIds": [
+        "RKBC-PROFILE-JOIN-TABLE-CALLER"
+      ],
+      "holeKind": "savingThrowOutcome",
+      "id": "BattleMoonbeamSavingThrowOutcomeHole",
+      "reason": "Moonbeam Saving Throw outcomes determine full or half Radiant damage after table-owned area trigger evidence; generic save damage branching is covered and table-caller movable-zone trigger integration remains follow-up work.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
+        "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP"
+      ],
+      "followUpTaskIds": [
+        "RKBC-PROFILE-JOIN-TABLE-CALLER"
+      ],
+      "holeKind": "rolledDice",
+      "id": "BattleMoonbeamDamageRollHole",
+      "reason": "Moonbeam damage rolls depend on table-owned movable-zone trigger evidence but reuse shared HP damage and the generic damage-disposition split; table-caller area trigger integration remains follow-up work.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "fillKind": "selfTransformationModeChoice",
+      "followUpTaskIds": [
+        "RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION"
+      ],
+      "id": "selfTransformationModeChoice",
+      "reason": "Self-transformation mode fills choose the reducer-visible spell mode rather than presentation metadata; remaining spell profile joins stay in their follow-up task.",
+      "subject": "battle-fill-kind"
     }
   ],
   "profileObligations": [
@@ -1656,7 +1717,19 @@
       "obligationIds": [
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
+      "profileId": "unit-feature.attack-action-attack-count-scaling"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
       "profileId": "unit-feature.attack-damage-rider"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.attack-roll-miss-to-hit-replacement"
     },
     {
       "obligationIds": [
@@ -1674,6 +1747,18 @@
       "obligationIds": [
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
+      "profileId": "unit-feature.innate-sorcery-activation"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.martial-arts-attack-projection"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
       "profileId": "unit-feature.passive-armor-class-bonus"
     },
     {
@@ -1681,6 +1766,24 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "profileId": "unit-feature.passive-ranged-attack-roll-bonus"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.passive-saving-throw-roll-mode"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.passive-speed-bonus"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.passive-speed-kind-grants"
     },
     {
       "obligationIds": [
@@ -1712,6 +1815,24 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "profileId": "unit-feature.weapon-damage-dice-roll-choice"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.weapon-mastery-cleave"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.weapon-mastery-sap"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.weapon-mastery-topple"
     },
     {
       "obligationIds": [
@@ -1864,14 +1985,17 @@
     "character-creation.class-feature-feat-choice",
     "character-creation.class-feature-option-projection",
     "character-creation.class-feature-resource-projection",
+    "character-creation.class-feature-source-fact-projection",
     "character-creation.eldritch-invocation-choice",
     "character-creation.skill-expertise-choice",
     "character-creation.warlock-pact-magic-advancement",
     "character-creation.weapon-mastery-choice",
     "character-sheet.ability-check-proficiency-bonus",
     "character-sheet.armor-class-base-formula",
+    "character-sheet.class-feature-long-rest-use-state",
     "character-sheet.class-feature-use-count-resource",
     "character-sheet.healing-resource-action",
+    "character-sheet.monk-uncanny-metabolism-initiative-recovery",
     "character-sheet.pact-slot-recovery",
     "character-sheet.short-rest-spell-slot-recovery",
     "character-sheet.spellbook-ritual-invocation",
@@ -1897,6 +2021,7 @@
     "spell.invocation-damage-save-or-attack",
     "spell.invocation-dancing-lights-movable-dim-light",
     "spell.invocation-direct-condition",
+    "spell.invocation-direct-condition-removal",
     "spell.invocation-expeditious-retreat-dash",
     "spell.invocation-feather-fall-mitigation",
     "spell.invocation-flaming-sphere-hazard-ram",
@@ -1910,11 +2035,13 @@
     "spell.invocation-make-stable",
     "spell.invocation-marked-damage-rider",
     "spell.invocation-mirror-image-hit-interception",
+    "spell.invocation-moonbeam-movable-zone",
     "spell.invocation-object-light",
     "spell.invocation-roll-modifier",
     "spell.invocation-sanctuary-targeting-interdiction",
     "spell.invocation-self-ability-check-advantage",
     "spell.invocation-self-teleport",
+    "spell.invocation-self-transformation-mode",
     "spell.invocation-sleep-repeat-save-lifecycle",
     "spell.invocation-sleep-target-admission",
     "spell.invocation-spell-hosted-weapon-attack",
@@ -1941,6 +2068,7 @@
     "unit-feature.first-attack-roll-reckless-advantage",
     "unit-feature.innate-sorcery-activation",
     "unit-feature.martial-arts-attack-projection",
+    "unit-feature.monk-focus-battle-options",
     "unit-feature.passive-armor-class-bonus",
     "unit-feature.passive-ranged-attack-roll-bonus",
     "unit-feature.passive-saving-throw-roll-mode",

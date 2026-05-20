@@ -11,9 +11,9 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | Strict runtime/profile support | 78/94 (83%) |
 | Strict target closure | 94/94 (100%) |
 | Product readiness | 367/367 (100%) |
-| Rules-kernel profile join | 19/58 (32.8%) |
-| Rules-kernel covered profile join | 14/58 (24.1%) |
-| Supported Unit rules-kernel chain | 29/78 (37.2%) |
+| Rules-kernel profile join | 21/58 (36.2%) |
+| Rules-kernel covered profile join | 16/58 (27.6%) |
+| Supported Unit rules-kernel chain | 31/78 (39.7%) |
 
 ## Scope
 
@@ -78,7 +78,6 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | `jump` | unmapped | `spell.invocation-jump-movement-replacement` (unmapped: no obligation mapping) |
 | `light` | unmapped | `spell.invocation-object-light` (unmapped: no obligation mapping) |
 | `longstrider` | unmapped | `spell.scalar-buff` (unmapped: no obligation mapping) |
-| `monk_martial_arts` | unmapped | `unit-feature.martial-arts-attack-projection` (unmapped: no obligation mapping) |
 | `paladin_lay_on_hands` | unmapped | `character-sheet.healing-resource-action` (unmapped: no obligation mapping) |
 | `paladin_weapon_mastery` | unmapped | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner)); `character-sheet.weapon-mastery-reselection` (unmapped: no obligation mapping) |
 | `produce_flame` | unmapped | `spell.invocation-held-light-emitter` (unmapped: no obligation mapping) |
@@ -90,7 +89,6 @@ This strict view tracks executable SRD level-1, cantrip, and level-1 spell press
 | `shield_of_faith` | unmapped | `spell.scalar-buff` (unmapped: no obligation mapping) |
 | `shillelagh` | unmapped | `spell.invocation-weapon-attack-override` (unmapped: no obligation mapping) |
 | `sleep` | unmapped | `spell.invocation-sleep-target-admission` (unmapped: no obligation mapping); `spell.invocation-sleep-repeat-save-lifecycle` (unmapped: no obligation mapping) |
-| `sorcerer_innate_sorcery` | unmapped | `unit-feature.innate-sorcery-activation` (unmapped: no obligation mapping) |
 | `spare_the_dying` | unmapped | `spell.invocation-make-stable` (unmapped: no obligation mapping) |
 | `true_strike` | unmapped | `spell.invocation-spell-hosted-weapon-attack` (unmapped: no obligation mapping) |
 | `warlock_eldritch_invocations` | mapped-open | `character-creation.eldritch-invocation-choice` (mapped-open: `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner)); `character-creation.class-feature-advancement-replacement` (mapped-open: `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner)); `character-creation.warlock-pact-magic-advancement` (mapped-open: `CREATION.CURRENT_SUPPORTED_CHOICES.FULL_PROFILE_AUDIT` (needs-qnt-owner)) |

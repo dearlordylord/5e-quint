@@ -963,18 +963,18 @@
     },
     "rulesKernelCoveredProfileJoin": {
       "denominator": 58,
-      "numerator": 14,
-      "percent": "24.1%"
+      "numerator": 16,
+      "percent": "27.6%"
     },
     "rulesKernelProfileJoin": {
       "denominator": 58,
-      "numerator": 19,
-      "percent": "32.8%"
+      "numerator": 21,
+      "percent": "36.2%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 78,
-      "numerator": 29,
-      "percent": "37.2%"
+      "numerator": 31,
+      "percent": "39.7%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 94,
@@ -3246,8 +3246,8 @@
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
         "denominator": 78,
-        "numerator": 29,
-        "percent": "37.2%"
+        "numerator": 31,
+        "percent": "39.7%"
       }
     },
     "units": [
@@ -4152,11 +4152,18 @@
         "unitId": "magic_missile"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
             "profileId": "unit-feature.martial-arts-attack-projection",
             "profileKind": "passive"
           }
@@ -4645,11 +4652,18 @@
         "unitId": "sleep"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
             "profileId": "unit-feature.innate-sorcery-activation",
             "profileKind": "persistent-effect"
           }

@@ -11,9 +11,9 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | Strict runtime/profile support | 108/164 (65.9%) |
 | Strict target closure | 163/164 (99.4%) |
 | Product readiness | 486/556 (87.4%) |
-| Rules-kernel profile join | 23/80 (28.8%) |
-| Rules-kernel covered profile join | 18/80 (22.5%) |
-| Supported Unit rules-kernel chain | 34/108 (31.5%) |
+| Rules-kernel profile join | 27/80 (33.8%) |
+| Rules-kernel covered profile join | 22/80 (27.5%) |
+| Supported Unit rules-kernel chain | 38/108 (35.2%) |
 
 ## Scope
 
@@ -54,7 +54,6 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `alter_self` | unmapped | `spell.invocation-self-transformation-mode` (unmapped: no obligation mapping) |
 | `animal_friendship` | unmapped | `spell.creature-type-protection-and-charm` (unmapped: no obligation mapping) |
 | `bane` | unmapped | `spell.invocation-roll-modifier` (unmapped: no obligation mapping) |
-| `barbarian_danger_sense` | unmapped | `unit-feature.passive-saving-throw-roll-mode` (unmapped: no obligation mapping) |
 | `bard_bardic_inspiration` | unmapped | `unit-feature.bardic-inspiration-grant` (unmapped: no obligation mapping); `unit-feature.bardic-inspiration-failed-d20-test` (unmapped: no obligation mapping) |
 | `bard_jack_of_all_trades` | unmapped | `character-sheet.ability-check-proficiency-bonus` (unmapped: no obligation mapping) |
 | `barkskin` | unmapped | `spell.scalar-buff` (unmapped: no obligation mapping) |
@@ -95,8 +94,6 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `longstrider` | unmapped | `spell.scalar-buff` (unmapped: no obligation mapping) |
 | `mirror_image` | unmapped | `spell.invocation-mirror-image-hit-interception` (unmapped: no obligation mapping) |
 | `misty_step` | unmapped | `spell.invocation-self-teleport` (unmapped: no obligation mapping) |
-| `monk_martial_arts` | unmapped | `unit-feature.martial-arts-attack-projection` (unmapped: no obligation mapping) |
-| `monk_unarmored_movement` | unmapped | `unit-feature.passive-speed-bonus` (unmapped: no obligation mapping) |
 | `monk_uncanny_metabolism` | unmapped | `character-creation.class-feature-source-fact-projection` (unmapped: no obligation mapping); `character-sheet.class-feature-long-rest-use-state` (unmapped: no obligation mapping); `character-sheet.monk-uncanny-metabolism-initiative-recovery` (unmapped: no obligation mapping) |
 | `paladin_lay_on_hands` | unmapped | `character-sheet.healing-resource-action` (unmapped: no obligation mapping) |
 | `paladin_paladins_smite` | unmapped | `spell.invocation-after-hit-damage` (unmapped: no obligation mapping) |
@@ -114,7 +111,6 @@ This strict view tracks executable SRD level-1 plus level-2 class pressure, cant
 | `shillelagh` | unmapped | `spell.invocation-weapon-attack-override` (unmapped: no obligation mapping) |
 | `shining_smite` | unmapped | `spell.invocation-after-hit-damage-illumination` (unmapped: no obligation mapping) |
 | `sleep` | unmapped | `spell.invocation-sleep-target-admission` (unmapped: no obligation mapping); `spell.invocation-sleep-repeat-save-lifecycle` (unmapped: no obligation mapping) |
-| `sorcerer_innate_sorcery` | unmapped | `unit-feature.innate-sorcery-activation` (unmapped: no obligation mapping) |
 | `spare_the_dying` | unmapped | `spell.invocation-make-stable` (unmapped: no obligation mapping) |
 | `spider_climb` | unmapped | `spell.scalar-buff` (unmapped: no obligation mapping) |
 | `true_strike` | unmapped | `spell.invocation-spell-hosted-weapon-attack` (unmapped: no obligation mapping) |

@@ -323,7 +323,7 @@ Reviewers should reject:
 | 4 | RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION - Battle Damage Disposition And Type Choice Obligations | done | RKBC-BATTLE-HOLE-INVENTORY | Covered obligations for damage disposition and damage-type choice holes. |
 | 5 | RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND - Battle Ability Skill And Command Hole Obligations | done | RKBC-BATTLE-HOLE-INVENTORY | Covered/boundary obligations for ability choice, skill choice, and Command option holes. |
 | 6 | RKBC-BATTLE-HOLE-REACTION-CONCENTRATION - Battle Reaction And Concentration Hole Obligations | done | RKBC-BATTLE-HOLE-INVENTORY | Reaction-decision, continuation-resume, spell-cast reaction-fact, and Concentration Saving Throw holes reuse the covered reaction obligation or table-fact boundary rows; Task 6 has no remaining follow-up. |
-| 7 | RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE - Feature Passive Resource And Persistent Profile Join | ready-for-research | baseline | Map feature passive/resource/persistent profiles to covered obligations or create missing obligations. |
+| 7 | RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE - Feature Passive Resource And Persistent Profile Join | done | baseline | Passive, persistent-effect, attack-scaling, mastery, and activation feature profiles are joined to covered feature procedure obligations; reaction/bonus and failed-roll resource profiles remain Task 8. |
 | 8 | RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS - Feature Reaction Bonus Action And Resource Profile Join | ready-for-research | baseline | Map feature reaction, bonus-action, and failed-roll resource profiles to covered obligations or create missing obligations. |
 | 9 | RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION - Spell Damage Condition And Scalar Profile Join | ready-for-research | baseline | Map Spell Definition profiles for damage, condition, scalar, and roll modifiers to covered Spell Effect/Invocation obligations or create missing obligations. |
 | 10 | RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION - Spell After Hit Reaction And Marked Effect Profile Join | ready-for-research | baseline | Map after-hit, reaction-casting-time Spell Invocation, Readied Spell Response, marked-effect, and chained spell profiles to covered obligations or create missing obligations. |
@@ -482,12 +482,19 @@ Acceptance:
 
 ### Task 7 - RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE - Feature Passive Resource And Persistent Profile Join
 
-Status: `ready-for-research`
+Status: `done`
 
 Scope: close unmapped Unit feature passive, persistent-effect, and resource
 profiles, including speed, attack-count scaling, martial arts projection,
 weapon mastery effects, innate sorcery activation, resource boosts, and feature
 target holes that mutate reducer-visible feature state.
+
+Result: passive speed, speed-kind, saving-throw roll-mode, attack-count
+scaling, martial arts projection, innate sorcery activation, miss-to-hit
+replacement, and weapon mastery Cleave/Sap/Topple profiles join the covered
+`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` obligation. Feature target,
+decision, and save holes now keep Task 8 visible for the reaction, bonus-action,
+and failed-roll resource profile families already scoped there.
 
 Acceptance:
 

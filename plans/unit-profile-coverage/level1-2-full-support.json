@@ -2833,18 +2833,18 @@
     },
     "rulesKernelCoveredProfileJoin": {
       "denominator": 80,
-      "numerator": 18,
-      "percent": "22.5%"
+      "numerator": 22,
+      "percent": "27.5%"
     },
     "rulesKernelProfileJoin": {
       "denominator": 80,
-      "numerator": 23,
-      "percent": "28.8%"
+      "numerator": 27,
+      "percent": "33.8%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 108,
-      "numerator": 34,
-      "percent": "31.5%"
+      "numerator": 38,
+      "percent": "35.2%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 164,
@@ -5575,8 +5575,8 @@
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
         "denominator": 108,
-        "numerator": 34,
-        "percent": "31.5%"
+        "numerator": 38,
+        "percent": "35.2%"
       }
     },
     "units": [
@@ -5667,11 +5667,18 @@
         "unitId": "bane"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
             "profileId": "unit-feature.passive-saving-throw-roll-mode",
             "profileKind": "passive"
           }
@@ -6706,11 +6713,18 @@
         "unitId": "misty_step"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
             "profileId": "unit-feature.martial-arts-attack-projection",
             "profileKind": "passive"
           }
@@ -6737,11 +6751,18 @@
         "unitId": "monk_unarmored_defense"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
             "profileId": "unit-feature.passive-speed-bonus",
             "profileKind": "passive"
           }
@@ -7333,11 +7354,18 @@
         "unitId": "sleep"
       },
       {
-        "joinStatus": "unmapped",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "unmapped",
-            "obligations": [],
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
             "profileId": "unit-feature.innate-sorcery-activation",
             "profileKind": "persistent-effect"
           }
