@@ -131,12 +131,13 @@ Do not run battle-runtime MBT unless the task changes promoted battle-runtime be
 - Do not edit `plans/ACTIVE_PLAN.md`.
 - Do not touch the external Claude lane in `plans/LEVEL2_RALPH_LOOP_CLAUDE_STASHED_FRONTIER.md` or `/workspace/typescript/dnd-ralph-level2-claude`.
 - Do not touch active Wild Shape manual-review work in `/workspace/typescript/dnd-wild-shape-runtime-c-manual-review`.
+- Do not touch active Moonbeam work owned by external/manual agents.
 - Do not start companion/familiar work, including Find Familiar or companion-control automation.
 - Shared generated coverage artifacts may conflict at merge time; regenerate them in master after integration merges.
 
 ## Recursive Tail Policy
 
-The final task is intentionally blocked on every real task in this plan and placed last. It auto-unblocks only after the planned implementation queue is done. It must plan new concrete work from current metrics and history; it must not substitute for same-plan dependency unblocking, and it must not reopen external Claude, Wild Shape, or companion work.
+The final task is intentionally blocked on every real task in this plan and placed last. It auto-unblocks only after the planned implementation queue is done. It must plan new concrete work from current metrics and history; it must not substitute for same-plan dependency unblocking, and it must not reopen external Claude, Wild Shape, Moonbeam, or companion work.
 
 ## DAG / Queue Order
 
@@ -534,7 +535,7 @@ Dependencies: L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS, L12G-FOLLOWUP-MONK
 
 Pre-researched scope:
 
-- Do not use this as ordinary dependency unblocking. Ralph already auto-unblocks same-plan blocked tasks whose dependencies are done. Use this only when no earlier task in this plan is runnable: inspect current metrics and git history, exclude external Claude and Wild Shape work, avoid companion work, and create 5-10 new atomic Ralph tasks for level-2 class resource/profile frontier that does not overlap active spell lanes.
+- Do not use this as ordinary dependency unblocking. Ralph already auto-unblocks same-plan blocked tasks whose dependencies are done. Use this only when no earlier task in this plan is runnable: inspect current metrics and git history, exclude external Claude, Wild Shape, and Moonbeam work, avoid companion work, and create 5-10 new atomic Ralph tasks for level-2 class resource/profile frontier that does not overlap active spell lanes.
 
 Inputs:
 
@@ -549,7 +550,7 @@ Inputs:
 Outputs:
 
 - create or update a follow-up Ralph plan with 5-10 new atomic tasks, each with status, dependencies, clear inputs, outputs, and acceptance criteria;
-- exclude active external Claude work, active Wild Shape manual-review work, companion/familiar work, and tasks already done in git history;
+- exclude active external Claude work, active Wild Shape manual-review work, active Moonbeam external/manual work, companion/familiar work, and tasks already done in git history;
 - when a potential task depends on another active lane, record it as `deferred-external` or put it behind a same-plan blocked dependency rather than making it runnable;
 - commit the planning change and then continue with the first runnable task if the harness supports continuing; otherwise leave the plan ready for the orchestrator.
 
