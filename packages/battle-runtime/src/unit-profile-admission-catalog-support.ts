@@ -96,6 +96,8 @@ export const blurUnitId = "blur";
 
 export const burningHandsUnitId = "burning_hands";
 
+export const calmEmotionsUnitId = "calm_emotions";
+
 export const chromaticOrbUnitId = "chromatic_orb";
 
 export const colorSprayUnitId = "color_spray";

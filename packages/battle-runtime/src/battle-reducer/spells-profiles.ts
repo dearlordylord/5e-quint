@@ -52,6 +52,7 @@ import {
   supportedDamageAmountExpr,
   supportedPreparedSaveGateAttackRollAdvantageProfile,
   supportedPreparedSaveGateConditionProfile,
+  supportedPreparedSaveGateConditionImmunityProfile,
   supportedPreparedCommandProfile,
   supportedPreparedSaveGateDamageProfile,
   supportedPreparedGreaseGroundHazardProfile,
@@ -138,6 +139,7 @@ export {
   supportedFailedSavePostDamageRiders,
   supportedPreparedSaveGateAttackRollAdvantageProfile,
   supportedPreparedSaveGateConditionProfile,
+  supportedPreparedSaveGateConditionImmunityProfile,
   supportedPreparedCommandProfile,
   supportedPreparedSaveGateDamageProfile,
   supportedPreparedGreaseGroundHazardProfile,
@@ -249,6 +251,13 @@ export function supportedSpellActs(
     ),
     ...preparedSpells.flatMap((spell) =>
       supportedPreparedSaveGateAttackRollAdvantageProfile(
+        actor.combatantId,
+        spell,
+        spellcasting.spellSlots,
+      ),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      supportedPreparedSaveGateConditionImmunityProfile(
         actor.combatantId,
         spell,
         spellcasting.spellSlots,

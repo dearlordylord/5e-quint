@@ -38,6 +38,7 @@ import classRogueInput from "../../content/class_rogue.json";
 import classSorcererInput from "../../content/class_sorcerer.json";
 import classWarlockInput from "../../content/class_warlock.json";
 import classWizardInput from "../../content/class_wizard.json";
+import calmEmotionsInput from "../../content/calm_emotions.json";
 import charmPersonInput from "../../content/charm_person.json";
 import chillTouchInput from "../../content/chill_touch.json";
 import chromaticOrbInput from "../../content/chromatic_orb.json";
@@ -436,6 +437,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     blessInput,
     blurInput,
     burningHandsInput,
+    calmEmotionsInput,
     chillTouchInput,
     chromaticOrbInput,
     colorSprayInput,

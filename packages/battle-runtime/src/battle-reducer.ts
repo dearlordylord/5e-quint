@@ -4,7 +4,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-moonbeam-movable-zone
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.monk-focus-battle-options
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.creature-type-protection-and-charm spell.hit-point-restoration spell.invocation-after-hit-damage spell.invocation-after-hit-damage-illumination spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-blur-attack-roll-defense spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-removal-protection spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-dancing-lights-movable-dim-light spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-independent-attack-sequence spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-self-ability-check-advantage spell.invocation-self-teleport spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-failed-d20-test unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.creature-type-protection-and-charm spell.hit-point-restoration spell.invocation-after-hit-damage spell.invocation-after-hit-damage-illumination spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-blur-attack-roll-defense spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-removal-protection spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-dancing-lights-movable-dim-light spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-independent-attack-sequence spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-save-gated-condition-immunity spell.invocation-self-ability-check-advantage spell.invocation-self-teleport spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-failed-d20-test unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.zero-hit-point-replacement
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-direct-condition
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-direct-condition-removal
@@ -910,6 +910,7 @@ export type BattleActiveEffect =
   | (BattleSpellEffectBase & {
       readonly kind: "conditionImmunity";
       readonly condition: Condition;
+      readonly conditionHadNonSpellSource: boolean;
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {
@@ -2455,6 +2456,10 @@ export type DamageReductionSpellInvocation = {
   readonly expiresAt: BattleActiveEffectExpiration;
   readonly rangeFeet: MovementFeet;
 };
+export type ConditionImmunityActiveEffectTemplate = Omit<
+  Extract<BattleActiveEffect, { readonly kind: "conditionImmunity" }>,
+  "conditionHadNonSpellSource"
+>;
 export type ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation = {
   readonly access: PreparedSpellAccess;
   readonly resource: SpellSlotInvocationResource;
@@ -2463,7 +2468,7 @@ export type ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation = {
   readonly actionCost: "magicAction";
   readonly targeting: SpellTargetListTargeting;
   readonly activeEffects: readonly [
-    Extract<BattleActiveEffect, { readonly kind: "conditionImmunity" }>,
+    ConditionImmunityActiveEffectTemplate,
     Extract<
       BattleActiveEffect,
       { readonly kind: "turnStartTemporaryHitPoints" }
@@ -2486,6 +2491,25 @@ export type SelfTransformationModeSpellInvocation = {
     BattleActiveEffectExpiration,
     { readonly kind: "concentration" }
   > & { readonly durationTicks: ElapsedTimeTicks };
+};
+export type SaveGatedConditionImmunitySpellInvocation = {
+  readonly access: PreparedSpellAccess;
+  readonly resource: SpellSlotInvocationResource;
+  readonly procedure: "saveGatedConditionImmunity";
+  readonly spell: SpellRecord;
+  readonly actionCost: "magicAction";
+  readonly ability: Ability;
+  readonly dc: DcSource;
+  readonly targeting: Extract<
+    SpellTargeting,
+    { readonly kind: "pointOriginSphere" }
+  >;
+  readonly targetCreatureTypes: readonly CreatureType[];
+  readonly activeEffects: readonly [
+    ConditionImmunityActiveEffectTemplate,
+    ConditionImmunityActiveEffectTemplate,
+  ];
+  readonly rangeFeet: MovementFeet;
 };
 export type JumpMovementReplacementSpellInvocation = {
   readonly access: PreparedSpellAccess;
@@ -3151,6 +3175,7 @@ export type SupportedSpellInvocation =
   | DirectConditionRemovalSpellInvocation
   | ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation
   | SelfTransformationModeSpellInvocation
+  | SaveGatedConditionImmunitySpellInvocation
   | WeaponDamageRiderSpellInvocation
   | AfterHitDamageSpellInvocation
   | AfterHitSaveGatedConditionSpellInvocation
@@ -3277,6 +3302,7 @@ type AnySupportedDamageSpellInvocation = Exclude<
       | "shieldReaction"
       | "counterspell"
       | "saveGatedCondition"
+      | "saveGatedConditionImmunity"
       | "saveGatedAttackRollAdvantage"
       | "sleepTargetAdmission"
       | "hideousLaughter"
@@ -4512,6 +4538,7 @@ export type BattleSpellSavingThrowOutcomeHole = {
         | "rollModifier"
         | "saveGatedDamage"
         | "saveGatedCondition"
+        | "saveGatedConditionImmunity"
         | "afterHitSaveGatedCondition"
         | "saveGatedAttackRollAdvantage"
         | "counterspell"

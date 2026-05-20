@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "L12G-MISSING-CALM-EMOTIONS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Calm Emotions Definition And Support"
     },
     {
@@ -204,7 +204,7 @@ The final task is intentionally blocked on every real task in this plan and plac
 | 5 | L12G-MISSING-ANIMAL-MESSENGER - Animal Messenger Definition And Closure | done | completed baseline | A lane; Unit `animal_messenger`. |
 | 6 | L12G-MISSING-ARCANISTS-MAGIC-AURA - Arcanists Magic Aura Definition And Closure | done | completed baseline | A lane; Unit `arcanists_magic_aura`. |
 | 7 | L12G-MISSING-AUGURY - Augury Definition And Closure | done | completed baseline | A lane; Unit `augury`. |
-| 8 | L12G-MISSING-CALM-EMOTIONS - Calm Emotions Definition And Support | ready-for-research | completed baseline | A lane; Unit `calm_emotions`. |
+| 8 | L12G-MISSING-CALM-EMOTIONS - Calm Emotions Definition And Support | done | completed baseline | A lane; Unit `calm_emotions`. |
 | 9 | L12G-MISSING-DARKNESS - Darkness Definition And Support Or Closure | ready-for-research | completed baseline | A lane; Unit `darkness`. |
 | 10 | L12G-MISSING-DARKVISION - Darkvision Definition And Support Or Closure | ready-for-research | completed baseline | A lane; Unit `darkvision`. |
 | 11 | L12G-MISSING-DETECT-THOUGHTS - Detect Thoughts Definition And Closure | ready-for-research | completed baseline | A lane; Unit `detect_thoughts`. |
@@ -508,7 +508,7 @@ Acceptance:
 
 ### Task 8 - L12G-MISSING-CALM-EMOTIONS - Calm Emotions Definition And Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `calm_emotions`.
 Origin: Original backlog task 55.

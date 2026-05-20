@@ -484,6 +484,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
               sourceSpellId: heroismUnitId,
               sourceCombatantId: spellCasterId,
               condition: immuneCondition,
+              conditionHadNonSpellSource: false,
               expiresAt: {
                 kind: "duration",
                 durationTicks: elapsedTimeTicks(600),
@@ -716,6 +717,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
             sourceSpellId: heroismUnitId,
             sourceCombatantId: spellTargetId,
             condition: "incapacitated",
+            conditionHadNonSpellSource: false,
             expiresAt: {
               kind: "duration",
               durationTicks: elapsedTimeTicks(600),

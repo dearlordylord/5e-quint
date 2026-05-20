@@ -186,12 +186,12 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 486,
-      "percent": "87.4%",
+      "numerator": 488,
+      "percent": "87.8%",
       "rowsByStatus": {
-        "accepted": 356,
+        "accepted": 358,
         "accepted-no-battle-effect": 130,
-        "battle-runtime-required": 57,
+        "battle-runtime-required": 55,
         "partial-battle-runtime": 11,
         "owner-evidence-required": 2
       }
@@ -207,17 +207,17 @@
       "catalog-installed-owner-evidence-required": 2
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 372,
+      "catalog-installed-owner-evidence-present": 374,
       "non-runtime": 24,
       "catalog-only/dead-for-now": 101,
-      "missing-authored-record": 22,
+      "missing-authored-record": 20,
       "catalog-installed-owner-evidence-required": 21,
       "catalog-authored-executable-follow-up": 16
     },
     "spellPressureRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 209,
+      "catalog-installed-owner-evidence-present": 211,
       "catalog-only/dead-for-now": 101,
-      "missing-authored-record": 22,
+      "missing-authored-record": 20,
       "catalog-installed-owner-evidence-required": 19,
       "catalog-authored-executable-follow-up": 16
     },
@@ -6244,16 +6244,36 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "calm_emotions",
+        "sourceRecordPath": "packages/surface/content/calm_emotions.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "calm_emotions"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "runtime-detached table/social-state owner",
+        "reason": "Attitude is social monster disposition rather than battle-owned condition state; the runtime has no per-creature attitude relationship model."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit calm_emotions is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-MISSING-CALM-EMOTIONS at packages/battle-runtime/src/unit-profile-admission-calm-emotions.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_detect_thoughts",
@@ -8717,16 +8737,36 @@
         "state": "current-surface-can-express-source-facts"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "calm_emotions",
+        "sourceRecordPath": "packages/surface/content/calm_emotions.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "calm_emotions"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "runtime-detached table/social-state owner",
+        "reason": "Attitude is social monster disposition rather than battle-owned condition state; the runtime has no per-creature attitude relationship model."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit calm_emotions is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime spell invocation/projection",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L12G-MISSING-CALM-EMOTIONS at packages/battle-runtime/src/unit-profile-admission-calm-emotions.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_continual_flame",

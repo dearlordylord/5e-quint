@@ -73,6 +73,7 @@ module battleRuntimeSpellInvocation {
       | FaerieFire => true
       | AnimalFriendship => true
       | CharmPerson => true
+      | CalmEmotions => true
       | BlindnessDeafness => true
       | HoldPerson => true
       | ProtectionFromEvilAndGood => true

@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 392,
-      "numerator": 182,
-      "percent": "46.4%"
+      "denominator": 393,
+      "numerator": 183,
+      "percent": "46.6%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 464,
-      "numerator": 214,
-      "percent": "46.1%"
+      "denominator": 465,
+      "numerator": 215,
+      "percent": "46.2%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 215
+      "value": 216
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 131,
@@ -67,29 +67,29 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 215,
-      "numerator": 215,
+      "denominator": 216,
+      "numerator": 216,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 76,
-      "numerator": 76,
+      "denominator": 77,
+      "numerator": 77,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 76,
-      "numerator": 75,
+      "denominator": 77,
+      "numerator": 76,
       "percent": "98.7%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 102,
+      "denominator": 103,
       "numerator": 26,
-      "percent": "25.5%"
+      "percent": "25.2%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 102,
+      "denominator": 103,
       "numerator": 31,
-      "percent": "30.4%"
+      "percent": "30.1%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 131,
@@ -97,13 +97,13 @@
       "percent": "34.4%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 76,
-      "numerator": 76,
+      "denominator": 77,
+      "numerator": 77,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 76,
-      "numerator": 76,
+      "denominator": 77,
+      "numerator": 77,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
@@ -112,9 +112,9 @@
       "percent": "80.2%"
     },
     "supportedProfileCoverage": {
-      "denominator": 183,
+      "denominator": 184,
       "numerator": 131,
-      "percent": "71.6%"
+      "percent": "71.2%"
     }
   },
   "metricSemantics": [
@@ -2252,6 +2252,31 @@
       ]
     },
     {
+      "id": "spell.invocation-save-gated-condition-immunity",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "sourceBoundary": "Calm Emotions condition branch consumes typed area Saving Throw outcomes for Humanoid creatures; runtime owns Magic Action, Spell Slot, Concentration resource spend, failed-save Charmed and Frightened condition-immunity active effects, condition suppression through the existing condition-immunity projection, and Concentration cleanup. Hostile-to-Indifferent Attitude changes, chosen attitude recipients, damage or witness early ends, and return-to-normal social state are table/social-state facts outside this battle-runtime profile.",
+      "taskRefs": [
+        "L12G-MISSING-CALM-EMOTIONS"
+      ],
+      "title": "Spell invocation applies save-gated condition immunity to failed-save area targets",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-calm-emotions.test.ts"
+        }
+      ]
+    },
+    {
       "id": "spell.scalar-buff",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -2969,14 +2994,14 @@
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 102,
+        "denominator": 103,
         "numerator": 26,
-        "percent": "25.5%"
+        "percent": "25.2%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 102,
+        "denominator": 103,
         "numerator": 31,
-        "percent": "30.4%"
+        "percent": "30.1%"
       }
     },
     "profileKinds": [
@@ -3596,6 +3621,12 @@
         "joinStatus": "unmapped",
         "obligations": [],
         "profileId": "spell.invocation-condition-immunity-turn-start-temporary-hit-points",
+        "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-save-gated-condition-immunity",
         "profileKind": "spell-invocation"
       },
       {
@@ -6862,6 +6893,22 @@
         "spell.invocation-attack-roll-advantage-save"
       ],
       "taskId": "SRDINV30E"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts for Calm Emotions' Humanoid area Saving Throw branch, failed-save Charmed and Frightened condition-immunity effects, Concentration cleanup, successful saves with no active effect, and non-Humanoid rejection.",
+      "profileIds": [
+        "spell.invocation-save-gated-condition-immunity"
+      ],
+      "taskId": "L12G-MISSING-CALM-EMOTIONS"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Surface and battle-runtime admission/reducer tests cover Calm Emotions' SRD authored spell record, Humanoid 20-foot Sphere condition-immunity branch, failed-save suppression through existing condition immunity projection, successful saves, non-Humanoid rejection, Spell Slot/Magic Action/Concentration resource handling, and explicit social Attitude closure.",
+      "profileIds": [
+        "spell.invocation-save-gated-condition-immunity"
+      ],
+      "taskId": "L12G-MISSING-CALM-EMOTIONS"
     },
     {
       "claimKind": "qnt-proof",
@@ -13845,6 +13892,79 @@
       ],
       "sourceRecordPath": "packages/surface/content/burning_hands.json",
       "unitId": "burning_hands"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "deferredMechanics": [
+          {
+            "battleReadinessClosure": {
+              "kind": "social-knowledge-effect",
+              "owner": "runtime-detached table/social-state owner",
+              "reason": "Attitude is social monster disposition rather than battle-owned condition state; the runtime has no per-creature attitude relationship model."
+            },
+            "mechanic": "Hostile-to-Indifferent Attitude branch, including creatures-of-choice social targeting, damage or witnessed-ally-damage early end, and return to normal Attitude when the spell ends"
+          }
+        ],
+        "profileIds": [
+          "spell.invocation-save-gated-condition-immunity"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Magic Action level-2 Spell Slot casting with Concentration up to 1 minute",
+          "point-origin 20-foot-radius Sphere within 60 feet with caller-supplied area membership",
+          "Humanoid-only Charisma Spell Save DC gate",
+          "failed-save Charmed and Frightened condition Immunity active effects",
+          "pre-existing Charmed and Frightened conditions are suppressed while Concentration lasts and restored when the spell-owned immunity ends if their source remains",
+          "Concentration cleanup removes the spell-owned condition-immunity effects"
+        ],
+        "tag": "profile-subset-supported"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-calm-emotions.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-MISSING-CALM-EMOTIONS"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-save-gated-condition-immunity",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "Calm Emotions condition branch consumes typed area Saving Throw outcomes for Humanoid creatures; runtime owns Magic Action, Spell Slot, Concentration resource spend, failed-save Charmed and Frightened condition-immunity active effects, condition suppression through the existing condition-immunity projection, and Concentration cleanup. Hostile-to-Indifferent Attitude changes, chosen attitude recipients, damage or witness early ends, and return-to-normal social state are table/social-state facts outside this battle-runtime profile.",
+          "taskRefs": [
+            "L12G-MISSING-CALM-EMOTIONS"
+          ],
+          "title": "Spell invocation applies save-gated condition immunity to failed-save area targets",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-calm-emotions.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/calm_emotions.json",
+      "unitId": "calm_emotions"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

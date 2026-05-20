@@ -316,6 +316,47 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
+      "reason": "Attitude is social monster disposition rather than battle-owned condition state; the runtime has no per-creature attitude relationship model.",
+      "sourceRecordPath": "packages/surface/content/calm_emotions.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Calm Emotions",
+          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_calm_emotions",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 193,
+            "lineStart": 193,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Cleric spell list Calm Emotions",
+          "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_calm_emotions",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 185,
+            "lineStart": 185,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        }
+      ],
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
+      "unitId": "calm_emotions"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "profile-subset-supported",
+      "closureKinds": [
+        "social-knowledge-effect"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
       "reason": "Friendly disposition, the Charmed condition's Social Advantage, social interaction adjudication, and target knowledge when the spell ends are social/knowledge facts outside promoted battle runtime state.",
       "sourceRecordPath": "packages/surface/content/charm_person.json",
       "sourceRows": [
@@ -2720,7 +2761,7 @@
       ]
     },
     {
-      "count": 24,
+      "count": 25,
       "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
@@ -2729,6 +2770,7 @@
         "arcane_lock",
         "arcanists_magic_aura",
         "augury",
+        "calm_emotions",
         "charm_person",
         "comprehend_languages",
         "detect_evil_and_good",
@@ -2821,12 +2863,12 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 486,
-      "percent": "87.4%",
+      "numerator": 488,
+      "percent": "87.8%",
       "rowsByStatus": {
-        "accepted": 356,
+        "accepted": 358,
         "accepted-no-battle-effect": 130,
-        "battle-runtime-required": 57,
+        "battle-runtime-required": 55,
         "owner-evidence-required": 2,
         "partial-battle-runtime": 11
       }
@@ -2847,13 +2889,13 @@
       "percent": "31.5%"
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 164,
+      "denominator": 165,
       "numerator": 108,
-      "percent": "65.9%"
+      "percent": "65.5%"
     },
     "strictTargetClosure": {
-      "denominator": 164,
-      "numerator": 163,
+      "denominator": 165,
+      "numerator": 164,
       "percent": "99.4%"
     }
   },
@@ -2889,36 +2931,6 @@
       }
     ],
     "noMatrixSrdPressure": [
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "spell Unit pressure",
-            "concept": "Bard spell list Calm Emotions",
-            "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_calm_emotions",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 193,
-              "lineStart": 193,
-              "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Cleric spell list Calm Emotions",
-            "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_calm_emotions",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 185,
-              "lineStart": 185,
-              "path": ".references/srd-5.2.1/Classes/Cleric.md"
-            }
-          }
-        ],
-        "unitId": "calm_emotions"
-      },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/create_or_destroy_water.md",
         "reason": "The SRD row has level-1 spell pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
@@ -7604,7 +7616,7 @@
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
       "missing": 1,
-      "profile-subset-supported": 16,
+      "profile-subset-supported": 17,
       "supported-profile": 108,
       "unsupported-profile": 39
     },
@@ -7613,11 +7625,11 @@
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
-      "closed-runtime-detached-table-adjudication": 24,
+      "closed-runtime-detached-table-adjudication": 25,
       "open-runtime-behavior": 1,
       "supported-profile": 108
     },
-    "nonSupportedFrontier": 56,
-    "strictDenominator": 164
+    "nonSupportedFrontier": 57,
+    "strictDenominator": 165
   }
 }

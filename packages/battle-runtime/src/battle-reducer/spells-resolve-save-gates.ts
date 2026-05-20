@@ -62,6 +62,7 @@ import {
   applySleepPendingRepeatSaveEffects,
   applyFailedSaveSpellActiveEffects,
   applyFailedSaveSpellConditionEffects,
+  applySaveGatedConditionImmunityEffects,
   selectFailedSaveConditionEffect,
   saveGatedAttackRollAdvantageInvocationIsFaerieFire,
   applySpellDamage,
@@ -79,6 +80,7 @@ import {
   validateSpellDamageFill,
   validateSpellTargetList,
 } from "./spells-holes-fills.ts";
+import { battleCreatureType } from "./domain-helpers.ts";
 
 import {
   spendSpellCastResources,
@@ -1468,6 +1470,151 @@ export function resolveSaveGateConditionSpellAct(input: {
     state: nextState,
     snapshot: snapshotBattle(nextState),
   };
+}
+
+export function resolveSaveGateConditionImmunitySpellAct(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "saveGatedConditionImmunity" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  const savingThrowHole = spellSavingThrowOutcomeHole(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+  );
+  if (
+    input.fillSet.targetId !== undefined ||
+    input.fillSet.targetList !== undefined
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Save-gate condition-immunity spells use area Saving Throw outcome fills.",
+    );
+  }
+  if (
+    input.fillSet.attackRoll !== undefined ||
+    input.fillSet.damageRoll !== undefined ||
+    input.fillSet.concentrationSavingThrows.length > 0 ||
+    input.fillSet.damageDispositions.length > 0
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Save-gate condition-immunity spells do not use attack or damage fills.",
+    );
+  }
+  if (input.fillSet.savingThrowOutcomes === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      savingThrowHole,
+    ]);
+  }
+  const savingThrowOutcomes = input.fillSet.savingThrowOutcomes;
+  const savingThrowValidation = validateSavingThrowOutcomes(
+    savingThrowOutcomes,
+    savingThrowHole,
+    input.input.state,
+    input.actorId,
+    undefined,
+    undefined,
+  );
+  if (savingThrowValidation !== null) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      savingThrowValidation,
+    );
+  }
+  const targetTypeValidation = validateSaveGatedConditionImmunityTargets(
+    input.input.state,
+    savingThrowOutcomes.outcomes.map((outcome) => outcome.targetId),
+    input.invocation,
+  );
+  if (targetTypeValidation !== null) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      targetTypeValidation,
+    );
+  }
+
+  const selectedTargetIds = savingThrowOutcomes.outcomes.map(
+    (outcome) => outcome.targetId,
+  );
+  const failedTargets = savingThrowOutcomes.outcomes.flatMap((outcome) =>
+    outcome.succeeded ? [] : [outcome.targetId],
+  );
+  if (failedTargets.length > 0) {
+    const saveFailedReactionWindow = maybeOpenReactionWindow(
+      input.input.state,
+      {
+        trigger: "saveFailed",
+        targetId: failedTargets[0]!,
+        sourceSpellId: input.invocation.spell.id,
+        continuation: {
+          kind: "replay",
+          subject:
+            input.input.reactionContinuationSubject ?? input.input.subject,
+          fills: input.input.fills,
+        },
+      },
+      input.input.suppressedReactionTrigger,
+    );
+    if (saveFailedReactionWindow !== null) {
+      return saveFailedReactionWindow;
+    }
+  }
+
+  const resourced = spendSpellCastResources({
+    state: input.input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+  });
+  if (resourced.tag === "invalid") {
+    return resourced;
+  }
+  const effected = applySaveGatedConditionImmunityEffects(
+    resourced.state,
+    input.actorId,
+    failedTargets,
+    input.invocation,
+  );
+  const nextState = extendSavingThrowOngoingFeatures(
+    effected,
+    input.actorId,
+    selectedTargetIds,
+  );
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function validateSaveGatedConditionImmunityTargets(
+  state: BattleState,
+  targetIds: readonly CombatantId[],
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "saveGatedConditionImmunity" }
+  >,
+): string | null {
+  return targetIds.every((targetId) => {
+    const target = state.combatants.get(targetId);
+    const targetCreatureType =
+      target === undefined ? null : battleCreatureType(target);
+    return (
+      targetCreatureType !== null &&
+      invocation.targetCreatureTypes.includes(targetCreatureType)
+    );
+  })
+    ? null
+    : "Calm Emotions condition-immunity branch affects only Humanoids.";
 }
 
 export function resolveCommandSpellAct(input: {

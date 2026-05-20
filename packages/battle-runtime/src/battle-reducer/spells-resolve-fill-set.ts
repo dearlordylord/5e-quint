@@ -677,6 +677,7 @@ export function spellFillSet(
         invocation.procedure !== "attackBurstSaveDamage" &&
         invocation.procedure !== "saveGatedDamage" &&
         invocation.procedure !== "saveGatedCondition" &&
+        invocation.procedure !== "saveGatedConditionImmunity" &&
         invocation.procedure !== "afterHitSaveGatedCondition" &&
         invocation.procedure !== "saveGatedAttackRollAdvantage" &&
         invocation.procedure !== "counterspell" &&
@@ -1311,6 +1312,7 @@ export function spellFillSetSavingThrowTargeting(
     ? invocation.burst.targeting
     : invocation.procedure === "saveGatedDamage" ||
         invocation.procedure === "saveGatedCondition" ||
+        invocation.procedure === "saveGatedConditionImmunity" ||
         invocation.procedure === "afterHitSaveGatedCondition" ||
         invocation.procedure === "saveGatedAttackRollAdvantage" ||
         invocation.procedure === "counterspell" ||

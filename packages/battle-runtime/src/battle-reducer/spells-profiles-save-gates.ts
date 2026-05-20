@@ -42,6 +42,7 @@ import {
   type SpellPostDamageRider,
   type SpellSavingThrowRollModeRule,
   type SpellTargeting,
+  type SaveGatedConditionImmunitySpellInvocation,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import type { CharacterBattleSpellcastingState } from "../character-battle-resources.ts";
@@ -183,6 +184,16 @@ const HOLD_PERSON_FAILED_SAVE_CONDITION =
 const HOLD_PERSON_TARGET_CREATURE_TYPES = [
   "humanoid",
 ] as const satisfies readonly [CreatureType, ...CreatureType[]];
+const CALM_EMOTIONS_BASE_SPELL_LEVEL = 2;
+const CALM_EMOTIONS_RANGE_FEET = 60;
+const CALM_EMOTIONS_AREA_RADIUS_FEET = 20;
+const CALM_EMOTIONS_CONDITION_IMMUNITIES = [
+  "charmed",
+  "frightened",
+] as const satisfies readonly [Condition, Condition];
+const CALM_EMOTIONS_TARGET_CREATURE_TYPES = [
+  "humanoid",
+] as const satisfies readonly [CreatureType, ...CreatureType[]];
 
 export function hasSaveGateRepeatSaves(
   phase: ActivationPhase | undefined,
@@ -294,6 +305,154 @@ export function supportedPreparedSaveGateAttackRollAdvantageProfile(
       },
     ];
   });
+}
+
+export function supportedPreparedSaveGateConditionImmunityProfile(
+  actorId: CombatantId,
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  const conditionImmunitySpell = calmEmotionsSaveGateConditionImmunitySpell(
+    actorId,
+    spell,
+  );
+  if (conditionImmunitySpell === null) {
+    return [];
+  }
+
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    return [
+      {
+        access: { tag: "prepared" },
+        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+        procedure: "saveGatedConditionImmunity",
+        spell,
+        actionCost: "magicAction",
+        ability: conditionImmunitySpell.phase.ability,
+        dc: conditionImmunitySpell.phase.dc,
+        targeting: conditionImmunitySpell.targeting,
+        targetCreatureTypes: conditionImmunitySpell.targetCreatureTypes,
+        activeEffects: conditionImmunitySpell.activeEffects,
+        rangeFeet: conditionImmunitySpell.rangeFeet,
+      },
+    ];
+  });
+}
+
+function calmEmotionsSaveGateConditionImmunitySpell(
+  actorId: CombatantId,
+  spell: SpellRecord,
+): {
+  readonly phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>;
+  readonly targeting: Extract<
+    SpellTargeting,
+    { readonly kind: "pointOriginSphere" }
+  >;
+  readonly targetCreatureTypes: typeof CALM_EMOTIONS_TARGET_CREATURE_TYPES;
+  readonly activeEffects: SaveGatedConditionImmunitySpellInvocation["activeEffects"];
+  readonly rangeFeet: MovementFeet;
+} | null {
+  if (spell.mechanics.family !== "activation") {
+    return null;
+  }
+  const phase = spell.mechanics.phases[0];
+  const area =
+    phase?.kind === "save_gate" &&
+    phase.attachment.kind === "hole" &&
+    phase.attachment.value.kind === "area"
+      ? phase.attachment.value
+      : null;
+  const targetSelection = area?.selection;
+  const immunityEffects =
+    phase?.kind === "save_gate"
+      ? conditionImmunityEffectsFromSaveGateFailure(phase.onFail)
+      : null;
+  if (
+    spell.mechanics.level !== CALM_EMOTIONS_BASE_SPELL_LEVEL ||
+    spell.mechanics.castingTime.kind !== "action" ||
+    spell.mechanics.range.kind !== "point" ||
+    spell.mechanics.range.feet !== CALM_EMOTIONS_RANGE_FEET ||
+    spell.mechanics.duration.kind !== "concentration" ||
+    spell.mechanics.duration.upTo.unit !== "minute" ||
+    spell.mechanics.duration.upTo.amount !== 1 ||
+    spell.mechanics.phases.length !== 1 ||
+    phase?.kind !== "save_gate" ||
+    hasSaveGateRepeatSaves(phase) ||
+    phase.ability !== "cha" ||
+    phase.dc.kind !== "caster_spell_save_dc" ||
+    phase.onSuccess.kind !== "none" ||
+    area === null ||
+    area.origin.kind !== "point_within_range" ||
+    area.shape.kind !== "sphere" ||
+    area.shape.radiusFeet !== CALM_EMOTIONS_AREA_RADIUS_FEET ||
+    targetSelection?.mode !== "any_number" ||
+    !sameStringSet(targetSelection.targetKinds ?? [], ["creature"]) ||
+    !sameStringSet(
+      targetSelection.typeFilter ?? [],
+      CALM_EMOTIONS_TARGET_CREATURE_TYPES,
+    ) ||
+    immunityEffects === null
+  ) {
+    return null;
+  }
+
+  return {
+    phase,
+    targeting: {
+      kind: "pointOriginSphere",
+      radiusFeet: movementFeet(area.shape.radiusFeet),
+    },
+    targetCreatureTypes: CALM_EMOTIONS_TARGET_CREATURE_TYPES,
+    activeEffects: [
+      {
+        kind: "conditionImmunity",
+        sourceSpellId: spell.id,
+        sourceCombatantId: actorId,
+        condition: CALM_EMOTIONS_CONDITION_IMMUNITIES[0],
+        expiresAt: { kind: "concentration", combatantId: actorId },
+      },
+      {
+        kind: "conditionImmunity",
+        sourceSpellId: spell.id,
+        sourceCombatantId: actorId,
+        condition: CALM_EMOTIONS_CONDITION_IMMUNITIES[1],
+        expiresAt: { kind: "concentration", combatantId: actorId },
+      },
+    ],
+    rangeFeet: movementFeet(spell.mechanics.range.feet),
+  };
+}
+
+type GrantConditionImmunitySaveGateEffect = Extract<
+  SaveGateFailedEffect,
+  { readonly kind: "grant_condition_immunity" }
+>;
+
+function conditionImmunityEffectsFromSaveGateFailure(
+  effect: SaveGateFailedEffect,
+):
+  | readonly [
+      GrantConditionImmunitySaveGateEffect,
+      GrantConditionImmunitySaveGateEffect,
+    ]
+  | null {
+  const effects =
+    effect.kind === "composite" ? effect.effects : ([effect] as const);
+  const immunities = effects.filter(
+    (candidate): candidate is GrantConditionImmunitySaveGateEffect =>
+      candidate.kind === "grant_condition_immunity",
+  );
+  return effects.length === CALM_EMOTIONS_CONDITION_IMMUNITIES.length &&
+    immunities.length === CALM_EMOTIONS_CONDITION_IMMUNITIES.length &&
+    sameStringSet(
+      immunities.map((immunity) => immunity.condition),
+      CALM_EMOTIONS_CONDITION_IMMUNITIES,
+    )
+    ? [immunities[0]!, immunities[1]!]
+    : null;
 }
 
 export function supportedPreparedSleepTargetAdmissionProfile(

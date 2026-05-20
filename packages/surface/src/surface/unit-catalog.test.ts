@@ -147,6 +147,7 @@ const requiredFirstVerticalUnitIds = [
   "eldritch_blast",
   "minor_illusion",
   "sorcerous_burst",
+  "calm_emotions",
   "charm_person",
   "command",
   "dissonant_whispers",
@@ -1785,6 +1786,66 @@ describe("SRD Unit catalog boundary", () => {
             on: ["ability_check"],
             delta: { kind: "fixed_number", amount: 10, sign: "-" },
             skillFilter: { kind: "fixed", skills: ["perception"] },
+          },
+          onSuccess: { kind: "none" },
+        },
+      ]);
+    }
+  });
+
+  test("decodes Calm Emotions condition branch as Humanoid Sphere condition immunities", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const calmEmotions = result.catalog.requireUnit("calm_emotions");
+      expect(calmEmotions.kind).toBe("spell");
+      if (calmEmotions.kind !== "spell") return;
+      expect(calmEmotions.mechanics.family).toBe("activation");
+      if (calmEmotions.mechanics.family !== "activation") return;
+
+      expect(calmEmotions.mechanics.level).toBe(2);
+      expect(calmEmotions.mechanics.castingTime).toEqual({ kind: "action" });
+      expect(calmEmotions.mechanics.range).toEqual({
+        kind: "point",
+        feet: 60,
+      });
+      expect(calmEmotions.mechanics.duration).toEqual({
+        kind: "concentration",
+        upTo: { unit: "minute", amount: 1 },
+      });
+      expect(calmEmotions.mechanics.phases).toEqual([
+        {
+          kind: "save_gate",
+          attachment: {
+            kind: "hole",
+            holeId: "calm_emotions_sphere",
+            label: "spell origin point",
+            value: {
+              kind: "area",
+              shape: { kind: "sphere", radiusFeet: 20 },
+              origin: { kind: "point_within_range" },
+              selection: {
+                mode: "any_number",
+                targetKinds: ["creature"],
+                typeFilter: ["humanoid"],
+              },
+            },
+          },
+          ability: "cha",
+          dc: { kind: "caster_spell_save_dc" },
+          onFail: {
+            kind: "composite",
+            effects: [
+              {
+                kind: "grant_condition_immunity",
+                condition: "charmed",
+              },
+              {
+                kind: "grant_condition_immunity",
+                condition: "frightened",
+              },
+            ],
           },
           onSuccess: { kind: "none" },
         },
