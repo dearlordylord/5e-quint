@@ -2651,7 +2651,7 @@
     "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_font_of_magic": {
       "taskId": "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS",
       "profile": "character-creation.class-feature-resource-projection support profile",
-      "summary": "Font of Magic is retained from the level-2 Sorcerer class feature grant and projected into shared Sorcery Point resource facts from the authored Surface point-pool record. The projection derives the sorcery_points pool identity, Sorcerer-level maximum, and Long Rest full reset from the retained feature and Sorcerer class level without duplicating class progression, Spell Slot conversion execution, or Metamagic option state.",
+      "summary": "Font of Magic is retained from the level-2 Sorcerer class feature grant and projected into shared Sorcery Point resource facts from the authored Surface point-pool record. The projection derives the sorcery_points pool identity, Sorcerer-level maximum, Long Rest full reset, and the existing Creating Spell Slots operation from the retained feature and Sorcerer class level without duplicating class progression, Spell Slot conversion execution, or Metamagic option state.",
       "discovery": [
         "packages/character-creation-runtime/src/discovery.ts:discoverInitialDraftHoles"
       ],
@@ -2665,10 +2665,35 @@
       "buildProjection": [
         "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds",
         "packages/character-creation-runtime/src/finalization.ts:characterBuildResources",
-        "packages/character-creation-runtime/src/sorcerer-font-of-magic.ts:characterBuildSorcererFontOfMagicFacts"
+        "packages/character-creation-runtime/src/sorcerer-font-of-magic.ts:characterBuildSorcererFontOfMagicFacts",
+        "packages/character-creation-runtime/src/sorcerer-font-of-magic.ts:fontOfMagicSpellSlotCreationOption"
       ],
       "tests": [
         "packages/character-creation-runtime/src/index.test.ts:sorcererFontOfMagicResourceFactsTestName"
+      ]
+    },
+    "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_metamagic": {
+      "taskId": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS",
+      "profile": "character-creation.class-feature-option-projection and character-creation.class-feature-source-fact-projection support profiles",
+      "summary": "Metamagic is discovered from the level-2 Sorcerer class feature grant, filled from the installed SRD Metamagic option roster, finalized as selected CharacterBuild Metamagic option facts, and projected with Sorcerer-level known-option counts, option costs, stacking modes, spell-use limit, and the shared Font of Magic Sorcery Point resource link.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:classFeatureGrantChoiceHoles",
+        "packages/character-creation-runtime/src/discovery.ts:sorcererMetamagicChoiceHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:finalizedClassChoiceFeaturesForSupportedChoices",
+        "packages/character-creation-runtime/src/finalization.ts:selectedSorcererMetamagicOptionFeatures"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds",
+        "packages/character-creation-runtime/src/sorcerer-metamagic.ts:characterBuildSorcererMetamagicFacts"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:projects Sorcerer Metamagic known option facts from finalized CharacterBuild selections"
       ]
     },
     "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations": {

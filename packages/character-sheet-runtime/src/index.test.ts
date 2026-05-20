@@ -1,6 +1,7 @@
 import type { CharacterBuild } from "@dnd/character-creation-runtime";
 import {
   abilityScoreAssignment,
+  characterBuildSorcererMetamagicFacts,
   characterBuildResources,
   characterEquipmentItemId,
   characterEquipmentItemUnitId,
@@ -10,6 +11,8 @@ import {
   MONK_MONKS_FOCUS_UNIT_ID,
   MONK_UNCANNY_METABOLISM_UNIT_ID,
   SORCERER_FONT_OF_MAGIC_UNIT_ID,
+  SORCERER_METAMAGIC_UNIT_ID,
+  sorcererMetamagicOptionId,
 } from "@dnd/character-creation-runtime";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { elapsedTimeTicks, timeSpanDuration } from "@dnd/shared/elapsed-time";
@@ -41,11 +44,13 @@ import {
   characterSheetPactSlots,
   characterSheetResources,
   characterSheetSpellInvocation,
+  characterSheetSpellSlotSourceState,
   characterSheetSpellSlots,
   completeLongRest,
   completeMagicalCunningRite,
   completeShortRest,
   convertFontOfMagicSpellSlotToSorceryPoints,
+  convertFontOfMagicSorceryPointsToSpellSlot,
   createFreshCharacterSheet as createFreshCharacterSheetCore,
   characterSheetId,
   characterSheetTempHp,
@@ -68,6 +73,7 @@ import {
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-long-rest-use-state
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-point-pool-resource
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.font-of-magic-slot-to-sorcery-points
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.font-of-magic-sorcery-points-to-spell-slot
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.monk-uncanny-metabolism-initiative-recovery
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B barbarian_unarmored_defense monk_unarmored_defense paladin_lay_on_hands wizard_arcane_recovery wizard_ritual_adept
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-04 fighter_weapon_mastery barbarian_weapon_mastery paladin_weapon_mastery ranger_weapon_mastery rogue_weapon_mastery
@@ -77,6 +83,7 @@ import {
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS monk_monks_focus
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS monk_uncanny_metabolism
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS sorcerer_font_of_magic
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS sorcerer_metamagic
 
 const build = armorClassBuild({ startingClass: "class_fighter" });
 
@@ -123,6 +130,10 @@ const sorcererFontOfMagicSlotConversionTestName =
   "Font of Magic converts an ordinary Spell Slot into Sorcery Points";
 const sorcererFontOfMagicSlotConversionGateTestName =
   "Font of Magic Spell Slot conversion respects Spell Slot and Sorcery Point gates";
+const sorcererFontOfMagicSlotCreationTestName =
+  "Font of Magic creates Spell Slots from Sorcery Points";
+const sorcererFontOfMagicSlotCreationGateTestName =
+  "Font of Magic Spell Slot creation enforces Sorcery Point and level gates";
 const uncannyMetabolismLongRestUseStateTestName =
   "tracks Uncanny Metabolism Long Rest use state separately from Focus Points";
 const uncannyMetabolismInitiativeRecoveryTestName =
@@ -574,6 +585,70 @@ describe("Character Sheet runtime", () => {
         },
       ]),
     );
+  });
+
+  test("round-trips stored Sorcerer Metamagic known options through sheet parsing", () => {
+    const sheet = parseCharacterSheet(
+      {
+        ...storedAvailableSheetInput({
+          characterId: "character:sorcerer-metamagic",
+          build: sorcererFontOfMagicBuild(),
+        }),
+        spellSlotExpenditures: [{ spellLevel: 1, expended: 0 }],
+      },
+      unitLibrary,
+    );
+
+    const parsed = requireRight(sheet);
+    expect(parsed.build.features).toEqual(
+      expect.arrayContaining([
+        {
+          kind: "selectedSorcererMetamagicOption",
+          selectedFromUnitId: SORCERER_METAMAGIC_UNIT_ID,
+          optionId: "sorcerer_empowered_spell",
+        },
+        {
+          kind: "selectedSorcererMetamagicOption",
+          selectedFromUnitId: SORCERER_METAMAGIC_UNIT_ID,
+          optionId: "sorcerer_heightened_spell",
+        },
+      ]),
+    );
+    const metamagicFacts = requireRight(
+      characterBuildSorcererMetamagicFacts({
+        build: parsed.build,
+        unitLibrary,
+      }),
+    );
+    expect(
+      metamagicFacts?.knownOptions.map((option) => option.optionId),
+    ).toEqual(["sorcerer_empowered_spell", "sorcerer_heightened_spell"]);
+    expect(metamagicFacts?.sorceryPointResource).toEqual({
+      resourceUnitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
+      poolId: SRD_SORCERY_POINTS_POOL_ID,
+    });
+  });
+
+  test("rejects stored Sorcerer Metamagic selections that do not match Sorcerer level", () => {
+    const build = sorcererFontOfMagicBuild();
+    const sheet = parseCharacterSheet(
+      storedAvailableSheetInput({
+        characterId: "character:sorcerer-metamagic-missing-option",
+        build: {
+          ...build,
+          features: build.features.slice(0, 1),
+        },
+      }),
+      unitLibrary,
+    );
+
+    expect(sheet).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "characterSheetIssue",
+        message: "Metamagic known option count must match the Sorcerer level.",
+      },
+    });
   });
 
   test("rejects stored Eldritch Invocation cantrip choices absent from known Warlock cantrips", () => {
@@ -1993,6 +2068,312 @@ describe("Character Sheet runtime", () => {
     });
   });
 
+  test(sorcererFontOfMagicSlotCreationTestName, () => {
+    const sorcererBuild = sorcererFontOfMagicBuild({
+      sorcererAdvancements: 4,
+      spellSlots: [
+        { spellLevel: 1, count: 4 },
+        { spellLevel: 2, count: 3 },
+        { spellLevel: 3, count: 2 },
+      ],
+    });
+    const sheet = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:sorcerer-font-create"),
+        build: sorcererBuild,
+        maximumHp: Hp(24),
+        currentHp: Hp(24),
+        tempHp: Hp(0),
+        unitLibrary,
+        spellSlots: [
+          {
+            spellLevel: spellSlotLevel(1),
+            count: resourceCount(4),
+            expended: resourceCount(0),
+          },
+          {
+            spellLevel: spellSlotLevel(2),
+            count: resourceCount(3),
+            expended: resourceCount(0),
+          },
+          {
+            spellLevel: spellSlotLevel(3),
+            count: resourceCount(2),
+            expended: resourceCount(0),
+          },
+        ],
+      }),
+    );
+    expect(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:sorcerer-font-aggregate"),
+        build: sorcererBuild,
+        maximumHp: Hp(24),
+        currentHp: Hp(24),
+        tempHp: Hp(0),
+        unitLibrary,
+        spellSlots: [
+          {
+            spellLevel: spellSlotLevel(1),
+            count: resourceCount(4),
+            expended: resourceCount(0),
+          },
+          {
+            spellLevel: spellSlotLevel(2),
+            count: resourceCount(3),
+            expended: resourceCount(0),
+          },
+          {
+            spellLevel: spellSlotLevel(3),
+            count: resourceCount(3),
+            expended: resourceCount(1),
+          },
+        ],
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: "Spell Slot state does not match build capacity for level 3.",
+      },
+    });
+
+    const created = requireRight(
+      convertFontOfMagicSorceryPointsToSpellSlot({
+        sheet,
+        unitLibrary,
+        spellLevel: spellSlotLevel(3),
+      }),
+    );
+
+    expect(characterSheetSpellSlots(created)).toEqual([
+      { spellLevel: 1, count: 4, expended: 0 },
+      { spellLevel: 2, count: 3, expended: 0 },
+      { spellLevel: 3, count: 3, expended: 0 },
+    ]);
+    expect(characterSheetResources(created, unitLibrary)).toMatchObject({
+      _tag: "Right",
+      right: expect.arrayContaining([
+        expect.objectContaining({
+          tag: "pointPoolResource",
+          unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
+          count: 5,
+          expended: 5,
+        }),
+      ]),
+    });
+
+    expect(
+      convertFontOfMagicSpellSlotToSorceryPoints({
+        sheet: created,
+        unitLibrary,
+        spellLevel: spellSlotLevel(3),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Font of Magic conversion requires a Spell Slot source when ordinary and created Spell Slots are both available.",
+      },
+    });
+
+    const createdSlotConverted = requireRight(
+      convertFontOfMagicSpellSlotToSorceryPoints({
+        sheet: created,
+        unitLibrary,
+        spellLevel: spellSlotLevel(3),
+        spellSlotSource: "created",
+      }),
+    );
+    expect(characterSheetSpellSlotSourceState(createdSlotConverted)).toEqual({
+      ordinarySpellSlotExpenditures: [
+        { spellLevel: 1, expended: 0 },
+        { spellLevel: 2, expended: 0 },
+        { spellLevel: 3, expended: 0 },
+      ],
+      createdSpellSlots: [{ spellLevel: 3, count: 1, expended: 1 }],
+    });
+    expect(characterSheetSpellSlots(createdSlotConverted)).toEqual([
+      { spellLevel: 1, count: 4, expended: 0 },
+      { spellLevel: 2, count: 3, expended: 0 },
+      { spellLevel: 3, count: 3, expended: 1 },
+    ]);
+    expect(
+      characterSheetResources(createdSlotConverted, unitLibrary),
+    ).toMatchObject({
+      _tag: "Right",
+      right: expect.arrayContaining([
+        expect.objectContaining({
+          tag: "pointPoolResource",
+          unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
+          count: 5,
+          expended: 2,
+        }),
+      ]),
+    });
+
+    if (
+      !("spellSlotExpenditures" in created) ||
+      !("createdSpellSlots" in created)
+    ) {
+      throw new Error(
+        "Expected Font of Magic sheet to carry Spell Slot state.",
+      );
+    }
+    const parsedWithExpendedCreatedSlot = requireRight(
+      parseCharacterSheet(
+        {
+          ...created,
+          createdSpellSlots: created.createdSpellSlots.map((slot) =>
+            slot.spellLevel === spellSlotLevel(3)
+              ? { ...slot, expended: resourceCount(1) }
+              : slot,
+          ),
+        },
+        unitLibrary,
+      ),
+    );
+    if (
+      !("spellSlotExpenditures" in parsedWithExpendedCreatedSlot) ||
+      !("createdSpellSlots" in parsedWithExpendedCreatedSlot)
+    ) {
+      throw new Error(
+        "Expected parsed Font of Magic sheet to carry Spell Slot state.",
+      );
+    }
+    expect(
+      parsedWithExpendedCreatedSlot.spellSlotExpenditures.find(
+        (slot) => slot.spellLevel === spellSlotLevel(3),
+      ),
+    ).toEqual({ spellLevel: 3, expended: 0 });
+    expect(parsedWithExpendedCreatedSlot.createdSpellSlots).toEqual([
+      { spellLevel: 3, count: 1, expended: 1 },
+    ]);
+    expect(characterSheetSpellSlots(parsedWithExpendedCreatedSlot)).toEqual([
+      { spellLevel: 1, count: 4, expended: 0 },
+      { spellLevel: 2, count: 3, expended: 0 },
+      { spellLevel: 3, count: 3, expended: 1 },
+    ]);
+
+    const longRested = requireRight(
+      completeLongRest({ sheet: created, unitLibrary }),
+    );
+
+    expect(characterSheetSpellSlots(longRested)).toEqual([
+      { spellLevel: 1, count: 4, expended: 0 },
+      { spellLevel: 2, count: 3, expended: 0 },
+      { spellLevel: 3, count: 2, expended: 0 },
+    ]);
+    expect(characterSheetResources(longRested, unitLibrary)).toMatchObject({
+      _tag: "Right",
+      right: expect.arrayContaining([
+        expect.objectContaining({
+          tag: "pointPoolResource",
+          unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
+          count: 5,
+          expended: 0,
+        }),
+      ]),
+    });
+  });
+
+  test(sorcererFontOfMagicSlotCreationGateTestName, () => {
+    const levelTwoSorcerer = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:sorcerer-font-create-level"),
+        build: sorcererFontOfMagicBuild(),
+        maximumHp: Hp(14),
+        currentHp: Hp(14),
+        tempHp: Hp(0),
+        unitLibrary,
+        spellSlots: [
+          {
+            spellLevel: spellSlotLevel(1),
+            count: resourceCount(3),
+            expended: resourceCount(0),
+          },
+        ],
+      }),
+    );
+
+    expect(
+      convertFontOfMagicSorceryPointsToSpellSlot({
+        sheet: levelTwoSorcerer,
+        unitLibrary,
+        spellLevel: spellSlotLevel(2),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Font of Magic Spell Slot creation requires Sorcerer level 3 for a level 2 Spell Slot.",
+      },
+    });
+
+    const lowPoints = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:sorcerer-font-create-points"),
+        build: sorcererFontOfMagicBuild({
+          sorcererAdvancements: 2,
+          spellSlots: [
+            { spellLevel: 1, count: 4 },
+            { spellLevel: 2, count: 2 },
+          ],
+        }),
+        maximumHp: Hp(18),
+        currentHp: Hp(18),
+        tempHp: Hp(0),
+        unitLibrary,
+        spellSlots: [
+          {
+            spellLevel: spellSlotLevel(1),
+            count: resourceCount(4),
+            expended: resourceCount(0),
+          },
+          {
+            spellLevel: spellSlotLevel(2),
+            count: resourceCount(2),
+            expended: resourceCount(0),
+          },
+        ],
+        resourceExpenditures: [
+          {
+            tag: "pointPoolResource",
+            unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
+            expended: resourceCount(1),
+          },
+        ],
+      }),
+    );
+
+    expect(
+      convertFontOfMagicSorceryPointsToSpellSlot({
+        sheet: lowPoints,
+        unitLibrary,
+        spellLevel: spellSlotLevel(2),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Font of Magic Spell Slot creation requires enough unexpended Sorcery Points.",
+      },
+    });
+
+    expect(
+      convertFontOfMagicSorceryPointsToSpellSlot({
+        sheet: lowPoints,
+        unitLibrary,
+        spellLevel: spellSlotLevel(6),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Font of Magic Spell Slot creation requires a Creating Spell Slots table entry.",
+      },
+    });
+  });
+
   test(uncannyMetabolismLongRestUseStateTestName, () => {
     const monkBuild = armorClassBuild({
       startingClass: "class_monk",
@@ -2999,14 +3380,29 @@ function sorcererFontOfMagicBuild(
     }[];
   } = {},
 ): CharacterBuild {
+  const build = armorClassBuild({
+    startingClass: "class_sorcerer",
+    advancements: Array.from(
+      { length: input.sorcererAdvancements ?? 1 },
+      () => "class_sorcerer",
+    ),
+  });
+
   return {
-    ...armorClassBuild({
-      startingClass: "class_sorcerer",
-      advancements: Array.from(
-        { length: input.sorcererAdvancements ?? 1 },
-        () => "class_sorcerer",
-      ),
-    }),
+    ...build,
+    features: [
+      ...build.features,
+      {
+        kind: "selectedSorcererMetamagicOption" as const,
+        selectedFromUnitId: SORCERER_METAMAGIC_UNIT_ID,
+        optionId: testSorcererMetamagicOptionId("sorcerer_empowered_spell"),
+      },
+      {
+        kind: "selectedSorcererMetamagicOption" as const,
+        selectedFromUnitId: SORCERER_METAMAGIC_UNIT_ID,
+        optionId: testSorcererMetamagicOptionId("sorcerer_heightened_spell"),
+      },
+    ],
     spellcasting: {
       sources: [
         {
@@ -3026,6 +3422,10 @@ function sorcererFontOfMagicBuild(
       },
     },
   };
+}
+
+function testSorcererMetamagicOptionId(optionId: string) {
+  return requireRight(sorcererMetamagicOptionId(optionId));
 }
 
 function warlockSpellcastingWithCantrips(

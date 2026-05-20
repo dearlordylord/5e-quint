@@ -56,6 +56,7 @@ import {
   WIZARD_PREPARED_SPELL_CHOICE_KEY,
   WIZARD_SPELLBOOK_CHOICE_KEY,
   ELDRITCH_INVOCATIONS_CHOICE_KEY,
+  SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY,
 } from "./phase1-manifest.ts";
 import { levelOneEldritchInvocationChoiceOptions } from "./eldritch-invocations.ts";
 import {
@@ -1258,12 +1259,49 @@ export function classFeatureGrantChoiceHoles(
     return eldritchInvocationChoiceHoles(featureUnitId, mechanics, input);
   }
 
+  if (mechanics.family === "metamagic_options") {
+    return sorcererMetamagicChoiceHoles(featureUnitId, mechanics, input);
+  }
+
   if (isWeaponMasteryChoiceFeature(feature)) {
     const hole = weaponMasteryFeatureHoleSource(feature, unitLibrary);
     return hole === undefined ? [] : [hole];
   }
 
   return [];
+}
+
+function sorcererMetamagicChoiceHoles(
+  featureUnitId: UnitRecord["id"],
+  mechanics: Extract<
+    ClassFeatureRecord["mechanics"],
+    { readonly family: "metamagic_options" }
+  >,
+  input: { readonly classLevel?: number },
+): readonly ChoiceCreationHole[] {
+  if (mechanics.choiceKey !== SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY) {
+    return [];
+  }
+
+  const cardinality = exactChoiceCardinality(
+    classLevelChoiceCountAtLevel(mechanics.choiceCount, input.classLevel ?? 1),
+  );
+  if (cardinality === undefined) {
+    return [];
+  }
+
+  const hole = requireChoiceCreationHole(
+    choiceHole({
+      source: unitSource(featureUnitId, SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY),
+      cardinality,
+      options: mechanics.options.map((option) => ({
+        optionId: creationChoiceOptionId(option.id),
+        label: option.displayName,
+      })),
+    }),
+  );
+
+  return hole === undefined ? [] : [hole];
 }
 
 function eldritchInvocationChoiceHoles(

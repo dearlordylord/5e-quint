@@ -121,6 +121,7 @@
         "srd521:classes/sorcerer:level-1:multiclass-entry:sorcerer_multiclass_entry_traits",
         "srd521:classes/sorcerer:level-1:spell-access:sorcerer_spellcasting",
         "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_font_of_magic",
+        "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_metamagic",
         "srd521:classes/warlock:level-1:class-container:warlock_class_container",
         "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations",
         "srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic",
@@ -188,14 +189,13 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 498,
-      "percent": "89.6%",
+      "numerator": 499,
+      "percent": "89.7%",
       "rowsByStatus": {
-        "accepted": 361,
+        "accepted": 362,
         "accepted-no-battle-effect": 137,
         "partial-battle-runtime": 13,
-        "battle-runtime-required": 44,
-        "owner-evidence-required": 1
+        "battle-runtime-required": 44
       }
     },
     "levelOneClassContainers": 12,
@@ -204,15 +204,14 @@
       "non-runtime": 12
     },
     "levelTwoRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 20,
-      "non-runtime": 12,
-      "catalog-installed-owner-evidence-required": 1
+      "catalog-installed-owner-evidence-present": 21,
+      "non-runtime": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 379,
+      "catalog-installed-owner-evidence-present": 380,
       "non-runtime": 24,
       "catalog-only/dead-for-now": 108,
-      "catalog-installed-owner-evidence-required": 21,
+      "catalog-installed-owner-evidence-required": 20,
       "missing-authored-record": 10,
       "catalog-authored-executable-follow-up": 14
     },
@@ -18846,12 +18845,12 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS character-creation.class-feature-resource-projection support profile; Font of Magic is retained from the level-2 Sorcerer class feature grant and projected into shared Sorcery Point resource facts from the authored Surface point-pool record. The projection derives the sorcery_points pool identity, Sorcerer-level maximum, and Long Rest full reset from the retained feature and Sorcerer class level without duplicating class progression, Spell Slot conversion execution, or Metamagic option state.",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS character-creation.class-feature-resource-projection support profile; Font of Magic is retained from the level-2 Sorcerer class feature grant and projected into shared Sorcery Point resource facts from the authored Surface point-pool record. The projection derives the sorcery_points pool identity, Sorcerer-level maximum, Long Rest full reset, and the existing Creating Spell Slots operation from the retained feature and Sorcerer class level without duplicating class progression, Spell Slot conversion execution, or Metamagic option state.",
           "status": "owner evidence present"
         },
         {
           "owner": "character-sheet-runtime",
-          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS Character Sheet class-feature point-pool resource and Spell Slot conversion runtime; Font of Magic is read from CharacterBuild resources and the installed Surface feature record, then projected as Character Sheet Sorcery Point point-pool state. The runtime derives capacity from Sorcerer class level, stores only expended Sorcery Points, restores all expended points on Long Rest, and executes the no-action ordinary Spell Slot to Sorcery Point conversion by spending one existing ordinary Spell Slot and reducing the shared point-pool expenditure by exactly the slot level only when the full gain fits under the cap. It does not store duplicate class progression, temporary Spell Slot creation, or Metamagic option state.",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS Character Sheet class-feature point-pool resource and Spell Slot conversion runtime; Font of Magic is read from CharacterBuild resources and the installed Surface feature record, then projected as Character Sheet Sorcery Point point-pool state. The runtime derives capacity from Sorcerer class level, stores only expended Sorcery Points, restores all expended points on Long Rest, executes the no-action source-aware Spell Slot to Sorcery Point conversion for ordinary and created Spell Slots, and records the Character Sheet state transition from Sorcery Points to created Spell Slots from the installed Creating Spell Slots table. Created Spell Slot state stores only the delta above ordinary build capacity, exposes aggregate capacity for Character Battle init, is preserved exactly when Character Battle handoff is source-unambiguous, and is cleared on Long Rest without duplicating class progression, action-economy state, or Metamagic option state. Bonus Action execution and source-aware battle spell spending remain split to L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE.",
           "status": "owner evidence present"
         }
       ],
@@ -18884,8 +18883,8 @@
         "state": "installed",
         "unitId": "sorcerer_metamagic"
       },
-      "unitProfileDisposition": "unsupported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -18893,13 +18892,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-creation-runtime plus character-sheet-runtime; character-battle-runtime plus battle-runtime spell invocation hooks",
-          "evidence": "Promote follow-up split L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION: L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS owns Retain the Metamagic feature ref with Sorcerer level-2 progression, then project chosen Metamagic option count, Sorcerer-level replacement, unique known-option roster, option costs, stacking exceptions, and the source link to the shared Font of Magic Sorcery Point resource without duplicating class progression or Sorcery Point pool state. Required output: Owner evidence for CharacterBuild or Character Sheet retained Metamagic feature ref, known Metamagic options, replacement lifecycle, option costs, stacking facts, and reference to the shared Font of Magic Sorcery Point resource.; L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION owns Execute known Metamagic options at spell-cast time by spending the shared Sorcery Point resource projected from Font of Magic, enforcing the one-option-per-spell rule plus Empowered and Seeking stacking exceptions, Quickened level-1-plus spell turn limits, and the option-specific spell modifications for Careful, Distant, Empowered, Extended, Heightened, Quickened, Seeking, Subtle, Transmuted, and Twinned Spell. Required output: Supported runtime profile and owner evidence for Metamagic option execution that consumes the shared Sorcery Point resource rather than a synthetic Metamagic-local point pool.",
-          "status": "owner evidence required"
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS character-creation.class-feature-option-projection and character-creation.class-feature-source-fact-projection support profiles; Metamagic is discovered from the level-2 Sorcerer class feature grant, filled from the installed SRD Metamagic option roster, finalized as selected CharacterBuild Metamagic option facts, and projected with Sorcerer-level known-option counts, option costs, stacking modes, spell-use limit, and the shared Font of Magic Sorcery Point resource link.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote follow-up split L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION: L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS owns Retain the Metamagic feature ref with Sorcerer level-2 progression, then project chosen Metamagic option count, Sorcerer-level replacement, unique known-option roster, option costs, stacking exceptions, and the source link to the shared Font of Magic Sorcery Point resource without duplicating class progression or Sorcery Point pool state. Required output: Owner evidence for CharacterBuild or Character Sheet retained Metamagic feature ref, known Metamagic options, replacement lifecycle, option costs, stacking facts, and reference to the shared Font of Magic Sorcery Point resource.; L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION owns Execute known Metamagic options at spell-cast time by spending the shared Sorcery Point resource projected from Font of Magic, enforcing the one-option-per-spell rule plus Empowered and Seeking stacking exceptions, Quickened level-1-plus spell turn limits, and the option-specific spell modifications for Careful, Distant, Empowered, Extended, Heightened, Quickened, Seeking, Subtle, Transmuted, and Twinned Spell. Required output: Supported runtime profile and owner evidence for Metamagic option execution that consumes the shared Sorcery Point resource rather than a synthetic Metamagic-local point pool.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/sorcerer:level-2:class-table-summary:sorcerer_level_2_feature_table_row",

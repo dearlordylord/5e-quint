@@ -19,6 +19,7 @@ import {
   MONK_MONKS_FOCUS_UNIT_ID,
   SORCERER_FONT_OF_MAGIC_UNIT_ID,
   characterBuildSorcererFontOfMagicFacts,
+  characterBuildSorcererMetamagicFacts,
   characterBuildDruidWildShapeFacts,
   characterBuildMonkUncannyMetabolismFacts,
   characterBuildMonksFocusFacts,
@@ -26,6 +27,7 @@ import {
   eldritchInvocationOptionForInvocationId,
   eldritchInvocationRepeatableChoiceSatisfiesRule,
   eldritchInvocationId,
+  fontOfMagicSpellSlotCreationOption,
   languageFromSurfaceLanguageId,
   parseCharacterEquipmentItemId,
   progressionClassUnitIds,
@@ -33,6 +35,7 @@ import {
   isClassLevelLinearPerLevel,
   isClassLevelThresholdTiers,
   replaceDruidWildShapeKnownForm,
+  sorcererMetamagicOptionId,
   thresholdTierValueAtClassLevel,
   validateDruidWildShapeKnownForms,
   weaponMasteryChoiceProfileForFeature,
@@ -152,6 +155,7 @@ import { Brand, Either, Match, Option } from "effect";
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-long-rest-use-state
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-point-pool-resource
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.font-of-magic-slot-to-sorcery-points
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.font-of-magic-sorcery-points-to-spell-slot
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.monk-uncanny-metabolism-initiative-recovery
 
 const WEAPON_PROFICIENCY_CATEGORY_VALUES = ["simple", "martial"] as const;
@@ -210,6 +214,9 @@ const CHARACTER_SHEET_CONDITIONS = CONDITIONS.filter(
   (condition): condition is CharacterSheetCondition =>
     condition !== "unconscious",
 );
+const FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES = ["ordinary", "created"] as const;
+export type CharacterSheetFontOfMagicSpellSlotSource =
+  (typeof FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES)[number];
 
 export type CharacterSheetId = string & Brand.Brand<"CharacterId">;
 const CharacterSheetId = Brand.nominal<CharacterSheetId>();
@@ -229,6 +236,7 @@ type NonSpellcastingCharacterBuild = CharacterBuild & {
 type CharacterSheetWithSpellSlots = CharacterSheet & {
   readonly build: SpellcastingCharacterBuild;
   readonly spellSlotExpenditures: readonly CharacterSpellSlotExpenditure[];
+  readonly createdSpellSlots: readonly CharacterSheetCreatedSpellSlotState[];
 };
 
 export type CharacterSheet =
@@ -247,6 +255,7 @@ export type CharacterSheet =
         | undefined;
       readonly druidWildShapeKnownForms?: CharacterSheetDruidWildShapeKnownForms;
       readonly spellSlotExpenditures: readonly CharacterSpellSlotExpenditure[];
+      readonly createdSpellSlots: readonly CharacterSheetCreatedSpellSlotState[];
       readonly pactSlotExpenditure: CharacterPactSlotExpenditure | undefined;
     }
   | {
@@ -262,6 +271,7 @@ export type CharacterSheet =
       readonly bookOfShadowsPresence?: never;
       readonly druidWildShapeKnownForms?: CharacterSheetDruidWildShapeKnownForms;
       readonly spellSlotExpenditures?: never;
+      readonly createdSpellSlots?: never;
       readonly pactSlotExpenditure?: never;
     };
 
@@ -293,6 +303,17 @@ export type CharacterSheetSpellSlotState = {
   readonly spellLevel: SpellSlotLevel;
   readonly count: ResourceCount;
   readonly expended: ResourceCount;
+};
+
+export type CharacterSheetCreatedSpellSlotState = {
+  readonly spellLevel: SpellSlotLevel;
+  readonly count: ResourceCount;
+  readonly expended: ResourceCount;
+};
+
+export type CharacterSheetSpellSlotSourceState = {
+  readonly ordinarySpellSlotExpenditures: readonly CharacterSpellSlotExpenditure[];
+  readonly createdSpellSlots: readonly CharacterSheetCreatedSpellSlotState[];
 };
 
 export type CharacterSheetPactSlotState = CharacterPactSlotExpenditure;
@@ -369,7 +390,10 @@ type CharacterSheetUseCountResource = CharacterBuildResource & {
 type CharacterSheetPointPoolResource = CharacterBuildResource & {
   readonly unitId: CharacterSheetPointPoolResourceUnitId;
   readonly resource: PointPoolResource;
-  readonly resetCadence: Extract<RestResetCadence, { readonly kind: "long_rest" }>;
+  readonly resetCadence: Extract<
+    RestResetCadence,
+    { readonly kind: "long_rest" }
+  >;
 };
 
 export type CharacterSheetResourceState =
@@ -424,6 +448,13 @@ export type CharacterSheetArcaneRecoverySlotRefund = {
 };
 
 export type CharacterSheetFontOfMagicSlotToSorceryPointsInput = {
+  readonly sheet: CharacterSheet;
+  readonly unitLibrary: UnitCatalog;
+  readonly spellLevel: SpellSlotLevel;
+  readonly spellSlotSource?: CharacterSheetFontOfMagicSpellSlotSource;
+};
+
+export type CharacterSheetFontOfMagicSorceryPointsToSpellSlotInput = {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
   readonly spellLevel: SpellSlotLevel;
@@ -807,6 +838,13 @@ function characterBuildOwnsFeatureUnit(
 export function createFreshCharacterSheet(
   input: CharacterSheetInput,
 ): Either.Either<CharacterSheet, CharacterSheetIssue> {
+  return createCharacterSheet(input);
+}
+
+function createCharacterSheet(
+  input: CharacterSheetInput,
+  storedSpellSlotState?: CharacterSheetSpellSlotSourceState,
+): Either.Either<CharacterSheet, CharacterSheetIssue> {
   const hitPointCapacity = characterSheetHitPointCapacity(input);
   if (Either.isLeft(hitPointCapacity))
     return Either.left(hitPointCapacity.left);
@@ -830,7 +868,7 @@ export function createFreshCharacterSheet(
   }
 
   if (isNonSpellcastingBuild(input.build)) {
-    if (input.spellSlots !== undefined) {
+    if (input.spellSlots !== undefined || storedSpellSlotState !== undefined) {
       return characterSheetIssue(
         "Non-spellcasting Character Sheet cannot carry Spell Slot state.",
       );
@@ -866,12 +904,18 @@ export function createFreshCharacterSheet(
   const build = input.build;
   const hitPoints = characterSheetHitPoints(input);
   if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
-  const spellSlotExpenditures = spellSlotExpendituresFromInput({
-    build,
-    ...(input.spellSlots === undefined ? {} : { spellSlots: input.spellSlots }),
-  });
-  if (Either.isLeft(spellSlotExpenditures)) {
-    return Either.left(spellSlotExpenditures.left);
+  const spellSlotState =
+    storedSpellSlotState === undefined
+      ? spellSlotStateFromInput({
+          build,
+          unitLibrary: input.unitLibrary,
+          ...(input.spellSlots === undefined
+            ? {}
+            : { spellSlots: input.spellSlots }),
+        })
+      : Either.right(storedSpellSlotState);
+  if (Either.isLeft(spellSlotState)) {
+    return Either.left(spellSlotState.left);
   }
   const pactSlotExpenditure = pactSlotExpenditureFromInput({
     build,
@@ -895,7 +939,8 @@ export function createFreshCharacterSheet(
     ...(druidWildShapeKnownForms.right === undefined
       ? {}
       : { druidWildShapeKnownForms: druidWildShapeKnownForms.right }),
-    spellSlotExpenditures: spellSlotExpenditures.right,
+    spellSlotExpenditures: spellSlotState.right.ordinarySpellSlotExpenditures,
+    createdSpellSlots: spellSlotState.right.createdSpellSlots,
     pactSlotExpenditure: pactSlotExpenditure.right,
   });
 }
@@ -1022,7 +1067,7 @@ export function parseCharacterSheet(
   if (Either.isLeft(resourceExpenditures)) {
     return Either.left(resourceExpenditures.left);
   }
-  const spellSlots = parseStoredSpellSlots(build.right, value);
+  const spellSlots = parseStoredSpellSlots(build.right, unitLibrary, value);
   if (Either.isLeft(spellSlots)) return Either.left(spellSlots.left);
   const pactSlots = parseStoredPactSlots(build.right, value);
   if (Either.isLeft(pactSlots)) return Either.left(pactSlots.left);
@@ -1039,35 +1084,37 @@ export function parseCharacterSheet(
     return Either.left(druidWildShapeKnownForms.left);
   }
 
-  return createFreshCharacterSheet({
-    characterId: characterSheetId(value.characterId),
-    build: build.right,
-    maximumHp: maximumHp.right,
-    currentHp: hitPoints.right.currentHp,
-    tempHp: hitPoints.right.tempHp,
-    conditions: conditions.right,
-    unitLibrary,
-    ...(hitPoints.right.positiveHpUnconscious === undefined
-      ? {}
-      : { positiveHpUnconscious: hitPoints.right.positiveHpUnconscious }),
-    ...(hitPoints.right.zeroHpLifecycle === undefined
-      ? {}
-      : { zeroHpLifecycle: hitPoints.right.zeroHpLifecycle }),
-    ...(spellSlots.right === undefined ? {} : { spellSlots: spellSlots.right }),
-    ...(pactSlots.right === undefined ? {} : { pactSlots: pactSlots.right }),
-    ...(bookOfShadowsPresence.right === undefined
-      ? {}
-      : { bookOfShadowsPresence: bookOfShadowsPresence.right }),
-    spentHitDice: spentHitDice.right,
-    restFeatureUses: restFeatureUses.right,
-    resourceExpenditures: resourceExpenditures.right,
-    ...(druidWildShapeKnownForms.right === undefined
-      ? {}
-      : {
-          druidWildShapeKnownFormStatBlockIds:
-            druidWildShapeKnownForms.right.statBlockIds,
-        }),
-  });
+  return createCharacterSheet(
+    {
+      characterId: characterSheetId(value.characterId),
+      build: build.right,
+      maximumHp: maximumHp.right,
+      currentHp: hitPoints.right.currentHp,
+      tempHp: hitPoints.right.tempHp,
+      conditions: conditions.right,
+      unitLibrary,
+      ...(hitPoints.right.positiveHpUnconscious === undefined
+        ? {}
+        : { positiveHpUnconscious: hitPoints.right.positiveHpUnconscious }),
+      ...(hitPoints.right.zeroHpLifecycle === undefined
+        ? {}
+        : { zeroHpLifecycle: hitPoints.right.zeroHpLifecycle }),
+      ...(pactSlots.right === undefined ? {} : { pactSlots: pactSlots.right }),
+      ...(bookOfShadowsPresence.right === undefined
+        ? {}
+        : { bookOfShadowsPresence: bookOfShadowsPresence.right }),
+      spentHitDice: spentHitDice.right,
+      restFeatureUses: restFeatureUses.right,
+      resourceExpenditures: resourceExpenditures.right,
+      ...(druidWildShapeKnownForms.right === undefined
+        ? {}
+        : {
+            druidWildShapeKnownFormStatBlockIds:
+              druidWildShapeKnownForms.right.statBlockIds,
+          }),
+    },
+    spellSlots.right,
+  );
 }
 
 export function characterSheetHitPoints(
@@ -1134,16 +1181,44 @@ export function characterSheetSpellSlots(
   sheet: CharacterSheet,
 ): readonly CharacterSheetSpellSlotState[] | undefined {
   if (!isCharacterSheetWithSpellSlots(sheet)) return undefined;
-  return characterBuildSpellcastingSlotCapacity(sheet.build).map((slot) => {
-    const expenditure = requireSpellSlotExpenditure(
-      sheet.spellSlotExpenditures,
-      spellSlotLevel(slot.spellLevel),
+  return combineSpellSlotStates(
+    ordinarySpellSlotStates(sheet),
+    sheet.createdSpellSlots,
+  );
+}
+
+export function characterSheetSpellSlotSourceState(
+  sheet: CharacterSheet,
+): CharacterSheetSpellSlotSourceState | undefined {
+  if (!isCharacterSheetWithSpellSlots(sheet)) return undefined;
+  return {
+    ordinarySpellSlotExpenditures: sheet.spellSlotExpenditures,
+    createdSpellSlots: sheet.createdSpellSlots,
+  };
+}
+
+export function replaceCharacterSheetSpellSlotSourceState(input: {
+  readonly sheet: CharacterSheet;
+  readonly unitLibrary: UnitCatalog;
+  readonly spellSlotState: CharacterSheetSpellSlotSourceState;
+}): Either.Either<CharacterSheet, CharacterSheetIssue> {
+  if (!isCharacterSheetWithSpellSlots(input.sheet)) {
+    return characterSheetIssue(
+      "Spell Slot source state requires ordinary Spell Slot state.",
     );
-    return {
-      spellLevel: spellSlotLevel(slot.spellLevel),
-      count: resourceCount(slot.count),
-      expended: expenditure.expended,
-    };
+  }
+  const spellSlotState = validateSpellSlotSourceState({
+    build: input.sheet.build,
+    unitLibrary: input.unitLibrary,
+    spellSlotState: input.spellSlotState,
+  });
+  if (Either.isLeft(spellSlotState)) {
+    return Either.left(spellSlotState.left);
+  }
+  return Either.right({
+    ...input.sheet,
+    spellSlotExpenditures: spellSlotState.right.ordinarySpellSlotExpenditures,
+    createdSpellSlots: spellSlotState.right.createdSpellSlots,
   });
 }
 
@@ -1406,20 +1481,12 @@ export function convertFontOfMagicSpellSlotToSorceryPoints(
     );
   }
 
-  const spellSlots = characterSheetSpellSlots(input.sheet);
-  const spellSlot = spellSlots?.find(
-    (slot) => slot.spellLevel === input.spellLevel,
-  );
-  if (spellSlot === undefined) {
-    return characterSheetIssue(
-      "Font of Magic conversion requires an existing ordinary Spell Slot level.",
-    );
-  }
-  if (spellSlot.expended >= spellSlot.count) {
-    return characterSheetIssue(
-      "Font of Magic conversion requires an unexpended ordinary Spell Slot.",
-    );
-  }
+  const spellSlotSpend = fontOfMagicSpellSlotSpendForSorceryPoints({
+    sheet: input.sheet,
+    spellLevel: input.spellLevel,
+    spellSlotSource: input.spellSlotSource,
+  });
+  if (Either.isLeft(spellSlotSpend)) return Either.left(spellSlotSpend.left);
 
   const resources = characterSheetResources(input.sheet, input.unitLibrary);
   if (Either.isLeft(resources)) return Either.left(resources.left);
@@ -1443,15 +1510,178 @@ export function convertFontOfMagicSpellSlotToSorceryPoints(
 
   return Either.right({
     ...input.sheet,
-    spellSlotExpenditures: input.sheet.spellSlotExpenditures.map((slot) =>
-      slot.spellLevel === input.spellLevel
-        ? { ...slot, expended: resourceCount(slot.expended + 1) }
-        : slot,
-    ),
+    spellSlotExpenditures: spellSlotSpend.right.ordinarySpellSlotExpenditures,
+    createdSpellSlots: spellSlotSpend.right.createdSpellSlots,
     resourceExpenditures: replacePointPoolResourceExpenditure({
       expenditures: input.sheet.resourceExpenditures,
       unitId: sorceryPoints.unitId,
       expended: resourceCount(sorceryPoints.expended - pointGain),
+    }),
+  });
+}
+
+function fontOfMagicSpellSlotSpendForSorceryPoints(input: {
+  readonly sheet: CharacterSheetWithSpellSlots;
+  readonly spellLevel: SpellSlotLevel;
+  readonly spellSlotSource:
+    | CharacterSheetFontOfMagicSpellSlotSource
+    | undefined;
+}): Either.Either<CharacterSheetSpellSlotSourceState, CharacterSheetIssue> {
+  const ordinarySlot = ordinarySpellSlotStates(input.sheet).find(
+    (slot) => slot.spellLevel === input.spellLevel,
+  );
+  const createdSlot = input.sheet.createdSpellSlots.find(
+    (slot) => slot.spellLevel === input.spellLevel,
+  );
+  const ordinaryAvailable =
+    ordinarySlot === undefined ? 0 : ordinarySlot.count - ordinarySlot.expended;
+  const createdAvailable =
+    createdSlot === undefined ? 0 : createdSlot.count - createdSlot.expended;
+  const source = fontOfMagicSpellSlotSourceForSorceryPointConversion({
+    spellSlotSource: input.spellSlotSource,
+    ordinarySlot,
+    ordinaryAvailable,
+    createdSlot,
+    createdAvailable,
+  });
+  if (Either.isLeft(source)) return Either.left(source.left);
+
+  return source.right === "ordinary"
+    ? Either.right({
+        ordinarySpellSlotExpenditures: input.sheet.spellSlotExpenditures.map(
+          (slot) =>
+            slot.spellLevel === input.spellLevel
+              ? { ...slot, expended: resourceCount(slot.expended + 1) }
+              : slot,
+        ),
+        createdSpellSlots: input.sheet.createdSpellSlots,
+      })
+    : Either.right({
+        ordinarySpellSlotExpenditures: input.sheet.spellSlotExpenditures,
+        createdSpellSlots: input.sheet.createdSpellSlots.map((slot) =>
+          slot.spellLevel === input.spellLevel
+            ? { ...slot, expended: resourceCount(slot.expended + 1) }
+            : slot,
+        ),
+      });
+}
+
+function fontOfMagicSpellSlotSourceForSorceryPointConversion(input: {
+  readonly spellSlotSource:
+    | CharacterSheetFontOfMagicSpellSlotSource
+    | undefined;
+  readonly ordinarySlot: CharacterSheetSpellSlotState | undefined;
+  readonly ordinaryAvailable: number;
+  readonly createdSlot: CharacterSheetCreatedSpellSlotState | undefined;
+  readonly createdAvailable: number;
+}): Either.Either<
+  CharacterSheetFontOfMagicSpellSlotSource,
+  CharacterSheetIssue
+> {
+  if (input.spellSlotSource === "ordinary") {
+    return input.ordinaryAvailable > 0
+      ? Either.right("ordinary")
+      : characterSheetIssue(
+          "Font of Magic conversion requires an unexpended ordinary Spell Slot.",
+        );
+  }
+  if (input.spellSlotSource === "created") {
+    return input.createdAvailable > 0
+      ? Either.right("created")
+      : characterSheetIssue(
+          "Font of Magic conversion requires an unexpended created Spell Slot.",
+        );
+  }
+  if (input.ordinaryAvailable > 0 && input.createdAvailable > 0) {
+    return characterSheetIssue(
+      "Font of Magic conversion requires a Spell Slot source when ordinary and created Spell Slots are both available.",
+    );
+  }
+  if (input.ordinaryAvailable > 0) return Either.right("ordinary");
+  if (input.createdAvailable > 0) return Either.right("created");
+  if (input.ordinarySlot !== undefined && input.createdSlot === undefined) {
+    return characterSheetIssue(
+      "Font of Magic conversion requires an unexpended ordinary Spell Slot.",
+    );
+  }
+  if (input.createdSlot !== undefined && input.ordinarySlot === undefined) {
+    return characterSheetIssue(
+      "Font of Magic conversion requires an unexpended created Spell Slot.",
+    );
+  }
+  return characterSheetIssue(
+    "Font of Magic conversion requires an unexpended Spell Slot.",
+  );
+}
+
+export function convertFontOfMagicSorceryPointsToSpellSlot(
+  input: CharacterSheetFontOfMagicSorceryPointsToSpellSlotInput,
+): Either.Either<CharacterSheet, CharacterSheetIssue> {
+  const fontOfMagicFacts = characterBuildSorcererFontOfMagicFacts({
+    build: input.sheet.build,
+    unitLibrary: input.unitLibrary,
+  });
+  if (Either.isLeft(fontOfMagicFacts)) {
+    return characterSheetIssue(fontOfMagicFacts.left.message);
+  }
+  if (fontOfMagicFacts.right === undefined) {
+    return characterSheetIssue(
+      "Font of Magic Spell Slot creation requires the Sorcerer Font of Magic feature.",
+    );
+  }
+  const fontOfMagic = fontOfMagicFacts.right;
+  if (!isCharacterSheetWithSpellSlots(input.sheet)) {
+    return characterSheetIssue(
+      "Font of Magic Spell Slot creation requires ordinary Spell Slot state.",
+    );
+  }
+
+  const option = fontOfMagicSpellSlotCreationOption({
+    facts: fontOfMagic,
+    spellLevel: input.spellLevel,
+  });
+  if (option === undefined) {
+    return characterSheetIssue(
+      "Font of Magic Spell Slot creation requires a Creating Spell Slots table entry.",
+    );
+  }
+  if (
+    fontOfMagic.spellSlotCreation.ownerClassLevel < option.minimumClassLevel
+  ) {
+    return characterSheetIssue(
+      `Font of Magic Spell Slot creation requires Sorcerer level ${option.minimumClassLevel} for a level ${option.spellSlotLevel} Spell Slot.`,
+    );
+  }
+
+  const resources = characterSheetResources(input.sheet, input.unitLibrary);
+  if (Either.isLeft(resources)) return Either.left(resources.left);
+  const sorceryPoints = resources.right.find(
+    (resource): resource is CharacterSheetSorceryPointPoolResourceState =>
+      resource.tag === "pointPoolResource" &&
+      resource.unitId === fontOfMagic.unitId,
+  );
+  if (sorceryPoints === undefined) {
+    return characterSheetIssue(
+      "Font of Magic Spell Slot creation requires the shared Sorcery Point resource.",
+    );
+  }
+  const availableSorceryPoints = sorceryPoints.count - sorceryPoints.expended;
+  if (availableSorceryPoints < option.pointCost) {
+    return characterSheetIssue(
+      "Font of Magic Spell Slot creation requires enough unexpended Sorcery Points.",
+    );
+  }
+
+  return Either.right({
+    ...input.sheet,
+    createdSpellSlots: addCreatedSpellSlot({
+      createdSpellSlots: input.sheet.createdSpellSlots,
+      spellLevel: input.spellLevel,
+    }),
+    resourceExpenditures: replacePointPoolResourceExpenditure({
+      expenditures: input.sheet.resourceExpenditures,
+      unitId: sorceryPoints.unitId,
+      expended: resourceCount(sorceryPoints.expended + option.pointCost),
     }),
   });
 }
@@ -1606,6 +1836,7 @@ export function completeLongRest(
           expended: resourceCount(0),
         }),
       ),
+      createdSpellSlots: [],
       pactSlotExpenditure:
         input.sheet.pactSlotExpenditure === undefined
           ? undefined
@@ -2524,14 +2755,55 @@ function requireSpellSlotExpenditure(
   );
 }
 
-function spellSlotExpendituresFromInput(
+function ordinarySpellSlotStates(
+  sheet: CharacterSheetWithSpellSlots,
+): readonly CharacterSheetSpellSlotState[] {
+  return characterBuildSpellcastingSlotCapacity(sheet.build).map((slot) => {
+    const spellLevel = spellSlotLevel(slot.spellLevel);
+    const expenditure = requireSpellSlotExpenditure(
+      sheet.spellSlotExpenditures,
+      spellLevel,
+    );
+    return {
+      spellLevel,
+      count: resourceCount(slot.count),
+      expended: expenditure.expended,
+    };
+  });
+}
+
+function combineSpellSlotStates(
+  ordinarySpellSlots: readonly CharacterSheetSpellSlotState[],
+  createdSpellSlots: readonly CharacterSheetCreatedSpellSlotState[],
+): readonly CharacterSheetSpellSlotState[] {
+  const states = new Map<number, CharacterSheetSpellSlotState>();
+  for (const slot of ordinarySpellSlots) {
+    states.set(slot.spellLevel, slot);
+  }
+  for (const createdSlot of createdSpellSlots) {
+    const ordinarySlot = states.get(createdSlot.spellLevel);
+    states.set(
+      createdSlot.spellLevel,
+      ordinarySlot === undefined
+        ? createdSlot
+        : {
+            spellLevel: ordinarySlot.spellLevel,
+            count: resourceCount(ordinarySlot.count + createdSlot.count),
+            expended: resourceCount(
+              ordinarySlot.expended + createdSlot.expended,
+            ),
+          },
+    );
+  }
+  return [...states.values()].sort((a, b) => a.spellLevel - b.spellLevel);
+}
+
+function spellSlotStateFromInput(
   input: Pick<CharacterSheetInput, "spellSlots"> & {
     readonly build: SpellcastingCharacterBuild;
+    readonly unitLibrary: UnitCatalog;
   },
-): Either.Either<
-  readonly CharacterSpellSlotExpenditure[],
-  CharacterSheetIssue
-> {
+): Either.Either<CharacterSheetSpellSlotSourceState, CharacterSheetIssue> {
   const runtimeSlots =
     input.spellSlots ??
     characterBuildSpellcastingSlotCapacity(input.build).map((slot) => ({
@@ -2547,6 +2819,17 @@ function spellSlotExpendituresFromInput(
   }
   const runtimeLevels = new Set<number>();
   for (const runtimeSlot of runtimeSlots) {
+    if (
+      !Number.isInteger(runtimeSlot.count) ||
+      runtimeSlot.count < 0 ||
+      !Number.isInteger(runtimeSlot.expended) ||
+      runtimeSlot.expended < 0 ||
+      runtimeSlot.expended > runtimeSlot.count
+    ) {
+      return characterSheetIssue(
+        "Spell Slot state must have nonnegative integer count and expenditure.",
+      );
+    }
     if (runtimeLevels.has(runtimeSlot.spellLevel)) {
       return characterSheetIssue(
         "Spell Slot state must not duplicate spell levels.",
@@ -2555,28 +2838,148 @@ function spellSlotExpendituresFromInput(
     runtimeLevels.add(runtimeSlot.spellLevel);
   }
   const expenditures: CharacterSpellSlotExpenditure[] = [];
+  const createdSpellSlots: CharacterSheetCreatedSpellSlotState[] = [];
   for (const buildSlot of buildSlots) {
+    const spellLevel = spellSlotLevel(buildSlot.spellLevel);
     const runtimeSlot = runtimeSlots.find(
-      (candidate) =>
-        candidate.spellLevel === spellSlotLevel(buildSlot.spellLevel),
+      (candidate) => candidate.spellLevel === spellLevel,
     );
     if (
       runtimeSlot === undefined ||
-      runtimeSlot.count !== resourceCount(buildSlot.count) ||
-      !Number.isInteger(runtimeSlot.expended) ||
-      runtimeSlot.expended < 0 ||
-      runtimeSlot.expended > buildSlot.count
+      runtimeSlot.count !== resourceCount(buildSlot.count)
     ) {
       return characterSheetIssue(
         `Spell Slot state does not match build capacity for level ${buildSlot.spellLevel}.`,
       );
     }
     expenditures.push({
-      spellLevel: spellSlotLevel(buildSlot.spellLevel),
+      spellLevel,
       expended: resourceCount(runtimeSlot.expended),
     });
   }
-  return Either.right(expenditures);
+  return validateSpellSlotSourceState({
+    build: input.build,
+    unitLibrary: input.unitLibrary,
+    spellSlotState: {
+      ordinarySpellSlotExpenditures: expenditures,
+      createdSpellSlots,
+    },
+  });
+}
+
+function validateSpellSlotSourceState(input: {
+  readonly build: SpellcastingCharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly spellSlotState: CharacterSheetSpellSlotSourceState;
+}): Either.Either<CharacterSheetSpellSlotSourceState, CharacterSheetIssue> {
+  const buildSlots = characterBuildSpellcastingSlotCapacity(input.build);
+  const expenditureLevels = new Set<number>();
+  for (const expenditure of input.spellSlotState
+    .ordinarySpellSlotExpenditures) {
+    if (expenditureLevels.has(expenditure.spellLevel)) {
+      return characterSheetIssue(
+        "Spell Slot state must not duplicate spell levels.",
+      );
+    }
+    expenditureLevels.add(expenditure.spellLevel);
+    const capacity = buildSlots.find(
+      (slot) => slot.spellLevel === expenditure.spellLevel,
+    );
+    if (capacity === undefined || expenditure.expended > capacity.count) {
+      return characterSheetIssue(
+        `Spell Slot state does not match build capacity for level ${expenditure.spellLevel}.`,
+      );
+    }
+  }
+  for (const buildSlot of buildSlots) {
+    if (!expenditureLevels.has(buildSlot.spellLevel)) {
+      return characterSheetIssue(
+        `Spell Slot state does not match build capacity for level ${buildSlot.spellLevel}.`,
+      );
+    }
+  }
+  const createdSpellSlots = validateCreatedSpellSlots({
+    build: input.build,
+    unitLibrary: input.unitLibrary,
+    createdSpellSlots: input.spellSlotState.createdSpellSlots,
+  });
+  if (Either.isLeft(createdSpellSlots)) {
+    return Either.left(createdSpellSlots.left);
+  }
+  return Either.right({
+    ordinarySpellSlotExpenditures:
+      input.spellSlotState.ordinarySpellSlotExpenditures,
+    createdSpellSlots: createdSpellSlots.right,
+  });
+}
+
+function validateCreatedSpellSlots(input: {
+  readonly build: SpellcastingCharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly createdSpellSlots: readonly CharacterSheetCreatedSpellSlotState[];
+}): Either.Either<
+  readonly CharacterSheetCreatedSpellSlotState[],
+  CharacterSheetIssue
+> {
+  if (input.createdSpellSlots.length === 0) return Either.right([]);
+  const fontOfMagicFacts = characterBuildSorcererFontOfMagicFacts({
+    build: input.build,
+    unitLibrary: input.unitLibrary,
+  });
+  if (Either.isLeft(fontOfMagicFacts)) {
+    return characterSheetIssue(fontOfMagicFacts.left.message);
+  }
+  if (fontOfMagicFacts.right === undefined) {
+    return characterSheetIssue(
+      "Created Spell Slot state requires the Sorcerer Font of Magic feature.",
+    );
+  }
+  const levels = new Set<number>();
+  for (const createdSlot of input.createdSpellSlots) {
+    if (levels.has(createdSlot.spellLevel)) {
+      return characterSheetIssue(
+        "Created Spell Slot state must not duplicate spell levels.",
+      );
+    }
+    levels.add(createdSlot.spellLevel);
+    const option = fontOfMagicSpellSlotCreationOption({
+      facts: fontOfMagicFacts.right,
+      spellLevel: createdSlot.spellLevel,
+    });
+    if (
+      option === undefined ||
+      fontOfMagicFacts.right.spellSlotCreation.ownerClassLevel <
+        option.minimumClassLevel
+    ) {
+      return characterSheetIssue(
+        "Created Spell Slot state must match the Font of Magic Creating Spell Slots table.",
+      );
+    }
+  }
+  return Either.right(input.createdSpellSlots);
+}
+
+function addCreatedSpellSlot(input: {
+  readonly createdSpellSlots: readonly CharacterSheetCreatedSpellSlotState[];
+  readonly spellLevel: SpellSlotLevel;
+}): readonly CharacterSheetCreatedSpellSlotState[] {
+  const next = input.createdSpellSlots.some(
+    (slot) => slot.spellLevel === input.spellLevel,
+  )
+    ? input.createdSpellSlots.map((slot) =>
+        slot.spellLevel === input.spellLevel
+          ? { ...slot, count: resourceCount(slot.count + 1) }
+          : slot,
+      )
+    : [
+        ...input.createdSpellSlots,
+        {
+          spellLevel: input.spellLevel,
+          count: resourceCount(1),
+          expended: resourceCount(0),
+        },
+      ];
+  return [...next].sort((a, b) => a.spellLevel - b.spellLevel);
 }
 
 function pactSlotExpenditureFromInput(
@@ -3898,13 +4301,15 @@ function parseStoredDeathSaves(
 
 function parseStoredSpellSlots(
   build: CharacterBuild,
+  unitLibrary: UnitCatalog,
   value: Readonly<Record<string, unknown>>,
 ): Either.Either<
-  readonly CharacterSheetSpellSlotState[] | undefined,
+  CharacterSheetSpellSlotSourceState | undefined,
   CharacterSheetIssue
 > {
   if (!isSpellcastingBuild(build)) {
-    return value.spellSlotExpenditures === undefined
+    return value.spellSlotExpenditures === undefined &&
+      value.createdSpellSlots === undefined
       ? Either.right(undefined)
       : characterSheetIssue(
           "Non-spellcasting Character Sheet cannot carry Spell Slot state.",
@@ -3915,7 +4320,9 @@ function parseStoredSpellSlots(
       "Spellcasting Character Sheet requires Spell Slot state.",
     );
   }
-  const parsed = [];
+  const spellSlotExpenditures: CharacterSpellSlotExpenditure[] = [];
+  const expenditureLevels = new Set<number>();
+  const buildSlots = characterBuildSpellcastingSlotCapacity(build);
   for (const expenditure of value.spellSlotExpenditures) {
     if (!isRecord(expenditure)) {
       return characterSheetIssue("Expected Spell Slot expenditure.");
@@ -3924,7 +4331,13 @@ function parseStoredSpellSlots(
     const expended = parseResourceCount(expenditure.expended);
     if (Either.isLeft(spellLevel)) return Either.left(spellLevel.left);
     if (Either.isLeft(expended)) return Either.left(expended.left);
-    const capacity = characterBuildSpellcastingSlotCapacity(build).find(
+    if (expenditureLevels.has(spellLevel.right)) {
+      return characterSheetIssue(
+        "Spell Slot state must not duplicate spell levels.",
+      );
+    }
+    expenditureLevels.add(spellLevel.right);
+    const capacity = buildSlots.find(
       (slot) => slot.spellLevel === spellLevel.right,
     );
     if (capacity === undefined) {
@@ -3932,13 +4345,79 @@ function parseStoredSpellSlots(
         "Spell Slot state does not match build capacity.",
       );
     }
-    parsed.push({
+    if (expended.right > capacity.count) {
+      return characterSheetIssue(
+        `Spell Slot state does not match build capacity for level ${capacity.spellLevel}.`,
+      );
+    }
+    spellSlotExpenditures.push({
       spellLevel: spellLevel.right,
-      count: resourceCount(capacity.count),
       expended: expended.right,
     });
   }
-  return Either.right(parsed);
+  for (const buildSlot of buildSlots) {
+    if (!expenditureLevels.has(buildSlot.spellLevel)) {
+      return characterSheetIssue(
+        `Spell Slot state does not match build capacity for level ${buildSlot.spellLevel}.`,
+      );
+    }
+  }
+  const createdSpellSlots = parseStoredCreatedSpellSlots(
+    value.createdSpellSlots,
+  );
+  if (Either.isLeft(createdSpellSlots)) {
+    return Either.left(createdSpellSlots.left);
+  }
+  return validateSpellSlotSourceState({
+    build,
+    unitLibrary,
+    spellSlotState: {
+      ordinarySpellSlotExpenditures: spellSlotExpenditures,
+      createdSpellSlots: createdSpellSlots.right,
+    },
+  });
+}
+
+function parseStoredCreatedSpellSlots(
+  value: unknown,
+): Either.Either<
+  readonly CharacterSheetCreatedSpellSlotState[],
+  CharacterSheetIssue
+> {
+  if (value === undefined) return Either.right([]);
+  if (!Array.isArray(value)) {
+    return characterSheetIssue("Created Spell Slot state must be a list.");
+  }
+  const slots: CharacterSheetCreatedSpellSlotState[] = [];
+  const levels = new Set<number>();
+  for (const slot of value) {
+    if (!isRecord(slot)) {
+      return characterSheetIssue("Expected Created Spell Slot state.");
+    }
+    const spellLevel = parseSpellSlotLevel(slot.spellLevel);
+    const count = parsePositiveResourceCount(slot.count);
+    const expended = parseResourceCount(slot.expended);
+    if (Either.isLeft(spellLevel)) return Either.left(spellLevel.left);
+    if (Either.isLeft(count)) return Either.left(count.left);
+    if (Either.isLeft(expended)) return Either.left(expended.left);
+    if (levels.has(spellLevel.right)) {
+      return characterSheetIssue(
+        "Created Spell Slot state must not duplicate spell levels.",
+      );
+    }
+    levels.add(spellLevel.right);
+    if (expended.right > count.right) {
+      return characterSheetIssue(
+        "Created Spell Slot expenditure cannot exceed count.",
+      );
+    }
+    slots.push({
+      spellLevel: spellLevel.right,
+      count: count.right,
+      expended: expended.right,
+    });
+  }
+  return Either.right(slots);
 }
 
 function parseStoredPactSlots(
@@ -4412,6 +4891,14 @@ function parseResourceCount(
     : characterSheetIssue("Expected nonnegative resource count.");
 }
 
+function parsePositiveResourceCount(
+  value: unknown,
+): Either.Either<ResourceCount, CharacterSheetIssue> {
+  return isPositiveInteger(value)
+    ? Either.right(resourceCount(value))
+    : characterSheetIssue("Expected positive resource count.");
+}
+
 function parseSpellSlotLevel(
   value: unknown,
 ): Either.Either<SpellSlotLevel, CharacterSheetIssue> {
@@ -4510,9 +4997,26 @@ function parseCharacterBuild(
   }
   const eldritchInvocationIssue =
     storedEldritchInvocationKnownCantripSelectionIssue(build, unitLibrary);
-  return Either.isLeft(eldritchInvocationIssue)
-    ? Either.left(eldritchInvocationIssue.left)
+  if (Either.isLeft(eldritchInvocationIssue)) {
+    return Either.left(eldritchInvocationIssue.left);
+  }
+  const sorcererMetamagicIssue = storedSorcererMetamagicSelectionIssue(
+    build,
+    unitLibrary,
+  );
+  return Either.isLeft(sorcererMetamagicIssue)
+    ? Either.left(sorcererMetamagicIssue.left)
     : Either.right(build);
+}
+
+function storedSorcererMetamagicSelectionIssue(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): Either.Either<void, CharacterSheetIssue> {
+  const facts = characterBuildSorcererMetamagicFacts({ build, unitLibrary });
+  return Either.isLeft(facts)
+    ? characterSheetIssue(facts.left.message)
+    : Either.right(undefined);
 }
 
 function storedEldritchInvocationKnownCantripSelectionIssue(
@@ -5142,6 +5646,21 @@ function parseStoredFeatures(
       features.push({
         kind: "selectedEldritchInvocation" as const,
         selection: selection.right,
+        selectedFromUnitId: feature.selectedFromUnitId,
+      });
+    } else if (
+      feature.kind === "selectedSorcererMetamagicOption" &&
+      typeof feature.optionId === "string"
+    ) {
+      const optionId = sorcererMetamagicOptionId(feature.optionId);
+      if (Either.isLeft(optionId)) {
+        return characterSheetIssue(
+          "Character Build Sorcerer Metamagic option selection is invalid.",
+        );
+      }
+      features.push({
+        kind: "selectedSorcererMetamagicOption" as const,
+        optionId: optionId.right,
         selectedFromUnitId: feature.selectedFromUnitId,
       });
     } else if (feature.kind === "abilityCheckBonus") {

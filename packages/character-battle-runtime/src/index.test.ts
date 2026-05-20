@@ -1,6 +1,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.invocation-marked-damage-rider
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-use-count-resource unit-feature.druid-wild-shape-known-form
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.monk-uncanny-metabolism-initiative-recovery
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.font-of-magic-sorcery-points-to-spell-slot
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.monk-focus-battle-options
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B mastery_sap mastery_topple mastery_cleave
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME monk_uncanny_metabolism
@@ -38,9 +39,11 @@ import {
   characterSheetCurrentHp,
   characterSheetPactSlots,
   characterSheetDruidWildShapeKnownForms,
+  characterSheetSpellSlotSourceState,
   characterSheetSpellSlots,
   characterSheetId,
   characterSheetTempHp,
+  convertFontOfMagicSorceryPointsToSpellSlot,
   createFreshCharacterSheet as createFreshCharacterSheetCore,
   useMonkUncannyMetabolismWhenRollingInitiative,
   type CharacterSheet,
@@ -511,6 +514,154 @@ describe("Character Sheet battle handoff", () => {
       { spellLevel: 1, count: 2, expended: 2 },
     ]);
     expect(characterSheetTempHp(settled)).toBe(3);
+  });
+
+  test("carries Font of Magic created Spell Slots into battle and rejects source-ambiguous handoff", () => {
+    const sheet = expectRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:sorcerer-font-battle"),
+        build: sorcererFontOfMagicBuild(),
+        maximumHp: Hp(24),
+        currentHp: Hp(24),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const created = expectRight(
+      convertFontOfMagicSorceryPointsToSpellSlot({
+        sheet,
+        unitLibrary,
+        spellLevel: spellSlotLevel(3),
+      }),
+    );
+
+    const init = expectRight(
+      characterSheetBattleInit({
+        sheet: created,
+        unitLibrary,
+        statBlockCatalog,
+        combatantId: combatantId("combatant:sorcerer-font-battle"),
+        displayName: "Sorcerer",
+        initiative: initiativeScore(12),
+        side: battleCombatantSide("party"),
+      }),
+    );
+    if (init.creatureInit.kind !== "character") {
+      throw new Error("Expected character battle creature init.");
+    }
+    const spellcasting = init.creatureInit.spellcasting;
+    if (spellcasting === undefined) {
+      throw new Error("Expected character spellcasting init.");
+    }
+    expect(spellcasting.spellSlots).toEqual([
+      { spellLevel: 1, count: 4 },
+      { spellLevel: 2, count: 3 },
+      { spellLevel: 3, count: 3 },
+    ]);
+
+    const unchangedHandoff = expectRight(
+      applyBattleHandoffToCharacterSheet({
+        sheet: created,
+        unitLibrary,
+        combatant: handoffBranchCombatant({
+          origin: {
+            kind: "character",
+            characterId: characterId("character:sorcerer-font-battle"),
+            spellcasting: {
+              sourceClassName: "sorcerer",
+              spellcastingAbilityModifier: abilityModifier(3),
+              proficiencyBonus: proficiencyBonus(3),
+              canCastSpells: true,
+              cantrips: [],
+              preparedSpells: [],
+              spellbookRitualSpellAccesses: [],
+              bookOfShadowsSpellAccesses: [],
+              invocationSpellAccesses: [],
+              spellSlots: [
+                {
+                  spellLevel: spellSlotLevel(1),
+                  count: resourceCount(4),
+                  expended: resourceCount(0),
+                },
+                {
+                  spellLevel: spellSlotLevel(2),
+                  count: resourceCount(3),
+                  expended: resourceCount(0),
+                },
+                {
+                  spellLevel: spellSlotLevel(3),
+                  count: resourceCount(3),
+                  expended: resourceCount(0),
+                },
+              ],
+            },
+          },
+          hp: Hp(22),
+          maxHp: Hp(24),
+          tempHp: Hp(0),
+          positiveHpUnconscious: null,
+        }),
+      }),
+    );
+    expect(characterSheetSpellSlotSourceState(unchangedHandoff)).toEqual({
+      ordinarySpellSlotExpenditures: [
+        { spellLevel: 1, expended: 0 },
+        { spellLevel: 2, expended: 0 },
+        { spellLevel: 3, expended: 0 },
+      ],
+      createdSpellSlots: [{ spellLevel: 3, count: 1, expended: 0 }],
+    });
+
+    const ambiguousHandoff = applyBattleHandoffToCharacterSheet({
+      sheet: created,
+      unitLibrary,
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:sorcerer-font-battle"),
+          spellcasting: {
+            sourceClassName: "sorcerer",
+            spellcastingAbilityModifier: abilityModifier(3),
+            proficiencyBonus: proficiencyBonus(3),
+            canCastSpells: true,
+            cantrips: [],
+            preparedSpells: [],
+            spellbookRitualSpellAccesses: [],
+            bookOfShadowsSpellAccesses: [],
+            invocationSpellAccesses: [],
+            spellSlots: [
+              {
+                spellLevel: spellSlotLevel(1),
+                count: resourceCount(4),
+                expended: resourceCount(0),
+              },
+              {
+                spellLevel: spellSlotLevel(2),
+                count: resourceCount(3),
+                expended: resourceCount(0),
+              },
+              {
+                spellLevel: spellSlotLevel(3),
+                count: resourceCount(3),
+                expended: resourceCount(1),
+              },
+            ],
+          },
+        },
+        hp: Hp(22),
+        maxHp: Hp(24),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+
+    expect(ambiguousHandoff).toEqual(
+      Either.left({
+        tag: "characterSheetBattleHandoffIssue",
+        message:
+          "Battle handoff Spell Slot expenditure is source-ambiguous for level 3.",
+      }),
+    );
   });
 
   test("preserves sheet-owned healing resource expenditures", () => {
@@ -3293,6 +3444,75 @@ function wizardWarlockBuild(): CharacterBuild {
           kind: "pactMagic",
           slotLevel: 1,
           count: 1,
+        },
+      },
+    },
+  };
+}
+
+function sorcererFontOfMagicBuild(): CharacterBuild {
+  return {
+    progression: {
+      startingClass: classUnitId("class_sorcerer"),
+      advancements: [
+        {
+          classUnitId: classUnitId("class_sorcerer"),
+          hitPointRule: { tag: "fixedHigherLevelGain" },
+        },
+        {
+          classUnitId: classUnitId("class_sorcerer"),
+          hitPointRule: { tag: "fixedHigherLevelGain" },
+        },
+        {
+          classUnitId: classUnitId("class_sorcerer"),
+          hitPointRule: { tag: "fixedHigherLevelGain" },
+        },
+        {
+          classUnitId: classUnitId("class_sorcerer"),
+          hitPointRule: { tag: "fixedHigherLevelGain" },
+        },
+      ],
+    },
+    background: "background_soldier",
+    species: "species_orc",
+    originLanguages: ["Common", "Dwarvish", "Goblin"],
+    classFeatureLanguages: [],
+    alignment: { order: "lawful", morality: "good" },
+    abilityScores: expectRight(
+      abilityScoreAssignment({
+        str: 8,
+        dex: 14,
+        con: 13,
+        int: 10,
+        wis: 12,
+        cha: 16,
+      }),
+    ),
+    proficiencyChoices: [],
+    features: [],
+    equipment: {
+      owned: [],
+      loadout: {},
+    },
+    spellcasting: {
+      sources: [
+        {
+          sourceUnitId: "class_sorcerer",
+          spellcastingAbility: "cha",
+          cantrips: [],
+          spellbook: [],
+          preparedSpells: [],
+          spellcastingFocuses: ["arcane_focus"],
+        },
+      ],
+      slotPools: {
+        spellcasting: {
+          kind: "spellcasting",
+          slots: [
+            { spellLevel: 1, count: 4 },
+            { spellLevel: 2, count: 3 },
+            { spellLevel: 3, count: 2 },
+          ],
         },
       },
     },

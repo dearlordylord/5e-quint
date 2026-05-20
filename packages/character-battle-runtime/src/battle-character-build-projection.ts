@@ -753,6 +753,14 @@ export function characterSpellcasting(input: {
     return Either.left(bookOfShadowsSpellAccesses.left);
   }
 
+  const spellSlots =
+    input.spellSlots ??
+    characterBuildSpellcastingSlotCapacity(build).map((slot) => ({
+      spellLevel: spellSlotLevel(slot.spellLevel),
+      count: resourceCount(slot.count),
+      expended: resourceCount(0),
+    }));
+
   return Either.right({
     sourceClassName: sources.right.sourceClassName,
     spellcastingAbilityModifier: battleAbilityModifier(
@@ -766,18 +774,14 @@ export function characterSpellcasting(input: {
     spellbookRitualSpellAccesses: spellbookRitualSpellAccesses.right,
     bookOfShadowsSpellAccesses: bookOfShadowsSpellAccesses.right,
     invocationSpellAccesses: invocationSpellAccesses.right,
-    spellSlots: characterBuildSpellcastingSlotCapacity(build).map((slot) => ({
-      spellLevel: spellSlotLevel(slot.spellLevel),
-      count: resourceCount(slot.count),
+    spellSlots: spellSlots.map((slot) => ({
+      spellLevel: slot.spellLevel,
+      count: slot.count,
     })),
-    ...(input.spellSlots === undefined
-      ? {}
-      : {
-          spellSlotExpenditures: input.spellSlots.map((slot) => ({
-            spellLevel: slot.spellLevel,
-            expended: slot.expended,
-          })),
-        }),
+    spellSlotExpenditures: spellSlots.map((slot) => ({
+      spellLevel: slot.spellLevel,
+      expended: slot.expended,
+    })),
   });
 }
 

@@ -658,7 +658,10 @@ const MetamagicChoiceCountSchema = ClassLevelChoiceCountSchema.pipe(
   }),
 );
 
-const METAMAGIC_OPTION_IDS = [
+export const SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY =
+  "sorcerer_metamagic_options" as const;
+
+export const SORCERER_METAMAGIC_OPTION_IDS = [
   "sorcerer_careful_spell",
   "sorcerer_distant_spell",
   "sorcerer_empowered_spell",
@@ -670,16 +673,16 @@ const METAMAGIC_OPTION_IDS = [
   "sorcerer_transmuted_spell",
   "sorcerer_twinned_spell",
 ] as const;
-type MetamagicOptionId = (typeof METAMAGIC_OPTION_IDS)[number];
+type MetamagicOptionId = (typeof SORCERER_METAMAGIC_OPTION_IDS)[number];
 
 const distinctCompleteMetamagicOptionSet = (
   options: readonly { readonly id: MetamagicOptionId }[],
 ): boolean => {
   const ids = new Set(options.map((option) => option.id));
   return (
-    options.length === METAMAGIC_OPTION_IDS.length &&
-    ids.size === METAMAGIC_OPTION_IDS.length &&
-    METAMAGIC_OPTION_IDS.every((optionId) => ids.has(optionId))
+    options.length === SORCERER_METAMAGIC_OPTION_IDS.length &&
+    ids.size === SORCERER_METAMAGIC_OPTION_IDS.length &&
+    SORCERER_METAMAGIC_OPTION_IDS.every((optionId) => ids.has(optionId))
   );
 };
 
@@ -776,7 +779,7 @@ const MetamagicOptionsSchema = Schema.NonEmptyArray(MetamagicOptionSchema).pipe(
 
 export const SorcererMetamagicMechanicsSchema = Schema.Struct({
   family: Schema.Literal("metamagic_options"),
-  choiceKey: Schema.Literal("sorcerer_metamagic_options"),
+  choiceKey: Schema.Literal(SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY),
   timing: Schema.Literal("class_feature_acquisition"),
   choiceCount: MetamagicChoiceCountSchema,
   changeOn: Schema.Struct({

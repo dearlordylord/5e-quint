@@ -48,21 +48,28 @@
       ]
     },
     "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_font_of_magic": {
-      "taskId": "L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS",
+      "taskId": "L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS",
       "profile": "Character Sheet class-feature point-pool resource and Spell Slot conversion runtime",
-      "summary": "Font of Magic is read from CharacterBuild resources and the installed Surface feature record, then projected as Character Sheet Sorcery Point point-pool state. The runtime derives capacity from Sorcerer class level, stores only expended Sorcery Points, restores all expended points on Long Rest, and executes the no-action ordinary Spell Slot to Sorcery Point conversion by spending one existing ordinary Spell Slot and reducing the shared point-pool expenditure by exactly the slot level only when the full gain fits under the cap. It does not store duplicate class progression, temporary Spell Slot creation, or Metamagic option state.",
+      "summary": "Font of Magic is read from CharacterBuild resources and the installed Surface feature record, then projected as Character Sheet Sorcery Point point-pool state. The runtime derives capacity from Sorcerer class level, stores only expended Sorcery Points, restores all expended points on Long Rest, executes the no-action source-aware Spell Slot to Sorcery Point conversion for ordinary and created Spell Slots, and records the Character Sheet state transition from Sorcery Points to created Spell Slots from the installed Creating Spell Slots table. Created Spell Slot state stores only the delta above ordinary build capacity, exposes aggregate capacity for Character Battle init, is preserved exactly when Character Battle handoff is source-unambiguous, and is cleared on Long Rest without duplicating class progression, action-economy state, or Metamagic option state. Bonus Action execution and source-aware battle spell spending remain split to L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE.",
       "runtimeProjection": [
         "packages/character-sheet-runtime/src/index.ts:characterSheetResources",
+        "packages/character-sheet-runtime/src/index.ts:characterSheetSpellSlots",
         "packages/character-sheet-runtime/src/index.ts:classFeaturePointPoolResourcesForBuild",
         "packages/character-sheet-runtime/src/index.ts:parseStoredResourceExpenditures",
         "packages/character-sheet-runtime/src/index.ts:completeLongRest",
         "packages/character-sheet-runtime/src/index.ts:convertFontOfMagicSpellSlotToSorceryPoints",
+        "packages/character-sheet-runtime/src/index.ts:convertFontOfMagicSorceryPointsToSpellSlot",
+        "packages/character-sheet-runtime/src/index.ts:characterSheetSpellSlotSourceState",
+        "packages/character-sheet-runtime/src/index.ts:replaceCharacterSheetSpellSlotSourceState",
+        "packages/character-sheet-runtime/src/index.ts:addCreatedSpellSlot",
         "packages/character-sheet-runtime/src/index.ts:replacePointPoolResourceExpenditure"
       ],
       "tests": [
         "packages/character-sheet-runtime/src/index.test.ts:sorcererFontOfMagicLongRestRecoveryTestName",
         "packages/character-sheet-runtime/src/index.test.ts:sorcererFontOfMagicSlotConversionTestName",
-        "packages/character-sheet-runtime/src/index.test.ts:sorcererFontOfMagicSlotConversionGateTestName"
+        "packages/character-sheet-runtime/src/index.test.ts:sorcererFontOfMagicSlotConversionGateTestName",
+        "packages/character-sheet-runtime/src/index.test.ts:sorcererFontOfMagicSlotCreationTestName",
+        "packages/character-sheet-runtime/src/index.test.ts:sorcererFontOfMagicSlotCreationGateTestName"
       ]
     },
     "srd521:classes/monk:level-2:class-feature-grant:monk_uncanny_metabolism": {
