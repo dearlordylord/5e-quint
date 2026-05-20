@@ -1,6 +1,5 @@
 import {
   BattleDroppedObjectOutcomeSchema,
-  BattleFillSchema,
   BattleHoleSchema,
   BattleObjectDamageOutcomeSchema,
   BattleObjectIgnitionOutcomeSchema,
@@ -10,28 +9,11 @@ import {
 } from "@dnd/battle-runtime";
 import { Schema } from "effect";
 
+import { McpSessionSnapshotSchema } from "./session-snapshot-output.ts";
+
 const JsonObjectSchema = Schema.Record({
   key: Schema.String,
   value: Schema.Any,
-});
-const McpSessionSnapshotSchema = Schema.Struct({
-  draftIds: Schema.Array(Schema.String),
-  characterIds: Schema.Array(Schema.String),
-  selectedStatBlockId: Schema.Union(Schema.String, Schema.Null),
-  activeBattle: Schema.Union(
-    Schema.Struct({
-      battleId: Schema.String,
-      currentActorId: Schema.String,
-    }),
-    Schema.Null,
-  ),
-  transientBattleFills: Schema.Union(
-    Schema.Struct({
-      subject: BattleSubjectSchema,
-      fills: Schema.Array(BattleFillSchema),
-    }),
-    Schema.Null,
-  ),
 });
 const BattleResolutionResultSchema = Schema.Union(
   Schema.Struct({

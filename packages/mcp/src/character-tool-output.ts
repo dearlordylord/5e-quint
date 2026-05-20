@@ -7,23 +7,11 @@ import {
 } from "@dnd/character-creation-runtime";
 import { Schema } from "effect";
 
+import { McpSessionSnapshotSchema } from "./session-snapshot-output.ts";
+
 const JsonObjectSchema = Schema.Record({
   key: Schema.String,
   value: Schema.Any,
-});
-
-export const McpSessionSnapshotSchema = Schema.Struct({
-  draftIds: Schema.Array(Schema.String),
-  characterIds: Schema.Array(Schema.String),
-  selectedStatBlockId: Schema.Union(Schema.String, Schema.Null),
-  activeBattle: Schema.Union(
-    Schema.Struct({
-      battleId: Schema.String,
-      currentActorId: Schema.String,
-    }),
-    Schema.Null,
-  ),
-  transientBattleFills: Schema.Union(JsonObjectSchema, Schema.Null),
 });
 
 const NonNegativeIntegerSchema = Schema.Number.pipe(
