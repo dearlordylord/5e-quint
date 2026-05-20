@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "L12G-MISSING-DARKNESS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Darkness Definition And Support Or Closure"
     },
     {
@@ -114,6 +114,24 @@
     },
     {
       "number": 19,
+      "id": "L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME",
+      "status": "ready-for-research",
+      "title": "Darkness Point-Origin Area Runtime Support"
+    },
+    {
+      "number": 20,
+      "id": "L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH",
+      "status": "ready-for-research",
+      "title": "Darkness Object-Origin Branch"
+    },
+    {
+      "number": 21,
+      "id": "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL",
+      "status": "blocked",
+      "title": "Darkness Spell-Created Light Dispel"
+    },
+    {
+      "number": 22,
       "id": "L12G-RECURSIVE-TAIL-LOOP-A",
       "status": "blocked",
       "title": "LOOP-A Recursive Next-Batch Planning Tail"
@@ -124,7 +142,7 @@
 
 This is a runnable overnight Ralph plan split out of the stale monolithic A plan and the current level-1/2 strict frontier. It owns open-runtime spells, missing spell definition closures, and Gust of Wind witness support not owned by Claude, Wild Shape, or Moonbeam.
 
-Preplanned load: 18 real atomic implementation/planning tasks plus one recursive planning tail. The recursive tail is a fallback only; ordinary `blocked` tasks already auto-unblock when their same-plan dependencies are marked `done`.
+Preplanned load: 21 real atomic implementation/planning tasks plus one recursive planning tail. The recursive tail is a fallback only; ordinary `blocked` tasks already auto-unblock when their same-plan dependencies are marked `done`.
 
 ## Worktree Safety Prefix
 
@@ -205,7 +223,7 @@ The final task is intentionally blocked on every real task in this plan and plac
 | 6 | L12G-MISSING-ARCANISTS-MAGIC-AURA - Arcanists Magic Aura Definition And Closure | done | completed baseline | A lane; Unit `arcanists_magic_aura`. |
 | 7 | L12G-MISSING-AUGURY - Augury Definition And Closure | done | completed baseline | A lane; Unit `augury`. |
 | 8 | L12G-MISSING-CALM-EMOTIONS - Calm Emotions Definition And Support | done | completed baseline | A lane; Unit `calm_emotions`. |
-| 9 | L12G-MISSING-DARKNESS - Darkness Definition And Support Or Closure | ready-for-research | completed baseline | A lane; Unit `darkness`. |
+| 9 | L12G-MISSING-DARKNESS - Darkness Definition And Support Or Closure | done | completed baseline | A lane; Unit `darkness`. |
 | 10 | L12G-MISSING-DARKVISION - Darkvision Definition And Support Or Closure | ready-for-research | completed baseline | A lane; Unit `darkvision`. |
 | 11 | L12G-MISSING-DETECT-THOUGHTS - Detect Thoughts Definition And Closure | ready-for-research | completed baseline | A lane; Unit `detect_thoughts`. |
 | 12 | L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME - Gust of Wind Line Runtime Support | ready-for-research | completed baseline | A lane; Unit `gust_of_wind`. |
@@ -215,7 +233,10 @@ The final task is intentionally blocked on every real task in this plan and plac
 | 16 | L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE - Web Surface Area Hazard Shape | ready-for-research | completed baseline | A lane; Unit `web`. |
 | 17 | L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME - Web Restraint Hazard Runtime | blocked | L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE | A lane; Unit `web`. |
 | 18 | L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE - Web Terrain Obscurement Fire Boundary | blocked | L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE, L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME | A lane; Unit `web`. |
-| 19 | L12G-RECURSIVE-TAIL-LOOP-A - LOOP-A Recursive Next-Batch Planning Tail | blocked | L12G-SPELL-LESSER-RESTORATION, L12G-SPELL-MAGIC-WEAPON, L12G-SPELL-MIND-SPIKE, L12G-SPELL-WEB, L12G-MISSING-ANIMAL-MESSENGER, L12G-MISSING-ARCANISTS-MAGIC-AURA, L12G-MISSING-AUGURY, L12G-MISSING-CALM-EMOTIONS, L12G-MISSING-DARKNESS, L12G-MISSING-DARKVISION, L12G-MISSING-DETECT-THOUGHTS, L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME, L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE, L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE, L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME, L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE, L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME, L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE | Last-resort next-batch planning safety net; auto-unblocks only after every real task in this plan is `done`. |
+| 19 | L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME - Darkness Point-Origin Area Runtime Support | ready-for-research | L12G-MISSING-DARKNESS | A lane; Unit `darkness`. |
+| 20 | L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH - Darkness Object-Origin Branch | ready-for-research | L12G-MISSING-DARKNESS | A lane; Unit `darkness`. |
+| 21 | L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL - Darkness Spell-Created Light Dispel | blocked | L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME, L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH | A lane; Unit `darkness`. |
+| 22 | L12G-RECURSIVE-TAIL-LOOP-A - LOOP-A Recursive Next-Batch Planning Tail | blocked | L12G-SPELL-LESSER-RESTORATION, L12G-SPELL-MAGIC-WEAPON, L12G-SPELL-MIND-SPIKE, L12G-SPELL-WEB, L12G-MISSING-ANIMAL-MESSENGER, L12G-MISSING-ARCANISTS-MAGIC-AURA, L12G-MISSING-AUGURY, L12G-MISSING-CALM-EMOTIONS, L12G-MISSING-DARKNESS, L12G-MISSING-DARKVISION, L12G-MISSING-DETECT-THOUGHTS, L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME, L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE, L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE, L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME, L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE, L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME, L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE, L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME, L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH, L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL | Last-resort next-batch planning safety net; auto-unblocks only after every real task in this plan is `done`. |
 
 ## Task Details
 
@@ -549,7 +570,7 @@ Acceptance:
 
 ### Task 9 - L12G-MISSING-DARKNESS - Darkness Definition And Support Or Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `darkness`.
 Origin: Original backlog task 56.
@@ -951,13 +972,129 @@ Acceptance:
 - reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
 - battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
 
-### Task 19 - L12G-RECURSIVE-TAIL-LOOP-A - LOOP-A Recursive Next-Batch Planning Tail
+### Task 19 - L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME - Darkness Point-Origin Area Runtime Support
+
+Status: `ready-for-research`
+
+Unit: `darkness`.
+Origin: Follow-up split from Task 9 and the Darkness Unit claim.
+Dependencies: L12G-MISSING-DARKNESS.
+
+Pre-researched scope:
+
+- Promote Darkness's point-origin Sphere branch: Magic Action and level-2-or-higher Spell Slot spend, caster-owned Concentration up to 10 minutes, caller-supplied 15-foot point-origin Sphere area identity, active magical Darkness/Heavily Obscured zone projection that ordinary sight and Darkvision cannot see through, nonmagical light denial as a light/obscurement witness consequence rather than deletion of existing light emitters, and cleanup when Concentration or duration ends.
+- Do not implement object-origin Darkness or spell-created-light overlap dispel in this task.
+
+Inputs:
+
+- `packages/surface/content/darkness.dhall` and `packages/surface/content/darkness.json`;
+- `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `packages/battle-runtime/battle-runtime.qnt` and promoted battle-runtime tests;
+- local RAW under `.references/srd-5.2.1/Spells/Descriptions-A-D.md#Darkness`;
+- `UBIQUITOUS_LANGUAGE.md`.
+
+Outputs:
+
+- supported-profile or profile-subset-supported Unit claim for the point-origin branch;
+- deterministic admission/projection evidence for point-origin magical Darkness;
+- focused runtime tests and promoted Quint/runtime parity for point-origin magical Darkness without object-origin or spell-created-light-dispel behavior;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- RAW and ubiquitous-language checks are performed before modeling;
+- runtime support consumes table/spatial visibility witness facts and does not duplicate light, map, pathfinding, or object-cover state;
+- focused package tests cover the point-origin owner boundary touched by the task;
+- package typecheck is run for touched packages when dependencies are available;
+- `pnpm unit-profile-coverage:check --write` and `pnpm unit-profile-coverage:check` are run;
+- `git diff --check` passes;
+- reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
+- battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
+
+### Task 20 - L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH - Darkness Object-Origin Branch
+
+Status: `ready-for-research`
+
+Unit: `darkness`.
+Origin: Follow-up split from Task 9 and the Darkness Unit claim.
+Dependencies: L12G-MISSING-DARKNESS.
+
+Pre-researched scope:
+
+- Represent and promote or close Darkness's object branch: target object not worn or carried, 15-foot Emanation originating from that object, object-origin area identity, and opaque-cover blocking.
+- Consume existing object and opaque-cover witness facts; do not add duplicate map, cover, item-lifecycle, or spatial derivation state.
+
+Inputs:
+
+- `packages/surface/content/darkness.dhall` and `packages/surface/content/darkness.json`;
+- Surface Spell Definition schema and tracer files for attachment/area choices;
+- `plans/unit-profile-coverage/unit-claims.jsonl`;
+- local RAW under `.references/srd-5.2.1/Spells/Descriptions-A-D.md#Darkness`;
+- `UBIQUITOUS_LANGUAGE.md`.
+
+Outputs:
+
+- Darkness Surface content and runtime owner decision with focused tests for the object-origin branch;
+- supported-profile/profile-subset-supported evidence or accepted closure if object attachment, movement, and opaque-cover blocking stay outside promoted runtime;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- RAW and ubiquitous-language checks are performed before modeling;
+- any Surface shape makes the point-origin and object-origin alternatives unambiguous instead of duplicating derivable state;
+- focused Surface/runtime tests cover the owner boundary touched by the task;
+- package typecheck is run for touched packages when dependencies are available;
+- `pnpm unit-profile-coverage:check --write` and `pnpm unit-profile-coverage:check` are run;
+- `git diff --check` passes;
+- reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
+- battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
+
+### Task 21 - L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL - Darkness Spell-Created Light Dispel
+
+Status: `blocked`
+
+Unit: `darkness`.
+Origin: Follow-up split from Task 9 and the Darkness plus Continual Flame Unit claims.
+Dependencies: L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME, L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH.
+
+Pre-researched scope:
+
+- Promote or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell.
+- Consume generic spell-created light facts such as Continual Flame rather than dispatching on spell identity; Continual Flame cleanup must remain represented through generic spell-created light facts.
+
+Inputs:
+
+- `packages/surface/content/darkness.dhall` and `packages/surface/content/darkness.json`;
+- `packages/surface/content/continual_flame.dhall` and `packages/surface/content/continual_flame.json`;
+- `plans/unit-profile-coverage/unit-claims.jsonl`;
+- promoted battle-runtime spell effect lifecycle owners and relevant Quint specs;
+- local RAW under `.references/srd-5.2.1/Spells/Descriptions-A-D.md#Darkness`;
+- `UBIQUITOUS_LANGUAGE.md`.
+
+Outputs:
+
+- focused tests and promoted Quint/runtime parity or accepted closure for overlap-triggered dispel of spell-created light;
+- updated Darkness and Continual Flame Unit claims that keep the overlap owner generic and avoid spell-identity dispatch;
+- regenerated coverage artifacts.
+
+Acceptance:
+
+- RAW and ubiquitous-language checks are performed before modeling;
+- no Darkness-local registry or spell-name/id dispatch is introduced for spell-created light;
+- focused package tests cover the overlap owner boundary touched by the task;
+- package typecheck is run for touched packages when dependencies are available;
+- `pnpm unit-profile-coverage:check --write` and `pnpm unit-profile-coverage:check` are run;
+- `git diff --check` passes;
+- reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
+- battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
+
+### Task 22 - L12G-RECURSIVE-TAIL-LOOP-A - LOOP-A Recursive Next-Batch Planning Tail
 
 Status: `blocked`
 
 Unit: `level1_2_frontier`.
 Origin: Safety-net planning task for when this plan has no earlier runnable implementation tasks.
-Dependencies: L12G-SPELL-LESSER-RESTORATION, L12G-SPELL-MAGIC-WEAPON, L12G-SPELL-MIND-SPIKE, L12G-SPELL-WEB, L12G-MISSING-ANIMAL-MESSENGER, L12G-MISSING-ARCANISTS-MAGIC-AURA, L12G-MISSING-AUGURY, L12G-MISSING-CALM-EMOTIONS, L12G-MISSING-DARKNESS, L12G-MISSING-DARKVISION, L12G-MISSING-DETECT-THOUGHTS, L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME, L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE, L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE, L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME, L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE, L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME, L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE.
+Dependencies: L12G-SPELL-LESSER-RESTORATION, L12G-SPELL-MAGIC-WEAPON, L12G-SPELL-MIND-SPIKE, L12G-SPELL-WEB, L12G-MISSING-ANIMAL-MESSENGER, L12G-MISSING-ARCANISTS-MAGIC-AURA, L12G-MISSING-AUGURY, L12G-MISSING-CALM-EMOTIONS, L12G-MISSING-DARKNESS, L12G-MISSING-DARKVISION, L12G-MISSING-DETECT-THOUGHTS, L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME, L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE, L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE, L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME, L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE, L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME, L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE, L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME, L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH, L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL.
 
 Pre-researched scope:
 

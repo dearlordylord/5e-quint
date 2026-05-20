@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 393,
-      "numerator": 183,
-      "percent": "46.6%"
+      "denominator": 394,
+      "numerator": 184,
+      "percent": "46.7%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 465,
-      "numerator": 215,
-      "percent": "46.2%"
+      "denominator": 466,
+      "numerator": 216,
+      "percent": "46.4%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 216
+      "value": 217
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 131,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 216,
-      "numerator": 216,
+      "denominator": 217,
+      "numerator": 217,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "80.2%"
     },
     "supportedProfileCoverage": {
-      "denominator": 184,
+      "denominator": 185,
       "numerator": 131,
-      "percent": "71.2%"
+      "percent": "70.8%"
     }
   },
   "metricSemantics": [
@@ -14413,7 +14413,7 @@
           },
           {
             "followUpTaskId": "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL",
-            "mechanic": "Darkness overlap dispelling spell-created Bright Light or Dim Light from level-2-or-lower spells is blocked until Darkness has an SRD-authored Unit and a runtime/profile owner that can consume spell-created light facts such as Continual Flame without dispatching on spell identity."
+            "mechanic": "Darkness overlap dispelling spell-created Bright Light or Dim Light from level-2-or-lower spells is blocked on a Darkness runtime/profile owner that can consume generic spell-created light facts such as Continual Flame without dispatching on spell identity; the SRD Darkness Unit is authored separately by Task 9."
           },
           {
             "followUpTaskId": "L12G-FOLLOWUP-ANTIMAGIC-FIELD-SPELL-EFFECT-SUPPRESSION",
@@ -14446,9 +14446,9 @@
           },
           {
             "id": "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL",
-            "mechanic": "Author or explicitly close the SRD Darkness Unit, then support or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell, consuming generic spell-created light facts such as Continual Flame rather than spell identity.",
-            "owner": "Darkness Surface definition plus battle-runtime Darkness area and spell-created light overlap owner",
-            "requiredOutput": "SRD Darkness authored/catalog outcome plus focused tests and promoted Quint/runtime parity or accepted closure for overlap-triggered dispel of spell-created light, with the missing Darkness Unit row resolved before it is named as an owner.",
+            "mechanic": "Promote or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell, consuming generic spell-created light facts such as Continual Flame rather than spell identity.",
+            "owner": "battle-runtime Darkness area and spell-created light overlap owner",
+            "requiredOutput": "Focused tests and promoted Quint/runtime parity or accepted closure for overlap-triggered dispel of spell-created light; Continual Flame cleanup must remain represented through generic spell-created light facts.",
             "title": "Darkness Spell-Created Light Dispel"
           },
           {
@@ -14459,7 +14459,7 @@
             "title": "Antimagic Field Spell Effect Suppression"
           }
         ],
-        "futureProfileOwner": "Dispel Magic ongoing Spell Effect ending plus Darkness authored Unit/profile support plus Antimagic Field Spell Effect suppression plus character inventory/equipment component legality plus runtime-detached object presentation owner",
+        "futureProfileOwner": "Dispel Magic ongoing Spell Effect ending plus Darkness runtime spell-created light overlap support plus Antimagic Field Spell Effect suppression plus character inventory/equipment component legality plus runtime-detached object presentation owner",
         "profileIds": [
           "spell.invocation-object-light"
         ],
@@ -14699,6 +14699,48 @@
       ],
       "sourceRecordPath": "packages/surface/content/dancing_lights.json",
       "unitId": "dancing_lights"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME",
+            "mechanic": "Promote Darkness's point-origin Sphere branch: Magic Action and level-2-or-higher Spell Slot spend, caster-owned Concentration up to 10 minutes, caller-supplied 15-foot point-origin Sphere area identity, active magical Darkness/Heavily Obscured zone projection that ordinary sight and Darkvision cannot see through, nonmagical light denial as a light/obscurement witness consequence rather than deletion of existing light emitters, and cleanup when Concentration or duration ends.",
+            "owner": "battle-runtime spell invocation/effect lifecycle plus table/spatial visibility witness boundary",
+            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for point-origin magical Darkness without object-origin or spell-created-light-dispel behavior.",
+            "title": "Darkness Point-Origin Area Runtime Support"
+          },
+          {
+            "id": "L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH",
+            "mechanic": "Represent and promote or close Darkness's object branch: target object not worn or carried, 15-foot Emanation originating from that object, object-origin area identity, and opaque-cover blocking, consuming existing object and opaque-cover witness facts without adding duplicate map or cover state.",
+            "owner": "Surface Spell Definition authoring plus battle-runtime object-origin spell-area and opaque-cover witness boundary",
+            "requiredOutput": "Darkness Surface content and runtime owner decision with focused tests for the object-origin branch, or accepted closure if object attachment, movement, and opaque-cover blocking stay outside promoted runtime.",
+            "title": "Darkness Object-Origin Branch"
+          },
+          {
+            "id": "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL",
+            "mechanic": "Promote or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell, consuming generic spell-created light facts such as Continual Flame rather than spell identity.",
+            "owner": "Darkness Surface definition plus battle-runtime Darkness area and spell-created light overlap owner",
+            "requiredOutput": "Focused tests and promoted Quint/runtime parity or accepted closure for overlap-triggered dispel of spell-created light; Continual Flame cleanup must remain represented through generic spell-created light facts.",
+            "title": "Darkness Spell-Created Light Dispel"
+          }
+        ],
+        "futureProfileOwner": "battle-runtime spell-area obscurement owner plus light/visibility witness boundary and spell-created light overlap owner",
+        "reason": "Darkness is authored as an SRD Surface Spell Definition for the point-origin branch, including Magic Action level-2 Spell Slot casting, Concentration up to 10 minutes, 60-foot range, a 15-foot-radius magical Darkness Sphere, and an executable Heavily Obscured area source fact. Task 9 claims no promoted battle-runtime profile yet because runtime has no Darkness-owned active spell-area admission that distinguishes magical Darkness from ordinary Heavy Obscurement for nonmagical-light denial, no object-origin Emanation and opaque-cover witness branch, and no overlap dispel owner for spell-created Bright Light or Dim Light without dispatching on spell identity.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/darkness.json",
+      "unitId": "darkness"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

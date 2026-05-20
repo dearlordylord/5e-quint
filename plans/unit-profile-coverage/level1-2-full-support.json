@@ -504,7 +504,7 @@
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING: Promote Dispel Magic's target creature, object, or magical effect procedure so it ends ongoing spells on the target, including object-attached Continual Flame occurrences, using spell-level and higher-slot gates from the Dispel Magic RAW without adding a Continual Flame-specific removal registry. Owner: Dispel Magic Unit support plus battle-runtime ongoing Spell Effect lifecycle owner. Required output: Supported Dispel Magic profile or accepted closure with focused tests and promoted Quint/runtime parity for ending ongoing spell occurrences on targets, including object-attached until-dispelled light emitters exposed by the object-light profile.; L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL: Author or explicitly close the SRD Darkness Unit, then support or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell, consuming generic spell-created light facts such as Continual Flame rather than spell identity. Owner: Darkness Surface definition plus battle-runtime Darkness area and spell-created light overlap owner. Required output: SRD Darkness authored/catalog outcome plus focused tests and promoted Quint/runtime parity or accepted closure for overlap-triggered dispel of spell-created light, with the missing Darkness Unit row resolved before it is named as an owner.; L12G-FOLLOWUP-ANTIMAGIC-FIELD-SPELL-EFFECT-SUPPRESSION: Promote Antimagic Field's suppression of ongoing spells in its area, excluding artifact/deity spell sources, so object-attached light emitters such as Continual Flame stop functioning while suppressed and resume from the same spell occurrence without duplicating emitter state. Owner: Antimagic Field Unit support plus generic ongoing Spell Effect suppression owner. Required output: Supported Antimagic Field profile or accepted closure with focused tests and promoted Quint/runtime parity for suppressing and restoring ongoing Spell Effects, including object-attached until-dispelled light emitters.",
+      "reason": "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING: Promote Dispel Magic's target creature, object, or magical effect procedure so it ends ongoing spells on the target, including object-attached Continual Flame occurrences, using spell-level and higher-slot gates from the Dispel Magic RAW without adding a Continual Flame-specific removal registry. Owner: Dispel Magic Unit support plus battle-runtime ongoing Spell Effect lifecycle owner. Required output: Supported Dispel Magic profile or accepted closure with focused tests and promoted Quint/runtime parity for ending ongoing spell occurrences on targets, including object-attached until-dispelled light emitters exposed by the object-light profile.; L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL: Promote or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell, consuming generic spell-created light facts such as Continual Flame rather than spell identity. Owner: battle-runtime Darkness area and spell-created light overlap owner. Required output: Focused tests and promoted Quint/runtime parity or accepted closure for overlap-triggered dispel of spell-created light; Continual Flame cleanup must remain represented through generic spell-created light facts.; L12G-FOLLOWUP-ANTIMAGIC-FIELD-SPELL-EFFECT-SUPPRESSION: Promote Antimagic Field's suppression of ongoing spells in its area, excluding artifact/deity spell sources, so object-attached light emitters such as Continual Flame stop functioning while suppressed and resume from the same spell occurrence without duplicating emitter state. Owner: Antimagic Field Unit support plus generic ongoing Spell Effect suppression owner. Required output: Supported Antimagic Field profile or accepted closure with focused tests and promoted Quint/runtime parity for suppressing and restoring ongoing Spell Effects, including object-attached until-dispelled light emitters.",
       "sourceRecordPath": "packages/surface/content/continual_flame.json",
       "sourceRows": [
         {
@@ -547,6 +547,59 @@
       "status": "blocked-follow-up-split",
       "strictTargetClosed": true,
       "unitId": "continual_flame"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "follow-up-split"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "L12G-FOLLOWUP-DARKNESS-POINT-AREA-RUNTIME: Promote Darkness's point-origin Sphere branch: Magic Action and level-2-or-higher Spell Slot spend, caster-owned Concentration up to 10 minutes, caller-supplied 15-foot point-origin Sphere area identity, active magical Darkness/Heavily Obscured zone projection that ordinary sight and Darkvision cannot see through, nonmagical light denial as a light/obscurement witness consequence rather than deletion of existing light emitters, and cleanup when Concentration or duration ends. Owner: battle-runtime spell invocation/effect lifecycle plus table/spatial visibility witness boundary. Required output: Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for point-origin magical Darkness without object-origin or spell-created-light-dispel behavior.; L12G-FOLLOWUP-DARKNESS-OBJECT-ORIGIN-BRANCH: Represent and promote or close Darkness's object branch: target object not worn or carried, 15-foot Emanation originating from that object, object-origin area identity, and opaque-cover blocking, consuming existing object and opaque-cover witness facts without adding duplicate map or cover state. Owner: Surface Spell Definition authoring plus battle-runtime object-origin spell-area and opaque-cover witness boundary. Required output: Darkness Surface content and runtime owner decision with focused tests for the object-origin branch, or accepted closure if object attachment, movement, and opaque-cover blocking stay outside promoted runtime.; L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL: Promote or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell, consuming generic spell-created light facts such as Continual Flame rather than spell identity. Owner: Darkness Surface definition plus battle-runtime Darkness area and spell-created light overlap owner. Required output: Focused tests and promoted Quint/runtime parity or accepted closure for overlap-triggered dispel of spell-created light; Continual Flame cleanup must remain represented through generic spell-created light facts.",
+      "sourceRecordPath": "packages/surface/content/darkness.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Sorcerer spell list Darkness",
+          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_darkness",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 273,
+            "lineStart": 273,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Warlock spell list Darkness",
+          "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_darkness",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 365,
+            "lineStart": 365,
+            "path": ".references/srd-5.2.1/Classes/Warlock.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Darkness",
+          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_darkness",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 205,
+            "lineStart": 205,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "status": "blocked-follow-up-split",
+      "strictTargetClosed": true,
+      "unitId": "darkness"
     },
     {
       "catalogStatus": "installed",
@@ -2793,12 +2846,13 @@
       ]
     },
     {
-      "count": 22,
+      "count": 23,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
         "acid_arrow",
         "continual_flame",
+        "darkness",
         "dragons_breath",
         "druid_wild_shape",
         "enhance_ability",
@@ -2889,13 +2943,13 @@
       "percent": "31.5%"
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 165,
+      "denominator": 166,
       "numerator": 108,
-      "percent": "65.5%"
+      "percent": "65.1%"
     },
     "strictTargetClosure": {
-      "denominator": 165,
-      "numerator": 164,
+      "denominator": 166,
+      "numerator": 165,
       "percent": "99.4%"
     }
   },
@@ -2961,48 +3015,6 @@
           }
         ],
         "unitId": "create_or_destroy_water"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "spell Unit pressure",
-            "concept": "Sorcerer spell list Darkness",
-            "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_darkness",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 273,
-              "lineStart": 273,
-              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Warlock spell list Darkness",
-            "id": "srd521:classes/warlock:spell-level-2:spell-unit-pressure:warlock_spell_list_darkness",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 365,
-              "lineStart": 365,
-              "path": ".references/srd-5.2.1/Classes/Warlock.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Wizard spell list Darkness",
-            "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_darkness",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 205,
-              "lineStart": 205,
-              "path": ".references/srd-5.2.1/Classes/Wizard.md"
-            }
-          }
-        ],
-        "unitId": "darkness"
       },
       {
         "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
@@ -7618,10 +7630,10 @@
       "missing": 1,
       "profile-subset-supported": 17,
       "supported-profile": 108,
-      "unsupported-profile": 39
+      "unsupported-profile": 40
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 22,
+      "blocked-follow-up-split": 23,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
@@ -7629,7 +7641,7 @@
       "open-runtime-behavior": 1,
       "supported-profile": 108
     },
-    "nonSupportedFrontier": 57,
-    "strictDenominator": 165
+    "nonSupportedFrontier": 58,
+    "strictDenominator": 166
   }
 }

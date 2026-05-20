@@ -50,6 +50,7 @@ import continualFlameInput from "../../content/continual_flame.json";
 import counterspellInput from "../../content/counterspell.json";
 import cureWoundsInput from "../../content/cure_wounds.json";
 import dancingLightsInput from "../../content/dancing_lights.json";
+import darknessInput from "../../content/darkness.json";
 import divineFavorInput from "../../content/divine_favor.json";
 import divineSmiteInput from "../../content/divine_smite.json";
 import druidDruidicInput from "../../content/druid_druidic.json";
@@ -446,6 +447,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     counterspellInput,
     cureWoundsInput,
     dancingLightsInput,
+    darknessInput,
     dissonantWhispersInput,
     divineFavorInput,
     divineSmiteInput,
