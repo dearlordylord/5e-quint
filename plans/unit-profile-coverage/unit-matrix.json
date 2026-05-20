@@ -88,8 +88,8 @@
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 106,
-      "numerator": 60,
-      "percent": "56.6%"
+      "numerator": 74,
+      "percent": "69.8%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 132,
@@ -3093,8 +3093,8 @@
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 106,
-        "numerator": 60,
-        "percent": "56.6%"
+        "numerator": 74,
+        "percent": "69.8%"
       }
     },
     "profileKinds": [
@@ -3526,8 +3526,15 @@
         "profileKind": "passive"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
+            "runtime": "battle",
+            "status": "needs-parity-witness",
+            "title": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup"
+          }
+        ],
         "profileId": "spell.invocation-after-hit-damage-illumination",
         "profileKind": "spell-invocation"
       },
@@ -3551,8 +3558,15 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
+            "runtime": "battle",
+            "status": "needs-parity-witness",
+            "title": "Battle chained spell attack sequence for damage-type choice, duplicate-die leap admission, target history, per-step attack and damage rolls, and slot-level leap limits"
+          }
+        ],
         "profileId": "spell.invocation-chained-attack-damage",
         "profileKind": "spell-invocation"
       },
@@ -3695,14 +3709,40 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+          },
+          {
+            "obligationId": "BATTLE.SPELL.REACTION_CASTING_TIME",
+            "runtime": "battle",
+            "status": "needs-parity-witness",
+            "title": "Battle reaction-casting-time spells for spell-cast and after-damage triggers, Reaction spend, Spell Slot ledger, interruption, and continuation resume"
+          }
+        ],
         "profileId": "spell.reaction-hellish-rebuke",
         "profileKind": "reaction"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+          },
+          {
+            "obligationId": "BATTLE.SPELL.REACTION_CASTING_TIME",
+            "runtime": "battle",
+            "status": "needs-parity-witness",
+            "title": "Battle reaction-casting-time spells for spell-cast and after-damage triggers, Reaction spend, Spell Slot ledger, interruption, and continuation resume"
+          }
+        ],
         "profileId": "spell.reaction-counterspell",
         "profileKind": "reaction"
       },
@@ -3745,50 +3785,106 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
+            "runtime": "battle",
+            "status": "needs-parity-witness",
+            "title": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders"
+          }
+        ],
         "profileId": "spell.invocation-weapon-damage-rider",
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
+            "runtime": "battle",
+            "status": "needs-parity-witness",
+            "title": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup"
+          }
+        ],
         "profileId": "spell.invocation-after-hit-damage",
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
+            "runtime": "battle",
+            "status": "needs-parity-witness",
+            "title": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup"
+          }
+        ],
         "profileId": "spell.invocation-after-hit-restraint-turn-start-damage",
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
+            "runtime": "battle",
+            "status": "needs-parity-witness",
+            "title": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup"
+          }
+        ],
         "profileId": "spell.invocation-after-hit-timed-damage-save",
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
+            "runtime": "battle",
+            "status": "needs-parity-witness",
+            "title": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders"
+          }
+        ],
         "profileId": "spell.invocation-spell-hosted-weapon-attack",
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
+            "runtime": "battle",
+            "status": "needs-parity-witness",
+            "title": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders"
+          }
+        ],
         "profileId": "spell.invocation-weapon-attack-override",
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
+            "runtime": "battle",
+            "status": "needs-parity-witness",
+            "title": "Battle independent spell attack sequences for beam and ray count, per-attack target choice, attack rolls, hit-gated damage rolls, object targets, and action or slot spend"
+          }
+        ],
         "profileId": "spell.invocation-independent-attack-sequence",
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
+            "runtime": "battle",
+            "status": "needs-parity-witness",
+            "title": "Battle marked-damage spell riders for attack-roll damage, Ability Check roll-mode projection, Concentration duration, and zero-Hit-Point transfer timing"
+          }
+        ],
         "profileId": "spell.invocation-marked-damage-rider",
         "profileKind": "spell-invocation"
       },
@@ -4123,8 +4219,15 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION",
+            "runtime": "battle",
+            "status": "needs-parity-witness",
+            "title": "Battle Mirror Image duplicate pool, attack-hit interception roll, duplicate destruction, bypass witnesses, and normal damage continuation"
+          }
+        ],
         "profileId": "spell.invocation-mirror-image-hit-interception",
         "profileKind": "spell-invocation"
       },
@@ -4142,8 +4245,15 @@
         "profileKind": "spell-invocation"
       },
       {
-        "joinStatus": "unmapped",
-        "obligations": [],
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",
+            "runtime": "battle",
+            "status": "needs-parity-witness",
+            "title": "Battle linked spell effects for Warding Bond defenses, all-damage Resistance, same-amount damage sharing, and source-zero, separation, recast, or duration cleanup"
+          }
+        ],
         "profileId": "spell.invocation-warding-bond-linked-effect",
         "profileKind": "spell-invocation"
       },
@@ -4655,11 +4765,18 @@
           "unitId": "chill_touch"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
+                  "runtime": "battle",
+                  "status": "needs-parity-witness",
+                  "title": "Battle chained spell attack sequence for damage-type choice, duplicate-die leap admission, target history, per-step attack and damage rolls, and slot-level leap limits"
+                }
+              ],
               "profileId": "spell.invocation-chained-attack-damage",
               "profileKind": "spell-invocation"
             },
@@ -4787,11 +4904,24 @@
           "unitId": "command"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.REACTION_CASTING_TIME",
+                  "runtime": "battle",
+                  "status": "needs-parity-witness",
+                  "title": "Battle reaction-casting-time spells for spell-cast and after-damage triggers, Reaction spend, Spell Slot ledger, interruption, and continuation resume"
+                }
+              ],
               "profileId": "spell.reaction-counterspell",
               "profileKind": "reaction"
             }
@@ -4880,11 +5010,18 @@
           "unitId": "dissonant_whispers"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
+                  "runtime": "battle",
+                  "status": "needs-parity-witness",
+                  "title": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders"
+                }
+              ],
               "profileId": "spell.invocation-weapon-damage-rider",
               "profileKind": "spell-invocation"
             }
@@ -4892,11 +5029,18 @@
           "unitId": "divine_favor"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
+                  "runtime": "battle",
+                  "status": "needs-parity-witness",
+                  "title": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup"
+                }
+              ],
               "profileId": "spell.invocation-after-hit-damage",
               "profileKind": "spell-invocation"
             }
@@ -4916,11 +5060,18 @@
           "unitId": "druid_primal_order"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
+                  "runtime": "battle",
+                  "status": "needs-parity-witness",
+                  "title": "Battle independent spell attack sequences for beam and ray count, per-attack target choice, attack rolls, hit-gated damage rolls, object targets, and action or slot spend"
+                }
+              ],
               "profileId": "spell.invocation-independent-attack-sequence",
               "profileKind": "spell-invocation"
             }
@@ -4928,11 +5079,18 @@
           "unitId": "eldritch_blast"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
+                  "runtime": "battle",
+                  "status": "needs-parity-witness",
+                  "title": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup"
+                }
+              ],
               "profileId": "spell.invocation-after-hit-restraint-turn-start-damage",
               "profileKind": "spell-invocation"
             }
@@ -5360,11 +5518,24 @@
           "unitId": "healing_word"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.REACTION_CASTING_TIME",
+                  "runtime": "battle",
+                  "status": "needs-parity-witness",
+                  "title": "Battle reaction-casting-time spells for spell-cast and after-damage triggers, Reaction spend, Spell Slot ledger, interruption, and continuation resume"
+                }
+              ],
               "profileId": "spell.reaction-hellish-rebuke",
               "profileKind": "reaction"
             },
@@ -5410,11 +5581,18 @@
           "unitId": "heroism"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
+                  "runtime": "battle",
+                  "status": "needs-parity-witness",
+                  "title": "Battle marked-damage spell riders for attack-roll damage, Ability Check roll-mode projection, Concentration duration, and zero-Hit-Point transfer timing"
+                }
+              ],
               "profileId": "spell.invocation-marked-damage-rider",
               "profileKind": "spell-invocation"
             }
@@ -5460,11 +5638,18 @@
           "unitId": "hold_person"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
+                  "runtime": "battle",
+                  "status": "needs-parity-witness",
+                  "title": "Battle marked-damage spell riders for attack-roll damage, Ability Check roll-mode projection, Concentration duration, and zero-Hit-Point transfer timing"
+                }
+              ],
               "profileId": "spell.invocation-marked-damage-rider",
               "profileKind": "spell-invocation"
             }
@@ -5805,11 +5990,18 @@
           "unitId": "mastery_topple"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION",
+                  "runtime": "battle",
+                  "status": "needs-parity-witness",
+                  "title": "Battle Mirror Image duplicate pool, attack-hit interception roll, duplicate destruction, bypass witnesses, and normal damage continuation"
+                }
+              ],
               "profileId": "spell.invocation-mirror-image-hit-interception",
               "profileKind": "spell-invocation"
             }
@@ -6023,11 +6215,18 @@
           "unitId": "paladin_lay_on_hands"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
+                  "runtime": "battle",
+                  "status": "needs-parity-witness",
+                  "title": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup"
+                }
+              ],
               "profileId": "spell.invocation-after-hit-damage",
               "profileKind": "spell-invocation"
             }
@@ -6537,11 +6736,18 @@
           "unitId": "sanctuary"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
+                  "runtime": "battle",
+                  "status": "needs-parity-witness",
+                  "title": "Battle independent spell attack sequences for beam and ray count, per-attack target choice, attack rolls, hit-gated damage rolls, object targets, and action or slot spend"
+                }
+              ],
               "profileId": "spell.invocation-independent-attack-sequence",
               "profileKind": "spell-invocation"
             }
@@ -6549,11 +6755,18 @@
           "unitId": "scorching_ray"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
+                  "runtime": "battle",
+                  "status": "needs-parity-witness",
+                  "title": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup"
+                }
+              ],
               "profileId": "spell.invocation-after-hit-timed-damage-save",
               "profileKind": "spell-invocation"
             }
@@ -6630,11 +6843,18 @@
           "unitId": "shield_of_faith"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
+                  "runtime": "battle",
+                  "status": "needs-parity-witness",
+                  "title": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders"
+                }
+              ],
               "profileId": "spell.invocation-weapon-attack-override",
               "profileKind": "spell-invocation"
             }
@@ -6642,11 +6862,18 @@
           "unitId": "shillelagh"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
+                  "runtime": "battle",
+                  "status": "needs-parity-witness",
+                  "title": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup"
+                }
+              ],
               "profileId": "spell.invocation-after-hit-damage-illumination",
               "profileKind": "spell-invocation"
             }
@@ -6855,11 +7082,18 @@
           "unitId": "thunderwave"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
+                  "runtime": "battle",
+                  "status": "needs-parity-witness",
+                  "title": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders"
+                }
+              ],
               "profileId": "spell.invocation-spell-hosted-weapon-attack",
               "profileKind": "spell-invocation"
             }
@@ -6911,11 +7145,18 @@
           "unitId": "vicious_mockery"
         },
         {
-          "joinStatus": "unmapped",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "unmapped",
-              "obligations": [],
+              "joinStatus": "mapped-open",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",
+                  "runtime": "battle",
+                  "status": "needs-parity-witness",
+                  "title": "Battle linked spell effects for Warding Bond defenses, all-damage Resistance, same-amount damage sharing, and source-zero, separation, recast, or duration cleanup"
+                }
+              ],
               "profileId": "spell.invocation-warding-bond-linked-effect",
               "profileKind": "spell-invocation"
             }

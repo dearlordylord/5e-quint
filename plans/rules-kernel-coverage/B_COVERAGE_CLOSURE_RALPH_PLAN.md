@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Spell After Hit Reaction And Marked Effect Profile Join"
     },
     {
@@ -177,6 +177,48 @@
       "id": "RKBC-SPELL-SELF-TRANSFORMATION-PARITY",
       "status": "ready-for-research",
       "title": "Spell Self Transformation Mode Parity Witness"
+    },
+    {
+      "number": 30,
+      "id": "RKBC-SPELL-REACTION-CASTING-PARITY",
+      "status": "ready-for-research",
+      "title": "Spell Reaction Casting Parity Witnesses"
+    },
+    {
+      "number": 31,
+      "id": "RKBC-SPELL-AFTER-HIT-RIDERS-PARITY",
+      "status": "ready-for-research",
+      "title": "Spell After-Hit Rider Parity Witnesses"
+    },
+    {
+      "number": 32,
+      "id": "RKBC-SPELL-WEAPON-HOSTED-PARITY",
+      "status": "ready-for-research",
+      "title": "Spell Weapon-Hosted Attack And Rider Parity Witnesses"
+    },
+    {
+      "number": 33,
+      "id": "RKBC-SPELL-MARKED-RIDER-PARITY",
+      "status": "ready-for-research",
+      "title": "Spell Marked Damage Rider Parity Witnesses"
+    },
+    {
+      "number": 34,
+      "id": "RKBC-SPELL-ATTACK-SEQUENCES-PARITY",
+      "status": "ready-for-research",
+      "title": "Spell Attack Sequence Parity Witnesses"
+    },
+    {
+      "number": 35,
+      "id": "RKBC-SPELL-MIRROR-IMAGE-PARITY",
+      "status": "ready-for-research",
+      "title": "Mirror Image Hit Interception Parity Witness"
+    },
+    {
+      "number": 36,
+      "id": "RKBC-SPELL-LINKED-EFFECT-PARITY",
+      "status": "ready-for-research",
+      "title": "Linked Spell Effect Damage Sharing Parity Witness"
     }
   ]
 }
@@ -356,7 +398,7 @@ Reviewers should reject:
 | 7 | RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE - Feature Passive Resource And Persistent Profile Join | done | baseline | Passive, persistent-effect, attack-scaling, mastery, and activation feature profiles are joined to covered feature procedure obligations; reaction/bonus and failed-roll resource profiles remain Task 8. |
 | 8 | RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS - Feature Reaction Bonus Action And Resource Profile Join | done | baseline | Feature reaction, bonus-action, and failed-roll resource profiles are joined to covered feature procedure obligations, with zero-damage redirect also joined to reaction continuation. |
 | 9 | RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION - Spell Damage Condition And Scalar Profile Join | done | baseline | Spell damage, restoration, condition, scalar, roll-modifier, protection, removal, and self-transformation profiles are joined to covered obligations or precise mapped-open spell parity obligations. |
-| 10 | RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION - Spell After Hit Reaction And Marked Effect Profile Join | ready-for-research | baseline | Map after-hit, reaction-casting-time Spell Invocation, Readied Spell Response, marked-effect, and chained spell profiles to covered obligations or create missing obligations. |
+| 10 | RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION - Spell After Hit Reaction And Marked Effect Profile Join | done | baseline | After-hit, reaction-casting-time, weapon-hosted, marked, attack-sequence, Mirror Image, and linked-effect spell profiles are mapped to precise covered or mapped-open obligations. |
 | 11 | RKBC-PROFILE-JOIN-TABLE-CALLER - Table Caller Profile Join And Boundary Classification | ready-for-research | RKBC-BATTLE-HOLE-INVENTORY, RKBC-BATTLE-HOLE-TARGETS-AREAS, RKBC-BATTLE-HOLE-MOVEMENT-ROUTE | Map table-caller profiles to reducer-semantic obligations or boundary rows without MBT state-space explosion. |
 | 12 | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY - Character Creation Choice Discovery And Cardinality | ready-for-research | baseline | Split current creation choice discovery/cardinality semantics out of the broad creation audit. |
 | 13 | RKBC-CREATION-FILL-VALIDATION-BATCH - Character Creation Fill Validation And Atomic Batch | ready-for-research | baseline | Cover fill validation, batch atomicity, rediscovery, and finalization deltas beyond the existing slice. |
@@ -370,12 +412,19 @@ Reviewers should reject:
 | 21 | RKBC-HANDOFF-BATTLE-INIT - Character Battle Initialization Projection | ready-for-research | baseline | Cover Character Sheet/build projection into battle initialization. |
 | 22 | RKBC-HANDOFF-BATTLE-SETTLEMENT - Character Battle Settlement Back To Sheet | blocked | RKBC-SHEET-HP-REST-HIT-DICE, RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS, RKBC-HANDOFF-BATTLE-INIT | Cover HP, condition, spell-slot, and resource settlement from battle back to sheet. |
 | 23 | RKBC-HANDOFF-IDENTITY-CONFLICTS - Character Battle Identity And Max HP Conflict Handling | blocked | RKBC-SHEET-HP-REST-HIT-DICE, RKBC-HANDOFF-BATTLE-INIT | Cover identity checks, max-HP conflicts, and zero-HP lifecycle handoff. |
-| 24 | RKBC-FINAL-B-CLOSURE-GATE - Final Rules Kernel B Closure Gate | blocked | RKBC-BATTLE-HOLE-INVENTORY, RKBC-BATTLE-HOLE-TARGETS-AREAS, RKBC-BATTLE-HOLE-MOVEMENT-ROUTE, RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION, RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND, RKBC-BATTLE-HOLE-REACTION-CONCENTRATION, RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE, RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS, RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION, RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION, RKBC-PROFILE-JOIN-TABLE-CALLER, RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH, RKBC-CREATION-ADVANCEMENT-REPLACEMENT, RKBC-CREATION-SPELLCASTING-PROGRESSION, RKBC-CREATION-WEAPON-MASTERY-FEAT, RKBC-SHEET-HP-REST-HIT-DICE, RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS, RKBC-SHEET-FEATURE-RESOURCES, RKBC-SHEET-WEAPON-MASTERY-RITUAL, RKBC-HANDOFF-BATTLE-INIT, RKBC-HANDOFF-BATTLE-SETTLEMENT, RKBC-HANDOFF-IDENTITY-CONFLICTS, RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY, RKBC-SPELL-SAVE-GATED-CONDITION-PARITY, RKBC-SPELL-ROLL-SCALAR-PARITY, RKBC-SPELL-MAKE-STABLE-PARITY, RKBC-SPELL-SELF-TRANSFORMATION-PARITY | Remove merge-acceptable `needs-*` statuses, wire quality gate, and prove reports show B closure. |
+| 24 | RKBC-FINAL-B-CLOSURE-GATE - Final Rules Kernel B Closure Gate | blocked | RKBC-BATTLE-HOLE-INVENTORY, RKBC-BATTLE-HOLE-TARGETS-AREAS, RKBC-BATTLE-HOLE-MOVEMENT-ROUTE, RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION, RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND, RKBC-BATTLE-HOLE-REACTION-CONCENTRATION, RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE, RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS, RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION, RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION, RKBC-PROFILE-JOIN-TABLE-CALLER, RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH, RKBC-CREATION-ADVANCEMENT-REPLACEMENT, RKBC-CREATION-SPELLCASTING-PROGRESSION, RKBC-CREATION-WEAPON-MASTERY-FEAT, RKBC-SHEET-HP-REST-HIT-DICE, RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS, RKBC-SHEET-FEATURE-RESOURCES, RKBC-SHEET-WEAPON-MASTERY-RITUAL, RKBC-HANDOFF-BATTLE-INIT, RKBC-HANDOFF-BATTLE-SETTLEMENT, RKBC-HANDOFF-IDENTITY-CONFLICTS, RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY, RKBC-SPELL-SAVE-GATED-CONDITION-PARITY, RKBC-SPELL-ROLL-SCALAR-PARITY, RKBC-SPELL-MAKE-STABLE-PARITY, RKBC-SPELL-SELF-TRANSFORMATION-PARITY, RKBC-SPELL-REACTION-CASTING-PARITY, RKBC-SPELL-AFTER-HIT-RIDERS-PARITY, RKBC-SPELL-WEAPON-HOSTED-PARITY, RKBC-SPELL-MARKED-RIDER-PARITY, RKBC-SPELL-ATTACK-SEQUENCES-PARITY, RKBC-SPELL-MIRROR-IMAGE-PARITY, RKBC-SPELL-LINKED-EFFECT-PARITY | Remove merge-acceptable `needs-*` statuses, wire quality gate, and prove reports show B closure. |
 | 25 | RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY - Spell Direct Condition Removal And Protection Parity Witnesses | ready-for-research | RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION | Add focused parity witnesses for direct spell condition application, creature-type protection/charm prevention, condition-immunity Temporary Hit Point refresh, and condition removal/protection obligations. |
 | 26 | RKBC-SPELL-SAVE-GATED-CONDITION-PARITY - Spell Save-Gated Condition Parity Witnesses | ready-for-research | RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION | Add focused parity witnesses for save-gated condition lifecycle, condition-choice holes, non-Sleep repeat saves, and save-gated attack-roll Advantage effects. |
 | 27 | RKBC-SPELL-ROLL-SCALAR-PARITY - Spell Roll Modifier And Scalar Buff Parity Witnesses | ready-for-research | RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION | Add focused parity witnesses for spell d20 roll modifiers and scalar buff active effects. |
 | 28 | RKBC-SPELL-MAKE-STABLE-PARITY - Spell Make Stable Parity Witness | ready-for-research | RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION | Add focused parity witness coverage for Spare the Dying target admission and Stable zero-Hit-Point lifecycle mutation. |
 | 29 | RKBC-SPELL-SELF-TRANSFORMATION-PARITY - Spell Self Transformation Mode Parity Witness | ready-for-research | RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION | Add focused parity witness coverage for self-transformation mode choice, natural weapon override, and mode-derived projections. |
+| 30 | RKBC-SPELL-REACTION-CASTING-PARITY - Spell Reaction Casting Parity Witnesses | ready-for-research | RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION | Add focused parity witnesses for Counterspell and Hellish Rebuke reaction triggers, Reaction spend, Spell Slot ledger, interruption, and continuation resume. |
+| 31 | RKBC-SPELL-AFTER-HIT-RIDERS-PARITY - Spell After-Hit Rider Parity Witnesses | ready-for-research | RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION | Add focused parity witnesses for after-hit damage, restraint, timed damage/save, illumination, resource spend, Concentration, and cleanup. |
+| 32 | RKBC-SPELL-WEAPON-HOSTED-PARITY - Spell Weapon-Hosted Attack And Rider Parity Witnesses | ready-for-research | RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION | Add focused parity witnesses for spell-hosted weapon attacks, held-weapon overrides, and weapon damage rider profiles. |
+| 33 | RKBC-SPELL-MARKED-RIDER-PARITY - Spell Marked Damage Rider Parity Witnesses | ready-for-research | RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION | Add focused parity witnesses for marked-damage attack rolls, Ability Check roll-mode projections, Concentration duration, and zero-Hit-Point transfer timing. |
+| 34 | RKBC-SPELL-ATTACK-SEQUENCES-PARITY - Spell Attack Sequence Parity Witnesses | ready-for-research | RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION | Add focused parity witnesses for chained attack spells and independent beam/ray attack sequences. |
+| 35 | RKBC-SPELL-MIRROR-IMAGE-PARITY - Mirror Image Hit Interception Parity Witness | ready-for-research | RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION | Add focused parity witness coverage for duplicate pools, duplicate-interception rolls, bypass witnesses, destruction, and damage continuation. |
+| 36 | RKBC-SPELL-LINKED-EFFECT-PARITY - Linked Spell Effect Damage Sharing Parity Witness | ready-for-research | RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION | Add focused parity witness coverage for Warding Bond defenses, all-damage Resistance, same-amount damage sharing, and cleanup. |
 
 ## Task Details
 
@@ -591,11 +640,20 @@ Acceptance:
 
 ### Task 10 - RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION - Spell After Hit Reaction And Marked Effect Profile Join
 
-Status: `ready-for-research`
+Status: `done`
 
 Scope: close after-hit, reaction-casting-time Spell Invocation, Readied Spell
 Response, marked-damage, chained-attack, beam-sequence, independent-attack, and
 weapon-hosted Spell Definition support profiles.
+
+Result: Reaction-casting-time spell profiles now join the covered Reaction
+continuation obligation and a precise mapped-open reaction-casting obligation.
+Readied Spell Response already had the required spell procedure and Reaction
+continuation joins. After-hit, weapon-hosted, marked-damage, chained attack,
+independent beam/ray attack, Mirror Image hit interception, and Warding Bond
+linked-effect profiles are mapped-open to reducer-invariant-specific
+`BATTLE.SPELL.*` parity-witness obligations. The battle hole frontier no longer
+points at the broad Task 10 id; remaining spell work is split into Tasks 30-36.
 
 Acceptance:
 
@@ -941,6 +999,133 @@ Acceptance:
   spell identity.
 - Natural weapon, movement, and mode-specific projections derive from the mode
   fact without storing contradictory duplicate projection facts.
+
+### Task 30 - RKBC-SPELL-REACTION-CASTING-PARITY - Spell Reaction Casting Parity Witnesses
+
+Status: `ready-for-research`
+
+Depends on: `RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION`.
+
+Scope: cover reaction-casting-time spells mapped by Task 10, including
+spell-cast and after-damage triggers, Reaction spend, Spell Slot ledger,
+Counterspell interruption, Hellish Rebuke damage continuation, and resume.
+
+Acceptance:
+
+- `BATTLE.SPELL.REACTION_CASTING_TIME` has focused parity witnesses.
+- Shared offer, decline, spend, and continuation resume semantics remain owned by
+  `BATTLE.REACTION.OFFER_DECLINE_RESUME` rather than duplicated.
+- Trigger facts stay explicit table/caller inputs where the reducer does not
+  derive visibility, range, or component evidence.
+
+### Task 31 - RKBC-SPELL-AFTER-HIT-RIDERS-PARITY - Spell After-Hit Rider Parity Witnesses
+
+Status: `ready-for-research`
+
+Depends on: `RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION`.
+
+Scope: cover after-hit spell riders mapped by Task 10, including immediate
+damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot
+or free-cast resource spend, Concentration, and cleanup.
+
+Acceptance:
+
+- `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` has focused parity witnesses.
+- Hit-triggered resource spend and active-effect lifecycle state are modeled by
+  typed runtime facts, not authored spell identity dispatch.
+- Turn-start damage and Saving Throw continuations reuse shared damage and
+  Saving Throw semantics without duplicating Hit Point lifecycle rules.
+
+### Task 32 - RKBC-SPELL-WEAPON-HOSTED-PARITY - Spell Weapon-Hosted Attack And Rider Parity Witnesses
+
+Status: `ready-for-research`
+
+Depends on: `RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION`.
+
+Scope: cover weapon-hosted spell profiles mapped by Task 10, including
+spell-hosted weapon attacks, held-weapon overrides, spellcasting ability
+replacement, damage-type choice, and weapon damage riders.
+
+Acceptance:
+
+- `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` has focused parity witnesses.
+- Held-weapon and weapon-attack facts are represented once at the reducer
+  boundary that consumes them.
+- Damage and attack-roll branches reuse the shared spell/attack obligations
+  where the hosted spell profile does not own the generic branch semantics.
+
+### Task 33 - RKBC-SPELL-MARKED-RIDER-PARITY - Spell Marked Damage Rider Parity Witnesses
+
+Status: `ready-for-research`
+
+Depends on: `RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION`.
+
+Scope: cover marked-damage spell riders mapped by Task 10, including attack-roll
+damage, Ability Check roll-mode projection, Concentration duration, retargeting,
+and zero-Hit-Point transfer timing.
+
+Acceptance:
+
+- `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` has focused parity witnesses.
+- Mark identity, damage rider, roll-mode projection, and transfer eligibility
+  derive from one active-effect state shape without redundant mutable copies.
+- Ability Choice holes remain domain facts, not authored identity switches.
+
+### Task 34 - RKBC-SPELL-ATTACK-SEQUENCES-PARITY - Spell Attack Sequence Parity Witnesses
+
+Status: `ready-for-research`
+
+Depends on: `RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION`.
+
+Scope: cover chained attack and independent beam/ray spell profiles mapped by
+Task 10, including damage-type choice, duplicate-die leap admission, target
+history, beam/ray count, target choice, attack rolls, damage rolls, and slot
+level limits.
+
+Acceptance:
+
+- `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE` and
+  `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE` have focused parity witnesses.
+- Target-history and per-attack sequencing facts are encoded locally enough that
+  target-count, repeat-target, and slot-level assumptions change together.
+- Object-target facts stay table-owned where the reducer consumes rather than
+  derives object identity or object-world state.
+
+### Task 35 - RKBC-SPELL-MIRROR-IMAGE-PARITY - Mirror Image Hit Interception Parity Witness
+
+Status: `ready-for-research`
+
+Depends on: `RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION`.
+
+Scope: cover Mirror Image hit interception mapped by Task 10, including duplicate
+pool lifecycle, duplicate-interception rolls, bypass witnesses, duplicate
+destruction, final cleanup, and damage continuation.
+
+Acceptance:
+
+- `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION` has a focused parity witness.
+- Duplicate count and hit-redirection outcome are represented as reducer state
+  and explicit fill facts, not presentation-only metadata.
+- Bypass witnesses remain caller/table facts where the reducer does not derive
+  senses or attack visibility.
+
+### Task 36 - RKBC-SPELL-LINKED-EFFECT-PARITY - Linked Spell Effect Damage Sharing Parity Witness
+
+Status: `ready-for-research`
+
+Depends on: `RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION`.
+
+Scope: cover linked spell effects mapped by Task 10, including Warding Bond
+defense bonuses, all-damage Resistance, same-amount damage sharing, and
+source-zero, separation, recast, or duration cleanup.
+
+Acceptance:
+
+- `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` has a focused parity witness.
+- Linked target/source state is one active-effect relation; damage sharing and
+  cleanup derive from that relation without contradictory mirrored state.
+- Separation facts remain table-owned spatial evidence; reducer-owned cleanup
+  consumes the fact without deriving distance or positions.
 
 ## Verification
 

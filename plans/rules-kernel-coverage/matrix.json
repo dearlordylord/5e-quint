@@ -1,12 +1,12 @@
 {
   "summary": {
-    "total": 37,
+    "total": 45,
     "covered": 19,
-    "open": 14,
+    "open": 22,
     "nonSemantic": 4,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 31,
+      "battle": 39,
       "character-creation": 2,
       "character-sheet": 2,
       "character-battle": 1
@@ -14,7 +14,7 @@
     "byStatus": {
       "covered": 19,
       "needs-qnt-owner": 3,
-      "needs-parity-witness": 10,
+      "needs-parity-witness": 18,
       "needs-surface-evidence": 1,
       "boundary-only": 3,
       "unsupported-by-admission": 1
@@ -96,6 +96,8 @@
         }
       ],
       "profiles": [
+        "spell.reaction-counterspell",
+        "spell.reaction-hellish-rebuke",
         "spell.reaction-shield",
         "spell.readied-action-time-spell",
         "unit-feature.attack-damage-reduction-zero-damage-redirect",
@@ -452,6 +454,196 @@
       "status": "needs-parity-witness",
       "surfaceEvidence": [],
       "title": "Battle self-transformation mode choice, Magic Action mode replacement, natural-weapon override, and Aquatic projections"
+    },
+    {
+      "id": "BATTLE.SPELL.REACTION_CASTING_TIME",
+      "kind": "reaction-continuation",
+      "parityWitnesses": [],
+      "profiles": [
+        "spell.reaction-counterspell",
+        "spell.reaction-hellish-rebuke"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+        "packages/battle-runtime/battle-runtime-spell-invocation.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/reaction-triggered-spells.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-cast-reaction-frame.ts"
+      ],
+      "status": "needs-parity-witness",
+      "surfaceEvidence": [],
+      "title": "Battle reaction-casting-time spells for spell-cast and after-damage triggers, Reaction spend, Spell Slot ledger, interruption, and continuation resume"
+    },
+    {
+      "id": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [],
+      "profiles": [
+        "spell.invocation-after-hit-damage",
+        "spell.invocation-after-hit-damage-illumination",
+        "spell.invocation-after-hit-restraint-turn-start-damage",
+        "spell.invocation-after-hit-timed-damage-save"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
+        "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
+        "packages/battle-runtime/battle-runtime-concentration.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-helpers.ts"
+      ],
+      "status": "needs-parity-witness",
+      "surfaceEvidence": [],
+      "title": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup"
+    },
+    {
+      "id": "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [],
+      "profiles": [
+        "spell.invocation-spell-hosted-weapon-attack",
+        "spell.invocation-weapon-attack-override",
+        "spell.invocation-weapon-damage-rider"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
+        "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
+        "packages/battle-runtime/battle-runtime-light.qnt",
+        "packages/battle-runtime/battle-runtime-spell-invocation.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-weapon-attack.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts"
+      ],
+      "status": "needs-parity-witness",
+      "surfaceEvidence": [],
+      "title": "Battle weapon-hosted spell attack and weapon damage rider profiles for spellcasting ability replacement, damage-type choice, held-weapon override, timed cleanup, and weapon-hit damage riders"
+    },
+    {
+      "id": "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [],
+      "profiles": [
+        "spell.invocation-marked-damage-rider"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-marked-riders.qnt",
+        "packages/battle-runtime/battle-runtime-marked-spells.qnt",
+        "packages/battle-runtime/battle-runtime-concentration.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles-support.ts"
+      ],
+      "status": "needs-parity-witness",
+      "surfaceEvidence": [],
+      "title": "Battle marked-damage spell riders for attack-roll damage, Ability Check roll-mode projection, Concentration duration, and zero-Hit-Point transfer timing"
+    },
+    {
+      "id": "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
+      "kind": "profile-procedure",
+      "parityWitnesses": [],
+      "profiles": [
+        "spell.invocation-chained-attack-damage"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-chained-spell-attack.qnt",
+        "packages/battle-runtime/battle-runtime-spell-attack.qnt",
+        "packages/battle-runtime/battle-runtime-spell-invocation.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-chained.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve.ts"
+      ],
+      "status": "needs-parity-witness",
+      "surfaceEvidence": [],
+      "title": "Battle chained spell attack sequence for damage-type choice, duplicate-die leap admission, target history, per-step attack and damage rolls, and slot-level leap limits"
+    },
+    {
+      "id": "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
+      "kind": "profile-procedure",
+      "parityWitnesses": [],
+      "profiles": [
+        "spell.invocation-independent-attack-sequence"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-spell-attack.qnt",
+        "packages/battle-runtime/battle-runtime-spell-invocation.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-burst.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts"
+      ],
+      "status": "needs-parity-witness",
+      "surfaceEvidence": [],
+      "title": "Battle independent spell attack sequences for beam and ray count, per-attack target choice, attack rolls, hit-gated damage rolls, object targets, and action or slot spend"
+    },
+    {
+      "id": "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [],
+      "profiles": [
+        "spell.invocation-mirror-image-hit-interception"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-mirror-image.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/mirror-image-hit-interception.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-burst.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts"
+      ],
+      "status": "needs-parity-witness",
+      "surfaceEvidence": [],
+      "title": "Battle Mirror Image duplicate pool, attack-hit interception roll, duplicate destruction, bypass witnesses, and normal damage continuation"
+    },
+    {
+      "id": "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [],
+      "profiles": [
+        "spell.invocation-warding-bond-linked-effect"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-warding-bond.qnt"
+      ],
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts",
+        "packages/battle-runtime/src/battle-reducer/warding-bond.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-support-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+      ],
+      "status": "needs-parity-witness",
+      "surfaceEvidence": [],
+      "title": "Battle linked spell effects for Warding Bond defenses, all-damage Resistance, same-amount damage sharing, and source-zero, separation, recast, or duration cleanup"
     },
     {
       "id": "BATTLE.SANCTUARY.TARGETING_INTERDICTION",
@@ -949,11 +1141,11 @@
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
       ],
       "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION"
+        "RKBC-SPELL-LINKED-EFFECT-PARITY"
       ],
       "holeKind": "targetSpatialFacts",
       "id": "BattleWardingBondSeparationFactsHole",
-      "reason": "Connected-creature separation is table spatial evidence. The reducer may consume the fact for Warding Bond cleanup, but distance/position derivation remains outside rules-kernel state.",
+      "reason": "Connected-creature separation is table spatial evidence. The reducer may consume the fact for Warding Bond cleanup, but distance/position derivation remains outside rules-kernel state; linked-effect cleanup parity is split into the Warding Bond obligation.",
       "subject": "battle-hole-family"
     },
     {
@@ -1062,11 +1254,13 @@
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES"
       ],
       "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION"
+        "RKBC-SPELL-AFTER-HIT-RIDERS-PARITY",
+        "RKBC-SPELL-ATTACK-SEQUENCES-PARITY",
+        "RKBC-SPELL-MIRROR-IMAGE-PARITY"
       ],
       "holeKind": "attackRoll",
       "id": "BattleSpellAttackRollHole",
-      "reason": "Spell Attack Roll results drive spell hit, miss, Critical Hit, and after-hit spell continuations; generic spell attack damage branches are covered while after-hit spell reactions remain split follow-up work.",
+      "reason": "Spell Attack Roll results drive spell hit, miss, Critical Hit, and after-hit, beam/ray, chained, or duplicate-interception continuations. Generic spell attack damage branches are covered; specialized spell attack continuations now route to dedicated parity-witness obligations.",
       "subject": "battle-hole-family"
     },
     {
@@ -1094,11 +1288,15 @@
         "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP"
       ],
       "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION"
+        "RKBC-SPELL-AFTER-HIT-RIDERS-PARITY",
+        "RKBC-SPELL-WEAPON-HOSTED-PARITY",
+        "RKBC-SPELL-MARKED-RIDER-PARITY",
+        "RKBC-SPELL-ATTACK-SEQUENCES-PARITY",
+        "RKBC-SPELL-LINKED-EFFECT-PARITY"
       ],
       "holeKind": "rolledDice",
       "id": "BattleSpellDamageRollHole",
-      "reason": "Spell damage rolls feed attack, save, chained, after-hit, and marked damage procedures. Generic spell damage branches, by-type reduction, disposition, and shared HP damage are covered; after-hit, chained, and marked spell damage joins remain split follow-up work.",
+      "reason": "Spell damage rolls feed attack, save, chained, after-hit, weapon-hosted, linked, and marked damage procedures. Generic spell damage branches, by-type reduction, disposition, and shared HP damage are covered; specialized spell damage joins now route to dedicated parity-witness obligations.",
       "subject": "battle-hole-family"
     },
     {
@@ -1117,11 +1315,11 @@
       "classification": "semantic-frontier",
       "coveredByObligationIds": [],
       "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION"
+        "RKBC-SPELL-MIRROR-IMAGE-PARITY"
       ],
       "holeKind": "rolledDice",
       "id": "BattleMirrorImageDuplicateRollHole",
-      "reason": "Mirror Image duplicate interception roll changes hit redirection, duplicate lifecycle, and continuation after an attack hit.",
+      "reason": "Mirror Image duplicate interception roll changes hit redirection, duplicate lifecycle, and continuation after an attack hit; those semantics now route to the Mirror Image parity-witness obligation.",
       "subject": "battle-hole-family"
     },
     {
@@ -1131,11 +1329,11 @@
         "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP"
       ],
       "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION"
+        "RKBC-SPELL-AFTER-HIT-RIDERS-PARITY"
       ],
       "holeKind": "rolledDice",
       "id": "BattleSpellTurnStartDamageRollHole",
-      "reason": "Turn-start spell damage rolls reuse shared HP damage and the generic damage-disposition split; after-hit and timed active-effect spell damage lifecycle remains dedicated follow-up work.",
+      "reason": "Turn-start spell damage rolls reuse shared HP damage and the generic damage-disposition split; timed after-hit spell damage lifecycle now routes to the after-hit rider parity-witness obligation.",
       "subject": "battle-hole-family"
     },
     {
@@ -1183,11 +1381,11 @@
       ],
       "followUpTaskIds": [
         "RKBC-SPELL-ROLL-SCALAR-PARITY",
-        "RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION"
+        "RKBC-SPELL-MARKED-RIDER-PARITY"
       ],
       "holeKind": "abilityChoice",
       "id": "BattleSpellAbilityChoiceHole",
-      "reason": "Ability choice changes roll modifiers, marked-damage riders, or later checks and must be owned by a semantic obligation; roll-modifier and marked-damage spell joins remain split follow-up work.",
+      "reason": "Ability choice changes roll modifiers, marked-damage riders, or later checks and must be owned by a semantic obligation; roll-modifier and marked-damage spell joins now route to their dedicated parity-witness obligations.",
       "subject": "battle-hole-family"
     },
     {
@@ -1247,12 +1445,13 @@
       ],
       "followUpTaskIds": [
         "RKBC-SPELL-SAVE-GATED-CONDITION-PARITY",
-        "RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION",
+        "RKBC-SPELL-REACTION-CASTING-PARITY",
+        "RKBC-SPELL-AFTER-HIT-RIDERS-PARITY",
         "RKBC-PROFILE-JOIN-TABLE-CALLER"
       ],
       "holeKind": "savingThrowOutcome",
       "id": "BattleSpellSavingThrowOutcomeHole",
-      "reason": "Spell Saving Throw outcomes determine damage, conditions, Command consequences, Counterspell, and area results. Generic spell save damage branches and Command consequences are covered; save-gated condition, reaction/after-hit, and table-caller area joins remain follow-up work.",
+      "reason": "Spell Saving Throw outcomes determine damage, conditions, Command consequences, Counterspell, timed after-hit continuations, and area results. Generic spell save damage branches and Command consequences are covered; condition, reaction-casting, after-hit, and table-caller area joins remain split parity or boundary follow-up work.",
       "subject": "battle-hole-family"
     },
     {
@@ -1260,11 +1459,11 @@
       "coveredByObligationIds": [],
       "followUpTaskIds": [
         "RKBC-SPELL-SAVE-GATED-CONDITION-PARITY",
-        "RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION"
+        "RKBC-SPELL-AFTER-HIT-RIDERS-PARITY"
       ],
       "holeKind": "savingThrowOutcome",
       "id": "BattleSpellTurnStartSavingThrowOutcomeHole",
-      "reason": "Turn-start active-effect Saving Throw outcomes can end or continue damage/effect state and still need dedicated condition or timed-damage QNT/parity ownership.",
+      "reason": "Turn-start active-effect Saving Throw outcomes can end or continue condition or timed-damage state and still need dedicated condition or after-hit rider QNT/parity ownership.",
       "subject": "battle-hole-family"
     },
     {
@@ -1539,10 +1738,15 @@
       ],
       "fillKind": "rolledDice",
       "followUpTaskIds": [
-        "RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION"
+        "RKBC-SPELL-AFTER-HIT-RIDERS-PARITY",
+        "RKBC-SPELL-WEAPON-HOSTED-PARITY",
+        "RKBC-SPELL-MARKED-RIDER-PARITY",
+        "RKBC-SPELL-ATTACK-SEQUENCES-PARITY",
+        "RKBC-SPELL-MIRROR-IMAGE-PARITY",
+        "RKBC-SPELL-LINKED-EFFECT-PARITY"
       ],
       "id": "rolledDice",
-      "reason": "Rolled Dice fills are shared by damage, healing, mitigation, duplicate interception, and feature-roll procedures. Generic damage branch, healing, type/reduction, disposition, and shared HP obligations cover the core while after-hit spell roll joins remain split follow-up work.",
+      "reason": "Rolled Dice fills are shared by damage, healing, mitigation, duplicate interception, linked effects, and feature-roll procedures. Generic damage branch, healing, type/reduction, disposition, and shared HP obligations cover the core while specialized spell roll joins route to dedicated parity-witness obligations.",
       "subject": "battle-fill-kind"
     },
     {
@@ -1568,11 +1772,12 @@
       "fillKind": "savingThrowOutcome",
       "followUpTaskIds": [
         "RKBC-SPELL-SAVE-GATED-CONDITION-PARITY",
-        "RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION",
+        "RKBC-SPELL-REACTION-CASTING-PARITY",
+        "RKBC-SPELL-AFTER-HIT-RIDERS-PARITY",
         "RKBC-PROFILE-JOIN-TABLE-CALLER"
       ],
       "id": "savingThrowOutcome",
-      "reason": "Saving Throw outcomes drive damage, condition, Command, protection, feature, and active-effect lifecycle branches. Generic spell/feature damage save branching and Command are covered while condition, after-hit, and table-caller joins remain follow-up work.",
+      "reason": "Saving Throw outcomes drive damage, condition, Command, protection, feature, reaction-casting, and active-effect lifecycle branches. Generic spell/feature damage save branching and Command are covered while condition, reaction-casting, after-hit, and table-caller joins remain split follow-up work.",
       "subject": "battle-fill-kind"
     },
     {
@@ -1605,10 +1810,10 @@
       "fillKind": "abilityChoice",
       "followUpTaskIds": [
         "RKBC-SPELL-ROLL-SCALAR-PARITY",
-        "RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION"
+        "RKBC-SPELL-MARKED-RIDER-PARITY"
       ],
       "id": "abilityChoice",
-      "reason": "Ability choices determine later roll modifiers, checks, or marked-damage semantics; roll-modifier and marked-damage spell profile joins remain split follow-up work.",
+      "reason": "Ability choices determine later roll modifiers, checks, or marked-damage semantics; roll-modifier and marked-damage spell profile joins now route to their dedicated parity-witness obligations.",
       "subject": "battle-fill-kind"
     },
     {
@@ -2255,6 +2460,92 @@
     },
     {
       "obligationIds": [
+        "BATTLE.SPELL.REACTION_CASTING_TIME",
+        "BATTLE.REACTION.OFFER_DECLINE_RESUME"
+      ],
+      "profileId": "spell.reaction-hellish-rebuke"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.REACTION_CASTING_TIME",
+        "BATTLE.REACTION.OFFER_DECLINE_RESUME"
+      ],
+      "profileId": "spell.reaction-counterspell"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS"
+      ],
+      "profileId": "spell.invocation-weapon-damage-rider"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS"
+      ],
+      "profileId": "spell.invocation-after-hit-damage"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS"
+      ],
+      "profileId": "spell.invocation-after-hit-restraint-turn-start-damage"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS"
+      ],
+      "profileId": "spell.invocation-after-hit-timed-damage-save"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS"
+      ],
+      "profileId": "spell.invocation-after-hit-damage-illumination"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS"
+      ],
+      "profileId": "spell.invocation-spell-hosted-weapon-attack"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS"
+      ],
+      "profileId": "spell.invocation-weapon-attack-override"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER"
+      ],
+      "profileId": "spell.invocation-marked-damage-rider"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE"
+      ],
+      "profileId": "spell.invocation-chained-attack-damage"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE"
+      ],
+      "profileId": "spell.invocation-independent-attack-sequence"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION"
+      ],
+      "profileId": "spell.invocation-mirror-image-hit-interception"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING"
+      ],
+      "profileId": "spell.invocation-warding-bond-linked-effect"
+    },
+    {
+      "obligationIds": [
         "BATTLE.SANCTUARY.TARGETING_INTERDICTION"
       ],
       "profileId": "spell.invocation-sanctuary-targeting-interdiction"
@@ -2368,7 +2659,9 @@
     "character-sheet.ability-check-proficiency-bonus",
     "character-sheet.armor-class-base-formula",
     "character-sheet.class-feature-long-rest-use-state",
+    "character-sheet.class-feature-point-pool-resource",
     "character-sheet.class-feature-use-count-resource",
+    "character-sheet.font-of-magic-slot-to-sorcery-points",
     "character-sheet.healing-resource-action",
     "character-sheet.monk-uncanny-metabolism-initiative-recovery",
     "character-sheet.pact-slot-recovery",
@@ -2419,6 +2712,7 @@
     "spell.invocation-self-transformation-mode",
     "spell.invocation-sleep-repeat-save-lifecycle",
     "spell.invocation-sleep-target-admission",
+    "spell.invocation-spell-created-held-object",
     "spell.invocation-spell-hosted-weapon-attack",
     "spell.invocation-warding-bond-linked-effect",
     "spell.invocation-weapon-attack-override",
@@ -2439,6 +2733,7 @@
     "unit-feature.bardic-inspiration-grant",
     "unit-feature.bonus-action-dash-temporary-hit-points",
     "unit-feature.bonus-action-ongoing-rage",
+    "unit-feature.druid-wild-shape-known-form",
     "unit-feature.failed-ability-check-resource-boost",
     "unit-feature.first-attack-roll-reckless-advantage",
     "unit-feature.innate-sorcery-activation",
