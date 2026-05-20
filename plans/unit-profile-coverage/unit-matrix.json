@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 394,
-      "numerator": 185,
-      "percent": "47%"
+      "denominator": 395,
+      "numerator": 186,
+      "percent": "47.1%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 466,
-      "numerator": 217,
-      "percent": "46.6%"
+      "denominator": 467,
+      "numerator": 218,
+      "percent": "46.7%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 218
+      "value": 219
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 132,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 218,
-      "numerator": 218,
+      "denominator": 219,
+      "numerator": 219,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "79.5%"
     },
     "supportedProfileCoverage": {
-      "denominator": 186,
+      "denominator": 187,
       "numerator": 132,
-      "percent": "71%"
+      "percent": "70.6%"
     }
   },
   "metricSemantics": [
@@ -15948,6 +15948,29 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/darkness.json",
       "unitId": "darkness"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "table/caller sight-observer and runtime-detached presentation owner",
+          "reason": "Darkvision changes how an observer treats Dim Light and Darkness, but the promoted light/obscurement boundary already consumes caller-supplied Darkvision observer range and distance facts. Character Sheet spell-granted sense projection, automatic sight-line derivation, and color-only darkness presentation are outside this task's promoted runtime owners."
+        },
+        "reason": "Darkvision is authored as an SRD Surface Spell Definition with Action level-2 Spell Slot casting, Touch range, an 8-hour duration, a willing creature target, and a spell-granted Darkvision sense fact with a 150-foot range. Task 10 claims no promoted runtime profile because current Character Sheet and light/obscurement reducers do not own active spell-granted sense projection; promoted light and obscurement reducers consume typed Darkvision observer facts supplied by the table/caller boundary rather than executing this Unit directly.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/darkvision.json",
+      "unitId": "darkvision"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

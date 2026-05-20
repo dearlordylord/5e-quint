@@ -224,7 +224,7 @@ The final task is intentionally blocked on every real task in this plan and plac
 | 7 | L12G-MISSING-AUGURY - Augury Definition And Closure | done | completed baseline | A lane; Unit `augury`. |
 | 8 | L12G-MISSING-CALM-EMOTIONS - Calm Emotions Definition And Support | done | completed baseline | A lane; Unit `calm_emotions`. |
 | 9 | L12G-MISSING-DARKNESS - Darkness Definition And Support Or Closure | done | completed baseline | A lane; Unit `darkness`. |
-| 10 | L12G-MISSING-DARKVISION - Darkvision Definition And Support Or Closure | ready-for-research | completed baseline | A lane; Unit `darkvision`. |
+| 10 | L12G-MISSING-DARKVISION - Darkvision Definition And Support Or Closure | done | completed baseline | A lane; Unit `darkvision`. |
 | 11 | L12G-MISSING-DETECT-THOUGHTS - Detect Thoughts Definition And Closure | ready-for-research | completed baseline | A lane; Unit `detect_thoughts`. |
 | 12 | L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME - Gust of Wind Line Runtime Support | ready-for-research | completed baseline | A lane; Unit `gust_of_wind`. |
 | 13 | L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE - Gust of Wind Gas And Flame Presentation Closure | ready-for-research | completed baseline | A lane; Unit `gust_of_wind`. |
@@ -611,7 +611,7 @@ Acceptance:
 
 ### Task 10 - L12G-MISSING-DARKVISION - Darkvision Definition And Support Or Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `darkvision`.
 Origin: Original backlog task 57.

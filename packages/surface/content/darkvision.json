@@ -1,0 +1,60 @@
+{
+  "description": "For the duration, a willing creature you touch has Darkvision with a range of 150 feet.",
+  "id": "darkvision",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a dried carrot",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 8,
+        "unit": "hour"
+      }
+    },
+    "family": "activation",
+    "level": 2,
+    "phases": [
+      {
+        "attachment": {
+          "holeId": "darkvision_target",
+          "kind": "hole",
+          "label": "willing target",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "disposition": "willing",
+              "mode": "one",
+              "targetKinds": [
+                "creature"
+              ]
+            }
+          }
+        },
+        "effects": [
+          {
+            "kind": "grant_sense",
+            "rangeFeet": 150,
+            "sense": "darkvision"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "kind": "touch"
+    },
+    "school": "transmutation"
+  },
+  "name": "Darkvision",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Darkvision"
+  }
+}

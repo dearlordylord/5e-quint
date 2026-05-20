@@ -188,12 +188,12 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 491,
-      "percent": "88.3%",
+      "numerator": 495,
+      "percent": "89%",
       "rowsByStatus": {
         "accepted": 361,
-        "accepted-no-battle-effect": 130,
-        "battle-runtime-required": 53,
+        "accepted-no-battle-effect": 134,
+        "battle-runtime-required": 49,
         "partial-battle-runtime": 11,
         "owner-evidence-required": 1
       }
@@ -211,15 +211,15 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 377,
       "non-runtime": 24,
-      "catalog-only/dead-for-now": 101,
-      "missing-authored-record": 17,
+      "catalog-only/dead-for-now": 105,
+      "missing-authored-record": 13,
       "catalog-installed-owner-evidence-required": 23,
       "catalog-authored-executable-follow-up": 14
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 213,
-      "catalog-only/dead-for-now": 101,
-      "missing-authored-record": 17,
+      "catalog-only/dead-for-now": 105,
+      "missing-authored-record": 13,
       "catalog-installed-owner-evidence-required": 22,
       "catalog-authored-executable-follow-up": 14
     },
@@ -11525,19 +11525,39 @@
       "detail": "Darkvision (Transmutation; —)",
       "candidateUnitId": "darkvision",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "darkvision",
+        "sourceRecordPath": "packages/surface/content/darkvision.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "darkvision"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "table/caller sight-observer and runtime-detached presentation owner",
+        "reason": "Darkvision changes how an observer treats Dim Light and Darkness, but the promoted light/obscurement boundary already consumes caller-supplied Darkvision observer range and distance facts. Character Sheet spell-granted sense projection, automatic sight-line derivation, and color-only darkness presentation are outside this task's promoted runtime owners."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit darkvision is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "table/caller sight-observer and runtime-detached presentation owner",
+          "evidence": "Darkvision changes how an observer treats Dim Light and Darkness, but the promoted light/obscurement boundary already consumes caller-supplied Darkvision observer range and distance facts. Character Sheet spell-granted sense projection, automatic sight-line derivation, and color-only darkness presentation are outside this task's promoted runtime owners.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Darkvision changes how an observer treats Dim Light and Darkness, but the promoted light/obscurement boundary already consumes caller-supplied Darkvision observer range and distance facts. Character Sheet spell-granted sense projection, automatic sight-line derivation, and color-only darkness presentation are outside this task's promoted runtime owners.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_enhance_ability",
@@ -16932,19 +16952,39 @@
       "detail": "Darkvision (Transmutation; —)",
       "candidateUnitId": "darkvision",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "darkvision",
+        "sourceRecordPath": "packages/surface/content/darkvision.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "darkvision"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "table/caller sight-observer and runtime-detached presentation owner",
+        "reason": "Darkvision changes how an observer treats Dim Light and Darkness, but the promoted light/obscurement boundary already consumes caller-supplied Darkvision observer range and distance facts. Character Sheet spell-granted sense projection, automatic sight-line derivation, and color-only darkness presentation are outside this task's promoted runtime owners."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit darkvision is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "table/caller sight-observer and runtime-detached presentation owner",
+          "evidence": "Darkvision changes how an observer treats Dim Light and Darkness, but the promoted light/obscurement boundary already consumes caller-supplied Darkvision observer range and distance facts. Character Sheet spell-granted sense projection, automatic sight-line derivation, and color-only darkness presentation are outside this task's promoted runtime owners.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Darkvision changes how an observer treats Dim Light and Darkness, but the promoted light/obscurement boundary already consumes caller-supplied Darkvision observer range and distance facts. Character Sheet spell-granted sense projection, automatic sight-line derivation, and color-only darkness presentation are outside this task's promoted runtime owners.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_enhance_ability",
@@ -20598,19 +20638,39 @@
       "detail": "Darkvision (Transmutation; —)",
       "candidateUnitId": "darkvision",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "darkvision",
+        "sourceRecordPath": "packages/surface/content/darkvision.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "darkvision"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "table/caller sight-observer and runtime-detached presentation owner",
+        "reason": "Darkvision changes how an observer treats Dim Light and Darkness, but the promoted light/obscurement boundary already consumes caller-supplied Darkvision observer range and distance facts. Character Sheet spell-granted sense projection, automatic sight-line derivation, and color-only darkness presentation are outside this task's promoted runtime owners."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit darkvision is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "table/caller sight-observer and runtime-detached presentation owner",
+          "evidence": "Darkvision changes how an observer treats Dim Light and Darkness, but the promoted light/obscurement boundary already consumes caller-supplied Darkvision observer range and distance facts. Character Sheet spell-granted sense projection, automatic sight-line derivation, and color-only darkness presentation are outside this task's promoted runtime owners.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Darkvision changes how an observer treats Dim Light and Darkness, but the promoted light/obscurement boundary already consumes caller-supplied Darkvision observer range and distance facts. Character Sheet spell-granted sense projection, automatic sight-line derivation, and color-only darkness presentation are outside this task's promoted runtime owners.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_detect_thoughts",
@@ -26205,19 +26265,39 @@
       "detail": "Darkvision (Transmutation; —)",
       "candidateUnitId": "darkvision",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "darkvision",
+        "sourceRecordPath": "packages/surface/content/darkvision.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "darkvision"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "table/caller sight-observer and runtime-detached presentation owner",
+        "reason": "Darkvision changes how an observer treats Dim Light and Darkness, but the promoted light/obscurement boundary already consumes caller-supplied Darkvision observer range and distance facts. Character Sheet spell-granted sense projection, automatic sight-line derivation, and color-only darkness presentation are outside this task's promoted runtime owners."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit darkvision is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "table/caller sight-observer and runtime-detached presentation owner",
+          "evidence": "Darkvision changes how an observer treats Dim Light and Darkness, but the promoted light/obscurement boundary already consumes caller-supplied Darkvision observer range and distance facts. Character Sheet spell-granted sense projection, automatic sight-line derivation, and color-only darkness presentation are outside this task's promoted runtime owners.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Darkvision changes how an observer treats Dim Light and Darkness, but the promoted light/obscurement boundary already consumes caller-supplied Darkvision observer range and distance facts. Character Sheet spell-granted sense projection, automatic sight-line derivation, and color-only darkness presentation are outside this task's promoted runtime owners.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_detect_thoughts",

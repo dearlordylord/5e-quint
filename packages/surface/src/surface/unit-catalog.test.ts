@@ -152,6 +152,7 @@ const requiredFirstVerticalUnitIds = [
   "command",
   "dissonant_whispers",
   "darkness",
+  "darkvision",
   "enhance_ability",
   "enlarge_reduce",
   "enthrall",
@@ -610,6 +611,57 @@ describe("SRD Unit catalog boundary", () => {
           kind: "direct",
           attachment: { kind: "self" },
           effects: [{ kind: "see_invisible_and_ethereal" }],
+        },
+      ]);
+    }
+  });
+
+  test("decodes Darkvision as a timed willing-target sense grant", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const darkvision = result.catalog.requireUnit("darkvision");
+
+      expect(darkvision.kind).toBe("spell");
+      if (
+        darkvision.kind !== "spell" ||
+        darkvision.mechanics.family !== "activation"
+      ) {
+        throw new Error("Expected Darkvision to be an activation spell.");
+      }
+      expect(darkvision.mechanics.level).toBe(2);
+      expect(darkvision.mechanics.school).toBe("transmutation");
+      expect(darkvision.mechanics.castingTime).toEqual({ kind: "action" });
+      expect(darkvision.mechanics.range).toEqual({ kind: "touch" });
+      expect(darkvision.mechanics.components).toEqual({
+        v: true,
+        s: true,
+        m: "a dried carrot",
+      });
+      expect(darkvision.mechanics.duration).toEqual({
+        kind: "timed",
+        value: { unit: "hour", amount: 8 },
+      });
+      expect(darkvision.mechanics.phases).toMatchObject([
+        {
+          kind: "direct",
+          attachment: {
+            kind: "hole",
+            holeId: "darkvision_target",
+            label: "willing target",
+            value: {
+              kind: "target",
+              selection: {
+                mode: "one",
+                targetKinds: ["creature"],
+                disposition: "willing",
+              },
+            },
+          },
+          effects: [
+            { kind: "grant_sense", sense: "darkvision", rangeFeet: 150 },
+          ],
         },
       ]);
     }
