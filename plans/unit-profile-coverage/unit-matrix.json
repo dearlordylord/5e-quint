@@ -1366,7 +1366,7 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts"
       ],
-      "sourceBoundary": "Runtime consumes typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
+      "sourceBoundary": "Runtime consumes typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Removal or suppression triggers such as Dispel Magic, Darkness overlap, and Antimagic Field are outside this object-emitter profile; this profile exposes object attachment and the until-dispelled marker for those future owners, while any additional generic Spell Effect facts belong to the remover or suppressor owner rather than a Continual Flame-specific registry. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
       "taskRefs": [
         "SRDINV70B",
         "SRDINV89C",
@@ -13626,13 +13626,16 @@
       "claim": {
         "deferredMechanics": [
           {
-            "battleReadinessClosure": {
-              "kind": "outside-battle-runtime",
-              "owner": "future dispel/suppression spell-effect lifecycle owner",
-              "reason": "The object-light profile records Continual Flame as until-dispelled state, but this task does not promote a generic Dispel Magic or antimagic spell-effect removal procedure."
-            },
-            "followUpTaskId": "L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL",
-            "mechanic": "Dispel Magic, antimagic, or other future spell-suppression/removal procedures that consume the until-dispelled emitter marker and remove or suppress the object-attached spell occurrence"
+            "followUpTaskId": "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING",
+            "mechanic": "Dispel Magic ending of an ongoing Continual Flame spell occurrence on a targeted object or magical effect, including spell-level and higher-slot gates, is blocked on a shared ongoing Spell Effect ending owner rather than a Continual Flame-specific remover registry."
+          },
+          {
+            "followUpTaskId": "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL",
+            "mechanic": "Darkness overlap dispelling spell-created Bright Light or Dim Light from level-2-or-lower spells is blocked until Darkness has an SRD-authored Unit and a runtime/profile owner that can consume spell-created light facts such as Continual Flame without dispatching on spell identity."
+          },
+          {
+            "followUpTaskId": "L12G-FOLLOWUP-ANTIMAGIC-FIELD-SPELL-EFFECT-SUPPRESSION",
+            "mechanic": "Antimagic Field suppression of ongoing spells in its area is blocked on a generic Spell Effect suppression owner that can suppress object-attached light emitters without deleting their spell occurrence or duplicating emitter state."
           },
           {
             "battleReadinessClosure": {
@@ -13653,14 +13656,28 @@
         ],
         "followUpTasks": [
           {
-            "id": "L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL",
-            "mechanic": "Consume until-dispelled spell-effect markers such as Continual Flame object emitters from Dispel Magic, antimagic, or another promoted spell-suppression/removal procedure without making each spell maintain a parallel removal registry.",
-            "owner": "battle-runtime generic dispel/suppression spell-effect lifecycle",
-            "requiredOutput": "Supported runtime profile and owner evidence for removing or suppressing object-attached until-dispelled spell occurrences, with focused tests and promoted Quint/runtime parity for Continual Flame cleanup through the generic dispel/suppression owner.",
-            "title": "Continual Flame Dispel And Suppression Removal"
+            "id": "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING",
+            "mechanic": "Promote Dispel Magic's target creature, object, or magical effect procedure so it ends ongoing spells on the target, including object-attached Continual Flame occurrences, using spell-level and higher-slot gates from the Dispel Magic RAW without adding a Continual Flame-specific removal registry.",
+            "owner": "Dispel Magic Unit support plus battle-runtime ongoing Spell Effect lifecycle owner",
+            "requiredOutput": "Supported Dispel Magic profile or accepted closure with focused tests and promoted Quint/runtime parity for ending ongoing spell occurrences on targets, including object-attached until-dispelled light emitters exposed by the object-light profile.",
+            "title": "Dispel Magic Ongoing Spell Ending"
+          },
+          {
+            "id": "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL",
+            "mechanic": "Author or explicitly close the SRD Darkness Unit, then support or close the overlap rule that dispels another level-2-or-lower spell when Darkness overlaps Bright Light or Dim Light created by that spell, consuming generic spell-created light facts such as Continual Flame rather than spell identity.",
+            "owner": "Darkness Surface definition plus battle-runtime Darkness area and spell-created light overlap owner",
+            "requiredOutput": "SRD Darkness authored/catalog outcome plus focused tests and promoted Quint/runtime parity or accepted closure for overlap-triggered dispel of spell-created light, with the missing Darkness Unit row resolved before it is named as an owner.",
+            "title": "Darkness Spell-Created Light Dispel"
+          },
+          {
+            "id": "L12G-FOLLOWUP-ANTIMAGIC-FIELD-SPELL-EFFECT-SUPPRESSION",
+            "mechanic": "Promote Antimagic Field's suppression of ongoing spells in its area, excluding artifact/deity spell sources, so object-attached light emitters such as Continual Flame stop functioning while suppressed and resume from the same spell occurrence without duplicating emitter state.",
+            "owner": "Antimagic Field Unit support plus generic ongoing Spell Effect suppression owner",
+            "requiredOutput": "Supported Antimagic Field profile or accepted closure with focused tests and promoted Quint/runtime parity for suppressing and restoring ongoing Spell Effects, including object-attached until-dispelled light emitters.",
+            "title": "Antimagic Field Spell Effect Suppression"
           }
         ],
-        "futureProfileOwner": "battle-runtime generic dispel/suppression spell-effect lifecycle plus character inventory/equipment component legality plus runtime-detached object presentation owner",
+        "futureProfileOwner": "Dispel Magic ongoing Spell Effect ending plus Darkness authored Unit/profile support plus Antimagic Field Spell Effect suppression plus character inventory/equipment component legality plus runtime-detached object presentation owner",
         "profileIds": [
           "spell.invocation-object-light"
         ],
@@ -13698,7 +13715,7 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
-          "sourceBoundary": "Runtime consumes typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
+          "sourceBoundary": "Runtime consumes typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Removal or suppression triggers such as Dispel Magic, Darkness overlap, and Antimagic Field are outside this object-emitter profile; this profile exposes object attachment and the until-dispelled marker for those future owners, while any additional generic Spell Effect facts belong to the remover or suppressor owner rather than a Continual Flame-specific registry. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
           "taskRefs": [
             "SRDINV70B",
             "SRDINV89C",
@@ -16120,7 +16137,7 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
           ],
-          "sourceBoundary": "Runtime consumes typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
+          "sourceBoundary": "Runtime consumes typed table-supplied object identity facts, emitter-distance facts, and opaque-cover witnesses. Light additionally consumes size and worn/carried facts and owns one-hour duration cleanup plus same-caster recast replacement. Continual Flame consumes a touched-object fact, owns level-2+ Spell Slot casting, source-owned object attachment, Bright/Dim 20-foot radii, non-ticking until-dispelled persistence, and preserves prior Continual Flame emitters from the same caster. Existing light projection derives Bright/Dim/Darkness to sight-obscurement and Darkvision-adjusted sight consequences without duplicating emitter state. Removal or suppression triggers such as Dispel Magic, Darkness overlap, and Antimagic Field are outside this object-emitter profile; this profile exposes object attachment and the until-dispelled marker for those future owners, while any additional generic Spell Effect facts belong to the remover or suppressor owner rather than a Continual Flame-specific registry. Colored/flame presentation, automatic line-of-sight drawing, automatic map geometry/pathfinding derivation, non-heat/fuel presentation, smother/quenched adjudication, and costly consumed Material component availability/consumption are outside this object-emitter runtime boundary.",
           "taskRefs": [
             "SRDINV70B",
             "SRDINV89C",

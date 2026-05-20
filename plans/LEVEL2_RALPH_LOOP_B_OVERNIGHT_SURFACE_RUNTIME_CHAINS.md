@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Continual Flame Dispel And Suppression Removal"
     },
     {
@@ -78,6 +78,24 @@
     },
     {
       "number": 13,
+      "id": "L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING",
+      "status": "ready-for-research",
+      "title": "Dispel Magic Ongoing Spell Ending"
+    },
+    {
+      "number": 14,
+      "id": "L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL",
+      "status": "ready-for-research",
+      "title": "Darkness Spell-Created Light Dispel"
+    },
+    {
+      "number": 15,
+      "id": "L12G-FOLLOWUP-ANTIMAGIC-FIELD-SPELL-EFFECT-SUPPRESSION",
+      "status": "ready-for-research",
+      "title": "Antimagic Field Spell Effect Suppression"
+    },
+    {
+      "number": 16,
       "id": "L12G-RECURSIVE-TAIL-LOOP-B",
       "status": "blocked",
       "title": "LOOP-B Recursive Next-Batch Planning Tail"
@@ -88,7 +106,7 @@
 
 This is a runnable overnight Ralph plan split out of the stale monolithic A plan and the current level-1/2 strict frontier. It owns Surface-to-runtime chains for Acid Arrow, Alter Self, Continual Flame, Flame Blade, and Heat Metal.
 
-Preplanned load: 12 real atomic implementation/planning tasks plus one recursive planning tail. The recursive tail is a fallback only; ordinary `blocked` tasks already auto-unblock when their same-plan dependencies are marked `done`.
+Preplanned load: 15 real atomic implementation/planning tasks plus one recursive planning tail. The recursive tail is a fallback only; ordinary `blocked` tasks already auto-unblock when their same-plan dependencies are marked `done`.
 
 ## Worktree Safety Prefix
 
@@ -167,13 +185,16 @@ The final task is intentionally blocked on every real task in this plan and plac
 | 4 | L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE - Alter Self Surface Option Shape | done | completed baseline | B lane; Unit `alter_self`. |
 | 5 | L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME - Alter Self Mode Lifecycle And Aquatic Runtime | done | L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE | B lane; Unit `alter_self`. |
 | 6 | L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME - Alter Self Natural Weapons Runtime | done | L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE, L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME | B lane; Unit `alter_self`. |
-| 7 | L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL - Continual Flame Dispel And Suppression Removal | ready-for-research | completed baseline | B lane; Unit `continual_flame`. |
+| 7 | L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL - Continual Flame Dispel And Suppression Removal | done | completed baseline | B lane; Unit `continual_flame`; split remaining RAW-sourced cleanup owners into concrete follow-up tasks. |
 | 8 | L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE - Flame Blade Surface Lifecycle Shape | ready-for-research | completed baseline | B lane; Unit `flame_blade`. |
 | 9 | L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT - Flame Blade Runtime Support | blocked | L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE | B lane; Unit `flame_blade`. |
 | 10 | L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE - Heat Metal Surface Contact Escape Shape | ready-for-research | completed baseline | B lane; Unit `heat_metal`. |
 | 11 | L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME - Heat Metal Contact Damage Runtime | blocked | L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE | B lane; Unit `heat_metal`. |
 | 12 | L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY - Heat Metal Holding Wearing Penalty Runtime | blocked | L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE, L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME | B lane; Unit `heat_metal`. |
-| 13 | L12G-RECURSIVE-TAIL-LOOP-B - LOOP-B Recursive Next-Batch Planning Tail | blocked | L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION, L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE, L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT, L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE, L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME, L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME, L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL, L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE, L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT, L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE, L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME, L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY | Last-resort next-batch planning safety net; auto-unblocks only after every real task in this plan is `done`. |
+| 13 | L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING - Dispel Magic Ongoing Spell Ending | ready-for-research | L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL | B lane split; Unit `dispel_magic`; resolves generic ongoing spell ending for object-attached Continual Flame occurrences without a spell-specific removal registry. |
+| 14 | L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL - Darkness Spell-Created Light Dispel | ready-for-research | L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL | B lane split; Unit `darkness`; first author or close the missing SRD Darkness Unit, then resolve level-2-or-lower spell-created light overlap dispel. |
+| 15 | L12G-FOLLOWUP-ANTIMAGIC-FIELD-SPELL-EFFECT-SUPPRESSION - Antimagic Field Spell Effect Suppression | ready-for-research | L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL | B lane split; Unit `antimagic_field`; resolves generic ongoing spell suppression for object-attached Continual Flame occurrences without duplicating emitter state. |
+| 16 | L12G-RECURSIVE-TAIL-LOOP-B - LOOP-B Recursive Next-Batch Planning Tail | blocked | L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION, L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE, L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT, L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE, L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME, L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME, L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL, L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE, L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT, L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE, L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME, L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY, L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING, L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL, L12G-FOLLOWUP-ANTIMAGIC-FIELD-SPELL-EFFECT-SUPPRESSION | Last-resort next-batch planning safety net; auto-unblocks only after every real task in this plan is `done`. |
 
 ## Task Details
 
@@ -416,7 +437,7 @@ Acceptance:
 
 ### Task 7 - L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL - Continual Flame Dispel And Suppression Removal
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `continual_flame`.
 Origin: Original backlog task 93.
@@ -660,13 +681,134 @@ Acceptance:
 - reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
 - battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
 
-### Task 13 - L12G-RECURSIVE-TAIL-LOOP-B - LOOP-B Recursive Next-Batch Planning Tail
+### Task 13 - L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING - Dispel Magic Ongoing Spell Ending
+
+Status: `ready-for-research`
+
+Unit: `dispel_magic`.
+Origin: Split from completed Task 7 `L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL`.
+Dependencies: L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL.
+
+Pre-researched scope:
+
+- Promote or precisely close Dispel Magic's ongoing-spell ending procedure from `.references/srd-5.2.1/Spells/Descriptions-A-D.md#Dispel Magic`: target creature/object/magical-effect selection, automatic ending for ongoing spells of level 3 or lower on the target, ability-check gate for level 4 or higher ongoing spells, and higher-slot automatic ending when the ongoing spell level is at most the slot level used. The owner must consume generic ongoing Spell Effect occurrences such as object-attached Continual Flame rather than adding a Continual Flame-specific removal registry.
+
+Inputs:
+
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/UNIT_REPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- `plans/unit-profile-coverage/unit-matrix.json`;
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `dispel_magic` and object-light Spell Effect occurrences including `continual_flame`.
+
+Outputs:
+
+- supported Dispel Magic profile, accepted closure, or a smaller follow-up split for ongoing Spell Effect ending;
+- Continual Flame's deferred Dispel Magic cleanup remains represented through the generic ongoing Spell Effect owner, not through authored spell identity dispatch or a parallel per-spell removal list;
+- update only the owner files required by the task;
+- regenerate coverage artifacts.
+
+Acceptance:
+
+- RAW and ubiquitous-language checks are performed before modeling;
+- focused package tests cover Dispel Magic target admission, low-level automatic ending, higher-level ability-check or slot gate behavior, and object-attached Continual Flame cleanup when supported;
+- package typecheck is run for touched packages when dependencies are available;
+- `pnpm unit-profile-coverage:check --write` and `pnpm unit-profile-coverage:check` are run;
+- `git diff --check` passes;
+- reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
+- battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
+
+### Task 14 - L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL - Darkness Spell-Created Light Dispel
+
+Status: `ready-for-research`
+
+Unit: `darkness`.
+Origin: Split from completed Task 7 `L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL`.
+Dependencies: L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL.
+
+Pre-researched scope:
+
+- Author or explicitly close the missing SRD Darkness Surface Unit, then promote or precisely close the overlap rule from `.references/srd-5.2.1/Spells/Descriptions-A-D.md#Darkness`: if Darkness overlaps Bright Light or Dim Light created by a spell of level 2 or lower, that other spell is dispelled. Consume generic spell-created light facts, including Continual Flame object emitters, without dispatching on authored spell identity.
+
+Inputs:
+
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/UNIT_REPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- `plans/unit-profile-coverage/unit-matrix.json`;
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for object-light Spell Effect occurrences including `continual_flame`.
+
+Outputs:
+
+- SRD-provenance Darkness Surface catalog outcome plus supported profile, accepted closure, or a smaller follow-up split for spell-created light overlap dispel;
+- the three current missing Darkness spell-list rows are resolved through authored catalog evidence or an explicit accepted closure;
+- Continual Flame's deferred Darkness overlap cleanup remains represented through the Darkness owner and generic spell-created light facts;
+- update only the owner files required by the task;
+- regenerate coverage artifacts.
+
+Acceptance:
+
+- RAW and ubiquitous-language checks are performed before modeling;
+- focused package tests cover Darkness catalog admission or accepted closure, overlap with level-2-or-lower spell-created Bright/Dim Light, non-identity-based cleanup of Continual Flame when supported, and any retained unsupported residuals;
+- package typecheck is run for touched packages when dependencies are available;
+- `pnpm unit-profile-coverage:check --write` and `pnpm unit-profile-coverage:check` are run;
+- `git diff --check` passes;
+- reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
+- battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
+
+### Task 15 - L12G-FOLLOWUP-ANTIMAGIC-FIELD-SPELL-EFFECT-SUPPRESSION - Antimagic Field Spell Effect Suppression
+
+Status: `ready-for-research`
+
+Unit: `antimagic_field`.
+Origin: Split from completed Task 7 `L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL`.
+Dependencies: L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL.
+
+Pre-researched scope:
+
+- Promote or precisely close Antimagic Field's ongoing-spell suppression from `.references/srd-5.2.1/Spells/Descriptions-A-D.md#Antimagic Field`: ongoing spells in the area are suppressed except those cast by an Artifact or deity; suppressed effects do not function, but suppressed time counts against duration. The owner must suppress object-attached Continual Flame emitters without deleting their spell occurrence or duplicating emitter state.
+
+Inputs:
+
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/UNIT_REPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- `plans/unit-profile-coverage/unit-matrix.json`;
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Surface content, Unit claims, owner evidence, and focused tests for `antimagic_field` and object-light Spell Effect occurrences including `continual_flame`.
+
+Outputs:
+
+- supported Antimagic Field profile, accepted closure, or a smaller follow-up split for ongoing Spell Effect suppression;
+- Continual Flame's deferred Antimagic Field suppression remains represented through a generic ongoing Spell Effect suppression owner, not through authored spell identity dispatch or duplicated object-emitter state;
+- update only the owner files required by the task;
+- regenerate coverage artifacts.
+
+Acceptance:
+
+- RAW and ubiquitous-language checks are performed before modeling;
+- focused package tests cover Antimagic Field suppression of ongoing spells in the area, non-deleting suppression and restoration of object-attached Continual Flame emitters when supported, Artifact/deity exception handling or accepted closure, and duration-time handling for suppressed effects;
+- package typecheck is run for touched packages when dependencies are available;
+- `pnpm unit-profile-coverage:check --write` and `pnpm unit-profile-coverage:check` are run;
+- `git diff --check` passes;
+- reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
+- battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
+
+### Task 16 - L12G-RECURSIVE-TAIL-LOOP-B - LOOP-B Recursive Next-Batch Planning Tail
 
 Status: `blocked`
 
 Unit: `level1_2_frontier`.
 Origin: Safety-net planning task for when this plan has no earlier runnable implementation tasks.
-Dependencies: L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION, L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE, L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT, L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE, L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME, L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME, L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL, L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE, L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT, L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE, L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME, L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY.
+Dependencies: L12G-FOLLOWUP-ACID-ARROW-RAW-CORPUS-RECONCILIATION, L12G-FOLLOWUP-ACID-ARROW-SURFACE-DAMAGE-SHAPE, L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT, L12G-FOLLOWUP-ALTER-SELF-SURFACE-OPTION-SHAPE, L12G-FOLLOWUP-ALTER-SELF-AQUATIC-RUNTIME, L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME, L12G-FOLLOWUP-CONTINUAL-FLAME-DISPEL-REMOVAL, L12G-FOLLOWUP-FLAME-BLADE-SURFACE-LIFECYCLE, L12G-FOLLOWUP-FLAME-BLADE-RUNTIME-SUPPORT, L12G-FOLLOWUP-HEAT-METAL-SURFACE-CONTACT-ESCAPE-SHAPE, L12G-FOLLOWUP-HEAT-METAL-CONTACT-DAMAGE-RUNTIME, L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY, L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING, L12G-FOLLOWUP-DARKNESS-SPELL-CREATED-LIGHT-DISPEL, L12G-FOLLOWUP-ANTIMAGIC-FIELD-SPELL-EFFECT-SUPPRESSION.
 
 Pre-researched scope:
 
