@@ -319,7 +319,6 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       expect.objectContaining({
         kind: "movableZoneRepositionMovement",
         movableZone: expect.objectContaining({
-          procedure: "flamingSphere",
           sourceCombatantId: spellCasterId,
           sourceSpellId: flamingSphereUnitId,
           areaId: flamingSphereAreaId,
@@ -378,7 +377,6 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       expect.objectContaining({
         label: "flaming_sphere ram movement",
         movableZone: expect.objectContaining({
-          procedure: "flamingSphere",
           targetId: spellTargetId,
           sourceCombatantId: spellCasterId,
           sourceSpellId: flamingSphereUnitId,

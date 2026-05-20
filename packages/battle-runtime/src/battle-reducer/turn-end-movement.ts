@@ -163,13 +163,12 @@ import type {
   BattleFill,
   BattleFlamingSphereDamageRollHole,
   BattleFlamingSphereRamMovementHole,
-  BattleFlamingSphereRepositionMovementHole,
   BattleFlamingSphereSavingThrowOutcomeHole,
   BattleFlamingSphereTrigger,
   BattleMoonbeamDamageRollHole,
-  BattleMoonbeamRepositionMovementHole,
   BattleMoonbeamSaveTrigger,
   BattleMoonbeamSavingThrowOutcomeHole,
+  BattleMovableZoneRepositionMovementHole,
   BattleGreaseGroundDifficultTerrainMovementFact,
   BattleGrappleLink,
   BattleGreaseGroundHazardSavingThrowOutcomeHole,
@@ -1891,7 +1890,6 @@ export function flamingSphereRamMovementHole(
     holeInstanceKey: holeInstanceKey(key),
     label: `${effect.sourceSpellId} ram movement`,
     movableZone: {
-      procedure: "flamingSphere",
       targetId,
       sourceSpellId: effect.sourceSpellId,
       sourceCombatantId: effect.sourceCombatantId,
@@ -1904,7 +1902,7 @@ export function flamingSphereRamMovementHole(
 
 export function flamingSphereRepositionMovementHole(
   effect: FlamingSphereEffect,
-): BattleFlamingSphereRepositionMovementHole {
+): BattleMovableZoneRepositionMovementHole {
   const key = `battle:flaming-sphere-reposition-movement:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}`;
   return {
     kind: "movableZoneRepositionMovement",
@@ -1912,7 +1910,6 @@ export function flamingSphereRepositionMovementHole(
     holeInstanceKey: holeInstanceKey(key),
     label: `${effect.sourceSpellId} reposition movement`,
     movableZone: {
-      procedure: "flamingSphere",
       sourceSpellId: effect.sourceSpellId,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
@@ -1935,7 +1932,6 @@ export function flamingSphereSavingThrowOutcomeHole(
     holeInstanceKey: holeInstanceKey(key),
     label: `${effect.sourceSpellId} ${flamingSphereTriggerLabel(trigger)} DEX save`,
     movableZone: {
-      procedure: "flamingSphere",
       targetId,
       sourceSpellId: effect.sourceSpellId,
       sourceCombatantId: effect.sourceCombatantId,
@@ -1968,7 +1964,6 @@ function flamingSphereDamageRollHole(
     holeInstanceKey: holeInstanceKey(key),
     label: `${effect.sourceSpellId} ${flamingSphereTriggerLabel(trigger)} damage`,
     movableZone: {
-      procedure: "flamingSphere",
       targetId,
       sourceSpellId: effect.sourceSpellId,
       sourceCombatantId: effect.sourceCombatantId,
@@ -2053,7 +2048,7 @@ function validateFlamingSphereRepositionMovement(
     BattleFill,
     { readonly kind: "movableZoneRepositionMovement" }
   >,
-  hole: BattleFlamingSphereRepositionMovementHole,
+  hole: BattleMovableZoneRepositionMovementHole,
 ): string | null {
   if (fill.holeId !== hole.holeId) {
     return "Movable zone reposition movement must use the selected sphere movement hole.";
@@ -2694,7 +2689,6 @@ export function moonbeamSavingThrowOutcomeHole(
     holeInstanceKey: holeInstanceKey(key),
     label: `${effect.sourceSpellId} ${moonbeamTriggerLabel(trigger)} CON save`,
     movableZone: {
-      procedure: "moonbeam",
       targetId,
       sourceSpellId: effect.sourceSpellId,
       sourceCombatantId: effect.sourceCombatantId,
@@ -2727,7 +2721,6 @@ function moonbeamDamageRollHole(
     holeInstanceKey: holeInstanceKey(key),
     label: `${effect.sourceSpellId} ${moonbeamTriggerLabel(trigger)} damage`,
     movableZone: {
-      procedure: "moonbeam",
       targetId,
       sourceSpellId: effect.sourceSpellId,
       sourceCombatantId: effect.sourceCombatantId,
@@ -2741,7 +2734,7 @@ function moonbeamDamageRollHole(
 
 export function moonbeamRepositionMovementHole(
   effect: MoonbeamEffect,
-): BattleMoonbeamRepositionMovementHole {
+): BattleMovableZoneRepositionMovementHole {
   const key = `battle:moonbeam-reposition-movement:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}`;
   return {
     kind: "movableZoneRepositionMovement",
@@ -2749,7 +2742,6 @@ export function moonbeamRepositionMovementHole(
     holeInstanceKey: holeInstanceKey(key),
     label: `${effect.sourceSpellId} reposition movement`,
     movableZone: {
-      procedure: "moonbeam",
       sourceSpellId: effect.sourceSpellId,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
@@ -2784,7 +2776,7 @@ function validateMoonbeamDamageRoll(
 
 function validateMoonbeamRepositionMovement(
   fill: Extract<BattleFill, { readonly kind: "movableZoneRepositionMovement" }>,
-  hole: BattleMoonbeamRepositionMovementHole,
+  hole: BattleMovableZoneRepositionMovementHole,
 ): string | null {
   if (fill.holeId !== hole.holeId) {
     return "Movable zone reposition movement must use the selected movement hole.";

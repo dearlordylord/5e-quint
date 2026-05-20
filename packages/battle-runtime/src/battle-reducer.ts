@@ -4078,7 +4078,6 @@ export type BattleFlamingSphereRamMovementHole = {
   readonly kind: "movableZoneRamMovement";
   readonly label: string;
   readonly movableZone: {
-    readonly procedure: "flamingSphere";
     readonly targetId: CombatantId;
     readonly sourceSpellId: SpellRecord["id"];
     readonly sourceCombatantId: CombatantId;
@@ -4087,13 +4086,12 @@ export type BattleFlamingSphereRamMovementHole = {
   };
   readonly requiresTableSpatialFact: true;
 };
-export type BattleFlamingSphereRepositionMovementHole = {
+export type BattleMovableZoneRepositionMovementHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
   readonly kind: "movableZoneRepositionMovement";
   readonly label: string;
   readonly movableZone: {
-    readonly procedure: "flamingSphere";
     readonly sourceSpellId: SpellRecord["id"];
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
@@ -4107,7 +4105,6 @@ export type BattleFlamingSphereSavingThrowOutcomeHole = {
   readonly kind: "savingThrowOutcome";
   readonly label: string;
   readonly movableZone: {
-    readonly procedure: "flamingSphere";
     readonly targetId: CombatantId;
     readonly sourceSpellId: SpellRecord["id"];
     readonly sourceCombatantId: CombatantId;
@@ -4129,7 +4126,6 @@ export type BattleFlamingSphereDamageRollHole = Extract<
   { readonly kind: "rolledDice" }
 > & {
   readonly movableZone: {
-    readonly procedure: "flamingSphere";
     readonly targetId: CombatantId;
     readonly sourceSpellId: SpellRecord["id"];
     readonly sourceCombatantId: CombatantId;
@@ -4144,27 +4140,12 @@ export type BattleMoonbeamSaveTrigger =
   | "areaMovesIntoSpace"
   | "entersArea"
   | "endsTurnInArea";
-export type BattleMoonbeamRepositionMovementHole = {
-  readonly holeInstanceKey: HoleInstanceKey;
-  readonly holeId: BattleHoleId;
-  readonly kind: "movableZoneRepositionMovement";
-  readonly label: string;
-  readonly movableZone: {
-    readonly procedure: "moonbeam";
-    readonly sourceSpellId: SpellRecord["id"];
-    readonly sourceCombatantId: CombatantId;
-    readonly areaId: BattleAreaId;
-    readonly maxMoveFeet: MovementFeet;
-  };
-  readonly requiresTableSpatialFact: true;
-};
 export type BattleMoonbeamSavingThrowOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
   readonly kind: "savingThrowOutcome";
   readonly label: string;
   readonly movableZone: {
-    readonly procedure: "moonbeam";
     readonly targetId: CombatantId;
     readonly sourceSpellId: SpellRecord["id"];
     readonly sourceCombatantId: CombatantId;
@@ -4186,7 +4167,6 @@ export type BattleMoonbeamDamageRollHole = Extract<
   { readonly kind: "rolledDice" }
 > & {
   readonly movableZone: {
-    readonly procedure: "moonbeam";
     readonly targetId: CombatantId;
     readonly sourceSpellId: SpellRecord["id"];
     readonly sourceCombatantId: CombatantId;
@@ -4642,9 +4622,8 @@ export type BattleHole =
   | BattleGreaseGroundHazardSavingThrowOutcomeHole
   | BattleSpellConditionEndTurnSavingThrowOutcomeHole
   | BattleFlamingSphereRamMovementHole
-  | BattleFlamingSphereRepositionMovementHole
+  | BattleMovableZoneRepositionMovementHole
   | BattleFlamingSphereSavingThrowOutcomeHole
-  | BattleMoonbeamRepositionMovementHole
   | BattleMoonbeamSavingThrowOutcomeHole
   | BattleMoonbeamDamageRollHole
   | BattleProtectionRelevantEffectSavingThrowOutcomeHole
