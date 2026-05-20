@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Feature Passive Resource And Persistent Profile Join"
     },
     {
