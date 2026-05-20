@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 389,
-      "numerator": 176,
-      "percent": "45.2%"
+      "denominator": 390,
+      "numerator": 177,
+      "percent": "45.4%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 461,
-      "numerator": 208,
-      "percent": "45.1%"
+      "denominator": 462,
+      "numerator": 209,
+      "percent": "45.2%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 209
+      "value": 210
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 129,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 209,
-      "numerator": 209,
+      "denominator": 210,
+      "numerator": 210,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "81.4%"
     },
     "supportedProfileCoverage": {
-      "denominator": 177,
+      "denominator": 178,
       "numerator": 129,
-      "percent": "72.9%"
+      "percent": "72.5%"
     }
   },
   "metricSemantics": [
@@ -12671,6 +12671,29 @@
       ],
       "sourceRecordPath": "packages/surface/content/animal_friendship.json",
       "unitId": "animal_friendship"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table/exploration Beast routing and message-delivery owner",
+          "reason": "Route choice, travel progress, recipient matching, arrival and delivery success, message playback, message loss, and return travel are table/exploration facts outside promoted battle runtime."
+        },
+        "reason": "Animal Messenger is authored and installed as an SRD Surface Spell Definition with Action or Ritual casting, 30-foot range, V/S/M morsel component, 24-hour duration plus 48 hours per slot above 2, one Tiny Beast target, Challenge-Rating-nonzero automatic save success, Charisma save for eligible CR 0 targets, and failed-save courier task facts for caster-specified visited location, generally described recipient, up-to-25-word message, 25/50 miles per 24 hours travel pacing, delivery by mimicking caster communication, and the message-loss/return clause. Task 5 claims no promoted battle-runtime profile because route choice, travel progress, recipient matching, arrival and delivery success, message playback, message loss, and return travel are runtime-detached table/exploration Beast routing/message-delivery facts outside promoted battle Unit profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/animal_messenger.json",
+      "unitId": "animal_messenger"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

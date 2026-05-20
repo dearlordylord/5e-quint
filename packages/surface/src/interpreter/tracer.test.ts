@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 
+import animalMessengerInput from "../../content/animal_messenger.json";
 import classFighterInput from "../../content/class_fighter.json";
 import dragonsBreathInput from "../../content/dragons_breath.json";
 import locateAnimalsOrPlantsInput from "../../content/locate_animals_or_plants.json";
@@ -138,6 +139,38 @@ describe("Surface trace interpreter", () => {
             "nearest particular_kind within 1000 ft",
             "direction_to_location_and_movement",
             "blocked_by: any_thickness_of_lead_direct_path",
+          ].join("\n"),
+        }),
+      ]),
+    );
+  });
+
+  test("renders Animal Messenger as a CR-gated Tiny Beast courier task", () => {
+    const trace = traceUnit(decodeUnitRecordSync(animalMessengerInput));
+
+    expect(trace.nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          atomKind: "hole",
+          label: expect.stringContaining("creature size: exact tiny"),
+        }),
+        expect.objectContaining({
+          atomKind: "save_gate",
+          label: expect.stringContaining(
+            "auto-success if target Challenge Rating != 0",
+          ),
+        }),
+        expect.objectContaining({
+          atomKind: "assign_courier_task",
+          label: [
+            "assign_courier_task",
+            "messenger: target_beast",
+            "destination: caster_specified_visited_location",
+            "recipient: caster_specified_general_description",
+            "message: 25 words; mimic_caster_communication",
+            "travel: 25/50 miles per 24h",
+            "on arrival: deliver_to_described_creature",
+            "on expiry: message_lost_and_beast_returns_to_casting_location",
           ].join("\n"),
         }),
       ]),

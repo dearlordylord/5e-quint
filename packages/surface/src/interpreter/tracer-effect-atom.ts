@@ -203,6 +203,7 @@ export function traceEffectAtom(
     case "detect":
     case "locate_kind":
     case "object_location_sense":
+    case "assign_courier_task":
     case "negate_triggering_spell":
     case "reflect_triggering_spell":
     case "waste_triggering_spell_or_effect":

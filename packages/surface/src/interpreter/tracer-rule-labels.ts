@@ -291,6 +291,10 @@ export function describeTargetSelection(s: TargetSelection): string {
     "typeFilter" in s && s.typeFilter !== undefined && s.typeFilter.length > 0
       ? `\ntype: ${s.typeFilter.join("/")}`
       : "";
+  const creatureSizeFilter =
+    "creatureSizeFilter" in s
+      ? `\ncreature size: ${s.creatureSizeFilter.kind} ${s.creatureSizeFilter.creatureSize}`
+      : "";
   const objectFilter =
     "objectFilter" in s ? describeObjectFilter(s.objectFilter) : "";
   const stateFilter =
@@ -302,12 +306,12 @@ export function describeTargetSelection(s: TargetSelection): string {
   const disposition =
     "disposition" in s ? `\ndisposition: ${s.disposition}` : "";
   if (s.mode === "one") {
-    return `one${targetKinds}${typeFilter}${objectFilter}${stateFilter}${disposition}`;
+    return `one${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}`;
   }
   if (s.mode === "any_number")
-    return `any_number${targetKinds}${typeFilter}${objectFilter}${stateFilter}${disposition}`;
+    return `any_number${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}`;
   const repeats = s.repeatsAllowed === true ? " (repeats allowed)" : "";
-  return `choose_up_to: ${describeScaling(s.count)}${repeats}${targetKinds}${typeFilter}${objectFilter}${stateFilter}${disposition}`;
+  return `choose_up_to: ${describeScaling(s.count)}${repeats}${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}`;
 }
 
 export function describeAreaOrigin(

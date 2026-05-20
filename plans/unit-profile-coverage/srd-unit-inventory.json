@@ -182,12 +182,12 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 478,
-      "percent": "86%",
+      "numerator": 481,
+      "percent": "86.5%",
       "rowsByStatus": {
         "accepted": 355,
-        "accepted-no-battle-effect": 123,
-        "battle-runtime-required": 68,
+        "accepted-no-battle-effect": 126,
+        "battle-runtime-required": 65,
         "partial-battle-runtime": 7,
         "owner-evidence-required": 3
       }
@@ -205,15 +205,15 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 367,
       "non-runtime": 24,
-      "catalog-only/dead-for-now": 94,
-      "missing-authored-record": 29,
+      "catalog-only/dead-for-now": 97,
+      "missing-authored-record": 26,
       "catalog-installed-owner-evidence-required": 21,
       "catalog-authored-executable-follow-up": 21
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 206,
-      "catalog-only/dead-for-now": 94,
-      "missing-authored-record": 29,
+      "catalog-only/dead-for-now": 97,
+      "missing-authored-record": 26,
       "catalog-installed-owner-evidence-required": 17,
       "catalog-authored-executable-follow-up": 21
     },
@@ -6145,19 +6145,39 @@
       "detail": "Animal Messenger (Enchantment; R)",
       "candidateUnitId": "animal_messenger",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "animal_messenger",
+        "sourceRecordPath": "packages/surface/content/animal_messenger.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "animal_messenger"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached table/exploration Beast routing and message-delivery owner",
+        "reason": "Route choice, travel progress, recipient matching, arrival and delivery success, message playback, message loss, and return travel are table/exploration facts outside promoted battle runtime."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit animal_messenger is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached table/exploration Beast routing and message-delivery owner",
+          "evidence": "Route choice, travel progress, recipient matching, arrival and delivery success, message playback, message loss, and return travel are table/exploration facts outside promoted battle runtime.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Route choice, travel progress, recipient matching, arrival and delivery success, message playback, message loss, and return travel are table/exploration facts outside promoted battle runtime.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_blindness_deafness",
@@ -11245,19 +11265,39 @@
       "detail": "Animal Messenger (Enchantment; R)",
       "candidateUnitId": "animal_messenger",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "animal_messenger",
+        "sourceRecordPath": "packages/surface/content/animal_messenger.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "animal_messenger"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached table/exploration Beast routing and message-delivery owner",
+        "reason": "Route choice, travel progress, recipient matching, arrival and delivery success, message playback, message loss, and return travel are table/exploration facts outside promoted battle runtime."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit animal_messenger is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached table/exploration Beast routing and message-delivery owner",
+          "evidence": "Route choice, travel progress, recipient matching, arrival and delivery success, message playback, message loss, and return travel are table/exploration facts outside promoted battle runtime.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Route choice, travel progress, recipient matching, arrival and delivery success, message playback, message loss, and return travel are table/exploration facts outside promoted battle runtime.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_augury",
@@ -16650,19 +16690,39 @@
       "detail": "Animal Messenger (Enchantment; R)",
       "candidateUnitId": "animal_messenger",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "animal_messenger",
+        "sourceRecordPath": "packages/surface/content/animal_messenger.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "animal_messenger"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "runtime-detached table/exploration Beast routing and message-delivery owner",
+        "reason": "Route choice, travel progress, recipient matching, arrival and delivery success, message playback, message loss, and return travel are table/exploration facts outside promoted battle runtime."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit animal_messenger is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached table/exploration Beast routing and message-delivery owner",
+          "evidence": "Route choice, travel progress, recipient matching, arrival and delivery success, message playback, message loss, and return travel are table/exploration facts outside promoted battle runtime.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Route choice, travel progress, recipient matching, arrival and delivery success, message playback, message loss, and return travel are table/exploration facts outside promoted battle runtime.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_barkskin",

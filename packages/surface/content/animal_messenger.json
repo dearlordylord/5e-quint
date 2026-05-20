@@ -1,0 +1,115 @@
+{
+  "description": "A Tiny Beast of your choice that you can see within range must succeed on a Charisma saving throw, or it attempts to deliver a message for you; if the target's Challenge Rating isn't 0, it automatically succeeds. You specify a location you have visited and a recipient who matches a general description. You also communicate a message of up to twenty-five words. The Beast travels for the duration toward the specified location, covering about 25 miles per 24 hours or 50 miles if the Beast can fly. When the Beast arrives, it delivers your message to the creature that you described, mimicking your communication. If the Beast doesn't reach its destination before the spell ends, the message is lost, and the Beast returns to where you cast the spell. Using a Higher-Level Spell Slot. The spell's duration increases by 48 hours for each spell slot level above 2.",
+  "id": "animal_messenger",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action",
+      "ritual": true
+    },
+    "components": {
+      "m": "a morsel of food",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 24,
+        "unit": "hour",
+        "upcastTiers": [
+          {
+            "amount": 72,
+            "atSlot": 3
+          },
+          {
+            "amount": 120,
+            "atSlot": 4
+          },
+          {
+            "amount": 168,
+            "atSlot": 5
+          },
+          {
+            "amount": 216,
+            "atSlot": 6
+          },
+          {
+            "amount": 264,
+            "atSlot": 7
+          },
+          {
+            "amount": 312,
+            "atSlot": 8
+          },
+          {
+            "amount": 360,
+            "atSlot": 9
+          }
+        ]
+      }
+    },
+    "family": "activation",
+    "level": 2,
+    "phases": [
+      {
+        "ability": "cha",
+        "attachment": {
+          "holeId": "animal_messenger_target",
+          "kind": "hole",
+          "label": "target Tiny Beast",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "creatureSizeFilter": {
+                "creatureSize": "tiny",
+                "kind": "exact"
+              },
+              "mode": "one",
+              "targetKinds": ["creature"],
+              "typeFilter": ["beast"]
+            }
+          }
+        },
+        "autoSuccessIfTarget": {
+          "challengeRating": 0,
+          "kind": "challenge_rating_not_equal"
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "destination": "caster_specified_visited_location",
+          "kind": "assign_courier_task",
+          "message": {
+            "delivery": "mimic_caster_communication",
+            "maxWords": 25
+          },
+          "messenger": "target_beast",
+          "onArrival": "deliver_to_described_creature",
+          "onExpiryBeforeArrival": "message_lost_and_beast_returns_to_casting_location",
+          "recipient": "caster_specified_general_description",
+          "travel": {
+            "direction": "toward_destination_for_duration",
+            "flyingMilesPer24Hours": 50,
+            "groundMilesPer24Hours": 25
+          }
+        },
+        "onSuccess": {
+          "kind": "none"
+        }
+      }
+    ],
+    "range": {
+      "feet": 30,
+      "kind": "point"
+    },
+    "school": "enchantment"
+  },
+  "name": "Animal Messenger",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Animal Messenger"
+  }
+}

@@ -24,6 +24,7 @@ export type CompositeAndCountermagicEffectAtom = Extract<
       | "detect"
       | "locate_kind"
       | "object_location_sense"
+      | "assign_courier_task"
       | "negate_triggering_spell"
       | "reflect_triggering_spell"
       | "waste_triggering_spell_or_effect"
@@ -395,6 +396,25 @@ export function traceCompositeAndCountermagicEffectAtom(
           `nearest ${e.searchModes.nearestObjectKind} within ${e.maxDistanceFeet} ft`,
           e.result,
           `blocked_by: ${e.blockedBy}`,
+        ].join("\n"),
+      });
+      return id;
+    }
+    case "assign_courier_task": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "assign_courier_task",
+        label: [
+          "assign_courier_task",
+          `messenger: ${e.messenger}`,
+          `destination: ${e.destination}`,
+          `recipient: ${e.recipient}`,
+          `message: ${e.message.maxWords} words; ${e.message.delivery}`,
+          `travel: ${e.travel.groundMilesPer24Hours}/${e.travel.flyingMilesPer24Hours} miles per 24h`,
+          `on arrival: ${e.onArrival}`,
+          `on expiry: ${e.onExpiryBeforeArrival}`,
         ].join("\n"),
       });
       return id;

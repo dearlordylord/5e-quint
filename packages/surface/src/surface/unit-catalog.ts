@@ -5,6 +5,7 @@ import { Option } from "effect";
 import armorChainMailInput from "../../content/armor_chain_mail.json";
 import aidInput from "../../content/aid.json";
 import animalFriendshipInput from "../../content/animal_friendship.json";
+import animalMessengerInput from "../../content/animal_messenger.json";
 import backgroundSoldierInput from "../../content/background_soldier.json";
 import bardBardicInspirationInput from "../../content/bard_bardic_inspiration.json";
 import bardCuttingWordsInput from "../../content/bard_cutting_words.json";
@@ -420,6 +421,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     acidSplashInput,
     aidInput,
     animalFriendshipInput,
+    animalMessengerInput,
     barkskinInput,
     blindnessDeafnessInput,
     baneInput,

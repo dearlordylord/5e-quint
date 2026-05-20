@@ -127,6 +127,59 @@
       "unitId": "alter_self"
     },
     {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Route choice, travel progress, recipient matching, arrival and delivery success, message playback, message loss, and return travel are table/exploration facts outside promoted battle runtime.",
+      "sourceRecordPath": "packages/surface/content/animal_messenger.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Animal Messenger",
+          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_animal_messenger",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 191,
+            "lineStart": 191,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Druid spell list Animal Messenger",
+          "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_animal_messenger",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 228,
+            "lineStart": 228,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Ranger spell list Animal Messenger",
+          "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_animal_messenger",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 183,
+            "lineStart": 183,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
+        }
+      ],
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
+      "unitId": "animal_messenger"
+    },
+    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -2699,11 +2752,12 @@
       ]
     },
     {
-      "count": 21,
+      "count": 22,
       "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
         "alarm",
+        "animal_messenger",
         "arcane_lock",
         "charm_person",
         "comprehend_languages",
@@ -2768,12 +2822,12 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 478,
-      "percent": "86%",
+      "numerator": 481,
+      "percent": "86.5%",
       "rowsByStatus": {
         "accepted": 355,
-        "accepted-no-battle-effect": 123,
-        "battle-runtime-required": 68,
+        "accepted-no-battle-effect": 126,
+        "battle-runtime-required": 65,
         "owner-evidence-required": 3,
         "partial-battle-runtime": 7
       }
@@ -2794,13 +2848,13 @@
       "percent": "29.2%"
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 161,
+      "denominator": 162,
       "numerator": 106,
-      "percent": "65.8%"
+      "percent": "65.4%"
     },
     "strictTargetClosure": {
-      "denominator": 161,
-      "numerator": 160,
+      "denominator": 162,
+      "numerator": 161,
       "percent": "99.4%"
     }
   },
@@ -2836,48 +2890,6 @@
       }
     ],
     "noMatrixSrdPressure": [
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "spell Unit pressure",
-            "concept": "Bard spell list Animal Messenger",
-            "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_animal_messenger",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 191,
-              "lineStart": 191,
-              "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Druid spell list Animal Messenger",
-            "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_animal_messenger",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 228,
-              "lineStart": 228,
-              "path": ".references/srd-5.2.1/Classes/Druid.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Ranger spell list Animal Messenger",
-            "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_animal_messenger",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 183,
-              "lineStart": 183,
-              "path": ".references/srd-5.2.1/Classes/Ranger.md"
-            }
-          }
-        ],
-        "unitId": "animal_messenger"
-      },
       {
         "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
         "sourceRows": [
@@ -7577,18 +7589,18 @@
       "missing": 1,
       "profile-subset-supported": 14,
       "supported-profile": 106,
-      "unsupported-profile": 40
+      "unsupported-profile": 41
     },
     "groupsByStatus": {
       "blocked-follow-up-split": 24,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
-      "closed-runtime-detached-table-adjudication": 21,
+      "closed-runtime-detached-table-adjudication": 22,
       "open-runtime-behavior": 1,
       "supported-profile": 106
     },
-    "nonSupportedFrontier": 55,
-    "strictDenominator": 161
+    "nonSupportedFrontier": 56,
+    "strictDenominator": 162
   }
 }

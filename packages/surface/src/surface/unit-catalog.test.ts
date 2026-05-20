@@ -110,6 +110,7 @@ const requiredFirstVerticalUnitIds = [
   "fire_bolt",
   "fireball",
   "light",
+  "animal_messenger",
   "ray_of_frost",
   "detect_evil_and_good",
   "detect_magic",
@@ -808,8 +809,14 @@ describe("SRD Unit catalog boundary", () => {
     const shapeShiftOnFail = {
       kind: "composite",
       effects: expect.arrayContaining([
-        { kind: "revert_shape_shift_to_true_form", onlyIfTargetIsShapeShifted: true },
-        { kind: "suppress_shape_shifting_while_in_area", onlyIfTargetIsShapeShifted: true },
+        {
+          kind: "revert_shape_shift_to_true_form",
+          onlyIfTargetIsShapeShifted: true,
+        },
+        {
+          kind: "suppress_shape_shifting_while_in_area",
+          onlyIfTargetIsShapeShifted: true,
+        },
       ]),
     };
 
@@ -821,7 +828,10 @@ describe("SRD Unit catalog boundary", () => {
     expect(moonbeam.mechanics.initialPhase).toMatchObject({
       kind: "save_gate",
       onFail: shapeShiftOnFail,
-      usageLimit: { kind: "once_per_turn", limitGroup: "moonbeam_save_per_turn" },
+      usageLimit: {
+        kind: "once_per_turn",
+        limitGroup: "moonbeam_save_per_turn",
+      },
     });
 
     // All three recurring save triggers (creature-ends-turn-in-area, creature-entry,
@@ -1614,6 +1624,97 @@ describe("SRD Unit catalog boundary", () => {
     }
   });
 
+  test("decodes Animal Messenger as a CR-gated Tiny Beast courier task", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const animalMessenger = result.catalog.requireUnit("animal_messenger");
+
+    expect(animalMessenger.kind).toBe("spell");
+    if (animalMessenger.kind !== "spell") return;
+    expect(animalMessenger.mechanics.family).toBe("activation");
+    if (animalMessenger.mechanics.family !== "activation") return;
+
+    expect(animalMessenger.mechanics).toMatchObject({
+      level: 2,
+      school: "enchantment",
+      castingTime: { kind: "action", ritual: true },
+      range: { kind: "point", feet: 30 },
+      components: {
+        v: true,
+        s: true,
+        m: "a morsel of food",
+      },
+      duration: {
+        kind: "timed",
+        value: {
+          unit: "hour",
+          amount: 24,
+          upcastTiers: [
+            { atSlot: 3, amount: 72 },
+            { atSlot: 4, amount: 120 },
+            { atSlot: 5, amount: 168 },
+            { atSlot: 6, amount: 216 },
+            { atSlot: 7, amount: 264 },
+            { atSlot: 8, amount: 312 },
+            { atSlot: 9, amount: 360 },
+          ],
+        },
+      },
+    });
+    expect(animalMessenger.mechanics.phases).toEqual([
+      {
+        kind: "save_gate",
+        attachment: {
+          kind: "hole",
+          holeId: "animal_messenger_target",
+          label: "target Tiny Beast",
+          value: {
+            kind: "target",
+            selection: {
+              mode: "one",
+              targetKinds: ["creature"],
+              typeFilter: ["beast"],
+              creatureSizeFilter: {
+                kind: "exact",
+                creatureSize: "tiny",
+              },
+            },
+          },
+        },
+        ability: "cha",
+        dc: { kind: "caster_spell_save_dc" },
+        autoSuccessIfTarget: {
+          kind: "challenge_rating_not_equal",
+          challengeRating: 0,
+        },
+        onFail: {
+          kind: "assign_courier_task",
+          messenger: "target_beast",
+          destination: "caster_specified_visited_location",
+          recipient: "caster_specified_general_description",
+          message: {
+            maxWords: 25,
+            delivery: "mimic_caster_communication",
+          },
+          travel: {
+            direction: "toward_destination_for_duration",
+            groundMilesPer24Hours: 25,
+            flyingMilesPer24Hours: 50,
+          },
+          onArrival: "deliver_to_described_creature",
+          onExpiryBeforeArrival:
+            "message_lost_and_beast_returns_to_casting_location",
+        },
+        onSuccess: { kind: "none" },
+      },
+    ]);
+    expect(animalMessenger.description).toContain(
+      "message is lost, and the Beast returns to where you cast the spell",
+    );
+  });
+
   test("decodes Locate Animals or Plants as ritual nearest-kind location disclosure", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 
@@ -1893,6 +1994,171 @@ describe("SRD Unit catalog boundary", () => {
           maxDistanceFeet: 1000,
           result: "direction_to_location_and_movement",
           blockedBy: "lead",
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test("rejects non-RAW Animal Messenger courier task variants", () => {
+    const decode = Schema.decodeUnknownEither(EffectAtomSchema);
+    const decodePhase = Schema.decodeUnknownEither(ActivationPhaseSchema);
+    const courierTask = {
+      kind: "assign_courier_task",
+      messenger: "target_beast",
+      destination: "caster_specified_visited_location",
+      recipient: "caster_specified_general_description",
+      message: {
+        maxWords: 25,
+        delivery: "mimic_caster_communication",
+      },
+      travel: {
+        direction: "toward_destination_for_duration",
+        groundMilesPer24Hours: 25,
+        flyingMilesPer24Hours: 50,
+      },
+      onArrival: "deliver_to_described_creature",
+      onExpiryBeforeArrival:
+        "message_lost_and_beast_returns_to_casting_location",
+    };
+    const tinyBeastTargetAttachment = {
+      kind: "target",
+      selection: {
+        mode: "one",
+        targetKinds: ["creature"],
+        typeFilter: ["beast"],
+        creatureSizeFilter: {
+          kind: "exact",
+          creatureSize: "tiny",
+        },
+      },
+    };
+    const objectTargetAttachment = {
+      kind: "target",
+      selection: {
+        mode: "one",
+        targetKinds: ["object"],
+      },
+    };
+    const creatureOrObjectTargetAttachment = {
+      kind: "target",
+      selection: {
+        mode: "one",
+        targetKinds: ["creature", "object"],
+        objectFilter: {
+          material: "metal",
+        },
+      },
+    };
+
+    expect(Either.isRight(decode(courierTask))).toBe(true);
+    expect(
+      Either.isRight(
+        decodePhase({
+          kind: "save_gate",
+          attachment: tinyBeastTargetAttachment,
+          ability: "cha",
+          dc: { kind: "caster_spell_save_dc" },
+          autoSuccessIfTarget: {
+            kind: "challenge_rating_not_equal",
+            challengeRating: 0,
+          },
+          onFail: courierTask,
+          onSuccess: { kind: "none" },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          ...courierTask,
+          message: {
+            maxWords: 26,
+            delivery: "mimic_caster_communication",
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          ...courierTask,
+          travel: {
+            direction: "toward_destination_for_duration",
+            groundMilesPer24Hours: 30,
+            flyingMilesPer24Hours: 50,
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          ...courierTask,
+          onExpiryBeforeArrival: "message_lost",
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decodePhase({
+          kind: "save_gate",
+          attachment: { kind: "self" },
+          ability: "cha",
+          dc: { kind: "caster_spell_save_dc" },
+          autoSuccessIfTarget: {
+            kind: "challenge_rating_not_equal",
+            challengeRating: 1,
+          },
+          onFail: courierTask,
+          onSuccess: { kind: "none" },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decodePhase({
+          kind: "save_gate",
+          attachment: { kind: "self" },
+          ability: "cha",
+          dc: { kind: "caster_spell_save_dc" },
+          autoSuccessIfTarget: {
+            kind: "challenge_rating_not_equal",
+            challengeRating: 0,
+          },
+          onFail: courierTask,
+          onSuccess: { kind: "none" },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decodePhase({
+          kind: "save_gate",
+          attachment: objectTargetAttachment,
+          ability: "cha",
+          dc: { kind: "caster_spell_save_dc" },
+          autoSuccessIfTarget: {
+            kind: "challenge_rating_not_equal",
+            challengeRating: 0,
+          },
+          onFail: courierTask,
+          onSuccess: { kind: "none" },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decodePhase({
+          kind: "save_gate",
+          attachment: creatureOrObjectTargetAttachment,
+          ability: "cha",
+          dc: { kind: "caster_spell_save_dc" },
+          autoSuccessIfTarget: {
+            kind: "challenge_rating_not_equal",
+            challengeRating: 0,
+          },
+          onFail: courierTask,
+          onSuccess: { kind: "none" },
         }),
       ),
     ).toBe(true);
@@ -2596,6 +2862,47 @@ describe("SRD Unit catalog boundary", () => {
           count: 5,
           targetKinds: ["object"],
           stateFilter: ["falling"],
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test("rejects creature size filters without creature target selections", () => {
+    const decode = Schema.decodeUnknownEither(TargetSelectionSchema);
+
+    expect(
+      Either.isRight(
+        decode({
+          mode: "one",
+          targetKinds: ["creature"],
+          typeFilter: ["beast"],
+          creatureSizeFilter: {
+            kind: "exact",
+            creatureSize: "tiny",
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          mode: "one",
+          targetKinds: ["object"],
+          creatureSizeFilter: {
+            kind: "exact",
+            creatureSize: "tiny",
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode({
+          mode: "one",
+          creatureSizeFilter: {
+            kind: "exact",
+            creatureSize: "tiny",
+          },
         }),
       ),
     ).toBe(true);
