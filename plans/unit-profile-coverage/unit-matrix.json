@@ -18144,17 +18144,20 @@
         },
         "deferredMechanics": [
           {
-            "followUpTaskId": "L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE",
-            "mechanic": "strong-wind gas or vapor dispersal and candle, unprotected-flame, and protected-flame presentation clauses"
-          }
-        ],
-        "followUpTasks": [
+            "battleReadinessClosure": {
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "table/environmental-effect interaction owner",
+              "reason": "Gust of Wind's Line records the authored strong-wind area fact, and promoted Fog Cloud owns strong-wind dispersal as a caller/table-supplied cleanup command. The Gust profile does not derive overlap with gas, vapor, fog, smoke, or other cloud effects; those gas/vapor area owners consume the same table-supplied strong-wind witness at their own effect boundary instead of adding spell-local gas state"
+            },
+            "mechanic": "Gust-owned automatic gas or vapor overlap and dispersal beyond table-supplied strong-wind area witnesses"
+          },
           {
-            "id": "L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE",
-            "mechanic": "Decide whether Gust of Wind's strong-wind gas or vapor dispersal should execute against promoted Fog Cloud, Stinking Cloud, Cloudkill, or other active gas/vapor areas, and close or support the candle, unprotected-flame, protected-flame dancing, and 50 percent protected-flame extinguishing clauses without adding a duplicate environmental state model.",
-            "owner": "table/spatial presentation and environmental-effect interaction owner",
-            "requiredOutput": "Focused Surface/runtime owner decision with tests or accepted runtime-detached closure for gas/vapor dispersal and flame presentation, reusing the authored area_has_strong_wind fact rather than duplicating wind state.",
-            "title": "Gust of Wind Gas And Flame Presentation Closure"
+            "battleReadinessClosure": {
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "runtime-detached object/environment presentation owner",
+              "reason": "Candle and lantern flame state, protected versus unprotected flame classification, wild flame presentation, and the 50 percent extinguishing chance are object/environment presentation facts with no promoted battle-runtime owner; Gust of Wind does not add duplicate flame, candle, lantern, or environmental wind state."
+            },
+            "mechanic": "candle, similar unprotected-flame, protected-flame dancing, and 50 percent protected-flame extinguishing presentation clauses"
           }
         ],
         "profileIds": [
