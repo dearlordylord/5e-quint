@@ -176,6 +176,7 @@ export {
   resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
   resolveCreatureTypeProtectionSpellAct,
   resolveDamageReductionSpellAct,
+  resolveDirectConditionRemovalSpellAct,
   resolveDirectConditionSpellAct,
   resolveJumpMovementReplacementSpellAct,
   resolveMakeStableSpellAct,
@@ -191,6 +192,7 @@ export {
   conditionRemovalProtectionSpellTargetSelection,
   conditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection,
   creatureTypeProtectionSpellTargetSelection,
+  directConditionRemovalSpellTargetSelection,
   healingSpellTargetSelection,
   rollModifierSpellAffectedTargets,
   rollModifierSpellEffectSelection,
@@ -199,6 +201,7 @@ export {
   type ConditionRemovalProtectionSpellTargetSelection,
   type ConditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection,
   type CreatureTypeProtectionSpellTargetSelection,
+  type DirectConditionRemovalSpellTargetSelection,
   type HealingSpellTargetSelection,
   type RollModifierSpellAffectedTargets,
   type RollModifierSpellEffectSelection,
@@ -212,6 +215,7 @@ import {
   resolveConditionImmunityAndTurnStartTemporaryHitPointsSpellAct,
   resolveCreatureTypeProtectionSpellAct,
   resolveDamageReductionSpellAct,
+  resolveDirectConditionRemovalSpellAct,
   resolveDirectConditionSpellAct,
   resolveJumpMovementReplacementSpellAct,
   resolveMakeStableSpellAct,
@@ -419,6 +423,7 @@ export function resolveSpellAct(
       invocation.procedure === "flamingSphere" ||
       invocation.procedure === "moonbeam" ||
       invocation.procedure === "sanctuaryTargetingInterdiction" ||
+      invocation.procedure === "directConditionRemoval" ||
       invocation.procedure === "directCondition" ||
       invocation.procedure === "spellAttackSequence")
   ) {
@@ -1282,14 +1287,13 @@ export function resolveSpellAct(
           fillSet.concentrationSavingThrows,
           concentrationSave,
         );
-  const concentrationSaveCheck = damageLifecycleConcentrationSavingThrowFillCheck(
-    {
+  const concentrationSaveCheck =
+    damageLifecycleConcentrationSavingThrowFillCheck({
       state: spellResolutionState,
       target: spellReduction.target,
       damageAmount: spellDamageAmount,
       fills: fillSet.concentrationSavingThrows,
-    },
-  );
+    });
   if (concentrationSaveCheck.tag === "needsHoles") {
     return needsHolesResult(spellResolutionState, input.subject, [
       ...concentrationSaveCheck.holes,
@@ -1784,6 +1788,14 @@ export function resolveBonusActionSpellAct(
         "Bonus Action spell subject requires a supported Bonus Action spell act.",
       );
     }
+  } else if (invocation.procedure === "directConditionRemoval") {
+    if (invocation.actionCost !== "bonusAction") {
+      return invalidResult(
+        input.state,
+        "unsupportedSubject",
+        "Bonus Action spell subject requires a supported Bonus Action spell act.",
+      );
+    }
   } else if (
     invocation.procedure !== "directHitPointRestoration" ||
     invocation.actionCost !== "bonusAction"
@@ -1900,6 +1912,14 @@ export function resolveBonusActionSpellAct(
   }
   if (invocation.procedure === "sanctuaryTargetingInterdiction") {
     return resolveSanctuaryTargetingInterdictionSpellAct({
+      input: { ...input, state: castingState },
+      actorId: subject.actorId,
+      invocation,
+      fillSet,
+    });
+  }
+  if (invocation.procedure === "directConditionRemoval") {
+    return resolveDirectConditionRemovalSpellAct({
       input: { ...input, state: castingState },
       actorId: subject.actorId,
       invocation,

@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest";
 
+import animalMessengerInput from "../../content/animal_messenger.json";
+import arcanistsMagicAuraInput from "../../content/arcanists_magic_aura.json";
+import auguryInput from "../../content/augury.json";
 import classFighterInput from "../../content/class_fighter.json";
 import dragonsBreathInput from "../../content/dragons_breath.json";
 import locateAnimalsOrPlantsInput from "../../content/locate_animals_or_plants.json";
@@ -138,6 +141,93 @@ describe("Surface trace interpreter", () => {
             "nearest particular_kind within 1000 ft",
             "direction_to_location_and_movement",
             "blocked_by: any_thickness_of_lead_direct_path",
+          ].join("\n"),
+        }),
+      ]),
+    );
+  });
+
+  test("renders Animal Messenger as a CR-gated Tiny Beast courier task", () => {
+    const trace = traceUnit(decodeUnitRecordSync(animalMessengerInput));
+
+    expect(trace.nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          atomKind: "hole",
+          label: expect.stringContaining("creature size: exact tiny"),
+        }),
+        expect.objectContaining({
+          atomKind: "save_gate",
+          label: expect.stringContaining(
+            "auto-success if target Challenge Rating != 0",
+          ),
+        }),
+        expect.objectContaining({
+          atomKind: "assign_courier_task",
+          label: [
+            "assign_courier_task",
+            "messenger: target_beast",
+            "destination: caster_specified_visited_location",
+            "recipient: caster_specified_general_description",
+            "message: 25 words; mimic_caster_communication",
+            "travel: 25/50 miles per 24h",
+            "on arrival: deliver_to_described_creature",
+            "on expiry: message_lost_and_beast_returns_to_casting_location",
+          ].join("\n"),
+        }),
+      ]),
+    );
+  });
+
+  test("renders Arcanist's Magic Aura as target-gated magical identity masking", () => {
+    const trace = traceUnit(decodeUnitRecordSync(arcanistsMagicAuraInput));
+
+    expect(trace.nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          atomKind: "hole",
+          label: expect.stringContaining("creature disposition: willing"),
+        }),
+        expect.objectContaining({
+          atomKind: "hole",
+          label: expect.stringContaining("not_worn_or_carried"),
+        }),
+        expect.objectContaining({
+          atomKind: "magical_identity_mask",
+          label: [
+            "magical_identity_mask",
+            "creature: other_than_actual_type",
+            "treated by: spells_and_magical_effects",
+            "object aura: nonmagical_magical_or_chosen_school",
+            "observed by: spells_and_magical_effects_detecting_magical_auras",
+          ].join("\n"),
+        }),
+        expect.objectContaining({
+          atomKind: "expire",
+          label: expect.stringContaining(
+            "permanent after 30 daily casts on same_target",
+          ),
+        }),
+      ]),
+    );
+  });
+
+  test("renders Augury as a GM-chosen divination omen table", () => {
+    const trace = traceUnit(decodeUnitRecordSync(auguryInput));
+
+    expect(trace.nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          atomKind: "divination_omen",
+          label: [
+            "divination_omen",
+            "source: otherworldly_entity",
+            "subject: planned_course_of_action within 30 minutes",
+            "adjudication: gm_chosen_omen_table",
+            "omens: weal=good, woe=bad, weal_and_woe=good_and_bad, indifference=neither_good_nor_bad",
+            "changed circumstances: not_accounted_for",
+            "repeat casting: 25% cumulative_percent_per_cast_after_first until long_rest",
+            "repeat result: no_answer",
           ].join("\n"),
         }),
       ]),

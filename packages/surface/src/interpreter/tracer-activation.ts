@@ -15,7 +15,10 @@ import type { SpellCtx } from "./tracer-spell-context.ts";
 
 import { traceEffectAtom } from "./tracer-effect-atom.ts";
 
-import { traceEffectAtomScaling, traceUsageLimit } from "./tracer-effect-scaling.ts";
+import {
+  traceEffectAtomScaling,
+  traceUsageLimit,
+} from "./tracer-effect-scaling.ts";
 
 import { traceAttachment } from "./tracer-attachments.ts";
 
@@ -118,6 +121,10 @@ export function tracePhase(
         phase.autoSuccessIfCasterSlotGte !== undefined
           ? `\nauto-success if caster slot ≥ ${phase.autoSuccessIfCasterSlotGte}`
           : "";
+      const targetAutoLabel =
+        phase.autoSuccessIfTarget !== undefined
+          ? `\nauto-success if target Challenge Rating != ${phase.autoSuccessIfTarget.challengeRating}`
+          : "";
       const gateLabel =
         phase.saveAppliesIf !== undefined
           ? `\nsave only if ${phase.saveAppliesIf}`
@@ -127,7 +134,7 @@ export function tracePhase(
         id: resId,
         category: "resolution",
         atomKind: "save_gate",
-        label: `save_gate [phase ${phaseNumber}]\n${phase.ability.toUpperCase()} save\nDC: ${describeDc(phase.dc)}${autoLabel}${gateLabel}`,
+        label: `save_gate [phase ${phaseNumber}]\n${phase.ability.toUpperCase()} save\nDC: ${describeDc(phase.dc)}${autoLabel}${targetAutoLabel}${gateLabel}`,
       });
       edges.push({ from: ctx.procId, to: resId, relation: "grants" });
       edges.push({ from: resId, to: attId, relation: "attaches_to" });

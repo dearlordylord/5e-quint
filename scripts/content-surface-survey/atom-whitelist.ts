@@ -232,6 +232,8 @@ export const STAGE_3_EXTENSIONS = [
   "grant_speed", // Fly (fly speed), Spider Climb (climb speed).
   "ignore_web_restrictions", // Cloak of Arachnida spider-walk web immunity / traversal carveout.
   "detect", // Detect Magic, Detect Evil and Good (radius + property).
+  "magical_identity_mask", // Arcanist's Magic Aura: creature-type mask and object magical-aura presentation.
+  "divination_omen", // Augury: runtime-detached GM-chosen omen table and repeat-cast no-answer source facts.
   "modify_crit_range", // Improved Critical (crit on 19-20).
   "suppress_incoming_critical_hit", // Adamantine Armor: incoming critical hits against the bearer become normal hits.
   "set_speed", // Hypnotic Pattern ("Speed of 0"). Distinct from modify_speed.

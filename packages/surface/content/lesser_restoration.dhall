@@ -25,7 +25,7 @@ let lesserRestoration =
           { family = "activation"
           , level = 2
           , school = "abjuration"
-          , castingTime = { kind = "action" }
+          , castingTime = { kind = "bonus_action" }
           , range = { kind = "touch" }
           , components = { v = True, s = True, m = False }
           , duration = { kind = "instantaneous" }

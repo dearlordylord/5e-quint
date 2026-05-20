@@ -77,6 +77,7 @@ module battleRuntimeSpellInvocation {
       | HoldPerson => true
       | ProtectionFromEvilAndGood => true
       | ProtectionFromPoison => true
+      | LesserRestoration => true
       | IceKnife => true
       | HealingWord => true
       | CureWounds => true
@@ -121,6 +122,7 @@ module battleRuntimeSpellInvocation {
       | MistyStep => true
       | Blur => true
       | MirrorImage => true
+      | MindSpike => true
     }
 
   pure def canExpendSpellSlotThisTurn(state: BattleState): bool =

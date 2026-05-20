@@ -44,6 +44,7 @@ import type {
   TargetSelection,
   TimeSpanDurationValue,
   ThresholdTiers,
+  TimedPermanentAfter,
   ToolProficiencyGrant,
   ToolProficiencyGrantSubject,
   WeaponFilter,
@@ -291,6 +292,10 @@ export function describeTargetSelection(s: TargetSelection): string {
     "typeFilter" in s && s.typeFilter !== undefined && s.typeFilter.length > 0
       ? `\ntype: ${s.typeFilter.join("/")}`
       : "";
+  const creatureSizeFilter =
+    "creatureSizeFilter" in s
+      ? `\ncreature size: ${s.creatureSizeFilter.kind} ${s.creatureSizeFilter.creatureSize}`
+      : "";
   const objectFilter =
     "objectFilter" in s ? describeObjectFilter(s.objectFilter) : "";
   const stateFilter =
@@ -301,13 +306,17 @@ export function describeTargetSelection(s: TargetSelection): string {
       : "";
   const disposition =
     "disposition" in s ? `\ndisposition: ${s.disposition}` : "";
+  const creatureDisposition =
+    "creatureDisposition" in s && s.creatureDisposition !== undefined
+      ? `\ncreature disposition: ${s.creatureDisposition}`
+      : "";
   if (s.mode === "one") {
-    return `one${targetKinds}${typeFilter}${objectFilter}${stateFilter}${disposition}`;
+    return `one${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}${creatureDisposition}`;
   }
   if (s.mode === "any_number")
-    return `any_number${targetKinds}${typeFilter}${objectFilter}${stateFilter}${disposition}`;
+    return `any_number${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}${creatureDisposition}`;
   const repeats = s.repeatsAllowed === true ? " (repeats allowed)" : "";
-  return `choose_up_to: ${describeScaling(s.count)}${repeats}${targetKinds}${typeFilter}${objectFilter}${stateFilter}${disposition}`;
+  return `choose_up_to: ${describeScaling(s.count)}${repeats}${targetKinds}${typeFilter}${creatureSizeFilter}${objectFilter}${stateFilter}${disposition}${creatureDisposition}`;
 }
 
 export function describeAreaOrigin(
@@ -777,6 +786,20 @@ export function describeEarlyEnd(
   if (triggers === undefined || triggers.length === 0) return "";
   const names = triggers.map(describeDurationEndTrigger).join(", ");
   return `\nor early on: ${names}`;
+}
+
+export function describeTimedPermanentAfter(
+  permanentAfter: TimedPermanentAfter | undefined,
+): string {
+  if (permanentAfter === undefined) return "";
+  return Match.value(permanentAfter).pipe(
+    Match.when(
+      { kind: "repeated_casts" },
+      (repeatedCasts) =>
+        `\npermanent after ${repeatedCasts.count} ${repeatedCasts.cadence} casts on ${repeatedCasts.target}; ends on: ${repeatedCasts.endsOn.join(", ")}`,
+    ),
+    Match.exhaustive,
+  );
 }
 
 function describeDurationEndTrigger(trigger: DurationEndTrigger): string {

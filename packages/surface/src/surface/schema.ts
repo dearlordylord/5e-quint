@@ -52,6 +52,7 @@ export {
   CreatedObjectDurabilitySchema,
   DcSourceSchema,
   DamageTypeRefSchema,
+  DivinationOmenEffectSchema,
   DurationEndTriggerSchema,
   DurationSchema,
   EffectAtomSchema,
@@ -117,6 +118,7 @@ export {
   TargetSelectionSchema,
   TargetStateFilterSchema,
   TargetTypeFilterSchema,
+  TimedPermanentAfterSchema,
   TriggeredReactionMechanicsSchema,
 } from "./schema-spell.ts";
 export {

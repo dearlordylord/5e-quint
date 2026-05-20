@@ -38,6 +38,7 @@ module battleRuntimeSpellBridge {
     | BattleRuntimeThunderwaveSaveDamage
     | BattleRuntimeDissonantWhispersSaveDamage
     | BattleRuntimeHellishRebukeSaveDamage
+    | BattleRuntimeMindSpikeSaveDamage
 
   type BattleRuntimeSaveGatedConditionProfile =
     | BattleRuntimeColorSpraySaveCondition
@@ -238,6 +239,7 @@ module battleRuntimeSpellBridge {
       | BattleRuntimeThunderwaveSaveDamage => ThunderwaveSaveDamageProfile
       | BattleRuntimeDissonantWhispersSaveDamage => DissonantWhispersSaveDamageProfile
       | BattleRuntimeHellishRebukeSaveDamage => HellishRebukeSaveDamageProfile
+      | BattleRuntimeMindSpikeSaveDamage => MindSpikeSaveDamageProfile
     }
 
   pure def battleRuntimeSaveGatedConditionProfile(
@@ -319,6 +321,11 @@ module battleRuntimeSpellBridge {
     profile: BattleRuntimeSaveGatedDamageProfile
   ): bool =
     spellSaveGatedDamageRequiresSlot(battleRuntimeSaveGatedDamageProfile(profile))
+
+  pure def battleRuntimeSaveGatedDamageRequiresConcentration(
+    profile: BattleRuntimeSaveGatedDamageProfile
+  ): bool =
+    spellSaveGatedDamageRequiresConcentration(battleRuntimeSaveGatedDamageProfile(profile))
 
   pure def battleRuntimeSaveGatedFailedEffect(
     effect: SpellSaveGatedFailedEffect
@@ -817,26 +824,33 @@ module battleRuntimeSpellBridge {
       assert(battleRuntimeSaveGatedDamageTargeting(BattleRuntimeSacredFlameSaveDamage) == BattleRuntimeSingleSaveTarget),
       assert(battleRuntimeSaveGatedDamageTargeting(BattleRuntimeBurningHandsSaveDamage) == BattleRuntimeAreaSaveTargets),
       assert(battleRuntimeSaveGatedDamageTargeting(BattleRuntimeFireballSaveDamage) == BattleRuntimeAreaSaveTargets),
+      assert(battleRuntimeSaveGatedDamageTargeting(BattleRuntimeMindSpikeSaveDamage) == BattleRuntimeSingleSaveTarget),
       assert(battleRuntimeSaveGatedDamageSuccess(BattleRuntimeInflictWoundsSaveDamage) == BattleRuntimeHalfDamageOnSaveSuccess),
       assert(battleRuntimeSaveGatedDamageSuccess(BattleRuntimeFireballSaveDamage) == BattleRuntimeHalfDamageOnSaveSuccess),
       assert(battleRuntimeSaveGatedDamageSuccess(BattleRuntimeThunderwaveSaveDamage) == BattleRuntimeHalfDamageOnSaveSuccess),
       assert(battleRuntimeSaveGatedDamageSuccess(BattleRuntimeDissonantWhispersSaveDamage) == BattleRuntimeHalfDamageOnSaveSuccess),
       assert(battleRuntimeSaveGatedDamageSuccess(BattleRuntimeHellishRebukeSaveDamage) == BattleRuntimeHalfDamageOnSaveSuccess),
+      assert(battleRuntimeSaveGatedDamageSuccess(BattleRuntimeMindSpikeSaveDamage) == BattleRuntimeHalfDamageOnSaveSuccess),
       assert(battleRuntimeSaveGatedDamageType(BattleRuntimeViciousMockerySaveDamage) == PsychicDamage),
       assert(battleRuntimeSaveGatedDamageType(BattleRuntimeFireballSaveDamage) == FireDamage),
       assert(battleRuntimeSaveGatedDamageType(BattleRuntimeThunderwaveSaveDamage) == ThunderDamage),
       assert(battleRuntimeSaveGatedDamageType(BattleRuntimeDissonantWhispersSaveDamage) == PsychicDamage),
       assert(battleRuntimeSaveGatedDamageType(BattleRuntimeHellishRebukeSaveDamage) == FireDamage),
+      assert(battleRuntimeSaveGatedDamageType(BattleRuntimeMindSpikeSaveDamage) == PsychicDamage),
       assert(battleRuntimeSaveGatedDamageRequiresSlot(BattleRuntimeBurningHandsSaveDamage)),
       assert(battleRuntimeSaveGatedDamageRequiresSlot(BattleRuntimeFireballSaveDamage)),
       assert(battleRuntimeSaveGatedDamageRequiresSlot(BattleRuntimeThunderwaveSaveDamage)),
       assert(battleRuntimeSaveGatedDamageRequiresSlot(BattleRuntimeDissonantWhispersSaveDamage)),
       assert(battleRuntimeSaveGatedDamageRequiresSlot(BattleRuntimeHellishRebukeSaveDamage)),
+      assert(battleRuntimeSaveGatedDamageRequiresSlot(BattleRuntimeMindSpikeSaveDamage)),
       assert(not(battleRuntimeSaveGatedDamageRequiresSlot(BattleRuntimeAcidSplashSaveDamage))),
+      assert(battleRuntimeSaveGatedDamageRequiresConcentration(BattleRuntimeMindSpikeSaveDamage)),
+      assert(not(battleRuntimeSaveGatedDamageRequiresConcentration(BattleRuntimeInflictWoundsSaveDamage))),
       assert(battleRuntimeSaveGatedDamageFailedSaveEffects(BattleRuntimeThunderwaveSaveDamage) == Set(BattleRuntimeThunderwavePush10FeetEffect)),
       assert(battleRuntimeSaveGatedDamageFailedSaveEffects(BattleRuntimeDissonantWhispersSaveDamage) == Set(BattleRuntimeDissonantWhispersForcedReactionMovementEffect)),
       assert(battleRuntimeSaveGatedDamageFailedSaveEffects(BattleRuntimeFireballSaveDamage) == Set()),
       assert(battleRuntimeSaveGatedDamageFailedSaveEffects(BattleRuntimeHellishRebukeSaveDamage) == Set()),
+      assert(battleRuntimeSaveGatedDamageFailedSaveEffects(BattleRuntimeMindSpikeSaveDamage) == Set()),
       assert(battleRuntimeSaveGatedDamageFailedSaveEffects(BattleRuntimeViciousMockerySaveDamage) == Set(BattleRuntimeViciousMockeryNextAttackDisadvantageEffect)),
       assert(battleRuntimeSaveGatedConditionTargeting(BattleRuntimeColorSpraySaveCondition) == BattleRuntimeAreaSaveTargets),
       assert(battleRuntimeSaveGatedConditionSavingThrowAbility(BattleRuntimeColorSpraySaveCondition) == BattleRuntimeConstitutionSavingThrow),

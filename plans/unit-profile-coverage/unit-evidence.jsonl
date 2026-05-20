@@ -252,4 +252,6 @@
 {"unitId":"warding_bond","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME","ownerPath":"packages/battle-runtime/src/unit-profile-admission-warding-bond.test.ts"}}
 {"unitId":"hold_person","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-SPELL-HOLD-PERSON","ownerPath":"packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts"}}
 {"unitId":"invisibility","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-SPELL-INVISIBILITY","ownerPath":"packages/battle-runtime/src/unit-profile-admission-invisibility.test.ts"}}
+{"unitId":"lesser_restoration","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-SPELL-LESSER-RESTORATION","ownerPath":"packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts"}}
 {"unitId":"hold_person","evidence":{"tag":"selected-identity-mbt","taskId":"condition-saving-throw-lifecycle","ownerPath":"packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts"}}
+{"unitId":"mind_spike","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-SPELL-MIND-SPIKE","ownerPath":"packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts"}}

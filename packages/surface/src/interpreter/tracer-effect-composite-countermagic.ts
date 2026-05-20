@@ -22,8 +22,11 @@ export type CompositeAndCountermagicEffectAtom = Extract<
       | "natural_weapons"
       | "water_breathing"
       | "detect"
+      | "magical_identity_mask"
       | "locate_kind"
       | "object_location_sense"
+      | "divination_omen"
+      | "assign_courier_task"
       | "negate_triggering_spell"
       | "reflect_triggering_spell"
       | "waste_triggering_spell_or_effect"
@@ -371,6 +374,22 @@ export function traceCompositeAndCountermagicEffectAtom(
       });
       return id;
     }
+    case "magical_identity_mask": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "magical_identity_mask",
+        label: [
+          "magical_identity_mask",
+          `creature: ${e.creatureBranch.chosenCreatureType}`,
+          `treated by: ${e.creatureBranch.treatedAsBy}`,
+          `object aura: ${e.objectBranch.auraAppearance}`,
+          `observed by: ${e.objectBranch.observedBy}`,
+        ].join("\n"),
+      });
+      return id;
+    }
     case "locate_kind": {
       const id = ids("eff");
       nodes.push({
@@ -395,6 +414,45 @@ export function traceCompositeAndCountermagicEffectAtom(
           `nearest ${e.searchModes.nearestObjectKind} within ${e.maxDistanceFeet} ft`,
           e.result,
           `blocked_by: ${e.blockedBy}`,
+        ].join("\n"),
+      });
+      return id;
+    }
+    case "divination_omen": {
+      const id = ids("eff");
+      const table = e.adjudication.table;
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "divination_omen",
+        label: [
+          "divination_omen",
+          `source: ${e.source}`,
+          `subject: ${e.subject.kind} within ${e.subject.plannedWithinMinutes} minutes`,
+          `adjudication: ${e.adjudication.kind}`,
+          `omens: ${table.good}=good, ${table.bad}=bad, ${table.goodAndBad}=good_and_bad, ${table.neitherGoodNorBad}=neither_good_nor_bad`,
+          `changed circumstances: ${e.changedCircumstances}`,
+          `repeat casting: ${e.repeatCasting.noAnswerChance.percent}% ${e.repeatCasting.noAnswerChance.kind} until ${e.repeatCasting.resetBy}`,
+          `repeat result: ${e.repeatCasting.noAnswerChance.result}`,
+        ].join("\n"),
+      });
+      return id;
+    }
+    case "assign_courier_task": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "assign_courier_task",
+        label: [
+          "assign_courier_task",
+          `messenger: ${e.messenger}`,
+          `destination: ${e.destination}`,
+          `recipient: ${e.recipient}`,
+          `message: ${e.message.maxWords} words; ${e.message.delivery}`,
+          `travel: ${e.travel.groundMilesPer24Hours}/${e.travel.flyingMilesPer24Hours} miles per 24h`,
+          `on arrival: ${e.onArrival}`,
+          `on expiry: ${e.onExpiryBeforeArrival}`,
         ].join("\n"),
       });
       return id;

@@ -19,7 +19,7 @@ module spellProcedureProfiles {
   // - Spells/Descriptions-A-D.md: Acid Splash, Aid, and Cure Wounds.
   // - Spells/Descriptions-E-L.md: Healing Word.
   // - Spells/Descriptions-M-P.md: Mage Armor, Magic Missile, Mass Cure
-  //   Wounds, and Mass Healing Word.
+  //   Wounds, Mass Healing Word, and Mind Spike.
   // - Spells/Descriptions-Q-R.md: Ray of Frost.
 
   type SpellInvocationAction =
@@ -90,6 +90,7 @@ module spellProcedureProfiles {
     | ThunderwaveSaveDamageProfile
     | DissonantWhispersSaveDamageProfile
     | HellishRebukeSaveDamageProfile
+    | MindSpikeSaveDamageProfile
 
   type SpellSaveGatedConditionProfile =
     | ColorSpraySaveConditionProfile
@@ -420,6 +421,7 @@ module spellProcedureProfiles {
       | ThunderwaveSaveDamageProfile => SpellAreaSaveTargets
       | DissonantWhispersSaveDamageProfile => SpellSingleSaveTarget
       | HellishRebukeSaveDamageProfile => SpellSingleSaveTarget
+      | MindSpikeSaveDamageProfile => SpellSingleSaveTarget
     }
 
   pure def spellSaveGatedDamageSuccess(profile: SpellSaveGatedDamageProfile): SpellSaveGatedDamageSuccess =
@@ -433,6 +435,7 @@ module spellProcedureProfiles {
       | ThunderwaveSaveDamageProfile => SpellHalfDamageOnSaveSuccess
       | DissonantWhispersSaveDamageProfile => SpellHalfDamageOnSaveSuccess
       | HellishRebukeSaveDamageProfile => SpellHalfDamageOnSaveSuccess
+      | MindSpikeSaveDamageProfile => SpellHalfDamageOnSaveSuccess
     }
 
   pure def spellSaveGatedDamageType(profile: SpellSaveGatedDamageProfile): RuleDamageType =
@@ -446,6 +449,7 @@ module spellProcedureProfiles {
       | ThunderwaveSaveDamageProfile => ThunderDamage
       | DissonantWhispersSaveDamageProfile => PsychicDamage
       | HellishRebukeSaveDamageProfile => FireDamage
+      | MindSpikeSaveDamageProfile => PsychicDamage
     }
 
   pure def spellSaveGatedDamageRequiresSlot(profile: SpellSaveGatedDamageProfile): bool =
@@ -459,6 +463,21 @@ module spellProcedureProfiles {
       | ThunderwaveSaveDamageProfile => true
       | DissonantWhispersSaveDamageProfile => true
       | HellishRebukeSaveDamageProfile => true
+      | MindSpikeSaveDamageProfile => true
+    }
+
+  pure def spellSaveGatedDamageRequiresConcentration(profile: SpellSaveGatedDamageProfile): bool =
+    match profile {
+      | AcidSplashSaveDamageProfile => false
+      | SacredFlameSaveDamageProfile => false
+      | InflictWoundsSaveDamageProfile => false
+      | BurningHandsSaveDamageProfile => false
+      | FireballSaveDamageProfile => false
+      | ViciousMockerySaveDamageProfile => false
+      | ThunderwaveSaveDamageProfile => false
+      | DissonantWhispersSaveDamageProfile => false
+      | HellishRebukeSaveDamageProfile => false
+      | MindSpikeSaveDamageProfile => true
     }
 
   pure def spellSaveGatedDamageFailedSaveEffects(profile: SpellSaveGatedDamageProfile): Set[SpellSaveGatedFailedEffect] =
@@ -1290,27 +1309,34 @@ module spellProcedureProfiles {
       assert(spellSaveGatedDamageTargeting(SacredFlameSaveDamageProfile) == SpellSingleSaveTarget),
       assert(spellSaveGatedDamageTargeting(BurningHandsSaveDamageProfile) == SpellAreaSaveTargets),
       assert(spellSaveGatedDamageTargeting(FireballSaveDamageProfile) == SpellAreaSaveTargets),
+      assert(spellSaveGatedDamageTargeting(MindSpikeSaveDamageProfile) == SpellSingleSaveTarget),
       assert(spellSaveGatedDamageSuccess(InflictWoundsSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
       assert(spellSaveGatedDamageSuccess(FireballSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
       assert(spellSaveGatedDamageSuccess(ViciousMockerySaveDamageProfile) == SpellNoDamageOnSaveSuccess),
       assert(spellSaveGatedDamageSuccess(ThunderwaveSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
       assert(spellSaveGatedDamageSuccess(DissonantWhispersSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
       assert(spellSaveGatedDamageSuccess(HellishRebukeSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
+      assert(spellSaveGatedDamageSuccess(MindSpikeSaveDamageProfile) == SpellHalfDamageOnSaveSuccess),
       assert(spellSaveGatedDamageType(ViciousMockerySaveDamageProfile) == PsychicDamage),
       assert(spellSaveGatedDamageType(FireballSaveDamageProfile) == FireDamage),
       assert(spellSaveGatedDamageType(ThunderwaveSaveDamageProfile) == ThunderDamage),
       assert(spellSaveGatedDamageType(DissonantWhispersSaveDamageProfile) == PsychicDamage),
       assert(spellSaveGatedDamageType(HellishRebukeSaveDamageProfile) == FireDamage),
+      assert(spellSaveGatedDamageType(MindSpikeSaveDamageProfile) == PsychicDamage),
       assert(spellSaveGatedDamageRequiresSlot(BurningHandsSaveDamageProfile)),
       assert(spellSaveGatedDamageRequiresSlot(FireballSaveDamageProfile)),
       assert(spellSaveGatedDamageRequiresSlot(ThunderwaveSaveDamageProfile)),
       assert(spellSaveGatedDamageRequiresSlot(DissonantWhispersSaveDamageProfile)),
       assert(spellSaveGatedDamageRequiresSlot(HellishRebukeSaveDamageProfile)),
+      assert(spellSaveGatedDamageRequiresSlot(MindSpikeSaveDamageProfile)),
       assert(not(spellSaveGatedDamageRequiresSlot(AcidSplashSaveDamageProfile))),
+      assert(spellSaveGatedDamageRequiresConcentration(MindSpikeSaveDamageProfile)),
+      assert(not(spellSaveGatedDamageRequiresConcentration(InflictWoundsSaveDamageProfile))),
       assert(spellSaveGatedDamageFailedSaveEffects(ThunderwaveSaveDamageProfile) == Set(ThunderwavePush10FeetEffect)),
       assert(spellSaveGatedDamageFailedSaveEffects(DissonantWhispersSaveDamageProfile) == Set(DissonantWhispersForcedReactionMovementEffect)),
       assert(spellSaveGatedDamageFailedSaveEffects(FireballSaveDamageProfile) == Set()),
       assert(spellSaveGatedDamageFailedSaveEffects(HellishRebukeSaveDamageProfile) == Set()),
+      assert(spellSaveGatedDamageFailedSaveEffects(MindSpikeSaveDamageProfile) == Set()),
       assert(spellSaveGatedDamageFailedSaveEffects(ViciousMockerySaveDamageProfile) == Set(ViciousMockeryNextAttackDisadvantageEffect)),
       assert(spellSaveGatedConditionTargeting(ColorSpraySaveConditionProfile) == SpellAreaSaveTargets),
       assert(spellSaveGatedConditionSavingThrowAbility(ColorSpraySaveConditionProfile) == SpellConstitutionSavingThrow),

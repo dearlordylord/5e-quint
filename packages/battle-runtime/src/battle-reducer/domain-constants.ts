@@ -75,6 +75,12 @@ export const CHROMATIC_ORB_CONTINUATION_LIMIT_KINDS = [
 export const HIDEOUS_LAUGHTER_REPEAT_SAVE_HOLE_KEY_PREFIX =
   "battle:hideous-laughter-repeat-save:";
 export const HIDEOUS_LAUGHTER_DURATION_TICKS = elapsedTimeTicks(10);
+export const DIRECT_CONDITION_REMOVAL_CONDITIONS = [
+  "blinded",
+  "deafened",
+  "paralyzed",
+  "poisoned",
+] as const satisfies ReadonlyArray<Condition>;
 export const HUNTERS_MARK_FINDING_SKILLS = [
   "perception",
   "survival",
@@ -92,9 +98,7 @@ export const THAUMATURGY_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_ID = holeId(
   "battle:spell:booming-voice:influence-ability-check",
 );
 export const THAUMATURGY_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_INSTANCE =
-  holeInstanceKey(
-    "battle:spell:booming-voice:influence-ability-check",
-  );
+  holeInstanceKey("battle:spell:booming-voice:influence-ability-check");
 export const WARDING_BOND_ARMOR_CLASS_BONUS = 1;
 export const WARDING_BOND_SAVING_THROW_BONUS = 1;
 export const WARDING_BOND_CAST_RANGE_FEET = movementFeet(5);

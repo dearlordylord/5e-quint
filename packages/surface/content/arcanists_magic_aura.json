@@ -1,0 +1,79 @@
+{
+  "description": "With a touch, you place an illusion on a willing creature or an object that isn't being worn or carried. A creature gains the Mask effect: choose a creature type other than the target's actual type, and spells and other magical effects treat the target as if it were a creature of the chosen type. An object gains the False Aura effect: you change the way the target appears to spells and magical effects that detect magical auras, such as Detect Magic. You can make a nonmagical object appear magical, make a magic item appear nonmagical, or change the object's aura so that it appears to belong to a school of magic you choose. If you cast the spell on the same target every day for 30 days, the illusion lasts until dispelled.",
+  "id": "arcanists_magic_aura",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a small square of silk",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "timed",
+      "permanentAfter": {
+        "cadence": "daily",
+        "count": 30,
+        "endsOn": [
+          "dispel"
+        ],
+        "kind": "repeated_casts",
+        "target": "same_target"
+      },
+      "value": {
+        "amount": 24,
+        "unit": "hour"
+      }
+    },
+    "family": "activation",
+    "level": 2,
+    "phases": [
+      {
+        "attachment": {
+          "holeId": "arcanists_magic_aura_target",
+          "kind": "hole",
+          "label": "willing creature or object",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "creatureDisposition": "willing",
+              "mode": "one",
+              "objectFilter": {
+                "targetRelation": "not_worn_or_carried"
+              },
+              "targetKinds": [
+                "creature",
+                "object"
+              ]
+            }
+          }
+        },
+        "effects": [
+          {
+            "creatureBranch": {
+              "chosenCreatureType": "other_than_actual_type",
+              "treatedAsBy": "spells_and_magical_effects"
+            },
+            "kind": "magical_identity_mask",
+            "objectBranch": {
+              "auraAppearance": "nonmagical_magical_or_chosen_school",
+              "observedBy": "spells_and_magical_effects_detecting_magical_auras"
+            }
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "kind": "touch"
+    },
+    "school": "illusion"
+  },
+  "name": "Arcanist's Magic Aura",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Arcanist's Magic Aura"
+  }
+}

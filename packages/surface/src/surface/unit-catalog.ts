@@ -5,6 +5,9 @@ import { Option } from "effect";
 import armorChainMailInput from "../../content/armor_chain_mail.json";
 import aidInput from "../../content/aid.json";
 import animalFriendshipInput from "../../content/animal_friendship.json";
+import animalMessengerInput from "../../content/animal_messenger.json";
+import arcanistsMagicAuraInput from "../../content/arcanists_magic_aura.json";
+import auguryInput from "../../content/augury.json";
 import backgroundSoldierInput from "../../content/background_soldier.json";
 import bardBardicInspirationInput from "../../content/bard_bardic_inspiration.json";
 import bardCuttingWordsInput from "../../content/bard_cutting_words.json";
@@ -101,6 +104,7 @@ import invisibilityInput from "../../content/invisibility.json";
 import jumpInput from "../../content/jump.json";
 import knockInput from "../../content/knock.json";
 import levitateInput from "../../content/levitate.json";
+import lesserRestorationInput from "../../content/lesser_restoration.json";
 import lightInput from "../../content/light.json";
 import locateAnimalsOrPlantsInput from "../../content/locate_animals_or_plants.json";
 import locateObjectInput from "../../content/locate_object.json";
@@ -108,6 +112,7 @@ import longstriderInput from "../../content/longstrider.json";
 import mageArmorInput from "../../content/mage_armor.json";
 import magicMissileInput from "../../content/magic_missile.json";
 import magicMouthInput from "../../content/magic_mouth.json";
+import mindSpikeInput from "../../content/mind_spike.json";
 import massCureWoundsInput from "../../content/mass_cure_wounds.json";
 import massHealingWordInput from "../../content/mass_healing_word.json";
 import moonbeamInput from "../../content/moonbeam.json";
@@ -419,6 +424,9 @@ export const srdUnitCollection = defineSrdUnitCollection({
     acidSplashInput,
     aidInput,
     animalFriendshipInput,
+    animalMessengerInput,
+    arcanistsMagicAuraInput,
+    auguryInput,
     barkskinInput,
     blindnessDeafnessInput,
     baneInput,
@@ -464,6 +472,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     jumpInput,
     knockInput,
     levitateInput,
+    lesserRestorationInput,
     locateAnimalsOrPlantsInput,
     locateObjectInput,
     lightInput,
@@ -496,6 +505,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     mageArmorInput,
     magicMissileInput,
     magicMouthInput,
+    mindSpikeInput,
     mirrorImageInput,
     moonbeamInput,
     massCureWoundsInput,

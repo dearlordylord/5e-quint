@@ -87,6 +87,33 @@ type ObjectLocationSenseSearchModes = Schema.Schema.Type<
   typeof ObjectLocationSenseSearchModesSchema
 >;
 
+export const DivinationOmenEffectSchema = strictStruct({
+  kind: Schema.Literal("divination_omen"),
+  source: Schema.Literal("otherworldly_entity"),
+  subject: strictStruct({
+    kind: Schema.Literal("planned_course_of_action"),
+    plannedWithinMinutes: Schema.Literal(30),
+  }),
+  adjudication: strictStruct({
+    kind: Schema.Literal("gm_chosen_omen_table"),
+    table: strictStruct({
+      good: Schema.Literal("weal"),
+      bad: Schema.Literal("woe"),
+      goodAndBad: Schema.Literal("weal_and_woe"),
+      neitherGoodNorBad: Schema.Literal("indifference"),
+    }),
+  }),
+  changedCircumstances: Schema.Literal("not_accounted_for"),
+  repeatCasting: strictStruct({
+    resetBy: Schema.Literal("long_rest"),
+    noAnswerChance: strictStruct({
+      kind: Schema.Literal("cumulative_percent_per_cast_after_first"),
+      percent: Schema.Literal(25),
+      result: Schema.Literal("no_answer"),
+    }),
+  }),
+});
+
 export const LinearPerLevelNumberSchema = Schema.Struct({
   kind: Schema.Literal("linear_per_level"),
   axis: LevelAxisSchema,
@@ -409,6 +436,9 @@ type ShapeShiftRevertTrigger = Schema.Schema.Type<
   typeof ShapeShiftRevertTriggerSchema
 >;
 type AreaAttachment = Schema.Schema.Type<typeof AreaAttachmentSchema>;
+type CreatureTargetAttachment = Schema.Schema.Type<
+  typeof CreatureTargetAttachmentSchema
+>;
 type Attachment = Schema.Schema.Type<typeof AttachmentSchema>;
 type DcSource = Schema.Schema.Type<typeof DcSourceSchema>;
 type CastTimeEffectModeChoice = Schema.Schema.Type<
@@ -912,6 +942,17 @@ type EffectAtom =
       readonly radiusFeet: number;
     }
   | {
+      readonly kind: "magical_identity_mask";
+      readonly creatureBranch: {
+        readonly chosenCreatureType: "other_than_actual_type";
+        readonly treatedAsBy: "spells_and_magical_effects";
+      };
+      readonly objectBranch: {
+        readonly auraAppearance: "nonmagical_magical_or_chosen_school";
+        readonly observedBy: "spells_and_magical_effects_detecting_magical_auras";
+      };
+    }
+  | {
       readonly kind: "locate_kind";
       readonly subjectKinds: ReadonlyNonEmptyArray<LocateKindSubject>;
       readonly maxDistanceFeet: number;
@@ -926,6 +967,8 @@ type EffectAtom =
       readonly result: "direction_to_location_and_movement";
       readonly blockedBy: "any_thickness_of_lead_direct_path";
     }
+  | Schema.Schema.Type<typeof DivinationOmenEffectSchema>
+  | CourierTaskEffect
   | {
       readonly kind: "grant_speed";
       readonly speedKind: "fly" | "swim" | "climb" | "burrow";
@@ -1243,6 +1286,11 @@ type PhaseContinuation = {
   readonly next: ReadonlyNonEmptyArray<ActivationPhase>;
 };
 
+type SaveGateTargetAutoSuccessPredicate = Schema.Schema.Type<
+  typeof SaveGateTargetAutoSuccessPredicateSchema
+>;
+type CourierTaskEffect = Schema.Schema.Type<typeof CourierTaskEffectSchema>;
+
 type ActivationPhase =
   | {
       readonly kind: "attack_roll";
@@ -1261,6 +1309,20 @@ type ActivationPhase =
       readonly onSuccess: SaveSuccessOutcome;
       readonly repeatSaves?: ReadonlyNonEmptyArray<RepeatSaveSpec>;
       readonly autoSuccessIfCasterSlotGte?: "triggering_spell_level";
+      readonly autoSuccessIfTarget?: never;
+      readonly saveAppliesIf?: "unwilling_target" | "unwilling_creature_target";
+      readonly usageLimit?: UsageLimit;
+    }
+  | {
+      readonly kind: "save_gate";
+      readonly attachment: CreatureTargetAttachment;
+      readonly ability: Ability;
+      readonly dc: DcSource;
+      readonly onFail: EffectAtom;
+      readonly onSuccess: SaveSuccessOutcome;
+      readonly repeatSaves?: ReadonlyNonEmptyArray<RepeatSaveSpec>;
+      readonly autoSuccessIfCasterSlotGte?: "triggering_spell_level";
+      readonly autoSuccessIfTarget: SaveGateTargetAutoSuccessPredicate;
       readonly saveAppliesIf?: "unwilling_target" | "unwilling_creature_target";
       readonly usageLimit?: UsageLimit;
     }
@@ -1443,6 +1505,14 @@ export const DurationEndTriggerSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("caster_lets_go_of_attached_weapon") }),
 );
 
+export const TimedPermanentAfterSchema = Schema.Struct({
+  kind: Schema.Literal("repeated_casts"),
+  cadence: Schema.Literal("daily"),
+  count: PositiveIntegerSchema,
+  target: Schema.Literal("same_target"),
+  endsOn: nonEmpty(Schema.Literal("dispel")),
+});
+
 export const DurationSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("instantaneous"),
@@ -1457,6 +1527,7 @@ export const DurationSchema = Schema.Union(
     kind: Schema.Literal("timed"),
     value: DurationValueSchema,
     earlyEnd: optionalExact(nonEmpty(DurationEndTriggerSchema)),
+    permanentAfter: optionalExact(TimedPermanentAfterSchema),
   }),
   Schema.Struct({
     kind: Schema.Literal("permanent"),
@@ -1498,12 +1569,23 @@ const CreatureOrObjectTargetKindsSchema = Schema.Union(
   Schema.Tuple(Schema.Literal("object"), Schema.Literal("creature")),
 );
 
+export const CreatureTargetSelectionSchema = strictStruct({
+  mode: Schema.Literal("one"),
+  targetKinds: CreatureTargetKindsSchema,
+  typeFilter: optionalExact(TargetTypeFilterSchema),
+  creatureSizeFilter: optionalExact(
+    Schema.suspend(() => CreatureSizeFilterSchema),
+  ),
+});
+
 export const TargetSelectionSchema = Schema.Union(
   strictStruct({
     mode: Schema.Literal("one"),
     targetKinds: CreatureOrObjectTargetKindsSchema,
     objectFilter: Schema.suspend(() => ObjectFilterSchema),
+    creatureDisposition: optionalExact(TargetDispositionSchema),
   }),
+  CreatureTargetSelectionSchema,
   strictStruct({
     mode: Schema.Literal("one"),
     targetKinds: optionalExact(nonEmpty(TargetKindSchema)),
@@ -1683,6 +1765,22 @@ export const TargetAttachmentBaseSchema = Schema.Struct({
   rangeOrigin: optionalExact(AttachmentRangeOriginSchema),
 });
 
+export const CreatureTargetAttachmentBaseSchema = Schema.Struct({
+  kind: Schema.Literal("target"),
+  selection: CreatureTargetSelectionSchema,
+  rangeOrigin: optionalExact(AttachmentRangeOriginSchema),
+});
+
+export const CreatureTargetAttachmentSchema = Schema.Union(
+  CreatureTargetAttachmentBaseSchema,
+  makeHoleSchema(CreatureTargetAttachmentBaseSchema),
+);
+
+export const TargetAttachmentSchema = Schema.Union(
+  TargetAttachmentBaseSchema,
+  makeHoleSchema(TargetAttachmentBaseSchema),
+);
+
 export const SizeSchema = Schema.Literal(
   "tiny",
   "small",
@@ -1691,6 +1789,11 @@ export const SizeSchema = Schema.Literal(
   "huge",
   "gargantuan",
 );
+
+export const CreatureSizeFilterSchema = strictStruct({
+  kind: Schema.Literal("exact"),
+  creatureSize: SizeSchema,
+});
 
 export const ObjectMaterialSchema = Schema.Literal("metal", "flammable");
 
@@ -1793,6 +1896,31 @@ export const ExtradimensionalSpaceEffectSchema = strictStruct({
   onEnd: strictStruct({
     kind: Schema.Literal("drop_contents_out"),
   }),
+});
+
+export const SaveGateTargetAutoSuccessPredicateSchema = strictStruct({
+  kind: Schema.Literal("challenge_rating_not_equal"),
+  challengeRating: Schema.Literal(0),
+});
+
+export const CourierTaskEffectSchema = strictStruct({
+  kind: Schema.Literal("assign_courier_task"),
+  messenger: Schema.Literal("target_beast"),
+  destination: Schema.Literal("caster_specified_visited_location"),
+  recipient: Schema.Literal("caster_specified_general_description"),
+  message: strictStruct({
+    maxWords: Schema.Literal(25),
+    delivery: Schema.Literal("mimic_caster_communication"),
+  }),
+  travel: strictStruct({
+    direction: Schema.Literal("toward_destination_for_duration"),
+    groundMilesPer24Hours: Schema.Literal(25),
+    flyingMilesPer24Hours: Schema.Literal(50),
+  }),
+  onArrival: Schema.Literal("deliver_to_described_creature"),
+  onExpiryBeforeArrival: Schema.Literal(
+    "message_lost_and_beast_returns_to_casting_location",
+  ),
 });
 
 export const ContinuationPredicateSchema = Schema.Struct({
@@ -2726,6 +2854,19 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         radiusFeet: Schema.Number,
       }),
       Schema.Struct({
+        kind: Schema.Literal("magical_identity_mask"),
+        creatureBranch: Schema.Struct({
+          chosenCreatureType: Schema.Literal("other_than_actual_type"),
+          treatedAsBy: Schema.Literal("spells_and_magical_effects"),
+        }),
+        objectBranch: Schema.Struct({
+          auraAppearance: Schema.Literal("nonmagical_magical_or_chosen_school"),
+          observedBy: Schema.Literal(
+            "spells_and_magical_effects_detecting_magical_auras",
+          ),
+        }),
+      }),
+      Schema.Struct({
         kind: Schema.Literal("locate_kind"),
         subjectKinds: nonEmpty(LocateKindSubjectSchema),
         maxDistanceFeet: PositiveIntegerSchema,
@@ -2740,6 +2881,8 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         result: Schema.Literal("direction_to_location_and_movement"),
         blockedBy: Schema.Literal("any_thickness_of_lead_direct_path"),
       }),
+      DivinationOmenEffectSchema,
+      CourierTaskEffectSchema,
       Schema.Struct({
         kind: Schema.Literal("grant_speed"),
         speedKind: Schema.Literal("fly", "swim", "climb", "burrow"),
@@ -3083,6 +3226,24 @@ export const ActivationPhaseSchema: Schema.suspend<
       autoSuccessIfCasterSlotGte: optionalExact(
         Schema.Literal("triggering_spell_level"),
       ),
+      autoSuccessIfTarget: optionalExact(Schema.Never),
+      saveAppliesIf: optionalExact(
+        Schema.Literal("unwilling_target", "unwilling_creature_target"),
+      ),
+      usageLimit: optionalExact(UsageLimitSchema),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("save_gate"),
+      attachment: CreatureTargetAttachmentSchema,
+      ability: AbilitySchema,
+      dc: DcSourceSchema,
+      onFail: EffectAtomSchema,
+      onSuccess: SaveSuccessOutcomeSchema,
+      repeatSaves: optionalExact(nonEmpty(RepeatSaveSpecSchema)),
+      autoSuccessIfCasterSlotGte: optionalExact(
+        Schema.Literal("triggering_spell_level"),
+      ),
+      autoSuccessIfTarget: SaveGateTargetAutoSuccessPredicateSchema,
       saveAppliesIf: optionalExact(
         Schema.Literal("unwilling_target", "unwilling_creature_target"),
       ),

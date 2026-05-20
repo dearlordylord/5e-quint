@@ -7,43 +7,43 @@
     {
       "number": 1,
       "id": "L12G-SPELL-LESSER-RESTORATION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Lesser Restoration Runtime Support"
     },
     {
       "number": 2,
       "id": "L12G-SPELL-MAGIC-WEAPON",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Magic Weapon Runtime Support Or Closure"
     },
     {
       "number": 3,
       "id": "L12G-SPELL-MIND-SPIKE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Mind Spike Runtime Support And Knowledge Closure"
     },
     {
       "number": 4,
       "id": "L12G-SPELL-WEB",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Web Runtime Support Or Closure"
     },
     {
       "number": 5,
       "id": "L12G-MISSING-ANIMAL-MESSENGER",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Animal Messenger Definition And Closure"
     },
     {
       "number": 6,
       "id": "L12G-MISSING-ARCANISTS-MAGIC-AURA",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Arcanists Magic Aura Definition And Closure"
     },
     {
       "number": 7,
       "id": "L12G-MISSING-AUGURY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Augury Definition And Closure"
     },
     {
@@ -84,6 +84,36 @@
     },
     {
       "number": 14,
+      "id": "L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE",
+      "status": "ready-for-research",
+      "title": "Magic Weapon Surface Item Enhancement Shape"
+    },
+    {
+      "number": 15,
+      "id": "L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME",
+      "status": "blocked",
+      "title": "Magic Weapon Item Enhancement Runtime"
+    },
+    {
+      "number": 16,
+      "id": "L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE",
+      "status": "ready-for-research",
+      "title": "Web Surface Area Hazard Shape"
+    },
+    {
+      "number": 17,
+      "id": "L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME",
+      "status": "blocked",
+      "title": "Web Restraint Hazard Runtime"
+    },
+    {
+      "number": 18,
+      "id": "L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE",
+      "status": "blocked",
+      "title": "Web Terrain Obscurement Fire Boundary"
+    },
+    {
+      "number": 19,
       "id": "L12G-RECURSIVE-TAIL-LOOP-A",
       "status": "blocked",
       "title": "LOOP-A Recursive Next-Batch Planning Tail"
@@ -94,7 +124,7 @@
 
 This is a runnable overnight Ralph plan split out of the stale monolithic A plan and the current level-1/2 strict frontier. It owns open-runtime spells, missing spell definition closures, and Gust of Wind witness support not owned by Claude, Wild Shape, or Moonbeam.
 
-Preplanned load: 13 real atomic implementation/planning tasks plus one recursive planning tail. The recursive tail is a fallback only; ordinary `blocked` tasks already auto-unblock when their same-plan dependencies are marked `done`.
+Preplanned load: 18 real atomic implementation/planning tasks plus one recursive planning tail. The recursive tail is a fallback only; ordinary `blocked` tasks already auto-unblock when their same-plan dependencies are marked `done`.
 
 ## Worktree Safety Prefix
 
@@ -167,26 +197,31 @@ The final task is intentionally blocked on every real task in this plan and plac
 
 | # | Task | Status | Depends On | Notes |
 | ---: | --- | --- | --- | --- |
-| 1 | L12G-SPELL-LESSER-RESTORATION - Lesser Restoration Runtime Support | ready-for-research | completed baseline | A lane; Unit `lesser_restoration`. |
-| 2 | L12G-SPELL-MAGIC-WEAPON - Magic Weapon Runtime Support Or Closure | ready-for-research | completed baseline | A lane; Unit `magic_weapon`. |
-| 3 | L12G-SPELL-MIND-SPIKE - Mind Spike Runtime Support And Knowledge Closure | ready-for-research | completed baseline | A lane; Unit `mind_spike`. |
-| 4 | L12G-SPELL-WEB - Web Runtime Support Or Closure | ready-for-research | completed baseline | A lane; Unit `web`. |
-| 5 | L12G-MISSING-ANIMAL-MESSENGER - Animal Messenger Definition And Closure | ready-for-research | completed baseline | A lane; Unit `animal_messenger`. |
-| 6 | L12G-MISSING-ARCANISTS-MAGIC-AURA - Arcanists Magic Aura Definition And Closure | ready-for-research | completed baseline | A lane; Unit `arcanists_magic_aura`. |
-| 7 | L12G-MISSING-AUGURY - Augury Definition And Closure | ready-for-research | completed baseline | A lane; Unit `augury`. |
+| 1 | L12G-SPELL-LESSER-RESTORATION - Lesser Restoration Runtime Support | done | completed baseline | A lane; Unit `lesser_restoration`. |
+| 2 | L12G-SPELL-MAGIC-WEAPON - Magic Weapon Runtime Support Or Closure | done | completed baseline | A lane; Unit `magic_weapon`. |
+| 3 | L12G-SPELL-MIND-SPIKE - Mind Spike Runtime Support And Knowledge Closure | done | completed baseline | A lane; Unit `mind_spike`. |
+| 4 | L12G-SPELL-WEB - Web Runtime Support Or Closure | done | completed baseline | A lane; Unit `web`. |
+| 5 | L12G-MISSING-ANIMAL-MESSENGER - Animal Messenger Definition And Closure | done | completed baseline | A lane; Unit `animal_messenger`. |
+| 6 | L12G-MISSING-ARCANISTS-MAGIC-AURA - Arcanists Magic Aura Definition And Closure | done | completed baseline | A lane; Unit `arcanists_magic_aura`. |
+| 7 | L12G-MISSING-AUGURY - Augury Definition And Closure | done | completed baseline | A lane; Unit `augury`. |
 | 8 | L12G-MISSING-CALM-EMOTIONS - Calm Emotions Definition And Support | ready-for-research | completed baseline | A lane; Unit `calm_emotions`. |
 | 9 | L12G-MISSING-DARKNESS - Darkness Definition And Support Or Closure | ready-for-research | completed baseline | A lane; Unit `darkness`. |
 | 10 | L12G-MISSING-DARKVISION - Darkvision Definition And Support Or Closure | ready-for-research | completed baseline | A lane; Unit `darkvision`. |
 | 11 | L12G-MISSING-DETECT-THOUGHTS - Detect Thoughts Definition And Closure | ready-for-research | completed baseline | A lane; Unit `detect_thoughts`. |
 | 12 | L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME - Gust of Wind Line Runtime Support | ready-for-research | completed baseline | A lane; Unit `gust_of_wind`. |
 | 13 | L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE - Gust of Wind Gas And Flame Presentation Closure | ready-for-research | completed baseline | A lane; Unit `gust_of_wind`. |
-| 14 | L12G-RECURSIVE-TAIL-LOOP-A - LOOP-A Recursive Next-Batch Planning Tail | blocked | L12G-SPELL-LESSER-RESTORATION, L12G-SPELL-MAGIC-WEAPON, L12G-SPELL-MIND-SPIKE, L12G-SPELL-WEB, L12G-MISSING-ANIMAL-MESSENGER, L12G-MISSING-ARCANISTS-MAGIC-AURA, L12G-MISSING-AUGURY, L12G-MISSING-CALM-EMOTIONS, L12G-MISSING-DARKNESS, L12G-MISSING-DARKVISION, L12G-MISSING-DETECT-THOUGHTS, L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME, L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE | Last-resort next-batch planning safety net; auto-unblocks only after every real task in this plan is `done`. |
+| 14 | L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE - Magic Weapon Surface Item Enhancement Shape | ready-for-research | completed baseline | A lane; Unit `magic_weapon`. |
+| 15 | L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME - Magic Weapon Item Enhancement Runtime | blocked | L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE | A lane; Unit `magic_weapon`. |
+| 16 | L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE - Web Surface Area Hazard Shape | ready-for-research | completed baseline | A lane; Unit `web`. |
+| 17 | L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME - Web Restraint Hazard Runtime | blocked | L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE | A lane; Unit `web`. |
+| 18 | L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE - Web Terrain Obscurement Fire Boundary | blocked | L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE, L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME | A lane; Unit `web`. |
+| 19 | L12G-RECURSIVE-TAIL-LOOP-A - LOOP-A Recursive Next-Batch Planning Tail | blocked | L12G-SPELL-LESSER-RESTORATION, L12G-SPELL-MAGIC-WEAPON, L12G-SPELL-MIND-SPIKE, L12G-SPELL-WEB, L12G-MISSING-ANIMAL-MESSENGER, L12G-MISSING-ARCANISTS-MAGIC-AURA, L12G-MISSING-AUGURY, L12G-MISSING-CALM-EMOTIONS, L12G-MISSING-DARKNESS, L12G-MISSING-DARKVISION, L12G-MISSING-DETECT-THOUGHTS, L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME, L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE, L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE, L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME, L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE, L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME, L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE | Last-resort next-batch planning safety net; auto-unblocks only after every real task in this plan is `done`. |
 
 ## Task Details
 
 ### Task 1 - L12G-SPELL-LESSER-RESTORATION - Lesser Restoration Runtime Support
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `lesser_restoration`.
 Origin: Original backlog task 34.
@@ -227,7 +262,7 @@ Acceptance:
 
 ### Task 2 - L12G-SPELL-MAGIC-WEAPON - Magic Weapon Runtime Support Or Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `magic_weapon`.
 Origin: Original backlog task 35.
@@ -268,7 +303,7 @@ Acceptance:
 
 ### Task 3 - L12G-SPELL-MIND-SPIKE - Mind Spike Runtime Support And Knowledge Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `mind_spike`.
 Origin: Original backlog task 36.
@@ -309,7 +344,7 @@ Acceptance:
 
 ### Task 4 - L12G-SPELL-WEB - Web Runtime Support Or Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `web`.
 Origin: Original backlog task 51.
@@ -350,7 +385,7 @@ Acceptance:
 
 ### Task 5 - L12G-MISSING-ANIMAL-MESSENGER - Animal Messenger Definition And Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `animal_messenger`.
 Origin: Original backlog task 52.
@@ -391,7 +426,7 @@ Acceptance:
 
 ### Task 6 - L12G-MISSING-ARCANISTS-MAGIC-AURA - Arcanists Magic Aura Definition And Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `arcanists_magic_aura`.
 Origin: Original backlog task 53.
@@ -432,7 +467,7 @@ Acceptance:
 
 ### Task 7 - L12G-MISSING-AUGURY - Augury Definition And Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `augury`.
 Origin: Original backlog task 54.
@@ -717,13 +752,212 @@ Acceptance:
 - reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
 - battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
 
-### Task 14 - L12G-RECURSIVE-TAIL-LOOP-A - LOOP-A Recursive Next-Batch Planning Tail
+### Task 14 - L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE - Magic Weapon Surface Item Enhancement Shape
+
+Status: `ready-for-research`
+
+Unit: `magic_weapon`.
+Origin: Follow-up split from `magic_weapon` unit claim and `L12G-SPELL-MAGIC-WEAPON`.
+Dependencies: none.
+
+Pre-researched scope:
+
+- Replace Magic Weapon's lossy Surface mechanics with a lossless SRD shape for Bonus Action level-2-or-higher casting, Touch range, one nonmagical weapon target, one-hour non-Concentration duration, target magic-weapon status, slot-tiered +1/+2/+3 bonuses to attack rolls and damage rolls made with that weapon, and same-caster recast early ending.
+
+Inputs:
+
+- `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md` when this task appears in the gate;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/UNIT_REPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Magic Weapon Surface content, schema/tracer support, Unit claims, owner evidence, and focused tests.
+
+Outputs:
+
+- Magic Weapon Dhall and JSON content, plus schema/tracer support where required, represent the nonmagical weapon target, item-attached magic-weapon status, slot-tiered attack and damage bonuses, and recast ending as executable source facts rather than comments or prose-only description;
+- update only the owner files required by the task;
+- regenerate coverage artifacts.
+
+Acceptance:
+
+- RAW and ubiquitous-language checks are performed before modeling;
+- focused package tests cover the owner boundary touched by the task;
+- package typecheck is run for touched packages when dependencies are available;
+- `pnpm unit-profile-coverage:check --write` and `pnpm unit-profile-coverage:check` are run;
+- `git diff --check` passes;
+- reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
+- battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
+
+### Task 15 - L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME - Magic Weapon Item Enhancement Runtime
+
+Status: `blocked`
+
+Unit: `magic_weapon`.
+Origin: Follow-up split from `magic_weapon` unit claim and `L12G-SPELL-MAGIC-WEAPON`.
+Dependencies: L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE.
+
+Pre-researched scope:
+
+- Promote Magic Weapon as a level-2-or-higher Bonus Action Spell Invocation that spends the Bonus Action and Spell Slot, consumes caller-supplied target item identity and nonmagical weapon witness facts, records one caster-owned item-attached Spell Effect, projects magic-weapon status plus the slot-tiered attack-roll and damage-roll bonuses only for attacks and damage made with that item, and ends on duration expiry or same-caster recast without rewriting authored weapon records or adding a parallel spell-owned loadout table.
+
+Inputs:
+
+- `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md` when this task appears in the gate;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/UNIT_REPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- Magic Weapon Surface item-enhancement shape from `L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE`;
+- existing battle-runtime spell invocation, item/equipment, weapon attack/damage projection, Unit claims, owner evidence, and focused tests.
+
+Outputs:
+
+- supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for spell discovery, resource spending, item-attached Spell Effect state, exact-item attack and damage projections, magic-weapon status projection, duration cleanup, and same-caster recast replacement;
+- update only the owner files required by the task;
+- regenerate coverage artifacts.
+
+Acceptance:
+
+- RAW and ubiquitous-language checks are performed before modeling;
+- focused package tests cover the owner boundary touched by the task;
+- package typecheck is run for touched packages when dependencies are available;
+- `pnpm unit-profile-coverage:check --write` and `pnpm unit-profile-coverage:check` are run;
+- `git diff --check` passes;
+- reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
+- battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
+
+### Task 16 - L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE - Web Surface Area Hazard Shape
+
+Status: `ready-for-research`
+
+Unit: `web`.
+Origin: Follow-up split from `web` unit claim and `L12G-SPELL-WEB`.
+Dependencies: none.
+
+Pre-researched scope:
+
+- Replace Web's partial Surface mechanics with a lossless SRD shape for Magic Action level-2 Spell Slot casting, point-origin 20-foot Cube, Concentration up to 1 hour, Difficult Terrain, Lightly Obscured area, anchoring or flat-surface layering, flat-surface 5-foot depth, start-of-next-caster-turn collapse, first-entry-on-a-turn creature-entry Dexterity save trigger, separate turn-start Dexterity save trigger, failed-save Restrained while in the webs or until escape, action Strength (Athletics) escape against caster spell save DC, and flammable 5-foot Cube burn-away with 2d4 Fire damage to creatures that start turns in the fire.
+
+Inputs:
+
+- `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md` when this task appears in the gate;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/UNIT_REPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Web Surface content, schema/tracer support, Unit claims, owner evidence, and focused tests.
+
+Outputs:
+
+- Web Dhall and JSON content, plus schema/tracer support where required, make area identity, first-entry-on-a-turn and turn-start save triggers, Restrained lifecycle, escape, terrain/obscurement, anchor collapse, flat-surface depth, and flammable cube cleanup executable source facts instead of comments or prose-only description;
+- update only the owner files required by the task;
+- regenerate coverage artifacts.
+
+Acceptance:
+
+- RAW and ubiquitous-language checks are performed before modeling;
+- focused package tests cover the owner boundary touched by the task;
+- package typecheck is run for touched packages when dependencies are available;
+- `pnpm unit-profile-coverage:check --write` and `pnpm unit-profile-coverage:check` are run;
+- `git diff --check` passes;
+- reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
+- battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
+
+### Task 17 - L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME - Web Restraint Hazard Runtime
+
+Status: `blocked`
+
+Unit: `web`.
+Origin: Follow-up split from `web` unit claim and `L12G-SPELL-WEB`.
+Dependencies: L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE.
+
+Pre-researched scope:
+
+- Promote Web's battle-visible restraint hazard: Magic Action and level-2-or-higher Spell Slot spend, caller-supplied point-origin 20-foot Cube area identity, Concentration-owned active Web area, table-triggered affected-creature facts for first-entry-on-a-turn saves and separate start-turn in-area saves, failed-save spell-owned Restrained condition tied to table-witnessed still-in-webs state, action Strength (Athletics) escape against caster spell save DC, and cleanup when escape succeeds, the target is no longer in the webs, Concentration or duration ends, or table supplies collapse or removal.
+
+Inputs:
+
+- `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md` when this task appears in the gate;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/UNIT_REPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- Web Surface area-hazard shape from `L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE`;
+- existing battle-runtime spell invocation, condition, area/spatial witness, Unit claims, owner evidence, and focused tests.
+
+Outputs:
+
+- supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for resource spending, active area identity, first-entry-on-a-turn and start-turn save triggers, Restrained application, escape, and cleanup without automatic geometry, pathfinding, or area membership derivation;
+- update only the owner files required by the task;
+- regenerate coverage artifacts.
+
+Acceptance:
+
+- RAW and ubiquitous-language checks are performed before modeling;
+- focused package tests cover the owner boundary touched by the task;
+- package typecheck is run for touched packages when dependencies are available;
+- `pnpm unit-profile-coverage:check --write` and `pnpm unit-profile-coverage:check` are run;
+- `git diff --check` passes;
+- reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
+- battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
+
+### Task 18 - L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE - Web Terrain Obscurement Fire Boundary
+
+Status: `blocked`
+
+Unit: `web`.
+Origin: Follow-up split from `web` unit claim and `L12G-SPELL-WEB`.
+Dependencies: L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE, L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME.
+
+Pre-researched scope:
+
+- Decide and promote or close Web's area projection and flammable-cube clauses: active Web area as Difficult Terrain movement-cost facts, Lightly Obscured sight or perception projection, anchoring or layering collapse boundary, flat-surface 5-foot depth projection, and fire-exposed 5-foot Cube burn-away after 1 round with 2d4 Fire damage to creatures starting turns in the fire, consuming table-supplied fire exposure and affected-creature witnesses rather than storing independent map squares.
+
+Inputs:
+
+- `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md` when this task appears in the gate;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/UNIT_REPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- Web Surface area-hazard shape from `L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE`;
+- Web active-area runtime owner from `L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME`;
+- existing light/obscurement, movement, damage, table/spatial/environment witness owners, Unit claims, owner evidence, and focused tests.
+
+Outputs:
+
+- focused Surface/runtime owner decision with tests or accepted runtime-detached closure for Difficult Terrain, Lightly Obscured, anchor collapse, flat-surface depth, and burning-cube damage and cleanup, reusing existing light/obscurement, movement, damage, and table/spatial witness owners without duplicating area state;
+- update only the owner files required by the task;
+- regenerate coverage artifacts.
+
+Acceptance:
+
+- RAW and ubiquitous-language checks are performed before modeling;
+- focused package tests cover the owner boundary touched by the task;
+- package typecheck is run for touched packages when dependencies are available;
+- `pnpm unit-profile-coverage:check --write` and `pnpm unit-profile-coverage:check` are run;
+- `git diff --check` passes;
+- reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
+- battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
+
+### Task 19 - L12G-RECURSIVE-TAIL-LOOP-A - LOOP-A Recursive Next-Batch Planning Tail
 
 Status: `blocked`
 
 Unit: `level1_2_frontier`.
 Origin: Safety-net planning task for when this plan has no earlier runnable implementation tasks.
-Dependencies: L12G-SPELL-LESSER-RESTORATION, L12G-SPELL-MAGIC-WEAPON, L12G-SPELL-MIND-SPIKE, L12G-SPELL-WEB, L12G-MISSING-ANIMAL-MESSENGER, L12G-MISSING-ARCANISTS-MAGIC-AURA, L12G-MISSING-AUGURY, L12G-MISSING-CALM-EMOTIONS, L12G-MISSING-DARKNESS, L12G-MISSING-DARKVISION, L12G-MISSING-DETECT-THOUGHTS, L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME, L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE.
+Dependencies: L12G-SPELL-LESSER-RESTORATION, L12G-SPELL-MAGIC-WEAPON, L12G-SPELL-MIND-SPIKE, L12G-SPELL-WEB, L12G-MISSING-ANIMAL-MESSENGER, L12G-MISSING-ARCANISTS-MAGIC-AURA, L12G-MISSING-AUGURY, L12G-MISSING-CALM-EMOTIONS, L12G-MISSING-DARKNESS, L12G-MISSING-DARKVISION, L12G-MISSING-DETECT-THOUGHTS, L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME, L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE, L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE, L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME, L12G-FOLLOWUP-WEB-SURFACE-AREA-HAZARD-SHAPE, L12G-FOLLOWUP-WEB-RESTRAINT-HAZARD-RUNTIME, L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE.
 
 Pre-researched scope:
 

@@ -4,6 +4,7 @@ import type { SpellRecord, TargetSelection } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import {
   type DirectConditionSpellInvocation,
+  type DirectConditionRemovalSpellInvocation,
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import type { CharacterBattleSpellcastingState } from "../character-battle-resources.ts";
@@ -12,6 +13,7 @@ import {
   sameStringSet,
   scalarBuffSpellTargetCount,
 } from "./spells-profile-shared.ts";
+import { DIRECT_CONDITION_REMOVAL_CONDITIONS } from "./domain-constants.ts";
 
 const INVISIBILITY_EARLY_END_KINDS = [
   "target_makes_attack_roll",
@@ -54,12 +56,89 @@ export function supportedPreparedDirectConditionSpellProfile(
   });
 }
 
+export function supportedPreparedDirectConditionRemovalSpellProfile(
+  spell: SpellRecord,
+  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+): readonly SupportedSpellInvocation[] {
+  const projection = directConditionRemovalProjection(spell);
+  if (projection === null) {
+    return [];
+  }
+  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] =>
+    Number(slot.spellLevel) < spell.mechanics.level
+      ? []
+      : [
+          {
+            access: { tag: "prepared" },
+            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+            procedure: "directConditionRemoval",
+            spell,
+            actionCost: "bonusAction",
+            ...projection,
+          },
+        ],
+  );
+}
+
+function directConditionRemovalProjection(
+  spell: SpellRecord,
+): Pick<
+  DirectConditionRemovalSpellInvocation,
+  "conditionChoices" | "rangeFeet" | "targeting"
+> | null {
+  if (
+    spell.mechanics.family !== "activation" ||
+    spell.mechanics.level !== 2 ||
+    spell.mechanics.castingTime.kind !== "bonus_action" ||
+    spell.mechanics.range.kind !== "touch" ||
+    spell.mechanics.duration.kind !== "instantaneous" ||
+    spell.mechanics.phases.length !== 1
+  ) {
+    return null;
+  }
+  const [phase] = spell.mechanics.phases;
+  const attachment = phase?.kind === "direct" ? phase.attachment : null;
+  const selection =
+    attachment?.kind === "hole" && attachment.value.kind === "target"
+      ? attachment.value.selection
+      : null;
+  const effects = phase?.kind === "direct" ? (phase.effects ?? []) : [];
+  const [effect, extraEffect] = effects;
+  const condition =
+    effect?.kind === "remove_condition" ? effect.condition : null;
+  const conditionChoice =
+    condition !== null &&
+    typeof condition === "object" &&
+    !Array.isArray(condition) &&
+    "kind" in condition &&
+    condition.kind === "choose"
+      ? condition
+      : null;
+  if (
+    selection === null ||
+    selection.mode !== "one" ||
+    !sameStringSet(selection.targetKinds ?? ["creature"], ["creature"]) ||
+    extraEffect !== undefined ||
+    conditionChoice === null ||
+    !sameStringSet(conditionChoice.from, DIRECT_CONDITION_REMOVAL_CONDITIONS)
+  ) {
+    return null;
+  }
+  return {
+    targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
+    conditionChoices: DIRECT_CONDITION_REMOVAL_CONDITIONS,
+    rangeFeet: movementFeet(5),
+  };
+}
+
 function directConditionProjection(
   actorId: CombatantId,
   spell: SpellRecord,
-): (Pick<DirectConditionSpellInvocation, "activeEffect" | "rangeFeet"> & {
-  readonly selection: TargetSelection;
-}) | null {
+):
+  | (Pick<DirectConditionSpellInvocation, "activeEffect" | "rangeFeet"> & {
+      readonly selection: TargetSelection;
+    })
+  | null {
   if (
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 2 ||

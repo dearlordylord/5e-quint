@@ -3,7 +3,8 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV38A sleep
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-BLINDNESS-DEAFNESS blindness_deafness
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-HOLD-PERSON hold_person
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-condition-save spell.invocation-sleep-target-admission
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-LESSER-RESTORATION lesser_restoration
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-condition-save spell.invocation-sleep-target-admission spell.invocation-direct-condition-removal
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { Schema } from "effect";
 import * as Either from "effect/Either";
@@ -15,6 +16,7 @@ import {
   heroismUnitId,
   holdPersonDurationTicks,
   holdPersonUnitId,
+  lesserRestorationUnitId,
   sleepUnitId,
   spellCasterId,
   spellTargetId,
@@ -28,10 +30,12 @@ import {
 import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
+  bonusSpellAct,
   savingThrowOutcomeFill,
   spellConditionChoiceFill,
   spellAct,
   spellHoleInvocation,
+  spellTargetFill,
   spellTargetListFill,
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
@@ -44,6 +48,9 @@ import {
   resolveBattleSubject,
 } from "./index.ts";
 import {
+  applyCondition,
+  battleCreatureStateWithKnockOutPreservedConditions,
+  hasCondition,
   resourceCount,
   spellSlotInvocationRef,
   spellSlotLevel,
@@ -211,9 +218,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       },
     );
     const expiredCombatants = tickDurationEffects(nearlyExpiredCombatants);
-    expect(
-      expiredCombatants.get(spellCasterId)?.concentration,
-    ).toBeNull();
+    expect(expiredCombatants.get(spellCasterId)?.concentration).toBeNull();
     expect(expiredCombatants.get(spellTargetId)).toMatchObject({
       conditions: expect.not.objectContaining({ paralyzed: true }),
       activeEffects: [],
@@ -252,7 +257,9 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     });
     expect(ended).toMatchObject({ tag: "resolved" });
     if (ended.tag !== "resolved") {
-      throw new Error("Expected successful Hold Person repeat save to resolve.");
+      throw new Error(
+        "Expected successful Hold Person repeat save to resolve.",
+      );
     }
     expect(ended.state.combatants.get(spellTargetId)).toMatchObject({
       conditions: expect.not.objectContaining({ paralyzed: true }),
@@ -790,5 +797,204 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
         targeting: { kind: "pointOriginSphere", radiusFeet: 5 },
       }),
     ]);
+  });
+
+  test("lesser_restoration is admitted as Bonus Action direct condition removal", () => {
+    const spell = spellRecord(lesserRestorationUnitId);
+    const baseState = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const target = requireCombatant(baseState, spellTargetId);
+    const paralyzedEffect = {
+      kind: "spellConditionEndTurnSave" as const,
+      sourceSpellId: holdPersonUnitId,
+      sourceCombatantId: spellCasterId,
+      condition: "paralyzed" as const,
+      conditionHadNonSpellSource: false,
+      save: {
+        ability: "wis" as const,
+        dc: { kind: "caster_spell_save_dc" as const },
+      },
+      expiresAt: {
+        kind: "duration" as const,
+        durationTicks: elapsedTimeTicks(10),
+      },
+    };
+    const poisonedEffect = {
+      kind: "spellConditionEndTurnSave" as const,
+      sourceSpellId: "synthetic_poison_spell",
+      sourceCombatantId: spellCasterId,
+      condition: "poisoned" as const,
+      conditionHadNonSpellSource: false,
+      save: {
+        ability: "con" as const,
+        dc: { kind: "caster_spell_save_dc" as const },
+      },
+      expiresAt: {
+        kind: "duration" as const,
+        durationTicks: elapsedTimeTicks(10),
+      },
+    };
+    const affectedTarget = battleCreatureStateWithKnockOutPreservedConditions(
+      {
+        ...target,
+        activeEffects: [
+          ...target.activeEffects,
+          paralyzedEffect,
+          poisonedEffect,
+        ],
+      },
+      applyCondition(
+        applyCondition(target.conditions, "paralyzed"),
+        "poisoned",
+      ),
+    );
+    const state = {
+      ...baseState,
+      combatants: new Map(baseState.combatants).set(
+        spellTargetId,
+        affectedTarget,
+      ),
+    };
+    const act = bonusSpellAct({ state, spellId: lesserRestorationUnitId });
+
+    expect(act.subject).toEqual({
+      tag: "bonusActionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(
+        lesserRestorationUnitId,
+        2,
+        "directConditionRemoval",
+      ),
+      mode: { tag: "cast" },
+    });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const conditionHole = requireHole(act.initialHoles, "conditionChoice");
+    expect(conditionHole.choices).toEqual([
+      "blinded",
+      "deafened",
+      "paralyzed",
+      "poisoned",
+    ]);
+    expect(spellHoleInvocation([conditionHole])).toEqual(
+      expect.objectContaining({
+        procedure: "directConditionRemoval",
+        spell,
+        actionCost: "bonusAction",
+        resource: { tag: "spellSlot", slotLevel: 2 },
+        targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
+        conditionChoices: ["blinded", "deafened", "paralyzed", "poisoned"],
+        rangeFeet: 5,
+      }),
+    );
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(
+          targetHole,
+          lesserRestorationUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+        spellConditionChoiceFill(conditionHole, "paralyzed"),
+      ],
+    });
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Lesser Restoration to resolve.");
+    }
+    const cleansed = requireCombatant(resolved.state, spellTargetId);
+    expect(hasCondition(cleansed.conditions, "paralyzed")).toBe(false);
+    expect(hasCondition(cleansed.conditions, "poisoned")).toBe(true);
+    expect(cleansed.activeEffects).not.toContainEqual(paralyzedEffect);
+    expect(cleansed.activeEffects).toContainEqual(poisonedEffect);
+    const caster = requireCombatant(resolved.state, spellCasterId);
+    expect(caster.origin.kind).toBe("character");
+    if (caster.origin.kind !== "character") {
+      throw new Error("Expected Lesser Restoration caster to be a character.");
+    }
+    expect(caster.origin.spellcasting?.spellSlots).toEqual([
+      { spellLevel: 2, count: 1, expended: 1 },
+    ]);
+    expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
+      false,
+    );
+    expect(resolved.snapshot.turn.bonusActionAvailable).toBe(false);
+  });
+
+  test("lesser_restoration clears source Concentration when removing the last concentration condition effect", () => {
+    const spell = spellRecord(lesserRestorationUnitId);
+    const baseState = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const caster = requireCombatant(baseState, spellCasterId);
+    const target = requireCombatant(baseState, spellTargetId);
+    const paralyzedEffect = {
+      kind: "spellConditionEndTurnSave" as const,
+      sourceSpellId: holdPersonUnitId,
+      sourceCombatantId: spellCasterId,
+      condition: "paralyzed" as const,
+      conditionHadNonSpellSource: false,
+      save: {
+        ability: "wis" as const,
+        dc: { kind: "caster_spell_save_dc" as const },
+      },
+      expiresAt: {
+        kind: "concentration" as const,
+        combatantId: spellCasterId,
+        durationTicks: holdPersonDurationTicks,
+      },
+    };
+    const affectedTarget = battleCreatureStateWithKnockOutPreservedConditions(
+      {
+        ...target,
+        activeEffects: [...target.activeEffects, paralyzedEffect],
+      },
+      applyCondition(target.conditions, "paralyzed"),
+    );
+    const state = {
+      ...baseState,
+      combatants: new Map(baseState.combatants)
+        .set(spellCasterId, {
+          ...caster,
+          concentration: {
+            sourceSpellId: holdPersonUnitId,
+            effectKind: "spellEffect" as const,
+          },
+        })
+        .set(spellTargetId, affectedTarget),
+    };
+    const act = bonusSpellAct({ state, spellId: lesserRestorationUnitId });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const conditionHole = requireHole(act.initialHoles, "conditionChoice");
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(
+          targetHole,
+          lesserRestorationUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+        spellConditionChoiceFill(conditionHole, "paralyzed"),
+      ],
+    });
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Lesser Restoration to resolve.");
+    }
+
+    const cleansed = requireCombatant(resolved.state, spellTargetId);
+    expect(hasCondition(cleansed.conditions, "paralyzed")).toBe(false);
+    expect(cleansed.activeEffects).not.toContainEqual(paralyzedEffect);
+    expect(
+      requireCombatant(resolved.state, spellCasterId).concentration,
+    ).toBeNull();
   });
 });

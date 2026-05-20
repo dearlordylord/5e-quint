@@ -1,10 +1,12 @@
 // Save-gated spell resolution extracted from spells-resolve.ts.
 // Owns save-gated damage, condition, and attack-roll-advantage procedures.
 
+import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   damageAmount as toDamageAmount,
   type MovementFeet,
 } from "@dnd/shared/types";
+import { Either } from "effect";
 import type { BattleReactionTrigger } from "../battle-reaction-triggers.ts";
 import {
   ATTACK_TARGET_HOLE_ID,
@@ -14,6 +16,7 @@ import {
   maybeOpenReactionWindow,
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
+  type BattleActiveEffect,
   type BattleHoleId,
   type BattleAfterDamageEvent,
   type BattleFill,
@@ -38,6 +41,7 @@ import {
 import { extendSavingThrowOngoingFeatures } from "./attack-roll.ts";
 import { combatantCanTakeReactions } from "./creature-state.ts";
 import {
+  breakBattleConcentration,
   damageLifecycleConcentrationSavingThrowHoles,
   damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
   damageLifecycleHideousLaughterDamageRepeatSaveHoles,
@@ -75,7 +79,10 @@ import {
   validateSpellTargetList,
 } from "./spells-holes-fills.ts";
 
-import { spendSpellCastResources } from "./spells-resolve-resources.ts";
+import {
+  spendSpellCastResources,
+  spellRequiresConcentration,
+} from "./spells-resolve-resources.ts";
 
 import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
 
@@ -529,6 +536,7 @@ export function resolveSaveGateDamageSpellAct(input: {
         actorId: input.actorId,
         invocation: input.invocation,
         errorState: input.input.state,
+        startConcentration: false,
       });
     }
     if (sanctuaryCheck.tag === "newTarget") {
@@ -643,6 +651,31 @@ export function resolveSaveGateDamageSpellAct(input: {
   const failedTargets = savingThrowOutcomes.outcomes.flatMap((outcome) =>
     outcome.succeeded ? [] : [outcome.targetId],
   );
+  const saveGatedDamageSpellRequiresConcentration = spellRequiresConcentration(
+    input.invocation,
+  );
+  const startFailedSaveConcentration =
+    saveGatedDamageSpellRequiresConcentration && failedTargets.length > 0;
+  const failedSaveConcentrationDuration = startFailedSaveConcentration
+    ? failedSaveConcentrationDurationEffect({
+        actorId: input.actorId,
+        invocation: input.invocation,
+      })
+    : null;
+  if (
+    startFailedSaveConcentration &&
+    failedSaveConcentrationDuration === null
+  ) {
+    return invalidResult(
+      input.input.state,
+      "unsupportedSubject",
+      "Save-gated damage Concentration spells require a supported maximum duration.",
+    );
+  }
+  const stateAfterCastConcentrationBreak =
+    saveGatedDamageSpellRequiresConcentration
+      ? breakBattleConcentration(input.input.state, input.actorId)
+      : input.input.state;
   const objectIgnitions = postSaveAreaObjectIgnitions({
     actorId: input.actorId,
     area: savingThrowArea,
@@ -668,7 +701,7 @@ export function resolveSaveGateDamageSpellAct(input: {
     savingThrowOutcomes.outcomes.map((outcome) => [
       outcome.targetId,
       saveGateDamageResultForOutcome(
-        input.input.state,
+        stateAfterCastConcentrationBreak,
         outcome.targetId,
         input.invocation,
         outcome.succeeded,
@@ -718,21 +751,26 @@ export function resolveSaveGateDamageSpellAct(input: {
       );
     }
     const effected = applyFailedSaveSpellActiveEffects(
-      input.input.state,
+      stateAfterCastConcentrationBreak,
       input.actorId,
       failedTargets,
       input.invocation,
     );
-    const spentResources = spendSpellCastResources({
-      state: extendSavingThrowOngoingFeatures(
-        effected,
-        input.actorId,
-        selectedTargetIds,
-      ),
-      actorId: input.actorId,
-      invocation: input.invocation,
-      errorState: input.input.state,
-    });
+    const spentResources = withFailedSaveConcentrationDuration(
+      spendSpellCastResources({
+        state: extendSavingThrowOngoingFeatures(
+          effected,
+          input.actorId,
+          selectedTargetIds,
+        ),
+        actorId: input.actorId,
+        invocation: input.invocation,
+        errorState: input.input.state,
+        startConcentration: startFailedSaveConcentration,
+      }),
+      input.actorId,
+      failedSaveConcentrationDuration,
+    );
     return withObjectIgnitions(spentResources, objectIgnitions);
   }
 
@@ -757,7 +795,7 @@ export function resolveSaveGateDamageSpellAct(input: {
   });
 
   const concentrationSaves = damageTargets.flatMap((targetId) => {
-    const target = input.input.state.combatants.get(targetId);
+    const target = stateAfterCastConcentrationBreak.combatants.get(targetId);
     if (target === undefined) {
       return [];
     }
@@ -768,7 +806,7 @@ export function resolveSaveGateDamageSpellAct(input: {
       saveDamageResultForTarget(targetId),
     );
     return damageLifecycleConcentrationSavingThrowHoles({
-      state: input.input.state,
+      state: stateAfterCastConcentrationBreak,
       target,
       damageAmount,
     });
@@ -811,7 +849,7 @@ export function resolveSaveGateDamageSpellAct(input: {
     ]),
   );
   const damageDispositionHoles = damageTargets.flatMap((targetId) => {
-    const target = input.input.state.combatants.get(targetId);
+    const target = stateAfterCastConcentrationBreak.combatants.get(targetId);
     if (target === undefined) {
       return [];
     }
@@ -850,7 +888,7 @@ export function resolveSaveGateDamageSpellAct(input: {
     ]);
   }
   const hideousLaughterSaveChecks = damageTargets.map((targetId) => {
-    const target = input.input.state.combatants.get(targetId);
+    const target = stateAfterCastConcentrationBreak.combatants.get(targetId);
     if (target === undefined) {
       return { tag: "ok" as const, holes: [] };
     }
@@ -861,12 +899,12 @@ export function resolveSaveGateDamageSpellAct(input: {
       saveDamageResultForTarget(targetId),
     );
     const holes = damageLifecycleHideousLaughterDamageRepeatSaveHoles({
-      state: input.input.state,
+      state: stateAfterCastConcentrationBreak,
       target,
       damageAmount,
     });
     return damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
-      state: input.input.state,
+      state: stateAfterCastConcentrationBreak,
       target,
       damageAmount,
       fills: fillsMatchingHoleIds(
@@ -909,39 +947,44 @@ export function resolveSaveGateDamageSpellAct(input: {
       "Hideous Laughter damage repeat save fill must match a requested damaged target.",
     );
   }
-  const damaged = damageTargets.reduce(
-    (state, targetId) => {
-      const target = state.combatants.get(targetId);
-      if (target === undefined) {
-        return state;
-      }
-      const damageAmount = spellDamageAmountForTarget(
+  const damaged = damageTargets.reduce((state, targetId) => {
+    const target = state.combatants.get(targetId);
+    if (target === undefined) {
+      return state;
+    }
+    const damageAmount = spellDamageAmountForTarget(
+      target,
+      input.invocation,
+      damageRoll,
+      saveDamageResultForTarget(targetId),
+    );
+    const concentrationLifecycleHoles =
+      damageLifecycleConcentrationSavingThrowHoles({
+        state,
         target,
-        input.invocation,
-        damageRoll,
-        saveDamageResultForTarget(targetId),
-      );
-      const concentrationLifecycleHoles =
-        damageLifecycleConcentrationSavingThrowHoles({
-          state,
-          target,
-          damageAmount,
-        });
-      const concentrationLifecycleFills = fillsMatchingHoleIds(
-        input.fillSet.concentrationSavingThrows,
-        concentrationLifecycleHoles,
-      );
-      const hideousLaughterLifecycleHoles =
-        damageLifecycleHideousLaughterDamageRepeatSaveHoles({
-          state,
-          target,
-          damageAmount,
-        });
-      const hideousLaughterLifecycleFills = fillsMatchingHoleIds(
-        input.fillSet.hideousLaughterDamageRepeatSaves,
-        hideousLaughterLifecycleHoles,
-      );
-      return applySpellDamage(state, targetId, input.invocation, damageRoll, false, {
+        damageAmount,
+      });
+    const concentrationLifecycleFills = fillsMatchingHoleIds(
+      input.fillSet.concentrationSavingThrows,
+      concentrationLifecycleHoles,
+    );
+    const hideousLaughterLifecycleHoles =
+      damageLifecycleHideousLaughterDamageRepeatSaveHoles({
+        state,
+        target,
+        damageAmount,
+      });
+    const hideousLaughterLifecycleFills = fillsMatchingHoleIds(
+      input.fillSet.hideousLaughterDamageRepeatSaves,
+      hideousLaughterLifecycleHoles,
+    );
+    return applySpellDamage(
+      state,
+      targetId,
+      input.invocation,
+      damageRoll,
+      false,
+      {
         concentrationSavingThrow: concentrationSaveByTargetId.get(targetId),
         wardingBondDamageShareConcentrationSavingThrows:
           concentrationLifecycleFills,
@@ -953,10 +996,9 @@ export function resolveSaveGateDamageSpellAct(input: {
           targetId,
         ),
         damageSourceId: input.actorId,
-      });
-    },
-    input.input.state,
-  );
+      },
+    );
+  }, stateAfterCastConcentrationBreak);
   const effected = applyFailedSaveSpellActiveEffects(
     damaged,
     input.actorId,
@@ -968,12 +1010,17 @@ export function resolveSaveGateDamageSpellAct(input: {
     input.actorId,
     selectedTargetIds,
   );
-  const spentResources = spendSpellCastResources({
-    state: extended,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-  });
+  const spentResources = withFailedSaveConcentrationDuration(
+    spendSpellCastResources({
+      state: extended,
+      actorId: input.actorId,
+      invocation: input.invocation,
+      errorState: input.input.state,
+      startConcentration: startFailedSaveConcentration,
+    }),
+    input.actorId,
+    failedSaveConcentrationDuration,
+  );
   if (spentResources.tag !== "resolved") {
     return spentResources;
   }
@@ -983,7 +1030,7 @@ export function resolveSaveGateDamageSpellAct(input: {
     damagedId: targetId,
     damageAmount: toDamageAmount(
       spellDamageAmountForTarget(
-        input.input.state.combatants.get(targetId)!,
+        stateAfterCastConcentrationBreak.combatants.get(targetId)!,
         input.invocation,
         damageRoll,
         saveDamageResultForTarget(targetId),
@@ -1031,6 +1078,69 @@ function withObjectIgnitions(
     ...result,
     objectIgnitions: [...(result.objectIgnitions ?? []), ...objectIgnitions],
   };
+}
+
+type SpellConcentrationDurationEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "spellConcentrationDuration" }
+>;
+
+function failedSaveConcentrationDurationEffect(input: {
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "saveGatedDamage" }
+  >;
+}): SpellConcentrationDurationEffect | null {
+  if (input.invocation.spell.mechanics.duration.kind !== "concentration") {
+    return null;
+  }
+  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
+    input.invocation.spell.mechanics.duration.upTo,
+  );
+  if (Either.isLeft(durationTicks)) {
+    return null;
+  }
+  return {
+    kind: "spellConcentrationDuration",
+    sourceSpellId: input.invocation.spell.id,
+    sourceCombatantId: input.actorId,
+    expiresAt: {
+      kind: "concentration",
+      combatantId: input.actorId,
+      durationTicks: durationTicks.right,
+    },
+  };
+}
+
+function withFailedSaveConcentrationDuration(
+  result: BattleResolutionResult,
+  actorId: CombatantId,
+  effect: SpellConcentrationDurationEffect | null,
+): BattleResolutionResult {
+  if (result.tag !== "resolved" || effect === null) {
+    return result;
+  }
+  const actor = result.state.combatants.get(actorId);
+  if (actor === undefined) {
+    return result;
+  }
+  const state = {
+    ...result.state,
+    combatants: new Map(result.state.combatants).set(actorId, {
+      ...actor,
+      activeEffects: [
+        ...actor.activeEffects.filter(
+          (candidate) =>
+            candidate.kind !== "spellConcentrationDuration" ||
+            candidate.sourceSpellId !== effect.sourceSpellId ||
+            candidate.sourceCombatantId !== effect.sourceCombatantId,
+        ),
+        effect,
+      ],
+    }),
+  };
+  return { ...result, state, snapshot: snapshotBattle(state) };
 }
 
 function resolveFailedSaveForcedReactionMovement(input: {

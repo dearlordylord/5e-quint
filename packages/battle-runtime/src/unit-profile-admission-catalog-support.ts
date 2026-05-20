@@ -142,6 +142,8 @@ export const invisibilityUnitId = "invisibility";
 
 export const invisibilityDurationTicks = elapsedTimeTicks(600);
 
+export const lesserRestorationUnitId = "lesser_restoration";
+
 export const thunderwaveUnitId = "thunderwave";
 
 export const dissonantWhispersUnitId = "dissonant_whispers";
@@ -211,6 +213,10 @@ export const longstriderUnitId = "longstrider";
 export const mageArmorUnitId = "mage_armor";
 
 export const magicMissileUnitId = "magic_missile";
+
+export const mindSpikeUnitId = "mind_spike";
+
+export const mindSpikeDurationTicks = elapsedTimeTicks(600);
 
 export const passWithoutTraceUnitId = "pass_without_trace";
 
