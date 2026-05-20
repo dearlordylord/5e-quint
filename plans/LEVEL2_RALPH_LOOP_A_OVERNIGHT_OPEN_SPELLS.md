@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L12G-SPELL-MAGIC-WEAPON",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Magic Weapon Runtime Support Or Closure"
     },
     {
@@ -84,6 +84,18 @@
     },
     {
       "number": 14,
+      "id": "L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE",
+      "status": "ready-for-research",
+      "title": "Magic Weapon Surface Item Enhancement Shape"
+    },
+    {
+      "number": 15,
+      "id": "L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME",
+      "status": "blocked",
+      "title": "Magic Weapon Item Enhancement Runtime"
+    },
+    {
+      "number": 16,
       "id": "L12G-RECURSIVE-TAIL-LOOP-A",
       "status": "blocked",
       "title": "LOOP-A Recursive Next-Batch Planning Tail"
@@ -94,7 +106,7 @@
 
 This is a runnable overnight Ralph plan split out of the stale monolithic A plan and the current level-1/2 strict frontier. It owns open-runtime spells, missing spell definition closures, and Gust of Wind witness support not owned by Claude or Wild Shape.
 
-Preplanned load: 13 real atomic implementation/planning tasks plus one recursive planning tail. The recursive tail is a fallback only; ordinary `blocked` tasks already auto-unblock when their same-plan dependencies are marked `done`.
+Preplanned load: 15 real atomic implementation/planning tasks plus one recursive planning tail. The recursive tail is a fallback only; ordinary `blocked` tasks already auto-unblock when their same-plan dependencies are marked `done`.
 
 ## Worktree Safety Prefix
 
@@ -167,7 +179,7 @@ The final task is intentionally blocked on every real task in this plan and plac
 | # | Task | Status | Depends On | Notes |
 | ---: | --- | --- | --- | --- |
 | 1 | L12G-SPELL-LESSER-RESTORATION - Lesser Restoration Runtime Support | done | completed baseline | A lane; Unit `lesser_restoration`. |
-| 2 | L12G-SPELL-MAGIC-WEAPON - Magic Weapon Runtime Support Or Closure | ready-for-research | completed baseline | A lane; Unit `magic_weapon`. |
+| 2 | L12G-SPELL-MAGIC-WEAPON - Magic Weapon Runtime Support Or Closure | done | completed baseline | A lane; Unit `magic_weapon`. |
 | 3 | L12G-SPELL-MIND-SPIKE - Mind Spike Runtime Support And Knowledge Closure | ready-for-research | completed baseline | A lane; Unit `mind_spike`. |
 | 4 | L12G-SPELL-WEB - Web Runtime Support Or Closure | ready-for-research | completed baseline | A lane; Unit `web`. |
 | 5 | L12G-MISSING-ANIMAL-MESSENGER - Animal Messenger Definition And Closure | ready-for-research | completed baseline | A lane; Unit `animal_messenger`. |
@@ -179,7 +191,9 @@ The final task is intentionally blocked on every real task in this plan and plac
 | 11 | L12G-MISSING-DETECT-THOUGHTS - Detect Thoughts Definition And Closure | ready-for-research | completed baseline | A lane; Unit `detect_thoughts`. |
 | 12 | L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME - Gust of Wind Line Runtime Support | ready-for-research | completed baseline | A lane; Unit `gust_of_wind`. |
 | 13 | L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE - Gust of Wind Gas And Flame Presentation Closure | ready-for-research | completed baseline | A lane; Unit `gust_of_wind`. |
-| 14 | L12G-RECURSIVE-TAIL-LOOP-A - LOOP-A Recursive Next-Batch Planning Tail | blocked | L12G-SPELL-LESSER-RESTORATION, L12G-SPELL-MAGIC-WEAPON, L12G-SPELL-MIND-SPIKE, L12G-SPELL-WEB, L12G-MISSING-ANIMAL-MESSENGER, L12G-MISSING-ARCANISTS-MAGIC-AURA, L12G-MISSING-AUGURY, L12G-MISSING-CALM-EMOTIONS, L12G-MISSING-DARKNESS, L12G-MISSING-DARKVISION, L12G-MISSING-DETECT-THOUGHTS, L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME, L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE | Last-resort next-batch planning safety net; auto-unblocks only after every real task in this plan is `done`. |
+| 14 | L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE - Magic Weapon Surface Item Enhancement Shape | ready-for-research | completed baseline | A lane; Unit `magic_weapon`. |
+| 15 | L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME - Magic Weapon Item Enhancement Runtime | blocked | L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE | A lane; Unit `magic_weapon`. |
+| 16 | L12G-RECURSIVE-TAIL-LOOP-A - LOOP-A Recursive Next-Batch Planning Tail | blocked | L12G-SPELL-LESSER-RESTORATION, L12G-SPELL-MAGIC-WEAPON, L12G-SPELL-MIND-SPIKE, L12G-SPELL-WEB, L12G-MISSING-ANIMAL-MESSENGER, L12G-MISSING-ARCANISTS-MAGIC-AURA, L12G-MISSING-AUGURY, L12G-MISSING-CALM-EMOTIONS, L12G-MISSING-DARKNESS, L12G-MISSING-DARKVISION, L12G-MISSING-DETECT-THOUGHTS, L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME, L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE, L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE, L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME | Last-resort next-batch planning safety net; auto-unblocks only after every real task in this plan is `done`. |
 
 ## Task Details
 
@@ -226,7 +240,7 @@ Acceptance:
 
 ### Task 2 - L12G-SPELL-MAGIC-WEAPON - Magic Weapon Runtime Support Or Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `magic_weapon`.
 Origin: Original backlog task 35.
@@ -716,13 +730,92 @@ Acceptance:
 - reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
 - battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
 
-### Task 14 - L12G-RECURSIVE-TAIL-LOOP-A - LOOP-A Recursive Next-Batch Planning Tail
+### Task 14 - L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE - Magic Weapon Surface Item Enhancement Shape
+
+Status: `ready-for-research`
+
+Unit: `magic_weapon`.
+Origin: Follow-up split from `magic_weapon` unit claim and `L12G-SPELL-MAGIC-WEAPON`.
+Dependencies: none.
+
+Pre-researched scope:
+
+- Replace Magic Weapon's lossy Surface mechanics with a lossless SRD shape for Bonus Action level-2-or-higher casting, Touch range, one nonmagical weapon target, one-hour non-Concentration duration, target magic-weapon status, slot-tiered +1/+2/+3 bonuses to attack rolls and damage rolls made with that weapon, and same-caster recast early ending.
+
+Inputs:
+
+- `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md` when this task appears in the gate;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/UNIT_REPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- existing Magic Weapon Surface content, schema/tracer support, Unit claims, owner evidence, and focused tests.
+
+Outputs:
+
+- Magic Weapon Dhall and JSON content, plus schema/tracer support where required, represent the nonmagical weapon target, item-attached magic-weapon status, slot-tiered attack and damage bonuses, and recast ending as executable source facts rather than comments or prose-only description;
+- update only the owner files required by the task;
+- regenerate coverage artifacts.
+
+Acceptance:
+
+- RAW and ubiquitous-language checks are performed before modeling;
+- focused package tests cover the owner boundary touched by the task;
+- package typecheck is run for touched packages when dependencies are available;
+- `pnpm unit-profile-coverage:check --write` and `pnpm unit-profile-coverage:check` are run;
+- `git diff --check` passes;
+- reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
+- battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
+
+### Task 15 - L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME - Magic Weapon Item Enhancement Runtime
+
+Status: `blocked`
+
+Unit: `magic_weapon`.
+Origin: Follow-up split from `magic_weapon` unit claim and `L12G-SPELL-MAGIC-WEAPON`.
+Dependencies: L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE.
+
+Pre-researched scope:
+
+- Promote Magic Weapon as a level-2-or-higher Bonus Action Spell Invocation that spends the Bonus Action and Spell Slot, consumes caller-supplied target item identity and nonmagical weapon witness facts, records one caster-owned item-attached Spell Effect, projects magic-weapon status plus the slot-tiered attack-roll and damage-roll bonuses only for attacks and damage made with that item, and ends on duration expiry or same-caster recast without rewriting authored weapon records or adding a parallel spell-owned loadout table.
+
+Inputs:
+
+- `plans/LEVEL1_2_FULL_SUPPORT_RALPH_GATE.md` when this task appears in the gate;
+- `plans/unit-profile-coverage/LEVEL1_2_FULL_SUPPORT.md`;
+- `plans/unit-profile-coverage/unit-claims.jsonl`;
+- `plans/unit-profile-coverage/UNIT_REPORT.md`;
+- `plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md`;
+- local RAW under `.references/srd-5.2.1/`;
+- `UBIQUITOUS_LANGUAGE.md`;
+- Magic Weapon Surface item-enhancement shape from `L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE`;
+- existing battle-runtime spell invocation, item/equipment, weapon attack/damage projection, Unit claims, owner evidence, and focused tests.
+
+Outputs:
+
+- supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for spell discovery, resource spending, item-attached Spell Effect state, exact-item attack and damage projections, magic-weapon status projection, duration cleanup, and same-caster recast replacement;
+- update only the owner files required by the task;
+- regenerate coverage artifacts.
+
+Acceptance:
+
+- RAW and ubiquitous-language checks are performed before modeling;
+- focused package tests cover the owner boundary touched by the task;
+- package typecheck is run for touched packages when dependencies are available;
+- `pnpm unit-profile-coverage:check --write` and `pnpm unit-profile-coverage:check` are run;
+- `git diff --check` passes;
+- reviewer-loop convergence completes with RAW, ubiquitous-language/domain-language, architecture/connascence, and code-review passes;
+- battle-runtime MBT is used only under the repository scarcity protocol when promoted battle-runtime behavior changes and focused tests cannot cover the boundary.
+
+### Task 16 - L12G-RECURSIVE-TAIL-LOOP-A - LOOP-A Recursive Next-Batch Planning Tail
 
 Status: `blocked`
 
 Unit: `level1_2_frontier`.
 Origin: Safety-net planning task for when this plan has no earlier runnable implementation tasks.
-Dependencies: L12G-SPELL-LESSER-RESTORATION, L12G-SPELL-MAGIC-WEAPON, L12G-SPELL-MIND-SPIKE, L12G-SPELL-WEB, L12G-MISSING-ANIMAL-MESSENGER, L12G-MISSING-ARCANISTS-MAGIC-AURA, L12G-MISSING-AUGURY, L12G-MISSING-CALM-EMOTIONS, L12G-MISSING-DARKNESS, L12G-MISSING-DARKVISION, L12G-MISSING-DETECT-THOUGHTS, L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME, L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE.
+Dependencies: L12G-SPELL-LESSER-RESTORATION, L12G-SPELL-MAGIC-WEAPON, L12G-SPELL-MIND-SPIKE, L12G-SPELL-WEB, L12G-MISSING-ANIMAL-MESSENGER, L12G-MISSING-ARCANISTS-MAGIC-AURA, L12G-MISSING-AUGURY, L12G-MISSING-CALM-EMOTIONS, L12G-MISSING-DARKNESS, L12G-MISSING-DARKVISION, L12G-MISSING-DETECT-THOUGHTS, L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME, L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE, L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE, L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME.
 
 Pre-researched scope:
 

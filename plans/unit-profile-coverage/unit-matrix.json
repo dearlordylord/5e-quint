@@ -23305,6 +23305,28 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "followUpTasks": [
+          {
+            "id": "L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE",
+            "mechanic": "Replace Magic Weapon's lossy Surface mechanics with a lossless SRD shape for Bonus Action level-2-or-higher casting, Touch range, one nonmagical weapon target, one-hour non-Concentration duration, target magic-weapon status, slot-tiered +1/+2/+3 bonuses to attack rolls and damage rolls made with that weapon, and same-caster recast early ending.",
+            "owner": "surface Spell Definition authoring",
+            "requiredOutput": "Magic Weapon Dhall and JSON content, plus schema/tracer support where required, represent the nonmagical weapon target, item-attached magic-weapon status, slot-tiered attack and damage bonuses, and recast ending as executable source facts rather than comments or prose-only description.",
+            "title": "Magic Weapon Surface Item Enhancement Shape"
+          },
+          {
+            "id": "L12G-FOLLOWUP-MAGIC-WEAPON-ITEM-RUNTIME",
+            "mechanic": "Promote Magic Weapon as a level-2-or-higher Bonus Action Spell Invocation that spends the Bonus Action and Spell Slot, consumes caller-supplied target item identity and nonmagical weapon witness facts, records one caster-owned item-attached spell effect, projects magic-weapon status plus the slot-tiered attack-roll and damage-roll bonuses only for attacks and damage made with that item, and ends on duration expiry or same-caster recast without rewriting authored weapon records or adding a parallel spell-owned loadout table.",
+            "owner": "battle-runtime item-attached spell effect lifecycle plus weapon attack/damage projection",
+            "requiredOutput": "Supported-profile or profile-subset-supported Unit claim, deterministic admission/projection evidence, focused runtime tests, and promoted Quint/runtime parity for spell discovery, resource spending, item-attached effect state, exact-item attack and damage projections, magic-weapon status projection, duration cleanup, and same-caster recast replacement.",
+            "title": "Magic Weapon Item Enhancement Runtime"
+          }
+        ],
+        "futureProfileOwner": "surface Spell Definition item-enhancement shape plus battle-runtime item-attached spell effect lifecycle and weapon attack/damage projection",
+        "reason": "Magic Weapon is authored as an SRD Surface Spell Definition with Bonus Action Spell Slot casting, Touch range, one-hour non-Concentration duration, a nonmagical weapon target, magic-weapon status for that target, slot-tiered +1/+2/+3 bonuses to attack rolls and damage rolls made with that weapon, and same-caster recast early ending. Task 2 claims no promoted battle-runtime profile because the authored executable shape has a generic object hole plus base +1 modifiers but lacks executable nonmagical-weapon target and slot-tier facts, while promoted runtime has no item-attached spell effect owner, no exact-item attack and damage projection, and no magic-weapon status projection without mutating authored weapon records or copying loadout state into a spell-owned table.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",

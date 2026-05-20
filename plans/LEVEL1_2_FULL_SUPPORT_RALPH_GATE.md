@@ -674,7 +674,7 @@ with supported profile or accepted strict closure in the level 1-2 report.
 | 34 | `L12G-SPELL-HOLD-PERSON` | `hold_person` | Wisdom save, Paralyzed condition, repeated save-to-end, Humanoid filter | supported profile and condition lifecycle evidence |
 | 35 | `L12G-SPELL-INVISIBILITY` | `invisibility` | Invisible condition, target scaling, ends when target attacks or casts a spell | supported profile and source-owned expiration evidence |
 | 36 | `L12G-SPELL-LESSER-RESTORATION` | `lesser_restoration` | condition removal for Blinded, Deafened, Paralyzed, or Poisoned | supported profile and condition-removal evidence |
-| 37 | `L12G-SPELL-MAGIC-WEAPON` | `magic_weapon` | touched weapon attack and damage bonus, magic-weapon fact, concentration | supported profile or exact object/equipment owner split |
+| 37 | `L12G-SPELL-MAGIC-WEAPON` | `magic_weapon` | touched nonmagical weapon attack and damage bonus, magic-weapon fact, one-hour non-Concentration duration | supported profile or exact item/equipment owner split |
 | 38 | `L12G-SPELL-MIND-SPIKE` | `mind_spike` | Wisdom save Psychic damage plus target-location knowledge | damage support plus runtime-detached knowledge closure |
 | 39 | `L12G-SPELL-MISTY-STEP` | `misty_step` | Bonus Action teleport to unoccupied visible destination | table-supplied destination witness and movement/position support |
 | 40 | `L12G-SPELL-MOONBEAM` | `moonbeam` | area save damage on entry/start, move-beam action, concentration, shapechanger rider | table-supplied area witness plus supported damage/effect subset |
