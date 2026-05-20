@@ -4,14 +4,14 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Summary
 
-- Total obligations: 17
-- Covered obligations: 9
+- Total obligations: 18
+- Covered obligations: 10
 - Open transitional obligations: 4
 - Boundary or unsupported obligations: 4
 
 | Status | Count |
 | --- | ---: |
-| covered | 9 |
+| covered | 10 |
 | needs-qnt-owner | 3 |
 | needs-parity-witness | 0 |
 | needs-surface-evidence | 1 |
@@ -21,7 +21,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | Runtime | Count |
 | --- | ---: |
 | shared-algebras | 1 |
-| battle | 11 |
+| battle | 12 |
 | character-creation | 2 |
 | character-sheet | 2 |
 | character-battle | 1 |
@@ -31,6 +31,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | Obligation | Runtime | Status | Profiles |
 | --- | --- | --- | --- |
 | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` | battle | covered | _direct reducer entrypoint_ |
+| `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY` | battle | covered | _direct reducer entrypoint_ |
 | `BATTLE.REACTION.OFFER_DECLINE_RESUME` | battle | covered | `spell.reaction-shield`, `spell.readied-action-time-spell`, `unit-feature.reaction-roll-or-damage-reduction` |
 | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` | battle | covered | `unit-feature.action-surge-resource`, `unit-feature.alternate-action-cost`, `unit-feature.attack-damage-rider`, `unit-feature.bonus-action-ongoing-rage`, `unit-feature.first-attack-roll-reckless-advantage`, `unit-feature.passive-armor-class-bonus`, `unit-feature.passive-ranged-attack-roll-bonus`, `unit-feature.reaction-roll-or-damage-reduction`, `unit-feature.save-damage-replacement`, `unit-feature.self-bonus-action-healing`, `unit-feature.weapon-critical-range-19`, `unit-feature.weapon-damage-dice-roll-choice`, `unit-feature.zero-hit-point-replacement` |
 | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | battle | covered | `spell.hit-point-restoration`, `spell.invocation-damage-save-or-attack`, `spell.invocation-direct-condition`, `spell.reaction-shield`, `spell.readied-action-time-spell` |
@@ -68,10 +69,10 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | --- | --- | --- | --- | --- | --- |
 | battle-hole-family | `BattleTargetChoiceHole` | `targetChoice` | semantic-frontier | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | `RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION`, `RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND`, `RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE`, `RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS`, `RKBC-PROFILE-JOIN-TABLE-CALLER` |
 | battle-hole-family | `BattleSpellCastReactionFactsHole` | `targetSpatialFacts` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-BATTLE-HOLE-REACTION-CONCENTRATION` |
-| battle-hole-family | `BattleWardingBondSeparationFactsHole` | `targetSpatialFacts` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-BATTLE-HOLE-MOVEMENT-ROUTE`, `RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION` |
+| battle-hole-family | `BattleWardingBondSeparationFactsHole` | `targetSpatialFacts` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION` |
 | battle-hole-family | `BattleObjectTargetChoiceHole` | `objectTargetChoice` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
 | battle-hole-family | `BattleSpellAreaChoiceHole` | `spellAreaChoice` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
-| battle-hole-family | `BattleTeleportDestinationHole` | `teleportDestination` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-BATTLE-HOLE-MOVEMENT-ROUTE`, `RKBC-PROFILE-JOIN-TABLE-CALLER` |
+| battle-hole-family | `BattleTeleportDestinationHole` | `teleportDestination` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
 | battle-hole-family | `BattleHeldObjectFactsHole` | `heldObjectFacts` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND`, `RKBC-PROFILE-JOIN-TABLE-CALLER` |
 | battle-hole-family | `BattleSpellDamageTypeChoiceHole` | `damageTypeChoice` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | `RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION` |
 | battle-hole-family | `BattleSpellTargetAllocationHole` | `spellTargetAllocation` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | _none_ |
@@ -95,10 +96,10 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | battle-hole-family | `BattleSpellTurnStartSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | _none_ | `RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION` |
 | battle-hole-family | `BattleSleepRepeatSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | _none_ | `RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION` |
 | battle-hole-family | `BattleHideousLaughterRepeatSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | _none_ | `RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION` |
-| battle-hole-family | `BattleGreaseGroundHazardSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | _none_ | `RKBC-BATTLE-HOLE-MOVEMENT-ROUTE`, `RKBC-PROFILE-JOIN-TABLE-CALLER` |
+| battle-hole-family | `BattleGreaseGroundHazardSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | _none_ | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
 | battle-hole-family | `BattleSpellConditionEndTurnSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | _none_ | `RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION` |
-| battle-hole-family | `BattleFlamingSphereRamMovementHole` | `flamingSphereRamMovement` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-BATTLE-HOLE-MOVEMENT-ROUTE`, `RKBC-PROFILE-JOIN-TABLE-CALLER` |
-| battle-hole-family | `BattleFlamingSphereRepositionMovementHole` | `flamingSphereRepositionMovement` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-BATTLE-HOLE-MOVEMENT-ROUTE`, `RKBC-PROFILE-JOIN-TABLE-CALLER` |
+| battle-hole-family | `BattleFlamingSphereRamMovementHole` | `flamingSphereRamMovement` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
+| battle-hole-family | `BattleFlamingSphereRepositionMovementHole` | `flamingSphereRepositionMovement` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
 | battle-hole-family | `BattleFlamingSphereSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | _none_ | `RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION`, `RKBC-PROFILE-JOIN-TABLE-CALLER` |
 | battle-hole-family | `BattleProtectionRelevantEffectSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | _none_ | `RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION` |
 | battle-hole-family | `BattleUnitFeatureSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` | `RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE` |
@@ -108,10 +109,10 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | battle-hole-family | `BattleStatBlockRechargeRollHole` | `statBlockRechargeRoll` | semantic-frontier | `BATTLE.STAT_BLOCK.ATTACK_CONTROL` | _none_ |
 | battle-hole-family | `BattleConcentrationSavingThrowHole` | `concentrationSavingThrow` | semantic-frontier | `BATTLE.REACTION.OFFER_DECLINE_RESUME` | `RKBC-BATTLE-HOLE-REACTION-CONCENTRATION` |
 | battle-hole-family | `BattleReactionDecisionHole` | `reactionDecision` | semantic-frontier | `BATTLE.REACTION.OFFER_DECLINE_RESUME` | `RKBC-BATTLE-HOLE-REACTION-CONCENTRATION` |
-| battle-hole-family | `BattleMovementHole` | `movement` | semantic-frontier | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` | `RKBC-BATTLE-HOLE-MOVEMENT-ROUTE` |
+| battle-hole-family | `BattleMovementHole` | `movement` | semantic-frontier | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION`, `RKBC-PROFILE-JOIN-TABLE-CALLER` |
 | battle-hole-family | `BattleAbilityCheckHole` | `abilityCheck` | semantic-frontier | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` | `RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND` |
 | battle-hole-family | `BattleGrappleOutcomeHole` | `grappleOutcome` | semantic-frontier | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` | _none_ |
-| battle-hole-family | `BattleShoveOutcomeHole` | `shoveOutcome` | semantic-frontier | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` | `RKBC-BATTLE-HOLE-MOVEMENT-ROUTE` |
+| battle-hole-family | `BattleShoveOutcomeHole` | `shoveOutcome` | semantic-frontier | `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION` |
 | battle-hole-family | `BattleSanctuaryInterdictionOutcomeHole` | `sanctuaryInterdictionOutcome` | semantic-frontier | `BATTLE.SANCTUARY.TARGETING_INTERDICTION` | _none_ |
 | battle-hole-family | `BattleAttackDamageDispositionHole` | `attackDamageDisposition` | semantic-frontier | `SHARED.HIT_POINTS.POSITIVE_DAMAGE` | `RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION` |
 | battle-fill-kind | `attackRoll` | `attackRoll` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.STAT_BLOCK.ATTACK_CONTROL` | `RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION` |
@@ -130,9 +131,9 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | battle-fill-kind | `targetSpatialFacts` | `targetSpatialFacts` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-BATTLE-HOLE-REACTION-CONCENTRATION`, `RKBC-PROFILE-JOIN-TABLE-CALLER` |
 | battle-fill-kind | `objectTargetChoice` | `objectTargetChoice` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
 | battle-fill-kind | `spellAreaChoice` | `spellAreaChoice` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
-| battle-fill-kind | `flamingSphereRamMovement` | `flamingSphereRamMovement` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-BATTLE-HOLE-MOVEMENT-ROUTE`, `RKBC-PROFILE-JOIN-TABLE-CALLER` |
-| battle-fill-kind | `flamingSphereRepositionMovement` | `flamingSphereRepositionMovement` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-BATTLE-HOLE-MOVEMENT-ROUTE`, `RKBC-PROFILE-JOIN-TABLE-CALLER` |
-| battle-fill-kind | `teleportDestination` | `teleportDestination` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-BATTLE-HOLE-MOVEMENT-ROUTE`, `RKBC-PROFILE-JOIN-TABLE-CALLER` |
+| battle-fill-kind | `flamingSphereRamMovement` | `flamingSphereRamMovement` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
+| battle-fill-kind | `flamingSphereRepositionMovement` | `flamingSphereRepositionMovement` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
+| battle-fill-kind | `teleportDestination` | `teleportDestination` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-TABLE-CALLER` |
 | battle-fill-kind | `spellTargetAllocation` | `spellTargetAllocation` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | _none_ |
 | battle-fill-kind | `spellTargetList` | `spellTargetList` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | _none_ |
 | battle-fill-kind | `deathSavingThrow` | `deathSavingThrow` | semantic-frontier | _none_ | `RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION` |
@@ -141,10 +142,10 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | battle-fill-kind | `attackDamageDisposition` | `attackDamageDisposition` | semantic-frontier | `SHARED.HIT_POINTS.POSITIVE_DAMAGE` | `RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION` |
 | battle-fill-kind | `sanctuaryInterdictionOutcome` | `sanctuaryInterdictionOutcome` | semantic-frontier | `BATTLE.SANCTUARY.TARGETING_INTERDICTION` | _none_ |
 | battle-fill-kind | `reactionDecision` | `reactionDecision` | semantic-frontier | `BATTLE.REACTION.OFFER_DECLINE_RESUME` | `RKBC-BATTLE-HOLE-REACTION-CONCENTRATION` |
-| battle-fill-kind | `movement` | `movement` | semantic-frontier | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` | `RKBC-BATTLE-HOLE-MOVEMENT-ROUTE` |
+| battle-fill-kind | `movement` | `movement` | semantic-frontier | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION`, `RKBC-PROFILE-JOIN-TABLE-CALLER` |
 | battle-fill-kind | `abilityCheck` | `abilityCheck` | semantic-frontier | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` | `RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND` |
 | battle-fill-kind | `grappleOutcome` | `grappleOutcome` | semantic-frontier | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` | _none_ |
-| battle-fill-kind | `shoveOutcome` | `shoveOutcome` | semantic-frontier | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` | `RKBC-BATTLE-HOLE-MOVEMENT-ROUTE` |
+| battle-fill-kind | `shoveOutcome` | `shoveOutcome` | semantic-frontier | `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | `RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION` |
 
 ## Generator Readiness
 

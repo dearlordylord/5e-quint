@@ -597,16 +597,20 @@ function validateBattleFrontierRow(
     .map((obligationId) => obligationsById.get(obligationId))
     .filter((obligation) => obligation !== undefined);
   if (row.classification === "semantic-frontier") {
-    if (
-      (row.coveredByObligationIds ?? []).length === 0 &&
-      (row.followUpTaskIds ?? []).length === 0
-    ) {
+    const hasCoveredSemanticObligation = coveredByObligations.some(
+      (obligation) => coveredStatuses.has(obligation.status),
+    );
+    const hasFollowUpTask = (row.followUpTaskIds ?? []).length > 0;
+    if (!hasCoveredSemanticObligation && !hasFollowUpTask) {
       issues.push(
-        `${context} semantic-frontier rows must name a covering obligation or follow-up task.`,
+        `${context} semantic-frontier rows must name a covered semantic obligation or follow-up task.`,
       );
     }
     for (const obligation of coveredByObligations) {
-      if (!coveredStatuses.has(obligation.status)) {
+      if (
+        !coveredStatuses.has(obligation.status) &&
+        !nonSemanticStatuses.has(obligation.status)
+      ) {
         issues.push(
           `${context} semantic-frontier row cannot claim non-covered obligation ${obligation.id} with status ${obligation.status}; use followUpTaskIds for uncovered semantic work.`,
         );

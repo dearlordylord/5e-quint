@@ -58,7 +58,9 @@ BattleHole/BattleFill frontier inventory. The checker parses
 `battle-fill-kind` row for every `BattleFill` discriminant. Boundary/table-owned
 rows must point at a non-semantic rules-kernel obligation; semantic rows must
 point at a covered obligation or at the Ralph follow-up task that will add the
-missing QNT/parity ownership.
+missing QNT/parity ownership. A semantic row may also point at a non-semantic
+boundary obligation when the same hole or fill carries caller/table facts, but
+that boundary coverage never substitutes for reducer-semantic ownership.
 
 `generator-readiness.jsonl` records the separate C-axis question: whether a
 covered obligation's QNT owner is shaped like generator-ready semantic core.
