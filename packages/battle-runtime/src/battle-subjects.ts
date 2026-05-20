@@ -114,6 +114,7 @@ export const SPELL_SLOT_PROCEDURES = [
   "blurAttackRollDefense",
   "mirrorImageHitInterception",
   "conditionRemovalProtection",
+  "directConditionRemoval",
   "weaponDamageRider",
   "afterHitDamage",
   "afterHitSaveGatedCondition",

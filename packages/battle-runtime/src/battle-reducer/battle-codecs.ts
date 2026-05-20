@@ -81,6 +81,7 @@ import {
   BATTLE_ATTACK_RANGE_BANDS,
   BLUR_ATTACK_ROLL_BYPASS_SENSES,
   COMMAND_OPTIONS,
+  DIRECT_CONDITION_REMOVAL_CONDITIONS,
   ELDRITCH_BLAST_BEAM_COUNTS,
   MIRROR_IMAGE_DUPLICATE_COUNTS,
   MIRROR_IMAGE_DUPLICATE_DIE_SIZE,
@@ -1734,6 +1735,24 @@ const SupportedSpellInvocationSchema: Schema.Schema<SupportedSpellInvocation> =
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
+      procedure: Schema.Literal("directConditionRemoval"),
+      spell: BattleRuntimeObjectSchema,
+      actionCost: Schema.Literal("bonusAction"),
+      targeting: Schema.Struct({
+        kind: Schema.Literal("targetList"),
+        minTargets: Schema.Literal(1),
+        maxTargets: Schema.Literal(1),
+      }),
+      conditionChoices: Schema.Tuple(
+        ...DIRECT_CONDITION_REMOVAL_CONDITIONS.map((condition) =>
+          Schema.Literal(condition),
+        ),
+      ),
+      rangeFeet: MovementFeet,
+    }),
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("weaponDamageRider"),
       spell: BattleRuntimeObjectSchema,
       actionCost: Schema.Literal("bonusAction"),
@@ -2246,9 +2265,7 @@ export const BattleHoleSchema = Schema.Union(
     dc: DcSourceSchema,
     areaChoices: Schema.Array(BattleRuntimeObjectSchema),
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
-    targetFlatBonuses: Schema.Array(
-      BattleSavingThrowFlatBonusProjectionSchema,
-    ),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2259,9 +2276,7 @@ export const BattleHoleSchema = Schema.Union(
     dc: DcSourceSchema,
     areaChoices: Schema.Array(BattleRuntimeObjectSchema),
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
-    targetFlatBonuses: Schema.Array(
-      BattleSavingThrowFlatBonusProjectionSchema,
-    ),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2272,9 +2287,7 @@ export const BattleHoleSchema = Schema.Union(
     dc: DcSourceSchema,
     areaChoices: Schema.Array(BattleRuntimeObjectSchema),
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
-    targetFlatBonuses: Schema.Array(
-      BattleSavingThrowFlatBonusProjectionSchema,
-    ),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2285,9 +2298,7 @@ export const BattleHoleSchema = Schema.Union(
     dc: DcSourceSchema,
     areaChoices: Schema.Array(BattleRuntimeObjectSchema),
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
-    targetFlatBonuses: Schema.Array(
-      BattleSavingThrowFlatBonusProjectionSchema,
-    ),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2298,9 +2309,7 @@ export const BattleHoleSchema = Schema.Union(
     dc: DcSourceSchema,
     areaChoices: Schema.Array(BattleRuntimeObjectSchema),
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
-    targetFlatBonuses: Schema.Array(
-      BattleSavingThrowFlatBonusProjectionSchema,
-    ),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2340,9 +2349,7 @@ export const BattleHoleSchema = Schema.Union(
     dc: DcSourceSchema,
     areaChoices: Schema.Array(BattleRuntimeObjectSchema),
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
-    targetFlatBonuses: Schema.Array(
-      BattleSavingThrowFlatBonusProjectionSchema,
-    ),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2353,9 +2360,7 @@ export const BattleHoleSchema = Schema.Union(
     dc: BattleRuntimeObjectSchema,
     areaChoices: Schema.Array(BattleSpellAreaChoiceSchema),
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
-    targetFlatBonuses: Schema.Array(
-      BattleSavingThrowFlatBonusProjectionSchema,
-    ),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -2366,9 +2371,7 @@ export const BattleHoleSchema = Schema.Union(
     dc: DcSourceSchema,
     targetIds: Schema.Array(CombatantId),
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
-    targetFlatBonuses: Schema.Array(
-      BattleSavingThrowFlatBonusProjectionSchema,
-    ),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,

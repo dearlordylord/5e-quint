@@ -44,13 +44,13 @@
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
       "denominator": 389,
-      "numerator": 174,
-      "percent": "44.7%"
+      "numerator": 175,
+      "percent": "45%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
       "denominator": 461,
-      "numerator": 206,
-      "percent": "44.7%"
+      "numerator": 207,
+      "percent": "44.9%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,62 +59,62 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 207
+      "value": 208
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 128,
-      "numerator": 128,
+      "denominator": 129,
+      "numerator": 129,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 207,
-      "numerator": 207,
+      "denominator": 208,
+      "numerator": 208,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 72,
-      "numerator": 72,
+      "denominator": 73,
+      "numerator": 73,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 72,
-      "numerator": 72,
+      "denominator": 73,
+      "numerator": 73,
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 95,
+      "denominator": 96,
       "numerator": 20,
-      "percent": "21.1%"
+      "percent": "20.8%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 95,
+      "denominator": 96,
       "numerator": 25,
-      "percent": "26.3%"
+      "percent": "26%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 128,
+      "denominator": 129,
       "numerator": 42,
-      "percent": "32.8%"
+      "percent": "32.6%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 72,
-      "numerator": 72,
+      "denominator": 73,
+      "numerator": 73,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 72,
-      "numerator": 72,
+      "denominator": 73,
+      "numerator": 73,
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 128,
+      "denominator": 129,
       "numerator": 105,
-      "percent": "82%"
+      "percent": "81.4%"
     },
     "supportedProfileCoverage": {
-      "denominator": 175,
-      "numerator": 128,
-      "percent": "73.1%"
+      "denominator": 176,
+      "numerator": 129,
+      "percent": "73.3%"
     }
   },
   "metricSemantics": [
@@ -2774,20 +2774,45 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-invisibility.test.ts"
         }
       ]
+    },
+    {
+      "id": "spell.invocation-direct-condition-removal",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "sourceBoundary": "The runtime consumes an authored direct remove_condition choice over Blinded, Deafened, Paralyzed, and Poisoned for one touched creature. It spends the caster's Bonus Action and level-2-or-higher Spell Slot, requires a caller-selected target and condition choice, removes the chosen condition plus spell-owned active effects that directly apply it, and preserves unchosen or independent condition sources. Disease, poison-object neutralization, and non-condition remediation are outside this SRD 5.2.1 Lesser Restoration profile.",
+      "taskRefs": [
+        "L12G-SPELL-LESSER-RESTORATION"
+      ],
+      "title": "Spell invocation removes one caller-selected condition from a touched creature",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts"
+        }
+      ]
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 95,
+        "denominator": 96,
         "numerator": 20,
-        "percent": "21.1%"
+        "percent": "20.8%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 95,
+        "denominator": 96,
         "numerator": 25,
-        "percent": "26.3%"
+        "percent": "26%"
       }
     },
     "profileKinds": [
@@ -3567,6 +3592,12 @@
         ],
         "profileId": "spell.invocation-direct-condition",
         "profileKind": "spell-invocation"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
+        "profileId": "spell.invocation-direct-condition-removal",
+        "profileKind": "spell-invocation"
       }
     ],
     "sourceArtifacts": {
@@ -3577,9 +3608,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 128,
+          "denominator": 129,
           "numerator": 42,
-          "percent": "32.8%"
+          "percent": "32.6%"
         }
       },
       "units": [
@@ -4680,6 +4711,18 @@
             }
           ],
           "unitId": "jump"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "spell.invocation-direct-condition-removal",
+              "profileKind": "spell-invocation"
+            }
+          ],
+          "unitId": "lesser_restoration"
         },
         {
           "joinStatus": "unmapped",
@@ -7678,6 +7721,22 @@
         "spell.invocation-direct-condition"
       ],
       "taskId": "L12G-SPELL-INVISIBILITY"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Promoted battle-runtime Quint facts cover Lesser Restoration's Bonus Action and level-2-or-higher Spell Slot spend, one touched target, and exact SRD choice removal for Blinded, Deafened, Paralyzed, or Poisoned while preserving unchosen condition effects.",
+      "profileIds": [
+        "spell.invocation-direct-condition-removal"
+      ],
+      "taskId": "L12G-SPELL-LESSER-RESTORATION"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle-runtime admission tests cover Lesser Restoration catalog admission, Bonus Action spell discovery, touched-creature target fill, exact condition-choice hole, Spell Slot and Bonus Action spending, chosen condition cleanup including spell-owned active effects, and preservation of unchosen conditions.",
+      "profileIds": [
+        "spell.invocation-direct-condition-removal"
+      ],
+      "taskId": "L12G-SPELL-LESSER-RESTORATION"
     }
   ],
   "units": [
@@ -15887,6 +15946,69 @@
         "status": "installed"
       },
       "claim": {
+        "deferredMechanics": [],
+        "profileIds": [
+          "spell.invocation-direct-condition-removal"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
+        ],
+        "supportedMechanics": [
+          "Bonus Action level-2-or-higher Spell Slot casting",
+          "one touched creature target",
+          "caster-selected condition choice restricted to Blinded, Deafened, Paralyzed, or Poisoned",
+          "chosen condition removal including active spell-owned effects that directly apply that condition",
+          "unchosen conditions and independent condition sources remain represented"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-SPELL-LESSER-RESTORATION"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [
+        {
+          "id": "spell.invocation-direct-condition-removal",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "sourceBoundary": "The runtime consumes an authored direct remove_condition choice over Blinded, Deafened, Paralyzed, and Poisoned for one touched creature. It spends the caster's Bonus Action and level-2-or-higher Spell Slot, requires a caller-selected target and condition choice, removes the chosen condition plus spell-owned active effects that directly apply it, and preserves unchosen or independent condition sources. Disease, poison-object neutralization, and non-condition remediation are outside this SRD 5.2.1 Lesser Restoration profile.",
+          "taskRefs": [
+            "L12G-SPELL-LESSER-RESTORATION"
+          ],
+          "title": "Spell invocation removes one caller-selected condition from a touched creature",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/lesser_restoration.json",
+      "unitId": "lesser_restoration"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "battleReadinessClosure": {
           "kind": "outside-runtime-presentation-exploration",
           "owner": "exploration/detection owner",
@@ -21749,24 +21871,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/insect_plague.json",
       "unitId": "insect_plague"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/lesser_restoration.json",
-      "unitId": "lesser_restoration"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

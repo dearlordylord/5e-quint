@@ -77,6 +77,7 @@ module battleRuntimeSpellInvocation {
       | HoldPerson => true
       | ProtectionFromEvilAndGood => true
       | ProtectionFromPoison => true
+      | LesserRestoration => true
       | IceKnife => true
       | HealingWord => true
       | CureWounds => true

@@ -45,6 +45,8 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-warding-bond-linked-effect
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-direct-condition-removal
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-direct-condition-removal
 module battleRuntime {
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
@@ -83,6 +85,7 @@ module battleRuntime {
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
   import battleRuntimeMirrorImage.* from "./battle-runtime-mirror-image"
   import battleRuntimeProtectionFromPoison.* from "./battle-runtime-protection-from-poison"
+  import battleRuntimeDirectConditionRemoval.* from "./battle-runtime-direct-condition-removal"
   import battleRuntimeAttackFacts.* from "./battle-runtime-attack-facts"
   import battleRuntimeHidden.* from "./battle-runtime-hidden"
   import battleRuntimeMovement.* from "./battle-runtime-movement"

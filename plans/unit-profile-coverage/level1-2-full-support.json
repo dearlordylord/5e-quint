@@ -1393,85 +1393,6 @@
       "unitId": "knock"
     },
     {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
-      "sourceRecordPath": "packages/surface/content/lesser_restoration.json",
-      "sourceRows": [
-        {
-          "category": "spell Unit pressure",
-          "concept": "Bard spell list Lesser Restoration",
-          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_lesser_restoration",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 202,
-            "lineStart": 202,
-            "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Cleric spell list Lesser Restoration",
-          "id": "srd521:classes/cleric:spell-level-2:spell-unit-pressure:cleric_spell_list_lesser_restoration",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 191,
-            "lineStart": 191,
-            "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Druid spell list Lesser Restoration",
-          "id": "srd521:classes/druid:spell-level-2:spell-unit-pressure:druid_spell_list_lesser_restoration",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 241,
-            "lineStart": 241,
-            "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Paladin spell list Lesser Restoration",
-          "id": "srd521:classes/paladin:spell-level-2:spell-unit-pressure:paladin_spell_list_lesser_restoration",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 197,
-            "lineStart": 197,
-            "path": ".references/srd-5.2.1/Classes/Paladin.md"
-          }
-        },
-        {
-          "category": "spell Unit pressure",
-          "concept": "Ranger spell list Lesser Restoration",
-          "id": "srd521:classes/ranger:spell-level-2:spell-unit-pressure:ranger_spell_list_lesser_restoration",
-          "levelBand": "spell-level-2",
-          "rowKind": "spell-unit-pressure",
-          "source": {
-            "lineEnd": 189,
-            "lineStart": 189,
-            "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
-        }
-      ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
-      "unitId": "lesser_restoration"
-    },
-    {
       "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
@@ -2630,7 +2551,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 105,
+      "count": 106,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2689,6 +2610,7 @@
         "inflict_wounds",
         "invisibility",
         "jump",
+        "lesser_restoration",
         "light",
         "longstrider",
         "mage_armor",
@@ -2811,12 +2733,11 @@
       ]
     },
     {
-      "count": 5,
+      "count": 4,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
         "find_steed",
-        "lesser_restoration",
         "magic_weapon",
         "mind_spike",
         "web"
@@ -2846,47 +2767,46 @@
       "numerator": 484,
       "percent": "87.1%",
       "rowsByStatus": {
-        "accepted": 348,
-        "accepted-no-battle-effect": 136,
+        "accepted": 353,
+        "accepted-no-battle-effect": 131,
         "battle-runtime-required": 62,
         "owner-evidence-required": 3,
         "partial-battle-runtime": 7
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 75,
+      "denominator": 76,
       "numerator": 12,
-      "percent": "16%"
+      "percent": "15.8%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 75,
+      "denominator": 76,
       "numerator": 17,
-      "percent": "22.7%"
+      "percent": "22.4%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 105,
+      "denominator": 106,
       "numerator": 31,
-      "percent": "29.5%"
+      "percent": "29.2%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 161,
-      "numerator": 105,
-      "percent": "65.2%"
+      "numerator": 106,
+      "percent": "65.8%"
     },
     "strictTargetClosure": {
       "denominator": 161,
-      "numerator": 156,
-      "percent": "96.9%"
+      "numerator": 157,
+      "percent": "97.5%"
     }
   },
   "openFrontier": [
     {
-      "count": 5,
+      "count": 4,
       "description": "No Unit profile claim records runtime support or an accepted strict closure.",
       "status": "open-runtime-behavior",
       "unitIds": [
         "find_steed",
-        "lesser_restoration",
         "magic_weapon",
         "mind_spike",
         "web"
@@ -5702,9 +5622,9 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 105,
+        "denominator": 106,
         "numerator": 31,
-        "percent": "29.5%"
+        "percent": "29.2%"
       }
     },
     "units": [
@@ -6656,6 +6576,18 @@
           }
         ],
         "unitId": "jump"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "spell.invocation-direct-condition-removal",
+            "profileKind": "spell-invocation"
+          }
+        ],
+        "unitId": "lesser_restoration"
       },
       {
         "joinStatus": "unmapped",
@@ -7641,9 +7573,9 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
-      "missing": 5,
+      "missing": 4,
       "profile-subset-supported": 13,
-      "supported-profile": 105,
+      "supported-profile": 106,
       "unsupported-profile": 38
     },
     "groupsByStatus": {
@@ -7652,10 +7584,10 @@
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 20,
-      "open-runtime-behavior": 5,
-      "supported-profile": 105
+      "open-runtime-behavior": 4,
+      "supported-profile": 106
     },
-    "nonSupportedFrontier": 56,
+    "nonSupportedFrontier": 55,
     "strictDenominator": 161
   }
 }

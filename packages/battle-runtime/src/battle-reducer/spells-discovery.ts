@@ -552,6 +552,27 @@ export function discoverSupportedSpellInvocations(
               },
             ];
       }
+      if (invocation.procedure === "directConditionRemoval") {
+        const targetHole = spellTargetHole(state, actorId, invocation);
+        return targetHole.choices.length === 0
+          ? []
+          : [
+              {
+                subject: {
+                  tag: "bonusActionSpell" as const,
+                  actorId,
+                  invocation: supportedSpellInvocationRef(invocation),
+                  mode: { tag: "cast" as const },
+                },
+                label: invocation.spell.name,
+                summary: spellInvocationCastSummary(invocation),
+                initialHoles: [
+                  targetHole,
+                  spellConditionChoiceHole(invocation),
+                ],
+              },
+            ];
+      }
       if (invocation.procedure === "directCondition") {
         const targetHole = spellTargetListHole(state, actorId, invocation);
         return targetHole.choices.length === 0
@@ -868,6 +889,9 @@ export function spellInvocationCastSummary(
   if (invocation.procedure === "conditionRemovalProtection") {
     return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
   }
+  if (invocation.procedure === "directConditionRemoval") {
+    return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
+  }
   if (invocation.procedure === "damageReduction") {
     return `Cast ${invocation.spell.name} as a cantrip.`;
   }
@@ -984,6 +1008,7 @@ export function spellActivationInvocationCastSummary(
         | "selfTeleport"
         | "sanctuaryTargetingInterdiction"
         | "directCondition"
+        | "directConditionRemoval"
         | "featherFallMitigation";
     }
   >,
@@ -1027,6 +1052,9 @@ export function spellSubjectTagForInvocation(
     return "bonusActionSpell";
   }
   if (invocation.procedure === "sanctuaryTargetingInterdiction") {
+    return "bonusActionSpell";
+  }
+  if (invocation.procedure === "directConditionRemoval") {
     return "bonusActionSpell";
   }
   if (
@@ -1100,6 +1128,7 @@ export function isReadiedSpellInvocation(
     invocation.procedure !== "blurAttackRollDefense" &&
     invocation.procedure !== "mirrorImageHitInterception" &&
     invocation.procedure !== "conditionRemovalProtection" &&
+    invocation.procedure !== "directConditionRemoval" &&
     invocation.procedure !== "scalarBuff" &&
     invocation.procedure !== "weaponDamageRider" &&
     invocation.procedure !== "afterHitDamage" &&
@@ -1157,6 +1186,7 @@ export function readiedSpellAct(
     invocation.procedure === "blurAttackRollDefense" ||
     invocation.procedure === "mirrorImageHitInterception" ||
     invocation.procedure === "conditionRemovalProtection" ||
+    invocation.procedure === "directConditionRemoval" ||
     invocation.procedure === "attackBurstSaveDamage" ||
     invocation.procedure === "saveGatedCondition" ||
     invocation.procedure === "saveGatedAttackRollAdvantage" ||

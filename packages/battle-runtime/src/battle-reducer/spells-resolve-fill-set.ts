@@ -41,7 +41,8 @@ import {
   commandOptionChoiceHoleId,
   spellDamageHole,
   spellDamageTypeChoiceHole,
-  saveGatedConditionHasConditionChoice,
+  spellConditionChoices,
+  spellInvocationHasConditionChoice,
   spellAreaChoiceHoleId,
   spellConditionChoiceHoleId,
   spellObjectTargetHoleId,
@@ -778,10 +779,7 @@ export function spellFillSet(
     }
 
     if (fill.kind === "conditionChoice") {
-      if (
-        invocation.procedure !== "saveGatedCondition" ||
-        !saveGatedConditionHasConditionChoice(invocation)
-      ) {
+      if (!spellInvocationHasConditionChoice(invocation)) {
         return {
           tag: "invalid",
           message: "Spell condition choice does not match this spell act.",
@@ -794,7 +792,7 @@ export function spellFillSet(
             "Spell condition choice must use the selected spell act condition-choice hole.",
         };
       }
-      if (!invocation.effect.choices.includes(fill.value)) {
+      if (!spellConditionChoices(invocation).includes(fill.value)) {
         return {
           tag: "invalid",
           message: "Spell condition choice is not available for this spell.",

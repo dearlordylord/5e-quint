@@ -101,6 +101,7 @@ import invisibilityInput from "../../content/invisibility.json";
 import jumpInput from "../../content/jump.json";
 import knockInput from "../../content/knock.json";
 import levitateInput from "../../content/levitate.json";
+import lesserRestorationInput from "../../content/lesser_restoration.json";
 import lightInput from "../../content/light.json";
 import locateAnimalsOrPlantsInput from "../../content/locate_animals_or_plants.json";
 import locateObjectInput from "../../content/locate_object.json";
@@ -463,6 +464,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     jumpInput,
     knockInput,
     levitateInput,
+    lesserRestorationInput,
     locateAnimalsOrPlantsInput,
     locateObjectInput,
     lightInput,

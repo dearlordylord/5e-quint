@@ -196,6 +196,14 @@ export function supportedSpellInvocationRef(
       procedure: "directCondition",
     };
   }
+  if (invocation.procedure === "directConditionRemoval") {
+    return {
+      tag: "spellSlot",
+      spellId: spellId(invocation.spell.id),
+      slotLevel: invocation.resource.slotLevel,
+      procedure: "directConditionRemoval",
+    };
+  }
   if (invocation.procedure === "objectLight") {
     if (invocation.resource.tag === "spellSlot") {
       return {

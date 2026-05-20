@@ -4,7 +4,7 @@
   "kind": "spell",
   "mechanics": {
     "castingTime": {
-      "kind": "action"
+      "kind": "bonus_action"
     },
     "components": {
       "m": false,
@@ -32,12 +32,7 @@
         "effects": [
           {
             "condition": {
-              "from": [
-                "blinded",
-                "deafened",
-                "paralyzed",
-                "poisoned"
-              ],
+              "from": ["blinded", "deafened", "paralyzed", "poisoned"],
               "kind": "choose"
             },
             "kind": "remove_condition"

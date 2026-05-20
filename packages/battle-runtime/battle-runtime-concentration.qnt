@@ -69,6 +69,19 @@ module battleRuntimeConcentration {
       | _ => false
     })
 
+  pure def holdPersonStillActiveFrom(state: BattleState, source: Actor): bool =
+    activeEffectsContainHoldPersonFrom(state.fighter.activeEffects, source) or
+      activeEffectsContainHoldPersonFrom(state.goblin.activeEffects, source)
+
+  pure def stateWithHoldPersonConcentrationClearedIfNoEffects(state: BattleState, source: Actor): BattleState =
+    if (holdPersonStillActiveFrom(state, source))
+      state
+    else
+      match source {
+        | Fighter => { ...state, fighter: { ...state.fighter, concentrating: false } }
+        | Goblin => { ...state, goblin: { ...state.goblin, concentrating: false } }
+      }
+
   pure def holdPersonEffectHadIncapacitated(effects: Set[ActiveEffect], source: Actor): bool =
     effects.exists(effect => match effect {
       | HoldPersonParalyzed(data) => data.source == source and data.hadIncapacitated

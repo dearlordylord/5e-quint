@@ -22,6 +22,7 @@ import { invalidResult } from "./result-helpers.ts";
 import { spellHealingAmount } from "./spell-effects.ts";
 import {
   applyConditionRemovalProtectionSpellEffect,
+  applyDirectConditionRemovalSpellEffect,
   applyDirectConditionSpellEffects,
   applyConditionImmunityAndTurnStartTemporaryHitPointsEffects,
   applyBlurAttackRollDefenseSpellEffect,
@@ -34,6 +35,7 @@ import {
   applyThaumaturgyBoomingVoiceSpellEffect,
   isThaumaturgyBoomingVoiceEffectForInvocation,
   spellDamageTypeChoiceHole,
+  spellConditionChoiceHole,
   spellHealingRollHole,
   spellScalarBuffRollHole,
   spellTargetHole,
@@ -62,6 +64,7 @@ import {
   conditionRemovalProtectionSpellTargetSelection,
   conditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection,
   creatureTypeProtectionSpellTargetSelection,
+  directConditionRemovalSpellTargetSelection,
   healingSpellTargetSelection,
   rollModifierSpellAffectedTargets,
   rollModifierSpellEffectSelection,
@@ -1082,6 +1085,109 @@ export function resolveConditionRemovalProtectionSpellAct(input: {
         state: resourced.state,
         snapshot: snapshotBattle(resourced.state),
       };
+}
+
+export function resolveDirectConditionRemovalSpellAct(input: {
+  readonly input: BonusActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "directConditionRemoval" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): BattleResolutionResult {
+  if (
+    input.fillSet.objectTarget !== undefined ||
+    input.fillSet.attackRoll !== undefined ||
+    input.fillSet.targetAllocation !== undefined ||
+    input.fillSet.attackSequencePartFills.length > 0 ||
+    input.fillSet.targetList !== undefined ||
+    input.fillSet.damageRoll !== undefined ||
+    input.fillSet.attackBurstDamageRoll !== undefined ||
+    input.fillSet.healingRoll !== undefined ||
+    input.fillSet.skillChoice !== undefined ||
+    input.fillSet.abilityChoice !== undefined ||
+    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.areaChoice !== undefined ||
+    input.fillSet.teleportDestination !== undefined ||
+    input.fillSet.dancingLightsPlacement !== undefined ||
+    input.fillSet.damageTypeChoice !== undefined ||
+    input.fillSet.savingThrowOutcomes !== undefined ||
+    input.fillSet.movement !== undefined ||
+    input.fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
+    input.fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
+    input.fillSet.damageDispositions.length > 0 ||
+    input.fillSet.concentrationSavingThrows.length > 0 ||
+    input.fillSet.spellDamageReductionRolls.length > 0
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Direct condition-removal spells use one target fill and one condition choice.",
+    );
+  }
+
+  const targetSelection = directConditionRemovalSpellTargetSelection(input);
+  if (targetSelection.tag === "needsHoles") {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      targetSelection.hole,
+    ]);
+  }
+  if (targetSelection.tag === "invalid") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      targetSelection.message,
+    );
+  }
+  const conditionChoice = input.fillSet.conditionChoice;
+  if (conditionChoice === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      spellConditionChoiceHole(input.invocation),
+    ]);
+  }
+  const selectedCondition = input.invocation.conditionChoices.find(
+    (choice) => choice === conditionChoice,
+  );
+  if (selectedCondition === undefined) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Spell condition choice is not available for this spell.",
+    );
+  }
+
+  const spellCastReactionWindow = maybeOpenReactionWindow(
+    input.input.state,
+    spellCastReactionFrame({
+      casterId: input.actorId,
+      invocation: input.invocation,
+      targetIds: targetSelection.targetIds,
+      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+      castingResource: { kind: "bonusAction" },
+      continuation: {
+        kind: "replay",
+        subject: input.input.subject,
+        fills: input.input.fills,
+      },
+    }),
+    input.input.suppressedReactionTrigger,
+  );
+  if (spellCastReactionWindow !== null) {
+    return spellCastReactionWindow;
+  }
+
+  const effected = applyDirectConditionRemovalSpellEffect(
+    input.input.state,
+    targetSelection.targetIds,
+    selectedCondition,
+  );
+  return spendSpellCastResources({
+    state: effected,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+  });
 }
 
 export function resolveDamageReductionSpellAct(input: {

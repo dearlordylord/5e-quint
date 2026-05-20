@@ -142,7 +142,10 @@ export function spellAttackSequencePartAttackRollHole(
   partIndex: number,
   rollMode?: AttackRollMode,
 ): BattleSpellAttackRollHole {
-  const protocolId = spellAttackSequencePartAttackRollProtocolId(invocation, partIndex);
+  const protocolId = spellAttackSequencePartAttackRollProtocolId(
+    invocation,
+    partIndex,
+  );
   const partName = spellAttackSequencePartName();
   return {
     kind: "attackRoll",
@@ -162,7 +165,9 @@ export function spellAttackSequencePartAttackRollHoleId(
   >,
   partIndex: number,
 ): BattleHoleId {
-  return holeId(spellAttackSequencePartAttackRollProtocolId(invocation, partIndex));
+  return holeId(
+    spellAttackSequencePartAttackRollProtocolId(invocation, partIndex),
+  );
 }
 
 function spellAttackSequencePartAttackRollProtocolId(
@@ -246,6 +251,12 @@ export type SaveGatedConditionChoiceInvocation = Extract<
 > & {
   readonly effect: SpellFailedSaveConditionChoiceEffect;
 };
+export type SpellConditionChoiceInvocation =
+  | SaveGatedConditionChoiceInvocation
+  | Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "directConditionRemoval" }
+    >;
 
 export function saveGatedConditionHasConditionChoice(
   invocation: Extract<
@@ -256,8 +267,26 @@ export function saveGatedConditionHasConditionChoice(
   return invocation.effect.kind === "choice";
 }
 
+export function spellInvocationHasConditionChoice(
+  invocation: SupportedSpellInvocation,
+): invocation is SpellConditionChoiceInvocation {
+  return (
+    (invocation.procedure === "saveGatedCondition" &&
+      saveGatedConditionHasConditionChoice(invocation)) ||
+    invocation.procedure === "directConditionRemoval"
+  );
+}
+
+export function spellConditionChoices(
+  invocation: SpellConditionChoiceInvocation,
+): readonly [Condition, ...Condition[]] {
+  return invocation.procedure === "saveGatedCondition"
+    ? invocation.effect.choices
+    : invocation.conditionChoices;
+}
+
 export function spellConditionChoiceHole(
-  invocation: SaveGatedConditionChoiceInvocation,
+  invocation: SpellConditionChoiceInvocation,
 ): BattleSpellConditionChoiceHole {
   const protocolId = spellConditionChoiceHoleProtocolId(invocation);
   return {
@@ -266,18 +295,18 @@ export function spellConditionChoiceHole(
     holeInstanceKey: holeInstanceKey(protocolId),
     label: `${invocation.spell.name} condition`,
     spell: invocation,
-    choices: invocation.effect.choices,
+    choices: spellConditionChoices(invocation),
   };
 }
 
 export function spellConditionChoiceHoleId(
-  invocation: SaveGatedConditionChoiceInvocation,
+  invocation: SpellConditionChoiceInvocation,
 ): BattleHoleId {
   return holeId(spellConditionChoiceHoleProtocolId(invocation));
 }
 
 function spellConditionChoiceHoleProtocolId(
-  invocation: SaveGatedConditionChoiceInvocation,
+  invocation: SpellConditionChoiceInvocation,
 ): string {
   return `battle:spell:condition-choice:${invocation.spell.id}`;
 }
@@ -527,7 +556,11 @@ export function spellAttackSequencePartDamageHole(
     critical,
     spellMarkedDamageRiders,
   );
-  const protocolId = spellAttackSequencePartDamageProtocolId(invocation, partIndex, critical);
+  const protocolId = spellAttackSequencePartDamageProtocolId(
+    invocation,
+    partIndex,
+    critical,
+  );
   const partName = spellAttackSequencePartName();
   return {
     kind: "rolledDice",
@@ -550,7 +583,9 @@ export function spellAttackSequencePartDamageHoleId(
   partIndex: number,
   critical: boolean,
 ): BattleHoleId {
-  return holeId(spellAttackSequencePartDamageProtocolId(invocation, partIndex, critical));
+  return holeId(
+    spellAttackSequencePartDamageProtocolId(invocation, partIndex, critical),
+  );
 }
 
 function spellAttackSequencePartDamageProtocolId(

@@ -19,6 +19,7 @@ import type { SpellId } from "../identity.ts";
 import type { CombatantId } from "../identity.ts";
 import type {
   BattleActiveEffect,
+  BattleActiveEffectExpiration,
   BattleCreatureState,
   BattlePossessionAttemptDisposition,
   BattleProtectionRelevantEffectSavingThrowOutcomeHole,
@@ -61,7 +62,7 @@ type HideousLaughterEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "hideousLaughter" }
 >;
-type SpellConcentrationEffectSource = {
+export type SpellConcentrationEffectSource = {
   readonly sourceCombatantId: CombatantId;
   readonly sourceSpellId: string;
 };
@@ -125,6 +126,35 @@ export function battleCreatureAfterConditionRemoval(
     activeEffects,
     conditions,
   };
+}
+
+export function concentrationSpellEffectSourcesDirectlyApplyingCondition(
+  combatant: BattleCreatureState,
+  condition: Condition,
+): readonly SpellConcentrationEffectSource[] {
+  const sources: SpellConcentrationEffectSource[] = [];
+  for (const effect of combatant.activeEffects) {
+    if (
+      !isConcentrationSpellEffectDirectlyApplyingCondition(effect, condition)
+    ) {
+      continue;
+    }
+    const source = {
+      sourceCombatantId: effect.sourceCombatantId,
+      sourceSpellId: effect.sourceSpellId,
+    };
+    if (
+      sources.some(
+        (existing) =>
+          existing.sourceCombatantId === source.sourceCombatantId &&
+          existing.sourceSpellId === source.sourceSpellId,
+      )
+    ) {
+      continue;
+    }
+    sources.push(source);
+  }
+  return sources;
 }
 
 export function conditionApplicationPreventedByCreatureTypeProtection(
@@ -432,6 +462,25 @@ function activeEffectDirectlyAppliesCondition(
     (effect.kind === "sleepUnconscious" && condition === "unconscious") ||
     (effect.kind === "hideousLaughter" &&
       (condition === "prone" || condition === "incapacitated"))
+  );
+}
+
+function isConcentrationSpellEffectDirectlyApplyingCondition(
+  effect: BattleActiveEffect,
+  condition: Condition,
+): effect is BattleActiveEffect &
+  SpellConcentrationEffectSource & {
+    readonly expiresAt: Extract<
+      BattleActiveEffectExpiration,
+      { readonly kind: "concentration" }
+    >;
+  } {
+  return (
+    activeEffectDirectlyAppliesCondition(effect, condition) &&
+    "sourceSpellId" in effect &&
+    "sourceCombatantId" in effect &&
+    "expiresAt" in effect &&
+    effect.expiresAt.kind === "concentration"
   );
 }
 

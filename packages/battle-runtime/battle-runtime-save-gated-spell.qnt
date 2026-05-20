@@ -556,19 +556,6 @@ module battleRuntimeSaveGatedSpell {
       breakConcentrationFromHoldPersonAppliedIncapacitated(held, targetActor)
     }
 
-  pure def holdPersonStillActiveFrom(state: BattleState, source: Actor): bool =
-    activeEffectsContainHoldPersonFrom(state.fighter.activeEffects, source) or
-      activeEffectsContainHoldPersonFrom(state.goblin.activeEffects, source)
-
-  pure def stateWithHoldPersonConcentrationClearedIfNoEffects(state: BattleState, source: Actor): BattleState =
-    if (holdPersonStillActiveFrom(state, source))
-      state
-    else
-      match source {
-        | Fighter => { ...state, fighter: { ...state.fighter, concentrating: false } }
-        | Goblin => { ...state, goblin: { ...state.goblin, concentrating: false } }
-      }
-
   pure def resolveHoldPerson(
     state: BattleState,
     slotLevel: int,

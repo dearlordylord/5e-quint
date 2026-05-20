@@ -25,6 +25,7 @@ import { scalarBuffTemporaryHitPointsAmount } from "./spell-effects.ts";
 import {
   battleCreatureAfterConditionRemoval,
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffects,
+  concentrationSpellEffectSourcesDirectlyApplyingCondition,
   conditionsAfterApplyingSpellConditionEffects,
   conditionApplicationPreventedByCreatureTypeProtection,
   conditionHadNonSpellSourceBeforeSpellEffect,
@@ -989,7 +990,7 @@ export function applyDirectConditionSpellEffects(
     { readonly procedure: "directCondition" }
   >,
 ): BattleState {
-  return targetIds.reduce((nextState, targetId) => {
+  return targetIds.reduce<BattleState>((nextState, targetId) => {
     const target = nextState.combatants.get(targetId);
     if (target === undefined) {
       return nextState;
@@ -1005,11 +1006,10 @@ export function applyDirectConditionSpellEffects(
       ...target.activeEffects.filter((effect) => !replacing.includes(effect)),
       {
         ...invocation.activeEffect,
-        conditionHadNonSpellSource:
-          conditionHadNonSpellSourceBeforeSpellEffect(
-            target,
-            invocation.activeEffect.condition,
-          ),
+        conditionHadNonSpellSource: conditionHadNonSpellSourceBeforeSpellEffect(
+          target,
+          invocation.activeEffect.condition,
+        ),
       },
     ];
     return {
@@ -2303,6 +2303,48 @@ export function applyConditionRemovalProtectionSpellEffect(
         ...cleansedTarget,
         activeEffects,
       }),
+    };
+  }, state);
+}
+
+export function applyDirectConditionRemovalSpellEffect(
+  state: BattleState,
+  targetIds: readonly CombatantId[],
+  condition: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "directConditionRemoval" }
+  >["conditionChoices"][number],
+): BattleState {
+  return targetIds.reduce((nextState, targetId) => {
+    const target = nextState.combatants.get(targetId);
+    if (target === undefined) {
+      return nextState;
+    }
+    const concentrationSources =
+      concentrationSpellEffectSourcesDirectlyApplyingCondition(
+        target,
+        condition,
+      );
+    const cleansedTarget = battleCreatureAfterConditionRemoval(
+      target,
+      condition,
+    );
+    const combatantsWithTarget: ReadonlyMap<
+      CombatantId,
+      BattleCreatureState
+    > = new Map(nextState.combatants).set(targetId, cleansedTarget);
+    return {
+      ...nextState,
+      combatants: concentrationSources.reduce<
+        ReadonlyMap<CombatantId, BattleCreatureState>
+      >(
+        (nextCombatants, source) =>
+          combatantsAfterConcentrationSpellEffectsEndedIfNoEffects(
+            nextCombatants,
+            source,
+          ),
+        combatantsWithTarget,
+      ),
     };
   }, state);
 }
