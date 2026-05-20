@@ -67,7 +67,7 @@
     {
       "number": 11,
       "id": "RKBC-PROFILE-JOIN-TABLE-CALLER",
-      "status": "ready-for-research",
+      "status": "blocked",
       "title": "Table Caller Profile Join And Boundary Classification"
     },
     {
@@ -92,7 +92,7 @@
       "number": 15,
       "id": "RKBC-CREATION-SPELLCASTING-PROGRESSION",
       "status": "blocked",
-      "title": "Character Creation Spellcasting Progression And Invocations"
+      "title": "Character Creation Spell Access Progression And Eldritch Invocation Choices"
     },
     {
       "number": 16,
@@ -109,13 +109,13 @@
     {
       "number": 18,
       "id": "RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS",
-      "status": "ready-for-research",
+      "status": "blocked",
       "title": "Character Sheet Spell Slot And Pact Slot Transitions"
     },
     {
       "number": 19,
       "id": "RKBC-SHEET-FEATURE-RESOURCES",
-      "status": "ready-for-research",
+      "status": "blocked",
       "title": "Character Sheet Feature Resource Transitions"
     },
     {
@@ -246,6 +246,12 @@ Every task must preserve these invariants:
 - `profile-obligations.jsonl` is the only profile-to-obligation join source.
 - Surface breadth stays in `plans/unit-profile-coverage`; do not turn catalog
   enumeration into MBT state-space exploration.
+- When a task touches a boundary that uses bare primitives for domain ids,
+  reducer/action/hole/fill/profile ids, spell/unit/action/condition/damage
+  identifiers, resource names, or authored content names, Ralph must either fix
+  that touched boundary with existing branded/domain types or block with a
+  precise follow-up. Do not ignore touched primitive/domain-id/authored-identity
+  dispatch as pre-existing.
 
 Every implementation task runs:
 
@@ -288,35 +294,51 @@ Reviewers should reject:
 - catalog admission treated as reducer-semantic coverage;
 - table geometry, social adjudication, object state, or presentation facts
   silently modeled as core reducer state.
+- touched bare primitive ids, authored-content-name dispatch, or duplicate
+  profile/obligation mappings being left in place as "pre-existing" when the
+  task depends on that boundary.
+
+## Lane Boundaries
+
+- Lane label: D, fourth Ralph lane.
+- Base branch: `ralph/level2-loop-d/rules-kernel-b-closure`.
+- Integration worktree: `/workspace/typescript/dnd-ralph-level2-d`.
+- Do not edit `plans/ACTIVE_PLAN.md`.
+- Do not implement Loop A/B/C level-2 Unit runtime/profile tasks from
+  `plans/LEVEL2_RALPH_LOOP_*_OVERNIGHT_*.md`; this lane owns rules-kernel B
+  coverage closure only.
+- Shared generated coverage artifacts may conflict with Unit-profile lanes;
+  regenerate them in the integration branch after task merges and again in
+  master after final integration.
 
 ## DAG / Queue Order
 
 | # | Task | Status | Depends On | Closure target |
 | ---: | --- | --- | --- | --- |
 | 1 | RKBC-BATTLE-HOLE-INVENTORY - Battle Hole And Fill Inventory | ready-for-research | baseline | Inventory every current `BattleHole` and fill kind; classify semantic frontier, deterministic projection, unsupported, or dead branch. |
-| 2 | RKBC-BATTLE-HOLE-TARGETS-AREAS - Battle Target And Area Hole Obligations | blocked | Task 1 | Covered obligations for target, target-list, and area-choice hole families. |
-| 3 | RKBC-BATTLE-HOLE-MOVEMENT-ROUTE - Battle Movement Route And Spatial Fact Obligations | blocked | Task 1 | Covered/boundary obligations for movement route and table spatial fact holes. |
-| 4 | RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION - Battle Damage Disposition And Type Choice Obligations | blocked | Task 1 | Covered obligations for damage disposition and damage-type choice holes. |
-| 5 | RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND - Battle Ability Skill And Command Hole Obligations | blocked | Task 1 | Covered/boundary obligations for ability choice, skill choice, and Command option holes. |
-| 6 | RKBC-BATTLE-HOLE-REACTION-CONCENTRATION - Battle Reaction And Concentration Hole Obligations | blocked | Task 1 | Covered obligations for reaction decisions, continuation resumption, and Concentration Saving Throw holes not already owned. |
+| 2 | RKBC-BATTLE-HOLE-TARGETS-AREAS - Battle Target And Area Hole Obligations | blocked | RKBC-BATTLE-HOLE-INVENTORY | Covered obligations for target, target-list, and area-choice hole families. |
+| 3 | RKBC-BATTLE-HOLE-MOVEMENT-ROUTE - Battle Movement Route And Spatial Fact Obligations | blocked | RKBC-BATTLE-HOLE-INVENTORY | Covered/boundary obligations for movement route and table spatial fact holes. |
+| 4 | RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION - Battle Damage Disposition And Type Choice Obligations | blocked | RKBC-BATTLE-HOLE-INVENTORY | Covered obligations for damage disposition and damage-type choice holes. |
+| 5 | RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND - Battle Ability Skill And Command Hole Obligations | blocked | RKBC-BATTLE-HOLE-INVENTORY | Covered/boundary obligations for ability choice, skill choice, and Command option holes. |
+| 6 | RKBC-BATTLE-HOLE-REACTION-CONCENTRATION - Battle Reaction And Concentration Hole Obligations | blocked | RKBC-BATTLE-HOLE-INVENTORY | Covered obligations for reaction decisions, continuation resumption, and Concentration Saving Throw holes not already owned. |
 | 7 | RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE - Feature Passive Resource And Persistent Profile Join | ready-for-research | baseline | Map feature passive/resource/persistent profiles to covered obligations or create missing obligations. |
 | 8 | RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS - Feature Reaction Bonus Action And Resource Profile Join | ready-for-research | baseline | Map feature reaction, bonus-action, and failed-roll resource profiles to covered obligations or create missing obligations. |
 | 9 | RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION - Spell Damage Condition And Scalar Profile Join | ready-for-research | baseline | Map Spell Definition profiles for damage, condition, scalar, and roll modifiers to covered Spell Effect/Invocation obligations or create missing obligations. |
 | 10 | RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION - Spell After Hit Reaction And Marked Effect Profile Join | ready-for-research | baseline | Map after-hit, reaction-casting-time Spell Invocation, Readied Spell Response, marked-effect, and chained spell profiles to covered obligations or create missing obligations. |
-| 11 | RKBC-PROFILE-JOIN-TABLE-CALLER - Table Caller Profile Join And Boundary Classification | blocked | Tasks 1-3 | Map table-caller profiles to reducer-semantic obligations or boundary rows without MBT state-space explosion. |
+| 11 | RKBC-PROFILE-JOIN-TABLE-CALLER - Table Caller Profile Join And Boundary Classification | blocked | RKBC-BATTLE-HOLE-INVENTORY, RKBC-BATTLE-HOLE-TARGETS-AREAS, RKBC-BATTLE-HOLE-MOVEMENT-ROUTE | Map table-caller profiles to reducer-semantic obligations or boundary rows without MBT state-space explosion. |
 | 12 | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY - Character Creation Choice Discovery And Cardinality | ready-for-research | baseline | Split current creation choice discovery/cardinality semantics out of the broad creation audit. |
 | 13 | RKBC-CREATION-FILL-VALIDATION-BATCH - Character Creation Fill Validation And Atomic Batch | ready-for-research | baseline | Cover fill validation, batch atomicity, rediscovery, and finalization deltas beyond the existing slice. |
-| 14 | RKBC-CREATION-ADVANCEMENT-REPLACEMENT - Character Creation Advancement And Replacement | blocked | Tasks 12-13 | Cover advancement replacement semantics and class-feature replacement profiles. |
-| 15 | RKBC-CREATION-SPELLCASTING-PROGRESSION - Character Creation Spell Access Progression And Eldritch Invocation Choices | blocked | Tasks 12-13 | Cover Pact Magic progression, Spell Access/progression facts, and Eldritch Invocation choices. |
-| 16 | RKBC-CREATION-WEAPON-MASTERY-FEAT - Character Creation Weapon Mastery And Feat Choice | blocked | Tasks 12-13 | Cover Weapon Mastery and feat-choice profiles without duplicating selected Unit behavior. |
+| 14 | RKBC-CREATION-ADVANCEMENT-REPLACEMENT - Character Creation Advancement And Replacement | blocked | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH | Cover advancement replacement semantics and class-feature replacement profiles. |
+| 15 | RKBC-CREATION-SPELLCASTING-PROGRESSION - Character Creation Spell Access Progression And Eldritch Invocation Choices | blocked | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH | Cover Pact Magic progression, Spell Access/progression facts, and Eldritch Invocation choices. |
+| 16 | RKBC-CREATION-WEAPON-MASTERY-FEAT - Character Creation Weapon Mastery And Feat Choice | blocked | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH | Cover Weapon Mastery and feat-choice profiles without duplicating selected Unit behavior. |
 | 17 | RKBC-SHEET-HP-REST-HIT-DICE - Character Sheet HP Rest And Hit Dice Transitions | ready-for-research | baseline | Split HP, healing, Short Rest, Long Rest, and Hit Dice semantics into covered obligations. |
-| 18 | RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS - Character Sheet Spell Slot And Pact Slot Transitions | blocked | Task 17 | Cover spell-slot and pact-slot spend/recovery transitions while reusing Task 17 rest timing/benefit semantics. |
-| 19 | RKBC-SHEET-FEATURE-RESOURCES - Character Sheet Feature Resource Transitions | blocked | Task 17 | Cover Lay On Hands, Arcane Recovery, class feature use counts, and similar sheet-owned resources while reusing Task 17 HP/rest algebra. |
+| 18 | RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS - Character Sheet Spell Slot And Pact Slot Transitions | blocked | RKBC-SHEET-HP-REST-HIT-DICE | Cover spell-slot and pact-slot spend/recovery transitions while reusing `RKBC-SHEET-HP-REST-HIT-DICE` rest timing/benefit semantics. |
+| 19 | RKBC-SHEET-FEATURE-RESOURCES - Character Sheet Feature Resource Transitions | blocked | RKBC-SHEET-HP-REST-HIT-DICE | Cover Lay On Hands, Arcane Recovery, class feature use counts, and similar sheet-owned resources while reusing `RKBC-SHEET-HP-REST-HIT-DICE` HP/rest algebra. |
 | 20 | RKBC-SHEET-WEAPON-MASTERY-RITUAL - Character Sheet Weapon Mastery And Ritual Projection | ready-for-research | baseline | Cover weapon mastery reselection and spellbook/ritual projection semantics. |
 | 21 | RKBC-HANDOFF-BATTLE-INIT - Character Battle Initialization Projection | ready-for-research | baseline | Cover Character Sheet/build projection into battle initialization. |
-| 22 | RKBC-HANDOFF-BATTLE-SETTLEMENT - Character Battle Settlement Back To Sheet | blocked | Tasks 17-18, 21 | Cover HP, condition, spell-slot, and resource settlement from battle back to sheet. |
-| 23 | RKBC-HANDOFF-IDENTITY-CONFLICTS - Character Battle Identity And Max HP Conflict Handling | blocked | Tasks 17, 21 | Cover identity checks, max-HP conflicts, and zero-HP lifecycle handoff. |
-| 24 | RKBC-FINAL-B-CLOSURE-GATE - Final Rules Kernel B Closure Gate | blocked | Tasks 1-23 | Remove merge-acceptable `needs-*` statuses, wire quality gate, and prove reports show B closure. |
+| 22 | RKBC-HANDOFF-BATTLE-SETTLEMENT - Character Battle Settlement Back To Sheet | blocked | RKBC-SHEET-HP-REST-HIT-DICE, RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS, RKBC-HANDOFF-BATTLE-INIT | Cover HP, condition, spell-slot, and resource settlement from battle back to sheet. |
+| 23 | RKBC-HANDOFF-IDENTITY-CONFLICTS - Character Battle Identity And Max HP Conflict Handling | blocked | RKBC-SHEET-HP-REST-HIT-DICE, RKBC-HANDOFF-BATTLE-INIT | Cover identity checks, max-HP conflicts, and zero-HP lifecycle handoff. |
+| 24 | RKBC-FINAL-B-CLOSURE-GATE - Final Rules Kernel B Closure Gate | blocked | RKBC-BATTLE-HOLE-INVENTORY, RKBC-BATTLE-HOLE-TARGETS-AREAS, RKBC-BATTLE-HOLE-MOVEMENT-ROUTE, RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION, RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND, RKBC-BATTLE-HOLE-REACTION-CONCENTRATION, RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE, RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS, RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION, RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION, RKBC-PROFILE-JOIN-TABLE-CALLER, RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH, RKBC-CREATION-ADVANCEMENT-REPLACEMENT, RKBC-CREATION-SPELLCASTING-PROGRESSION, RKBC-CREATION-WEAPON-MASTERY-FEAT, RKBC-SHEET-HP-REST-HIT-DICE, RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS, RKBC-SHEET-FEATURE-RESOURCES, RKBC-SHEET-WEAPON-MASTERY-RITUAL, RKBC-HANDOFF-BATTLE-INIT, RKBC-HANDOFF-BATTLE-SETTLEMENT, RKBC-HANDOFF-IDENTITY-CONFLICTS | Remove merge-acceptable `needs-*` statuses, wire quality gate, and prove reports show B closure. |
 
 ## Task Details
 
@@ -341,7 +363,7 @@ Acceptance:
 
 Status: `blocked`
 
-Depends on: Task 1.
+Depends on: `RKBC-BATTLE-HOLE-INVENTORY`.
 
 Scope: cover target choice, target list, and area choice hole families. Use
 focused random MBT where target ordering, repeated selection, or area
@@ -358,7 +380,7 @@ Acceptance:
 
 Status: `blocked`
 
-Depends on: Task 1.
+Depends on: `RKBC-BATTLE-HOLE-INVENTORY`.
 
 Scope: cover movement route facts, table-supplied geometry, forced movement
 route choices, and distance/position facts currently represented as reducer
@@ -374,7 +396,7 @@ Acceptance:
 
 Status: `blocked`
 
-Depends on: Task 1.
+Depends on: `RKBC-BATTLE-HOLE-INVENTORY`.
 
 Scope: cover damage disposition, damage-type choice, resistance/reduction
 choice, and save/attack damage branch holes not already owned by existing spell,
@@ -391,7 +413,7 @@ Acceptance:
 
 Status: `blocked`
 
-Depends on: Task 1.
+Depends on: `RKBC-BATTLE-HOLE-INVENTORY`.
 
 Scope: cover ability choice, skill choice, and Command-style table option holes.
 Preserve table adjudication where RAW leaves route/social outcome to the table.
@@ -409,7 +431,7 @@ Acceptance:
 
 Status: `blocked`
 
-Depends on: Task 1.
+Depends on: `RKBC-BATTLE-HOLE-INVENTORY`.
 
 Scope: cover reaction-decision, continuation-resume, and Concentration Saving Throw
 holes not already captured by `BATTLE.REACTION.OFFER_DECLINE_RESUME`.
@@ -496,7 +518,7 @@ Acceptance:
 
 Status: `blocked`
 
-Depends on: Tasks 1-3.
+Depends on: `RKBC-BATTLE-HOLE-INVENTORY`, `RKBC-BATTLE-HOLE-TARGETS-AREAS`, and `RKBC-BATTLE-HOLE-MOVEMENT-ROUTE`.
 
 Scope: close table-caller profiles after the target/area and movement/route
 hole classifications are recorded. In-scope examples include target admission,
@@ -511,8 +533,10 @@ Acceptance:
 - Table-owned positions, barriers, object facts, fog/obscurement facts,
   hazard placement, route selection, and social adjudication remain
   boundary/table-caller evidence.
-- Task 11 reuses Tasks 1-3 classifications rather than creating a second
-  reducer-vs-boundary classification ledger.
+- This task reuses `RKBC-BATTLE-HOLE-INVENTORY`,
+  `RKBC-BATTLE-HOLE-TARGETS-AREAS`, and
+  `RKBC-BATTLE-HOLE-MOVEMENT-ROUTE` classifications rather than creating a
+  second reducer-vs-boundary classification ledger.
 - No task expands MBT into `Surface record x table state x battle state`.
 
 ### Task 12 - RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY - Character Creation Choice Discovery And Cardinality
@@ -547,7 +571,7 @@ Acceptance:
 
 Status: `blocked`
 
-Depends on: Tasks 12-13.
+Depends on: `RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY` and `RKBC-CREATION-FILL-VALIDATION-BATCH`.
 
 Scope: cover advancement replacement, class-feature replacement, and level-up
 choice replacement semantics currently supported by TS.
@@ -562,7 +586,7 @@ Acceptance:
 
 Status: `blocked`
 
-Depends on: Tasks 12-13.
+Depends on: `RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY` and `RKBC-CREATION-FILL-VALIDATION-BATCH`.
 
 Scope: cover Pact Magic progression, Spell Access/progression facts, and
 Eldritch Invocation choices that current TS supports.
@@ -578,7 +602,7 @@ Acceptance:
 
 Status: `blocked`
 
-Depends on: Tasks 12-13.
+Depends on: `RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY` and `RKBC-CREATION-FILL-VALIDATION-BATCH`.
 
 Scope: cover weapon mastery choices and class-feature feat choices as
 character-creation reducer semantics.
@@ -600,9 +624,9 @@ transitions out of `SHEET.REST_AND_RESOURCE.TRANSITIONS`.
 Acceptance:
 
 - Sheet-owned HP/rest/Hit Dice mutations have QNT owners and parity witnesses.
-- Task 17 owns shared HP damage/healing and rest eligibility/benefit algebra;
-  downstream slot and feature-resource tasks reuse it rather than duplicating
-  rest procedure logic.
+- `RKBC-SHEET-HP-REST-HIT-DICE` owns shared HP damage/healing and rest
+  eligibility/benefit algebra; downstream slot and feature-resource tasks reuse
+  it rather than duplicating rest procedure logic.
 - Long Rest coverage explicitly handles the start gate, 16-hour wait,
   interruption handling, all spent Hit Point Dice restored, and max-HP
   reduction reset.
@@ -614,31 +638,31 @@ Acceptance:
 
 Status: `blocked`
 
-Depends on: Task 17.
+Depends on: `RKBC-SHEET-HP-REST-HIT-DICE`.
 
 Scope: cover spell-slot and pact-slot spend/recover transitions, including Long
 Rest, Short Rest, and class-feature recovery hooks currently supported by TS.
-Reuse Task 17 for rest eligibility/benefit timing; this task owns slot capacity,
-current slot state, and slot-specific spend/recovery.
+Reuse `RKBC-SHEET-HP-REST-HIT-DICE` for rest eligibility/benefit timing; this
+task owns slot capacity, current slot state, and slot-specific spend/recovery.
 
 Acceptance:
 
 - Slot capacity facts are distinguished from current slot state.
 - Pact Slot and normal Spell Slot semantics are not conflated.
-- Rest-triggered slot recovery consumes Task 17 rest outcomes rather than
-  re-modeling rest procedure logic.
+- Rest-triggered slot recovery consumes `RKBC-SHEET-HP-REST-HIT-DICE` rest
+  outcomes rather than re-modeling rest procedure logic.
 - Covered obligations connect QNT to production sheet runtime behavior.
 
 ### Task 19 - RKBC-SHEET-FEATURE-RESOURCES - Character Sheet Feature Resource Transitions
 
 Status: `blocked`
 
-Depends on: Task 17.
+Depends on: `RKBC-SHEET-HP-REST-HIT-DICE`.
 
 Scope: cover Lay On Hands, Arcane Recovery, class feature use-count resources,
-healing-resource actions, and related sheet-owned resources. Reuse Task 17 for
-HP mutation and rest eligibility/benefit timing; this task owns feature-resource
-spend, recovery, and reset semantics.
+healing-resource actions, and related sheet-owned resources. Reuse
+`RKBC-SHEET-HP-REST-HIT-DICE` for HP mutation and rest eligibility/benefit
+timing; this task owns feature-resource spend, recovery, and reset semantics.
 
 Acceptance:
 
@@ -681,7 +705,7 @@ Acceptance:
 
 Status: `blocked`
 
-Depends on: Tasks 17-18 and 21.
+Depends on: `RKBC-SHEET-HP-REST-HIT-DICE`, `RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS`, and `RKBC-HANDOFF-BATTLE-INIT`.
 
 Scope: cover settlement from battle state back to Character Sheet state for HP,
 conditions, spell slots, pact slots, and feature resources.
@@ -696,7 +720,7 @@ Acceptance:
 
 Status: `blocked`
 
-Depends on: Tasks 17 and 21.
+Depends on: `RKBC-SHEET-HP-REST-HIT-DICE` and `RKBC-HANDOFF-BATTLE-INIT`.
 
 Scope: cover identity checks, stale combatant/session conflict handling, max HP
 changes, and zero-HP lifecycle edges across sheet/battle handoff.
@@ -713,7 +737,7 @@ Acceptance:
 
 Status: `blocked`
 
-Depends on: Tasks 1-23.
+Depends on: every real task in this plan, listed by task id in the DAG row.
 
 Scope: close the B lane mechanically after every transitional obligation is
 resolved.
