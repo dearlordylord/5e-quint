@@ -13479,7 +13479,7 @@
         "state": "installed",
         "unitId": "monk_uncanny_metabolism"
       },
-      "unitProfileDisposition": "profile-subset-supported",
+      "unitProfileDisposition": "supported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
@@ -13489,12 +13489,12 @@
         },
         {
           "owner": "character-creation-runtime",
-          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS character-creation.class-feature-source-fact-projection support profile; Uncanny Metabolism is retained from the level-2 Monk class feature grant and projected into CharacterBuild source facts from the authored Surface Initiative recovery record. The projection derives its optional Initiative trigger, Long Rest reset cadence, shared Monk's Focus resource link, Martial Arts die source link, self-healing target, and Monk-level healing bonus from the retained feature, Monk's Focus facts, Martial Arts facts, and Monk class level without duplicating Focus Point capacity, Martial Arts die tiers, or class progression state.",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS character-creation.class-feature-source-fact-projection support profile; Uncanny Metabolism is retained from the level-2 Monk class feature grant and projected into CharacterBuild source facts from the authored Surface Initiative recovery record. The projection derives its optional Initiative trigger, Long Rest reset cadence, shared Monk's Focus resource link, current Martial Arts die from the existing Martial Arts source, self-healing target, and Monk-level healing bonus from the retained feature, Monk's Focus facts, Martial Arts facts, and Monk class level without duplicating Focus Point capacity, Martial Arts die tiers, or class progression state.",
           "status": "owner evidence present"
         },
         {
           "owner": "character-sheet-runtime",
-          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS Character Sheet class-feature Long Rest use state runtime; Uncanny Metabolism is read from CharacterBuild source facts and the installed Surface feature record, then projected as a once-per-Long-Rest feature use state. The runtime validates that stored use state belongs only to sheets whose build retains Uncanny Metabolism, stores only the used-since-Long-Rest marker, preserves that marker across Short Rests, clears it on Long Rest, and derives Focus Point recovery and Martial Arts die source links from CharacterBuild facts rather than storing duplicate resource or die projections.",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME Character Sheet Uncanny Metabolism Initiative recovery and Long Rest use state runtime; Uncanny Metabolism is read from CharacterBuild source facts and the installed Surface feature record, then projected as a once-per-Long-Rest feature use state and optional Initiative-window recovery. The runtime validates that stored use state belongs only to sheets whose build retains Uncanny Metabolism, stores only the used-since-Long-Rest marker, preserves that marker across Short Rests, clears it on Long Rest, derives the current Martial Arts die from CharacterBuild facts, validates the caller-supplied die roll, clears all shared Monk's Focus expenditures, and applies capped self-healing without storing duplicate resource or die projections.",
           "status": "owner evidence present"
         }
       ],

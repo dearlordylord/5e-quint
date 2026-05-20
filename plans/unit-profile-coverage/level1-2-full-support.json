@@ -1900,35 +1900,6 @@
       "unitId": "monk_monks_focus"
     },
     {
-      "catalogStatus": "installed",
-      "claimTag": "profile-subset-supported",
-      "closureKinds": [
-        "follow-up-split"
-      ],
-      "collectionId": "srd-5.2.1",
-      "executableMechanics": true,
-      "kind": "class_feature",
-      "reason": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME: Offer the optional Uncanny Metabolism choice when the Monk rolls Initiative, recover all expended shared Focus Points, roll the Martial Arts die from the existing Monk Martial Arts source, restore Hit Points equal to Monk level plus that die roll, and spend the once-per-Long-Rest feature use. Owner: battle-runtime plus character-battle-runtime resource handoff. Required output: Supported runtime profile and owner evidence for Initiative-window Focus Point recovery, self-healing, and Long Rest recharge using the shared Focus Point resource and existing Martial Arts die source.",
-      "sourceRecordPath": "packages/surface/content/monk_uncanny_metabolism.json",
-      "sourceRows": [
-        {
-          "category": "class feature",
-          "concept": "Monk Uncanny Metabolism",
-          "id": "srd521:classes/monk:level-2:class-feature-grant:monk_uncanny_metabolism",
-          "levelBand": "level-2",
-          "rowKind": "class-feature-grant",
-          "source": {
-            "lineEnd": 101,
-            "lineStart": 96,
-            "path": ".references/srd-5.2.1/Classes/Monk.md"
-          }
-        }
-      ],
-      "status": "blocked-follow-up-split",
-      "strictTargetClosed": true,
-      "unitId": "monk_uncanny_metabolism"
-    },
-    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -2630,7 +2601,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 105,
+      "count": 106,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -2698,6 +2669,7 @@
         "monk_martial_arts",
         "monk_unarmored_defense",
         "monk_unarmored_movement",
+        "monk_uncanny_metabolism",
         "paladin_lay_on_hands",
         "paladin_paladins_smite",
         "paladin_weapon_mastery",
@@ -2742,7 +2714,7 @@
       ]
     },
     {
-      "count": 22,
+      "count": 21,
       "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
       "status": "blocked-follow-up-split",
       "unitIds": [
@@ -2759,7 +2731,6 @@
         "heat_metal",
         "levitate",
         "monk_monks_focus",
-        "monk_uncanny_metabolism",
         "moonbeam",
         "prayer_of_healing",
         "ray_of_enfeeblement",
@@ -2854,24 +2825,24 @@
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 75,
+      "denominator": 78,
       "numerator": 12,
-      "percent": "16%"
+      "percent": "15.4%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 75,
+      "denominator": 78,
       "numerator": 17,
-      "percent": "22.7%"
+      "percent": "21.8%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 105,
+      "denominator": 106,
       "numerator": 31,
-      "percent": "29.5%"
+      "percent": "29.2%"
     },
     "strictRuntimeProfileSupport": {
       "denominator": 161,
-      "numerator": 105,
-      "percent": "65.2%"
+      "numerator": 106,
+      "percent": "65.8%"
     },
     "strictTargetClosure": {
       "denominator": 161,
@@ -5702,9 +5673,9 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 105,
+        "denominator": 106,
         "numerator": 31,
-        "percent": "29.5%"
+        "percent": "29.2%"
       }
     },
     "units": [
@@ -6830,6 +6801,30 @@
           {
             "joinStatus": "unmapped",
             "obligations": [],
+            "profileId": "character-creation.class-feature-source-fact-projection",
+            "profileKind": "character-creation"
+          },
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "character-sheet.class-feature-long-rest-use-state",
+            "profileKind": "character-sheet"
+          },
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
+            "profileId": "character-sheet.monk-uncanny-metabolism-initiative-recovery",
+            "profileKind": "character-sheet"
+          }
+        ],
+        "unitId": "monk_uncanny_metabolism"
+      },
+      {
+        "joinStatus": "unmapped",
+        "profiles": [
+          {
+            "joinStatus": "unmapped",
+            "obligations": [],
             "profileId": "character-sheet.healing-resource-action",
             "profileKind": "character-sheet"
           }
@@ -7642,20 +7637,20 @@
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
       "missing": 5,
-      "profile-subset-supported": 15,
-      "supported-profile": 105,
+      "profile-subset-supported": 14,
+      "supported-profile": 106,
       "unsupported-profile": 36
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 22,
+      "blocked-follow-up-split": 21,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
       "closed-runtime-detached-table-adjudication": 20,
       "open-runtime-behavior": 5,
-      "supported-profile": 105
+      "supported-profile": 106
     },
-    "nonSupportedFrontier": 56,
+    "nonSupportedFrontier": 55,
     "strictDenominator": 161
   }
 }

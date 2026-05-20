@@ -4092,20 +4092,36 @@ describe("character creation finalization", () => {
       healing: {
         target: "self",
         martialArtsDieSourceUnitId: MONK_MARTIAL_ARTS_UNIT_ID,
+        martialArtsDie: {
+          dice: 1,
+          dieSize: 6,
+        },
         monkLevelBonus: 2,
       },
     });
 
-    const levelFourFacts = expectRight(
-      characterBuildMonkUncannyMetabolismFacts({
-        build: {
-          features: result.build.features,
-          progression: testProgression("class_monk", 4),
-        },
-        unitLibrary,
-      }),
-    );
-    expect(levelFourFacts?.healing.monkLevelBonus).toBe(4);
+    const monkLevelFacts = [
+      { level: 4, dieSize: 6 },
+      { level: 5, dieSize: 8 },
+      { level: 11, dieSize: 10 },
+      { level: 17, dieSize: 12 },
+    ] as const;
+    for (const expectation of monkLevelFacts) {
+      const levelFacts = expectRight(
+        characterBuildMonkUncannyMetabolismFacts({
+          build: {
+            features: result.build.features,
+            progression: testProgression("class_monk", expectation.level),
+          },
+          unitLibrary,
+        }),
+      );
+      expect(levelFacts?.healing.monkLevelBonus).toBe(expectation.level);
+      expect(levelFacts?.healing.martialArtsDie).toEqual({
+        dice: 1,
+        dieSize: expectation.dieSize,
+      });
+    }
   });
 
   test("projects Druid 4 Wild Shape roster thresholds without known-form defaults", () => {

@@ -2547,7 +2547,7 @@
     "srd521:classes/monk:level-2:class-feature-grant:monk_uncanny_metabolism": {
       "taskId": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS",
       "profile": "character-creation.class-feature-source-fact-projection support profile",
-      "summary": "Uncanny Metabolism is retained from the level-2 Monk class feature grant and projected into CharacterBuild source facts from the authored Surface Initiative recovery record. The projection derives its optional Initiative trigger, Long Rest reset cadence, shared Monk's Focus resource link, Martial Arts die source link, self-healing target, and Monk-level healing bonus from the retained feature, Monk's Focus facts, Martial Arts facts, and Monk class level without duplicating Focus Point capacity, Martial Arts die tiers, or class progression state.",
+      "summary": "Uncanny Metabolism is retained from the level-2 Monk class feature grant and projected into CharacterBuild source facts from the authored Surface Initiative recovery record. The projection derives its optional Initiative trigger, Long Rest reset cadence, shared Monk's Focus resource link, current Martial Arts die from the existing Martial Arts source, self-healing target, and Monk-level healing bonus from the retained feature, Monk's Focus facts, Martial Arts facts, and Monk class level without duplicating Focus Point capacity, Martial Arts die tiers, or class progression state.",
       "discovery": [
         "packages/character-creation-runtime/src/discovery.ts:discoverInitialDraftHoles"
       ],

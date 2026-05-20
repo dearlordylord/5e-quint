@@ -48,11 +48,12 @@
       ]
     },
     "srd521:classes/monk:level-2:class-feature-grant:monk_uncanny_metabolism": {
-      "taskId": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS",
-      "profile": "Character Sheet class-feature Long Rest use state runtime",
-      "summary": "Uncanny Metabolism is read from CharacterBuild source facts and the installed Surface feature record, then projected as a once-per-Long-Rest feature use state. The runtime validates that stored use state belongs only to sheets whose build retains Uncanny Metabolism, stores only the used-since-Long-Rest marker, preserves that marker across Short Rests, clears it on Long Rest, and derives Focus Point recovery and Martial Arts die source links from CharacterBuild facts rather than storing duplicate resource or die projections.",
+      "taskId": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME",
+      "profile": "Character Sheet Uncanny Metabolism Initiative recovery and Long Rest use state runtime",
+      "summary": "Uncanny Metabolism is read from CharacterBuild source facts and the installed Surface feature record, then projected as a once-per-Long-Rest feature use state and optional Initiative-window recovery. The runtime validates that stored use state belongs only to sheets whose build retains Uncanny Metabolism, stores only the used-since-Long-Rest marker, preserves that marker across Short Rests, clears it on Long Rest, derives the current Martial Arts die from CharacterBuild facts, validates the caller-supplied die roll, clears all shared Monk's Focus expenditures, and applies capped self-healing without storing duplicate resource or die projections.",
       "runtimeProjection": [
         "packages/character-sheet-runtime/src/index.ts:characterSheetMonkUncannyMetabolismUseState",
+        "packages/character-sheet-runtime/src/index.ts:useMonkUncannyMetabolismWhenRollingInitiative",
         "packages/character-sheet-runtime/src/index.ts:restFeatureUseStateMatchesBuild",
         "packages/character-sheet-runtime/src/index.ts:parseStoredRestFeatureUses",
         "packages/character-sheet-runtime/src/index.ts:completeShortRest",
@@ -60,6 +61,8 @@
       ],
       "tests": [
         "packages/character-sheet-runtime/src/index.test.ts:uncannyMetabolismLongRestUseStateTestName",
+        "packages/character-sheet-runtime/src/index.test.ts:uncannyMetabolismInitiativeRecoveryTestName",
+        "packages/character-sheet-runtime/src/index.test.ts:uncannyMetabolismInitiativeGatesTestName",
         "packages/character-sheet-runtime/src/index.test.ts:uncannyMetabolismRejectsUnownedUseStateTestName"
       ]
     },

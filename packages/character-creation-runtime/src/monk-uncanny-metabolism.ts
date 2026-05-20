@@ -1,5 +1,11 @@
 import { Either, Option } from "effect";
-import type { ClassFeatureRecord, UnitRecord } from "@dnd/surface/surface/types";
+import { DAMAGE_DIE_SIZES, type DamageDieSize } from "@dnd/shared/types";
+import type {
+  ClassFeatureRecord,
+  DiceExpr,
+  DiceExprDelta,
+  UnitRecord,
+} from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "./types.ts";
 import { characterBuildFeatureUnitIds } from "./finalization.ts";
 import type { CharacterBuild } from "./types.ts";
@@ -45,6 +51,20 @@ type MonkMartialArtsFeature = ClassFeatureRecord & {
     { readonly family: "passive" }
   >;
 };
+type MonkMartialArtsPassiveGrant =
+  MonkMartialArtsFeature["mechanics"]["grants"][number];
+type ReplaceDamageDieGrant = Extract<
+  MonkMartialArtsPassiveGrant,
+  { readonly kind: "replace_damage_die" }
+>;
+type ThresholdTierDamageDie = Extract<
+  ReplaceDamageDieGrant["die"],
+  { readonly kind: "threshold_tiers" }
+>;
+type MonkMartialArtsDieGrant = ReplaceDamageDieGrant & {
+  readonly scope: "unarmed_or_monk_weapon";
+  readonly die: ThresholdTierDamageDie & { readonly axis: "class" };
+};
 
 export type CharacterBuildMonkUncannyMetabolismFacts = {
   readonly unitId: typeof MONK_UNCANNY_METABOLISM_UNIT_ID;
@@ -60,6 +80,10 @@ export type CharacterBuildMonkUncannyMetabolismFacts = {
   readonly healing: {
     readonly target: "self";
     readonly martialArtsDieSourceUnitId: UnitRecord["id"];
+    readonly martialArtsDie: {
+      readonly dice: 1;
+      readonly dieSize: DamageDieSize;
+    };
     readonly monkLevelBonus: number;
   };
 };
@@ -138,6 +162,11 @@ export function characterBuildMonkUncannyMetabolismFacts(input: {
   if (Either.isLeft(monkLevel)) {
     return monkUncannyMetabolismFactsIssue(monkLevel.left.message);
   }
+  const martialArtsDie = monkMartialArtsDieForLevel({
+    unit: martialArtsUnit.value,
+    monkLevel: monkLevel.right,
+  });
+  if (Either.isLeft(martialArtsDie)) return Either.left(martialArtsDie.left);
 
   return Either.right({
     unitId: MONK_UNCANNY_METABOLISM_UNIT_ID,
@@ -153,6 +182,7 @@ export function characterBuildMonkUncannyMetabolismFacts(input: {
     healing: {
       target: featureUnit.value.mechanics.healing.target,
       martialArtsDieSourceUnitId: martialArtsUnitId,
+      martialArtsDie: martialArtsDie.right,
       monkLevelBonus: monkLevel.right,
     },
   });
@@ -183,14 +213,100 @@ function isMonkMartialArtsDieSource(
     unit.kind === "class_feature" &&
     unit.className === "monk" &&
     unit.mechanics.family === "passive" &&
-    unit.mechanics.grants.some(
-      (grant) =>
-        grant.kind === "replace_damage_die" &&
-        grant.scope === "unarmed_or_monk_weapon" &&
-        grant.die.kind === "threshold_tiers" &&
-        grant.die.axis === "class",
-    )
+    unit.mechanics.grants.some(isMonkMartialArtsDieGrant)
   );
+}
+
+function monkMartialArtsDieForLevel(input: {
+  readonly unit: MonkMartialArtsFeature;
+  readonly monkLevel: number;
+}): Either.Either<
+  CharacterBuildMonkUncannyMetabolismFacts["healing"]["martialArtsDie"],
+  CharacterBuildMonkUncannyMetabolismFactsIssue
+> {
+  const dieGrant = input.unit.mechanics.grants.find(isMonkMartialArtsDieGrant);
+  if (dieGrant === undefined) {
+    return monkUncannyMetabolismFactsIssue(
+      "Uncanny Metabolism requires Martial Arts die source facts.",
+    );
+  }
+
+  const baseDie = parseSingleDamageDie(dieGrant.die.base);
+  if (Either.isLeft(baseDie)) return Either.left(baseDie.left);
+
+  let die = baseDie.right;
+  const applicableTiers = [...dieGrant.die.tiers]
+    .filter((tier) => tier.atLevel <= input.monkLevel)
+    .sort((left, right) => left.atLevel - right.atLevel);
+  for (const tier of applicableTiers) {
+    const tierDie = applySingleDamageDieOverride({
+      die,
+      override: tier.override,
+    });
+    if (Either.isLeft(tierDie)) return Either.left(tierDie.left);
+    die = tierDie.right;
+  }
+
+  return Either.right(die);
+}
+
+function isMonkMartialArtsDieGrant(
+  grant: MonkMartialArtsPassiveGrant,
+): grant is MonkMartialArtsDieGrant {
+  return (
+    grant.kind === "replace_damage_die" &&
+    grant.scope === "unarmed_or_monk_weapon" &&
+    grant.die.kind === "threshold_tiers" &&
+    grant.die.axis === "class"
+  );
+}
+
+function parseSingleDamageDie(
+  value: DiceExpr,
+): Either.Either<
+  CharacterBuildMonkUncannyMetabolismFacts["healing"]["martialArtsDie"],
+  CharacterBuildMonkUncannyMetabolismFactsIssue
+> {
+  if (value.dice !== 1 || value.flat !== undefined) {
+    return monkUncannyMetabolismFactsIssue(
+      "Uncanny Metabolism requires a single Martial Arts damage die.",
+    );
+  }
+  if (!isDamageDieSize(value.dieSize)) {
+    return monkUncannyMetabolismFactsIssue(
+      "Uncanny Metabolism requires a supported Martial Arts damage die size.",
+    );
+  }
+  return Either.right({ dice: 1, dieSize: value.dieSize });
+}
+
+function applySingleDamageDieOverride(input: {
+  readonly die: CharacterBuildMonkUncannyMetabolismFacts["healing"]["martialArtsDie"];
+  readonly override: DiceExprDelta;
+}): Either.Either<
+  CharacterBuildMonkUncannyMetabolismFacts["healing"]["martialArtsDie"],
+  CharacterBuildMonkUncannyMetabolismFactsIssue
+> {
+  if (input.override.dice !== undefined || input.override.flat !== undefined) {
+    return monkUncannyMetabolismFactsIssue(
+      "Uncanny Metabolism requires Martial Arts tiers to override only die size.",
+    );
+  }
+  if (input.override.dieSize === undefined) {
+    return monkUncannyMetabolismFactsIssue(
+      "Uncanny Metabolism requires Martial Arts tiers to override die size.",
+    );
+  }
+  if (!isDamageDieSize(input.override.dieSize)) {
+    return monkUncannyMetabolismFactsIssue(
+      "Uncanny Metabolism requires a supported Martial Arts damage die size.",
+    );
+  }
+  return Either.right({ dice: 1, dieSize: input.override.dieSize });
+}
+
+function isDamageDieSize(value: number): value is DamageDieSize {
+  return DAMAGE_DIE_SIZES.some((dieSize) => dieSize === value);
 }
 
 function monkUncannyMetabolismFactsIssue(

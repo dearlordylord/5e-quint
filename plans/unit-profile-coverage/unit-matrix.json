@@ -62,8 +62,8 @@
       "value": 207
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 128,
-      "numerator": 128,
+      "denominator": 129,
+      "numerator": 129,
       "percent": "100%"
     },
     "profileClassificationCoverage": {
@@ -82,19 +82,19 @@
       "percent": "100%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 98,
+      "denominator": 99,
       "numerator": 20,
-      "percent": "20.4%"
+      "percent": "20.2%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 98,
+      "denominator": 99,
       "numerator": 25,
-      "percent": "25.5%"
+      "percent": "25.3%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 128,
+      "denominator": 129,
       "numerator": 42,
-      "percent": "32.8%"
+      "percent": "32.6%"
     },
     "runtimeMappingCoverage": {
       "denominator": 73,
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityMbtCoverage": {
-      "denominator": 128,
+      "denominator": 129,
       "numerator": 105,
-      "percent": "82%"
+      "percent": "81.4%"
     },
     "supportedProfileCoverage": {
       "denominator": 175,
-      "numerator": 128,
-      "percent": "73.1%"
+      "numerator": 129,
+      "percent": "73.7%"
     }
   },
   "metricSemantics": [
@@ -2700,6 +2700,30 @@
       ]
     },
     {
+      "id": "character-sheet.monk-uncanny-metabolism-initiative-recovery",
+      "profileKind": "character-sheet",
+      "qntOwners": [],
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/index.ts",
+        "packages/character-battle-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "Character Sheet consumes retained Uncanny Metabolism source facts, the shared Monk's Focus use-count expenditure owner, current Martial Arts die source projection, and once-per-Long-Rest use state at the Initiative roll boundary; it recovers all expended Focus Points, applies capped self Hit Point healing, records the Long Rest use marker, and Character Battle init carries the updated sheet resource and HP state into battle without a duplicate battle resource pool.",
+      "taskRefs": [
+        "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME"
+      ],
+      "title": "Character Sheet applies Monk Uncanny Metabolism when rolling Initiative",
+      "verificationOwners": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
+        }
+      ]
+    },
+    {
       "id": "spell.invocation-self-teleport",
       "profileKind": "spell-invocation",
       "qntOwners": [
@@ -2864,14 +2888,14 @@
     "denominatorRule": "profile kinds that carry reducer-owned semantics: executable runtime profiles, table-caller profiles, character-creation profiles, and character-sheet profiles",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 98,
+        "denominator": 99,
         "numerator": 20,
-        "percent": "20.4%"
+        "percent": "20.2%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 98,
+        "denominator": 99,
         "numerator": 25,
-        "percent": "25.5%"
+        "percent": "25.3%"
       }
     },
     "profileKinds": [
@@ -3630,6 +3654,12 @@
       {
         "joinStatus": "unmapped",
         "obligations": [],
+        "profileId": "character-sheet.monk-uncanny-metabolism-initiative-recovery",
+        "profileKind": "character-sheet"
+      },
+      {
+        "joinStatus": "unmapped",
+        "obligations": [],
         "profileId": "spell.invocation-self-teleport",
         "profileKind": "spell-invocation"
       },
@@ -3679,9 +3709,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 128,
+          "denominator": 129,
           "numerator": 42,
-          "percent": "32.8%"
+          "percent": "32.6%"
         }
       },
       "units": [
@@ -5035,6 +5065,30 @@
             }
           ],
           "unitId": "monk_unarmored_movement"
+        },
+        {
+          "joinStatus": "unmapped",
+          "profiles": [
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "character-creation.class-feature-source-fact-projection",
+              "profileKind": "character-creation"
+            },
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "character-sheet.class-feature-long-rest-use-state",
+              "profileKind": "character-sheet"
+            },
+            {
+              "joinStatus": "unmapped",
+              "obligations": [],
+              "profileId": "character-sheet.monk-uncanny-metabolism-initiative-recovery",
+              "profileKind": "character-sheet"
+            }
+          ],
+          "unitId": "monk_uncanny_metabolism"
         },
         {
           "joinStatus": "covered",
@@ -7680,6 +7734,14 @@
       "taskId": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS"
     },
     {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Character Sheet and Character Battle runtime tests cover optional Initiative-window Uncanny Metabolism execution, shared Focus Point recovery, Martial Arts die roll validation from the existing Martial Arts source, Monk-level HP restoration capped by max HP, once-per-Long-Rest use spending, and battle init/handoff propagation without a duplicate Focus resource or Martial Arts table.",
+      "profileIds": [
+        "character-sheet.monk-uncanny-metabolism-initiative-recovery"
+      ],
+      "taskId": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME"
+    },
+    {
       "claimKind": "qnt-proof",
       "note": "Promoted battle-runtime Quint facts cover Monk's Focus Points equaling Monk level, Flurry of Blows spending one shared Focus Point and Bonus Action to grant two Unarmed Strike slots, Patient Defense Bonus Action Disengage with optional Focus Point Dodge, Step of the Wind Bonus Action Dash with optional Focus Point Disengage, and the shared Focus Point resource boundary. The Step of the Wind doubled jump-distance clause remains split to L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME.",
       "profileIds": [
@@ -10095,31 +10157,18 @@
         "status": "installed"
       },
       "claim": {
-        "deferredMechanics": [
-          {
-            "followUpTaskId": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME",
-            "mechanic": "Initiative-window execution remains blocked until battle-runtime and character-battle-runtime offer the optional choice when rolling Initiative, recover all expended shared Focus Points, roll the existing Martial Arts die source, restore Hit Points equal to Monk level plus that roll, and spend the once-per-Long-Rest use state."
-          }
-        ],
-        "followUpTasks": [
-          {
-            "id": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME",
-            "mechanic": "Offer the optional Uncanny Metabolism choice when the Monk rolls Initiative, recover all expended shared Focus Points, roll the Martial Arts die from the existing Monk Martial Arts source, restore Hit Points equal to Monk level plus that die roll, and spend the once-per-Long-Rest feature use.",
-            "owner": "battle-runtime plus character-battle-runtime resource handoff",
-            "requiredOutput": "Supported runtime profile and owner evidence for Initiative-window Focus Point recovery, self-healing, and Long Rest recharge using the shared Focus Point resource and existing Martial Arts die source.",
-            "title": "Monk Uncanny Metabolism Initiative Recovery Runtime"
-          }
-        ],
-        "futureProfileOwner": "battle-runtime plus character-battle-runtime resource handoff",
         "profileIds": [
           "character-creation.class-feature-source-fact-projection",
-          "character-sheet.class-feature-long-rest-use-state"
+          "character-sheet.class-feature-long-rest-use-state",
+          "character-sheet.monk-uncanny-metabolism-initiative-recovery"
         ],
         "supportedMechanics": [
-          "Character Creation admits same-class Monk level-2 progression, retains the Uncanny Metabolism feature ref from the Surface class record, and projects its optional Initiative trigger, Long Rest reset cadence, shared Monk's Focus resource link, Martial Arts die source link, self-healing target, and Monk-level healing bonus without adding a second Focus Point or Martial Arts table",
-          "Character Sheet validates and stores Uncanny Metabolism once-per-Long-Rest use state only for builds that retain the Monk Uncanny Metabolism feature, projects whether the feature has been used since the last Long Rest, preserves that use state across Short Rests, and clears it on Long Rest"
+          "Character Creation admits same-class Monk level-2 progression, retains the Uncanny Metabolism feature ref from the Surface class record, and projects its optional Initiative trigger, Long Rest reset cadence, shared Monk's Focus resource link, current Martial Arts die from the installed Martial Arts source, self-healing target, and Monk-level healing bonus without adding a second Focus Point or Martial Arts table",
+          "Character Sheet validates and stores Uncanny Metabolism once-per-Long-Rest use state only for builds that retain the Monk Uncanny Metabolism feature, projects whether the feature has been used since the last Long Rest, preserves that use state across Short Rests, and clears it on Long Rest",
+          "Character Sheet applies optional Initiative-window use by validating the caller-supplied Martial Arts die roll against the derived die size, clearing all expended shared Monk's Focus Points, restoring self HP by Monk level plus the roll capped by maximum HP, and recording the once-per-Long-Rest use marker",
+          "Character Battle init and handoff carry the recovered Focus Point expenditure state, restored HP state, and Long Rest use marker through the existing Character Sheet resource handoff without creating a duplicate battle resource pool or Martial Arts progression table"
         ],
-        "tag": "profile-subset-supported"
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
@@ -10132,6 +10181,11 @@
           "ownerPath": "packages/character-sheet-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS"
+        },
+        {
+          "ownerPath": "packages/character-battle-runtime/src/index.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME"
         }
       ],
       "executableMechanics": true,
@@ -10172,6 +10226,30 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            }
+          ]
+        },
+        {
+          "id": "character-sheet.monk-uncanny-metabolism-initiative-recovery",
+          "profileKind": "character-sheet",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-sheet-runtime/src/index.ts",
+            "packages/character-battle-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Character Sheet consumes retained Uncanny Metabolism source facts, the shared Monk's Focus use-count expenditure owner, current Martial Arts die source projection, and once-per-Long-Rest use state at the Initiative roll boundary; it recovers all expended Focus Points, applies capped self Hit Point healing, records the Long Rest use marker, and Character Battle init carries the updated sheet resource and HP state into battle without a duplicate battle resource pool.",
+          "taskRefs": [
+            "L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME"
+          ],
+          "title": "Character Sheet applies Monk Uncanny Metabolism when rolling Initiative",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/index.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-battle-runtime/src/index.test.ts"
             }
           ]
         }

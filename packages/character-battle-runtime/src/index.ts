@@ -41,6 +41,7 @@ import {
 import { battleCreatureInitIssue } from "./battle-character-build-projection.ts";
 
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.monk-uncanny-metabolism-initiative-recovery
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.monk-focus-battle-options
 export {
   battleCreatureInitFromCharacterBuild,

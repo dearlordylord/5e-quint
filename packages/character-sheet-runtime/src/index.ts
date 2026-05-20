@@ -147,6 +147,7 @@ import { Brand, Either, Match, Option } from "effect";
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.pact-slot-recovery
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-long-rest-use-state
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.monk-uncanny-metabolism-initiative-recovery
 
 const WEAPON_PROFICIENCY_CATEGORY_VALUES = ["simple", "martial"] as const;
 const ARMOR_TRAINING_CATEGORY_VALUES = [
@@ -366,6 +367,12 @@ export type CharacterSheetMonkUncannyMetabolismUseState =
       readonly resourceUnitId: typeof MONK_MONKS_FOCUS_UNIT_ID;
     };
   };
+
+export type CharacterSheetMonkUncannyMetabolismInitiativeInput = {
+  readonly sheet: CharacterSheet;
+  readonly unitLibrary: UnitCatalog;
+  readonly martialArtsRoll: DieRollResult;
+};
 
 export type CharacterSheetArcaneRecoverySlotRefund = {
   readonly spellLevel: SpellSlotLevel;
@@ -1237,6 +1244,67 @@ export function characterSheetMonkUncannyMetabolismUseState(
     usedSinceLongRest: sheet.restFeatureUses.some(
       (use) => use.tag === UNCANNY_METABOLISM_REST_FEATURE_TAG,
     ),
+  });
+}
+
+export function useMonkUncannyMetabolismWhenRollingInitiative(
+  input: CharacterSheetMonkUncannyMetabolismInitiativeInput,
+): Either.Either<CharacterSheet, CharacterSheetIssue> {
+  const useState = characterSheetMonkUncannyMetabolismUseState(
+    input.sheet,
+    input.unitLibrary,
+  );
+  if (Either.isLeft(useState)) return Either.left(useState.left);
+  if (useState.right === undefined) {
+    return characterSheetIssue(
+      "Uncanny Metabolism requires the Monk Uncanny Metabolism feature.",
+    );
+  }
+  if (useState.right.usedSinceLongRest) {
+    return characterSheetIssue(
+      "Uncanny Metabolism cannot be used again until a Long Rest.",
+    );
+  }
+
+  const roll = Number(input.martialArtsRoll);
+  const dieSize = useState.right.healing.martialArtsDie.dieSize;
+  if (roll < 1 || roll > dieSize) {
+    return characterSheetIssue(
+      `Uncanny Metabolism Martial Arts die roll must be within d${dieSize}.`,
+    );
+  }
+  if (
+    input.sheet.hitPoints.tag === "zero" &&
+    input.sheet.hitPoints.lifecycle.tag === "dead"
+  ) {
+    return characterSheetIssue(
+      "Uncanny Metabolism cannot restore HP to a dead character.",
+    );
+  }
+
+  const currentHp = characterSheetCurrentHp(input.sheet);
+  const healing = useState.right.healing.monkLevelBonus + roll;
+  const hitPoints = characterSheetHitPoints({
+    currentHp: Hp(Math.min(Number(input.sheet.maximumHp), currentHp + healing)),
+    tempHp: characterSheetTempHp(input.sheet),
+  });
+  if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
+
+  return Either.right({
+    ...input.sheet,
+    hitPoints: hitPoints.right,
+    restFeatureUses: [
+      ...input.sheet.restFeatureUses,
+      {
+        tag: UNCANNY_METABOLISM_REST_FEATURE_TAG,
+        usedSinceLongRest: true,
+      },
+    ],
+    resourceExpenditures: replaceUseCountResourceExpenditure({
+      expenditures: input.sheet.resourceExpenditures,
+      unitId: useState.right.focusRecovery.resourceUnitId,
+      expended: resourceCount(0),
+    }),
   });
 }
 

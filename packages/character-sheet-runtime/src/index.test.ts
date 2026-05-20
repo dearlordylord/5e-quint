@@ -32,6 +32,7 @@ import {
   applyLayOnHands,
   characterSheetAbilityCheckProficiencyBonus,
   characterSheetArmorClassState,
+  characterSheetCurrentHp,
   characterSheetDruidWildShapeKnownForms,
   characterSheetHitDice,
   characterSheetMonkUncannyMetabolismUseState,
@@ -48,6 +49,7 @@ import {
   characterSheetTempHp,
   parseCharacterSheet,
   timePassed,
+  useMonkUncannyMetabolismWhenRollingInitiative,
   type CharacterSheet,
   type CharacterSheetInput,
   type CharacterSheetWeaponMasteryReselection,
@@ -62,6 +64,7 @@ import {
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.pact-slot-recovery
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-use-count-resource
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-long-rest-use-state
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.monk-uncanny-metabolism-initiative-recovery
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B barbarian_unarmored_defense monk_unarmored_defense paladin_lay_on_hands wizard_arcane_recovery wizard_ritual_adept
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-04 fighter_weapon_mastery barbarian_weapon_mastery paladin_weapon_mastery ranger_weapon_mastery rogue_weapon_mastery
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-CLASS-BARD-JACK-OF-ALL-TRADES bard_jack_of_all_trades
@@ -110,6 +113,10 @@ const monksFocusShortRestRecoveryTestName =
   "Short Rest restores the Monk Focus Point use pool";
 const uncannyMetabolismLongRestUseStateTestName =
   "tracks Uncanny Metabolism Long Rest use state separately from Focus Points";
+const uncannyMetabolismInitiativeRecoveryTestName =
+  "uses Uncanny Metabolism when rolling Initiative to recover Focus Points and restore HP";
+const uncannyMetabolismInitiativeGatesTestName =
+  "rejects Uncanny Metabolism Initiative use outside its die and Long Rest gates";
 const uncannyMetabolismRejectsUnownedUseStateTestName =
   "rejects Uncanny Metabolism use state without the retained Monk feature";
 const druidWildShapeFixtureKnownFormStatBlockIds = [
@@ -1787,6 +1794,10 @@ describe("Character Sheet runtime", () => {
         healing: {
           target: "self",
           martialArtsDieSourceUnitId: MONK_MARTIAL_ARTS_UNIT_ID,
+          martialArtsDie: {
+            dice: 1,
+            dieSize: 6,
+          },
           monkLevelBonus: 2,
         },
         usedSinceLongRest: true,
@@ -1834,6 +1845,150 @@ describe("Character Sheet runtime", () => {
       right: {
         unitId: MONK_UNCANNY_METABOLISM_UNIT_ID,
         usedSinceLongRest: false,
+      },
+    });
+  });
+
+  test(uncannyMetabolismInitiativeRecoveryTestName, () => {
+    const monkBuild = armorClassBuild({
+      startingClass: "class_monk",
+      advancements: ["class_monk", "class_monk", "class_monk", "class_monk"],
+    });
+    const spent = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:monk-uncanny-initiative"),
+        build: monkBuild,
+        maximumHp: Hp(30),
+        currentHp: Hp(10),
+        tempHp: Hp(3),
+        unitLibrary,
+        resourceExpenditures: [
+          {
+            tag: "useCountResource",
+            unitId: MONK_MONKS_FOCUS_UNIT_ID,
+            expended: resourceCount(5),
+          },
+        ],
+      }),
+    );
+
+    const recovered = requireRight(
+      useMonkUncannyMetabolismWhenRollingInitiative({
+        sheet: spent,
+        unitLibrary,
+        martialArtsRoll: DieRollResult(7),
+      }),
+    );
+
+    expect(characterSheetCurrentHp(recovered)).toBe(22);
+    expect(characterSheetTempHp(recovered)).toBe(3);
+    expect(recovered.resourceExpenditures).toEqual([]);
+    expect(recovered.restFeatureUses).toEqual([
+      { tag: "uncannyMetabolism", usedSinceLongRest: true },
+    ]);
+    expect(
+      characterSheetMonkUncannyMetabolismUseState(recovered, unitLibrary),
+    ).toMatchObject({
+      _tag: "Right",
+      right: {
+        healing: {
+          martialArtsDie: { dice: 1, dieSize: 8 },
+          monkLevelBonus: 5,
+        },
+        usedSinceLongRest: true,
+      },
+    });
+    expect(characterSheetResources(recovered, unitLibrary)).toMatchObject({
+      _tag: "Right",
+      right: expect.arrayContaining([
+        expect.objectContaining({
+          tag: "useCountResource",
+          unitId: MONK_MONKS_FOCUS_UNIT_ID,
+          count: 5,
+          expended: 0,
+        }),
+      ]),
+    });
+
+    const nearMaximum = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:monk-uncanny-cap"),
+        build: monkBuild,
+        maximumHp: Hp(30),
+        currentHp: Hp(28),
+        tempHp: Hp(0),
+        unitLibrary,
+        resourceExpenditures: [
+          {
+            tag: "useCountResource",
+            unitId: MONK_MONKS_FOCUS_UNIT_ID,
+            expended: resourceCount(1),
+          },
+        ],
+      }),
+    );
+
+    const capped = requireRight(
+      useMonkUncannyMetabolismWhenRollingInitiative({
+        sheet: nearMaximum,
+        unitLibrary,
+        martialArtsRoll: DieRollResult(8),
+      }),
+    );
+
+    expect(characterSheetCurrentHp(capped)).toBe(30);
+    expect(capped.resourceExpenditures).toEqual([]);
+    expect(capped.restFeatureUses).toEqual([
+      { tag: "uncannyMetabolism", usedSinceLongRest: true },
+    ]);
+  });
+
+  test(uncannyMetabolismInitiativeGatesTestName, () => {
+    const monkBuild = armorClassBuild({
+      startingClass: "class_monk",
+      advancements: ["class_monk", "class_monk", "class_monk", "class_monk"],
+    });
+    const sheet = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:monk-uncanny-gates"),
+        build: monkBuild,
+        maximumHp: Hp(30),
+        currentHp: Hp(20),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+
+    expect(
+      useMonkUncannyMetabolismWhenRollingInitiative({
+        sheet,
+        unitLibrary,
+        martialArtsRoll: DieRollResult(9),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: "Uncanny Metabolism Martial Arts die roll must be within d8.",
+      },
+    });
+
+    const used = requireRight(
+      useMonkUncannyMetabolismWhenRollingInitiative({
+        sheet,
+        unitLibrary,
+        martialArtsRoll: DieRollResult(4),
+      }),
+    );
+    expect(
+      useMonkUncannyMetabolismWhenRollingInitiative({
+        sheet: used,
+        unitLibrary,
+        martialArtsRoll: DieRollResult(4),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: "Uncanny Metabolism cannot be used again until a Long Rest.",
       },
     });
   });
