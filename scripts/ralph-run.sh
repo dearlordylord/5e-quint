@@ -1857,8 +1857,8 @@ for (const line of lines) {
     inBlockerSection = true
     continue
   }
-  if (!inBlockerSection && /^blocker type:\s*(.+)$/.test(normalized)) {
-    raw = normalized.replace(/^blocker type:\s*/, "")
+  if (!inBlockerSection && /^[-*]?\s*blocker type:\s*(.+)$/.test(normalized)) {
+    raw = normalized.replace(/^[-*]?\s*blocker type:\s*/, "")
     break
   }
   if (inBlockerSection) {

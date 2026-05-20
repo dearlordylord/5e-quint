@@ -307,6 +307,8 @@ Reviewers should reject:
 - Do not implement Loop A/B/C level-2 Unit runtime/profile tasks from
   `plans/LEVEL2_RALPH_LOOP_*_OVERNIGHT_*.md`; this lane owns rules-kernel B
   coverage closure only.
+- Do not touch external/manual Wild Shape or Moonbeam work, and do not start
+  companion/familiar work.
 - Shared generated coverage artifacts may conflict with Unit-profile lanes;
   regenerate them in the integration branch after task merges and again in
   master after final integration.
