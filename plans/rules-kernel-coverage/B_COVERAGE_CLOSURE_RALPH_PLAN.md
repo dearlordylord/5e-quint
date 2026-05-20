@@ -216,6 +216,7 @@ Every task starts by reading:
 - `plans/rules-kernel-coverage/REPORT.md`;
 - `plans/rules-kernel-coverage/obligations.jsonl`;
 - `plans/rules-kernel-coverage/profile-obligations.jsonl`;
+- `plans/unit-profile-coverage/profiles.jsonl`, the canonical profile ledger;
 - `plans/unit-profile-coverage/UNIT_REPORT.md`;
 - `plans/unit-profile-coverage/unit-matrix.json`;
 - the relevant runtime package source and package-local QNT specs;
@@ -257,6 +258,12 @@ Every implementation task runs:
 - `git diff --check`;
 - reviewer-loop convergence.
 
+Tasks that change coverage checker behavior, generated-report gates, or
+merge-acceptance policy also run:
+
+- `pnpm rules-kernel-coverage:check:self-test`;
+- `pnpm unit-profile-coverage:check:self-test`.
+
 Do not run battle-runtime MBT for exploratory questions. If an actual
 end-to-end MBT run is required after behavior changes, use the repository MBT
 scarcity protocol.
@@ -291,20 +298,20 @@ Reviewers should reject:
 | 3 | RKBC-BATTLE-HOLE-MOVEMENT-ROUTE - Battle Movement Route And Spatial Fact Obligations | blocked | Task 1 | Covered/boundary obligations for movement route and table spatial fact holes. |
 | 4 | RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION - Battle Damage Disposition And Type Choice Obligations | blocked | Task 1 | Covered obligations for damage disposition and damage-type choice holes. |
 | 5 | RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND - Battle Ability Skill And Command Hole Obligations | blocked | Task 1 | Covered/boundary obligations for ability choice, skill choice, and Command option holes. |
-| 6 | RKBC-BATTLE-HOLE-REACTION-CONCENTRATION - Battle Reaction And Concentration Hole Obligations | blocked | Task 1 | Covered obligations for reaction decisions, continuation resumption, and Concentration save holes not already owned. |
+| 6 | RKBC-BATTLE-HOLE-REACTION-CONCENTRATION - Battle Reaction And Concentration Hole Obligations | blocked | Task 1 | Covered obligations for reaction decisions, continuation resumption, and Concentration Saving Throw holes not already owned. |
 | 7 | RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE - Feature Passive Resource And Persistent Profile Join | ready-for-research | baseline | Map feature passive/resource/persistent profiles to covered obligations or create missing obligations. |
 | 8 | RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS - Feature Reaction Bonus Action And Resource Profile Join | ready-for-research | baseline | Map feature reaction, bonus-action, and failed-roll resource profiles to covered obligations or create missing obligations. |
-| 9 | RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION - Spell Damage Condition And Scalar Profile Join | ready-for-research | baseline | Map damage, condition, scalar, and roll-modifier spell profiles to covered obligations or create missing obligations. |
-| 10 | RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION - Spell After Hit Reaction And Marked Effect Profile Join | ready-for-research | baseline | Map after-hit, reaction, marked-effect, and chained spell profiles to covered obligations or create missing obligations. |
-| 11 | RKBC-PROFILE-JOIN-TABLE-CALLER - Table Caller Profile Join And Boundary Classification | ready-for-research | baseline | Map table-caller profiles to reducer-semantic obligations or boundary rows without MBT state-space explosion. |
+| 9 | RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION - Spell Damage Condition And Scalar Profile Join | ready-for-research | baseline | Map Spell Definition profiles for damage, condition, scalar, and roll modifiers to covered Spell Effect/Invocation obligations or create missing obligations. |
+| 10 | RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION - Spell After Hit Reaction And Marked Effect Profile Join | ready-for-research | baseline | Map after-hit, reaction-casting-time Spell Invocation, Readied Spell Response, marked-effect, and chained spell profiles to covered obligations or create missing obligations. |
+| 11 | RKBC-PROFILE-JOIN-TABLE-CALLER - Table Caller Profile Join And Boundary Classification | blocked | Tasks 1-3 | Map table-caller profiles to reducer-semantic obligations or boundary rows without MBT state-space explosion. |
 | 12 | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY - Character Creation Choice Discovery And Cardinality | ready-for-research | baseline | Split current creation choice discovery/cardinality semantics out of the broad creation audit. |
 | 13 | RKBC-CREATION-FILL-VALIDATION-BATCH - Character Creation Fill Validation And Atomic Batch | ready-for-research | baseline | Cover fill validation, batch atomicity, rediscovery, and finalization deltas beyond the existing slice. |
 | 14 | RKBC-CREATION-ADVANCEMENT-REPLACEMENT - Character Creation Advancement And Replacement | blocked | Tasks 12-13 | Cover advancement replacement semantics and class-feature replacement profiles. |
-| 15 | RKBC-CREATION-SPELLCASTING-PROGRESSION - Character Creation Spellcasting Progression And Invocations | blocked | Tasks 12-13 | Cover Pact Magic progression, spell access/progression facts, and Eldritch Invocation choices. |
+| 15 | RKBC-CREATION-SPELLCASTING-PROGRESSION - Character Creation Spell Access Progression And Eldritch Invocation Choices | blocked | Tasks 12-13 | Cover Pact Magic progression, Spell Access/progression facts, and Eldritch Invocation choices. |
 | 16 | RKBC-CREATION-WEAPON-MASTERY-FEAT - Character Creation Weapon Mastery And Feat Choice | blocked | Tasks 12-13 | Cover Weapon Mastery and feat-choice profiles without duplicating selected Unit behavior. |
 | 17 | RKBC-SHEET-HP-REST-HIT-DICE - Character Sheet HP Rest And Hit Dice Transitions | ready-for-research | baseline | Split HP, healing, Short Rest, Long Rest, and Hit Dice semantics into covered obligations. |
-| 18 | RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS - Character Sheet Spell Slot And Pact Slot Transitions | ready-for-research | baseline | Cover spell-slot and pact-slot spend/recovery transitions. |
-| 19 | RKBC-SHEET-FEATURE-RESOURCES - Character Sheet Feature Resource Transitions | ready-for-research | baseline | Cover Lay On Hands, Arcane Recovery, class feature use counts, and similar sheet-owned resources. |
+| 18 | RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS - Character Sheet Spell Slot And Pact Slot Transitions | blocked | Task 17 | Cover spell-slot and pact-slot spend/recovery transitions while reusing Task 17 rest timing/benefit semantics. |
+| 19 | RKBC-SHEET-FEATURE-RESOURCES - Character Sheet Feature Resource Transitions | blocked | Task 17 | Cover Lay On Hands, Arcane Recovery, class feature use counts, and similar sheet-owned resources while reusing Task 17 HP/rest algebra. |
 | 20 | RKBC-SHEET-WEAPON-MASTERY-RITUAL - Character Sheet Weapon Mastery And Ritual Projection | ready-for-research | baseline | Cover weapon mastery reselection and spellbook/ritual projection semantics. |
 | 21 | RKBC-HANDOFF-BATTLE-INIT - Character Battle Initialization Projection | ready-for-research | baseline | Cover Character Sheet/build projection into battle initialization. |
 | 22 | RKBC-HANDOFF-BATTLE-SETTLEMENT - Character Battle Settlement Back To Sheet | blocked | Tasks 17-18, 21 | Cover HP, condition, spell-slot, and resource settlement from battle back to sheet. |
@@ -392,8 +399,10 @@ Preserve table adjudication where RAW leaves route/social outcome to the table.
 Acceptance:
 
 - Ability/skill choices that affect reducer legality or state are QNT-owned.
-- Command route/social choices are either covered as reducer semantics or
-  explicitly boundary/table-caller.
+- Command options and RAW-fixed next-turn consequences are covered only when
+  they create executable reducer state.
+- Command route choice and social adjudication remain boundary/table-caller
+  facts unless a specific RAW rule creates executable reducer state.
 - No client-only "available option" projection bypasses the rules kernel.
 
 ### Task 6 - RKBC-BATTLE-HOLE-REACTION-CONCENTRATION - Battle Reaction And Concentration Hole Obligations
@@ -402,7 +411,7 @@ Status: `blocked`
 
 Depends on: Task 1.
 
-Scope: cover reaction-decision, continuation-resume, and Concentration-save
+Scope: cover reaction-decision, continuation-resume, and Concentration Saving Throw
 holes not already captured by `BATTLE.REACTION.OFFER_DECLINE_RESUME`.
 
 Acceptance:
@@ -449,45 +458,61 @@ Acceptance:
 
 Status: `ready-for-research`
 
-Scope: close unmapped spell profiles for save/attack damage, direct conditions,
-repeat saves, scalar buffs, roll modifiers, condition immunity, condition
-removal, and make-stable/restoration semantics.
+Scope: close unmapped Spell Definition support profiles for Saving
+Throw/Attack Roll damage, direct conditions, repeated Saving Throws, scalar
+modifiers, roll modifiers, condition immunity, condition removal, and
+make-stable/restoration semantics.
 
 Acceptance:
 
-- Covered spell obligations are split when "spell procedure semantics" is too
-  broad to prove the specific profile.
+- Covered Spell Effect or Spell Invocation obligations are split when "spell
+  procedure semantics" is too broad to prove the specific profile.
 - Deterministic Surface evidence remains separate from reducer-semantic parity.
 - Unit/profile reports show each in-scope spell profile as covered or
   mapped-open with a precise new obligation.
+- If the profile family is still too large for one Ralph slice, the first
+  output is a finer split by reducer invariant, not broad coverage work.
 
 ### Task 10 - RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION - Spell After Hit Reaction And Marked Effect Profile Join
 
 Status: `ready-for-research`
 
-Scope: close after-hit, reaction, marked-damage, chained-attack, beam-sequence,
-independent-attack, weapon-hosted, and readied/reaction spell profiles.
+Scope: close after-hit, reaction-casting-time Spell Invocation, Readied Spell
+Response, marked-damage, chained-attack, beam-sequence, independent-attack, and
+weapon-hosted Spell Definition support profiles.
 
 Acceptance:
 
 - Timing, trigger, resource, and cleanup semantics are not collapsed into one
   vague spell obligation.
-- Reaction spell profiles join reaction-continuation obligations where needed.
+- Reaction-casting-time Spell Invocation and Readied Spell Response profiles
+  join reaction-continuation obligations where needed.
 - Any broad profile that needs random MBT has focused random MBT rather than
   deterministic replay.
+- If the profile family is still too large for one Ralph slice, the first
+  output is a finer split by reducer invariant, not broad coverage work.
 
 ### Task 11 - RKBC-PROFILE-JOIN-TABLE-CALLER - Table Caller Profile Join And Boundary Classification
 
-Status: `ready-for-research`
+Status: `blocked`
 
-Scope: close table-caller profiles such as target admission, fog/obscurement,
-drop held object, route choice, fleeing/approach route, Dancing Lights movement,
-and Flaming Sphere hazard/ram table facts.
+Depends on: Tasks 1-3.
+
+Scope: close table-caller profiles after the target/area and movement/route
+hole classifications are recorded. In-scope examples include target admission,
+fog/obscurement, drop held object, route choice, fleeing/approach route,
+Dancing Lights movement, and Flaming Sphere movement into another creature's
+space.
 
 Acceptance:
 
-- Reducer-owned consequences are covered.
-- Table-owned geometry/object/social facts are boundary/table-caller evidence.
+- Reducer-owned consequences, including effect state, action economy,
+  Saving Throw/damage outcomes, range constraints, and cleanup, are covered.
+- Table-owned positions, barriers, object facts, fog/obscurement facts,
+  hazard placement, route selection, and social adjudication remain
+  boundary/table-caller evidence.
+- Task 11 reuses Tasks 1-3 classifications rather than creating a second
+  reducer-vs-boundary classification ledger.
 - No task expands MBT into `Surface record x table state x battle state`.
 
 ### Task 12 - RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY - Character Creation Choice Discovery And Cardinality
@@ -533,19 +558,20 @@ Acceptance:
 - Durable character facts are not polluted with transient draft/session state.
 - New obligations have QNT owner and parity witness.
 
-### Task 15 - RKBC-CREATION-SPELLCASTING-PROGRESSION - Character Creation Spellcasting Progression And Invocations
+### Task 15 - RKBC-CREATION-SPELLCASTING-PROGRESSION - Character Creation Spell Access Progression And Eldritch Invocation Choices
 
 Status: `blocked`
 
 Depends on: Tasks 12-13.
 
-Scope: cover Pact Magic progression, spellcasting access/progression facts, and
+Scope: cover Pact Magic progression, Spell Access/progression facts, and
 Eldritch Invocation choices that current TS supports.
 
 Acceptance:
 
 - Pact Magic and invocation profiles have covered obligations.
-- Spell Access and Spell Invocation terms match `UBIQUITOUS_LANGUAGE.md`.
+- Spell Access and Eldritch Invocation terms match `UBIQUITOUS_LANGUAGE.md`;
+  Spell Invocation is used only for concrete runtime cast attempts.
 - No selected spell behavior is duplicated in the class progression owner.
 
 ### Task 16 - RKBC-CREATION-WEAPON-MASTERY-FEAT - Character Creation Weapon Mastery And Feat Choice
@@ -574,33 +600,52 @@ transitions out of `SHEET.REST_AND_RESOURCE.TRANSITIONS`.
 Acceptance:
 
 - Sheet-owned HP/rest/Hit Dice mutations have QNT owners and parity witnesses.
-- Shared HP damage algebra is reused rather than duplicated.
+- Task 17 owns shared HP damage/healing and rest eligibility/benefit algebra;
+  downstream slot and feature-resource tasks reuse it rather than duplicating
+  rest procedure logic.
+- Long Rest coverage explicitly handles the start gate, 16-hour wait,
+  interruption handling, all spent Hit Point Dice restored, and max-HP
+  reduction reset.
+- Short Rest coverage explicitly handles the Hit Point Dice spend loop and
+  interrupted Short Rest no-benefit outcome.
 - Rest-triggered and calendar-time-triggered semantics stay separated.
 
 ### Task 18 - RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS - Character Sheet Spell Slot And Pact Slot Transitions
 
-Status: `ready-for-research`
+Status: `blocked`
+
+Depends on: Task 17.
 
 Scope: cover spell-slot and pact-slot spend/recover transitions, including Long
 Rest, Short Rest, and class-feature recovery hooks currently supported by TS.
+Reuse Task 17 for rest eligibility/benefit timing; this task owns slot capacity,
+current slot state, and slot-specific spend/recovery.
 
 Acceptance:
 
 - Slot capacity facts are distinguished from current slot state.
 - Pact Slot and normal Spell Slot semantics are not conflated.
+- Rest-triggered slot recovery consumes Task 17 rest outcomes rather than
+  re-modeling rest procedure logic.
 - Covered obligations connect QNT to production sheet runtime behavior.
 
 ### Task 19 - RKBC-SHEET-FEATURE-RESOURCES - Character Sheet Feature Resource Transitions
 
-Status: `ready-for-research`
+Status: `blocked`
+
+Depends on: Task 17.
 
 Scope: cover Lay On Hands, Arcane Recovery, class feature use-count resources,
-healing-resource actions, and related sheet-owned resources.
+healing-resource actions, and related sheet-owned resources. Reuse Task 17 for
+HP mutation and rest eligibility/benefit timing; this task owns feature-resource
+spend, recovery, and reset semantics.
 
 Acceptance:
 
 - Each resource has explicit spend/recover/reset ownership.
 - Durable sheet facts and current session resources remain separate.
+- Healing-resource actions call through the shared HP mutation owner instead of
+  duplicating HP algebra.
 - Surface/profile rows map through covered obligations.
 
 ### Task 20 - RKBC-SHEET-WEAPON-MASTERY-RITUAL - Character Sheet Weapon Mastery And Ritual Projection
@@ -612,7 +657,8 @@ semantics currently supported by the sheet runtime.
 
 Acceptance:
 
-- Reselection and ritual invocation profiles map to covered obligations.
+- Reselection, Ritual, and Spell Access projection profiles map to covered
+  obligations.
 - Creation-time choice state is not duplicated in durable sheet state.
 - Deterministic replay is used only for fixed projection fixtures.
 
@@ -682,6 +728,8 @@ Acceptance:
   rules-kernel obligations or explicit non-semantic dispositions.
 - `pnpm rules-kernel-coverage:check`, `pnpm unit-profile-coverage:check`, and
   `git diff --check` pass after generated artifacts are refreshed.
+- `pnpm rules-kernel-coverage:check:self-test` and
+  `pnpm unit-profile-coverage:check:self-test` pass after checker/gate changes.
 
 ## Verification
 
@@ -692,4 +740,6 @@ Every task must include:
 - reviewer-loop convergence across RAW traceability, ubiquitous-language/domain
   language, architecture/connascence, and code review;
 - generated coverage report refresh and consistency checks;
+- checker self-tests when checker behavior, generated-report gates, or
+  merge-acceptance policy changes;
 - explicit rejection rationale for any reviewer finding that is not fixed.
