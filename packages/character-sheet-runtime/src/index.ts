@@ -17,6 +17,7 @@ import {
   computeTotalLevel,
   DRUID_WILD_SHAPE_UNIT_ID,
   MONK_MONKS_FOCUS_UNIT_ID,
+  SORCERER_FONT_OF_MAGIC_UNIT_ID,
   characterBuildDruidWildShapeFacts,
   characterBuildMonkUncannyMetabolismFacts,
   characterBuildMonksFocusFacts,
@@ -114,6 +115,7 @@ import type {
   ChargePoolResource,
   ClassFeatureComponentMechanics,
   EquipmentPredicate,
+  PointPoolResource,
   RestResetCadence,
   SpellRecord,
   UnitRecord,
@@ -147,6 +149,7 @@ import { Brand, Either, Match, Option } from "effect";
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.pact-slot-recovery
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-long-rest-use-state
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-point-pool-resource
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.monk-uncanny-metabolism-initiative-recovery
 
 const WEAPON_PROFICIENCY_CATEGORY_VALUES = ["simple", "martial"] as const;
@@ -163,6 +166,12 @@ const CHARACTER_SHEET_USE_COUNT_RESOURCE_UNIT_IDS = [
 type CharacterSheetUseCountResourceUnitId =
   (typeof CHARACTER_SHEET_USE_COUNT_RESOURCE_UNIT_IDS)[number];
 export type { CharacterSheetUseCountResourceUnitId };
+const CHARACTER_SHEET_POINT_POOL_RESOURCE_UNIT_IDS = [
+  SORCERER_FONT_OF_MAGIC_UNIT_ID,
+] as const satisfies ReadonlyArray<UnitRecord["id"]>;
+type CharacterSheetPointPoolResourceUnitId =
+  (typeof CHARACTER_SHEET_POINT_POOL_RESOURCE_UNIT_IDS)[number];
+export type { CharacterSheetPointPoolResourceUnitId };
 const DEFAULT_SRD_STAT_BLOCK_CATALOG_RESULT = buildStatBlockCatalog({
   collections: [srdStatBlockCollection],
 });
@@ -319,9 +328,16 @@ type CharacterSheetUseCountResourceExpenditure = {
   readonly expended: ResourceCount;
 };
 
+type CharacterSheetPointPoolResourceExpenditure = {
+  readonly tag: "pointPoolResource";
+  readonly unitId: CharacterSheetPointPoolResourceUnitId;
+  readonly expended: ResourceCount;
+};
+
 export type CharacterSheetResourceExpenditure =
   | CharacterSheetTaggedResourceExpenditure
-  | CharacterSheetUseCountResourceExpenditure;
+  | CharacterSheetUseCountResourceExpenditure
+  | CharacterSheetPointPoolResourceExpenditure;
 
 type CharacterSheetLayOnHandsResource = CharacterBuildResource & {
   readonly unitId: UnitRecord["id"];
@@ -340,6 +356,12 @@ type CharacterSheetUseCountResource = CharacterBuildResource & {
   readonly resetCadence: RestResetCadence;
 };
 
+type CharacterSheetPointPoolResource = CharacterBuildResource & {
+  readonly unitId: CharacterSheetPointPoolResourceUnitId;
+  readonly resource: PointPoolResource;
+  readonly resetCadence: Extract<RestResetCadence, { readonly kind: "long_rest" }>;
+};
+
 export type CharacterSheetResourceState =
   | (CharacterSheetLayOnHandsResource & {
       readonly tag: "layOnHandsHealingPool";
@@ -351,6 +373,11 @@ export type CharacterSheetResourceState =
     })
   | (CharacterSheetUseCountResource & {
       readonly tag: "useCountResource";
+      readonly count: ResourceCount;
+      readonly expended: ResourceCount;
+    })
+  | (CharacterSheetPointPoolResource & {
+      readonly tag: "pointPoolResource";
       readonly count: ResourceCount;
       readonly expended: ResourceCount;
     });
@@ -1190,6 +1217,33 @@ export function characterSheetResources(
           (expenditure) =>
             expenditure.tag === "useCountResource" &&
             expenditure.unitId === useCountResource.unitId,
+        )?.expended ?? resourceCount(0),
+    });
+  }
+
+  const pointPoolResources = classFeaturePointPoolResourcesForBuild(
+    sheet.build,
+    unitLibrary,
+  );
+  if (Either.isLeft(pointPoolResources)) {
+    return Either.left(pointPoolResources.left);
+  }
+  for (const pointPoolResource of pointPoolResources.right) {
+    const count = characterSheetResourceCapacity({
+      build: sheet.build,
+      unitLibrary,
+      resource: pointPoolResource,
+    });
+    if (Either.isLeft(count)) return Either.left(count.left);
+    resources.push({
+      ...pointPoolResource,
+      tag: "pointPoolResource",
+      count: count.right,
+      expended:
+        sheet.resourceExpenditures.find(
+          (expenditure) =>
+            expenditure.tag === "pointPoolResource" &&
+            expenditure.unitId === pointPoolResource.unitId,
         )?.expended ?? resourceCount(0),
     });
   }
@@ -2631,6 +2685,13 @@ function resourceExpendituresFromInput(
   if (Either.isLeft(useCountResources)) {
     return Either.left(useCountResources.left);
   }
+  const pointPoolResources = classFeaturePointPoolResourcesForBuild(
+    input.build,
+    input.unitLibrary,
+  );
+  if (Either.isLeft(pointPoolResources)) {
+    return Either.left(pointPoolResources.left);
+  }
   const seen: CharacterSheetResourceExpenditure[] = [];
   const result: CharacterSheetResourceExpenditure[] = [];
   for (const expenditure of expenditures) {
@@ -2650,6 +2711,7 @@ function resourceExpendituresFromInput(
       layOnHandsResource: layOnHandsResource.right,
       freeCastResources: freeCastResources.right,
       useCountResources: useCountResources.right,
+      pointPoolResources: pointPoolResources.right,
       expenditure,
     });
     if (Either.isLeft(count)) return Either.left(count.left);
@@ -2680,6 +2742,7 @@ function characterSheetResourceExpenditureCapacity(input: {
   readonly layOnHandsResource: CharacterSheetLayOnHandsResource | null;
   readonly freeCastResources: readonly CharacterSheetClassFeatureSpellFreeCastResource[];
   readonly useCountResources: readonly CharacterSheetUseCountResource[];
+  readonly pointPoolResources: readonly CharacterSheetPointPoolResource[];
   readonly expenditure: CharacterSheetResourceExpenditure;
 }): Either.Either<ResourceCount, CharacterSheetIssue> {
   if (input.expenditure.tag === "layOnHandsHealingPool") {
@@ -2710,6 +2773,22 @@ function characterSheetResourceExpenditureCapacity(input: {
       resource: useCountResource,
     });
   }
+  if (input.expenditure.tag === "pointPoolResource") {
+    const unitId = input.expenditure.unitId;
+    const pointPoolResource = input.pointPoolResources.find(
+      (resource) => resource.unitId === unitId,
+    );
+    if (pointPoolResource === undefined) {
+      return characterSheetIssue(
+        "Class feature point-pool expenditure requires the matching class feature.",
+      );
+    }
+    return characterSheetResourceCapacity({
+      build: input.build,
+      unitLibrary: input.unitLibrary,
+      resource: pointPoolResource,
+    });
+  }
   const freeCastResource = input.freeCastResources.find(
     (resource) => resource.tag === input.expenditure.tag,
   );
@@ -2725,9 +2804,13 @@ function characterSheetResourceExpenditureWithExpended(
   expenditure: CharacterSheetResourceExpenditure,
   expended: ResourceCount,
 ): CharacterSheetResourceExpenditure {
-  return expenditure.tag === "useCountResource"
-    ? { tag: expenditure.tag, unitId: expenditure.unitId, expended }
-    : { tag: expenditure.tag, expended };
+  if (expenditure.tag === "useCountResource") {
+    return { tag: expenditure.tag, unitId: expenditure.unitId, expended };
+  }
+  if (expenditure.tag === "pointPoolResource") {
+    return { tag: expenditure.tag, unitId: expenditure.unitId, expended };
+  }
+  return { tag: expenditure.tag, expended };
 }
 
 function characterSheetResourceExpendituresMatch(
@@ -2736,6 +2819,9 @@ function characterSheetResourceExpendituresMatch(
 ): boolean {
   if (first.tag !== second.tag) return false;
   if (first.tag === "useCountResource" && second.tag === "useCountResource") {
+    return first.unitId === second.unitId;
+  }
+  if (first.tag === "pointPoolResource" && second.tag === "pointPoolResource") {
     return first.unitId === second.unitId;
   }
   return true;
@@ -2858,7 +2944,45 @@ function classFeatureUseCountResourcesForBuild(
   return Either.right(resources);
 }
 
+function classFeaturePointPoolResourcesForBuild(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): Either.Either<
+  readonly CharacterSheetPointPoolResource[],
+  CharacterSheetIssue
+> {
+  const resources: CharacterSheetPointPoolResource[] = [];
+  for (const resource of characterBuildResources(build, unitLibrary)) {
+    if (!isCharacterSheetPointPoolResourceUnitId(resource.unitId)) continue;
+    const unit = getRequiredUnit(unitLibrary, resource.unitId);
+    if (Either.isLeft(unit)) return Either.left(unit.left);
+    const resetCadence = restResetCadenceForClassFeatureResourceUnit(
+      unit.right,
+    );
+    if (
+      resource.resource.kind !== "point_pool" ||
+      resetCadence?.kind !== "long_rest"
+    ) {
+      return characterSheetIssue(
+        "Class feature point-pool resource requires an installed Long Rest reset class feature.",
+      );
+    }
+    resources.push({
+      unitId: resource.unitId,
+      resource: resource.resource,
+      resetCadence,
+    });
+  }
+  return Either.right(resources);
+}
+
 function restResetCadenceForUseCountResourceUnit(
+  unit: UnitRecord,
+): RestResetCadence | undefined {
+  return restResetCadenceForClassFeatureResourceUnit(unit);
+}
+
+function restResetCadenceForClassFeatureResourceUnit(
   unit: UnitRecord,
 ): RestResetCadence | undefined {
   if (unit.kind !== "class_feature") return undefined;
@@ -2886,6 +3010,14 @@ export function isCharacterSheetUseCountResourceUnitId(
   unitId: UnitRecord["id"],
 ): unitId is CharacterSheetUseCountResourceUnitId {
   return CHARACTER_SHEET_USE_COUNT_RESOURCE_UNIT_IDS.some(
+    (supportedUnitId) => supportedUnitId === unitId,
+  );
+}
+
+export function isCharacterSheetPointPoolResourceUnitId(
+  unitId: UnitRecord["id"],
+): unitId is CharacterSheetPointPoolResourceUnitId {
+  return CHARACTER_SHEET_POINT_POOL_RESOURCE_UNIT_IDS.some(
     (supportedUnitId) => supportedUnitId === unitId,
   );
 }
@@ -3798,6 +3930,7 @@ function parseStoredResourceExpenditures(
       !isRecord(expenditure) ||
       (expenditure.tag !== "layOnHandsHealingPool" &&
         expenditure.tag !== "useCountResource" &&
+        expenditure.tag !== "pointPoolResource" &&
         !isSupportedClassFeatureSpellFreeCastResourceTag(expenditure.tag))
     ) {
       return characterSheetIssue(
@@ -3808,6 +3941,16 @@ function parseStoredResourceExpenditures(
     if (Either.isLeft(expended)) return Either.left(expended.left);
     if (expenditure.tag === "useCountResource") {
       const unitId = parseUseCountResourceExpenditureUnitId(expenditure);
+      if (Either.isLeft(unitId)) return Either.left(unitId.left);
+      expenditures.push({
+        tag: expenditure.tag,
+        unitId: unitId.right,
+        expended: expended.right,
+      });
+      continue;
+    }
+    if (expenditure.tag === "pointPoolResource") {
+      const unitId = parsePointPoolResourceExpenditureUnitId(expenditure);
       if (Either.isLeft(unitId)) return Either.left(unitId.left);
       expenditures.push({
         tag: expenditure.tag,
@@ -3851,6 +3994,20 @@ function parseUseCountResourceExpenditureUnitId(
   ) {
     return characterSheetIssue(
       "Character Sheet use-count expenditure requires a supported class feature Unit id.",
+    );
+  }
+  return Either.right(expenditure.unitId);
+}
+
+function parsePointPoolResourceExpenditureUnitId(
+  expenditure: Record<string, unknown>,
+): Either.Either<CharacterSheetPointPoolResourceUnitId, CharacterSheetIssue> {
+  if (
+    typeof expenditure.unitId !== "string" ||
+    !isCharacterSheetPointPoolResourceUnitId(expenditure.unitId)
+  ) {
+    return characterSheetIssue(
+      "Character Sheet point-pool expenditure requires a supported class feature Unit id.",
     );
   }
   return Either.right(expenditure.unitId);

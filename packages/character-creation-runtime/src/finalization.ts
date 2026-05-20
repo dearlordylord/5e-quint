@@ -2960,7 +2960,8 @@ function characterBuildResourcesForUnit(
     unit.kind === "class_feature" &&
     supportsCharacterBuildResourceUnitId(unit.id) &&
     (unit.mechanics.family === "activation" ||
-      unit.mechanics.family === "resource_container") &&
+      unit.mechanics.family === "resource_container" ||
+      unit.mechanics.family === "resource_pool") &&
     unit.mechanics.resource !== undefined
   ) {
     return [{ unitId: unit.id, resource: unit.mechanics.resource }];

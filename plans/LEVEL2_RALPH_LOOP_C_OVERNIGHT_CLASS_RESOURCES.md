@@ -31,25 +31,25 @@
     {
       "number": 5,
       "id": "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Sorcerer Font Of Magic Sorcery Point Resource Facts"
     },
     {
       "number": 6,
       "id": "L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Sorcerer Font Of Magic Spell Slot To Sorcery Points"
     },
     {
       "number": 7,
       "id": "L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Sorcerer Font Of Magic Sorcery Points To Spell Slot"
     },
     {
       "number": 8,
       "id": "L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Sorcerer Metamagic Character Facts And Option Projection"
     },
     {
@@ -153,10 +153,10 @@ The final task is intentionally blocked on every real task in this plan and plac
 | 2 | L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS - Monk's Focus Battle Option Execution | done | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS | C lane; Unit `monk_monks_focus`. |
 | 3 | L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS - Monk Uncanny Metabolism Character Facts And Rest-Scoped Use-State Projection | done | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS | C lane; Unit `monk_uncanny_metabolism`. |
 | 4 | L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME - Monk Uncanny Metabolism Initiative Recovery Runtime | done | L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS | C lane; Unit `monk_uncanny_metabolism`. |
-| 5 | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS - Sorcerer Font Of Magic Sorcery Point Resource Facts | ready-for-research | completed baseline | C lane; Unit `sorcerer_font_of_magic`. |
-| 6 | L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS - Sorcerer Font Of Magic Spell Slot To Sorcery Points | blocked | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS | C lane; Unit `sorcerer_font_of_magic`. |
-| 7 | L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS - Sorcerer Font Of Magic Sorcery Points To Spell Slot | blocked | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS | C lane; Unit `sorcerer_font_of_magic`. |
-| 8 | L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS - Sorcerer Metamagic Character Facts And Option Projection | blocked | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS | C lane; Unit `sorcerer_metamagic`. |
+| 5 | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS - Sorcerer Font Of Magic Sorcery Point Resource Facts | done | completed baseline | C lane; Unit `sorcerer_font_of_magic`. |
+| 6 | L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS - Sorcerer Font Of Magic Spell Slot To Sorcery Points | ready-for-research | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS | C lane; Unit `sorcerer_font_of_magic`. |
+| 7 | L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS - Sorcerer Font Of Magic Sorcery Points To Spell Slot | ready-for-research | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS | C lane; Unit `sorcerer_font_of_magic`. |
+| 8 | L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS - Sorcerer Metamagic Character Facts And Option Projection | ready-for-research | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS | C lane; Unit `sorcerer_metamagic`. |
 | 9 | L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION - Sorcerer Metamagic Cast-Time Option Execution | blocked | L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS | C lane; Unit `sorcerer_metamagic`. |
 | 10 | L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME - Monk Step of the Wind Jump Distance Runtime | ready-for-research | L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS | C lane; Unit `monk_monks_focus`. |
 | 11 | L12G-RECURSIVE-TAIL-LOOP-C - LOOP-C Recursive Next-Batch Planning Tail | blocked | L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS, L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME, L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS, L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS, L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS, L12G-FOLLOWUP-SORCERER-METAMAGIC-OPTION-EXECUTION, L12G-FOLLOWUP-MONK-STEP-OF-THE-WIND-JUMP-RUNTIME | Last-resort next-batch planning safety net; auto-unblocks only after every real task in this plan is `done`. |
@@ -329,7 +329,7 @@ Acceptance:
 
 ### Task 5 - L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS - Sorcerer Font Of Magic Sorcery Point Resource Facts
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `sorcerer_font_of_magic`.
 Origin: Original backlog task 83.
@@ -370,7 +370,7 @@ Acceptance:
 
 ### Task 6 - L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS - Sorcerer Font Of Magic Spell Slot To Sorcery Points
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Unit: `sorcerer_font_of_magic`.
 Origin: Original backlog task 84.
@@ -411,7 +411,7 @@ Acceptance:
 
 ### Task 7 - L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS - Sorcerer Font Of Magic Sorcery Points To Spell Slot
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Unit: `sorcerer_font_of_magic`.
 Origin: Original backlog task 85.
@@ -452,7 +452,7 @@ Acceptance:
 
 ### Task 8 - L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS - Sorcerer Metamagic Character Facts And Option Projection
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Unit: `sorcerer_metamagic`.
 Origin: Original backlog task 86.

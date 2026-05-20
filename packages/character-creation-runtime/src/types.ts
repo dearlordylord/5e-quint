@@ -35,6 +35,7 @@ import type {
   ActivationResource,
   ArmorTrainingCategory,
   ClassSpellcastingCreation,
+  PointPoolResource,
   Skill,
   Size,
   UnitRecord,
@@ -1064,7 +1065,7 @@ type CharacterBuildAbilityCheckBonusFeature =
 
 export type CharacterBuildResource = {
   readonly unitId: UnitRecord["id"];
-  readonly resource: ActivationResource;
+  readonly resource: ActivationResource | PointPoolResource;
 };
 
 export type CharacterBuildSpellcasting = {

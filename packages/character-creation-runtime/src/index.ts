@@ -214,6 +214,12 @@ export {
   type CharacterBuildMonkUncannyMetabolismFactsIssue,
 } from "./monk-uncanny-metabolism.ts";
 export {
+  SORCERER_FONT_OF_MAGIC_UNIT_ID,
+  characterBuildSorcererFontOfMagicFacts,
+  type CharacterBuildSorcererFontOfMagicFacts,
+  type CharacterBuildSorcererFontOfMagicFactsIssue,
+} from "./sorcerer-font-of-magic.ts";
+export {
   classLevelLinearValueAtClassLevel,
   classLevelChoiceCountAtLevel,
   isClassLevelLinearPerLevel,

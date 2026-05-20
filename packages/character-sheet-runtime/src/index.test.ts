@@ -9,6 +9,7 @@ import {
   MONK_MARTIAL_ARTS_UNIT_ID,
   MONK_MONKS_FOCUS_UNIT_ID,
   MONK_UNCANNY_METABOLISM_UNIT_ID,
+  SORCERER_FONT_OF_MAGIC_UNIT_ID,
 } from "@dnd/character-creation-runtime";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { elapsedTimeTicks, timeSpanDuration } from "@dnd/shared/elapsed-time";
@@ -64,6 +65,7 @@ import {
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.pact-slot-recovery
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-use-count-resource
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-long-rest-use-state
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-point-pool-resource
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.monk-uncanny-metabolism-initiative-recovery
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B barbarian_unarmored_defense monk_unarmored_defense paladin_lay_on_hands wizard_arcane_recovery wizard_ritual_adept
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-04 fighter_weapon_mastery barbarian_weapon_mastery paladin_weapon_mastery ranger_weapon_mastery rogue_weapon_mastery
@@ -72,6 +74,7 @@ import {
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS druid_wild_shape
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS monk_monks_focus
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS monk_uncanny_metabolism
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS sorcerer_font_of_magic
 
 const build = armorClassBuild({ startingClass: "class_fighter" });
 
@@ -82,6 +85,7 @@ if (unitCatalogResult.tag !== "ok") {
   throw new Error("Character Sheet runtime test Unit catalog must build.");
 }
 const unitLibrary = unitCatalogResult.catalog;
+const SRD_SORCERY_POINTS_POOL_ID = "sorcery_points";
 
 const layOnHandsSpendsHealingPoolTestName =
   "Lay On Hands spends one healing pool for HP restoration and Poisoned removal";
@@ -111,6 +115,8 @@ const druidWildShapeShortRestRecoveryTestName =
   "Short Rest partially restores the Druid Wild Shape use pool";
 const monksFocusShortRestRecoveryTestName =
   "Short Rest restores the Monk Focus Point use pool";
+const sorcererFontOfMagicLongRestRecoveryTestName =
+  "Long Rest restores the Sorcerer Font of Magic Sorcery Point pool";
 const uncannyMetabolismLongRestUseStateTestName =
   "tracks Uncanny Metabolism Long Rest use state separately from Focus Points";
 const uncannyMetabolismInitiativeRecoveryTestName =
@@ -1747,6 +1753,73 @@ describe("Character Sheet runtime", () => {
     });
   });
 
+  test(sorcererFontOfMagicLongRestRecoveryTestName, () => {
+    const sorcererBuild = sorcererFontOfMagicBuild();
+    expect(characterBuildResources(sorcererBuild, unitLibrary)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
+          resource: expect.objectContaining({
+            kind: "point_pool",
+            poolId: SRD_SORCERY_POINTS_POOL_ID,
+          }),
+        }),
+      ]),
+    );
+
+    const spent = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:sorcerer-font-rest"),
+        build: sorcererBuild,
+        maximumHp: Hp(14),
+        currentHp: Hp(14),
+        tempHp: Hp(0),
+        unitLibrary,
+        resourceExpenditures: [
+          {
+            tag: "pointPoolResource",
+            unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
+            expended: resourceCount(2),
+          },
+        ],
+      }),
+    );
+
+    expect(characterSheetResources(spent, unitLibrary)).toMatchObject({
+      _tag: "Right",
+      right: expect.arrayContaining([
+        expect.objectContaining({
+          tag: "pointPoolResource",
+          unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
+          resource: expect.objectContaining({
+            kind: "point_pool",
+            poolId: SRD_SORCERY_POINTS_POOL_ID,
+          }),
+          count: 2,
+          expended: 2,
+          resetCadence: { kind: "long_rest" },
+        }),
+      ]),
+    });
+
+    const longRested = requireRight(
+      completeLongRest({ sheet: spent, unitLibrary }),
+    );
+
+    expect(longRested.resourceExpenditures).toEqual([]);
+    expect(characterSheetResources(longRested, unitLibrary)).toMatchObject({
+      _tag: "Right",
+      right: expect.arrayContaining([
+        expect.objectContaining({
+          tag: "pointPoolResource",
+          unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
+          count: 2,
+          expended: 0,
+        }),
+      ]),
+    });
+  });
+
   test(uncannyMetabolismLongRestUseStateTestName, () => {
     const monkBuild = armorClassBuild({
       startingClass: "class_monk",
@@ -2739,6 +2812,33 @@ function armorClassBuild(input: {
       loadout: {
         ...(armorItemId === undefined ? {} : { armor: armorItemId }),
         ...(shieldItemId === undefined ? {} : { shield: shieldItemId }),
+      },
+    },
+  };
+}
+
+function sorcererFontOfMagicBuild(): CharacterBuild {
+  return {
+    ...armorClassBuild({
+      startingClass: "class_sorcerer",
+      advancements: ["class_sorcerer"],
+    }),
+    spellcasting: {
+      sources: [
+        {
+          sourceUnitId: "class_sorcerer",
+          spellcastingAbility: "cha",
+          cantrips: ["light", "prestidigitation", "shocking_grasp"],
+          spellbook: [],
+          preparedSpells: ["burning_hands", "detect_magic"],
+          spellcastingFocuses: ["arcane_focus"],
+        },
+      ],
+      slotPools: {
+        spellcasting: {
+          kind: "spellcasting",
+          slots: [{ spellLevel: 1, count: 3 }],
+        },
       },
     },
   };

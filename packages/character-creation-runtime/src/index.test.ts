@@ -40,10 +40,12 @@ import {
   MONK_MARTIAL_ARTS_UNIT_ID,
   MONK_MONKS_FOCUS_UNIT_ID,
   MONK_UNCANNY_METABOLISM_UNIT_ID,
+  SORCERER_FONT_OF_MAGIC_UNIT_ID,
   exactChoiceCardinality,
   boundedChoiceCardinality,
   choiceCardinalityBounds,
   characterBuildUnitRefs,
+  characterBuildSorcererFontOfMagicFacts,
   computeTotalLevel,
   CHARACTER_EQUIPMENT_ITEM_SLOTS,
   LOADOUT_SLOTS,
@@ -136,6 +138,8 @@ import {
   proficiencyGrantSubjectOption,
 } from "./choice-option-codecs.ts";
 
+const SRD_SORCERY_POINTS_POOL_ID = "sorcery_points";
+
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.class-feature-feat-choice
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.weapon-mastery-choice
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.eldritch-invocation-choice
@@ -155,6 +159,7 @@ import {
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS druid_wild_shape
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-MONKS-FOCUS-CHARACTER-FACTS monk_monks_focus
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS monk_uncanny_metabolism
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS sorcerer_font_of_magic
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -186,6 +191,8 @@ if (statBlockCatalogResult.tag !== "ok") {
 
 const unitLibrary = unitCatalogResult.catalog;
 const statBlockCatalog = statBlockCatalogResult.catalog;
+const sorcererFontOfMagicResourceFactsTestName =
+  "projects Sorcerer 2 Font of Magic shared Sorcery Point resource facts";
 const druidWildShapeFixtureKnownFormStatBlockIds = [
   "stat_block_rat",
   "stat_block_riding_horse",
@@ -767,6 +774,7 @@ describe("character creation hole discovery", () => {
           "11:class_rogue:level_1:maximum_hit_die",
           "11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue:level_6:fixed_hp_gain",
           "14:class_sorcerer:level_1:maximum_hit_die",
+          "14:class_sorcerer|14:class_sorcerer:level_2:fixed_hp_gain",
           "13:class_warlock:level_1:maximum_hit_die",
           "12:class_wizard:level_1:maximum_hit_die",
           "12:class_wizard|12:class_wizard:level_2:fixed_hp_gain",
@@ -4122,6 +4130,74 @@ describe("character creation finalization", () => {
         dieSize: expectation.dieSize,
       });
     }
+  });
+
+  test(sorcererFontOfMagicResourceFactsTestName, () => {
+    const sorcererTwo = completeSupportedProgressionDraft({
+      draftId: "draft:sorcerer-font-of-magic",
+      progression: testProgression("class_sorcerer", 2),
+    });
+    const result = finalizeCharacterDraft({ draft: sorcererTwo, unitLibrary });
+
+    expect(result.tag).toBe("ready");
+    if (result.tag !== "ready") return;
+
+    expect(characterBuildFeatureUnitIds(result.build, unitLibrary)).toEqual(
+      expect.arrayContaining([
+        "sorcerer_innate_sorcery",
+        SORCERER_FONT_OF_MAGIC_UNIT_ID,
+        "sorcerer_metamagic",
+      ]),
+    );
+    expect(
+      characterBuildResources(result.build, unitLibrary).find(
+        (resource) => resource.unitId === SORCERER_FONT_OF_MAGIC_UNIT_ID,
+      ),
+    ).toEqual({
+      unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
+      resource: {
+        kind: "point_pool",
+        poolId: SRD_SORCERY_POINTS_POOL_ID,
+        cap: {
+          axis: "class",
+          base: 2,
+          kind: "linear_per_level",
+          perLevel: 1,
+          startingAtLevel: 2,
+        },
+      },
+    });
+
+    const fontFacts = expectRight(
+      characterBuildSorcererFontOfMagicFacts({
+        build: result.build,
+        unitLibrary,
+      }),
+    );
+    if (fontFacts === undefined) {
+      throw new Error(
+        "Expected Sorcerer 2 build to project Font of Magic facts.",
+      );
+    }
+    expect(fontFacts).toEqual({
+      unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
+      sorceryPointPool: {
+        poolId: SRD_SORCERY_POINTS_POOL_ID,
+        maximum: 2,
+        longRestRefillsAll: true,
+      },
+    });
+
+    const levelFourFontFacts = expectRight(
+      characterBuildSorcererFontOfMagicFacts({
+        build: {
+          features: result.build.features,
+          progression: testProgression("class_sorcerer", 4),
+        },
+        unitLibrary,
+      }),
+    );
+    expect(levelFourFontFacts?.sorceryPointPool.maximum).toBe(4);
   });
 
   test("projects Druid 4 Wild Shape roster thresholds without known-form defaults", () => {

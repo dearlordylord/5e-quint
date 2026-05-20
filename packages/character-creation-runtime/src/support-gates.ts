@@ -53,6 +53,7 @@ import {
   SRD_PALADIN_CLASS_UNIT_ID,
   SRD_RANGER_CLASS_UNIT_ID,
   SRD_LEVEL_ONE_CLASS_UNIT_IDS,
+  SRD_SORCERER_CLASS_UNIT_ID,
   SRD_CHARACTER_ADMISSION_SPECIES_UNIT_IDS,
   progressionOptionId,
   SUPPORTED_BACKGROUND_OPTION_IDS,
@@ -182,6 +183,7 @@ const SUPPORTED_PROGRESSIONS = [
   supportedSameClassSecondLevelProgression(SRD_MONK_CLASS_UNIT_ID),
   supportedSameClassSecondLevelProgression(SRD_PALADIN_CLASS_UNIT_ID),
   supportedSameClassSecondLevelProgression(SRD_RANGER_CLASS_UNIT_ID),
+  supportedSameClassSecondLevelProgression(SRD_SORCERER_CLASS_UNIT_ID),
   supportedSameClassSecondLevelProgression(WIDTH_CLASS_WIZARD_UNIT_ID),
   supportedSameClassProgression(SRD_ROGUE_CLASS_UNIT_ID, 6),
   ...SRD_LEVEL_ONE_CLASS_UNIT_IDS.filter(
@@ -302,6 +304,7 @@ const CHARACTER_BUILD_RESOURCE_UNIT_IDS = [
   "fighter_second_wind",
   "monk_monks_focus",
   "paladin_lay_on_hands",
+  "sorcerer_font_of_magic",
   "sorcerer_innate_sorcery",
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 

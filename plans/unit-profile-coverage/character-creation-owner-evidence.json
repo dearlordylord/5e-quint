@@ -2648,6 +2648,29 @@
         "packages/character-creation-runtime/src/index.test.ts:finalizes each supported level-1 SRD class-container source facts from Surface class records"
       ]
     },
+    "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_font_of_magic": {
+      "taskId": "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS",
+      "profile": "character-creation.class-feature-resource-projection support profile",
+      "summary": "Font of Magic is retained from the level-2 Sorcerer class feature grant and projected into shared Sorcery Point resource facts from the authored Surface point-pool record. The projection derives the sorcery_points pool identity, Sorcerer-level maximum, and Long Rest full reset from the retained feature and Sorcerer class level without duplicating class progression, Spell Slot conversion execution, or Metamagic option state.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:discoverInitialDraftHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.characterBuildResourceUnitIds"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds",
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildResources",
+        "packages/character-creation-runtime/src/sorcerer-font-of-magic.ts:characterBuildSorcererFontOfMagicFacts"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/index.test.ts:sorcererFontOfMagicResourceFactsTestName"
+      ]
+    },
     "srd521:classes/warlock:level-1:class-feature-grant:warlock_eldritch_invocations": {
       "taskId": "L1C-WARLOCK-PACT-MAGIC-ADVANCEMENT",
       "profile": "all-level Warlock Eldritch Invocation choice and advancement support profile",

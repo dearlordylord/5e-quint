@@ -2320,14 +2320,14 @@
     },
     {
       "catalogStatus": "installed",
-      "claimTag": "unsupported-profile",
+      "claimTag": "profile-subset-supported",
       "closureKinds": [
         "follow-up-split"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS: Retain the Font of Magic feature ref with Sorcerer level-2 progression, then project the shared Sorcery Point pool, Sorcerer-level cap, and Long Rest reset from the authored record without duplicating class progression or Metamagic option state. Owner: character-creation-runtime plus character-sheet-runtime. Required output: Owner evidence for CharacterBuild or Character Sheet retained Font of Magic feature ref and shared Sorcery Point resource facts consumed by Metamagic and later Sorcerer features.; L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS: Execute the no-action conversion that expends one spell slot and grants Sorcery Points equal to the expended slot's level, bounded by the shared Sorcery Point cap. Owner: character-battle-runtime plus spellcasting resource owner. Required output: Supported runtime profile and owner evidence for spell slot to Sorcery Point conversion using the shared Sorcery Point resource and existing Spell Slot state.; L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS: Execute the Bonus Action conversion that spends Sorcery Points by the Creating Spell Slots table, enforces the minimum Sorcerer level for the target slot, creates one spell slot no higher than level 5, and expires created slots on Long Rest. Owner: character-battle-runtime plus spellcasting resource owner. Required output: Supported runtime profile and owner evidence for Sorcery Point to temporary Spell Slot creation, Bonus Action spending, minimum-level gating, and Long Rest expiry.",
+      "reason": "L12G-FOLLOWUP-SORCERER-FONT-SLOT-TO-POINTS: Execute the no-action conversion that expends one Spell Slot and grants Sorcery Points equal to the expended slot's level, bounded by the shared Sorcery Point cap. Owner: character-battle-runtime plus spellcasting resource owner. Required output: Supported runtime profile and owner evidence for Spell Slot to Sorcery Point conversion using the shared Sorcery Point resource and existing Spell Slot state.; L12G-FOLLOWUP-SORCERER-FONT-POINTS-TO-SLOTS: Execute the Bonus Action conversion that spends Sorcery Points by the Creating Spell Slots table, enforces the minimum Sorcerer level for the target slot, creates one Spell Slot no higher than level 5, and expires created slots on Long Rest. Owner: character-battle-runtime plus spellcasting resource owner. Required output: Supported runtime profile and owner evidence for Sorcery Point to temporary Spell Slot creation, Bonus Action spending, minimum-level gating, and Long Rest expiry.",
       "sourceRecordPath": "packages/surface/content/sorcerer_font_of_magic.json",
       "sourceRows": [
         {
@@ -2821,13 +2821,13 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 486,
-      "percent": "87.4%",
+      "numerator": 487,
+      "percent": "87.6%",
       "rowsByStatus": {
-        "accepted": 356,
+        "accepted": 357,
         "accepted-no-battle-effect": 130,
         "battle-runtime-required": 57,
-        "owner-evidence-required": 2,
+        "owner-evidence-required": 1,
         "partial-battle-runtime": 11
       }
     },
@@ -7604,9 +7604,9 @@
     "candidateUnitIdsBeforeExclusions": 197,
     "groupsByClaimTag": {
       "missing": 1,
-      "profile-subset-supported": 16,
+      "profile-subset-supported": 17,
       "supported-profile": 108,
-      "unsupported-profile": 39
+      "unsupported-profile": 38
     },
     "groupsByStatus": {
       "blocked-follow-up-split": 22,
