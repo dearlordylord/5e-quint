@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 395,
-      "numerator": 186,
-      "percent": "47.1%"
+      "denominator": 396,
+      "numerator": 187,
+      "percent": "47.2%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 467,
-      "numerator": 218,
-      "percent": "46.7%"
+      "denominator": 468,
+      "numerator": 219,
+      "percent": "46.8%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 219
+      "value": 220
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 132,
@@ -67,8 +67,8 @@
       "percent": "100%"
     },
     "profileClassificationCoverage": {
-      "denominator": 219,
-      "numerator": 219,
+      "denominator": 220,
+      "numerator": 220,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "79.5%"
     },
     "supportedProfileCoverage": {
-      "denominator": 187,
+      "denominator": 188,
       "numerator": 132,
-      "percent": "70.6%"
+      "percent": "70.2%"
     }
   },
   "metricSemantics": [
@@ -20266,6 +20266,29 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/detect_poison_and_disease.json",
       "unitId": "detect_poison_and_disease"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "social-knowledge-effect",
+          "owner": "runtime-detached table/social knowledge and detection owner",
+          "reason": "Thought presence, thought content, qualifying language or telepathy facts, material occlusion, hidden-presence disclosure, deeper-probe knowledge, target awareness, attention shifting, and the target's Arcana-check escape are table/social knowledge adjudication outside promoted battle runtime; the current battle Search owner is scoped to hidden combatant discovery rather than state-of-mind or mind-reading facts."
+        },
+        "reason": "Detect Thoughts is authored and installed as an SRD Surface Spell Definition with Magic Action Spell Slot casting, Self range, V/S/M 1 Copper Piece component, Concentration up to 1 minute, Sense Thoughts detection of qualifying thoughts within 30 feet, later-turn Magic Action option reuse, Read Thoughts targeting a visible or previously detected creature within 30 feet, material occlusion by stone, dirt, wood, metal, or lead, and the deeper Probe Wisdom Saving Throw plus target Intelligence (Arcana) check escape. Task 11 claims no promoted battle-runtime profile because thought presence, current thought content, language or telepathy eligibility, hidden presence disclosure, material occlusion, deeper-probe knowledge, target awareness, attention shifting, and Arcana-check escape are runtime-detached table/social knowledge facts; the existing battle Search owner resolves hidden combatant discovery only and is not an owner for state-of-mind or mind-reading knowledge.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/detect_thoughts.json",
+      "unitId": "detect_thoughts"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

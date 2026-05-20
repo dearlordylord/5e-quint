@@ -67,7 +67,7 @@
     {
       "number": 11,
       "id": "L12G-MISSING-DETECT-THOUGHTS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Detect Thoughts Definition And Closure"
     },
     {
@@ -225,7 +225,7 @@ The final task is intentionally blocked on every real task in this plan and plac
 | 8 | L12G-MISSING-CALM-EMOTIONS - Calm Emotions Definition And Support | done | completed baseline | A lane; Unit `calm_emotions`. |
 | 9 | L12G-MISSING-DARKNESS - Darkness Definition And Support Or Closure | done | completed baseline | A lane; Unit `darkness`. |
 | 10 | L12G-MISSING-DARKVISION - Darkvision Definition And Support Or Closure | done | completed baseline | A lane; Unit `darkvision`. |
-| 11 | L12G-MISSING-DETECT-THOUGHTS - Detect Thoughts Definition And Closure | ready-for-research | completed baseline | A lane; Unit `detect_thoughts`. |
+| 11 | L12G-MISSING-DETECT-THOUGHTS - Detect Thoughts Definition And Closure | done | completed baseline | A lane; Unit `detect_thoughts`. |
 | 12 | L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME - Gust of Wind Line Runtime Support | ready-for-research | completed baseline | A lane; Unit `gust_of_wind`. |
 | 13 | L12G-FOLLOWUP-GUST-OF-WIND-GAS-FLAME-CLOSURE - Gust of Wind Gas And Flame Presentation Closure | ready-for-research | completed baseline | A lane; Unit `gust_of_wind`. |
 | 14 | L12G-FOLLOWUP-MAGIC-WEAPON-SURFACE-ITEM-SHAPE - Magic Weapon Surface Item Enhancement Shape | ready-for-research | completed baseline | A lane; Unit `magic_weapon`. |
@@ -652,7 +652,7 @@ Acceptance:
 
 ### Task 11 - L12G-MISSING-DETECT-THOUGHTS - Detect Thoughts Definition And Closure
 
-Status: `ready-for-research`
+Status: `done`
 
 Unit: `detect_thoughts`.
 Origin: Original backlog task 58.

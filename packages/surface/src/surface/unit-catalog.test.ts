@@ -129,6 +129,7 @@ const requiredFirstVerticalUnitIds = [
   "detect_evil_and_good",
   "detect_magic",
   "detect_poison_and_disease",
+  "detect_thoughts",
   "mage_armor",
   "magic_missile",
   "magic_mouth",
@@ -2082,6 +2083,47 @@ describe("SRD Unit catalog boundary", () => {
         "reveals that a trap is present but not its location",
       );
     }
+  });
+
+  test("decodes Detect Thoughts as concentration thought detection", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const detectThoughts = result.catalog.requireUnit("detect_thoughts");
+
+    expect(detectThoughts.kind).toBe("spell");
+    if (detectThoughts.kind !== "spell") return;
+    expect(detectThoughts.mechanics.family).toBe("activation");
+    if (detectThoughts.mechanics.family !== "activation") return;
+
+    expect(detectThoughts.mechanics).toMatchObject({
+      level: 2,
+      school: "divination",
+      castingTime: { kind: "action" },
+      range: { kind: "self" },
+      components: { v: true, s: true, m: "1 Copper Piece" },
+      duration: {
+        kind: "concentration",
+        upTo: { unit: "minute", amount: 1 },
+      },
+    });
+    expect(detectThoughts.mechanics.phases).toEqual([
+      {
+        kind: "direct",
+        attachment: { kind: "self" },
+        effects: [
+          {
+            kind: "detect",
+            property: "thoughts",
+            radiusFeet: 30,
+          },
+        ],
+      },
+    ]);
+    expect(detectThoughts.description).toContain(
+      "the target can take an action to make an Intelligence (Arcana) check",
+    );
   });
 
   test("decodes Animal Messenger as a CR-gated Tiny Beast courier task", () => {

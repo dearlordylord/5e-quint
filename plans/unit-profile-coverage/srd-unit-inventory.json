@@ -188,13 +188,13 @@
     },
     "levelOneTwoBattleReadiness": {
       "denominator": 556,
-      "numerator": 495,
-      "percent": "89%",
+      "numerator": 498,
+      "percent": "89.6%",
       "rowsByStatus": {
         "accepted": 361,
-        "accepted-no-battle-effect": 134,
-        "battle-runtime-required": 49,
+        "accepted-no-battle-effect": 137,
         "partial-battle-runtime": 11,
+        "battle-runtime-required": 46,
         "owner-evidence-required": 1
       }
     },
@@ -211,16 +211,16 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 377,
       "non-runtime": 24,
-      "catalog-only/dead-for-now": 105,
-      "missing-authored-record": 13,
+      "catalog-only/dead-for-now": 108,
       "catalog-installed-owner-evidence-required": 23,
+      "missing-authored-record": 10,
       "catalog-authored-executable-follow-up": 14
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 213,
-      "catalog-only/dead-for-now": 105,
-      "missing-authored-record": 13,
+      "catalog-only/dead-for-now": 108,
       "catalog-installed-owner-evidence-required": 22,
+      "missing-authored-record": 10,
       "catalog-authored-executable-follow-up": 14
     },
     "levelOneRowsByCategory": {
@@ -6292,19 +6292,39 @@
       "detail": "Detect Thoughts (Divination; C)",
       "candidateUnitId": "detect_thoughts",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "detect_thoughts",
+        "sourceRecordPath": "packages/surface/content/detect_thoughts.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "detect_thoughts"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "social-knowledge-effect",
+        "owner": "runtime-detached table/social knowledge and detection owner",
+        "reason": "Thought presence, thought content, qualifying language or telepathy facts, material occlusion, hidden-presence disclosure, deeper-probe knowledge, target awareness, attention shifting, and the target's Arcana-check escape are table/social knowledge adjudication outside promoted battle runtime; the current battle Search owner is scoped to hidden combatant discovery rather than state-of-mind or mind-reading facts."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit detect_thoughts is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached table/social knowledge and detection owner",
+          "evidence": "Thought presence, thought content, qualifying language or telepathy facts, material occlusion, hidden-presence disclosure, deeper-probe knowledge, target awareness, attention shifting, and the target's Arcana-check escape are table/social knowledge adjudication outside promoted battle runtime; the current battle Search owner is scoped to hidden combatant discovery rather than state-of-mind or mind-reading facts.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Thought presence, thought content, qualifying language or telepathy facts, material occlusion, hidden-presence disclosure, deeper-probe knowledge, target awareness, attention shifting, and the target's Arcana-check escape are table/social knowledge adjudication outside promoted battle runtime; the current battle Search owner is scoped to hidden combatant discovery rather than state-of-mind or mind-reading facts.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_enhance_ability",
@@ -20687,19 +20707,39 @@
       "detail": "Detect Thoughts (Divination; C)",
       "candidateUnitId": "detect_thoughts",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "detect_thoughts",
+        "sourceRecordPath": "packages/surface/content/detect_thoughts.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "detect_thoughts"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "social-knowledge-effect",
+        "owner": "runtime-detached table/social knowledge and detection owner",
+        "reason": "Thought presence, thought content, qualifying language or telepathy facts, material occlusion, hidden-presence disclosure, deeper-probe knowledge, target awareness, attention shifting, and the target's Arcana-check escape are table/social knowledge adjudication outside promoted battle runtime; the current battle Search owner is scoped to hidden combatant discovery rather than state-of-mind or mind-reading facts."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit detect_thoughts is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached table/social knowledge and detection owner",
+          "evidence": "Thought presence, thought content, qualifying language or telepathy facts, material occlusion, hidden-presence disclosure, deeper-probe knowledge, target awareness, attention shifting, and the target's Arcana-check escape are table/social knowledge adjudication outside promoted battle runtime; the current battle Search owner is scoped to hidden combatant discovery rather than state-of-mind or mind-reading facts.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Thought presence, thought content, qualifying language or telepathy facts, material occlusion, hidden-presence disclosure, deeper-probe knowledge, target awareness, attention shifting, and the target's Arcana-check escape are table/social knowledge adjudication outside promoted battle runtime; the current battle Search owner is scoped to hidden combatant discovery rather than state-of-mind or mind-reading facts.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_dragons_breath",
@@ -26314,19 +26354,39 @@
       "detail": "Detect Thoughts (Divination; C)",
       "candidateUnitId": "detect_thoughts",
       "surface": {
-        "state": "current-surface-can-express-source-facts"
+        "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "detect_thoughts",
+        "sourceRecordPath": "packages/surface/content/detect_thoughts.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "detect_thoughts"
       },
-      "finalDisposition": "missing-authored-record",
-      "ownerEvidence": [],
-      "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
-      "battleReadinessStatus": "battle-runtime-required"
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "social-knowledge-effect",
+        "owner": "runtime-detached table/social knowledge and detection owner",
+        "reason": "Thought presence, thought content, qualifying language or telepathy facts, material occlusion, hidden-presence disclosure, deeper-probe knowledge, target awareness, attention shifting, and the target's Arcana-check escape are table/social knowledge adjudication outside promoted battle runtime; the current battle Search owner is scoped to hidden combatant discovery rather than state-of-mind or mind-reading facts."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit detect_thoughts is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached table/social knowledge and detection owner",
+          "evidence": "Thought presence, thought content, qualifying language or telepathy facts, material occlusion, hidden-presence disclosure, deeper-probe knowledge, target awareness, attention shifting, and the target's Arcana-check escape are table/social knowledge adjudication outside promoted battle runtime; the current battle Search owner is scoped to hidden combatant discovery rather than state-of-mind or mind-reading facts.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "Thought presence, thought content, qualifying language or telepathy facts, material occlusion, hidden-presence disclosure, deeper-probe knowledge, target awareness, attention shifting, and the target's Arcana-check escape are table/social knowledge adjudication outside promoted battle runtime; the current battle Search owner is scoped to hidden combatant discovery rather than state-of-mind or mind-reading facts.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_dragons_breath",

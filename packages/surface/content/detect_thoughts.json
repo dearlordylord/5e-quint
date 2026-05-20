@@ -1,0 +1,48 @@
+{
+  "description": "You activate Sense Thoughts or Read Thoughts. Until the spell ends, you can activate either effect as a Magic action on later turns. Sense Thoughts detects the presence of thoughts within 30 feet of yourself from creatures that know languages or are telepathic, without reading those thoughts; stone, dirt, wood, metal, or lead can block the spell. Read Thoughts targets a visible creature within 30 feet or a creature within 30 feet detected by Sense Thoughts, revealing what is most on the target's mind if the target knows a language or is telepathic. On your next turn, a Magic action can probe deeper: the target makes a Wisdom saving throw, failed saves reveal reasoning, emotions, and something prominent in the target's mind, successful saves end the spell, and the target knows about the probe either way. Until you shift attention away, the target can take an action to make an Intelligence (Arcana) check against your spell save DC, ending the spell on a success.",
+  "id": "detect_thoughts",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "1 Copper Piece",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "activation",
+    "level": 2,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "self"
+        },
+        "effects": [
+          {
+            "kind": "detect",
+            "property": "thoughts",
+            "radiusFeet": 30
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "kind": "self"
+    },
+    "school": "divination"
+  },
+  "name": "Detect Thoughts",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Detect Thoughts"
+  }
+}

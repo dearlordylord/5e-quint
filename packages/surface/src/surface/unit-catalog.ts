@@ -83,6 +83,7 @@ import fighterWeaponMasteryInput from "../../content/fighter_weapon_mastery.json
 import detectEvilAndGoodInput from "../../content/detect_evil_and_good.json";
 import detectMagicInput from "../../content/detect_magic.json";
 import detectPoisonAndDiseaseInput from "../../content/detect_poison_and_disease.json";
+import detectThoughtsInput from "../../content/detect_thoughts.json";
 import dissonantWhispersInput from "../../content/dissonant_whispers.json";
 import falseLifeInput from "../../content/false_life.json";
 import fireBoltInput from "../../content/fire_bolt.json";
@@ -514,6 +515,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     detectEvilAndGoodInput,
     detectMagicInput,
     detectPoisonAndDiseaseInput,
+    detectThoughtsInput,
     mageArmorInput,
     magicMissileInput,
     magicMouthInput,

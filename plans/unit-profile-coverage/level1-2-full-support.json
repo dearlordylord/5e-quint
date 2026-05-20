@@ -886,6 +886,59 @@
       "unitId": "detect_poison_and_disease"
     },
     {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "social-knowledge-effect"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "Thought presence, thought content, qualifying language or telepathy facts, material occlusion, hidden-presence disclosure, deeper-probe knowledge, target awareness, attention shifting, and the target's Arcana-check escape are table/social knowledge adjudication outside promoted battle runtime; the current battle Search owner is scoped to hidden combatant discovery rather than state-of-mind or mind-reading facts.",
+      "sourceRecordPath": "packages/surface/content/detect_thoughts.json",
+      "sourceRows": [
+        {
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Detect Thoughts",
+          "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_detect_thoughts",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 194,
+            "lineStart": 194,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Sorcerer spell list Detect Thoughts",
+          "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_detect_thoughts",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 275,
+            "lineStart": 275,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          }
+        },
+        {
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Detect Thoughts",
+          "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_detect_thoughts",
+          "levelBand": "spell-level-2",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 207,
+            "lineStart": 207,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          }
+        }
+      ],
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
+      "unitId": "detect_thoughts"
+    },
+    {
       "catalogDisposition": {
         "category": "srd-candidate",
         "planningLane": "QMBT14-QMBT16",
@@ -2834,7 +2887,7 @@
       ]
     },
     {
-      "count": 26,
+      "count": 27,
       "description": "The Unit claim records a runtime-detached presentation, exploration, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
@@ -2850,6 +2903,7 @@
         "detect_evil_and_good",
         "detect_magic",
         "detect_poison_and_disease",
+        "detect_thoughts",
         "find_traps",
         "gentle_repose",
         "identify",
@@ -2937,12 +2991,12 @@
   "metrics": {
     "productReadiness": {
       "denominator": 556,
-      "numerator": 495,
-      "percent": "89%",
+      "numerator": 498,
+      "percent": "89.6%",
       "rowsByStatus": {
         "accepted": 361,
-        "accepted-no-battle-effect": 134,
-        "battle-runtime-required": 49,
+        "accepted-no-battle-effect": 137,
+        "battle-runtime-required": 46,
         "owner-evidence-required": 1,
         "partial-battle-runtime": 11
       }
@@ -2963,13 +3017,13 @@
       "percent": "35.8%"
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 167,
+      "denominator": 168,
       "numerator": 109,
-      "percent": "65.3%"
+      "percent": "64.9%"
     },
     "strictTargetClosure": {
-      "denominator": 167,
-      "numerator": 166,
+      "denominator": 168,
+      "numerator": 167,
       "percent": "99.4%"
     }
   },
@@ -3035,48 +3089,6 @@
           }
         ],
         "unitId": "create_or_destroy_water"
-      },
-      {
-        "reason": "The SRD row has level-1 spell pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "spell Unit pressure",
-            "concept": "Bard spell list Detect Thoughts",
-            "id": "srd521:classes/bard:spell-level-2:spell-unit-pressure:bard_spell_list_detect_thoughts",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 194,
-              "lineStart": 194,
-              "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Sorcerer spell list Detect Thoughts",
-            "id": "srd521:classes/sorcerer:spell-level-2:spell-unit-pressure:sorcerer_spell_list_detect_thoughts",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 275,
-              "lineStart": 275,
-              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-            }
-          },
-          {
-            "category": "spell Unit pressure",
-            "concept": "Wizard spell list Detect Thoughts",
-            "id": "srd521:classes/wizard:spell-level-2:spell-unit-pressure:wizard_spell_list_detect_thoughts",
-            "levelBand": "spell-level-2",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 207,
-              "lineStart": 207,
-              "path": ".references/srd-5.2.1/Classes/Wizard.md"
-            }
-          }
-        ],
-        "unitId": "detect_thoughts"
       },
       {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/disguise_self.md",
@@ -8068,18 +8080,18 @@
       "missing": 1,
       "profile-subset-supported": 18,
       "supported-profile": 109,
-      "unsupported-profile": 39
+      "unsupported-profile": 40
     },
     "groupsByStatus": {
       "blocked-follow-up-split": 22,
       "closed-character-fact-and-runtime-detached-split": 2,
       "closed-companion-control-boundary": 1,
       "closed-later-level-only": 6,
-      "closed-runtime-detached-table-adjudication": 26,
+      "closed-runtime-detached-table-adjudication": 27,
       "open-runtime-behavior": 1,
       "supported-profile": 109
     },
-    "nonSupportedFrontier": 58,
-    "strictDenominator": 167
+    "nonSupportedFrontier": 59,
+    "strictDenominator": 168
   }
 }
