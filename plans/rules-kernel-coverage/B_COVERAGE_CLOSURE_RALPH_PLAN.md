@@ -67,7 +67,7 @@
     {
       "number": 11,
       "id": "RKBC-PROFILE-JOIN-TABLE-CALLER",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Table Caller Profile Join And Boundary Classification"
     },
     {
@@ -219,6 +219,12 @@
       "id": "RKBC-SPELL-LINKED-EFFECT-PARITY",
       "status": "ready-for-research",
       "title": "Linked Spell Effect Damage Sharing Parity Witness"
+    },
+    {
+      "number": 37,
+      "id": "RKBC-SPELL-MOONBEAM-MOVABLE-ZONE-PARITY",
+      "status": "ready-for-research",
+      "title": "Moonbeam Movable Zone Parity Witness"
     }
   ]
 }
@@ -399,7 +405,7 @@ Reviewers should reject:
 | 8 | RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS - Feature Reaction Bonus Action And Resource Profile Join | done | baseline | Feature reaction, bonus-action, and failed-roll resource profiles are joined to covered feature procedure obligations, with zero-damage redirect also joined to reaction continuation. |
 | 9 | RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION - Spell Damage Condition And Scalar Profile Join | done | baseline | Spell damage, restoration, condition, scalar, roll-modifier, protection, removal, and self-transformation profiles are joined to covered obligations or precise mapped-open spell parity obligations. |
 | 10 | RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION - Spell After Hit Reaction And Marked Effect Profile Join | done | baseline | After-hit, reaction-casting-time, weapon-hosted, marked, attack-sequence, Mirror Image, and linked-effect spell profiles are mapped to precise covered or mapped-open obligations. |
-| 11 | RKBC-PROFILE-JOIN-TABLE-CALLER - Table Caller Profile Join And Boundary Classification | ready-for-research | RKBC-BATTLE-HOLE-INVENTORY, RKBC-BATTLE-HOLE-TARGETS-AREAS, RKBC-BATTLE-HOLE-MOVEMENT-ROUTE | Map table-caller profiles to reducer-semantic obligations or boundary rows without MBT state-space explosion. |
+| 11 | RKBC-PROFILE-JOIN-TABLE-CALLER - Table Caller Profile Join And Boundary Classification | done | RKBC-BATTLE-HOLE-INVENTORY, RKBC-BATTLE-HOLE-TARGETS-AREAS, RKBC-BATTLE-HOLE-MOVEMENT-ROUTE | Table-caller and spatial spell profiles are mapped to covered reducer obligations, boundary-only table facts, or precise mapped-open parity obligations without expanding MBT state space. |
 | 12 | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY - Character Creation Choice Discovery And Cardinality | ready-for-research | baseline | Split current creation choice discovery/cardinality semantics out of the broad creation audit. |
 | 13 | RKBC-CREATION-FILL-VALIDATION-BATCH - Character Creation Fill Validation And Atomic Batch | ready-for-research | baseline | Cover fill validation, batch atomicity, rediscovery, and finalization deltas beyond the existing slice. |
 | 14 | RKBC-CREATION-ADVANCEMENT-REPLACEMENT - Character Creation Advancement And Replacement | blocked | RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH | Cover advancement replacement semantics and class-feature replacement profiles. |
@@ -412,7 +418,7 @@ Reviewers should reject:
 | 21 | RKBC-HANDOFF-BATTLE-INIT - Character Battle Initialization Projection | ready-for-research | baseline | Cover Character Sheet/build projection into battle initialization. |
 | 22 | RKBC-HANDOFF-BATTLE-SETTLEMENT - Character Battle Settlement Back To Sheet | blocked | RKBC-SHEET-HP-REST-HIT-DICE, RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS, RKBC-HANDOFF-BATTLE-INIT | Cover HP, condition, spell-slot, and resource settlement from battle back to sheet. |
 | 23 | RKBC-HANDOFF-IDENTITY-CONFLICTS - Character Battle Identity And Max HP Conflict Handling | blocked | RKBC-SHEET-HP-REST-HIT-DICE, RKBC-HANDOFF-BATTLE-INIT | Cover identity checks, max-HP conflicts, and zero-HP lifecycle handoff. |
-| 24 | RKBC-FINAL-B-CLOSURE-GATE - Final Rules Kernel B Closure Gate | blocked | RKBC-BATTLE-HOLE-INVENTORY, RKBC-BATTLE-HOLE-TARGETS-AREAS, RKBC-BATTLE-HOLE-MOVEMENT-ROUTE, RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION, RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND, RKBC-BATTLE-HOLE-REACTION-CONCENTRATION, RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE, RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS, RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION, RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION, RKBC-PROFILE-JOIN-TABLE-CALLER, RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH, RKBC-CREATION-ADVANCEMENT-REPLACEMENT, RKBC-CREATION-SPELLCASTING-PROGRESSION, RKBC-CREATION-WEAPON-MASTERY-FEAT, RKBC-SHEET-HP-REST-HIT-DICE, RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS, RKBC-SHEET-FEATURE-RESOURCES, RKBC-SHEET-WEAPON-MASTERY-RITUAL, RKBC-HANDOFF-BATTLE-INIT, RKBC-HANDOFF-BATTLE-SETTLEMENT, RKBC-HANDOFF-IDENTITY-CONFLICTS, RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY, RKBC-SPELL-SAVE-GATED-CONDITION-PARITY, RKBC-SPELL-ROLL-SCALAR-PARITY, RKBC-SPELL-MAKE-STABLE-PARITY, RKBC-SPELL-SELF-TRANSFORMATION-PARITY, RKBC-SPELL-REACTION-CASTING-PARITY, RKBC-SPELL-AFTER-HIT-RIDERS-PARITY, RKBC-SPELL-WEAPON-HOSTED-PARITY, RKBC-SPELL-MARKED-RIDER-PARITY, RKBC-SPELL-ATTACK-SEQUENCES-PARITY, RKBC-SPELL-MIRROR-IMAGE-PARITY, RKBC-SPELL-LINKED-EFFECT-PARITY | Remove merge-acceptable `needs-*` statuses, wire quality gate, and prove reports show B closure. |
+| 24 | RKBC-FINAL-B-CLOSURE-GATE - Final Rules Kernel B Closure Gate | blocked | RKBC-BATTLE-HOLE-INVENTORY, RKBC-BATTLE-HOLE-TARGETS-AREAS, RKBC-BATTLE-HOLE-MOVEMENT-ROUTE, RKBC-BATTLE-HOLE-DAMAGE-DISPOSITION, RKBC-BATTLE-HOLE-ABILITY-SKILL-COMMAND, RKBC-BATTLE-HOLE-REACTION-CONCENTRATION, RKBC-PROFILE-JOIN-FEATURE-PASSIVE-RESOURCE, RKBC-PROFILE-JOIN-FEATURE-REACTION-BONUS, RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION, RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION, RKBC-PROFILE-JOIN-TABLE-CALLER, RKBC-CREATION-CHOICE-DISCOVERY-CARDINALITY, RKBC-CREATION-FILL-VALIDATION-BATCH, RKBC-CREATION-ADVANCEMENT-REPLACEMENT, RKBC-CREATION-SPELLCASTING-PROGRESSION, RKBC-CREATION-WEAPON-MASTERY-FEAT, RKBC-SHEET-HP-REST-HIT-DICE, RKBC-SHEET-SPELL-SLOTS-PACT-SLOTS, RKBC-SHEET-FEATURE-RESOURCES, RKBC-SHEET-WEAPON-MASTERY-RITUAL, RKBC-HANDOFF-BATTLE-INIT, RKBC-HANDOFF-BATTLE-SETTLEMENT, RKBC-HANDOFF-IDENTITY-CONFLICTS, RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY, RKBC-SPELL-SAVE-GATED-CONDITION-PARITY, RKBC-SPELL-ROLL-SCALAR-PARITY, RKBC-SPELL-MAKE-STABLE-PARITY, RKBC-SPELL-SELF-TRANSFORMATION-PARITY, RKBC-SPELL-REACTION-CASTING-PARITY, RKBC-SPELL-AFTER-HIT-RIDERS-PARITY, RKBC-SPELL-WEAPON-HOSTED-PARITY, RKBC-SPELL-MARKED-RIDER-PARITY, RKBC-SPELL-ATTACK-SEQUENCES-PARITY, RKBC-SPELL-MIRROR-IMAGE-PARITY, RKBC-SPELL-LINKED-EFFECT-PARITY, RKBC-SPELL-MOONBEAM-MOVABLE-ZONE-PARITY | Remove merge-acceptable `needs-*` statuses, wire quality gate, and prove reports show B closure. |
 | 25 | RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY - Spell Direct Condition Removal And Protection Parity Witnesses | ready-for-research | RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION | Add focused parity witnesses for direct spell condition application, creature-type protection/charm prevention, condition-immunity Temporary Hit Point refresh, and condition removal/protection obligations. |
 | 26 | RKBC-SPELL-SAVE-GATED-CONDITION-PARITY - Spell Save-Gated Condition Parity Witnesses | ready-for-research | RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION | Add focused parity witnesses for save-gated condition lifecycle, condition-choice holes, non-Sleep repeat saves, and save-gated attack-roll Advantage effects. |
 | 27 | RKBC-SPELL-ROLL-SCALAR-PARITY - Spell Roll Modifier And Scalar Buff Parity Witnesses | ready-for-research | RKBC-PROFILE-JOIN-SPELL-DAMAGE-CONDITION | Add focused parity witnesses for spell d20 roll modifiers and scalar buff active effects. |
@@ -425,6 +431,7 @@ Reviewers should reject:
 | 34 | RKBC-SPELL-ATTACK-SEQUENCES-PARITY - Spell Attack Sequence Parity Witnesses | ready-for-research | RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION | Add focused parity witnesses for chained attack spells and independent beam/ray attack sequences. |
 | 35 | RKBC-SPELL-MIRROR-IMAGE-PARITY - Mirror Image Hit Interception Parity Witness | ready-for-research | RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION | Add focused parity witness coverage for duplicate pools, duplicate-interception rolls, bypass witnesses, destruction, and damage continuation. |
 | 36 | RKBC-SPELL-LINKED-EFFECT-PARITY - Linked Spell Effect Damage Sharing Parity Witness | ready-for-research | RKBC-PROFILE-JOIN-SPELL-AFTER-HIT-REACTION | Add focused parity witness coverage for Warding Bond defenses, all-damage Resistance, same-amount damage sharing, and cleanup. |
+| 37 | RKBC-SPELL-MOONBEAM-MOVABLE-ZONE-PARITY - Moonbeam Movable Zone Parity Witness | ready-for-research | RKBC-PROFILE-JOIN-TABLE-CALLER | Add focused parity witness coverage for Moonbeam movable Cylinder lifecycle, once-per-turn save limiting, reposition, damage, and cleanup. |
 
 ## Task Details
 
@@ -668,7 +675,7 @@ Acceptance:
 
 ### Task 11 - RKBC-PROFILE-JOIN-TABLE-CALLER - Table Caller Profile Join And Boundary Classification
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: `RKBC-BATTLE-HOLE-INVENTORY`, `RKBC-BATTLE-HOLE-TARGETS-AREAS`, and `RKBC-BATTLE-HOLE-MOVEMENT-ROUTE`.
 
@@ -1126,6 +1133,25 @@ Acceptance:
   cleanup derive from that relation without contradictory mirrored state.
 - Separation facts remain table-owned spatial evidence; reducer-owned cleanup
   consumes the fact without deriving distance or positions.
+
+### Task 37 - RKBC-SPELL-MOONBEAM-MOVABLE-ZONE-PARITY - Moonbeam Movable Zone Parity Witness
+
+Status: `ready-for-research`
+
+Depends on: `RKBC-PROFILE-JOIN-TABLE-CALLER`.
+
+Scope: cover the Moonbeam movable zone lifecycle mapped by Task 11, including
+caller/table area identity, once-per-turn save limiting, reposition command,
+Radiant damage application, Concentration duration, and cleanup.
+
+Acceptance:
+
+- `BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE` has a focused parity witness.
+- Area placement, creature occupancy, and route/position derivation remain
+  table-owned facts rather than reducer-owned map state.
+- Damage and zero-Hit-Point consequences reuse the shared spell save/damage,
+  positive-damage, and damage-disposition obligations instead of duplicating
+  Hit Point lifecycle rules.
 
 ## Verification
 

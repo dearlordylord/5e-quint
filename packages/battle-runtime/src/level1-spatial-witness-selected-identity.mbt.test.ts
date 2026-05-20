@@ -8,6 +8,7 @@
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness light doLightObjectEmitterProjectionReplacementCleanup
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness produce_flame doProduceFlameHeldLightProjectionHurlCleanup
 // UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness thunderwave doThunderwaveSavePushObjectsBoom
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";

@@ -37,7 +37,11 @@ const obligationKinds = new Set([
   "boundary-protocol",
 ]);
 
-const parityWitnessKinds = new Set(["focused-mbt", "deterministic-qnt-replay"]);
+const parityWitnessKinds = new Set([
+  "focused-mbt",
+  "deterministic-qnt-replay",
+  "runtime-test",
+]);
 
 const battleFrontierSubjects = new Set([
   "battle-hole-family",

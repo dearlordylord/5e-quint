@@ -394,6 +394,23 @@ function validateWitness(witness, context) {
       );
     }
   }
+  if (witness.kind === "runtime-test") {
+    if (
+      typeof witness.ownerPath === "string" &&
+      !witness.ownerPath.endsWith(".test.ts")
+    ) {
+      issues.push(`${context}.ownerPath must point to a .test.ts file.`);
+    }
+    for (const field of [
+      "qntSpecPath",
+      "stepAction",
+      "deterministicReplayRationale",
+    ]) {
+      if (witness[field] !== undefined) {
+        issues.push(`${context}.${field} is not valid for runtime-test.`);
+      }
+    }
+  }
   return issues;
 }
 
@@ -431,6 +448,31 @@ function validateObligationShape(obligation) {
     issues.push(
       ...validateStringArray(obligation[field], `${obligation.id}.${field}`),
     );
+  }
+  if (Object.prototype.hasOwnProperty.call(obligation, "followUpTaskIds")) {
+    issues.push(
+      ...validateStringArray(
+        obligation.followUpTaskIds,
+        `${obligation.id}.followUpTaskIds`,
+      ),
+    );
+    if (
+      Array.isArray(obligation.followUpTaskIds) &&
+      obligation.followUpTaskIds.length === 0
+    ) {
+      issues.push(
+        `${obligation.id}.followUpTaskIds must name a follow-up task when present; omit the field when no follow-up is assigned.`,
+      );
+    }
+    if (Array.isArray(obligation.followUpTaskIds)) {
+      for (const taskId of obligation.followUpTaskIds) {
+        if (!/^RKBC-[A-Z0-9-]+$/.test(taskId)) {
+          issues.push(
+            `${obligation.id}.followUpTaskIds has invalid task id ${taskId}.`,
+          );
+        }
+      }
+    }
   }
   if (obligation.parityWitnesses !== undefined) {
     if (!Array.isArray(obligation.parityWitnesses)) {
@@ -856,6 +898,56 @@ function validateCoveredEvidence(rootPath, obligation, markerIndex) {
   return issues;
 }
 
+function validateRuntimeTestWitnessProfiles(
+  obligation,
+  profileIds,
+  profilesById,
+) {
+  const issues = [];
+  const runtimeTestWitnesses = (obligation.parityWitnesses ?? []).filter(
+    (witness) => witness.kind === "runtime-test",
+  );
+  if (runtimeTestWitnesses.length === 0) return issues;
+  if (profileIds.length === 0) {
+    issues.push(
+      `${obligation.id} uses runtime-test witnesses but has no mapped Surface profiles.`,
+    );
+    return issues;
+  }
+  for (const profileId of profileIds) {
+    const profile = profilesById.get(profileId);
+    if (profile === undefined) {
+      issues.push(
+        `${obligation.id} runtime-test witness cannot verify missing profile ${profileId}.`,
+      );
+      continue;
+    }
+    const verificationOwners = Array.isArray(profile.verificationOwners)
+      ? profile.verificationOwners
+      : [];
+    const hasQntProof = verificationOwners.some(
+      (owner) => owner.kind === "qnt-proof",
+    );
+    if (!hasQntProof) {
+      issues.push(
+        `${obligation.id} runtime-test witness requires ${profileId} to already record profile-level qnt-proof ownership.`,
+      );
+    }
+    for (const witness of runtimeTestWitnesses) {
+      const hasRuntimeTestOwner = verificationOwners.some(
+        (owner) =>
+          owner.kind === "runtime-test" && owner.ownerPath === witness.ownerPath,
+      );
+      if (!hasRuntimeTestOwner) {
+        issues.push(
+          `${obligation.id} runtime-test witness ${witness.ownerPath} is not a runtime-test verification owner for ${profileId}.`,
+        );
+      }
+    }
+  }
+  return issues;
+}
+
 function escapeRegExp(value) {
   return value.replace(/[\\^$.*+?()[\]{}|]/g, "\\$&");
 }
@@ -1071,7 +1163,7 @@ function renderReport(matrix, issues) {
   } else {
     for (const obligation of open) {
       lines.push(
-        `- \`${obligation.id}\` (${obligation.status}): ${obligation.title}`,
+        `- \`${obligation.id}\` (${obligation.status}; follow-up: ${renderObligationFollowUp(obligation)}): ${obligation.title}`,
       );
     }
   }
@@ -1084,6 +1176,19 @@ function renderReport(matrix, issues) {
     for (const issue of issues) lines.push(`- ${issue}`);
   }
   return `${lines.join("\n")}\n`;
+}
+
+function renderObligationFollowUp(obligation) {
+  if (!Object.prototype.hasOwnProperty.call(obligation, "followUpTaskIds")) {
+    return "_plan-update-required_";
+  }
+  if (!Array.isArray(obligation.followUpTaskIds)) {
+    return "_invalid-follow-up-task-ids_";
+  }
+  if (obligation.followUpTaskIds.length === 0) {
+    return "_invalid-empty-follow-up-task-ids_";
+  }
+  return obligation.followUpTaskIds.map((taskId) => `\`${taskId}\``).join(", ");
 }
 
 function renderObligationProfiles(obligation) {
@@ -1241,6 +1346,11 @@ function buildKernelCoverage({ root: rootPath }) {
     if (coveredStatuses.has(obligation.status)) {
       issues.push(
         ...validateCoveredEvidence(rootPath, obligation, markerIndex),
+        ...validateRuntimeTestWitnessProfiles(
+          obligation,
+          derivedProfilesByObligation.get(obligation.id) ?? [],
+          profilesById,
+        ),
       );
     }
   }

@@ -1,5 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV95 flame_blade
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-spell-created-held-object
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { difficultyClass, type HandUse } from "@dnd/shared/types";
 import { decodeSpellRecordSync } from "@dnd/surface/surface/schema";
